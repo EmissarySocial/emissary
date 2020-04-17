@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,12 @@ func (service Page) New() *model.Page {
 	return &model.Page{
 		PageID: primitive.NewObjectID(),
 	}
+}
+
+// List returns an iterator containing all of the Pages who match the provided criteria
+func (service Page) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+
+	return nil, nil
 }
 
 // Load retrieves an Page from the database
@@ -61,6 +68,11 @@ func (service Page) Delete(page *model.Page, note string) *derp.Error {
 // NewObject wraps the `New` method as a generic Object
 func (service Page) NewObject() data.Object {
 	return service.New()
+}
+
+// ListObjects wraps the `List` method as a generic Object
+func (service Page) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object

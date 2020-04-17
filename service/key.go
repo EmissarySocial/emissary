@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,12 @@ func (service Key) New() *model.Key {
 	return &model.Key{
 		KeyID: primitive.NewObjectID(),
 	}
+}
+
+// List returns an iterator containing all of the Keys who match the provided criteria
+func (service Key) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+
+	return nil, nil
 }
 
 // Load retrieves an Key from the database
@@ -61,6 +68,11 @@ func (service Key) Delete(key *model.Key, note string) *derp.Error {
 // NewObject wraps the `New` method as a generic Object
 func (service Key) NewObject() data.Object {
 	return service.New()
+}
+
+// ListObjects wraps the `List` method as a generic Object
+func (service Key) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object

@@ -3,7 +3,6 @@ package service
 import (
 	"testing"
 
-	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
 	"github.com/benpate/data/mock"
 	"github.com/benpate/ghost/model"
@@ -45,49 +44,12 @@ func TestStream2(t *testing.T) {
 
 	service := getTestStreamService()
 
-	service.Load(expression.New())
-	datasource := mock.New()
-
-	factory := NewFactory(datasource)
-
-	service := factory.Stream()
-
-	stream1 := service.New()
-	stream1.StreamID = primitive.NewObjectID()
-	stream1.Label = "My First Stream"
-	stream1.Token = "my-first-stream"
-
-	if err := service.Save(stream1, "This is the first record I'm going to save."); err != nil {
-		t.Error(err)
-		return
-	}
-
-	stream2 := service.New()
-	stream2.StreamID = primitive.NewObjectID()
-	stream2.Label = "My Second Stream"
-	stream2.Token = "my-second-stream"
-
-	if err := service.Save(stream2, "This is the second record I'm going to save."); err != nil {
-		t.Error(err)
-		return
-	}
-
-	stream3 := service.New()
-	stream3.StreamID = primitive.NewObjectID()
-	stream3.Label = "My Third Stream"
-	stream3.Token = "my-third-stream"
-
-	if err := service.Save(stream3, "This is the third record I'm going to save."); err != nil {
-		t.Error(err)
-		return
-	}
-
-	criteria := data.NewExpression()
+	criteria := expression.And()
 
 	service.List(criteria)
 }
 
-func getTestStreamService(t *testing.T) Stream {
+func getTestStreamService() Stream {
 
 	data := []model.Stream{
 		model.Stream{
@@ -109,8 +71,8 @@ func getTestStreamService(t *testing.T) Stream {
 	service := factory.Stream()
 
 	for _, record := range data {
-		if err := service.Save(record); err != nil {
-			t.Error(err)
+		if err := service.Save(&record, "comment"); err != nil {
+			panic(err)
 		}
 	}
 

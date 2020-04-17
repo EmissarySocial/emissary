@@ -25,6 +25,7 @@ func (service Actor) New() *model.Actor {
 	}
 }
 
+// List returns an iterator containing all of the Actors who match the provided criteria
 func (service Actor) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 
 	return nil, nil
@@ -67,6 +68,11 @@ func (service Actor) Delete(actor *model.Actor, note string) *derp.Error {
 // NewObject wraps the `New` method as a generic Object
 func (service Actor) NewObject() data.Object {
 	return service.New()
+}
+
+// ListObjects wraps the `List` method as a generic Object
+func (service Actor) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object

@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,12 @@ func (service Domain) New() *model.Domain {
 	return &model.Domain{
 		DomainID: primitive.NewObjectID().Hex(),
 	}
+}
+
+// List returns an iterator containing all of the Domains who match the provided criteria
+func (service Domain) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+
+	return nil, nil
 }
 
 // Load retrieves an Domain from the database
@@ -61,6 +68,11 @@ func (service Domain) Delete(domain *model.Domain, note string) *derp.Error {
 // NewObject wraps the `New` method as a generic Object
 func (service Domain) NewObject() data.Object {
 	return service.New()
+}
+
+// ListObjects wraps the `List` method as a generic Object
+func (service Domain) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object

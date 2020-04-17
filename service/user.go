@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,12 @@ func (service User) New() *model.User {
 	return &model.User{
 		UserID: primitive.NewObjectID(),
 	}
+}
+
+// List returns an iterator containing all of the Users who match the provided criteria
+func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+
+	return nil, nil
 }
 
 // Load retrieves an User from the database
@@ -61,6 +68,11 @@ func (service User) Delete(stage *model.User, note string) *derp.Error {
 // NewObject wraps the `New` method as a generic Object
 func (service User) NewObject() data.Object {
 	return service.New()
+}
+
+// ListObjects wraps the `List` method as a generic Object
+func (service User) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
