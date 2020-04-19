@@ -27,8 +27,7 @@ func (service User) New() *model.User {
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
-	return nil, nil
+	return service.session.List(CollectionUser, criteria, options...)
 }
 
 // Load retrieves an User from the database

@@ -27,8 +27,7 @@ func (service Comment) New() *model.Comment {
 
 // List returns an iterator containing all of the Comments who match the provided criteria
 func (service Comment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
-	return nil, nil
+	return service.session.List(CollectionComment, criteria, options...)
 }
 
 // Load retrieves an Comment from the database

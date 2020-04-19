@@ -27,8 +27,7 @@ func (service Domain) New() *model.Domain {
 
 // List returns an iterator containing all of the Domains who match the provided criteria
 func (service Domain) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
-	return nil, nil
+	return service.session.List(CollectionDomain, criteria, options...)
 }
 
 // Load retrieves an Domain from the database

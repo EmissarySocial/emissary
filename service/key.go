@@ -27,8 +27,7 @@ func (service Key) New() *model.Key {
 
 // List returns an iterator containing all of the Keys who match the provided criteria
 func (service Key) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
-	return nil, nil
+	return service.session.List(CollectionKey, criteria, options...)
 }
 
 // Load retrieves an Key from the database

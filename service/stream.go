@@ -27,7 +27,6 @@ func (service Stream) New() *model.Stream {
 
 // List returns an iterator containing all of the Streams who match the provided criteria
 func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
 	return service.session.List(CollectionStream, criteria, options...)
 }
 

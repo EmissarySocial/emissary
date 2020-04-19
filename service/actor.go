@@ -27,8 +27,7 @@ func (service Actor) New() *model.Actor {
 
 // List returns an iterator containing all of the Actors who match the provided criteria
 func (service Actor) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-
-	return nil, nil
+	return service.session.List(CollectionActor, criteria, options...)
 }
 
 // Load retrieves an Actor from the database

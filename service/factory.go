@@ -66,9 +66,9 @@ func (factory *Factory) Key() Key {
 	}
 }
 
-// Page returns a fully populated Contact service
-func (factory *Factory) Page() Page {
-	return Page{
+// Post returns a fully populated Contact service
+func (factory *Factory) Post() Post {
+	return Post{
 		factory: factory,
 		session: factory.Session(),
 	}
@@ -112,8 +112,8 @@ func (factory *Factory) Presto(service string) presto.ServiceFunc {
 		case "Key":
 			return factory.Key()
 
-		case "Page":
-			return factory.Page()
+		case "Post":
+			return factory.Post()
 
 		case "Stream":
 			return factory.Stream()
