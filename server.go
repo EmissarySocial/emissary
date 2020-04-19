@@ -49,19 +49,19 @@ func main() {
 	e.GET("/outbox/:username", placeholder)
 	e.POST("/outbox/:username", placeholder)
 
-	presto.UseRouter(e)
-	presto.UseScopes(scope.Route, scope.NotDeleted)
+	// Presto Global Settings
+	presto.UseRouter(e.)
 
 	presto.NewCollection(factory.Presto("Stream"), "/streams").
-		UseToken("stream").
+		UseScope(scope.NotDeleted).
 		List().
 		Post().
 		Get().
 		Put().
 		Delete()
 
-	presto.NewCollection(factory.Presto("Page"), "/streams/:stream/pages").
-		UseToken("page").
+	presto.NewCollection(factory.Presto("Post"), "/streams/:stream/posts").
+		UseScopes(scope.String("stream"), scope.NotDeleted).
 		List().
 		Post().
 		Get().
@@ -69,21 +69,24 @@ func main() {
 		Delete()
 
 	presto.NewCollection(factory.Presto("Attachment"), "/streams/:stream/pages/:page/attachments").
-		List().
+		UseScopes(scope.String("stream", "page"), scope.NotDeleted)
+	List().
 		Post().
 		Get().
 		Put().
 		Delete()
 
 	presto.NewCollection(factory.Presto("Comment"), "/streams/:stream/pages/:page/comments").
-		List().
+		UseScopes(scope.String("stream", "page"), scope.NotDeleted)
+	List().
 		Post().
 		Get().
 		Put().
 		Delete()
 
 	presto.NewCollection(factory.Presto("User"), "/users/:user").
-		List().
+		UseScopes(scope.NotDeleted)
+	List().
 		Post().
 		Get().
 		Put().

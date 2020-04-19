@@ -7,6 +7,6 @@ import (
 )
 
 // NotDeleted filters out all records that have not been "virtually deleted" from the database.
-func NotDeleted(ctx echo.Context) (data.Expression, *derp.Error) {
-	return data.Expression{{"journal.deleteDate", "=", 0}}, nil
+func NotDeleted(ctx echo.Context) (expression.Expression, *derp.Error) {
+	return data.Expression{{"journal.deleteDate", expression.OperatorEqual, 0}}, nil
 }
