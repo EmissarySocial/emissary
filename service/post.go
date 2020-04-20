@@ -14,7 +14,7 @@ const CollectionPost = "Post"
 
 // Post manosts all interactions with the Post collection
 type Post struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

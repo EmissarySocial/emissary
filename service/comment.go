@@ -14,7 +14,7 @@ const CollectionComment = "Comment"
 
 // Comment manages all interactions with the Comment collection
 type Comment struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

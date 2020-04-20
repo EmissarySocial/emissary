@@ -14,7 +14,7 @@ const CollectionKey = "Key"
 
 // Key manages all interactions with the Key collection
 type Key struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

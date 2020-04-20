@@ -14,7 +14,7 @@ const CollectionUser = "User"
 
 // User manages all interactions with the User collection
 type User struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

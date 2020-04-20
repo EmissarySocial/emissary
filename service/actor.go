@@ -14,7 +14,7 @@ const CollectionActor = "Actor"
 
 // Actor manages all interactions with the Actor collection
 type Actor struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

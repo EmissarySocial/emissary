@@ -14,7 +14,7 @@ const CollectionAttachment = "Attachment"
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

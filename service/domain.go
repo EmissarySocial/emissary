@@ -14,7 +14,7 @@ const CollectionDomain = "Domain"
 
 // Domain manages all interactions with the Domain collection
 type Domain struct {
-	factory *Factory
+	factory Factory
 	session data.Session
 }
 

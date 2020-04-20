@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/benpate/data/expression"
@@ -13,13 +14,9 @@ import (
 
 func TestStream_ReadWrite(t *testing.T) {
 
-	datasource := mockdb.New()
+	service := getTestStreamService()
 
-	factory := NewFactory(datasource)
-
-	service := factory.Stream()
 	stream1 := service.New()
-
 	stream1.StreamID = primitive.NewObjectID()
 	stream1.Label = "My New Stream"
 	stream1.Token = "my-new-stream"
@@ -69,7 +66,7 @@ func getTestStreamService() Stream {
 
 	// Create service
 	datasource := mockdb.New()
-	factory := NewFactory(datasource)
+	factory := NewFactoryMaker(datasource).Factory(context.TODO())
 	service := factory.Stream()
 
 	// Initial data to load
