@@ -4,6 +4,8 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
+github.com/benpate/activitystream v0.1.0 h1:kFoBUMxeK06VERO76SnA9HB5feVQOkM9i1v4Yz+Cauw=
+github.com/benpate/activitystream v0.1.0/go.mod h1:Egvu8vQgYPzhBlqVemTPJN4PHCYpXruW0plsWPwQMJY=
 github.com/benpate/data v0.2.1 h1:eLzZ6t+FoY+MEnEhUrM9WluRNwY4hjJ4g/X8/1ZWcL0=
 github.com/benpate/data v0.2.1/go.mod h1:gLchngJz/+24TRq0qKJwxKsnXeGP6KE7y+i67YEZNQE=
 github.com/benpate/data v0.2.2/go.mod h1:gLchngJz/+24TRq0qKJwxKsnXeGP6KE7y+i67YEZNQE=
@@ -36,6 +38,8 @@ github.com/benpate/presto v0.3.2 h1:qtPryzo7AAGGEtr3XfR8Weu4JKl1SR9VEdhcWYmfWnA=
 github.com/benpate/presto v0.3.2/go.mod h1:zaJW9MyhBSfN4y0ODOGXseAfAoI9FQfUCAluFyjorwg=
 github.com/benpate/presto v0.3.4 h1:wAQrlyN7K93KSjq/d8ptXMQuMuBkLnJ4L+GlBXgzqJ0=
 github.com/benpate/presto v0.3.4/go.mod h1:sqgK9riAV6MAVTj3TTYDXLPHGE6Ik8MPc1yJOfYbY8M=
+github.com/benpate/presto v0.4.1 h1:bwzOKyR6K733+p8wQbkYsWvql1o8toBHtHnAjqZmUjs=
+github.com/benpate/presto v0.4.1/go.mod h1:XB2V5wMT/EHOKbiHGBU6/Nk9jU5YmPxb1Fwdpqqm5AU=
 github.com/benpate/remote v0.5.5 h1:NwnYMbYZk/UP/1axv46WYc3AgN4VOWLyJSn+BH9mNLY=
 github.com/benpate/remote v0.5.5/go.mod h1:O7g/SXr/SlMH3QJgJH+8fvjwlSxosvi5XJo+l7SnO4w=
 github.com/benpate/remote v0.5.6/go.mod h1:O7g/SXr/SlMH3QJgJH+8fvjwlSxosvi5XJo+l7SnO4w=
