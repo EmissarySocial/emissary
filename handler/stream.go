@@ -22,6 +22,7 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		scopes := presto.ScopeFuncSlice{}
 		roles := presto.RoleFuncSlice{}
 
+		// Try to load the stream from the database (with all presto decorations)
 		code, stream := presto.Get(ctx, streamService, nil, scopes, roles)
 
 		// ERROR..  SHOULD PROBABLY HAVE A BETTER ERROR PAGE HERE...

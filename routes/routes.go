@@ -22,15 +22,8 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	// Home Page for the website (should probably be a redirect to a "default" space?)
 	e.GET("/", handler.TBD)
 
-	// Home Pages for users and spaces
-	e.GET("/:username", handler.TBD)
-	e.GET("/:username/:pagename", handler.TBD)
-
-	// ActivityPub
-	e.GET("/inbox/:username", handler.TBD)
-	e.POST("/inbox/:username", handler.TBD)
-	e.GET("/outbox/:username", handler.TBD)
-	e.POST("/outbox/:username", handler.TBD)
+	// Stream Pages
+	e.GET("/:stream", handler.GetStream(factoryMaker))
 
 	// Presto Global Settings
 	presto.UseRouter(e)
@@ -68,13 +61,19 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 		Put().
 		Delete()
 
-	presto.NewCollection(factoryMaker.User, "/users/:user").
+	presto.NewCollection(factoryMaker.User, "/users/:username").
 		UseScopes().
 		List().
 		Post().
 		Get().
 		Put().
 		Delete()
+
+	// ActivityPub INBOX/OUTBOX
+	e.GET("/users/:username/inbox", handler.TBD)
+	e.POST("/users/:username/inbox", handler.TBD)
+	e.GET("/users/:username/outbox", handler.TBD)
+	e.POST("/users/:username/outbox", handler.TBD)
 
 	return e
 }
