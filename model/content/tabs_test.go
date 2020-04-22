@@ -16,4 +16,6 @@ func TestTabs(t *testing.T) {
 
 	spew.Dump(tabs)
 	spew.Dump(tabs.HTML())
+
+	t.Fail()
 }

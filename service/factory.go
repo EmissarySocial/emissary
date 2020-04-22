@@ -60,9 +60,17 @@ func (factory Factory) Post() Post {
 	}
 }
 
-// Stream returns a fully populated Section service
+// Stream returns a fully populated Stream service
 func (factory Factory) Stream() Stream {
 	return Stream{
+		factory: factory,
+		session: factory.Session,
+	}
+}
+
+// Template returns a fully populated Template service
+func (factory Factory) Template() Template {
+	return Template{
 		factory: factory,
 		session: factory.Session,
 	}

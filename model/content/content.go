@@ -9,7 +9,7 @@ type Content interface {
 }
 
 // Parse takes an arbitrary data set and attempts to parse it into a single Content value
-func Parse(_ interface{}) (Content, bool) {
+func Parse(content interface{}) (Content, bool) {
 
 	result := HTML("<example></example>")
 

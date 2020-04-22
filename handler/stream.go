@@ -1,17 +1,41 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/presto"
 	"github.com/labstack/echo/v4"
 )
 
-func GetStream(factory service.Factory) echo.HandlerFunc {
+// GetStream generates the base HTML for a stream
+func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		// domain := factory.Domain()
-		// stream := factory.Stream()
+		// Get the service factory
+		factory := maker.Factory(ctx.Request().Context())
 
-		return nil
+		// Get the stream service
+		streamService := factory.Stream()
+
+		scopes := presto.ScopeFuncSlice{}
+		roles := presto.RoleFuncSlice{}
+
+		code, stream := presto.Get(ctx, streamService, nil, scopes, roles)
+
+		// ERROR..  SHOULD PROBABLY HAVE A BETTER ERROR PAGE HERE...
+		if stream == nil {
+			return ctx.String(code, "")
+		}
+
+		// Use the service.Template to manage HTML templates
+		templateService := factory.Template()
+
+		// Generate the result
+		result := templateService.HTML(stream)
+
+		// Return to caller
+		return ctx.HTML(http.StatusOK, result)
 	}
 }
