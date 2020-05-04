@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/ghost/model"
 )
 
-// ActivityPub servie manages all interactions with ActivityPub objects
+// ActivityPub service manages all interactions with ActivityPub objects
 type ActivityPub struct {
 	factory Factory
 	session data.Session

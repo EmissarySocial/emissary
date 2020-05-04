@@ -1,6 +1,14 @@
 package routes
 
-import "github.com/benpate/ghost/service"
+import (
+	"testing"
+
+	"github.com/benpate/ghost/service"
+)
+
+func TestServer(t *testing.T) {
+	startTestServer()
+}
 
 func startTestServer() {
 

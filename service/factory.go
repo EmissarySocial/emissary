@@ -60,6 +60,14 @@ func (factory Factory) Post() Post {
 	}
 }
 
+// Publisher returns a fully populated Publisher service
+func (factory Factory) Publisher() Publisher {
+	return Publisher{
+		factory: factory,
+		session: factory.Session,
+	}
+}
+
 // Stream returns a fully populated Stream service
 func (factory Factory) Stream() Stream {
 	return Stream{

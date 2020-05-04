@@ -21,7 +21,7 @@ type Actor struct {
 // New creates a newly initialized Actor that is ready to use
 func (service Actor) New() *model.Actor {
 	return &model.Actor{
-		ActorID: primitive.NewObjectID().Hex(),
+		ActorID: primitive.NewObjectID(),
 	}
 }
 

@@ -1,6 +1,6 @@
 # Ghost Messenger
 
-[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/benpate/ghost)
+[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://pkg.go.dev/github.com/benpate/ghost)
 [![Go Report Card](https://goreportcard.com/badge/github.com/benpate/ghost?style=flat-square)](https://goreportcard.com/report/github.com/benpate/ghost)
 [![Build Status](http://img.shields.io/travis/benpate/ghost.svg?style=flat-square)](https://travis-ci.org/benpate/ghost)
 [![Codecov](https://img.shields.io/codecov/c/github/benpate/ghost.svg?style=flat-square)](https://codecov.io/gh/benpate/ghost)

@@ -9,7 +9,7 @@ import (
 
 func TestStream(t *testing.T) {
 
-	startTestServer()
+	go startTestServer()
 
 	{
 		result := ""
