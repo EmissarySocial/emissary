@@ -20,8 +20,8 @@ func NewTemplateCache(factory Factory) (*TemplateCache, []*derp.Error) {
 	var object model.Template
 
 	funcMap := map[string]interface{}{
-		"TEXT": func(v string) string {
-			return "text(" + v + ")"
+		"MyFunc": func(v string) string {
+			return "MyFunc, MyFunc, My Lovely Little Func."
 		},
 	}
 
