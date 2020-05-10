@@ -6,6 +6,9 @@ import (
 	"github.com/benpate/data"
 )
 
+/// SINGLETON VALUES
+var templateCache *TemplateCache
+
 // Factory knows how to create an populate all services
 type Factory struct {
 	Context context.Context
@@ -90,4 +93,17 @@ func (factory Factory) User() User {
 		factory: factory,
 		session: factory.Session,
 	}
+}
+
+/// NON MODEL SERVICES
+
+func (factory Factory) TemplateCache() *TemplateCache {
+
+	// Initialize
+	if templateCache == nil {
+		templateCache, _ = NewTemplateCache(factory)
+		// TODO: Should USE the errors that NewTemplateCache returns, eventually.
+	}
+
+	return templateCache
 }
