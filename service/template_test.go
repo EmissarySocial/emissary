@@ -43,7 +43,7 @@ func TestTemplate(t *testing.T) {
 	spew.Dump(result)
 	spew.Dump(err)
 
-	t.Error()
+	// t.Error()
 }
 
 func populateTestTemplates(service Template) {
