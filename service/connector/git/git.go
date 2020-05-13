@@ -3,11 +3,10 @@ package git
 import (
 	"bytes"
 	"encoding/json"
-	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/list"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -18,8 +17,8 @@ import (
 type Git struct {
 	URL        string
 	Package    model.Package
-	Templates  map[string]model.Template
-	BlockLists map[string]model.BlockList
+	Templates  map[string]*model.Template
+	BlockLists map[string]*model.BlockList
 }
 
 // New returns a fully initialized Git connector service
@@ -28,8 +27,8 @@ func New(url string) Git {
 	return Git{
 		URL:        url,
 		Package:    model.Package{},
-		Templates:  map[string]model.Template{},
-		BlockLists: map[string]model.BlockList{},
+		Templates:  map[string]*model.Template{},
+		BlockLists: map[string]*model.BlockList{},
 	}
 
 }
@@ -75,7 +74,6 @@ func (g *Git) Load() *derp.Error {
 	err = tree.Files().ForEach(g.ParseFile)
 
 	if err != nil {
-		spew.Dump("HERE?", err.(*derp.Error))
 		return derp.New(500, "service.connector.git.Load", "Error iterating over file directory from Git server", g.URL, err)
 	}
 
@@ -96,13 +94,31 @@ func (g *Git) ParseFile(f *object.File) error {
 		return nil
 	}
 
-	if strings.HasPrefix(f.Name, "template") {
-		g.parseTemplate(f)
-		return nil
-	}
+	folder, filename := list.Split(f.Name, "/")
 
-	if strings.HasPrefix(f.Name, "blocklist") {
-		g.parseBlockList(f)
+	switch folder {
+
+	case "template":
+
+		folder, filename := list.Split(filename, "/")
+
+		switch filename {
+
+		case "render.html":
+			g.parseHTMLTemplate(folder, f)
+			return nil
+
+		case "schema.json":
+			g.parseJSONSchema(folder, f)
+			return nil
+
+		case "form.json":
+			g.parseJSONForm(folder, f)
+			return nil
+		}
+
+	case "blocklist":
+		g.parseBlockList(folder, f)
 		return nil
 	}
 
@@ -135,18 +151,45 @@ func (g *Git) parsePackage(f *object.File) *derp.Error {
 		return derp.New(500, "service.connector.git.parsePackage", "Error parsing JSON", f.Name, err)
 	}
 
-	spew.Dump(string(contents))
-	spew.Dump(g.Package)
+	return nil
+}
+
+func (g *Git) parseHTMLTemplate(name string, f *object.File) *derp.Error {
+
+	contents, err := g.fileContents(f)
+
+	if err != nil {
+		return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
+	}
+
+	// Get (or create) the Template for this name, and load it with the contents.
+	t := g.getTemplateByName(name)
+	t.Content = string(contents)
+
+	// TODO: consider minifying with https://github.com/tdewolff/minify
 
 	return nil
 }
 
-func (g *Git) parseTemplate(f *object.File) *derp.Error {
+func (g *Git) parseJSONSchema(name string, f *object.File) *derp.Error {
 	return nil
 }
 
-func (g *Git) parseBlockList(f *object.File) *derp.Error {
+func (g *Git) parseJSONForm(name string, f *object.File) *derp.Error {
 	return nil
+}
+
+func (g *Git) parseBlockList(name string, f *object.File) *derp.Error {
+	return nil
+}
+
+func (g *Git) getTemplateByName(name string) *model.Template {
+
+	if _, ok := g.Templates[name]; !ok {
+		g.Templates[name] = &model.Template{}
+	}
+
+	return g.Templates[name]
 }
 
 func (g *Git) fileContents(f *object.File) ([]byte, *derp.Error) {
