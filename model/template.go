@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/qri-io/jsonschema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,7 +17,7 @@ type Template struct {
 	IconURL    string             // Icon image used in management UI.
 	Format     string             // TOKEN that other templates will use to reference this template.
 	Form       string             // JSON-Form data that describes how to render an input form for this template.
-	Schema     string             // JSON Schema that describes the data required to populate this template.
+	Schema     jsonschema.Schema  // JSON Schema that describes the data required to populate this template.
 	Content    string             // String representation of the template.
 
 	Compiled *template.Template // Compiled representation of the template.

@@ -2,15 +2,18 @@ package service
 
 import (
 	"bytes"
+	"context"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // TemplateCache service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type TemplateCache struct {
 	Cache   map[string]model.Template
 	FuncMap map[string]interface{}
+	Context context.Context
 }
 
 // NewTemplateCache loads all templates into memory for the duration of the server.
@@ -28,6 +31,7 @@ func NewTemplateCache(factory Factory) (*TemplateCache, []*derp.Error) {
 	templateCache := TemplateCache{
 		Cache:   map[string]model.Template{},
 		FuncMap: funcMap,
+		Context: factory.Context,
 	}
 
 	// Get TemplateService to load ALL templates from the database
@@ -68,6 +72,14 @@ func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.E
 
 	if err != nil {
 		return "", derp.Wrap(err, "service.TemplateCache.Render", "Could not load template for data", data)
+	}
+
+	validationState := template.Schema.Validate(cache.Context, data)
+
+	spew.Dump(validationState)
+
+	if validationState.IsValid() == false {
+		return "", derp.New(500, "service.TemplateCache.Render", "Data does not match JSON-Schema", data, validationState.Errs)
 	}
 
 	if err := template.Compiled.Execute(&result, data); err != nil {

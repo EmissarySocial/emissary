@@ -7,10 +7,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/qri-io/jsonschema"
 )
 
 // Git represents the Git connector service, that can populate Packages and Templates from a Git repository
@@ -104,7 +104,7 @@ func (g *Git) ParseFile(f *object.File) error {
 
 		switch filename {
 
-		case "render.html":
+		case "content.html":
 			g.parseHTMLTemplate(folder, f)
 			return nil
 
@@ -172,6 +172,22 @@ func (g *Git) parseHTMLTemplate(name string, f *object.File) *derp.Error {
 }
 
 func (g *Git) parseJSONSchema(name string, f *object.File) *derp.Error {
+
+	contents, err := g.fileContents(f)
+
+	if err != nil {
+		return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
+	}
+
+	schema := jsonschema.Schema{}
+
+	if err := json.Unmarshal(contents, &schema); err != nil {
+		return derp.New(500, "Cannot unmarshal JSON schema", string(contents), err)
+	}
+
+	t := g.getTemplateByName(name)
+	t.Schema = schema
+
 	return nil
 }
 

@@ -39,19 +39,63 @@ func TestTemplate(t *testing.T) {
 
 	result, err := cache.Render(data)
 
-	spew.Dump(data)
+	// spew.Dump(data)
 	spew.Dump(result)
 	spew.Dump(err)
 
-	// t.Error()
+	t.Error()
 }
 
 func populateTestTemplates(service Template) {
+
+	schema, err := populateSchema(`{
+		"title": "Test Template Schema",
+		"type": "object",
+		"properties": {
+			"class": {
+				"type": "string"
+			},
+			"title": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			},
+			"body": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			},
+			"persons": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type":"string"
+						}
+					}
+				}
+			},
+			"friends": {
+			  "type" : "array",
+			  "items" : { "title" : "REFERENCE", "$ref" : "#" }
+			}
+		},
+		"required": ["class", "title", "body", "persons"]
+	  }	
+	`)
+
+	if err != nil {
+		panic(err)
+	}
 
 	t1 := model.Template{
 		TemplateID: primitive.NewObjectID(),
 		Format:     "ARTICLE",
 		Content:    `{{define "person"}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end -}}<article><h3>{{.title}}</h3><div>{{.body}}</div>{{range .persons}}{{template "person" .}}{{end}}</article>`,
+		Schema:     *schema,
 	}
 
 	service.Save(&t1, "created")
