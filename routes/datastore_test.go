@@ -14,7 +14,9 @@ func getTestDatastore() data.Datastore {
 			&model.Stream{
 				StreamID: primitive.NewObjectID(),
 				Token:    "omg-it-works",
-				Data:     "this is my content.  deal with it.",
+				Data: map[string]interface{}{
+					"content": "this is my content.  deal with it.",
+				},
 			},
 		},
 	}

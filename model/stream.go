@@ -7,10 +7,9 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID primitive.ObjectID `json:"sectionId" bson:"_id"`   // Internal identifier.  Not used publicly
-	Token    string             `json:"token"     bson:"token"` // Unique value that identifies this element in the URL
-	Label    string             `json:"label"     bson:"label"` // Label used in auto-generated navigation
-	Data     string             `json:"content" bson:"content"` // Array of content objects in this stream.
+	StreamID primitive.ObjectID     `json:"sectionId" bson:"_id"`   // Internal identifier.  Not used publicly
+	Token    string                 `json:"token"     bson:"token"` // Unique value that identifies this element in the URL
+	Data     map[string]interface{} `json:"data" bson:"data"`       // Array of content objects in this stream.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

@@ -3,6 +3,8 @@ package handler
 import (
 	"net/http"
 
+	"github.com/benpate/derp"
+	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
 	"github.com/labstack/echo/v4"
@@ -23,18 +25,29 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		roles := presto.RoleFuncSlice{}
 
 		// Try to load the stream from the database (with all presto decorations)
-		code, stream := presto.Get(ctx, streamService, nil, scopes, roles)
+		code, object := presto.Get(ctx, streamService, nil, scopes, roles)
 
 		// ERROR..  SHOULD PROBABLY HAVE A BETTER ERROR PAGE HERE...
-		if stream == nil {
+		if object == nil {
 			return ctx.String(code, "")
 		}
 
+		stream, ok := object.(*model.Stream)
+
+		if ok == false {
+			derp.New(500, "handler.GetStream", "Unrecognized variable returned by Stream service", object).Report()
+			return ctx.String(500, "")
+		}
+
 		// Use the service.Template to manage HTML templates
-		templateService := factory.Template()
+		templateCache := factory.TemplateCache()
 
 		// Generate the result
-		result := templateService.HTML(stream)
+		result, err := templateCache.Render(stream.Data)
+
+		if err != nil {
+			return ctx.String(err.Code, "")
+		}
 
 		// Return to caller
 		return ctx.HTML(http.StatusOK, result)
