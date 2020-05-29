@@ -105,3 +105,43 @@ func (service Stream) DeleteObject(object data.Object, note string) *derp.Error 
 func (service Stream) Close() {
 	service.session.Close()
 }
+
+// QUERIES /////////////////////////
+
+func (service Stream) FindBySourceURL(url string) (*model.Stream, *derp.Error) {
+
+	return service.Load(expression.New("sourceUrl", "=", url).And("deleteDate", "=", 0))
+}
+
+///////////////////
+
+func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note string) *derp.Error {
+
+	object, err := service.FindBySourceURL(stream.SourceURL)
+
+	// We already have this object.
+	// TODO: Add compare/copy function to model.Stream object and use it here.
+	if err == nil {
+
+		if changed := object.UpdateWith(stream); changed == false {
+			return nil
+		}
+
+		// Fall through to here means that we have made changes. Update the "stream" variable with the now-correct value from "object" and continue as normal
+		stream = object
+
+	} else {
+
+		// This means that there was an error connecting to the database.
+		if err.NotFound() == false {
+			return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error querying Stream from database", stream)
+		}
+	}
+
+	// Fall through to here means that it was a "Not Found" error, which means we can safely add the new stream.
+	if err := service.Save(stream, note); err != nil {
+		return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error saving new Stream", stream, note)
+	}
+
+	return nil
+}

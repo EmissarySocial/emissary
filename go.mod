@@ -16,4 +16,5 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1
 	go.mongodb.org/mongo-driver v1.3.3
+	github.com/mmcdole/gofeed v1.0.0
 )
