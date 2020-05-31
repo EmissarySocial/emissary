@@ -111,6 +111,7 @@ func (service BlockList) Close() {
 // CUSTOM FUNCTIONS
 ////////////////////////////////////////////////////
 
+// Block adds a particular ID/identity to the blocklist.
 func (service BlockList) Block(id string, identity string, reason string, comment string) *derp.Error {
 
 	blockListID, errr := primitive.ObjectIDFromHex(id)

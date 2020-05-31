@@ -110,19 +110,24 @@ func (service Source) Close() {
 
 /// QUERIES //////////////////////////////////
 
-func (service Source) ListSourcesByMethod(method model.SourceMethod) (data.Iterator, *derp.Error) {
-	return service.List(expression.New("method", "=", string(method)))
+// ListByMethod identifies all sources with a specific "Method" field
+func (service Source) ListByMethod(method model.SourceMethod) (data.Iterator, *derp.Error) {
+
+	criteria := expression.New("method", expression.OperatorEqual, method)
+
+	return service.List(criteria)
 }
 
 //////////////////////////////////////////////
 
+// Poll retrieves all streams from a remote source and saves/updates any changes to the local database.
 func (service Source) Poll() (*derp.Error, []*derp.Error) {
 
 	var pollErrors []*derp.Error
 
 	object := service.New()
 
-	it, err := service.ListSourcesByMethod(model.SourceMethodPoll)
+	it, err := service.ListByMethod(model.SourceMethodPoll)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Source.Poll", "Error loading list of sources"), pollErrors

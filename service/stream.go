@@ -108,6 +108,7 @@ func (service Stream) Close() {
 
 // QUERIES /////////////////////////
 
+// FindBySourceURL locates a single stream that matches the provided SourceURL
 func (service Stream) FindBySourceURL(url string) (*model.Stream, *derp.Error) {
 
 	return service.Load(expression.New("sourceUrl", "=", url).And("deleteDate", "=", 0))
@@ -115,6 +116,7 @@ func (service Stream) FindBySourceURL(url string) (*model.Stream, *derp.Error) {
 
 ///////////////////
 
+// SaveUniqueStreamBySourceURL saves a stream, and avoids duplicates using the SourceURL property.
 func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note string) *derp.Error {
 
 	object, err := service.FindBySourceURL(stream.SourceURL)

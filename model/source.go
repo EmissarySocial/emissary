@@ -5,8 +5,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+////////////////////////////////
 // SourceAdapter enumerates all of the possible values for a stream.Source variable
 type SourceAdapter string
+
+func (sourceAdapter SourceAdapter) String() string {
+	return string(sourceAdapter)
+}
 
 // SourceAdapterActivityPub identifies a Stream that originated on an external ActivityPub server
 const SourceAdapterActivityPub SourceAdapter = "ACTIVITYPUB"
@@ -23,8 +28,13 @@ const SourceAdapterSystem SourceAdapter = "SYSTEM"
 // SourceAdapterTwitter identifies a Stream that originated on Twitter
 const SourceAdapterTwitter SourceAdapter = "TWITTER"
 
+///////////////////////////////////
 // SourceMethod enumerates the different kind of data sources
 type SourceMethod string
+
+func (sourceMethod SourceMethod) String() string {
+	return string(sourceMethod)
+}
 
 // SourceMethodPoll identifies that this source must be polled to provide data
 const SourceMethodPoll SourceMethod = "POLL"
@@ -37,11 +47,11 @@ type SourceConfig map[string]string
 
 // Source represents an account or node on this server.
 type Source struct {
-	SourceID primitive.ObjectID `json:"sourceId" bson:"_id"`    // This is the internal ID for the domain.  It should not be available via the web service.
-	Label    string             `json:"label"    bson:"label"`  // Fully qualified domain name (without protocol)
-	Adapter  SourceAdapter      `json:"type"     bson:"type"`   // What kind of source
-	Method   SourceMethod       `json:"method"   bson:"method"` // How do we connect to the source? Polling or WebHooks?
-	Config   SourceConfig       `jwsn:"config"   bson:"config"` // Source-specific configuration information.  This is validated by JSON-Schema provided by the source adapter.
+	SourceID primitive.ObjectID `json:"sourceId" bson:"_id"`     // This is the internal ID for the domain.  It should not be available via the web service.
+	Label    string             `json:"label"    bson:"label"`   // Fully qualified domain name (without protocol)
+	Adapter  SourceAdapter      `json:"adapter"  bson:"adapter"` // What kind of source
+	Method   SourceMethod       `json:"method"   bson:"method"`  // How do we connect to the source? Polling or WebHooks?
+	Config   SourceConfig       `jwsn:"config"   bson:"config"`  // Source-specific configuration information.  This is validated by JSON-Schema provided by the source adapter.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

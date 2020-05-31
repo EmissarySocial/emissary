@@ -64,6 +64,7 @@ func NewTemplateCache(factory Factory) (*TemplateCache, []*derp.Error) {
 	return &templateCache, errors
 }
 
+// Render uses all templates in the cache to display the data set provided.
 func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.Error) {
 
 	var result bytes.Buffer
@@ -89,6 +90,7 @@ func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.E
 	return result.String(), nil
 }
 
+// GetTemplate locates the correct template to use for a set of data, based on its "class" property.
 func (cache *TemplateCache) GetTemplate(data map[string]interface{}) (*model.Template, *derp.Error) {
 
 	if class, ok := data["class"]; ok {

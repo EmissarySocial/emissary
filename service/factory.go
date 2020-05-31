@@ -71,6 +71,14 @@ func (factory Factory) Publisher() Publisher {
 	}
 }
 
+// Source returns a fully populated Source service
+func (factory Factory) Source() Source {
+	return Source{
+		factory: factory,
+		session: factory.Session,
+	}
+}
+
 // Stream returns a fully populated Stream service
 func (factory Factory) Stream() Stream {
 	return Stream{
@@ -97,6 +105,7 @@ func (factory Factory) User() User {
 
 /// NON MODEL SERVICES
 
+// TemplateCache returns a fully populated TemplateCache service
 func (factory Factory) TemplateCache() *TemplateCache {
 
 	// Initialize
