@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // TemplateCache service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -76,8 +75,6 @@ func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.E
 	}
 
 	validationState := template.Schema.Validate(cache.Context, data)
-
-	spew.Dump(validationState)
 
 	if validationState.IsValid() == false {
 		return "", derp.New(500, "service.TemplateCache.Render", "Data does not match JSON-Schema", data, validationState.Errs)
