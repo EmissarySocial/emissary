@@ -116,3 +116,10 @@ func (factory Factory) TemplateCache() *TemplateCache {
 
 	return templateCache
 }
+
+// RSS returns a fully populated RSS service
+func (factory Factory) RSS() RSS {
+	return RSS{
+		factory: factory,
+	}
+}

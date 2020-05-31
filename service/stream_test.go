@@ -1,11 +1,9 @@
 package service
 
 import (
-	"context"
 	"testing"
 
 	"github.com/benpate/data/expression"
-	"github.com/benpate/data/mockdb"
 	"github.com/benpate/data/option"
 	"github.com/benpate/ghost/model"
 	"github.com/stretchr/testify/assert"
@@ -62,10 +60,15 @@ func TestStream_List(t *testing.T) {
 
 func getTestStreamService() Stream {
 
-	// Create service
-	datasource := mockdb.New()
-	factory := NewFactoryMaker(datasource).Factory(context.TODO())
+	factory := getTestFactory()
 	service := factory.Stream()
+
+	populateTestStreamService(service)
+
+	return service
+}
+
+func populateTestStreamService(service Stream) {
 
 	// Initial data to load
 	data := []*model.Stream{
@@ -89,6 +92,4 @@ func getTestStreamService() Stream {
 			panic(err)
 		}
 	}
-
-	return service
 }

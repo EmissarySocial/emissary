@@ -69,14 +69,15 @@ func (rss RSS) makeStream(rssItem *gofeed.Item) model.Stream {
 
 	stream := model.NewStream()
 	stream.Title = rssItem.Title
-	stream.Author = rssItem.Author.Name
+	stream.AuthorName = rssItem.Author.Name
+	stream.AuthorURL = rssItem.Author.Email
 	stream.Tags = append(stream.Tags, rssItem.Categories...)
 	stream.Summary = rssItem.Description
 	stream.SourceID = rss.SourceID
 	stream.SourceURL = rssItem.Link
 
 	if rssItem.Image != nil {
-		stream.Icon = rssItem.Image.URL
+		stream.Image = rssItem.Image.URL
 	}
 
 	if rssItem.PublishedParsed != nil {
