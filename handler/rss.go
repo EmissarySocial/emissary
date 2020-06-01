@@ -27,6 +27,9 @@ func GetRSS(fm service.FactoryMaker) echo.HandlerFunc {
 			return derp.New(500, "handler.GetRSS", "Error writing JSON feed information", errr).Report()
 		}
 
+		response := ctx.Response()
+		response.Header().Set("content-type", "application/json")
+
 		return ctx.String(200, result)
 	}
 }

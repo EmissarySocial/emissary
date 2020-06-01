@@ -10,13 +10,13 @@ import (
 // FactoryMaker stores basic database connection information, and is able to
 // make new factories for each user request.
 type FactoryMaker struct {
-	Datastore data.Datastore
+	Server data.Server
 }
 
 // NewFactoryMaker returns a fully populated FactoryMaker object
-func NewFactoryMaker(datasource data.Datastore) FactoryMaker {
+func NewFactoryMaker(server data.Server) FactoryMaker {
 	return FactoryMaker{
-		Datastore: datasource,
+		Server: server,
 	}
 }
 
@@ -25,7 +25,7 @@ func NewFactoryMaker(datasource data.Datastore) FactoryMaker {
 func (fm FactoryMaker) Factory(ctx context.Context) Factory {
 	return Factory{
 		Context: ctx,
-		Session: fm.Datastore.Session(ctx),
+		Session: fm.Server.Session(ctx),
 	}
 }
 
