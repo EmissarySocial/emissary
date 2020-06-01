@@ -74,15 +74,21 @@ func populateTestStreamService(service Stream) {
 	data := []*model.Stream{
 		{
 			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/1-my-first-stream",
 			Token:    "1-my-first-stream",
+			Title:    "My First Stream",
 		},
 		{
 			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/2-my-second-stream",
 			Token:    "2-my-second-stream",
+			Title:    "My Second Stream",
 		},
 		{
 			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/3-my-third-stream",
 			Token:    "3-my-third-stream",
+			Title:    "My Third Stream",
 		},
 	}
 

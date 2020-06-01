@@ -7,7 +7,7 @@ import (
 )
 
 // GetInbox returns an inbox for a particular ACTOR
-func GetInbox(factory service.FactoryMaker) echo.HandlerFunc {
+func GetInbox(fm service.FactoryMaker) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -21,7 +21,7 @@ func GetInbox(factory service.FactoryMaker) echo.HandlerFunc {
 }
 
 // PostInbox accepts messages to a particular ACTOR
-func PostInbox(factory service.FactoryMaker) echo.HandlerFunc {
+func PostInbox(fm service.FactoryMaker) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -30,7 +30,7 @@ func PostInbox(factory service.FactoryMaker) echo.HandlerFunc {
 }
 
 // GetOutbox returns an inbox for a particular ACTOR
-func GetOutbox(factory service.FactoryMaker) echo.HandlerFunc {
+func GetOutbox(fm service.FactoryMaker) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -39,7 +39,7 @@ func GetOutbox(factory service.FactoryMaker) echo.HandlerFunc {
 }
 
 // PostOutbox accepts messages to a particular ACTOR
-func PostOutbox(factory service.FactoryMaker) echo.HandlerFunc {
+func PostOutbox(fm service.FactoryMaker) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

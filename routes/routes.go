@@ -19,6 +19,9 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryMaker))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factoryMaker))
 
+	// RSS Feed
+	e.GET("/rss", handler.GetRSS(factoryMaker))
+
 	// Home Page for the website (should probably be a redirect to a "default" space?)
 	e.GET("/", handler.TBD)
 

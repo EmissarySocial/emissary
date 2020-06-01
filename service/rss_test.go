@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/data/expression"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRss(t *testing.T) {
@@ -16,8 +16,14 @@ func TestRss(t *testing.T) {
 
 	feed, err := rss.Feed(expression.All())
 
-	spew.Dump(err)
-	spew.Dump(feed)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(feed.Items))
+	assert.Equal(t, "My First Stream", feed.Items[0].Title)
 
-	t.Fail()
+	/*
+		spew.Dump(err)
+		spew.Dump(feed)
+
+		t.Fail()
+	*/
 }

@@ -15,12 +15,17 @@ type RSS struct {
 	factory Factory
 }
 
-// Feed generates an RSS data feed based on the provided query criteria
-func (rss RSS) Feed(criteria expression.Expression) (*feeds.JSONFeed, *derp.Error) {
+// Feed generates an RSS data feed based on the provided query criteria.  This feed
+// has a lot of incomplete data at the top level, so we're expecting the handler
+// that calls this to fill in the rest of the gaps before it passes the values back
+// to the requester.
+func (rss RSS) Feed(criteria ...expression.Expression) (*feeds.JSONFeed, *derp.Error) {
 
 	streamService := rss.factory.Stream()
 
-	streams, err := streamService.List(criteria, option.SortDesc("publishDate"))
+	filter := expression.And(criteria...)
+
+	streams, err := streamService.List(filter, option.SortDesc("publishDate"))
 	stream := model.NewStream()
 
 	if err != nil {
