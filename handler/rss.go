@@ -21,6 +21,11 @@ func GetRSS(fm service.FactoryMaker) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetRSS", "Error generating RSS feed").Report()
 		}
 
+		// TODO: Replace these with real values from the server setup.
+		feed.Title = "Title Goes Here"
+		feed.Description = "Description Goes Here"
+		feed.FeedUrl = "Feed URL goes here"
+
 		result, errr := feed.ToJSON()
 
 		if errr != nil {
