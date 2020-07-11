@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/benpate/activitystream v0.1.2
 	github.com/benpate/data v0.3.7
-	github.com/benpate/derp v0.11.0
+	github.com/benpate/derp v0.12.0
 	github.com/benpate/list v0.0.3
 	github.com/benpate/presto v0.4.5
 	github.com/benpate/remote v0.5.8
