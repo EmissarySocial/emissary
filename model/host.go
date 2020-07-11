@@ -7,9 +7,9 @@ import (
 
 // Host is a Domain Object that defines a particular Host domain.
 type Host struct {
-	HostID  primitive.ObjectID `json:"HostId" bson:"_id"`        // Unique ID of this Host
-	OwnerID primitive.ObjectID `json:"ownerId"   bson:"ownerId"` // Unique ID of the single owner of this Host.
-	Domains []string           `json:"domains"   bson:"domains"` // Array of domain names that can be used for this domain name.
+	HostID  primitive.ObjectID `json:"HostId"   bson:"_id"`     // Unique ID of this Host
+	OwnerID primitive.ObjectID `json:"ownerId"  bson:"ownerId"` // Unique ID of the single owner of this Host.
+	Domains []string           `json:"domains"  bson:"domains"` // Array of domain names that can be used for this domain name.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

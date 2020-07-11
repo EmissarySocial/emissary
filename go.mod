@@ -9,6 +9,7 @@ require (
 	github.com/benpate/list v0.0.3
 	github.com/benpate/presto v0.4.5
 	github.com/benpate/remote v0.5.8
+	github.com/benpate/schema v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/gorilla/feeds v1.1.1
