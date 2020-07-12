@@ -26,12 +26,12 @@ func (service Attachment) New() *model.Attachment {
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
-func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.session.List(CollectionAttachment, criteria, options...)
 }
 
 // Load retrieves an Attachment from the database
-func (service Attachment) Load(criteria expression.Expression) (*model.Attachment, *derp.Error) {
+func (service Attachment) Load(criteria expression.Expression) (*model.Attachment, error) {
 
 	attachment := service.New()
 
@@ -43,7 +43,7 @@ func (service Attachment) Load(criteria expression.Expression) (*model.Attachmen
 }
 
 // Save adds/updates an Attachment in the database
-func (service Attachment) Save(attachment *model.Attachment, note string) *derp.Error {
+func (service Attachment) Save(attachment *model.Attachment, note string) error {
 
 	if err := service.session.Save(CollectionAttachment, attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
@@ -53,7 +53,7 @@ func (service Attachment) Save(attachment *model.Attachment, note string) *derp.
 }
 
 // Delete removes an Attachment from the database (virtual delete)
-func (service Attachment) Delete(attachment *model.Attachment, note string) *derp.Error {
+func (service Attachment) Delete(attachment *model.Attachment, note string) error {
 
 	if err := service.session.Delete(CollectionAttachment, attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error deleting Attachment", attachment, note)
@@ -70,17 +70,17 @@ func (service Attachment) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Attachment) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Attachment) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Attachment) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
+func (service Attachment) LoadObject(criteria expression.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Attachment) SaveObject(object data.Object, note string) *derp.Error {
+func (service Attachment) SaveObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Attachment); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Attachment) SaveObject(object data.Object, note string) *derp.Erro
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Attachment) DeleteObject(object data.Object, note string) *derp.Error {
+func (service Attachment) DeleteObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Attachment); ok {
 		return service.Delete(object, note)

@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/data"
-	"github.com/benpate/derp"
 )
 
 // Publisher service knows how to publish ActivityPub events based on subscriptions that are registered in the database
@@ -13,7 +12,7 @@ type Publisher struct {
 }
 
 // Publish sends notifications to external services when an event occurs.
-func (publisher Publisher) Publish(writer.Object) *derp.Error {
+func (publisher Publisher) Publish(writer.Object) error {
 
 	/* TODO:  This should be asynchrous.
 

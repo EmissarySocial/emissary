@@ -26,12 +26,12 @@ func (service Post) New() *model.Post {
 }
 
 // List returns an iterator containing all of the Posts who match the provided criteria
-func (service Post) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Post) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.session.List(CollectionPost, criteria, options...)
 }
 
 // Load retrieves an Post from the database
-func (service Post) Load(criteria expression.Expression) (*model.Post, *derp.Error) {
+func (service Post) Load(criteria expression.Expression) (*model.Post, error) {
 
 	post := service.New()
 
@@ -43,7 +43,7 @@ func (service Post) Load(criteria expression.Expression) (*model.Post, *derp.Err
 }
 
 // Save adds/updates an Post in the database
-func (service Post) Save(post *model.Post, note string) *derp.Error {
+func (service Post) Save(post *model.Post, note string) error {
 
 	if err := service.session.Save(CollectionPost, post, note); err != nil {
 		return derp.Wrap(err, "service.Post", "Error saving Post", post, note)
@@ -53,7 +53,7 @@ func (service Post) Save(post *model.Post, note string) *derp.Error {
 }
 
 // Delete removes an Post from the database (virtual delete)
-func (service Post) Delete(post *model.Post, note string) *derp.Error {
+func (service Post) Delete(post *model.Post, note string) error {
 
 	if err := service.session.Delete(CollectionPost, post, note); err != nil {
 		return derp.Wrap(err, "service.Post", "Error deleting Post", post, note)
@@ -70,17 +70,17 @@ func (service Post) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Post) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Post) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Post) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
+func (service Post) LoadObject(criteria expression.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Post) SaveObject(object data.Object, note string) *derp.Error {
+func (service Post) SaveObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Post); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Post) SaveObject(object data.Object, note string) *derp.Error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Post) DeleteObject(object data.Object, note string) *derp.Error {
+func (service Post) DeleteObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Post); ok {
 		return service.Delete(object, note)

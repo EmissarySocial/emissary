@@ -1,7 +1,6 @@
 package source
 
 import (
-	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/qri-io/jsonschema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,7 +10,7 @@ type TODO struct {
 	SourceID primitive.ObjectID
 }
 
-func (todo TODO) Init(sourceID primitive.ObjectID, _ model.SourceConfig) *derp.Error {
+func (todo TODO) Init(sourceID primitive.ObjectID, _ model.SourceConfig) error {
 	todo.SourceID = sourceID
 	return nil
 }
@@ -27,10 +26,10 @@ func (todo TODO) JSONForm() string {
 }
 
 // Poll checks the remote data source and returnsa slice of model.Stream objects
-func (todo TODO) Poll() ([]model.Stream, *derp.Error) {
+func (todo TODO) Poll() ([]model.Stream, error) {
 	return []model.Stream{}, nil
 }
 
-func (todo TODO) Webhook(data map[string]interface{}) (model.Stream, *derp.Error) {
+func (todo TODO) Webhook(data map[string]interface{}) (model.Stream, error) {
 	return model.Stream{}, nil
 }

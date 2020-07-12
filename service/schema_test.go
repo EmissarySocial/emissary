@@ -7,7 +7,7 @@ import (
 	"github.com/qri-io/jsonschema"
 )
 
-func populateSchema(value string) (*jsonschema.Schema, *derp.Error) {
+func populateSchema(value string) (*jsonschema.Schema, error) {
 
 	result := jsonschema.Schema{}
 

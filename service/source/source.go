@@ -12,16 +12,16 @@ import (
 // Source defines the interface for all "source" adapters, that know how to connect to a (likely remote) data source and
 // generate a slice of model.Stream objects to be imported into the local database.
 type Source interface {
-	Init(primitive.ObjectID, model.SourceConfig) *derp.Error
+	Init(primitive.ObjectID, model.SourceConfig) error
 	JSONForm() string
 	JSONSchema() jsonschema.Schema
 
-	Poll() ([]model.Stream, *derp.Error)
-	Webhook(map[string]interface{}) (model.Stream, *derp.Error)
+	Poll() ([]model.Stream, error)
+	Webhook(map[string]interface{}) (model.Stream, error)
 }
 
 // New uses a map of configuration information to return a fully populated Source of model.Stream objects (almost certainly from a remote server)
-func New(adapter model.SourceAdapter, sourceID primitive.ObjectID, config model.SourceConfig) (Source, *derp.Error) {
+func New(adapter model.SourceAdapter, sourceID primitive.ObjectID, config model.SourceConfig) (Source, error) {
 
 	var result Source
 

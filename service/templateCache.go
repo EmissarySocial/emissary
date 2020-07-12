@@ -16,9 +16,9 @@ type TemplateCache struct {
 }
 
 // NewTemplateCache loads all templates into memory for the duration of the server.
-func NewTemplateCache(factory Factory) (*TemplateCache, []*derp.Error) {
+func NewTemplateCache(factory Factory) (*TemplateCache, []error) {
 
-	var errors []*derp.Error
+	var errors []error
 	var object model.Template
 
 	funcMap := map[string]interface{}{
@@ -64,7 +64,7 @@ func NewTemplateCache(factory Factory) (*TemplateCache, []*derp.Error) {
 }
 
 // Render uses all templates in the cache to display the data set provided.
-func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.Error) {
+func (cache *TemplateCache) Render(data map[string]interface{}) (string, error) {
 
 	var result bytes.Buffer
 
@@ -88,7 +88,7 @@ func (cache *TemplateCache) Render(data map[string]interface{}) (string, *derp.E
 }
 
 // GetTemplate locates the correct template to use for a set of data, based on its "class" property.
-func (cache *TemplateCache) GetTemplate(data map[string]interface{}) (*model.Template, *derp.Error) {
+func (cache *TemplateCache) GetTemplate(data map[string]interface{}) (*model.Template, error) {
 
 	if class, ok := data["class"]; ok {
 

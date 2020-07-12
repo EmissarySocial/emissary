@@ -34,7 +34,7 @@ func New(url string) Git {
 }
 
 // Load retrieves a package from a remote Git repository
-func (g *Git) Load() *derp.Error {
+func (g *Git) Load() error {
 	// Clones the given repository in memory, creating the remote, the local
 	// branches and fetching the objects, exactly as:
 	// Info("git clone https://github.com/go-git/go-billy")
@@ -139,7 +139,7 @@ func (g *Git) parseReadMe(f *object.File) error {
 	return nil
 }
 
-func (g *Git) parsePackage(f *object.File) *derp.Error {
+func (g *Git) parsePackage(f *object.File) error {
 
 	contents, err := g.fileContents(f)
 
@@ -154,7 +154,7 @@ func (g *Git) parsePackage(f *object.File) *derp.Error {
 	return nil
 }
 
-func (g *Git) parseHTMLTemplate(name string, f *object.File) *derp.Error {
+func (g *Git) parseHTMLTemplate(name string, f *object.File) error {
 
 	contents, err := g.fileContents(f)
 
@@ -171,7 +171,7 @@ func (g *Git) parseHTMLTemplate(name string, f *object.File) *derp.Error {
 	return nil
 }
 
-func (g *Git) parseJSONSchema(name string, f *object.File) *derp.Error {
+func (g *Git) parseJSONSchema(name string, f *object.File) error {
 
 	contents, err := g.fileContents(f)
 
@@ -191,11 +191,11 @@ func (g *Git) parseJSONSchema(name string, f *object.File) *derp.Error {
 	return nil
 }
 
-func (g *Git) parseJSONForm(name string, f *object.File) *derp.Error {
+func (g *Git) parseJSONForm(name string, f *object.File) error {
 	return nil
 }
 
-func (g *Git) parseBlockList(name string, f *object.File) *derp.Error {
+func (g *Git) parseBlockList(name string, f *object.File) error {
 	return nil
 }
 
@@ -208,7 +208,7 @@ func (g *Git) getTemplateByName(name string) *model.Template {
 	return g.Templates[name]
 }
 
-func (g *Git) fileContents(f *object.File) ([]byte, *derp.Error) {
+func (g *Git) fileContents(f *object.File) ([]byte, error) {
 
 	var result bytes.Buffer
 

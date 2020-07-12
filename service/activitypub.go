@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/activitystream/vocabulary"
 	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/data"
-	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 )
 
@@ -21,7 +20,7 @@ func (service ActivityPub) GetInbox(actor model.Actor) writer.Collection {
 }
 
 // PostInbox adds a new item to a User's inbox
-func (service ActivityPub) PostInbox(info reader.Object) *derp.Error {
+func (service ActivityPub) PostInbox(info reader.Object) error {
 
 	switch info.Type() {
 
@@ -91,7 +90,7 @@ func (service ActivityPub) GetOutbox(actor model.Actor) writer.Collection {
 }
 
 // PostOutbox adds a new item to a User's outbox
-func (service ActivityPub) PostOutbox(info reader.Object) *derp.Error {
+func (service ActivityPub) PostOutbox(info reader.Object) error {
 
 	switch info.Type() {
 

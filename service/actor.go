@@ -26,12 +26,12 @@ func (service Actor) New() *model.Actor {
 }
 
 // List returns an iterator containing all of the Actors who match the provided criteria
-func (service Actor) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Actor) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.session.List(CollectionActor, criteria, options...)
 }
 
 // Load retrieves an Actor from the database
-func (service Actor) Load(criteria expression.Expression) (*model.Actor, *derp.Error) {
+func (service Actor) Load(criteria expression.Expression) (*model.Actor, error) {
 
 	actor := service.New()
 
@@ -43,7 +43,7 @@ func (service Actor) Load(criteria expression.Expression) (*model.Actor, *derp.E
 }
 
 // Save adds/updates an Actor in the database
-func (service Actor) Save(actor *model.Actor, note string) *derp.Error {
+func (service Actor) Save(actor *model.Actor, note string) error {
 
 	if err := service.session.Save(CollectionActor, actor, note); err != nil {
 		return derp.Wrap(err, "service.Actor", "Error saving Actor", actor, note)
@@ -53,7 +53,7 @@ func (service Actor) Save(actor *model.Actor, note string) *derp.Error {
 }
 
 // Delete removes an Actor from the database (virtual delete)
-func (service Actor) Delete(actor *model.Actor, note string) *derp.Error {
+func (service Actor) Delete(actor *model.Actor, note string) error {
 
 	if err := service.session.Delete(CollectionActor, actor, note); err != nil {
 		return derp.Wrap(err, "service.Actor", "Error deleting Actor", actor, note)
@@ -70,17 +70,17 @@ func (service Actor) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Actor) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Actor) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Actor) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
+func (service Actor) LoadObject(criteria expression.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Actor) SaveObject(object data.Object, note string) *derp.Error {
+func (service Actor) SaveObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Actor); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Actor) SaveObject(object data.Object, note string) *derp.Error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Actor) DeleteObject(object data.Object, note string) *derp.Error {
+func (service Actor) DeleteObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Actor); ok {
 		return service.Delete(object, note)

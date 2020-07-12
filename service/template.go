@@ -26,12 +26,12 @@ func (service Template) New() *model.Template {
 }
 
 // List returns an iterator containing all of the Templates who match the provided criteria
-func (service Template) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Template) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.session.List(CollectionTemplate, criteria, options...)
 }
 
 // Load retrieves an Template from the database
-func (service Template) Load(criteria expression.Expression) (*model.Template, *derp.Error) {
+func (service Template) Load(criteria expression.Expression) (*model.Template, error) {
 
 	template := service.New()
 
@@ -43,7 +43,7 @@ func (service Template) Load(criteria expression.Expression) (*model.Template, *
 }
 
 // Save adds/updates an Template in the database
-func (service Template) Save(template *model.Template, note string) *derp.Error {
+func (service Template) Save(template *model.Template, note string) error {
 
 	if err := service.session.Save(CollectionTemplate, template, note); err != nil {
 		return derp.Wrap(err, "service.Template", "Error saving Template", template, note)
@@ -53,7 +53,7 @@ func (service Template) Save(template *model.Template, note string) *derp.Error 
 }
 
 // Delete removes an Template from the database (virtual delete)
-func (service Template) Delete(template *model.Template, note string) *derp.Error {
+func (service Template) Delete(template *model.Template, note string) error {
 
 	if err := service.session.Delete(CollectionTemplate, template, note); err != nil {
 		return derp.Wrap(err, "service.Template", "Error deleting Template", template, note)

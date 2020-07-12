@@ -15,7 +15,7 @@ type RSS struct {
 }
 
 // Init populates this RSS feed with the configuraion data, and returns an error if the configuration data is invalid
-func (rss *RSS) Init(sourceID primitive.ObjectID, config model.SourceConfig) *derp.Error {
+func (rss *RSS) Init(sourceID primitive.ObjectID, config model.SourceConfig) error {
 
 	rss.SourceID = sourceID
 
@@ -39,7 +39,7 @@ func (rss RSS) JSONForm() string {
 }
 
 // Poll checks the remote data source and returnsa slice of model.Stream objects
-func (rss RSS) Poll() ([]model.Stream, *derp.Error) {
+func (rss RSS) Poll() ([]model.Stream, error) {
 
 	var result []model.Stream
 
@@ -60,7 +60,7 @@ func (rss RSS) Poll() ([]model.Stream, *derp.Error) {
 	return result, nil
 }
 
-func (rss RSS) Webhook(data map[string]interface{}) (model.Stream, *derp.Error) {
+func (rss RSS) Webhook(data map[string]interface{}) (model.Stream, error) {
 	return model.Stream{}, nil
 }
 
