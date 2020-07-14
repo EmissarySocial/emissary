@@ -35,15 +35,16 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		stream, ok := object.(*model.Stream)
 
 		if ok == false {
-			derp.New(500, "handler.GetStream", "Unrecognized variable returned by Stream service", object).Report()
+			err := derp.New(500, "handler.GetStream", "Unrecognized variable returned by Stream service", object)
+			derp.Report(err)
 			return ctx.String(500, "")
 		}
 
 		// Use the service.Template to manage HTML templates
-		templateCache := factory.TemplateCache()
+		templateCache := factory.Template()
 
 		// Generate the result
-		result, err := templateCache.Render(stream.Data)
+		result, err := templateCache.Render(stream, "default")
 
 		if err != nil {
 			return ctx.String(err.Code, "")

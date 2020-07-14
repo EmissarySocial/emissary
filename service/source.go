@@ -28,12 +28,12 @@ func (service Source) New() *model.Source {
 }
 
 // List returns an iterator containing all of the Sources who match the provided criteria
-func (service Source) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Source) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.session.List(CollectionSource, criteria, options...)
 }
 
 // Load retrieves an Source from the database
-func (service Source) Load(criteria expression.Expression) (*model.Source, error) {
+func (service Source) Load(criteria expression.Expression) (*model.Source, *derp.Error) {
 
 	account := service.New()
 
@@ -45,7 +45,7 @@ func (service Source) Load(criteria expression.Expression) (*model.Source, error
 }
 
 // Save adds/updates an Source in the database
-func (service Source) Save(account *model.Source, note string) error {
+func (service Source) Save(account *model.Source, note string) *derp.Error {
 
 	if err := service.session.Save(CollectionSource, account, note); err != nil {
 		return derp.Wrap(err, "service.Source", "Error saving Source", account, note)
@@ -55,7 +55,7 @@ func (service Source) Save(account *model.Source, note string) error {
 }
 
 // Delete removes an Source from the database (virtual delete)
-func (service Source) Delete(account *model.Source, note string) error {
+func (service Source) Delete(account *model.Source, note string) *derp.Error {
 
 	if err := service.session.Delete(CollectionSource, account, note); err != nil {
 		return derp.Wrap(err, "service.Source", "Error deleting Source", account, note)
@@ -72,17 +72,17 @@ func (service Source) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Source) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Source) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Source) LoadObject(criteria expression.Expression) (data.Object, error) {
+func (service Source) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Source) SaveObject(object data.Object, note string) error {
+func (service Source) SaveObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Source); ok {
 		return service.Save(object, note)
@@ -93,7 +93,7 @@ func (service Source) SaveObject(object data.Object, note string) error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Source) DeleteObject(object data.Object, note string) error {
+func (service Source) DeleteObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Source); ok {
 		return service.Delete(object, note)
@@ -111,7 +111,7 @@ func (service Source) Close() {
 /// QUERIES //////////////////////////////////
 
 // ListByMethod identifies all sources with a specific "Method" field
-func (service Source) ListByMethod(method model.SourceMethod) (data.Iterator, error) {
+func (service Source) ListByMethod(method model.SourceMethod) (data.Iterator, *derp.Error) {
 
 	criteria := expression.New("method", expression.OperatorEqual, method)
 
@@ -121,9 +121,9 @@ func (service Source) ListByMethod(method model.SourceMethod) (data.Iterator, er
 //////////////////////////////////////////////
 
 // Poll retrieves all streams from a remote source and saves/updates any changes to the local database.
-func (service Source) Poll() (error, []error) {
+func (service Source) Poll() (*derp.Error, []*derp.Error) {
 
-	var pollErrors []error
+	var pollErrors []*derp.Error
 
 	object := service.New()
 

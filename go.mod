@@ -6,10 +6,11 @@ require (
 	github.com/benpate/activitystream v0.1.2
 	github.com/benpate/data v0.3.7
 	github.com/benpate/derp v0.12.3
+	github.com/benpate/form v0.1.0
 	github.com/benpate/list v0.0.3
-	github.com/benpate/presto v0.4.5
+	github.com/benpate/presto v0.5.0
 	github.com/benpate/remote v0.5.8
-	github.com/benpate/schema v0.3.0
+	github.com/benpate/schema v0.4.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/gorilla/feeds v1.1.1
@@ -18,5 +19,5 @@ require (
 	github.com/qri-io/jsonschema v0.2.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1
-	go.mongodb.org/mongo-driver v1.3.4
+	go.mongodb.org/mongo-driver v1.3.5
 )

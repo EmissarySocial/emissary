@@ -26,12 +26,12 @@ func (service Key) New() *model.Key {
 }
 
 // List returns an iterator containing all of the Keys who match the provided criteria
-func (service Key) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Key) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.session.List(CollectionKey, criteria, options...)
 }
 
 // Load retrieves an Key from the database
-func (service Key) Load(criteria expression.Expression) (*model.Key, error) {
+func (service Key) Load(criteria expression.Expression) (*model.Key, *derp.Error) {
 
 	key := service.New()
 
@@ -43,7 +43,7 @@ func (service Key) Load(criteria expression.Expression) (*model.Key, error) {
 }
 
 // Save adds/updates an Key in the database
-func (service Key) Save(key *model.Key, note string) error {
+func (service Key) Save(key *model.Key, note string) *derp.Error {
 
 	if err := service.session.Save(CollectionKey, key, note); err != nil {
 		return derp.Wrap(err, "service.Key", "Error saving Key", key, note)
@@ -53,7 +53,7 @@ func (service Key) Save(key *model.Key, note string) error {
 }
 
 // Delete removes an Key from the database (virtual delete)
-func (service Key) Delete(key *model.Key, note string) error {
+func (service Key) Delete(key *model.Key, note string) *derp.Error {
 
 	if err := service.session.Delete(CollectionKey, key, note); err != nil {
 		return derp.Wrap(err, "service.Key", "Error deleting Key", key, note)
@@ -70,17 +70,17 @@ func (service Key) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Key) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Key) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Key) LoadObject(criteria expression.Expression) (data.Object, error) {
+func (service Key) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Key) SaveObject(object data.Object, note string) error {
+func (service Key) SaveObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Key); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Key) SaveObject(object data.Object, note string) error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Key) DeleteObject(object data.Object, note string) error {
+func (service Key) DeleteObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Key); ok {
 		return service.Delete(object, note)

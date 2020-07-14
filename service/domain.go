@@ -26,12 +26,12 @@ func (service Domain) New() *model.Domain {
 }
 
 // List returns an iterator containing all of the Domains who match the provided criteria
-func (service Domain) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Domain) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.session.List(CollectionDomain, criteria, options...)
 }
 
 // Load retrieves an Domain from the database
-func (service Domain) Load(criteria expression.Expression) (*model.Domain, error) {
+func (service Domain) Load(criteria expression.Expression) (*model.Domain, *derp.Error) {
 
 	domain := service.New()
 
@@ -43,7 +43,7 @@ func (service Domain) Load(criteria expression.Expression) (*model.Domain, error
 }
 
 // Save adds/updates an Domain in the database
-func (service Domain) Save(domain *model.Domain, note string) error {
+func (service Domain) Save(domain *model.Domain, note string) *derp.Error {
 
 	if err := service.session.Save(CollectionDomain, domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain", "Error saving Domain", domain, note)
@@ -53,7 +53,7 @@ func (service Domain) Save(domain *model.Domain, note string) error {
 }
 
 // Delete removes an Domain from the database (virtual delete)
-func (service Domain) Delete(domain *model.Domain, note string) error {
+func (service Domain) Delete(domain *model.Domain, note string) *derp.Error {
 
 	if err := service.session.Delete(CollectionDomain, domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain", "Error deleting Domain", domain, note)
@@ -70,17 +70,17 @@ func (service Domain) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Domain) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Domain) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Domain) LoadObject(criteria expression.Expression) (data.Object, error) {
+func (service Domain) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Domain) SaveObject(object data.Object, note string) error {
+func (service Domain) SaveObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Domain); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Domain) SaveObject(object data.Object, note string) error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Domain) DeleteObject(object data.Object, note string) error {
+func (service Domain) DeleteObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Domain); ok {
 		return service.Delete(object, note)

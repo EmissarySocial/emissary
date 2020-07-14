@@ -19,7 +19,7 @@ type RSS struct {
 // has a lot of incomplete data at the top level, so we're expecting the handler
 // that calls this to fill in the rest of the gaps before it passes the values back
 // to the requester.
-func (rss RSS) Feed(criteria ...expression.Expression) (*feeds.JSONFeed, error) {
+func (rss RSS) Feed(criteria ...expression.Expression) (*feeds.JSONFeed, *derp.Error) {
 
 	streamService := rss.factory.Stream()
 

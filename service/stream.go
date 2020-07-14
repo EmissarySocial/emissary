@@ -26,12 +26,12 @@ func (service Stream) New() *model.Stream {
 }
 
 // List returns an iterator containing all of the Streams who match the provided criteria
-func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.session.List(CollectionStream, criteria, options...)
 }
 
 // Load retrieves an Stream from the database
-func (service Stream) Load(criteria expression.Expression) (*model.Stream, error) {
+func (service Stream) Load(criteria expression.Expression) (*model.Stream, *derp.Error) {
 
 	account := service.New()
 
@@ -43,7 +43,7 @@ func (service Stream) Load(criteria expression.Expression) (*model.Stream, error
 }
 
 // Save adds/updates an Stream in the database
-func (service Stream) Save(account *model.Stream, note string) error {
+func (service Stream) Save(account *model.Stream, note string) *derp.Error {
 
 	if err := service.session.Save(CollectionStream, account, note); err != nil {
 		return derp.Wrap(err, "service.Stream", "Error saving Stream", account, note)
@@ -53,7 +53,7 @@ func (service Stream) Save(account *model.Stream, note string) error {
 }
 
 // Delete removes an Stream from the database (virtual delete)
-func (service Stream) Delete(account *model.Stream, note string) error {
+func (service Stream) Delete(account *model.Stream, note string) *derp.Error {
 
 	if err := service.session.Delete(CollectionStream, account, note); err != nil {
 		return derp.Wrap(err, "service.Stream", "Error deleting Stream", account, note)
@@ -70,17 +70,17 @@ func (service Stream) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Stream) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Stream) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Stream) LoadObject(criteria expression.Expression) (data.Object, error) {
+func (service Stream) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Stream) SaveObject(object data.Object, note string) error {
+func (service Stream) SaveObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Stream); ok {
 		return service.Save(object, note)
@@ -91,7 +91,7 @@ func (service Stream) SaveObject(object data.Object, note string) error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Stream) DeleteObject(object data.Object, note string) error {
+func (service Stream) DeleteObject(object data.Object, note string) *derp.Error {
 
 	if object, ok := object.(*model.Stream); ok {
 		return service.Delete(object, note)
@@ -108,18 +108,26 @@ func (service Stream) Close() {
 
 // QUERIES /////////////////////////
 
-// FindBySourceURL locates a single stream that matches the provided SourceURL
-func (service Stream) FindBySourceURL(url string) (*model.Stream, error) {
+func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
 
-	return service.Load(expression.New("sourceUrl", "=", url).And("deleteDate", "=", 0))
+	return service.Load(
+		expression.New("token", expression.OperatorEqual, token).
+			And("deleteDate", expression.OperatorEqual, 0))
+}
+
+// LoadBySourceURL locates a single stream that matches the provided SourceURL
+func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
+	return service.Load(
+		expression.New("sourceUrl", expression.OperatorEqual, url).
+			And("deleteDate", expression.OperatorEqual, 0))
 }
 
 ///////////////////
 
 // SaveUniqueStreamBySourceURL saves a stream, and avoids duplicates using the SourceURL property.
-func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note string) error {
+func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note string) *derp.Error {
 
-	object, err := service.FindBySourceURL(stream.SourceURL)
+	object, err := service.LoadBySourceURL(stream.SourceURL)
 
 	// We already have this object.
 	// TODO: Add compare/copy function to model.Stream object and use it here.
@@ -134,13 +142,13 @@ func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note str
 
 	} else {
 
-		// This means that there was an error connecting to the database.
+		// This means that there was an *derp.Error connecting to the database.
 		if err.NotFound() == false {
 			return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error querying Stream from database", stream)
 		}
 	}
 
-	// Fall through to here means that it was a "Not Found" error, which means we can safely add the new stream.
+	// Fall through to here means that it was a "Not Found" *derp.Error, which means we can safely add the new stream.
 	if err := service.Save(stream, note); err != nil {
 		return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error saving new Stream", stream, note)
 	}

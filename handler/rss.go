@@ -18,7 +18,9 @@ func GetRSS(fm service.FactoryMaker) echo.HandlerFunc {
 		feed, err := service.Feed()
 
 		if err != nil {
-			return derp.Wrap(err, "handler.GetRSS", "Error generating RSS feed").Report()
+			err := derp.Wrap(err, "handler.GetRSS", "Error generating RSS feed")
+			derp.Report(err)
+			return err
 		}
 
 		// TODO: Replace these with real values from the server setup.
@@ -29,7 +31,9 @@ func GetRSS(fm service.FactoryMaker) echo.HandlerFunc {
 		result, errr := feed.ToJSON()
 
 		if errr != nil {
-			return derp.New(500, "handler.GetRSS", "Error writing JSON feed information", errr).Report()
+			err := derp.Wrap(errr, "handler.GetRSS", "Error writing JSON feed information")
+			derp.Report(err)
+			return err
 		}
 
 		response := ctx.Response()

@@ -10,7 +10,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/qri-io/jsonschema"
 )
 
 // Git represents the Git connector service, that can populate Packages and Templates from a Git repository
@@ -156,38 +155,40 @@ func (g *Git) parsePackage(f *object.File) error {
 
 func (g *Git) parseHTMLTemplate(name string, f *object.File) error {
 
-	contents, err := g.fileContents(f)
+	/*
+		contents, err := g.fileContents(f)
 
-	if err != nil {
-		return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
-	}
+		if err != nil {
+			return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
+		}
 
-	// Get (or create) the Template for this name, and load it with the contents.
-	t := g.getTemplateByName(name)
-	t.Content = string(contents)
+		// Get (or create) the Template for this name, and load it with the contents.
+		t := g.getTemplateByName(name)
+		// t.Content = string(contents)
 
-	// TODO: consider minifying with https://github.com/tdewolff/minify
-
+		// TODO: consider minifying with https://github.com/tdewolff/minify
+	*/
 	return nil
 }
 
 func (g *Git) parseJSONSchema(name string, f *object.File) error {
 
-	contents, err := g.fileContents(f)
+	/*
+		contents, err := g.fileContents(f)
 
-	if err != nil {
-		return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
-	}
+		if err != nil {
+			return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
+		}
 
-	schema := jsonschema.Schema{}
+		schema := jsonschema.Schema{}
 
-	if err := json.Unmarshal(contents, &schema); err != nil {
-		return derp.New(500, "Cannot unmarshal JSON schema", string(contents), err)
-	}
+		if err := json.Unmarshal(contents, &schema); err != nil {
+			return derp.New(500, "Cannot unmarshal JSON schema", string(contents), err)
+		}
 
-	t := g.getTemplateByName(name)
-	t.Schema = schema
-
+		t := g.getTemplateByName(name)
+		t.Schema = schema
+	*/
 	return nil
 }
 

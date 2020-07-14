@@ -12,11 +12,11 @@ type Stream struct {
 	URL           string                 `json:"url"           bson:"url"`           // Unique URL of this Stream.  This duplicates the "token" field a bit, but it (hopefully?) makes access easier.
 	Token         string                 `json:"token"         bson:"token"`         // Unique value that identifies this element in the URL
 	Title         string                 `json:"title"         bson:"title"`         // Text to display in lists of streams, probably displayed at top of stream page, too.
-	Image         string                 `json:"image"          bson:"image"`        // Image to display next to the stream in lists.
+	Image         string                 `json:"image"         bson:"image"`         // Image to display next to the stream in lists.
 	Summary       string                 `json:"summary"       bson:"summary"`       // Brief summary of this stream, used in lists of streams
 	AuthorID      primitive.ObjectID     `json:"authorId"      bson:"authorId"`      // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
 	AuthorName    string                 `json:"authorName"    bson:"authorName"`    // Full name of the person who created this stream
-	AuthorURL     string                 `json:"authorURL"   bson:"authorURL"`       // URL address of the person who created this stream
+	AuthorURL     string                 `json:"authorURL"     bson:"authorURL"`     // URL address of the person who created this stream
 	Tags          []string               `json:"tags"          bson:"tags"`          // Organizational Tags
 	Source        StreamSourceType       `json:"source"        bson:"source"`        // Identifies the remote source
 	SourceID      primitive.ObjectID     `json:"sourceId"      bson:"sourceId"`      // Internal identifier of the source configuration that generated this stream
