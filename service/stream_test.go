@@ -73,22 +73,39 @@ func populateTestStreamService(service Stream) {
 	// Initial data to load
 	data := []*model.Stream{
 		{
-			StreamID: primitive.NewObjectID(),
-			URL:      "https://example.com/1-my-first-stream",
-			Token:    "1-my-first-stream",
-			Title:    "My First Stream",
+			StreamID:   primitive.NewObjectID(),
+			URL:        "https://example.com/1-my-first-stream",
+			Token:      "1-my-first-stream",
+			Title:      "My First Stream",
+			TemplateID: testObjectID("000000000000000000000001"),
+			Data: map[string]interface{}{
+				"persons": []map[string]interface{}{
+					{
+						"name":  "John",
+						"email": "john@connor.com",
+					}, {
+						"name":  "Sarah",
+						"email": "sarah@sky.net",
+					}, {
+						"name":  "Kyle",
+						"email": "kyle@resistance.mil",
+					},
+				},
+			},
 		},
 		{
-			StreamID: primitive.NewObjectID(),
-			URL:      "https://example.com/2-my-second-stream",
-			Token:    "2-my-second-stream",
-			Title:    "My Second Stream",
+			StreamID:   primitive.NewObjectID(),
+			URL:        "https://example.com/2-my-second-stream",
+			Token:      "2-my-second-stream",
+			Title:      "My Second Stream",
+			TemplateID: testObjectID("000000000000000000000001"),
 		},
 		{
-			StreamID: primitive.NewObjectID(),
-			URL:      "https://example.com/3-my-third-stream",
-			Token:    "3-my-third-stream",
-			Title:    "My Third Stream",
+			StreamID:   primitive.NewObjectID(),
+			URL:        "https://example.com/3-my-third-stream",
+			Token:      "3-my-third-stream",
+			Title:      "My Third Stream",
+			TemplateID: testObjectID("000000000000000000000001"),
 		},
 	}
 
@@ -99,3 +116,44 @@ func populateTestStreamService(service Stream) {
 		}
 	}
 }
+
+func testObjectID(value string) primitive.ObjectID {
+
+	if result, err := primitive.ObjectIDFromHex(value); err == nil {
+		return result
+	}
+
+	return primitive.NewObjectID()
+}
+
+/*
+	data := map[string]interface{}{
+		"class": "ARTICLE",
+		"title": "My Title",
+		"body":  "My Body",
+		"persons": []map[string]interface{}{
+			{
+				"name":  "John",
+				"email": "john@connor.com",
+			}, {
+				"name":  "Sarah",
+				"email": "sarah@sky.net",
+			}, {
+				"name":  "Kyle",
+				"email": "kyle@resistance.mil",
+			},
+		},
+	}
+
+	template, err := service.LoadByFormat("ARTICLE")
+
+	assert.Nil(t, err)
+
+	result, err := cache.Render(data)
+
+	// spew.Dump(data)
+	spew.Dump(result)
+	spew.Dump(err)
+
+	t.Error()
+*/

@@ -3,11 +3,10 @@ package service
 import (
 	"testing"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestTemplate(t *testing.T) {
@@ -22,54 +21,33 @@ func TestTemplate(t *testing.T) {
 	populateTestStreamService(streamService)
 
 	stream, err := streamService.LoadByToken("1-my-first-stream")
-
-	spew.Dump(stream)
-	spew.Dump(err)
-	return
-
 	assert.Nil(t, err)
 
 	html, err := templateService.Render(stream, "default")
 
 	assert.Nil(t, err)
+	derp.Report(err)
 	t.Log(html)
 
-	/*
-		data := map[string]interface{}{
-			"class": "ARTICLE",
-			"title": "My Title",
-			"body":  "My Body",
-			"persons": []map[string]interface{}{
-				{
-					"name":  "John",
-					"email": "john@connor.com",
-				}, {
-					"name":  "Sarah",
-					"email": "sarah@sky.net",
-				}, {
-					"name":  "Kyle",
-					"email": "kyle@resistance.mil",
-				},
-			},
-		}
-
-		template, err := service.LoadByFormat("ARTICLE")
-
-		assert.Nil(t, err)
-
-		result, err := cache.Render(data)
-
-		// spew.Dump(data)
-		spew.Dump(result)
-		spew.Dump(err)
-
-		t.Error()
-	*/
 }
 
 func populateTestTemplates(service Template) {
 
-	s, err := schema.NewFromJSON([]byte(`{
+	v1 := `<article><h3>{{.Title}}</h3><div>{{.Summary}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>`
+
+	t1 := model.Template{
+		TemplateID: testObjectID("000000000000000000000001"),
+		Format:     "ARTICLE",
+		Views: map[string]model.View{
+			"default": {
+				Label: "Default",
+				HTML:  v1,
+			},
+		},
+	}
+
+	t1.Schema, _ = schema.NewFromJSON([]byte(`{
+		"url": "example.com/test-template",
 		"title": "Test Template Schema",
 		"type": "object",
 		"properties": {
@@ -107,22 +85,6 @@ func populateTestTemplates(service Template) {
 		"required": ["class", "title", "body", "persons"]
 	  }	
 	`))
-
-	if err != nil {
-		panic(err)
-	}
-
-	t1 := model.Template{
-		TemplateID: primitive.NewObjectID(),
-		Format:     "ARTICLE",
-		Views: map[string]model.View{
-			"default": {
-				Label: "Default",
-				HTML:  `{{define "person"}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end -}}<article><h3>{{.title}}</h3><div>{{.body}}</div>{{range .persons}}{{template "person" .}}{{end}}</article>`,
-			},
-		},
-		Schema: s,
-	}
 
 	service.Save(&t1, "created")
 }

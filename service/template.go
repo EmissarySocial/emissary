@@ -66,7 +66,7 @@ func (service Template) Delete(template *model.Template, note string) *derp.Erro
 
 func (service Template) LoadByTemplateID(templateID primitive.ObjectID) (*model.Template, *derp.Error) {
 
-	return service.Load(expression.New("templateId", expression.OperatorEqual, templateID))
+	return service.Load(expression.New("_id", expression.OperatorEqual, templateID))
 }
 
 func (service Template) Render(stream *model.Stream, viewID string) (string, *derp.Error) {

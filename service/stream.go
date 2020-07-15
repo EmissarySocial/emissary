@@ -111,15 +111,13 @@ func (service Stream) Close() {
 func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
 
 	return service.Load(
-		expression.New("token", expression.OperatorEqual, token).
-			And("deleteDate", expression.OperatorEqual, 0))
+		expression.New("token", expression.OperatorEqual, token))
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL
 func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
 	return service.Load(
-		expression.New("sourceUrl", expression.OperatorEqual, url).
-			And("deleteDate", expression.OperatorEqual, 0))
+		expression.New("sourceUrl", expression.OperatorEqual, url))
 }
 
 ///////////////////
