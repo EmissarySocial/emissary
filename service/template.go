@@ -64,36 +64,7 @@ func (service Template) Delete(template *model.Template, note string) *derp.Erro
 
 /// CUSTOM FUNCTIONS FOR THIS SERVICE ONLY
 
-func (service Template) LoadByTemplateID(templateID primitive.ObjectID) (*model.Template, *derp.Error) {
+func (service Template) LoadByName(name string) (*model.Template, *derp.Error) {
 
-	return service.Load(expression.New("_id", expression.OperatorEqual, templateID))
-}
-
-func (service Template) Render(stream *model.Stream, viewID string) (string, *derp.Error) {
-
-	// Try to load the template from the database
-	template, err := service.LoadByTemplateID(stream.TemplateID)
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)
-	}
-
-	// Try to find the view in the list of views
-	view, ok := template.Views[viewID]
-
-	if !ok {
-		return "", derp.New(404, "service.Template.Render", "Unrecognized view", viewID)
-	}
-
-	// TODO: need to enforce permissions somewhere...
-
-	// Try to generate the HTML response using the provided data
-	html, err := view.Execute(stream)
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Template.Render", "Error rendering view")
-	}
-
-	// Success!
-	return html, nil
+	return service.Load(expression.New("name", expression.OperatorEqual, name))
 }

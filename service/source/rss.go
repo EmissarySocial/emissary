@@ -68,16 +68,16 @@ func (rss RSS) Webhook(data map[string]interface{}) (model.Stream, error) {
 func (rss RSS) makeStream(rssItem *gofeed.Item) model.Stream {
 
 	stream := model.NewStream()
-	stream.Title = rssItem.Title
+	stream.Label = rssItem.Title
 	stream.AuthorName = rssItem.Author.Name
 	stream.AuthorURL = rssItem.Author.Email
 	stream.Tags = append(stream.Tags, rssItem.Categories...)
-	stream.Summary = rssItem.Description
+	stream.Description = rssItem.Description
 	stream.SourceID = rss.SourceID
 	stream.SourceURL = rssItem.Link
 
 	if rssItem.Image != nil {
-		stream.Image = rssItem.Image.URL
+		stream.ThumbnailImage = rssItem.Image.URL
 	}
 
 	if rssItem.PublishedParsed != nil {

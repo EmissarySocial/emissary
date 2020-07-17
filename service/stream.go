@@ -153,3 +153,36 @@ func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note str
 
 	return nil
 }
+
+// Render generates HTML output for the provided stream.  It looks up the appropriate
+// template/view for this stream, and executes the template.
+func (service Stream) Render(stream *model.Stream, viewID string) (string, *derp.Error) {
+
+	templateService := service.factory.Template()
+
+	// Try to load the template from the database
+	template, err := templateService.LoadByName(stream.Template)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)
+	}
+
+	// Try to find the view in the list of views
+	view, ok := template.Views[viewID]
+
+	if !ok {
+		return "", derp.New(404, "service.Template.Render", "Unrecognized view", viewID)
+	}
+
+	// TODO: need to enforce permissions somewhere...
+
+	// Try to generate the HTML response using the provided data
+	html, err := view.Execute(stream)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Template.Render", "Error rendering view")
+	}
+
+	// Success!
+	return html, nil
+}

@@ -73,11 +73,11 @@ func populateTestStreamService(service Stream) {
 	// Initial data to load
 	data := []*model.Stream{
 		{
-			StreamID:   primitive.NewObjectID(),
-			URL:        "https://example.com/1-my-first-stream",
-			Token:      "1-my-first-stream",
-			Title:      "My First Stream",
-			TemplateID: testObjectID("000000000000000000000001"),
+			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/1-my-first-stream",
+			Token:    "1-my-first-stream",
+			Label:    "My First Stream",
+			Template: "ARTICLE",
 			Data: map[string]interface{}{
 				"persons": []map[string]interface{}{
 					{
@@ -94,18 +94,18 @@ func populateTestStreamService(service Stream) {
 			},
 		},
 		{
-			StreamID:   primitive.NewObjectID(),
-			URL:        "https://example.com/2-my-second-stream",
-			Token:      "2-my-second-stream",
-			Title:      "My Second Stream",
-			TemplateID: testObjectID("000000000000000000000001"),
+			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/2-my-second-stream",
+			Token:    "2-my-second-stream",
+			Label:    "My Second Stream",
+			Template: "ARTICLE",
 		},
 		{
-			StreamID:   primitive.NewObjectID(),
-			URL:        "https://example.com/3-my-third-stream",
-			Token:      "3-my-third-stream",
-			Title:      "My Third Stream",
-			TemplateID: testObjectID("000000000000000000000001"),
+			StreamID: primitive.NewObjectID(),
+			URL:      "https://example.com/3-my-third-stream",
+			Token:    "3-my-third-stream",
+			Label:    "My Third Stream",
+			Template: "ARTICLE",
 		},
 	}
 

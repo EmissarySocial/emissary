@@ -53,9 +53,9 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		Id:            "",
 		Url:           stream.URL,
 		ExternalUrl:   stream.SourceURL,
-		Title:         stream.Title,
-		Summary:       stream.Summary,
-		Image:         stream.Image,
+		Title:         stream.Label,
+		Summary:       stream.Description,
+		Image:         stream.ThumbnailImage,
 		PublishedDate: &publishDate,
 		ModifiedDate:  &modifiedDate,
 

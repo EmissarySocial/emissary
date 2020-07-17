@@ -23,7 +23,7 @@ func TestTemplate(t *testing.T) {
 	stream, err := streamService.LoadByToken("1-my-first-stream")
 	assert.Nil(t, err)
 
-	html, err := templateService.Render(stream, "default")
+	html, err := streamService.Render(stream, "default")
 
 	assert.Nil(t, err)
 	derp.Report(err)
@@ -33,11 +33,10 @@ func TestTemplate(t *testing.T) {
 
 func populateTestTemplates(service Template) {
 
-	v1 := `<article><h3>{{.Title}}</h3><div>{{.Summary}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>`
+	v1 := `<article><h3>{{.Label}}</h3><div>{{.Description}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>`
 
 	t1 := model.Template{
-		TemplateID: testObjectID("000000000000000000000001"),
-		Format:     "ARTICLE",
+		Name: "ARTICLE",
 		Views: map[string]model.View{
 			"default": {
 				Label: "Default",

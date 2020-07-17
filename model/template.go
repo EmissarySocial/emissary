@@ -8,12 +8,13 @@ import (
 
 // Template represents an HTML template to be used for generating an HTML page.
 type Template struct {
-	TemplateID  primitive.ObjectID    `json:"templateId"  bson:"_id"`         // Unique Identifier for this Template.
-	URL         string                `json:"url"         bson:"url"`         // URL where this template is published
-	Category    string                `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
+	TemplateID  primitive.ObjectID    `json:"templateId"  bson:"_id"`         // Unique Identifier for this Template. (NOT PUBLICLY USED)
+	Name        string                `json:"name"        bson:"name"`        // Internal name/token other objects (like streams) will use to reference this Template.
 	Label       string                `json:"label"       bson:"label"`       // Human-readable label used in management UI.
+	Description string                `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
+	Category    string                `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
 	IconURL     string                `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
-	Format      string                `json:"format"      bson:"format"`      // TOKEN that other templates will use to reference this template.
+	URL         string                `json:"url"         bson:"url"`         // URL where this template is published
 	Schema      schema.Schema         `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
 	Views       map[string]View       `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
 	States      map[string]State      `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
