@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -39,8 +38,6 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 			derp.Report(err)
 			return ctx.String(500, "")
 		}
-
-		spew.Dump(ctx.Param("view"))
 
 		// Generate the result
 		result, err := streamService.Render(stream, ctx.Param("view"))
