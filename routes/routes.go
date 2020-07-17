@@ -27,6 +27,9 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 
 	// Stream Pages
 	e.GET("/:stream", handler.GetStream(factoryMaker))
+	e.GET("/:stream/", handler.GetStream(factoryMaker))
+
+	e.GET("/:stream/:view", handler.GetStream(factoryMaker))
 
 	// Presto Global Settings
 	presto.UseRouter(e)

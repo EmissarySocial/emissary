@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,7 +23,6 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		streamService := factory.Stream()
 
 		scopes := presto.ScopeFuncSlice{}
-		roles := presto.RoleFuncSlice{}
 
 		// Try to load the stream from the database (with all presto decorations)
 		code, object := presto.Get(ctx, streamService, nil, scopes, roles)
@@ -40,13 +40,13 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 			return ctx.String(500, "")
 		}
 
-		// Use the service.Template to manage HTML templates
-		templateCache := factory.Template()
+		spew.Dump(ctx.Param("view"))
 
 		// Generate the result
-		result, err := templateCache.Render(stream, "default")
+		result, err := streamService.Render(stream, ctx.Param("view"))
 
 		if err != nil {
+			derp.Report(err)
 			return ctx.String(err.Code, "")
 		}
 

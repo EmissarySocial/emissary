@@ -156,7 +156,7 @@ func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note str
 
 // Render generates HTML output for the provided stream.  It looks up the appropriate
 // template/view for this stream, and executes the template.
-func (service Stream) Render(stream *model.Stream, viewID string) (string, *derp.Error) {
+func (service Stream) Render(stream *model.Stream, viewName string) (string, *derp.Error) {
 
 	templateService := service.factory.Template()
 
@@ -167,11 +167,10 @@ func (service Stream) Render(stream *model.Stream, viewID string) (string, *derp
 		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)
 	}
 
-	// Try to find the view in the list of views
-	view, ok := template.Views[viewID]
+	view, ok := template.View(viewName)
 
 	if !ok {
-		return "", derp.New(404, "service.Template.Render", "Unrecognized view", viewID)
+		return "", derp.New(404, "service.Template.Render", "Unrecognized view", view)
 	}
 
 	// TODO: need to enforce permissions somewhere...

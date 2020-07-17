@@ -27,3 +27,20 @@ type Template struct {
 func (t *Template) ID() string {
 	return t.TemplateID.Hex()
 }
+
+// View returns a specific View that is defined in this Template.  If the requested view does not exist, then
+// the "default" View is returned.  If there is no default, then an empty View is returned along with a FALSE.
+func (t *Template) View(name string) (View, bool) {
+
+	if name != "" {
+		if view, ok := t.Views[name]; ok {
+			return view, true
+		}
+	}
+
+	if view, ok := t.Views["default"]; ok {
+		return view, true
+	}
+
+	return View{}, false
+}
