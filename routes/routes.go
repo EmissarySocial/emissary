@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/benpate/ghost/handler"
+	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
 	"github.com/benpate/presto/scope"
@@ -10,6 +11,8 @@ import (
 
 // New returns all of the routes required for this application
 func New(factoryMaker service.FactoryMaker) *echo.Echo {
+
+	domainWrapper := middleware.DomainWrapper()
 
 	e := echo.New()
 
@@ -26,10 +29,10 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	e.GET("/", handler.TBD)
 
 	// Stream Pages
-	e.GET("/:stream", handler.GetStream(factoryMaker))
-	e.GET("/:stream/", handler.GetStream(factoryMaker))
+	e.GET("/:stream", handler.GetStream(factoryMaker), domainWrapper)
+	e.GET("/:stream/", handler.GetStream(factoryMaker), domainWrapper)
 
-	e.GET("/:stream/:view", handler.GetStream(factoryMaker))
+	e.GET("/:stream/:view", handler.GetStream(factoryMaker), domainWrapper)
 
 	// Presto Global Settings
 	presto.UseRouter(e)
