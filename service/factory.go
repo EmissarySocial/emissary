@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/benpate/data"
+	"github.com/benpate/ghost/model"
 )
 
 // Factory knows how to create an populate all services
@@ -52,14 +53,6 @@ func (factory Factory) Key() Key {
 	}
 }
 
-// Post returns a fully populated Contact service
-func (factory Factory) Post() Post {
-	return Post{
-		factory: factory,
-		session: factory.Session,
-	}
-}
-
 // Publisher returns a fully populated Publisher service
 func (factory Factory) Publisher() Publisher {
 	return Publisher{
@@ -68,9 +61,9 @@ func (factory Factory) Publisher() Publisher {
 	}
 }
 
-// Source returns a fully populated Source service
-func (factory Factory) Source() Source {
-	return Source{
+// StreamSource returns a fully populated StreamSource service
+func (factory Factory) StreamSource() StreamSource {
+	return StreamSource{
 		factory: factory,
 		session: factory.Session,
 	}
@@ -85,11 +78,16 @@ func (factory Factory) Stream() Stream {
 }
 
 // Template returns a fully populated Template service
-func (factory Factory) Template() Template {
-	return Template{
-		factory: factory,
-		session: factory.Session,
+func (factory Factory) Template() *Template {
+
+	// Initialize service, if necessary
+	if singletonTemplateService == nil {
+		singletonTemplateService = &Template{
+			Templates: map[string]*model.Template{},
+		}
 	}
+
+	return singletonTemplateService
 }
 
 // User returns a fully populated User service

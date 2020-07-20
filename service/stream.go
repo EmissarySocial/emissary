@@ -161,7 +161,7 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 	templateService := service.factory.Template()
 
 	// Try to load the template from the database
-	template, err := templateService.LoadByName(stream.Template)
+	template, err := templateService.Load(stream.Template)
 
 	if err != nil {
 		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)

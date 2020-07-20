@@ -1,4 +1,4 @@
-package source
+package streamSource
 
 import (
 	"github.com/benpate/derp"
@@ -15,7 +15,7 @@ type RSS struct {
 }
 
 // Init populates this RSS feed with the configuraion data, and returns an error if the configuration data is invalid
-func (rss *RSS) Init(sourceID primitive.ObjectID, config model.SourceConfig) error {
+func (rss *RSS) Init(sourceID primitive.ObjectID, config model.StreamSourceConfig) error {
 
 	rss.SourceID = sourceID
 

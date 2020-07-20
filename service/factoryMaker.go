@@ -54,11 +54,6 @@ func (fm FactoryMaker) Key(ctx context.Context) presto.Service {
 	return fm.Factory(ctx).Key()
 }
 
-// Post returns a presto.Service for managing Posts
-func (fm FactoryMaker) Post(ctx context.Context) presto.Service {
-	return fm.Factory(ctx).Post()
-}
-
 // Stream returns a presto.Service for managing Streams
 func (fm FactoryMaker) Stream(ctx context.Context) presto.Service {
 	return fm.Factory(ctx).Stream()

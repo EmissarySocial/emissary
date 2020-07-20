@@ -1,4 +1,4 @@
-package source
+package streamSource
 
 import (
 	"github.com/benpate/ghost/model"
@@ -10,7 +10,7 @@ type TODO struct {
 	SourceID primitive.ObjectID
 }
 
-func (todo TODO) Init(sourceID primitive.ObjectID, _ model.SourceConfig) error {
+func (todo TODO) Init(sourceID primitive.ObjectID, _ model.StreamSourceConfig) error {
 	todo.SourceID = sourceID
 	return nil
 }

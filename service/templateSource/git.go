@@ -1,4 +1,4 @@
-package git
+package templateSource
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ type Git struct {
 }
 
 // New returns a fully initialized Git connector service
-func New(url string) Git {
+func NewGit(url string) Git {
 
 	return Git{
 		URL:        url,
@@ -30,6 +30,11 @@ func New(url string) Git {
 		BlockLists: map[string]*model.BlockList{},
 	}
 
+}
+
+// ID returns a unique string that identifies this TemplateSource
+func (g *Git) ID() string {
+	return "GIT:" + g.URL
 }
 
 // Load retrieves a package from a remote Git repository

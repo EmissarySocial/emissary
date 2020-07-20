@@ -31,12 +31,12 @@ func TestTemplate(t *testing.T) {
 
 }
 
-func populateTestTemplates(service Template) {
+func populateTestTemplates(service *Template) {
 
 	v1 := `<article><h3>{{.Label}}</h3><div>{{.Description}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>`
 
 	t1 := model.Template{
-		Name: "ARTICLE",
+		TemplateID: "ARTICLE",
 		Views: map[string]model.View{
 			"default": {
 				Label: "Default",
@@ -45,7 +45,7 @@ func populateTestTemplates(service Template) {
 		},
 	}
 
-	t1.Schema, _ = schema.NewFromJSON([]byte(`{
+	t1.Schema, _ = schema.UnmarshalJSON([]byte(`{
 		"url": "example.com/test-template",
 		"title": "Test Template Schema",
 		"type": "object",

@@ -1,4 +1,4 @@
-package source
+package streamSource
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 
 func TestRss(t *testing.T) {
 
-	source, err := New(model.SourceAdapterRSS, primitive.NewObjectID(), model.SourceConfig{
+	source, err := New(model.StreamSourceAdapterRSS, primitive.NewObjectID(), model.StreamSourceConfig{
 		"url": "https://appleinsider.com/rss/news",
 	})
 

@@ -1,4 +1,4 @@
-package source
+package streamSource
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 
 // Source defines the interface for all "source" adapters, that know how to connect to a (likely remote) data source and
 // generate a slice of model.Stream objects to be imported into the local database.
-type Source interface {
-	Init(primitive.ObjectID, model.SourceConfig) error
+type StreamSource interface {
+	Init(primitive.ObjectID, model.StreamSourceConfig) error
 	JSONForm() string
 	JSONSchema() jsonschema.Schema
 
@@ -21,25 +21,25 @@ type Source interface {
 }
 
 // New uses a map of configuration information to return a fully populated Source of model.Stream objects (almost certainly from a remote server)
-func New(adapter model.SourceAdapter, sourceID primitive.ObjectID, config model.SourceConfig) (Source, error) {
+func New(adapter model.StreamSourceAdapter, sourceID primitive.ObjectID, config model.StreamSourceConfig) (StreamSource, error) {
 
-	var result Source
+	var result StreamSource
 
 	switch adapter {
 
-	case model.SourceAdapterActivityPub:
+	case model.StreamSourceAdapterActivityPub:
 		result = TODO{}
 
-	case model.SourceAdapterEmail:
+	case model.StreamSourceAdapterEmail:
 		result = TODO{}
 
-	case model.SourceAdapterRSS:
+	case model.StreamSourceAdapterRSS:
 		result = &RSS{}
 
-	case model.SourceAdapterSystem:
+	case model.StreamSourceAdapterSystem:
 		result = TODO{}
 
-	case model.SourceAdapterTwitter:
+	case model.StreamSourceAdapterTwitter:
 		result = TODO{}
 
 	default:

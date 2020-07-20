@@ -1,4 +1,4 @@
-package git
+package templateSource
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 
 func TestConnect(t *testing.T) {
 
-	g := New("https://github.com/benpate/ghost-packages")
+	g := NewGit("https://github.com/benpate/ghost-packages")
 
 	err := g.Load()
 

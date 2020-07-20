@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CollectionTemplate is the database collection where Templates are stored
@@ -14,57 +13,48 @@ const CollectionTemplate = "Template"
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	factory Factory
-	session data.Session
+	Sources   []TemplateSource
+	Templates map[string]*model.Template
 }
 
 // New creates a newly initialized Key that is ready to use
 func (service Template) New() *model.Template {
-	return &model.Template{
-		TemplateID: primitive.NewObjectID(),
-	}
+	return &model.Template{}
 }
 
 // List returns an iterator containing all of the Templates who match the provided criteria
 func (service Template) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionTemplate, criteria, options...)
+	return nil, derp.New(500, "ghost.service.Template.List", "Unimplemented")
 }
 
 // Load retrieves an Template from the database
-func (service Template) Load(criteria expression.Expression) (*model.Template, *derp.Error) {
+func (service Template) Load(templateID string) (*model.Template, *derp.Error) {
 
-	template := service.New()
-
-	if err := service.session.Load(CollectionTemplate, criteria, template); err != nil {
-		return nil, derp.Wrap(err, "service.Template", "Error loading Template", criteria)
+	// Look in the local cache first
+	if template, ok := service.Templates[templateID]; ok {
+		return template, nil
 	}
 
-	return template, nil
+	// Otherwise, search all sources for the Template.
+	for index := range service.Sources {
+		if template, err := service.Sources[index].Load(templateID); err != nil {
+			service.Templates[templateID] = &template
+			return &template, nil
+		}
+	}
+
+	return nil, derp.New(404, "ghost.sevice.Template.Load", "Could not load Template", templateID)
 }
 
 // Save adds/updates an Template in the database
 func (service Template) Save(template *model.Template, note string) *derp.Error {
-
-	if err := service.session.Save(CollectionTemplate, template, note); err != nil {
-		return derp.Wrap(err, "service.Template", "Error saving Template", template, note)
-	}
+	service.Templates[template.TemplateID] = template
+	// TODO: should this also persist to TemplateSources???
 
 	return nil
 }
 
 // Delete removes an Template from the database (virtual delete)
 func (service Template) Delete(template *model.Template, note string) *derp.Error {
-
-	if err := service.session.Delete(CollectionTemplate, template, note); err != nil {
-		return derp.Wrap(err, "service.Template", "Error deleting Template", template, note)
-	}
-
-	return nil
-}
-
-/// CUSTOM FUNCTIONS FOR THIS SERVICE ONLY
-
-func (service Template) LoadByName(name string) (*model.Template, *derp.Error) {
-
-	return service.Load(expression.New("name", expression.OperatorEqual, name))
+	return derp.New(500, "ghost.service.Template.Delete", "Unimplemented")
 }

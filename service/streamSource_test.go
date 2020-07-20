@@ -13,7 +13,7 @@ func TestSourceQueries(t *testing.T) {
 	service := getTestSourceService()
 	object := service.New()
 
-	it, err := service.ListByMethod(model.SourceMethodPoll)
+	it, err := service.ListByMethod(model.StreamSourceMethodPoll)
 
 	assert.Nil(t, err)
 
@@ -36,17 +36,17 @@ func TestSourcePolling(t *testing.T) {
 	t.Fail()
 }
 
-func getTestSourceService() Source {
+func getTestSourceService() StreamSource {
 
 	f := getTestFactory()
 
-	service := f.Source()
+	service := f.StreamSource()
 
 	{
 		source := service.New()
-		source.Adapter = model.SourceAdapterRSS
-		source.Method = model.SourceMethodPoll
-		source.Config = model.SourceConfig{
+		source.Adapter = model.StreamSourceAdapterRSS
+		source.Method = model.StreamSourceMethodPoll
+		source.Config = model.StreamSourceConfig{
 			"url": "https://appleinsider.com/rss/news",
 		}
 
@@ -55,9 +55,9 @@ func getTestSourceService() Source {
 
 	{
 		source := service.New()
-		source.Adapter = model.SourceAdapterRSS
-		source.Method = model.SourceMethodPoll
-		source.Config = model.SourceConfig{
+		source.Adapter = model.StreamSourceAdapterRSS
+		source.Method = model.StreamSourceMethodPoll
+		source.Config = model.StreamSourceConfig{
 			"url": "https://daringfireball.net/feeds/main",
 		}
 

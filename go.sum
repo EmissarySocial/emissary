@@ -35,6 +35,8 @@ github.com/benpate/activitystream v0.1.2 h1:fn3t/oJjb5iRzJpK9zIYWF3p7cd1cv/INIX8
 github.com/benpate/activitystream v0.1.2/go.mod h1:xJ+RLs3cQQjeRKfJhWfkqON9gfDpvkNoQdfFXouKpkA=
 github.com/benpate/convert v0.7.0 h1:jQxFyjjimcXqOftVpzfBoC5VcnP3CT9/0EOqIqKDYKQ=
 github.com/benpate/convert v0.7.0/go.mod h1:RdD5UC0UAI3LsGcQzq51ZVGUZyZ9g8DITcemEgZ6jkE=
+github.com/benpate/convert v0.7.1 h1:cOtrcntvAcSE5GO+lVAy4VZMxFdNTqjNynJDZfnQOjQ=
+github.com/benpate/convert v0.7.1/go.mod h1:pcY4F1bLyFeKC6F0CKKzUUJoWiBUfRaM+FxgTU+xG7A=
 github.com/benpate/data v0.2.1 h1:eLzZ6t+FoY+MEnEhUrM9WluRNwY4hjJ4g/X8/1ZWcL0=
 github.com/benpate/data v0.2.1/go.mod h1:gLchngJz/+24TRq0qKJwxKsnXeGP6KE7y+i67YEZNQE=
 github.com/benpate/data v0.2.2/go.mod h1:gLchngJz/+24TRq0qKJwxKsnXeGP6KE7y+i67YEZNQE=
@@ -76,6 +78,8 @@ github.com/benpate/list v0.0.3/go.mod h1:CwJjch4WAMRGsAYntCADywLfJzZbC7LkP0saZ+1
 github.com/benpate/null v0.2.0/go.mod h1:br8iIVIEnZrPC0UbJA6ePDBwUEFqPeBQ5sEXKc917jg=
 github.com/benpate/null v0.4.0 h1:OZMIkC06Jxf9+yF9B8YxKFj1dQYirTRL0lufHvgfWl4=
 github.com/benpate/null v0.4.0/go.mod h1:Nbm9Q2f+usSG1Ddt6CoFKamzlojzbaNIB7dtr3nhzfc=
+github.com/benpate/null v0.4.1 h1:Cp+Xz7O5ZJyue1bLUEtwVq3+WUkozsJBQxIKWxJJH+A=
+github.com/benpate/null v0.4.1/go.mod h1:Nbm9Q2f+usSG1Ddt6CoFKamzlojzbaNIB7dtr3nhzfc=
 github.com/benpate/path v0.1.1/go.mod h1:+lYBAMAREaGEuHd9gnSe5FmJ/WD/zTNBmVes5apDMU8=
 github.com/benpate/path v0.1.2 h1:W+8pYkE3JbkSqDDpV9WYV3kD3OguAtUWIK2bHctrDyI=
 github.com/benpate/path v0.1.2/go.mod h1:Dd/z5YMpB/dxGNC9GYI4RILDvXvv15wcst0ZRa1LJrI=
@@ -114,6 +118,8 @@ github.com/benpate/remote v0.5.8/go.mod h1:S9GHq4YaLr+FXHb6CnTEZ5dsYOcZWPY1qmSo0
 github.com/benpate/schema v0.3.0/go.mod h1:Id4E1IpiStoqpMP8nQQk/prIAWtsCLLf07IFcpk85JE=
 github.com/benpate/schema v0.4.1 h1:9KF8Y4pZq7tud9z+RVZfT4giHi6Z27DAADhBSLfMLlM=
 github.com/benpate/schema v0.4.1/go.mod h1:uvj92M7BaDcBc3fOcRm3WDtra+1RAiyJk2GZMzRK9wE=
+github.com/benpate/schema v0.5.0 h1:omIBc/DP8ShMAGktB9OnkzrFIZkFspLq2gSKszT2xxQ=
+github.com/benpate/schema v0.5.0/go.mod h1:gSf/vVc58MEitwg96Zxhhj8kbrZkNXRuePsU51oaRfY=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
