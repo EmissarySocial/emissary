@@ -48,6 +48,11 @@ func (service Template) Load(templateID string) (*model.Template, *derp.Error) {
 
 // Save adds/updates an Template in the database
 func (service Template) Save(template *model.Template, note string) *derp.Error {
+
+	if template == nil {
+		return derp.New(500, "ghost.service.Template.Save", "Cannot save empty template")
+	}
+
 	service.Templates[template.TemplateID] = template
 	// TODO: should this also persist to TemplateSources???
 

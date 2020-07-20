@@ -10,6 +10,7 @@ type Stream struct {
 	StreamID       primitive.ObjectID     `json:"streamId"        bson:"_id"`            // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID       primitive.ObjectID     `json:"parentId"        bson:"parentId"`       // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
 	Template       string                 `json:"template"        bson:"template"`       // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	State          string                 `json:"state"           bson:"state"`          // Defines the current status for this stream.  Templates define the state machine
 	Token          string                 `json:"token"           bson:"token"`          // Unique value that identifies this element in the URL
 	URL            string                 `json:"url"             bson:"url"`            // Unique URL of this Stream.  This duplicates the "token" field a bit, but it (hopefully?) makes access easier.
 	Label          string                 `json:"label"           bson:"label"`          // Text to display in lists of streams, probably displayed at top of stream page, too.
@@ -43,52 +44,4 @@ func NewStream() Stream {
 		Tags:     []string{},
 		Data:     map[string]interface{}{},
 	}
-}
-
-// UpdateWith compares/updates the stream in the arguments with current values.  If any values have been changed, then this function returns TRUE
-func (stream *Stream) UpdateWith(other *Stream) bool {
-
-	changed := false
-
-	if stream.Label != other.Label {
-		stream.Label = other.Label
-		changed = true
-	}
-
-	if stream.ThumbnailImage != other.ThumbnailImage {
-		stream.ThumbnailImage = other.ThumbnailImage
-		changed = true
-	}
-
-	if stream.Description != other.Description {
-		stream.Description = other.Description
-		changed = true
-	}
-
-	if stream.AuthorID != other.AuthorID {
-		stream.AuthorID = other.AuthorID
-		changed = true
-	}
-
-	if stream.AuthorName != other.AuthorName {
-		stream.AuthorName = other.AuthorName
-		changed = true
-	}
-
-	if stream.AuthorURL != other.AuthorURL {
-		stream.AuthorURL = other.AuthorURL
-		changed = true
-	}
-
-	/* TODO Comparisons for arrays of strings, and for map[string]interface{}
-	if stream.Tags != other.Tags {
-		stream.Tags = other.Tags
-		changed = true
-	}
-
-	if stream.Data...
-
-	*/
-
-	return changed
 }

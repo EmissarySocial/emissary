@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFile(t *testing.T) {
@@ -12,6 +14,9 @@ func TestFile(t *testing.T) {
 
 	template, err := source.Load("simple")
 
+	assert.Nil(t, err)
+	assert.NotNil(t, template)
+
 	derp.Report(err)
-	t.Log(template)
+	spew.Dump(template)
 }

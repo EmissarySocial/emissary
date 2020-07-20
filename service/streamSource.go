@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service/streamSource"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -116,51 +115,4 @@ func (service StreamSource) ListByMethod(method model.StreamSourceMethod) (data.
 	criteria := expression.New("method", expression.OperatorEqual, method)
 
 	return service.List(criteria)
-}
-
-//////////////////////////////////////////////
-
-// Poll retrieves all streams from a remote streamSource and saves/updates any changes to the local database.
-func (service StreamSource) Poll() (*derp.Error, []*derp.Error) {
-
-	var pollErrors []*derp.Error
-
-	object := service.New()
-
-	it, err := service.ListByMethod(model.StreamSourceMethodPoll)
-
-	if err != nil {
-		return derp.Wrap(err, "service.StreamSource.Poll", "Error loading list of streamSources"), pollErrors
-	}
-
-	// Use the stream service to add/remove streams.
-	streamService := service.factory.Stream()
-
-	for it.Next(object) {
-
-		adapter, err := streamSource.New(object.Adapter, object.StreamSourceID, object.Config)
-
-		if err != nil {
-			pollErrors = append(pollErrors, derp.New(500, "service.StreamSource.Poll", "Error initializing adapter", object))
-			continue
-		}
-
-		// Load all streams from the adapter.
-		streams, err := adapter.Poll()
-
-		if err != nil {
-			pollErrors = append(pollErrors, derp.Wrap(err, "service.StreamSource.Poll", "Error retrieving streams from adapter"))
-			continue
-		}
-
-		// TODO: There HAS to be a more efficient way of diffing streams. Hashes? Batches?
-		for _, stream := range streams {
-			if err := streamService.SaveUniqueStreamBySourceURL(&stream, "Imported from remote StreamSource"); err != nil {
-				pollErrors = append(pollErrors, derp.Wrap(err, "service.StreamSource.Poll", "Error saving unique stream data", stream))
-				break
-			}
-		}
-	}
-
-	return nil, pollErrors
 }

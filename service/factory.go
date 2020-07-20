@@ -83,6 +83,7 @@ func (factory Factory) Template() *Template {
 	// Initialize service, if necessary
 	if singletonTemplateService == nil {
 		singletonTemplateService = &Template{
+			Sources:   []TemplateSource{},
 			Templates: map[string]*model.Template{},
 		}
 	}

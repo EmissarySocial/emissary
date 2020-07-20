@@ -122,38 +122,6 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
 
 ///////////////////
 
-// SaveUniqueStreamBySourceURL saves a stream, and avoids duplicates using the SourceURL property.
-func (service Stream) SaveUniqueStreamBySourceURL(stream *model.Stream, note string) *derp.Error {
-
-	object, err := service.LoadBySourceURL(stream.SourceURL)
-
-	// We already have this object.
-	// TODO: Add compare/copy function to model.Stream object and use it here.
-	if err == nil {
-
-		if changed := object.UpdateWith(stream); changed == false {
-			return nil
-		}
-
-		// Fall through to here means that we have made changes. Update the "stream" variable with the now-correct value from "object" and continue as normal
-		stream = object
-
-	} else {
-
-		// This means that there was an *derp.Error connecting to the database.
-		if err.NotFound() == false {
-			return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error querying Stream from database", stream)
-		}
-	}
-
-	// Fall through to here means that it was a "Not Found" *derp.Error, which means we can safely add the new stream.
-	if err := service.Save(stream, note); err != nil {
-		return derp.Wrap(err, "service.Stream.SaveUniqueStreamBySourceURL", "Error saving new Stream", stream, note)
-	}
-
-	return nil
-}
-
 // Render generates HTML output for the provided stream.  It looks up the appropriate
 // template/view for this stream, and executes the template.
 func (service Stream) Render(stream *model.Stream, viewName string) (string, *derp.Error) {
@@ -167,10 +135,12 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)
 	}
 
-	view, ok := template.View(viewName)
+	// Locate / Authenticate the view to use
 
-	if !ok {
-		return "", derp.New(404, "service.Template.Render", "Unrecognized view", view)
+	view, ok := template.View(stream.State, viewName)
+
+	if ok != nil {
+		return "", derp.Wrap(err, "service.Template.Render", "Unrecognized view", view)
 	}
 
 	// TODO: need to enforce permissions somewhere...

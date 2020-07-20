@@ -1,0 +1,54 @@
+{
+	"label": "Article Template",
+	"schema": {
+		"url": "example.com/test-template",
+		"title": "Test Template Schema",
+		"type": "object",
+		"properties": {
+			"class": {
+				"type": "string"
+			},
+			"title": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			},
+			"body": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			},
+			"persons": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type":"string"
+						}
+					}
+				}
+			},
+			"friends": {
+			"type" : "array",
+			"items" : { "title" : "REFERENCE", "$ref" : "#" }
+			}
+		},
+		"required": ["class", "title", "body", "persons"]
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"views": ["default"]
+		}
+	},
+	"views": {
+		"default": {
+			"label": "Default",
+			"HTML":  "<article><h3>{{.Label}}</h3><div>{{.Description}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>"
+		}
+	}
+}
+

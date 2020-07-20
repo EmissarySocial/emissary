@@ -20,20 +20,6 @@ func TestSourceQueries(t *testing.T) {
 	for it.Next(object) {
 		spew.Dump(object)
 	}
-
-	t.Fail()
-}
-
-func TestSourcePolling(t *testing.T) {
-
-	service := getTestSourceService()
-
-	err, contentErrors := service.Poll()
-
-	spew.Dump(err)
-	spew.Dump(contentErrors)
-	spew.Dump(service.session)
-	t.Fail()
 }
 
 func getTestSourceService() StreamSource {

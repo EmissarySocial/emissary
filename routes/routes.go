@@ -43,14 +43,6 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 		Put().
 		Delete()
 
-	presto.NewCollection(factoryMaker.Post, "/streams/:stream/posts").
-		UseScopes(scope.String("stream")).
-		List().
-		Post().
-		Get().
-		Put().
-		Delete()
-
 	presto.NewCollection(factoryMaker.Attachment, "/streams/:stream/pages/:page/attachments").
 		UseScopes(scope.String("stream", "page")).
 		List().

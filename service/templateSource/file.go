@@ -27,27 +27,46 @@ func (fs *File) ID() string {
 }
 
 // Load tries to find a template sub-directory within the filesystem path
-func (fs *File) Load(name string) (*model.Template, *derp.Error) {
+func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 
-	directory := fs.Path + "/" + name + "/"
+	directory := fs.Path + "/" + templateID + "/"
 
-	templateFilename := directory + "template.json"
+	templateFilename := directory + "_template.json"
 
 	data, err := ioutil.ReadFile(templateFilename)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.templateSource.File", "Cannot read file", templateFilename)
+		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", templateFilename)
 	}
 
 	result := model.Template{}
 
 	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.temlpateSource.Filename", "Invalid JSON in template.json", string(data))
+		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
 	}
 
-	result.Name = name
+	result.TemplateID = templateID
 
-	// TODO: load separate files from views
+	// Scan for HTML files associated to each view.
+	for key, view := range result.Views {
+
+		if view.File == "" {
+			continue
+		}
+
+		// Read the file from the filesystem
+		file, err := ioutil.ReadFile(directory + view.File)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Error reading vies", view.File)
+		}
+
+		// Update the view with the HTML template.
+		view.HTML = string(file)
+
+		// Write this value back into the map
+		result.Views[key] = view
+	}
 
 	return &result, nil
 }

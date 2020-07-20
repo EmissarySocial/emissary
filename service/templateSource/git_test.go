@@ -15,5 +15,5 @@ func TestConnect(t *testing.T) {
 	spew.Dump(g)
 	spew.Dump(err)
 
-	t.Fail()
+	// t.Fail()
 }
