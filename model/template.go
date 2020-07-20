@@ -21,6 +21,11 @@ type Template struct {
 // View locates and verifies a state/view combination.
 func (template Template) View(stateName string, viewName string) (*View, *derp.Error) {
 
+	// If no view name is specified, then use "DEFAULT" instead.
+	if viewName == "" {
+		viewName = "DEFAULT"
+	}
+
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
 
@@ -38,5 +43,5 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 		}
 	}
 
-	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", stateName)
+	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)
 }

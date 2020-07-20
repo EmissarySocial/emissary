@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/benpate/data/mongodb"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/service/templatesource"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/viper"
 )
 
@@ -28,6 +31,12 @@ func main() {
 	factoryMaker := service.NewFactoryMaker(datasource)
 
 	e := routes.New(factoryMaker)
+
+	// TODO: this must be moved to DB Startup before launch
+	templateService := factoryMaker.Factory(context.TODO()).Template()
+	templateService.AddSource(templatesource.NewFile("service/templatesource/test"))
+	templateService.Startup()
+	spew.Dump(templateService)
 
 	fmt.Println("Starting web server..")
 

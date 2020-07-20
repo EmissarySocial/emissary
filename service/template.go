@@ -17,12 +17,14 @@ type Template struct {
 	Templates map[string]model.Template
 }
 
+func (service *Template) AddSource(source ...TemplateSource) {
+	service.Sources = append(service.Sources, source...)
+}
+
 // Startup loads all templates from all available sources.
-func (service *Template) Startup(sources []TemplateSource) []*derp.Error {
+func (service *Template) Startup() []*derp.Error {
 
 	var errors []*derp.Error
-
-	service.Sources = sources
 
 	// Iterate through every source
 	for _, source := range service.Sources {
