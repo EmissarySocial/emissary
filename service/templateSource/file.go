@@ -1,4 +1,4 @@
-package templateSource
+package templatesource
 
 import (
 	"encoding/json"
@@ -26,8 +26,32 @@ func (fs *File) ID() string {
 	return "FILE"
 }
 
+// List returns all Templates produced by this TemplateSource
+func (fs *File) List() ([]string, *derp.Error) {
+
+	list, err := ioutil.ReadDir(fs.Path)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.templateSource.File.List", "Unable to list files in filesystem", fs)
+	}
+
+	result := make([]string, len(list))
+
+	// Use a separate counter because not all files will be included in the result
+	counter := 0
+	for _, fileInfo := range list {
+
+		if fileInfo.IsDir() {
+			result[counter] = fileInfo.Name()
+			counter = counter + 1
+		}
+	}
+
+	return result, nil
+}
+
 // Load tries to find a template sub-directory within the filesystem path
-func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
+func (fs *File) Load(templateID string) (model.Template, *derp.Error) {
 
 	directory := fs.Path + "/" + templateID + "/"
 
@@ -36,13 +60,13 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 	data, err := ioutil.ReadFile(templateFilename)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", templateFilename)
+		return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", templateFilename)
 	}
 
 	result := model.Template{}
 
 	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
+		return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
 	}
 
 	result.TemplateID = templateID
@@ -58,7 +82,7 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 		file, err := ioutil.ReadFile(directory + view.File)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Error reading vies", view.File)
+			return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Error reading vies", view.File)
 		}
 
 		// Update the view with the HTML template.
@@ -68,5 +92,5 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 		result.Views[key] = view
 	}
 
-	return &result, nil
+	return result, nil
 }

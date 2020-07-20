@@ -137,9 +137,9 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 
 	// Locate / Authenticate the view to use
 
-	view, ok := template.View(stream.State, viewName)
+	view, err := template.View(stream.State, viewName)
 
-	if ok != nil {
+	if err != nil {
 		return "", derp.Wrap(err, "service.Template.Render", "Unrecognized view", view)
 	}
 

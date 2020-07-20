@@ -13,6 +13,9 @@ type TemplateSource interface {
 	// linked to the correct source.
 	ID() string
 
+	// List returns all Templates owned by this TemplateSource
+	List() ([]string, *derp.Error)
+
 	// Load tries to locate a Template from the TemplateSource data
 	Load(string) (model.Template, *derp.Error)
 }

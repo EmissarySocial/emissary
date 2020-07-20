@@ -77,7 +77,8 @@ func populateTestStreamService(service Stream) {
 			URL:      "https://example.com/1-my-first-stream",
 			Token:    "1-my-first-stream",
 			Label:    "My First Stream",
-			Template: "ARTICLE",
+			State:    "DEFAULT",
+			Template: "article",
 			Data: map[string]interface{}{
 				"persons": []map[string]interface{}{
 					{

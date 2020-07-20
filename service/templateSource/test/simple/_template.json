@@ -10,28 +10,28 @@
 			"fullName": {"type": "string"},
 			"email": {"type": "string"}
 		},
-		"views": ["first", "second", "third"]
+		"views": ["FIRST", "SECOND", "THIRD"]
 	},
 	"states": {
-		"default": {
+		"DEFAULT": {
 			"label": "Default State",
 			"views": ["default.html", "detail.html"]
 		},
-		"detail": {
+		"DETAIL": {
 			"label": "Detail State",
 			"views": ["detail.html"]
 		}
 	},
 	"views": {
-		"first": {
+		"FIRST": {
 			"label": "My First View",
 			"file": "first.html"
 		},
-		"second": {
+		"SECOND": {
 			"label": "My Second View",
 			"file": "second.html"
 		},
-		"third": {
+		"THIRD": {
 			"label": "My Third View",
 			"file": "third.html"
 		}

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service/templateSource"
+	"github.com/benpate/ghost/service/templatesource"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +34,7 @@ func TestTemplate(t *testing.T) {
 	stream, err := streamService.LoadByToken("1-my-first-stream")
 	assert.Nil(t, err)
 
-	html, err := streamService.Render(stream, "default")
+	html, err := streamService.Render(stream, "DEFAULT")
 
 	assert.Nil(t, err)
 	derp.Report(err)
@@ -44,17 +44,17 @@ func TestTemplate(t *testing.T) {
 
 func populateTestTemplates(service *Template) {
 
-	testTemplates := templateSource.NewFile("templateSource/test")
+	testTemplates := templatesource.NewFile("templateSource/test")
 
 	{
 		simple, err := testTemplates.Load("simple")
-		service.Save(simple, "loaded from filesystem")
+		service.Cache(simple)
 		derp.Report(err)
 	}
 
 	{
 		article, err := testTemplates.Load("article")
-		service.Save(article, "loaded from filesystem")
+		service.Cache(article)
 		derp.Report(err)
 	}
 

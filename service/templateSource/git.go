@@ -1,4 +1,4 @@
-package templateSource
+package templatesource
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type Git struct {
 	BlockLists map[string]*model.BlockList
 }
 
-// New returns a fully initialized Git connector service
+// NewGit returns a fully initialized Git connector service
 func NewGit(url string) Git {
 
 	return Git{
@@ -29,12 +29,11 @@ func NewGit(url string) Git {
 		Templates:  map[string]*model.Template{},
 		BlockLists: map[string]*model.BlockList{},
 	}
-
 }
 
-// ID returns a unique string that identifies this TemplateSource
-func (g *Git) ID() string {
-	return "GIT:" + g.URL
+// List tries to return all Templates produced by this TemplateSource
+func (g *Git) List() ([]string, *derp.Error) {
+	return nil, derp.New(500, "ghost.service.templateSource.Git.List", "Unimplemented")
 }
 
 // Load retrieves a package from a remote Git repository

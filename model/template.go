@@ -19,7 +19,7 @@ type Template struct {
 }
 
 // View locates and verifies a state/view combination.
-func (template Template) View(stateName string, viewName string) (View, *derp.Error) {
+func (template Template) View(stateName string, viewName string) (*View, *derp.Error) {
 
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
@@ -32,11 +32,11 @@ func (template Template) View(stateName string, viewName string) (View, *derp.Er
 
 				// Try to find this view in the template
 				if view, ok := template.Views[viewName]; ok {
-					return view, nil
+					return &view, nil
 				}
 			}
 		}
 	}
 
-	return View{}, derp.New(404, "ghost.model.Template.View", "Unrecognized State", stateName)
+	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", stateName)
 }
