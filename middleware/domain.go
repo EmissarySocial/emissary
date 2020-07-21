@@ -18,11 +18,14 @@ func DomainWrapper() echo.MiddlewareFunc {
 				builder.WriteString(`<html><head>`)
 				builder.WriteString(`<script src="https://unpkg.com/htmx.org@0.0.8"></script>`)
 				builder.WriteString(`</head><body>`)
+				builder.WriteString(`<div>GLOBAL NAVIGATION HERE</di><hr>`)
+				builder.WriteString(`<div id="stream" hx-target="#stream" hx-push-url="true">`)
 				ctx.Response().Writer.Write([]byte(builder.String()))
 
 				err := next(ctx)
 
 				builder.Reset()
+				builder.WriteString(`</div>`)
 				builder.WriteString(`</body></html>`)
 				ctx.Response().Writer.Write([]byte(builder.String()))
 

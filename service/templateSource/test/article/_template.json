@@ -41,13 +41,17 @@
 	"states": {
 		"DEFAULT": {
 			"label": "Default",
-			"views": ["DEFAULT"]
+			"views": ["DEFAULT", "DETAIL"]
 		}
 	},
 	"views": {
 		"DEFAULT": {
 			"label": "Default",
-			"HTML":  "<article><h3>{{.Label}}</h3><div>{{.Description}}</div>{{range .Data.persons}}<item><div>name: {{.name}}</div><div>{{.email}}</div></item>{{end}}</article>"
+			"file":  "default.html"
+		},
+		"DETAIL": {
+			"label": "Detail",
+			"file":  "detail.html"
 		}
 	}
 }

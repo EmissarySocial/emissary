@@ -31,6 +31,10 @@ func NewGit(url string) Git {
 	}
 }
 
+func (g *Git) Register(_ TemplateService) {
+	// Nothing to do right now.
+}
+
 // List tries to return all Templates produced by this TemplateSource
 func (g *Git) List() ([]string, *derp.Error) {
 	return nil, derp.New(500, "ghost.service.templateSource.Git.List", "Unimplemented")

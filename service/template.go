@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service/templatesource"
 )
 
 // CollectionTemplate is the database collection where Templates are stored
@@ -13,11 +14,11 @@ const CollectionTemplate = "Template"
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	Sources   []TemplateSource
+	Sources   []templatesource.TemplateSource
 	Templates map[string]model.Template
 }
 
-func (service *Template) AddSource(source ...TemplateSource) {
+func (service *Template) AddSource(source ...templatesource.TemplateSource) {
 	service.Sources = append(service.Sources, source...)
 }
 

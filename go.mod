@@ -20,4 +20,5 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1
 	go.mongodb.org/mongo-driver v1.3.5
+	github.com/fsnotify/fsnotify v1.4.9
 )

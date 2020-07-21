@@ -34,7 +34,10 @@ func main() {
 
 	// TODO: this must be moved to DB Startup before launch
 	templateService := factoryMaker.Factory(context.TODO()).Template()
-	templateService.AddSource(templatesource.NewFile("service/templatesource/test"))
+
+	fileSource := templatesource.NewFile("service/templatesource/test")
+	templateService.AddSource(fileSource)
+	fileSource.Register(templateService)
 	templateService.Startup()
 	spew.Dump(templateService)
 

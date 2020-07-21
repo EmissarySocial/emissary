@@ -6,12 +6,13 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/fsnotify/fsnotify"
 )
 
 // File is a TemplateSource adapter that can load/save Templates from/to the local filesytem.
 type File struct {
-	Path            string
-	TemplateService TemplateService
+	Path string
 }
 
 // NewFile returns a fully initialized File adapter for loading/saving Templates
@@ -19,6 +20,41 @@ func NewFile(path string) *File {
 	return &File{
 		Path: path,
 	}
+}
+
+// Register connects this TemplateSource to the provided TemplateService
+// so that the TemplateSource can write/update Templates in the TemplateService.
+func (fs *File) Register(service TemplateService) {
+
+	watcher, err := fsnotify.NewWatcher()
+
+	if err != nil {
+		return
+	}
+
+	go func() {
+
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+
+				spew.Dump(event)
+				spew.Dump(ok)
+
+				if ok {
+					Populate(service, fs)
+				}
+
+			case err, ok := <-watcher.Errors:
+				spew.Dump(err)
+				spew.Dump(ok)
+			}
+		}
+	}()
+
+	watcher.Add(fs.Path)
+
+	spew.Dump(watcher)
 }
 
 // ID returns a unique string that identifies this TemplateSource

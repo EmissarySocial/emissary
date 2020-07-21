@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service/templatesource"
 )
 
 // Factory knows how to create an populate all services
@@ -83,7 +84,7 @@ func (factory Factory) Template() *Template {
 	// Initialize service, if necessary
 	if singletonTemplateService == nil {
 		singletonTemplateService = &Template{
-			Sources:   []TemplateSource{},
+			Sources:   []templatesource.TemplateSource{},
 			Templates: map[string]model.Template{},
 		}
 	}
