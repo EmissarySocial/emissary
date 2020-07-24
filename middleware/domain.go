@@ -26,6 +26,8 @@ func DomainWrapper() echo.MiddlewareFunc {
 
 				builder.Reset()
 				builder.WriteString(`</div>`)
+				// builder.WriteString(`<div hx-sse="connect /sse"></div>`)
+				builder.WriteString(`<div hx-ws="connect ws://localhost/ws"><div id="ws-target"></div></div>`)
 				builder.WriteString(`</body></html>`)
 				ctx.Response().Writer.Write([]byte(builder.String()))
 

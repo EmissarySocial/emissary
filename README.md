@@ -4,6 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/benpate/ghost?style=flat-square)](https://goreportcard.com/report/github.com/benpate/ghost)
 [![Build Status](http://img.shields.io/travis/benpate/ghost.svg?style=flat-square)](https://travis-ci.org/benpate/ghost)
 [![Codecov](https://img.shields.io/codecov/c/github/benpate/ghost.svg?style=flat-square)](https://codecov.io/gh/benpate/ghost)
+![Version](https://img.shields.io/github/v/release/benpate/ghost?include_prereleases&style=flat-square&color=brightgreen)
 
 
 ## This is a work-in-progress / proof-of-concept project that is guaranteed to NOT work for anyone, in any capacity, at any time.  Do not use this code in production, in development, or even in theory, because it's all wrong and may never be corrected, maintained, or supported.

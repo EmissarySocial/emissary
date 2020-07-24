@@ -14,8 +14,8 @@ const CollectionDomain = "Domain"
 
 // Domain manages all interactions with the Domain collection
 type Domain struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized Domain that is ready to use
@@ -27,7 +27,7 @@ func (service Domain) New() *model.Domain {
 
 // List returns an iterator containing all of the Domains who match the provided criteria
 func (service Domain) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionDomain, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Domain from the database
@@ -35,7 +35,7 @@ func (service Domain) Load(criteria expression.Expression) (*model.Domain, *derp
 
 	domain := service.New()
 
-	if err := service.session.Load(CollectionDomain, criteria, domain); err != nil {
+	if err := service.collection.Load(criteria, domain); err != nil {
 		return nil, derp.Wrap(err, "service.Domain", "Error loading Domain", criteria)
 	}
 
@@ -45,7 +45,7 @@ func (service Domain) Load(criteria expression.Expression) (*model.Domain, *derp
 // Save adds/updates an Domain in the database
 func (service Domain) Save(domain *model.Domain, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionDomain, domain, note); err != nil {
+	if err := service.collection.Save(domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain", "Error saving Domain", domain, note)
 	}
 
@@ -55,7 +55,7 @@ func (service Domain) Save(domain *model.Domain, note string) *derp.Error {
 // Delete removes an Domain from the database (virtual delete)
 func (service Domain) Delete(domain *model.Domain, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionDomain, domain, note); err != nil {
+	if err := service.collection.Delete(domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain", "Error deleting Domain", domain, note)
 	}
 
@@ -103,5 +103,5 @@ func (service Domain) DeleteObject(object data.Object, note string) *derp.Error 
 
 // Close cleans up the service and any outstanding connections.
 func (service Domain) Close() {
-	service.session.Close()
+	service.factory.Close()
 }

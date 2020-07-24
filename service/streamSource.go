@@ -14,8 +14,8 @@ const CollectionStreamSource = "StreamSource"
 
 // StreamSource manages all interactions with the StreamSource collection
 type StreamSource struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized StreamSource that is ready to use
@@ -28,7 +28,7 @@ func (service StreamSource) New() *model.StreamSource {
 
 // List returns an iterator containing all of the StreamSources who match the provided criteria
 func (service StreamSource) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionStreamSource, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an StreamSource from the database
@@ -36,7 +36,7 @@ func (service StreamSource) Load(criteria expression.Expression) (*model.StreamS
 
 	account := service.New()
 
-	if err := service.session.Load(CollectionStreamSource, criteria, account); err != nil {
+	if err := service.collection.Load(criteria, account); err != nil {
 		return nil, derp.Wrap(err, "service.StreamSource", "Error loading StreamSource", criteria)
 	}
 
@@ -46,7 +46,7 @@ func (service StreamSource) Load(criteria expression.Expression) (*model.StreamS
 // Save adds/updates an StreamSource in the database
 func (service StreamSource) Save(account *model.StreamSource, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionStreamSource, account, note); err != nil {
+	if err := service.collection.Save(account, note); err != nil {
 		return derp.Wrap(err, "service.StreamSource", "Error saving StreamSource", account, note)
 	}
 
@@ -56,7 +56,7 @@ func (service StreamSource) Save(account *model.StreamSource, note string) *derp
 // Delete removes an StreamSource from the database (virtual delete)
 func (service StreamSource) Delete(account *model.StreamSource, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionStreamSource, account, note); err != nil {
+	if err := service.collection.Delete(account, note); err != nil {
 		return derp.Wrap(err, "service.StreamSource", "Error deleting StreamSource", account, note)
 	}
 
@@ -102,10 +102,12 @@ func (service StreamSource) DeleteObject(object data.Object, note string) *derp.
 	return derp.New(derp.CodeInternalError, "service.StreamSource", "Object is not a model.StreamSource", object, note)
 }
 
+/*
 // Close cleans up the service and any outstanding connections.
 func (service StreamSource) Close() {
-	service.session.Close()
+	service.collection.Close()
 }
+*/
 
 /// QUERIES //////////////////////////////////
 

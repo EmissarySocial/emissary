@@ -17,64 +17,56 @@ type Factory struct {
 // Actor returns a fully populated Actor service
 func (factory Factory) Actor() Actor {
 	return Actor{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionActor),
 	}
 }
 
 // Attachment returns a fully populated Attachment service
 func (factory Factory) Attachment() Attachment {
 	return Attachment{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionAttachment),
 	}
 }
 
 // Comment returns a fully populated Comment service
 func (factory Factory) Comment() Comment {
 	return Comment{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionComment),
 	}
 }
 
 // Domain returns a fully populated Website service
 func (factory Factory) Domain() Domain {
 	return Domain{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionDomain),
 	}
 }
 
 // Key returns a fully populated Contact service
 func (factory Factory) Key() Key {
 	return Key{
-		factory: factory,
-		session: factory.Session,
-	}
-}
-
-// Publisher returns a fully populated Publisher service
-func (factory Factory) Publisher() Publisher {
-	return Publisher{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionKey),
 	}
 }
 
 // StreamSource returns a fully populated StreamSource service
 func (factory Factory) StreamSource() StreamSource {
 	return StreamSource{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionStreamSource),
 	}
 }
 
 // Stream returns a fully populated Stream service
 func (factory Factory) Stream() Stream {
 	return Stream{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionStream),
 	}
 }
 
@@ -95,8 +87,8 @@ func (factory Factory) Template() *Template {
 // User returns a fully populated User service
 func (factory Factory) User() User {
 	return User{
-		factory: factory,
-		session: factory.Session,
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionUser),
 	}
 }
 
@@ -107,4 +99,10 @@ func (factory Factory) RSS() RSS {
 	return RSS{
 		factory: factory,
 	}
+}
+
+// Close ends any connections opened by this Factory.
+func (factory Factory) Close() {
+	// DO NOT DO THIS OR YOU WILL PERMANENTLY DISCONNECT FROM THE DATABASE
+	// factory.Session.Close()
 }

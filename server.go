@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/benpate/data/mongodb"
+	"github.com/benpate/ghost/handler"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/service/templatesource"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/viper"
 )
 
@@ -25,12 +25,22 @@ func main() {
 	}
 
 	// Datasource saves db connection information.
-	datasource := mongodb.New(viper.GetString("dbserver"), viper.GetString("dbname"))
+	datasource, err := mongodb.New(viper.GetString("dbserver"), viper.GetString("dbname"))
+
+	if err != nil {
+		panic(err)
+	}
 
 	// FactoryMaker knows how to make new factories for each user request.
 	factoryMaker := service.NewFactoryMaker(datasource)
 
 	e := routes.New(factoryMaker)
+
+	// Listen for updates to Streams
+	streamChannel := service.Watcher(viper.GetString("dbserver"), viper.GetString("dbname"))
+	broker := handler.NewBroker(streamChannel)
+	e.GET("/sse", handler.ServerSentEvent(broker))
+	e.GET("/ws", handler.Websocket(broker))
 
 	// TODO: this must be moved to DB Startup before launch
 	templateService := factoryMaker.Factory(context.TODO()).Template()
@@ -39,7 +49,6 @@ func main() {
 	templateService.AddSource(fileSource)
 	fileSource.Register(templateService)
 	templateService.Startup()
-	spew.Dump(templateService)
 
 	fmt.Println("Starting web server..")
 

@@ -14,8 +14,8 @@ const CollectionActor = "Actor"
 
 // Actor manages all interactions with the Actor collection
 type Actor struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized Actor that is ready to use
@@ -27,7 +27,7 @@ func (service Actor) New() *model.Actor {
 
 // List returns an iterator containing all of the Actors who match the provided criteria
 func (service Actor) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionActor, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Actor from the database
@@ -35,7 +35,7 @@ func (service Actor) Load(criteria expression.Expression) (*model.Actor, *derp.E
 
 	actor := service.New()
 
-	if err := service.session.Load(CollectionActor, criteria, actor); err != nil {
+	if err := service.collection.Load(criteria, actor); err != nil {
 		return nil, derp.Wrap(err, "service.Actor", "Error loading Actor", criteria)
 	}
 
@@ -45,7 +45,7 @@ func (service Actor) Load(criteria expression.Expression) (*model.Actor, *derp.E
 // Save adds/updates an Actor in the database
 func (service Actor) Save(actor *model.Actor, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionActor, actor, note); err != nil {
+	if err := service.collection.Save(actor, note); err != nil {
 		return derp.Wrap(err, "service.Actor", "Error saving Actor", actor, note)
 	}
 
@@ -55,7 +55,7 @@ func (service Actor) Save(actor *model.Actor, note string) *derp.Error {
 // Delete removes an Actor from the database (virtual delete)
 func (service Actor) Delete(actor *model.Actor, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionActor, actor, note); err != nil {
+	if err := service.collection.Delete(actor, note); err != nil {
 		return derp.Wrap(err, "service.Actor", "Error deleting Actor", actor, note)
 	}
 
@@ -103,5 +103,5 @@ func (service Actor) DeleteObject(object data.Object, note string) *derp.Error {
 
 // Close cleans up the service and any outstanding connections.
 func (service Actor) Close() {
-	service.session.Close()
+	service.factory.Close()
 }

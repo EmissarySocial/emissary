@@ -23,9 +23,12 @@ func NewFactoryMaker(server data.Server) FactoryMaker {
 // Factory makes a new Factory object that is fully initialied (with a Context)
 // and ready to generate new service objects.
 func (fm FactoryMaker) Factory(ctx context.Context) Factory {
+
+	session, _ := fm.Server.Session(ctx)
+
 	return Factory{
 		Context: ctx,
-		Session: fm.Server.Session(ctx),
+		Session: session,
 	}
 }
 

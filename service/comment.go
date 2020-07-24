@@ -14,8 +14,8 @@ const CollectionComment = "Comment"
 
 // Comment manages all interactions with the Comment collection
 type Comment struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized Comment that is ready to use
@@ -27,7 +27,7 @@ func (service Comment) New() *model.Comment {
 
 // List returns an iterator containing all of the Comments who match the provided criteria
 func (service Comment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionComment, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Comment from the database
@@ -35,7 +35,7 @@ func (service Comment) Load(criteria expression.Expression) (*model.Comment, *de
 
 	comment := service.New()
 
-	if err := service.session.Load(CollectionComment, criteria, comment); err != nil {
+	if err := service.collection.Load(criteria, comment); err != nil {
 		return nil, derp.Wrap(err, "service.Comment", "Error loading Comment", criteria)
 	}
 
@@ -45,7 +45,7 @@ func (service Comment) Load(criteria expression.Expression) (*model.Comment, *de
 // Save adds/updates an Comment in the database
 func (service Comment) Save(comment *model.Comment, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionComment, comment, note); err != nil {
+	if err := service.collection.Save(comment, note); err != nil {
 		return derp.Wrap(err, "service.Comment", "Error saving Comment", comment, note)
 	}
 
@@ -55,7 +55,7 @@ func (service Comment) Save(comment *model.Comment, note string) *derp.Error {
 // Delete removes an Comment from the database (virtual delete)
 func (service Comment) Delete(comment *model.Comment, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionComment, comment, note); err != nil {
+	if err := service.collection.Delete(comment, note); err != nil {
 		return derp.Wrap(err, "service.Comment", "Error deleting Comment", comment, note)
 	}
 
@@ -103,5 +103,5 @@ func (service Comment) DeleteObject(object data.Object, note string) *derp.Error
 
 // Close cleans up the service and any outstanding connections.
 func (service Comment) Close() {
-	service.session.Close()
+	service.factory.Close()
 }

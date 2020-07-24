@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
@@ -15,8 +14,8 @@ const CollectionBlockList = "BlockList"
 
 // BlockList manages all interactions with the BlockList collection
 type BlockList struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized BlockList that is ready to use
@@ -28,7 +27,7 @@ func (service BlockList) New() *model.BlockList {
 
 // List returns an iterator containing all of the BlockLists who match the provided criteria
 func (service BlockList) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionBlockList, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an BlockList from the database
@@ -36,7 +35,7 @@ func (service BlockList) Load(criteria expression.Expression) (*model.BlockList,
 
 	actor := service.New()
 
-	if err := service.session.Load(CollectionBlockList, criteria, actor); err != nil {
+	if err := service.collection.Load(criteria, actor); err != nil {
 		return nil, derp.Wrap(err, "service.BlockList", "Error loading BlockList", criteria)
 	}
 
@@ -46,7 +45,7 @@ func (service BlockList) Load(criteria expression.Expression) (*model.BlockList,
 // Save adds/updates an BlockList in the database
 func (service BlockList) Save(actor *model.BlockList, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionBlockList, actor, note); err != nil {
+	if err := service.collection.Save(actor, note); err != nil {
 		return derp.Wrap(err, "service.BlockList", "Error saving BlockList", actor, note)
 	}
 
@@ -56,7 +55,7 @@ func (service BlockList) Save(actor *model.BlockList, note string) *derp.Error {
 // Delete removes an BlockList from the database (virtual delete)
 func (service BlockList) Delete(actor *model.BlockList, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionBlockList, actor, note); err != nil {
+	if err := service.collection.Delete(actor, note); err != nil {
 		return derp.Wrap(err, "service.BlockList", "Error deleting BlockList", actor, note)
 	}
 
@@ -104,13 +103,14 @@ func (service BlockList) DeleteObject(object data.Object, note string) *derp.Err
 
 // Close cleans up the service and any outstanding connections.
 func (service BlockList) Close() {
-	service.session.Close()
+	service.factory.Close()
 }
 
-////////////////////////////////////////////////////
+////////////////////////////////////
 // CUSTOM FUNCTIONS
 ////////////////////////////////////////////////////
 
+/*
 // Block adds a particular ID/identity to the blocklist.
 func (service BlockList) Block(id string, identity string, reason string, comment string) *derp.Error {
 
@@ -154,3 +154,4 @@ func (service BlockList) Block(id string, identity string, reason string, commen
 	// Success!
 	return nil
 }
+*/

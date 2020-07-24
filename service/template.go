@@ -25,7 +25,7 @@ func (service *Template) AddSource(source ...templatesource.TemplateSource) {
 // Startup loads all templates from all available sources.
 func (service *Template) Startup() []*derp.Error {
 
-	var errors []*derp.Error
+	errors := []*derp.Error{}
 
 	// Iterate through every source
 	for _, source := range service.Sources {

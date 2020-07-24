@@ -19,9 +19,7 @@ func TestMockDB(t *testing.T) {
 	stream.Token = "1-my-first-stream"
 
 	err := service.Save(stream, "New Stream")
-
 	assert.Nil(t, err)
-	// spew.Dump(factory.Session)
 
 	result, err := service.Load(expression.New("token", "=", "1-my-first-stream"))
 

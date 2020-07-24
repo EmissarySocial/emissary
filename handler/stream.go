@@ -17,6 +17,7 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 
 		// Get the service factory
 		factory := maker.Factory(ctx.Request().Context())
+		defer factory.Close()
 
 		// Get the stream service
 		streamService := factory.Stream()

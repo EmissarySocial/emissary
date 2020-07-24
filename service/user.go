@@ -14,8 +14,8 @@ const CollectionUser = "User"
 
 // User manages all interactions with the User collection
 type User struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized User that is ready to use
@@ -27,7 +27,7 @@ func (service User) New() *model.User {
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionUser, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an User from the database
@@ -35,7 +35,7 @@ func (service User) Load(criteria expression.Expression) (*model.User, *derp.Err
 
 	contact := service.New()
 
-	if err := service.session.Load(CollectionUser, criteria, contact); err != nil {
+	if err := service.collection.Load(criteria, contact); err != nil {
 		return nil, derp.Wrap(err, "service.User", "Error loading User", criteria)
 	}
 
@@ -45,7 +45,7 @@ func (service User) Load(criteria expression.Expression) (*model.User, *derp.Err
 // Save adds/updates an User in the database
 func (service User) Save(stage *model.User, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionUser, stage, note); err != nil {
+	if err := service.collection.Save(stage, note); err != nil {
 		return derp.Wrap(err, "service.Stage", "Error saving Stage", stage, note)
 	}
 
@@ -55,11 +55,15 @@ func (service User) Save(stage *model.User, note string) *derp.Error {
 // Delete removes an User from the database (virtual delete)
 func (service User) Delete(stage *model.User, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionUser, stage, note); err != nil {
+	if err := service.collection.Delete(stage, note); err != nil {
 		return derp.Wrap(err, "service.Stage", "Error deleting Stage", stage, note)
 	}
 
 	return nil
+}
+
+func (service User) Close() {
+	service.factory.Close()
 }
 
 //// GENERIC FUNCTIONS //////////////////
@@ -99,9 +103,4 @@ func (service User) DeleteObject(object data.Object, note string) *derp.Error {
 
 	// This should never happen.
 	return derp.New(derp.CodeInternalError, "service.User", "Object is not a model.User", object, note)
-}
-
-// Close cleans up the service and any outstanding connections.
-func (service User) Close() {
-	service.session.Close()
 }

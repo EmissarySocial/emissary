@@ -14,8 +14,8 @@ const CollectionAttachment = "Attachment"
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	factory Factory
-	session data.Session
+	factory    Factory
+	collection data.Collection
 }
 
 // New creates a newly initialized Attachment that is ready to use
@@ -27,7 +27,7 @@ func (service Attachment) New() *model.Attachment {
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.session.List(CollectionAttachment, criteria, options...)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Attachment from the database
@@ -35,7 +35,7 @@ func (service Attachment) Load(criteria expression.Expression) (*model.Attachmen
 
 	attachment := service.New()
 
-	if err := service.session.Load(CollectionAttachment, criteria, attachment); err != nil {
+	if err := service.collection.Load(criteria, attachment); err != nil {
 		return nil, derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
 	}
 
@@ -45,7 +45,7 @@ func (service Attachment) Load(criteria expression.Expression) (*model.Attachmen
 // Save adds/updates an Attachment in the database
 func (service Attachment) Save(attachment *model.Attachment, note string) *derp.Error {
 
-	if err := service.session.Save(CollectionAttachment, attachment, note); err != nil {
+	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
 	}
 
@@ -55,7 +55,7 @@ func (service Attachment) Save(attachment *model.Attachment, note string) *derp.
 // Delete removes an Attachment from the database (virtual delete)
 func (service Attachment) Delete(attachment *model.Attachment, note string) *derp.Error {
 
-	if err := service.session.Delete(CollectionAttachment, attachment, note); err != nil {
+	if err := service.collection.Delete(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error deleting Attachment", attachment, note)
 	}
 
@@ -103,5 +103,5 @@ func (service Attachment) DeleteObject(object data.Object, note string) *derp.Er
 
 // Close cleans up the service and any outstanding connections.
 func (service Attachment) Close() {
-	service.session.Close()
+	service.factory.Close()
 }
