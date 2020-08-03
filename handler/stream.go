@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
+	"github.com/benpate/presto/scope"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,22 +22,22 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		// Get the stream service
 		streamService := factory.Stream()
 
-		scopes := presto.ScopeFuncSlice{}
+		scopes := scope.And(scope.String("token"), scope.NotDeleted)
 
-		// Try to load the stream from the database (with all presto decorations)
-		code, object := presto.Get(ctx, streamService, nil, scopes, roles)
+		criteria, err := scopes(ctx)
 
-		// ERROR..  SHOULD PROBABLY HAVE A BETTER ERROR PAGE HERE...
-		if object == nil {
-			return ctx.String(code, "")
+		if err != nil {
+			err = derp.Wrap(err, "ghost.handler.GetStream", "Error evaluating scope")
+			derp.Report(err)
+			return err
 		}
 
-		stream, ok := object.(*model.Stream)
+		stream, err := streamService.Load(criteria)
 
-		if ok == false {
-			err := derp.New(500, "handler.GetStream", "Unrecognized variable returned by Stream service", object)
+		if err != nil {
+			err = derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service", criteria)
 			derp.Report(err)
-			return ctx.String(500, "")
+			return err
 		}
 
 		// Generate the result

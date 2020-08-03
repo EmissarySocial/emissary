@@ -1,18 +1,29 @@
 package routes
 
 import (
+	"context"
+
 	"github.com/benpate/ghost/handler"
 	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
 	"github.com/benpate/presto/scope"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 // New returns all of the routes required for this application
 func New(factoryMaker service.FactoryMaker) *echo.Echo {
 
 	domainWrapper := middleware.DomainWrapper()
+
+	// BACKGROUND TASKS HERE (probably move to another file...)
+
+	backgroundFactory := factoryMaker.Factory(context.Background())
+
+	// Listen for updates to Streams
+	streamChannel := service.Watcher(viper.GetString("dbserver"), viper.GetString("dbname"))
+	broker := handler.NewBroker(backgroundFactory, streamChannel)
 
 	e := echo.New()
 
@@ -29,9 +40,13 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	e.GET("/", handler.TBD)
 
 	// Stream Pages
-	e.GET("/:stream", handler.GetStream(factoryMaker), domainWrapper)
-	e.GET("/:stream/", handler.GetStream(factoryMaker), domainWrapper)
-	e.GET("/:stream/:view", handler.GetStream(factoryMaker), domainWrapper)
+	e.GET("/:token", handler.GetStream(factoryMaker), domainWrapper)
+	e.GET("/:token/", handler.GetStream(factoryMaker), domainWrapper)
+	e.GET("/:token/:view", handler.GetStream(factoryMaker), domainWrapper)
+	e.GET("/:token/:view/sse", handler.ServerSentEvent(broker))
+	e.GET("/:token/:view/websocket", handler.Websocket(broker))
+
+	e.Static("/htmx", "/Users/benpate/Documents/Source Code/github.com/benpate/htmx/src")
 
 	// Presto Global Settings
 	presto.UseRouter(e)

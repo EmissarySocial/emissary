@@ -4,11 +4,11 @@ go 1.14
 
 require (
 	github.com/benpate/activitystream v0.1.2
-	github.com/benpate/data v0.7.0
+	github.com/benpate/data v0.8.0
 	github.com/benpate/derp v0.14.0
 	github.com/benpate/form v0.2.0
 	github.com/benpate/list v0.0.3
-	github.com/benpate/presto v0.7.0
+	github.com/benpate/presto v0.8.0
 	github.com/benpate/remote v0.5.8
 	github.com/benpate/schema v0.7.1
 	github.com/davecgh/go-spew v1.1.1

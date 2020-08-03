@@ -39,17 +39,17 @@
 		"required": ["class", "title", "body", "persons"]
 	},
 	"states": {
-		"DEFAULT": {
+		"default": {
 			"label": "Default",
-			"views": ["DEFAULT", "DETAIL"]
+			"views": ["default", "detail"]
 		}
 	},
 	"views": {
-		"DEFAULT": {
+		"default": {
 			"label": "Default",
 			"file":  "default.html"
 		},
-		"DETAIL": {
+		"detail": {
 			"label": "Detail",
 			"file":  "detail.html"
 		}

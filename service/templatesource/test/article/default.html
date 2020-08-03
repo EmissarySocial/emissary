@@ -1,10 +1,14 @@
-<div>
-	Default | <a href="/{{.Token}}/DETAIL" hx-get="/{{.Token}}/DETAIL">Detail</a>
+<div id="stream" hx-ws="connect ws://localhost/{{.Token}}/default/websocket">
+
+	<div>
+		Default | <a href="/{{.Token}}/detail" hx-get="/{{.Token}}/detail">Detail</a>
+	</div>
+
+	<article>
+		<h3>{{.Label}}</h3>
+		<div>{{.Description}}</div>
+	</article>
+
+	<b>Other.</b>
+
 </div>
-
-<article>
-	<h3>{{.Label}}</h3>
-	<div>{{.Description}}</div>
-</article>
-
-<b>Other.</b>

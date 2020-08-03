@@ -1,14 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/net/websocket"
 )
@@ -35,7 +34,7 @@ type Broker struct {
 }
 
 // NewBroker generates a new stream broker
-func NewBroker(messages chan model.Stream) *Broker {
+func NewBroker(factory service.Factory, messages chan model.Stream) *Broker {
 
 	result := &Broker{
 		clients:        make(map[chan string]bool),
@@ -44,7 +43,7 @@ func NewBroker(messages chan model.Stream) *Broker {
 		messages:       messages,
 	}
 
-	go result.Listen()
+	go result.Listen(factory)
 
 	return result
 }
@@ -53,7 +52,10 @@ func NewBroker(messages chan model.Stream) *Broker {
 // the addition & removal of clients, as well as the broadcasting
 // of messages out to clients that are currently attached.
 //
-func (b *Broker) Listen() {
+func (b *Broker) Listen(factory service.Factory) {
+
+	// Get the stream service
+	streamService := factory.Stream()
 
 	// Loop endlessly
 	//
@@ -81,18 +83,17 @@ func (b *Broker) Listen() {
 
 		case stream := <-b.messages:
 
-			spew.Dump("SSE Received", stream)
-			serialized, err := json.Marshal(stream)
-			spew.Dump(serialized, err)
+			// TODO: need to filter only the right streams to the right receivers.
+			// TODO: need to have a "view" parameter somehow
+			if html, err := streamService.Render(&stream, ""); err == nil {
 
-			// There is a new message to send.  For each
-			// attached client, push the new message
-			// into the client's message channel.
-			for s := range b.clients {
-				s <- string(serialized)
+				// There is a new message to send.  For each
+				// attached client, push the new message
+				// into the client's message channel.
+				for s := range b.clients {
+					s <- html
+				}
 			}
-
-			log.Printf("Broadcast message to %d clients", len(b.clients))
 		}
 	}
 }
@@ -146,8 +147,11 @@ func ServerSentEvent(b *Broker) echo.HandlerFunc {
 				break
 			}
 
+			msg = `<div id="stream">` + msg + `</div>`
+
 			// Write to the ResponseWriter, `w`.
-			fmt.Fprintf(w, "data: Message: %s\n\n", msg)
+			fmt.Fprintf(w, "event: EventName\n")
+			fmt.Fprintf(w, "data: %s\n", msg)
 
 			// Flush the response.  This is only possible if the response supports streaming.
 			f.Flush()
@@ -164,8 +168,6 @@ func Websocket(b *Broker) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		spew.Dump("Received Websocket GET request")
-
 		websocket.Handler(func(ws *websocket.Conn) {
 
 			// Make a new channel to receive new messages
@@ -176,8 +178,8 @@ func Websocket(b *Broker) echo.HandlerFunc {
 
 			// When complete, close the channel
 			defer func() {
-				ws.Close()
 				b.defunctClients <- messageChan
+				ws.Close()
 			}()
 
 			// Wait for new messages
@@ -191,9 +193,12 @@ func Websocket(b *Broker) echo.HandlerFunc {
 					break
 				}
 
+				// Hacky wrap for websocket connection.
+				msg = `<div id="stream" hx-ws="connect ws://localhost/ws">` + msg + `</div>`
+
 				// Try to send the message to the client.
-				if err := websocket.Message.Send(ws, `<div id="ws-target">`+msg+`</div>`); err != nil {
-					derp.Report(derp.Wrap(err, "ghost.handler.Websocket", "Could not send message", msg))
+				if err := websocket.Message.Send(ws, msg); err != nil {
+					return
 				}
 			}
 

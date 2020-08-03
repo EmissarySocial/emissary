@@ -23,7 +23,7 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 
 	// If no view name is specified, then use "DEFAULT" instead.
 	if viewName == "" {
-		viewName = "DEFAULT"
+		viewName = "default"
 	}
 
 	// Verify that the requested State exists
@@ -41,6 +41,11 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 				}
 			}
 		}
+	}
+
+	// If we're not trying the default view, then switch to that view now.
+	if viewName != "default" {
+		return template.View(stateName, "default")
 	}
 
 	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)

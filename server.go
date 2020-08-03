@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/benpate/data/mongodb"
-	"github.com/benpate/ghost/handler"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/service/templatesource"
@@ -35,12 +34,6 @@ func main() {
 	factoryMaker := service.NewFactoryMaker(datasource)
 
 	e := routes.New(factoryMaker)
-
-	// Listen for updates to Streams
-	streamChannel := service.Watcher(viper.GetString("dbserver"), viper.GetString("dbname"))
-	broker := handler.NewBroker(streamChannel)
-	e.GET("/sse", handler.ServerSentEvent(broker))
-	e.GET("/ws", handler.Websocket(broker))
 
 	// TODO: this must be moved to DB Startup before launch
 	templateService := factoryMaker.Factory(context.TODO()).Template()
