@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service/templatesource"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // CollectionTemplate is the database collection where Templates are stored
@@ -14,45 +14,68 @@ const CollectionTemplate = "Template"
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	Sources   []templatesource.TemplateSource
+	Factory   *Factory
+	Sources   []TemplateSource
 	Templates map[string]model.Template
+	Updates   chan model.Template
 }
 
-func (service *Template) AddSource(source ...templatesource.TemplateSource) {
-	service.Sources = append(service.Sources, source...)
-}
+func (service *Template) AddSource(source TemplateSource) *derp.Error {
 
-// Startup loads all templates from all available sources.
-func (service *Template) Startup() []*derp.Error {
+	service.Sources = append(service.Sources, source)
 
-	errors := []*derp.Error{}
+	list, err := source.List()
 
-	// Iterate through every source
-	for _, source := range service.Sources {
-
-		list, err := source.List()
-
-		if err != nil {
-			errors = append(errors, err)
-			continue
-		}
-
-		// Iterate through every template
-		for _, name := range list {
-
-			template, err := source.Load(name)
-
-			if err != nil {
-				errors = append(errors, err)
-				continue
-			}
-
-			// Save the template in memory.
-			service.Cache(template)
-		}
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Template", "Error listing templates from", source)
 	}
 
-	return errors
+	// Iterate through every template
+	for _, name := range list {
+
+		template, err := source.Load(name)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.service.Template", "Error loading template", name)
+		}
+
+		// Save the template in memory.
+		service.Cache(template)
+	}
+
+	// Watch for changes to this TemplateSource
+	source.Watch(service.Updates)
+
+	return nil
+}
+
+func (service Template) Start() {
+
+	for {
+		template := <-service.Updates
+
+		spew.Dump("TEMPLATE: RECEIVED TEMPLATE UPDATE")
+		service.Cache(template)
+
+		realtimeBroker := service.Factory.RealtimeBroker()
+		streamService := service.Factory.Stream()
+
+		iterator, err := streamService.ListByTemplate(template.TemplateID)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", template))
+			return
+		}
+
+		var stream model.Stream
+
+		for iterator.Next(&stream) {
+			spew.Dump("Sending Stream update...")
+			realtimeBroker.streamUpdates <- stream
+		}
+
+		spew.Dump("TEMPLATE: DONE UPDATING STREAMS.")
+	}
 }
 
 // List returns an iterator containing all of the Templates who match the provided criteria

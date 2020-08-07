@@ -40,6 +40,17 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 			return err
 		}
 
+		pageService := factory.PageService()
+
+		var header string
+		var footer string
+
+		if ctx.Request().Header.Get("HX-Request") == "" {
+			header, footer = pageService.RenderPage(stream, ctx.Param("view"))
+		} else {
+			header, footer = pageService.RenderPartial(stream, ctx.Param("view"))
+		}
+
 		// Generate the result
 		result, err := streamService.Render(stream, ctx.Param("view"))
 
@@ -49,6 +60,6 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		}
 
 		// Return to caller
-		return ctx.HTML(http.StatusOK, result)
+		return ctx.HTML(http.StatusOK, header+result+footer)
 	}
 }

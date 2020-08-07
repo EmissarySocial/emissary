@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service/templatesource"
+	"github.com/spf13/viper"
 )
 
 // Factory knows how to create an populate all services
@@ -76,9 +76,13 @@ func (factory Factory) Template() *Template {
 	// Initialize service, if necessary
 	if singletonTemplateService == nil {
 		singletonTemplateService = &Template{
-			Sources:   []templatesource.TemplateSource{},
-			Templates: map[string]model.Template{},
+			Factory:   &factory,
+			Sources:   make([]TemplateSource, 0),
+			Templates: make(map[string]model.Template),
+			Updates:   make(chan model.Template),
 		}
+
+		go singletonTemplateService.Start()
 	}
 
 	return singletonTemplateService
@@ -92,7 +96,27 @@ func (factory Factory) User() User {
 	}
 }
 
+///////////////////////////////////////
+// WATCHERS
+
+func (factory Factory) StreamWatcher() chan model.Stream {
+	return StreamWatcher(viper.GetString("dbserver"), viper.GetString("dbname"))
+}
+
+func (factory Factory) RealtimeBroker() *RealtimeBroker {
+
+	if singletonRealtimeBroker == nil {
+		singletonRealtimeBroker = NewRealtimeBroker(factory)
+	}
+
+	return singletonRealtimeBroker
+}
+
 /// NON MODEL SERVICES
+
+func (factory Factory) PageService() *PageService {
+	return &PageService{}
+}
 
 // RSS returns a fully populated RSS service
 func (factory Factory) RSS() RSS {

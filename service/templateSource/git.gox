@@ -1,4 +1,4 @@
-package templatesource
+package templateSource
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git"
+	"github.com/go-git/go-git/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 

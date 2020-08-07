@@ -1,4 +1,4 @@
-package templatesource
+package templateSource
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/list"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
@@ -20,46 +21,6 @@ func NewFile(path string) *File {
 	return &File{
 		Path: path,
 	}
-}
-
-// Register connects this TemplateSource to the provided TemplateService
-// so that the TemplateSource can write/update Templates in the TemplateService.
-func (fs *File) Register(service TemplateService) {
-
-	watcher, err := fsnotify.NewWatcher()
-
-	if err != nil {
-		return
-	}
-
-	go func() {
-
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-
-				spew.Dump(event)
-				spew.Dump(ok)
-
-				if ok {
-					Populate(service, fs)
-				}
-
-			case err, ok := <-watcher.Errors:
-				spew.Dump(err)
-				spew.Dump(ok)
-			}
-		}
-	}()
-
-	watcher.Add(fs.Path)
-
-	spew.Dump(watcher)
-}
-
-// ID returns a unique string that identifies this TemplateSource
-func (fs *File) ID() string {
-	return "FILE"
 }
 
 // List returns all Templates produced by this TemplateSource
@@ -129,4 +90,59 @@ func (fs *File) Load(templateID string) (model.Template, *derp.Error) {
 	}
 
 	return result, nil
+}
+
+// Watch populates a channel of model.Template objects every time a template is updated.
+func (fs *File) Watch(results chan model.Template) {
+
+	watcher, err := fsnotify.NewWatcher()
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.templateSource", "Could not watch filesystem"))
+	}
+
+	files, err := ioutil.ReadDir(fs.Path)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.templateSource", "Could not read directory", fs.Path))
+	}
+
+	go func() {
+
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+
+				if ok {
+
+					if _, err := ioutil.ReadDir(event.Name); err == nil {
+
+						fileName := list.Last(event.Name, "/")
+						template, err := fs.Load(fileName)
+
+						if err != nil {
+							derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error loading changes to template", event, fileName))
+							continue
+						}
+
+						spew.Dump("Template Watcher.  Updating", template)
+						results <- template
+					}
+				}
+
+			case err, ok := <-watcher.Errors:
+				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error watching filesystem"))
+				spew.Dump(err)
+				spew.Dump(ok)
+			}
+		}
+	}()
+
+	for _, file := range files {
+		if file.IsDir() {
+			if err := watcher.Add(fs.Path + "/" + file.Name()); err != nil {
+				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error adding watcher on path", fs.Path, file))
+			}
+		}
+	}
 }

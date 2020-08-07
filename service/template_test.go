@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service/templatesource"
+	templateSource "github.com/benpate/ghost/service/templatesource"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +44,7 @@ func TestTemplate(t *testing.T) {
 
 func populateTestTemplates(service *Template) {
 
-	testTemplates := templatesource.NewFile("templateSource/test")
+	testTemplates := templateSource.NewFile("templateSource/test")
 
 	{
 		simple, err := testTemplates.Load("simple")

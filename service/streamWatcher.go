@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Watcher initiates a mongodb change stream to on every updates to Stream data objects
-func Watcher(uri string, database string) chan model.Stream {
+// StreamWatcher initiates a mongodb change stream to on every updates to Stream data objects
+func StreamWatcher(uri string, database string) chan model.Stream {
 
 	result := make(chan model.Stream)
 

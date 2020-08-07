@@ -1,4 +1,4 @@
-package templatesource
+package templateSource
 
 import (
 	"testing"

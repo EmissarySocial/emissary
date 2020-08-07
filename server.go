@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/data/mongodb"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
-	"github.com/benpate/ghost/service/templatesource"
+	"github.com/benpate/ghost/service/templateSource"
 	"github.com/spf13/viper"
 )
 
@@ -36,12 +36,22 @@ func main() {
 	e := routes.New(factoryMaker)
 
 	// TODO: this must be moved to DB Startup before launch
-	templateService := factoryMaker.Factory(context.TODO()).Template()
+	factory := factoryMaker.Factory(context.TODO())
+	templateService := factory.Template()
+	directories := viper.Get("templates")
 
-	fileSource := templatesource.NewFile("service/templatesource/test")
-	templateService.AddSource(fileSource)
-	fileSource.Register(templateService)
-	templateService.Startup()
+	switch value := directories.(type) {
+	case string:
+		fileSource := templateSource.NewFile(value)
+		templateService.AddSource(fileSource)
+
+	case []string:
+
+		for _, value := range value {
+			fileSource := templateSource.NewFile(value)
+			templateService.AddSource(fileSource)
+		}
+	}
 
 	fmt.Println("Starting web server..")
 

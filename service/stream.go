@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -108,8 +109,12 @@ func (service Stream) Close() {
 
 // QUERIES /////////////////////////
 
-func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
+func (service Stream) ListByTemplate(template string) (data.Iterator, *derp.Error) {
+	return service.List(
+		expression.New("template", expression.OperatorEqual, template))
+}
 
+func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
 	return service.Load(
 		expression.New("token", expression.OperatorEqual, token))
 }
@@ -146,12 +151,16 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 	// TODO: need to enforce permissions somewhere...
 
 	// Try to generate the HTML response using the provided data
-	html, err := view.Execute(stream)
+	result, err := view.Execute(stream)
 
 	if err != nil {
 		return "", derp.Wrap(err, "service.Template.Render", "Error rendering view")
 	}
 
+	result = html.CollapseWhitespace(result)
+
+	// TODO: Add caching here...
+
 	// Success!
-	return html, nil
+	return result, nil
 }
