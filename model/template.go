@@ -50,3 +50,18 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 
 	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)
 }
+
+func (template Template) Transition(id string) *Transition {
+
+	for _, state := range template.States {
+
+		for _, transition := range state.Transitions {
+
+			if transition.ID == id {
+				return &transition
+			}
+		}
+	}
+
+	return nil
+}

@@ -41,7 +41,26 @@
 	"states": {
 		"default": {
 			"label": "Default",
-			"views": ["default", "detail"]
+			"views": ["default", "detail"],
+			"transitions": [{
+				"id":"update",
+				"label": "Update",
+				"stateId": "default",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Update Form",
+					"description": "This will update the object in this state",
+					"children": [{
+						"kind": "text",
+						"label": "Title",
+						"path": "title"
+					}, {
+						"kind": "textarea",
+						"label":"Body Text",
+						"path": "body"
+					}]
+				}
+			}]
 		}
 	},
 	"views": {

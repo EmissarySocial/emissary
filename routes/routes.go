@@ -36,8 +36,11 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	// Stream Pages
 	e.GET("/:token", handler.GetStream(factoryMaker))
 	e.GET("/:token/", handler.GetStream(factoryMaker))
+	e.GET("/:token/transition", handler.PostTransition(factoryMaker))
+	e.GET("/:token/transitions/:transitionId", handler.GetTransition(factoryMaker))
 	e.GET("/:token/:view", handler.GetStream(factoryMaker))
 	e.GET("/:token/:view/sse", handler.ServerSentEvent(broker))
+
 	// e.GET("/:token/:view/websocket", handler.Websocket(broker))
 
 	e.Static("/htmx", "/Users/benpate/Documents/Source Code/github.com/benpate/htmx/src")

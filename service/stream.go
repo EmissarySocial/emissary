@@ -116,7 +116,9 @@ func (service Stream) ListByTemplate(template string) (data.Iterator, *derp.Erro
 
 func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
 	return service.Load(
-		expression.New("token", expression.OperatorEqual, token))
+		expression.
+			New("token", expression.OperatorEqual, token).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/benpate/data"
+	"github.com/benpate/form"
+	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/model"
 	"github.com/spf13/viper"
 )
@@ -116,6 +118,14 @@ func (factory Factory) RealtimeBroker() *RealtimeBroker {
 
 func (factory Factory) PageService() *PageService {
 	return &PageService{}
+}
+
+func (factory Factory) FormLibrary() form.Library {
+
+	library := form.New()
+	vocabulary.All(library)
+
+	return library
 }
 
 // RSS returns a fully populated RSS service

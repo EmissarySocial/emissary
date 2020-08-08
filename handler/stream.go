@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
-	"github.com/benpate/presto/scope"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,20 +21,10 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 		// Get the stream service
 		streamService := factory.Stream()
 
-		scopes := scope.And(scope.String("token"), scope.NotDeleted)
-
-		criteria, err := scopes(ctx)
+		stream, err := streamService.LoadByToken(ctx.Param("token"))
 
 		if err != nil {
-			err = derp.Wrap(err, "ghost.handler.GetStream", "Error evaluating scope")
-			derp.Report(err)
-			return err
-		}
-
-		stream, err := streamService.Load(criteria)
-
-		if err != nil {
-			err = derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service", criteria)
+			err = derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service")
 			derp.Report(err)
 			return err
 		}
