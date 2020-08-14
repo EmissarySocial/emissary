@@ -6,9 +6,10 @@ require (
 	github.com/benpate/activitystream v0.1.2
 	github.com/benpate/data v0.8.0
 	github.com/benpate/derp v0.14.1
-	github.com/benpate/form v0.2.0
+	github.com/benpate/form v0.2.1
 	github.com/benpate/html v0.0.1
-	github.com/benpate/list v0.0.3
+	github.com/benpate/list v0.1.0
+	github.com/benpate/path v0.1.3
 	github.com/benpate/presto v0.8.0
 	github.com/benpate/remote v0.5.8
 	github.com/benpate/schema v0.7.1

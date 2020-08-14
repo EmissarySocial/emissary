@@ -46,18 +46,27 @@
 				"id":"update",
 				"label": "Update",
 				"stateId": "default",
+				"nextView": "detail",
 				"form": {
 					"kind": "layout-vertical",
 					"label": "Update Form",
 					"description": "This will update the object in this state",
 					"children": [{
 						"kind": "text",
-						"label": "Title",
-						"path": "title"
+						"label": "Stream Label",
+						"path": "label"
 					}, {
 						"kind": "textarea",
-						"label":"Body Text",
-						"path": "body"
+						"label":"Stream Body",
+						"path": "description"
+					},{
+						"kind": "text",
+						"label": "Data Title",
+						"path": "data.title"
+					}, {
+						"kind": "textarea",
+						"label":"Data Description",
+						"path": "data.description"
 					}]
 				}
 			}]

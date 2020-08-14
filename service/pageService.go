@@ -4,9 +4,19 @@ import (
 	"strings"
 
 	"github.com/benpate/ghost/model"
+	"github.com/labstack/echo/v4"
 )
 
 type PageService struct{}
+
+func (pageService PageService) Render(ctx echo.Context, stream *model.Stream, view string) (string, string) {
+
+	if ctx.Request().Header.Get("hx-request") == "true" {
+		return pageService.RenderPartial(stream, view)
+	}
+
+	return pageService.RenderPage(stream, view)
+}
 
 func (pageService PageService) RenderPage(stream *model.Stream, view string) (string, string) {
 
@@ -22,7 +32,7 @@ func (pageService PageService) RenderPage(stream *model.Stream, view string) (st
 
 	header.WriteString(`<div id="stream" hx-sse="connect /`)
 	header.WriteString(stream.StreamID.Hex())
-	header.WriteString(`/`)
+	header.WriteString(`/views/`)
 	header.WriteString(view)
 	header.WriteString(`/sse EventName">`)
 	header.WriteString(`<div id="stream-updates">`)
@@ -33,7 +43,6 @@ func (pageService PageService) RenderPage(stream *model.Stream, view string) (st
 	footer.WriteString(`</body></html>`)
 
 	return header.String(), footer.String()
-
 }
 
 func (pageService PageService) RenderPartial(stream *model.Stream, view string) (string, string) {
@@ -43,7 +52,7 @@ func (pageService PageService) RenderPartial(stream *model.Stream, view string) 
 
 	header.WriteString(`<div id="stream" hx-sse="connect /`)
 	header.WriteString(stream.StreamID.Hex())
-	header.WriteString(`/`)
+	header.WriteString(`/views/`)
 	header.WriteString(view)
 	header.WriteString(`/sse EventName">`)
 	header.WriteString(`<div id="stream-updates">`)

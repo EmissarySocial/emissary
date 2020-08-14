@@ -120,6 +120,10 @@ func (factory Factory) PageService() *PageService {
 	return &PageService{}
 }
 
+func (factory Factory) FormService() *FormService {
+	return &FormService{}
+}
+
 func (factory Factory) FormLibrary() form.Library {
 
 	library := form.New()

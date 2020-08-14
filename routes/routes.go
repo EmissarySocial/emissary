@@ -35,11 +35,10 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 
 	// Stream Pages
 	e.GET("/:token", handler.GetStream(factoryMaker))
-	e.GET("/:token/", handler.GetStream(factoryMaker))
-	e.GET("/:token/transition", handler.PostTransition(factoryMaker))
-	e.GET("/:token/transitions/:transitionId", handler.GetTransition(factoryMaker))
-	e.GET("/:token/:view", handler.GetStream(factoryMaker))
-	e.GET("/:token/:view/sse", handler.ServerSentEvent(broker))
+	e.GET("/:token/forms/:transitionId", handler.GetTransition(factoryMaker))
+	e.POST("/:token/forms/:transitionId", handler.PostTransition(factoryMaker))
+	e.GET("/:token/views/:view", handler.GetStream(factoryMaker))
+	e.GET("/:token/views/:view/sse", handler.ServerSentEvent(broker))
 
 	// e.GET("/:token/:view/websocket", handler.Websocket(broker))
 

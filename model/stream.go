@@ -2,6 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -44,4 +46,64 @@ func NewStream() Stream {
 		Tags:     []string{},
 		Data:     map[string]interface{}{},
 	}
+}
+
+func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
+
+	switch p.Head() {
+
+	case "data":
+		return p.Tail().Get(stream.Data)
+
+	case "label":
+		return stream.Label, nil
+
+	case "description":
+		return stream.Description, nil
+
+	case "thumbnailImage":
+		return stream.ThumbnailImage, nil
+	}
+
+	return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+}
+
+func (stream *Stream) SetPath(p path.Path, value interface{}) error {
+
+	var property *string
+
+	// Properties that can be set
+	switch p.Head() {
+
+	case "data":
+		return p.Tail().Set(stream.Data, value)
+
+	case "label":
+		if p.IsTailEmpty() {
+			property = &stream.Label
+		}
+
+	case "description":
+		if p.IsTailEmpty() {
+			property = &stream.Description
+		}
+
+	case "thumbnailImage":
+		if p.IsTailEmpty() {
+			property = &stream.ThumbnailImage
+		}
+	}
+
+	// Set property (if it is valid)
+	if property != nil {
+		if v, ok := value.(string); ok {
+			*property = v
+			return nil
+		}
+
+		return derp.New(500, "ghost.model.Stream.SetPath", "Label must be a string", value)
+	}
+
+	// Fall through means failure.  Own it.
+	return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
 }

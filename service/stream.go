@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -34,30 +35,30 @@ func (service Stream) List(criteria expression.Expression, options ...option.Opt
 // Load retrieves an Stream from the database
 func (service Stream) Load(criteria expression.Expression) (*model.Stream, *derp.Error) {
 
-	account := service.New()
+	stream := service.New()
 
-	if err := service.collection.Load(criteria, account); err != nil {
+	if err := service.collection.Load(criteria, stream); err != nil {
 		return nil, derp.Wrap(err, "service.Stream", "Error loading Stream", criteria)
 	}
 
-	return account, nil
+	return stream, nil
 }
 
 // Save adds/updates an Stream in the database
-func (service Stream) Save(account *model.Stream, note string) *derp.Error {
+func (service Stream) Save(stream *model.Stream, note string) *derp.Error {
 
-	if err := service.collection.Save(account, note); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error saving Stream", account, note)
+	if err := service.collection.Save(stream, note); err != nil {
+		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
 	}
 
 	return nil
 }
 
 // Delete removes an Stream from the database (virtual delete)
-func (service Stream) Delete(account *model.Stream, note string) *derp.Error {
+func (service Stream) Delete(stream *model.Stream, note string) *derp.Error {
 
-	if err := service.collection.Delete(account, note); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error deleting Stream", account, note)
+	if err := service.collection.Delete(stream, note); err != nil {
+		return derp.Wrap(err, "service.Stream", "Error deleting Stream", stream, note)
 	}
 
 	return nil
@@ -165,4 +166,33 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 
 	// Success!
 	return result, nil
+}
+
+// Transition handles a transition request to move the stream from one state into another state.
+func (service Stream) Transition(stream *model.Stream, transition *model.Transition, data map[string]interface{}) *derp.Error {
+
+	// TODO: where are permissions processed?
+
+	paths := transition.Form.AllPaths()
+
+	// Only look for data in the registered paths for this form.  If other data is present, it will be ignored.
+	for _, element := range paths {
+
+		// TODO: What about form validation?  Can this happen HERE as well as in the template schema?
+
+		// If we have a value, then set it.
+		if value, ok := data[element.Path]; ok {
+			if err := path.Set(stream, element.Path, value); err != nil {
+				return derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
+			}
+		}
+		// TODO: Otherwise?  Should this form throw an error?
+	}
+
+	// Update the stream to the new state
+	stream.State = transition.StateID
+
+	// TODO:  Actions will be processes here.
+
+	return service.Save(stream, "stream transition: "+transition.ID)
 }

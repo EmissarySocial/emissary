@@ -51,14 +51,13 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)
 }
 
-func (template Template) Transition(id string) *Transition {
+func (template Template) Transition(stateID string, transitionID string) *Transition {
 
-	for _, state := range template.States {
+	if state, ok := template.States[stateID]; ok {
 
-		for _, transition := range state.Transitions {
-
-			if transition.ID == id {
-				return &transition
+		for index := range state.Transitions {
+			if state.Transitions[index].ID == transitionID {
+				return &(template.States[stateID].Transitions[index])
 			}
 		}
 	}

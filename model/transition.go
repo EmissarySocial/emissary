@@ -10,4 +10,5 @@ type Transition struct {
 	Form        form.Form `json:"form"`        // User-facing Form to be filled out in order to complete this Transition
 	Actions     []Action  `json:"actions"`     // Pipeline of Actions to apply when this Transition is called.
 	Permissions []string  `json:"permissions"` // List of Permissions required to apply this Transition.
+	NextView    string    `json:"nextView"`    // The next view to show after the transition
 }

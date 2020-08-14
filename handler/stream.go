@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
@@ -31,15 +29,6 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 
 		pageService := factory.PageService()
 
-		var header string
-		var footer string
-
-		if ctx.Request().Header.Get("HX-Request") == "" {
-			header, footer = pageService.RenderPage(stream, ctx.Param("view"))
-		} else {
-			header, footer = pageService.RenderPartial(stream, ctx.Param("view"))
-		}
-
 		// Generate the result
 		result, err := streamService.Render(stream, ctx.Param("view"))
 
@@ -48,7 +37,15 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 			return ctx.String(err.Code, "")
 		}
 
-		// Return to caller
-		return ctx.HTML(http.StatusOK, header+result+footer)
+		header, footer := pageService.Render(ctx, stream, ctx.Param("view"))
+
+		// Success!
+		response := ctx.Response()
+		response.WriteHeader(200)
+		response.Write([]byte(header))
+		response.Write([]byte(result))
+		response.Write([]byte(footer))
+
+		return nil
 	}
 }
