@@ -43,6 +43,7 @@ func New(factoryMaker service.FactoryMaker) *echo.Echo {
 	// e.GET("/:token/:view/websocket", handler.Websocket(broker))
 
 	e.Static("/htmx", "/Users/benpate/Documents/Source Code/github.com/benpate/htmx/src")
+	e.Static("/r", "static")
 
 	/*
 		// Presto Global Settings

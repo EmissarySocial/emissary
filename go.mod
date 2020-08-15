@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/benpate/activitystream v0.1.2
+	github.com/benpate/convert v0.7.1
 	github.com/benpate/data v0.8.0
 	github.com/benpate/derp v0.14.1
 	github.com/benpate/form v0.2.1

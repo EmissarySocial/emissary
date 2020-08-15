@@ -1,19 +1,15 @@
-<div hx-boost="true">
+<div>
+	<a href="/{{.Token}}/views/default">Default</a> | Detail
+</div>
 
-	<div>
-		<a href="/{{.Token}}/views/default" hx-get="/{{.Token}}/views/default">Default</a> | Detail
-	</div>
+<article>
+	<h3>{{.Label}}</h3>
+	<div>{{.Description}}</div>
+	{{range .Data.persons}}
+		<item><div>name: {{.name}}</div><div>{{.email}}</div></item>
+	{{end}}
+</article>
 
-	<article>
-		<h3>{{.Label}}</h3>
-		<div>{{.Description}}</div>
-		{{range .Data.persons}}
-			<item><div>name: {{.name}}</div><div>{{.email}}</div></item>
-		{{end}}
-	</article>
-
-	<div>
-		[ <a href="/{{.Token}}/forms/update">UPDATE</a> ]
-	</div>
-
+<div>
+	[ <a href="/{{.Token}}/forms/update">UPDATE</a> ]
 </div>

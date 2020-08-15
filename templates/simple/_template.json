@@ -1,0 +1,39 @@
+{
+	"label": "Simple Example",
+	"description": "This is an example template to be used for tesing the File TemplateSource",
+	"version": "0.0.1",
+	"category": "",
+	"url": "",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"fullName": {"type": "string"},
+			"email": {"type": "string"}
+		},
+		"views": ["FIRST", "SECOND", "THIRD"]
+	},
+	"states": {
+		"DEFAULT": {
+			"label": "Default State",
+			"views": ["default.html", "detail.html"]
+		},
+		"DETAIL": {
+			"label": "Detail State",
+			"views": ["detail.html"]
+		}
+	},
+	"views": {
+		"FIRST": {
+			"label": "My First View",
+			"file": "first.html"
+		},
+		"SECOND": {
+			"label": "My Second View",
+			"file": "second.html"
+		},
+		"THIRD": {
+			"label": "My Third View",
+			"file": "third.html"
+		}
+	}
+}

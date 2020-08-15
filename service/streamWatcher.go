@@ -51,6 +51,11 @@ func StreamWatcher(uri string, database string) chan model.Stream {
 				continue
 			}
 
+			// Skip "zero" sreams
+			if event.Stream.StreamID.IsZero() {
+				continue
+			}
+
 			spew.Dump("Watcher. Writing stream to channel.", event.Stream)
 			result <- event.Stream
 		}

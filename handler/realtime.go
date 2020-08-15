@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/ghost/service"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func ServerSentEvent(b *service.RealtimeBroker) echo.HandlerFunc {
@@ -23,18 +22,17 @@ func ServerSentEvent(b *service.RealtimeBroker) echo.HandlerFunc {
 		f, ok := w.(http.Flusher)
 
 		if !ok {
-			return derp.New(500, "handler.ServerSentEvent", "Streaming Not Supported")
+			return derp.Report(derp.New(500, "handler.ServerSentEvent", "Streaming Not Supported"))
 		}
 
-		streamID, err := primitive.ObjectIDFromHex(ctx.Param("token"))
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.ServerSentEvent", "Invalid StreamID", ctx.Param("token"))
-		}
-
+		token := ctx.Param("token")
 		view := ctx.Param("view")
 
-		client := service.NewRealtimeClient(streamID, view)
+		if view == "" {
+			view = "default"
+		}
+
+		client := service.NewRealtimeClient(token, view)
 
 		// Add this client to the map of those that should
 		// receive updates

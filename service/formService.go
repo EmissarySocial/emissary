@@ -16,17 +16,17 @@ func (service FormService) Render(stream *model.Stream, transition *model.Transi
 
 	url := "/" + stream.Token + "/forms/" + transition.ID
 
-	head.WriteString(`<form method="post" encoding="" url="`)
+	head.WriteString(`<form method="post" url="`)
 	head.WriteString(url)
 	head.WriteString(`" hx-post="`)
 	head.WriteString(url)
 	head.WriteString(`" hx-target="#stream">`)
 
-	foot.WriteString(`<div><input type="submit" value="`)
+	foot.WriteString(`<div><input type="submit" class="uk-button uk-button-primary" value="`)
 	foot.WriteString(transition.Label)
 	foot.WriteString(`"> <a href="/`)
 	foot.WriteString(stream.Token)
-	foot.WriteString(`" hx-boost="true">Cancel</a></div>`)
+	foot.WriteString(`" hx-boost="true" class="uk-button uk-button-default">Cancel</a></div>`)
 	foot.WriteString(`</form>`)
 
 	return head.String(), foot.String()

@@ -5,8 +5,8 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/form"
-	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/vocabulary"
 	"github.com/spf13/viper"
 )
 

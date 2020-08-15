@@ -1,0 +1,20 @@
+package render
+
+import "github.com/benpate/ghost/service"
+
+type Global struct {
+	factory service.Factory
+}
+
+func (g Global) Label() string {
+	return "Site Name Here"
+}
+
+func (g Global) TopStreams() ([]Stream, error) {
+
+	var result []Stream
+
+	streamService := g.factory.Stream()
+
+	return result, nil
+}

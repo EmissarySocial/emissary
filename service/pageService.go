@@ -24,23 +24,24 @@ func (pageService PageService) RenderPage(stream *model.Stream, view string) (st
 	var footer strings.Builder
 
 	header.WriteString(`<html><head><title>GH0ST</title>`)
-	header.WriteString(`<script src="http://localhost/htmx/htmx.js"></script>`)
+	header.WriteString(`<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">`)
+	header.WriteString(`<link rel="stylesheet" href="/r/stylesheet.css">`)
 	// header.WriteString(`<script src="https://unpkg.com/htmx.org@0.0.8"></script>`)
-	header.WriteString(`</head><body>`)
+	header.WriteString(`</head><body hx-boost="true" hx-target="#stream" hx-push-url="true">`)
 	header.WriteString(`<div>GLOBAL NAVIGATION HERE</di><hr>`)
-	header.WriteString(`<div hx-target="#stream" hx-push-url="true">`)
 
-	header.WriteString(`<div id="stream" hx-sse="connect /`)
-	header.WriteString(stream.StreamID.Hex())
+	header.WriteString(`<div hx-sse="/`)
+	header.WriteString(stream.Token)
 	header.WriteString(`/views/`)
 	header.WriteString(view)
-	header.WriteString(`/sse EventName">`)
-	header.WriteString(`<div id="stream-updates">`)
+	header.WriteString(`/sse EventName" hx-target="#stream" hx-swap="outerHTML"></div>`)
+	header.WriteString(`<div id="stream">`)
 
 	footer.WriteString(`</div>`)
-	footer.WriteString(`</div>`)
-	footer.WriteString(`</div>`)
-	footer.WriteString(`</body></html>`)
+	footer.WriteString(`</body>`)
+	footer.WriteString(`<script src="http://localhost/htmx/htmx.js"></script>`)
+	footer.WriteString(`<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/js/uikit.min.js"></script>`)
+	footer.WriteString(`</html>`)
 
 	return header.String(), footer.String()
 }
@@ -50,14 +51,12 @@ func (pageService PageService) RenderPartial(stream *model.Stream, view string) 
 	var header strings.Builder
 	var footer strings.Builder
 
-	header.WriteString(`<div id="stream" hx-sse="connect /`)
-	header.WriteString(stream.StreamID.Hex())
-	header.WriteString(`/views/`)
-	header.WriteString(view)
-	header.WriteString(`/sse EventName">`)
-	header.WriteString(`<div id="stream-updates">`)
+	header.WriteString(`<div id="stream">`) // hx-swap="outerHTML" hx-sse="/`)
+	//header.WriteString(stream.Token)
+	//header.WriteString(`/views/`)
+	//header.WriteString(view)
+	//header.WriteString(`/sse EventName">`)
 
-	footer.WriteString(`</div>`)
 	footer.WriteString(`</div>`)
 
 	return header.String(), footer.String()

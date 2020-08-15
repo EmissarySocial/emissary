@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,7 +17,7 @@ type RealtimeBroker struct {
 	clients map[primitive.ObjectID]*RealtimeClient
 
 	// map of streams being watched.
-	streams map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient
+	streams map[string]map[primitive.ObjectID]*RealtimeClient
 
 	// Channels that updates are pushed into.
 	streamUpdates   chan model.Stream
@@ -38,7 +37,7 @@ type RealtimeBroker struct {
 
 type RealtimeClient struct {
 	ClientID     primitive.ObjectID // Unique Identifier of this RealtimeClient.
-	StreamID     primitive.ObjectID // Stream.Token of current stream being watched.
+	Token        string             // Stream.Token of current stream being watched.
 	View         string             // Stream.View of the current stream/view being watched.
 	WriteChannel chan string        // Channel for writing responses to this client.
 }
@@ -48,7 +47,7 @@ func NewRealtimeBroker(factory Factory) *RealtimeBroker {
 
 	result := &RealtimeBroker{
 		clients:         make(map[primitive.ObjectID]*RealtimeClient),
-		streams:         make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
+		streams:         make(map[string]map[primitive.ObjectID]*RealtimeClient),
 		streamUpdates:   factory.StreamWatcher(),
 		templateUpdates: make(chan model.Template),
 		AddClient:       make(chan *RealtimeClient),
@@ -61,11 +60,11 @@ func NewRealtimeBroker(factory Factory) *RealtimeBroker {
 }
 
 // NewRealtimeClient initializes a new realtime client.
-func NewRealtimeClient(streamID primitive.ObjectID, view string) *RealtimeClient {
+func NewRealtimeClient(token string, view string) *RealtimeClient {
 
 	return &RealtimeClient{
 		ClientID:     primitive.NewObjectID(),
-		StreamID:     streamID,
+		Token:        token,
 		View:         view,
 		WriteChannel: make(chan string),
 	}
@@ -90,11 +89,11 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 
 		case client := <-b.AddClient:
 
-			if _, ok := b.streams[client.StreamID]; !ok {
-				b.streams[client.StreamID] = make(map[primitive.ObjectID]*RealtimeClient)
+			if _, ok := b.streams[client.Token]; !ok {
+				b.streams[client.Token] = make(map[primitive.ObjectID]*RealtimeClient)
 			}
 
-			b.streams[client.StreamID][client.ClientID] = client
+			b.streams[client.Token][client.ClientID] = client
 			b.clients[client.ClientID] = client
 
 			log.Println("Added new client")
@@ -102,10 +101,10 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 		case client := <-b.RemoveClient:
 
 			delete(b.clients, client.ClientID)
-			delete(b.streams[client.StreamID], client.ClientID)
+			delete(b.streams[client.Token], client.ClientID)
 
-			if len(b.streams[client.StreamID]) == 0 {
-				delete(b.streams, client.StreamID)
+			if len(b.streams[client.Token]) == 0 {
+				delete(b.streams, client.Token)
 			}
 
 			close(client.WriteChannel)
@@ -114,8 +113,7 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 
 		case stream := <-b.streamUpdates:
 
-			spew.Dump("Updating Stream", stream)
-			for _, client := range b.streams[stream.StreamID] {
+			for _, client := range b.streams[stream.Token] {
 
 				if html, err := streamService.Render(&stream, client.View); err == nil {
 					client.WriteChannel <- html
@@ -123,8 +121,6 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 			}
 
 		case template := <-b.templateUpdates:
-
-			spew.Dump("Received Template Update")
 
 			go func() {
 
@@ -138,11 +134,8 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 				var stream model.Stream
 
 				for iterator.Next(&stream) {
-					spew.Dump("Sending Stream update...")
 					b.streamUpdates <- stream
 				}
-
-				spew.Dump("DONE UPDATING STREAMS.")
 			}()
 		}
 	}
