@@ -3,6 +3,7 @@ package templateSource
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -48,52 +49,63 @@ func (fs *File) List() ([]string, *derp.Error) {
 }
 
 // Load tries to find a template sub-directory within the filesystem path
-func (fs *File) Load(templateID string) (model.Template, *derp.Error) {
+func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 
-	directory := fs.Path + "/" + templateID + "/"
+	result := model.NewTemplate(templateID)
 
-	templateFilename := directory + "_template.json"
+	directory := fs.Path + "/" + templateID
 
-	data, err := ioutil.ReadFile(templateFilename)
+	files, err := ioutil.ReadDir(directory)
 
 	if err != nil {
-		return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", templateFilename)
+		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Unable to list directory", directory)
 	}
 
-	result := model.Template{}
+	for _, file := range files {
 
-	if err := json.Unmarshal(data, &result); err != nil {
-		return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
-	}
+		filename := file.Name()
+		extension := list.Last(file.Name(), ".")
 
-	result.TemplateID = templateID
-
-	// Scan for HTML files associated to each view.
-	for key, view := range result.Views {
-
-		if view.File == "" {
-			continue
-		}
-
-		// Read the file from the filesystem
-		file, err := ioutil.ReadFile(directory + view.File)
+		data, err := ioutil.ReadFile(filename)
 
 		if err != nil {
-			return model.Template{}, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Error reading vies", view.File)
+			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
 		}
 
-		// Update the view with the HTML template.
-		view.HTML = string(file)
+		switch extension {
 
-		// Write this value back into the map
-		result.Views[key] = view
+		case "json":
+			fs.appendJSON(result, data)
+
+		case "html":
+
+			name := strings.TrimSuffix(list.Last(strings.ToLower(filename), "/"), ".html")
+			view := model.NewView(string(data))
+			result.Views[name] = view
+		}
 	}
 
 	return result, nil
 }
 
+func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
+
+	var temp model.Template
+
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
+	}
+
+	template.Populate(&temp)
+
+	return nil
+}
+
+/////////////////////////////////////
+/// REAL TIME UPDATES
+
 // Watch populates a channel of model.Template objects every time a template is updated.
-func (fs *File) Watch(results chan model.Template) {
+func (fs *File) Watch(results chan *model.Template) {
 
 	watcher, err := fsnotify.NewWatcher()
 

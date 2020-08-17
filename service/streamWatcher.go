@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -56,7 +55,6 @@ func StreamWatcher(uri string, database string) chan model.Stream {
 				continue
 			}
 
-			spew.Dump("Watcher. Writing stream to channel.", event.Stream)
 			result <- event.Stream
 		}
 	}()

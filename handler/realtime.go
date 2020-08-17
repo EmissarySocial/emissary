@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -70,11 +69,9 @@ func ServerSentEvent(b *service.RealtimeBroker) echo.HandlerFunc {
 				break
 			}
 
-			msg = `<div id="stream-updates">` + msg + `</div>`
-			spew.Dump(msg)
-
 			// Write to the ResponseWriter, `w`.
-			fmt.Fprintf(w, "event: EventName\n")
+			// eventName := "EventName1"
+			// fmt.Fprintf(w, "event: update\n")
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 
 			// Flush the response.  This is only possible if the response supports streaming.

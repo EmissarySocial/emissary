@@ -13,8 +13,8 @@ type TemplateSource interface {
 	List() ([]string, *derp.Error)
 
 	// Load tries to locate a Template from the TemplateSource data
-	Load(string) (model.Template, *derp.Error)
+	Load(string) (*model.Template, *derp.Error)
 
 	// Watch passes realtime updates to templates back through to the provided channel
-	Watch(chan model.Template)
+	Watch(chan *model.Template)
 }

@@ -9,12 +9,15 @@ import (
 
 // View is an individual HTML template that can render a part of a stream
 type View struct {
-	Label       string             `json:"label"`       // Human-friendly label of this view
-	Description string             `json:"description"` // Human-friendly, long description of this view
-	Permissions []string           `json:"permissions"` // List of roles/users who can view this view
-	File        string             `json:"file"`        // Name of the file in the template package where HTML is stored.
-	HTML        string             `json:"html"`        // Raw HTML to render
-	Compiled    *template.Template `json:"-"`           // Parsed HTML template to render (by merging with Stream dataset)
+	File     string             `json:"file"` // Name of the file in the template package where HTML is stored.
+	HTML     string             `json:"html"` // Raw HTML to render
+	Compiled *template.Template `json:"-"`    // Parsed HTML template to render (by merging with Stream dataset)
+}
+
+func NewView(html string) View {
+	return View{
+		HTML: html,
+	}
 }
 
 // Execute executes this template on the provided data.  It maintains a cache of the compiled template

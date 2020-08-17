@@ -42,7 +42,7 @@ func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 		}
 
 		// Generate HTML by merging the form with the element library, the data schema, and the data value
-		html, errr := transition.Form.HTML(library, template.Schema, stream)
+		html, errr := transition.Form.HTML(library, *template.Schema, stream)
 
 		if errr != nil {
 			return derp.Report(derp.Wrap(errr, "ghost.handler.getTransition", "Error generating form HTML", transition.Form))

@@ -1,0 +1,38 @@
+{
+	"label": "Article",
+	"schema": {
+		"url": "example.com/test-template",
+		"title": "Test Template Schema",
+		"type": "object",
+		"properties": {
+			"class": {
+				"type": "string"
+			},
+			"title": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			},
+			"body": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			},
+			"persons": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type":"string"
+						}
+					}
+				}
+			}
+		},
+		"required": ["class", "title", "body", "persons"]
+	}
+}
+

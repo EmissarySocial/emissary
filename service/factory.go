@@ -80,8 +80,8 @@ func (factory Factory) Template() *Template {
 		singletonTemplateService = &Template{
 			Factory:   &factory,
 			Sources:   make([]TemplateSource, 0),
-			Templates: make(map[string]model.Template),
-			Updates:   make(chan model.Template),
+			Templates: make(map[string]*model.Template),
+			Updates:   make(chan *model.Template),
 		}
 
 		go singletonTemplateService.Start()
@@ -115,6 +115,12 @@ func (factory Factory) RealtimeBroker() *RealtimeBroker {
 }
 
 /// NON MODEL SERVICES
+
+func (factory Factory) Render() *Render {
+	return &Render{
+		factory: factory,
+	}
+}
 
 func (factory Factory) PageService() *PageService {
 	return &PageService{}

@@ -33,11 +33,6 @@ type Stream struct {
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
-// ID returns the primary key of this object
-func (stream *Stream) ID() string {
-	return stream.StreamID.Hex()
-}
-
 // NewStream returns a fully initialized Stream object.
 func NewStream() Stream {
 
@@ -46,6 +41,15 @@ func NewStream() Stream {
 		Tags:     []string{},
 		Data:     map[string]interface{}{},
 	}
+}
+
+// ID returns the primary key of this object
+func (stream *Stream) ID() string {
+	return stream.StreamID.Hex()
+}
+
+func (stream *Stream) HasParent() bool {
+	return !stream.ParentID.IsZero()
 }
 
 func (stream *Stream) GetPath(p path.Path) (interface{}, error) {

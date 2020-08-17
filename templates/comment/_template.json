@@ -1,0 +1,40 @@
+{
+	"label": "Comment",
+	"schema": {
+		"title": "Comment Schema",
+		"type": "object",
+		"properties": {
+			"message": {
+				"type": "string"
+			}
+		}
+	},
+	"states": {
+		"new": {
+			"label": "New",
+			"views": ["default"],
+			"transitions": [{
+				"id":"edit",
+				"label": "Edit",
+				"stateId": "new",
+				"nextView": "default",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Comment",
+					"children": [{
+						"kind": "text",
+						"label": "My Comment",
+						"path": "message"
+					}]
+				}
+			}]
+		}
+	},
+	"views": {
+		"default": {
+			"label": "Default",
+			"file":  "default.html"
+		}
+	}
+}
+

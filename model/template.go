@@ -13,9 +13,17 @@ type Template struct {
 	Category    string           `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
 	IconURL     string           `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
 	URL         string           `json:"url"         bson:"url"`         // URL where this template is published
-	Schema      schema.Schema    `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
+	Schema      *schema.Schema   `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
 	States      map[string]State `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
 	Views       map[string]View  `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
+}
+
+func NewTemplate(templateID string) *Template {
+	return &Template{
+		TemplateID: templateID,
+		States:     make(map[string]State),
+		Views:      make(map[string]View),
+	}
 }
 
 // View locates and verifies a state/view combination.
@@ -63,4 +71,39 @@ func (template Template) Transition(stateID string, transitionID string) *Transi
 	}
 
 	return nil
+}
+
+// Populate safely copies values from an external Template into this one.
+func (template *Template) Populate(from *Template) {
+
+	template.Label = template.BestString(template.Label, from.Label)
+	template.Description = template.BestString(template.Description, from.Description)
+	template.Category = template.BestString(template.Category, from.Category)
+	template.IconURL = template.BestString(template.IconURL, from.IconURL)
+	template.URL = template.BestString(template.URL, from.URL)
+
+	if template.Schema == nil {
+		template.Schema = from.Schema
+	}
+
+	if from.States != nil {
+		for name, state := range from.States {
+			template.States[name] = state
+		}
+	}
+
+	if from.Views != nil {
+		for name, view := range from.Views {
+			template.Views[name] = view
+		}
+	}
+}
+
+func (template Template) BestString(local string, remote string) string {
+
+	if local != "" {
+		return local
+	}
+
+	return remote
 }

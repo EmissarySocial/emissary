@@ -10,11 +10,11 @@ func (g Global) Label() string {
 	return "Site Name Here"
 }
 
-func (g Global) TopStreams() ([]Stream, error) {
+func (g Global) TopStreams() ([]StreamWrapper, error) {
 
-	var result []Stream
+	var result []StreamWrapper
 
-	streamService := g.factory.Stream()
+	// 	streamService := g.factory.StreamWrapper()
 
 	return result, nil
 }

@@ -16,8 +16,8 @@ const CollectionTemplate = "Template"
 type Template struct {
 	Factory   *Factory
 	Sources   []TemplateSource
-	Templates map[string]model.Template
-	Updates   chan model.Template
+	Templates map[string]*model.Template
+	Updates   chan *model.Template
 }
 
 func (service *Template) AddSource(source TemplateSource) *derp.Error {
@@ -84,7 +84,7 @@ func (service Template) List(criteria expression.Expression, options ...option.O
 }
 
 // Load retrieves an Template from the database
-func (service Template) Load(templateID string) (model.Template, *derp.Error) {
+func (service Template) Load(templateID string) (*model.Template, *derp.Error) {
 
 	// Look in the local cache first
 	if template, ok := service.Templates[templateID]; ok {
@@ -99,11 +99,11 @@ func (service Template) Load(templateID string) (model.Template, *derp.Error) {
 		}
 	}
 
-	return model.Template{}, derp.New(404, "ghost.sevice.Template.Load", "Could not load Template", templateID)
+	return nil, derp.New(404, "ghost.sevice.Template.Load", "Could not load Template", templateID)
 }
 
 // Cache adds/updates an Template in the memory cache
-func (service Template) Cache(template model.Template) {
+func (service Template) Cache(template *model.Template) {
 	service.Templates[template.TemplateID] = template
 }
 

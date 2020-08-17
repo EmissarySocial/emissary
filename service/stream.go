@@ -110,9 +110,18 @@ func (service Stream) Close() {
 
 // QUERIES /////////////////////////
 
+func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, *derp.Error) {
+	return service.List(
+		expression.
+			New("parentId", expression.OperatorEqual, parentID).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
+}
+
 func (service Stream) ListByTemplate(template string) (data.Iterator, *derp.Error) {
 	return service.List(
-		expression.New("template", expression.OperatorEqual, template))
+		expression.
+			New("template", expression.OperatorEqual, template).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
 func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
@@ -122,10 +131,30 @@ func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
+func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, *derp.Error) {
+	return service.Load(
+		expression.
+			New("_id", expression.OperatorEqual, streamID).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
+}
+
+func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, *derp.Error) {
+
+	if stream.HasParent() == false {
+		return nil, derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
+	}
+
+	stream, err := service.LoadByID(stream.ParentID)
+
+	return stream, derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
+}
+
 // LoadBySourceURL locates a single stream that matches the provided SourceURL
 func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
 	return service.Load(
-		expression.New("sourceUrl", expression.OperatorEqual, url))
+		expression.
+			New("sourceUrl", expression.OperatorEqual, url).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
 ///////////////////
