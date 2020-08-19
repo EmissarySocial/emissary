@@ -66,7 +66,7 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 		filename := file.Name()
 		extension := list.Last(file.Name(), ".")
 
-		data, err := ioutil.ReadFile(filename)
+		data, err := ioutil.ReadFile(directory + "/" + filename)
 
 		if err != nil {
 			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
@@ -75,16 +75,22 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 		switch extension {
 
 		case "json":
-			fs.appendJSON(result, data)
+			if err := fs.appendJSON(result, data); err != nil {
+				return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file", filename)
+			}
 
 		case "html":
 
 			name := strings.TrimSuffix(list.Last(strings.ToLower(filename), "/"), ".html")
 			view := model.NewView(string(data))
 			result.Views[name] = view
+
+		default:
+			spew.Dump("UNRECOGNIZED EXTENSION", extension)
 		}
 	}
 
+	spew.Dump("templateSource.File.  New Template: ", result)
 	return result, nil
 }
 
@@ -96,6 +102,7 @@ func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
 		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
 	}
 
+	spew.Dump("appendJSON", temp)
 	template.Populate(&temp)
 
 	return nil

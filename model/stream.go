@@ -48,10 +48,13 @@ func (stream *Stream) ID() string {
 	return stream.StreamID.Hex()
 }
 
+// HasParent returns TRUE if this Stream has a valid parentID
 func (stream *Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
+// GetPath implements the path.Getter interface.  It looks up
+// data within this Stream and returns it to the caller.
 func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 
 	switch p.Head() {
@@ -72,6 +75,8 @@ func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 	return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
 }
 
+// SetPath implements the path.Setter interface.  It takes any data value
+// and tries to set it to the correct path within this Stream.
 func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
 	var property *string

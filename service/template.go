@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // CollectionTemplate is the database collection where Templates are stored
@@ -54,7 +53,6 @@ func (service Template) Start() {
 	for {
 		template := <-service.Updates
 
-		spew.Dump("TEMPLATE: RECEIVED TEMPLATE UPDATE")
 		service.Cache(template)
 
 		realtimeBroker := service.Factory.RealtimeBroker()
@@ -70,11 +68,8 @@ func (service Template) Start() {
 		var stream model.Stream
 
 		for iterator.Next(&stream) {
-			spew.Dump("Sending Stream update...")
 			realtimeBroker.streamUpdates <- stream
 		}
-
-		spew.Dump("TEMPLATE: DONE UPDATING STREAMS.")
 	}
 }
 

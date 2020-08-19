@@ -1,23 +1,27 @@
 package model
 
 import (
+	"github.com/benpate/choose"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/schema"
 )
 
 // Template represents an HTML template to be used for generating an HTML page.
 type Template struct {
-	TemplateID  string           `json:"templateId"  bson:"templateId"`  // Internal name/token other objects (like streams) will use to reference this Template.
-	Label       string           `json:"label"       bson:"label"`       // Human-readable label used in management UI.
-	Description string           `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
-	Category    string           `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
-	IconURL     string           `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
-	URL         string           `json:"url"         bson:"url"`         // URL where this template is published
-	Schema      *schema.Schema   `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
-	States      map[string]State `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
-	Views       map[string]View  `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
+	TemplateID  string               `json:"templateId"  bson:"templateId"`  // Internal name/token other objects (like streams) will use to reference this Template.
+	Label       string               `json:"label"       bson:"label"`       // Human-readable label used in management UI.
+	Description string               `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
+	Category    string               `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
+	IconURL     string               `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
+	URL         string               `json:"url"         bson:"url"`         // URL where this template is published
+	Schema      *schema.Schema       `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
+	States      map[string]State     `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
+	Views       map[string]View      `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
+	Forms       map[string]form.Form `json:"forms"       bson:"forms"`       // Map of Forms (by form.ID) that are available in transitions between states.
 }
 
+// NewTemplate creates a new, fully initialized Template object
 func NewTemplate(templateID string) *Template {
 	return &Template{
 		TemplateID: templateID,
@@ -37,50 +41,64 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
 
-		// Scan all views in the state to verify that this view is allowed in this State
-		for _, allowedViewName := range state.Views {
+		// Verify that this is an allowed view
+		if _, ok := state.Views[viewName]; ok {
 
-			// If the view is allowed for this State
-			if viewName == allowedViewName {
+			// TODO: Check permissions here
 
-				// Try to find this view in the template
-				if view, ok := template.Views[viewName]; ok {
-					return &view, nil
-				}
+			if view, ok := template.Views[viewName]; ok {
+				return &view, nil
 			}
 		}
-	}
 
-	// If we're not trying the default view, then switch to that view now.
-	if viewName != "default" {
-		return template.View(stateName, "default")
+		// If we're not trying the default view, then switch to that view now.
+		if viewName != "default" {
+			return template.View(stateName, "default")
+		}
+
+		return nil, derp.New(500, "ghost.model.TemplateView", "Unauthorized", stateName, viewName)
 	}
 
 	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)
 }
 
-func (template Template) Transition(stateID string, transitionID string) *Transition {
+// Transition returns the Transition for a particular State/Transition combination.
+func (template Template) Transition(stateID string, transitionID string) (*Transition, *derp.Error) {
 
 	if state, ok := template.States[stateID]; ok {
 
-		for index := range state.Transitions {
-			if state.Transitions[index].ID == transitionID {
-				return &(template.States[stateID].Transitions[index])
-			}
+		if transition, ok := state.Transitions[transitionID]; ok {
+			return &transition, nil
 		}
 	}
 
-	return nil
+	return nil, derp.New(404, "ghost.model.template.Transition", "Unrecognized StateID", stateID)
+}
+
+// Form returns the Form for a particular State/Transition combination.
+func (template Template) Form(stateID string, transitionID string) (*form.Form, *derp.Error) {
+
+	transition, err := template.Transition(stateID, transitionID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.model.template.Form", "Unable to locate transition", stateID, transitionID)
+	}
+
+	if form, ok := template.Forms[transition.Form]; ok {
+		return &form, nil
+	}
+
+	return nil, derp.New(404, "ghost.model.template.Form", "Undefined form", transition.Form)
 }
 
 // Populate safely copies values from an external Template into this one.
 func (template *Template) Populate(from *Template) {
 
-	template.Label = template.BestString(template.Label, from.Label)
-	template.Description = template.BestString(template.Description, from.Description)
-	template.Category = template.BestString(template.Category, from.Category)
-	template.IconURL = template.BestString(template.IconURL, from.IconURL)
-	template.URL = template.BestString(template.URL, from.URL)
+	template.Label = choose.String(template.Label, from.Label)
+	template.Description = choose.String(template.Description, from.Description)
+	template.Category = choose.String(template.Category, from.Category)
+	template.IconURL = choose.String(template.IconURL, from.IconURL)
+	template.URL = choose.String(template.URL, from.URL)
 
 	if template.Schema == nil {
 		template.Schema = from.Schema
@@ -97,13 +115,4 @@ func (template *Template) Populate(from *Template) {
 			template.Views[name] = view
 		}
 	}
-}
-
-func (template Template) BestString(local string, remote string) string {
-
-	if local != "" {
-		return local
-	}
-
-	return remote
 }

@@ -169,7 +169,7 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 	template, err := templateService.Load(stream.Template)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Template.Render", "Unable to load Template", stream)
+		return "", derp.Wrap(err, "service.Stream.Render", "Unable to load Template", stream)
 	}
 
 	// Locate / Authenticate the view to use
@@ -177,7 +177,7 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 	view, err := template.View(stream.State, viewName)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Template.Render", "Unrecognized view", view)
+		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", viewName)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -186,7 +186,7 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 	result, err := view.Execute(stream)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Template.Render", "Error rendering view")
+		return "", derp.Wrap(err, "service.Stream.Render", "Error rendering view")
 	}
 
 	result = html.CollapseWhitespace(result)
@@ -198,11 +198,23 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 }
 
 // Transition handles a transition request to move the stream from one state into another state.
-func (service Stream) Transition(stream *model.Stream, transition *model.Transition, data map[string]interface{}) *derp.Error {
+func (service Stream) Transition(stream *model.Stream, template *model.Template, transitionID string, data map[string]interface{}) *derp.Error {
+
+	transition, err := template.Transition(stream.State, transitionID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
+	}
+
+	form, ok := template.Forms[transition.Form]
+
+	if !ok {
+		return derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
+	}
 
 	// TODO: where are permissions processed?
 
-	paths := transition.Form.AllPaths()
+	paths := form.AllPaths()
 
 	// Only look for data in the registered paths for this form.  If other data is present, it will be ignored.
 	for _, element := range paths {

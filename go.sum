@@ -35,6 +35,8 @@ github.com/benpate/activitystream v0.1.1 h1:lHCqZv5K8cMiRKQgQrOLxculKslpUJcxaxwR
 github.com/benpate/activitystream v0.1.1/go.mod h1:Egvu8vQgYPzhBlqVemTPJN4PHCYpXruW0plsWPwQMJY=
 github.com/benpate/activitystream v0.1.2 h1:fn3t/oJjb5iRzJpK9zIYWF3p7cd1cv/INIX8ZEamxWc=
 github.com/benpate/activitystream v0.1.2/go.mod h1:xJ+RLs3cQQjeRKfJhWfkqON9gfDpvkNoQdfFXouKpkA=
+github.com/benpate/choose v0.1.1 h1:XKggJd4tUP1++xb/BKkzjgxNYSxmq8mZx2V/loa/gDw=
+github.com/benpate/choose v0.1.1/go.mod h1:G2cRkuOCEhnShscBIOvBR+/ilo4ahgSJFpKDqXAEaBY=
 github.com/benpate/convert v0.7.0 h1:jQxFyjjimcXqOftVpzfBoC5VcnP3CT9/0EOqIqKDYKQ=
 github.com/benpate/convert v0.7.0/go.mod h1:RdD5UC0UAI3LsGcQzq51ZVGUZyZ9g8DITcemEgZ6jkE=
 github.com/benpate/convert v0.7.1 h1:cOtrcntvAcSE5GO+lVAy4VZMxFdNTqjNynJDZfnQOjQ=

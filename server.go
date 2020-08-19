@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/benpate/data/mongodb"
+	"github.com/benpate/derp"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/service/templateSource"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/viper"
 )
 
@@ -43,10 +45,12 @@ func main() {
 	switch value := directories.(type) {
 	case string:
 		fileSource := templateSource.NewFile(value)
-		templateService.AddSource(fileSource)
+		if err := templateService.AddSource(fileSource); err != nil {
+			derp.Report(err)
+		}
+		spew.Dump(templateService.Templates)
 
 	case []string:
-
 		for _, value := range value {
 			fileSource := templateSource.NewFile(value)
 			templateService.AddSource(fileSource)

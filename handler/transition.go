@@ -25,14 +25,20 @@ func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 		stream, err := streamService.LoadByToken(token)
 
 		if err != nil {
-			err = derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Stream", token)
-			derp.Report(err)
-			return err
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Stream", token))
 		}
 
 		template, err := templateService.Load(stream.Template)
 
-		transition := template.Transition(stream.State, transitionID)
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Template", stream.Template))
+		}
+
+		transition, err := template.Transition(stream.State, transitionID)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Invalid Transition"))
+		}
 
 		// TODO: Validate that this transition is VALID
 		// TODO: Validate that the USER IS PERMITTED to make this transition.
@@ -41,11 +47,17 @@ func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 			err = derp.New(404, "ghost.handler.GetTransition", "Unrecognized Transition", transitionID)
 		}
 
+		form, err := template.Form(stream.State, transitionID)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.getTransition", "Invalid Form"))
+		}
+
 		// Generate HTML by merging the form with the element library, the data schema, and the data value
-		html, errr := transition.Form.HTML(library, *template.Schema, stream)
+		html, errr := form.HTML(library, *template.Schema, stream)
 
 		if errr != nil {
-			return derp.Report(derp.Wrap(errr, "ghost.handler.getTransition", "Error generating form HTML", transition.Form))
+			return derp.Report(derp.Wrap(errr, "ghost.handler.getTransition", "Error generating form HTML", form))
 		}
 
 		header, footer := pageService.Render(ctx, stream, "")
@@ -103,9 +115,9 @@ func PostTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 		}
 
 		// Execute transition
-		if transition := template.Transition(stream.State, transitionID); transition != nil {
+		if transition, err := template.Transition(stream.State, transitionID); err == nil {
 
-			if err := streamService.Transition(stream, transition, form); err != nil {
+			if err := streamService.Transition(stream, template, transitionID, form); err != nil {
 				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
 			}
 
