@@ -16,7 +16,7 @@ type Template struct {
 	Factory   *Factory
 	Sources   []TemplateSource
 	Templates map[string]*model.Template
-	Updates   chan *model.Template
+	Updates   chan model.Template
 }
 
 func (service *Template) AddSource(source TemplateSource) *derp.Error {
@@ -53,7 +53,7 @@ func (service Template) Start() {
 	for {
 		template := <-service.Updates
 
-		service.Cache(template)
+		service.Cache(&template)
 
 		realtimeBroker := service.Factory.RealtimeBroker()
 		streamService := service.Factory.Stream()

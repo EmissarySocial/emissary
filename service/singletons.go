@@ -6,4 +6,4 @@ var singletonTemplateService *Template
 
 var singletonRealtimeBroker *RealtimeBroker
 
-var singletonTemplateWatcher chan *model.Template
+var singletonTemplateWatcher chan model.Template

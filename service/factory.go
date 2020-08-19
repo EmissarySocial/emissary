@@ -106,10 +106,10 @@ func (factory Factory) StreamWatcher() chan model.Stream {
 	return StreamWatcher(viper.GetString("dbserver"), viper.GetString("dbname"))
 }
 
-func (factory Factory) TemplateWatcher() chan *model.Template {
+func (factory Factory) TemplateWatcher() chan model.Template {
 
 	if singletonTemplateWatcher == nil {
-		singletonTemplateWatcher = make(chan *model.Template)
+		singletonTemplateWatcher = make(chan model.Template)
 	}
 
 	return singletonTemplateWatcher
