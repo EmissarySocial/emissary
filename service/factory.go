@@ -77,11 +77,12 @@ func (factory Factory) Template() *Template {
 
 	// Initialize service, if necessary
 	if singletonTemplateService == nil {
+
 		singletonTemplateService = &Template{
 			Factory:   &factory,
 			Sources:   make([]TemplateSource, 0),
 			Templates: make(map[string]*model.Template),
-			Updates:   make(chan *model.Template),
+			Updates:   factory.TemplateWatcher(),
 		}
 
 		go singletonTemplateService.Start()
@@ -103,6 +104,15 @@ func (factory Factory) User() User {
 
 func (factory Factory) StreamWatcher() chan model.Stream {
 	return StreamWatcher(viper.GetString("dbserver"), viper.GetString("dbname"))
+}
+
+func (factory Factory) TemplateWatcher() chan *model.Template {
+
+	if singletonTemplateWatcher == nil {
+		singletonTemplateWatcher = make(chan *model.Template)
+	}
+
+	return singletonTemplateWatcher
 }
 
 func (factory Factory) RealtimeBroker() *RealtimeBroker {

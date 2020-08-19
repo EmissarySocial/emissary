@@ -12,21 +12,27 @@
 	"states": {
 		"new": {
 			"label": "New",
-			"views": ["default"],
-			"transitions": [{
-				"id":"edit",
-				"label": "Edit",
-				"stateId": "new",
-				"nextView": "default",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Comment",
-					"children": [{
-						"kind": "text",
-						"label": "My Comment",
-						"path": "message"
-					}]
+			"views": {
+				"default":"all"
+			},
+			"transitions": {
+				"edit": {
+					"label": "Edit",
+					"stateId": "new",
+					"nextView": "default",
+					"form": "comment"
 				}
+			}
+		}
+	},
+	"forms": {
+		"comment": {
+			"kind": "layout-vertical",
+			"label": "Comment",
+			"children": [{
+				"kind": "text",
+				"label": "My Comment",
+				"path": "message"
 			}]
 		}
 	},

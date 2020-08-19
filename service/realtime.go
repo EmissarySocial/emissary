@@ -20,8 +20,7 @@ type RealtimeBroker struct {
 	streams map[string]map[primitive.ObjectID]*RealtimeClient
 
 	// Channels that updates are pushed into.
-	streamUpdates   chan model.Stream
-	templateUpdates chan model.Template
+	streamUpdates chan model.Stream
 
 	// Create a map of clients, the keys of the map are the channels
 	// over which we can push messages to attached clients.  (The values
@@ -35,6 +34,7 @@ type RealtimeBroker struct {
 	RemoveClient chan *RealtimeClient
 }
 
+// RealtimeClient represents a single SSE connection that has subscribed to updates for a particular stream/view combination.
 type RealtimeClient struct {
 	ClientID     primitive.ObjectID // Unique Identifier of this RealtimeClient.
 	Token        string             // Stream.Token of current stream being watched.
@@ -46,12 +46,11 @@ type RealtimeClient struct {
 func NewRealtimeBroker(factory Factory) *RealtimeBroker {
 
 	result := &RealtimeBroker{
-		clients:         make(map[primitive.ObjectID]*RealtimeClient),
-		streams:         make(map[string]map[primitive.ObjectID]*RealtimeClient),
-		streamUpdates:   factory.StreamWatcher(),
-		templateUpdates: make(chan model.Template),
-		AddClient:       make(chan *RealtimeClient),
-		RemoveClient:    make(chan *RealtimeClient),
+		clients:       make(map[primitive.ObjectID]*RealtimeClient),
+		streams:       make(map[string]map[primitive.ObjectID]*RealtimeClient),
+		streamUpdates: factory.StreamWatcher(),
+		AddClient:     make(chan *RealtimeClient),
+		RemoveClient:  make(chan *RealtimeClient),
 	}
 
 	go result.Listen(factory)
@@ -117,26 +116,10 @@ func (b *RealtimeBroker) Listen(factory Factory) {
 
 				if html, err := streamService.Render(&stream, client.View); err == nil {
 					client.WriteChannel <- html
+				} else {
+					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))
 				}
 			}
-
-		case template := <-b.templateUpdates:
-
-			go func() {
-
-				iterator, err := streamService.ListByTemplate(template.TemplateID)
-
-				if err != nil {
-					derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", template))
-					return
-				}
-
-				var stream model.Stream
-
-				for iterator.Next(&stream) {
-					b.streamUpdates <- stream
-				}
-			}()
 		}
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/service/templateSource"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/viper"
 )
 
@@ -48,7 +47,6 @@ func main() {
 		if err := templateService.AddSource(fileSource); err != nil {
 			derp.Report(err)
 		}
-		spew.Dump(templateService.Templates)
 
 	case []string:
 		for _, value := range value {

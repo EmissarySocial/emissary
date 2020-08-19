@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -84,13 +83,9 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 			name := strings.TrimSuffix(list.Last(strings.ToLower(filename), "/"), ".html")
 			view := model.NewView(string(data))
 			result.Views[name] = view
-
-		default:
-			spew.Dump("UNRECOGNIZED EXTENSION", extension)
 		}
 	}
 
-	spew.Dump("templateSource.File.  New Template: ", result)
 	return result, nil
 }
 
@@ -102,7 +97,6 @@ func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
 		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
 	}
 
-	spew.Dump("appendJSON", temp)
 	template.Populate(&temp)
 
 	return nil
@@ -112,18 +106,26 @@ func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
 /// REAL TIME UPDATES
 
 // Watch populates a channel of model.Template objects every time a template is updated.
-func (fs *File) Watch(results chan *model.Template) {
+func (fs *File) Watch(updates chan *model.Template) *derp.Error {
 
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.templateSource", "Could not watch filesystem"))
+		return derp.Wrap(err, "ghost.service.templateSource", "Could not watch filesystem")
 	}
 
 	files, err := ioutil.ReadDir(fs.Path)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.templateSource", "Could not read directory", fs.Path))
+		return derp.Wrap(err, "ghost.service.templateSource", "Could not read directory", fs.Path)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			if err := watcher.Add(fs.Path + "/" + file.Name()); err != nil {
+				return derp.Wrap(err, "ghost.service.templateSource.File", "Error adding watcher on path", fs.Path, file)
+			}
+		}
 	}
 
 	go func() {
@@ -133,35 +135,30 @@ func (fs *File) Watch(results chan *model.Template) {
 			case event, ok := <-watcher.Events:
 
 				if ok {
-
-					if _, err := ioutil.ReadDir(event.Name); err == nil {
-
-						fileName := list.Last(event.Name, "/")
-						template, err := fs.Load(fileName)
-
-						if err != nil {
-							derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error loading changes to template", event, fileName))
-							continue
-						}
-
-						spew.Dump("Template Watcher.  Updating", template)
-						results <- template
+					if event.Op != fsnotify.Write {
+						continue
 					}
+
+					templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
+
+					template, err := fs.Load(templateName)
+
+					if err != nil {
+						derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error loading changes to template", event, templateName))
+						continue
+					}
+
+					updates <- template
 				}
 
 			case err, ok := <-watcher.Errors:
-				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error watching filesystem"))
-				spew.Dump(err)
-				spew.Dump(ok)
+
+				if ok {
+					derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error watching filesystem"))
+				}
 			}
 		}
 	}()
 
-	for _, file := range files {
-		if file.IsDir() {
-			if err := watcher.Add(fs.Path + "/" + file.Name()); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error adding watcher on path", fs.Path, file))
-			}
-		}
-	}
+	return nil
 }

@@ -16,5 +16,5 @@ type TemplateSource interface {
 	Load(string) (*model.Template, *derp.Error)
 
 	// Watch passes realtime updates to templates back through to the provided channel
-	Watch(chan *model.Template)
+	Watch(chan *model.Template) *derp.Error
 }

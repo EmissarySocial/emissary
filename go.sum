@@ -103,8 +103,8 @@ github.com/benpate/html v0.0.1/go.mod h1:yUTnTs33Oaai+fGussYCAgMXJGKVD2VRTMJ6MkQ
 github.com/benpate/list v0.0.1/go.mod h1:CwJjch4WAMRGsAYntCADywLfJzZbC7LkP0saZ+1eWmo=
 github.com/benpate/list v0.0.3 h1:gIJBBqXvU7VRKiwD59YZVaMOZgunpTLARadM8wNl4zw=
 github.com/benpate/list v0.0.3/go.mod h1:CwJjch4WAMRGsAYntCADywLfJzZbC7LkP0saZ+1eWmo=
-github.com/benpate/list v0.1.0 h1:sQAIg9ZrNIXopr/WU0siqG3GjOPnNR4xbAH/qVtp3Qk=
-github.com/benpate/list v0.1.0/go.mod h1:uemdCNP+Ycdcamt3XMLtA5g1Zv8ukCC1ClaN+ppX5og=
+github.com/benpate/list v0.2.0 h1:Ln8tBGuzLgcdNL+vcYfVeIfCm4WPUE4g5ziOhEA6ZoU=
+github.com/benpate/list v0.2.0/go.mod h1:uemdCNP+Ycdcamt3XMLtA5g1Zv8ukCC1ClaN+ppX5og=
 github.com/benpate/null v0.2.0/go.mod h1:br8iIVIEnZrPC0UbJA6ePDBwUEFqPeBQ5sEXKc917jg=
 github.com/benpate/null v0.4.0 h1:OZMIkC06Jxf9+yF9B8YxKFj1dQYirTRL0lufHvgfWl4=
 github.com/benpate/null v0.4.0/go.mod h1:Nbm9Q2f+usSG1Ddt6CoFKamzlojzbaNIB7dtr3nhzfc=

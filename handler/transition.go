@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -90,8 +89,6 @@ func PostTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 		if err := ctx.Bind(&form); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
 		}
-
-		spew.Dump(form)
 
 		// Get Factory and services required for this step
 		factory := factoryMaker.Factory(ctx.Request().Context())
