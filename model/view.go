@@ -5,6 +5,8 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/html"
 )
 
 // View is an individual HTML template that can render a part of a stream
@@ -26,7 +28,16 @@ func (v *View) Execute(data interface{}) (string, *derp.Error) {
 	// If this view has already been compiled, then return the compiled version
 	if v.Compiled == nil {
 
-		result, err := template.New("").Parse(v.HTML)
+		m := minify.New()
+		m.AddFunc("text/html", html.Minify)
+
+		minified, err := m.String("text/html", v.HTML)
+
+		if err != nil {
+			return "", derp.Wrap(err, "model.View.Template", "Error minifying template")
+		}
+
+		result, err := template.New("").Parse(minified)
 
 		if err != nil {
 			return "", derp.Wrap(err, "model.View.Template", "Unable to parse template HTML")

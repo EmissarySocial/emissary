@@ -49,19 +49,19 @@ func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 		form, err := template.Form(stream.State, transitionID)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.getTransition", "Invalid Form"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Invalid Form", template))
 		}
 
 		// Generate HTML by merging the form with the element library, the data schema, and the data value
 		html, errr := form.HTML(library, *template.Schema, stream)
 
 		if errr != nil {
-			return derp.Report(derp.Wrap(errr, "ghost.handler.getTransition", "Error generating form HTML", form))
+			return derp.Report(derp.Wrap(errr, "ghost.handler.GetTransition", "Error generating form HTML", form))
 		}
 
 		header, footer := pageService.Render(ctx, stream, "")
 
-		formTop, formBottom := formService.Render(stream, transition)
+		formTop, formBottom := formService.Render(stream, transitionID, transition)
 
 		// Success!
 		response := ctx.Response()

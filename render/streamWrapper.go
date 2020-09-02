@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/html"
 )
 
 type StreamWrapper struct {
@@ -19,8 +20,40 @@ func NewStreamWrapper(factory service.Factory, stream *model.Stream) *StreamWrap
 	}
 }
 
-func (w *StreamWrapper) Render(view string) {
+func (w *StreamWrapper) Render(viewName string) (string, error) {
 
+	templateService := w.factory.Template()
+
+	// Try to load the template from the database
+	template, err := templateService.Load(w.stream.Template)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Stream.Render", "Unable to load Template", w.stream)
+	}
+
+	// Locate / Authenticate the view to use
+
+	view, err := template.View(w.stream.State, viewName)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", viewName)
+	}
+
+	// TODO: need to enforce permissions somewhere...
+
+	// Try to generate the HTML response using the provided data
+	result, err := view.Execute(w)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Stream.Render", "Error rendering view")
+	}
+
+	result = html.CollapseWhitespace(result)
+
+	// TODO: Add caching here...
+
+	// Success!
+	return result, nil
 }
 
 func (w *StreamWrapper) Token() string {
@@ -63,7 +96,7 @@ func (w *StreamWrapper) Parent() (*StreamWrapper, error) {
 	return NewStreamWrapper(w.factory, parent), nil
 }
 
-func (w *StreamWrapper) Children() ([]*StreamWrapper, error) {
+func (w *StreamWrapper) Children() ([]*SubStreamWrapper, error) {
 
 	streamService := w.factory.Stream()
 
@@ -73,5 +106,12 @@ func (w *StreamWrapper) Children() ([]*StreamWrapper, error) {
 		return nil, derp.Report(derp.Wrap(err, "ghost.render.stream.Children", "Error loading child streams", w.stream))
 	}
 
-	return wrapStreamIterator(w.factory, iterator)
+	result := make([]*SubStreamWrapper, iterator.Count())
+	stream := streamService.New()
+
+	for index := 0; iterator.Next(stream); index = index + 1 {
+		result[index] = NewSubStreamWrapper(w.factory, "/"+w.stream.Token, stream)
+	}
+
+	return result, nil
 }

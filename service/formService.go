@@ -9,12 +9,12 @@ import (
 type FormService struct {
 }
 
-func (service FormService) Render(stream *model.Stream, transition *model.Transition) (string, string) {
+func (service FormService) Render(stream *model.Stream, transitionID string, transition *model.Transition) (string, string) {
 
 	var head strings.Builder
 	var foot strings.Builder
 
-	url := "/" + stream.Token + "/forms/" + transition.ID
+	url := "/" + stream.Token + "/forms/" + transitionID
 
 	head.WriteString(`<form method="post" url="`)
 	head.WriteString(url)

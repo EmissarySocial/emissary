@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/presto"
 	"github.com/labstack/echo/v4"
@@ -27,15 +28,15 @@ func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.Handle
 			return err
 		}
 
-		pageService := factory.PageService()
+		wrapper := render.NewStreamWrapper(factory, stream)
 
-		// Generate the result
-		result, err := streamService.Render(stream, ctx.Param("view"))
+		result, errr := wrapper.Render(ctx.Param("view"))
 
-		if err != nil {
-			derp.Report(err)
-			return ctx.String(err.Code, "")
+		if errr != nil {
+			return derp.Report(derp.Wrap(errr, "ghost.handler.GetStream", "Error rendering template"))
 		}
+
+		pageService := factory.PageService()
 
 		header, footer := pageService.Render(ctx, stream, ctx.Param("view"))
 
