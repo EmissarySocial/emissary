@@ -14,7 +14,7 @@ const CollectionStreamSource = "StreamSource"
 
 // StreamSource manages all interactions with the StreamSource collection
 type StreamSource struct {
-	factory    Factory
+	factory    *Factory
 	collection data.Collection
 }
 

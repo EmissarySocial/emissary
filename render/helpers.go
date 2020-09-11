@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-func wrapStreamIterator(factory service.Factory, iterator data.Iterator) ([]*StreamWrapper, error) {
+func wrapStreamIterator(factory *service.Factory, iterator data.Iterator) ([]*StreamWrapper, error) {
 
 	var stream model.Stream
 

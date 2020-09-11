@@ -6,14 +6,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
+func GetTransition(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		token := ctx.Param("token")
 		transitionID := ctx.Param("transitionId")
 
-		factory := factoryMaker.Factory(ctx.Request().Context())
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return err
+		}
 
 		streamService := factory.Stream()
 		templateService := factory.Template()
@@ -76,10 +80,16 @@ func GetTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 	}
 }
 
-func PostTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
+func PostTransition(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Get Factory and services required for this step
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return err
+		}
 		// Get parameters from context
 		token := ctx.Param("token")
 		transitionID := ctx.Param("transitionId")
@@ -90,8 +100,6 @@ func PostTransition(factoryMaker service.FactoryMaker) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
 		}
 
-		// Get Factory and services required for this step
-		factory := factoryMaker.Factory(ctx.Request().Context())
 		streamService := factory.Stream()
 		templateService := factory.Template()
 

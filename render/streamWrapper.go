@@ -8,11 +8,11 @@ import (
 )
 
 type StreamWrapper struct {
-	factory service.Factory
+	factory *service.Factory
 	stream  *model.Stream
 }
 
-func NewStreamWrapper(factory service.Factory, stream *model.Stream) *StreamWrapper {
+func NewStreamWrapper(factory *service.Factory, stream *model.Stream) *StreamWrapper {
 
 	return &StreamWrapper{
 		factory: factory,
@@ -28,7 +28,7 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	template, err := templateService.Load(w.stream.Template)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Unable to load Template", w.stream)
+		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unable to load Template", w.stream.Template)
 	}
 
 	// Locate / Authenticate the view to use
@@ -36,7 +36,7 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	view, err := template.View(w.stream.State, viewName)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", viewName)
+		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unrecognized view", viewName)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -45,7 +45,7 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	result, err := view.Execute(w)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Error rendering view")
+		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Error rendering view")
 	}
 
 	result = html.CollapseWhitespace(result)

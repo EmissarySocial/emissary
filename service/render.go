@@ -3,7 +3,7 @@ package service
 import "github.com/benpate/ghost/model"
 
 type Render struct {
-	factory Factory
+	factory *Factory
 }
 
 type Renderer interface {

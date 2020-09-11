@@ -10,9 +10,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ServerSentEvent(b *service.RealtimeBroker) echo.HandlerFunc {
+func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
+
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		b := factory.RealtimeBroker()
 
 		r := ctx.Request()
 		w := ctx.Response().Writer

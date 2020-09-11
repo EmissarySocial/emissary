@@ -7,11 +7,15 @@ import (
 )
 
 // GetRSS returns an RSS data feed for the requested URL
-func GetRSS(fm service.FactoryMaker) echo.HandlerFunc {
+func GetRSS(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		factory := fm.Factory(ctx.Request().Context())
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return err
+		}
 
 		service := factory.RSS()
 

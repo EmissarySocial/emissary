@@ -6,29 +6,14 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // StreamWatcher initiates a mongodb change stream to on every updates to Stream data objects
-func StreamWatcher(uri string, database string) chan model.Stream {
+func StreamWatcher(collection *mongo.Collection) chan model.Stream {
 
 	result := make(chan model.Stream)
 
 	ctx := context.Background()
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-
-	if err != nil {
-		derp.Report(err)
-		return result
-	}
-
-	if err := client.Connect(ctx); err != nil {
-		derp.Report(err)
-		return result
-	}
-
-	collection := client.Database(database).Collection("Stream")
 
 	cs, err := collection.Watch(ctx, mongo.Pipeline{})
 

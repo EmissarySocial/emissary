@@ -14,7 +14,7 @@ const CollectionBlockList = "BlockList"
 
 // BlockList manages all interactions with the BlockList collection
 type BlockList struct {
-	factory    Factory
+	factory    *Factory
 	collection data.Collection
 }
 
@@ -62,51 +62,7 @@ func (service BlockList) Delete(actor *model.BlockList, note string) *derp.Error
 	return nil
 }
 
-//// GENERIC FUNCTIONS //////////////////
-
-// NewObject wraps the `New` method as a generic Object
-func (service BlockList) NewObject() data.Object {
-	return service.New()
-}
-
-// ListObjects wraps the `List` method as a generic Object
-func (service BlockList) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.List(criteria, options...)
-}
-
-// LoadObject wraps the `Load` method as a generic Object
-func (service BlockList) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
-	return service.Load(criteria)
-}
-
-// SaveObject wraps the `Save` method as a generic Object
-func (service BlockList) SaveObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.BlockList); ok {
-		return service.Save(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.BlockList", "Object is not a model.BlockList", object, note)
-}
-
-// DeleteObject wraps the `Delete` method as a generic Object
-func (service BlockList) DeleteObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.BlockList); ok {
-		return service.Delete(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.BlockList", "Object is not a model.BlockList", object, note)
-}
-
-// Close cleans up the service and any outstanding connections.
-func (service BlockList) Close() {
-	service.factory.Close()
-}
-
-////////////////////////////////////
+////////////////////////////////////////////////////
 // CUSTOM FUNCTIONS
 ////////////////////////////////////////////////////
 

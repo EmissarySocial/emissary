@@ -16,7 +16,7 @@ const CollectionStream = "Stream"
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	factory    Factory
+	factory    *Factory
 	collection data.Collection
 }
 

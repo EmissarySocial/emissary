@@ -43,7 +43,7 @@ type RealtimeClient struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory Factory) *RealtimeBroker {
+func NewRealtimeBroker(factory *Factory) *RealtimeBroker {
 
 	result := &RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
@@ -73,7 +73,7 @@ func NewRealtimeClient(token string, view string) *RealtimeClient {
 // the addition & removal of clients, as well as the broadcasting
 // of messages out to clients that are currently attached.
 //
-func (b *RealtimeBroker) Listen(factory Factory) {
+func (b *RealtimeBroker) Listen(factory *Factory) {
 
 	// Get the stream service
 	streamService := factory.Stream()

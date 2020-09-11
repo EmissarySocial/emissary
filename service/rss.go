@@ -12,7 +12,7 @@ import (
 
 // RSS service generates RSS feeds of the available streams in the database
 type RSS struct {
-	factory Factory
+	factory *Factory
 }
 
 // Feed generates an RSS data feed based on the provided query criteria.  This feed

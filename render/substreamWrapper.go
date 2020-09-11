@@ -8,12 +8,12 @@ import (
 )
 
 type SubStreamWrapper struct {
-	factory   service.Factory
+	factory   *service.Factory
 	parentURL string
 	stream    *model.Stream
 }
 
-func NewSubStreamWrapper(factory service.Factory, parentURL string, stream *model.Stream) *SubStreamWrapper {
+func NewSubStreamWrapper(factory *service.Factory, parentURL string, stream *model.Stream) *SubStreamWrapper {
 
 	return &SubStreamWrapper{
 		factory:   factory,

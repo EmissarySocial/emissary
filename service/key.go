@@ -14,7 +14,7 @@ const CollectionKey = "Key"
 
 // Key manages all interactions with the Key collection
 type Key struct {
-	factory    Factory
+	factory    *Factory
 	collection data.Collection
 }
 
@@ -60,48 +60,4 @@ func (service Key) Delete(key *model.Key, note string) *derp.Error {
 	}
 
 	return nil
-}
-
-//// GENERIC FUNCTIONS //////////////////
-
-// NewObject wraps the `New` method as a generic Object
-func (service Key) NewObject() data.Object {
-	return service.New()
-}
-
-// ListObjects wraps the `List` method as a generic Object
-func (service Key) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.List(criteria, options...)
-}
-
-// LoadObject wraps the `Load` method as a generic Object
-func (service Key) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
-	return service.Load(criteria)
-}
-
-// SaveObject wraps the `Save` method as a generic Object
-func (service Key) SaveObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.Key); ok {
-		return service.Save(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Key", "Object is not a model.Key", object, note)
-}
-
-// DeleteObject wraps the `Delete` method as a generic Object
-func (service Key) DeleteObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.Key); ok {
-		return service.Delete(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Key", "Object is not a model.Key", object, note)
-}
-
-// Close cleans up the service and any outstanding connections.
-func (service Key) Close() {
-	service.factory.Close()
 }

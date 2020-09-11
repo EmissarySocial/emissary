@@ -9,13 +9,16 @@ import (
 )
 
 // GetStream generates the base HTML for a stream
-func GetStream(maker service.FactoryMaker, roles ...presto.RoleFunc) echo.HandlerFunc {
+func GetStream(factoryManager *service.FactoryManager, roles ...presto.RoleFunc) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		// Get the service factory
-		factory := maker.Factory(ctx.Request().Context())
-		defer factory.Close()
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return err
+		}
 
 		// Get the stream service
 		streamService := factory.Stream()

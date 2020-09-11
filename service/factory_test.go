@@ -10,7 +10,6 @@ func getTestFactory() Factory {
 
 	session, _ := mockdb.New().Session(context.TODO())
 	return Factory{
-		Context: context.TODO(),
 		Session: session,
 	}
 }

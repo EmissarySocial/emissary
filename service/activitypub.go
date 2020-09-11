@@ -10,12 +10,12 @@ import (
 
 // ActivityPub service manages all interactions with ActivityPub objects
 type ActivityPub struct {
-	factory Factory
+	factory *Factory
 	session data.Session
 }
 
 // GetInbox returns inbox information for the requested Actor
-func (service ActivityPub) GetInbox(actor model.Actor) writer.Collection {
+func (service ActivityPub) GetInbox(actor model.User) writer.Collection {
 	return writer.Collection{}
 }
 
@@ -85,7 +85,7 @@ func (service ActivityPub) PostInbox(info reader.Object) error {
 }
 
 // GetOutbox returns outbox information for the requested Actor
-func (service ActivityPub) GetOutbox(actor model.Actor) writer.Collection {
+func (service ActivityPub) GetOutbox(actor model.User) writer.Collection {
 	return writer.Collection{}
 }
 

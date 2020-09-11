@@ -14,7 +14,7 @@ const CollectionAttachment = "Attachment"
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	factory    Factory
+	factory    *Factory
 	collection data.Collection
 }
 
@@ -60,48 +60,4 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) *der
 	}
 
 	return nil
-}
-
-//// GENERIC FUNCTIONS //////////////////
-
-// NewObject wraps the `New` method as a generic Object
-func (service Attachment) NewObject() data.Object {
-	return service.New()
-}
-
-// ListObjects wraps the `List` method as a generic Object
-func (service Attachment) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.List(criteria, options...)
-}
-
-// LoadObject wraps the `Load` method as a generic Object
-func (service Attachment) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
-	return service.Load(criteria)
-}
-
-// SaveObject wraps the `Save` method as a generic Object
-func (service Attachment) SaveObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.Attachment); ok {
-		return service.Save(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Attachment", "Object is not a model.Attachment", object, note)
-}
-
-// DeleteObject wraps the `Delete` method as a generic Object
-func (service Attachment) DeleteObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.Attachment); ok {
-		return service.Delete(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Attachment", "Object is not a model.Attachment", object, note)
-}
-
-// Close cleans up the service and any outstanding connections.
-func (service Attachment) Close() {
-	service.factory.Close()
 }
