@@ -23,7 +23,7 @@ func TestStream_ReadWrite(t *testing.T) {
 		return
 	}
 
-	stream2, err := service.Load(expression.New("token", "=", "my-new-stream"))
+	stream2, err := service.Load(expression.Equal("token", "my-new-stream"))
 
 	if err != nil {
 		t.Error(err)

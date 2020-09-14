@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service/templateSource"
 	"github.com/benpate/ghost/vocabulary"
+	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -24,6 +25,7 @@ type Factory struct {
 	templateService *Template
 	templateWatcher chan model.Template
 	realtimeBroker  *RealtimeBroker
+	steranko        *steranko.Steranko
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
@@ -120,6 +122,23 @@ func (factory *Factory) User() User {
 		factory:    factory,
 		collection: factory.Session.Collection(CollectionUser),
 	}
+}
+
+// Steranko returns a fully populated Steranko adapter for the User service.
+func (factory *Factory) Steranko() *steranko.Steranko {
+
+	if factory.steranko == nil {
+
+		userService := SterankoUserService{
+			userService: factory.User(),
+		}
+
+		config := steranko.Config{}
+
+		factory.steranko = steranko.New(userService, config)
+	}
+
+	return factory.steranko
 }
 
 ///////////////////////////////////////

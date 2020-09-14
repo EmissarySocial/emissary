@@ -66,41 +66,6 @@ func (service User) Close() {
 	service.factory.Close()
 }
 
-//// GENERIC FUNCTIONS //////////////////
-
-// NewObject wraps the `New` method as a generic Object
-func (service User) NewObject() data.Object {
-	return service.New()
-}
-
-// ListObjects wraps the `List` method as a generic Object
-func (service User) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
-	return service.List(criteria, options...)
-}
-
-// LoadObject wraps the `Load` method as a generic Object
-func (service User) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
-	return service.Load(criteria)
-}
-
-// SaveObject wraps the `Save` method as a generic Object
-func (service User) SaveObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.User); ok {
-		return service.Save(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.User", "Object is not a model.User", object, note)
-}
-
-// DeleteObject wraps the `Delete` method as a generic Object
-func (service User) DeleteObject(object data.Object, note string) *derp.Error {
-
-	if object, ok := object.(*model.User); ok {
-		return service.Delete(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.User", "Object is not a model.User", object, note)
+func (service User) LoadByUsername(username string) (*model.User, *derp.Error) {
+	return service.Load(expression.Equal("username", username))
 }

@@ -6,28 +6,27 @@ require (
 	github.com/benpate/activitystream v0.1.2
 	github.com/benpate/choose v0.1.1
 	github.com/benpate/convert v0.7.1
-	github.com/benpate/data v0.9.2
+	github.com/benpate/data v0.9.3
 	github.com/benpate/derp v0.15.0
 	github.com/benpate/form v0.2.1
 	github.com/benpate/html v0.0.1
 	github.com/benpate/list v0.2.0
 	github.com/benpate/path v0.1.3
 	github.com/benpate/presto v0.8.0
-	github.com/benpate/remote v0.5.8
-	github.com/benpate/schema v0.7.1
+	github.com/benpate/schema v0.8.0
+	github.com/benpate/steranko v0.1.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/go-git/go-git/v5 v5.1.0
+	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gorilla/feeds v1.1.1
-	github.com/labstack/echo v3.3.10+incompatible
+	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.1.17
-	github.com/mmcdole/gofeed v1.0.0
+	github.com/mmcdole/gofeed v1.1.0
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/qri-io/jsonschema v0.2.0
-	github.com/spf13/viper v1.7.1
+	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/tdewolff/minify v2.3.6+incompatible
-	github.com/tdewolff/minify/v2 v2.9.3
-	github.com/tdewolff/parse v2.3.4+incompatible // indirect
+	github.com/tdewolff/minify/v2 v2.9.4
 	go.mongodb.org/mongo-driver v1.4.1
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b //indirect
 )

@@ -5,8 +5,8 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 // View is an individual HTML template that can render a part of a stream

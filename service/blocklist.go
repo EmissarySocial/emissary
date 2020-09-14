@@ -78,7 +78,7 @@ func (service BlockList) Block(id string, identity string, reason string, commen
 
 	// TODO: Add mutex locks around this so that we avoid updating the same blocklist multiple times.
 
-	blockList, err := service.Load(expression.New("_id", expression.OperatorEqual, blockListID))
+	blockList, err := service.Load(expression.Equal("_id", blockListID))
 
 	if err != nil {
 		return derp.Wrap(err, "service.Blocklist.Block", "Can't Load Blocklist", blockListID)

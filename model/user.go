@@ -12,8 +12,8 @@ type User struct {
 	DisplayName string               `json:"displayName" bson:"displayName"` // Name to be displayed for this user
 	Username    string               `json:"username"    bson:"username"`    // This is the primary public identifier for the user.
 	Password    string               `json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
-	
-	ImageURL    string               `json:"imageUrl"    bson:"imageUrl"`    // Avatar image of this user.
+
+	ImageURL string `json:"imageUrl"    bson:"imageUrl"` // Avatar image of this user.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }
@@ -21,4 +21,31 @@ type User struct {
 // ID returns the primary key for this record
 func (user *User) ID() string {
 	return user.UserID.Hex()
+}
+
+//////////////////////////
+// Steranko Interfaces
+
+// GetUsername returns the username for this User.  It helps implement the "steranko.User" interface.
+func (user *User) GetUsername() string {
+	return user.Username
+}
+
+// GetPassword returns the (encrypted) passsword for this User.  It helps implement the "steranko.User" interface.
+func (user *User) GetPassword() string {
+	return user.Password
+}
+
+// SetUsername updates the username for this User.  It helps implement the "steranko.User" interface.
+func (user *User) SetUsername(username string) {
+	user.Username = username
+}
+
+// SetPassword updates the password for this User.  It helps implement the "steranko.User" interface.
+func (user *User) SetPassword(password string) {
+	user.Password = password
+}
+
+func (user *User) Claims() map[string]interface{} {
+	return map[string]interface{}{}
 }

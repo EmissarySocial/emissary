@@ -114,7 +114,7 @@ func (service StreamSource) Close() {
 // ListByMethod identifies all streamSources with a specific "Method" field
 func (service StreamSource) ListByMethod(method model.StreamSourceMethod) (data.Iterator, *derp.Error) {
 
-	criteria := expression.New("method", expression.OperatorEqual, method)
+	criteria := expression.Equal("method", method)
 
 	return service.List(criteria)
 }
