@@ -1,11 +1,9 @@
 package streamSource
 
 import (
-	"context"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/qri-io/jsonschema"
+	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,7 +12,7 @@ import (
 type StreamSource interface {
 	Init(primitive.ObjectID, model.StreamSourceConfig) error
 	JSONForm() string
-	JSONSchema() jsonschema.Schema
+	Schema() schema.Schema
 
 	Poll() ([]model.Stream, error)
 	Webhook(map[string]interface{}) (model.Stream, error)
@@ -46,13 +44,11 @@ func New(adapter model.StreamSourceAdapter, sourceID primitive.ObjectID, config 
 		return nil, derp.New(500, "service.NewSource", "Unrecognized Stream Source", config["type"])
 	}
 
-	// Get the JSON-Schema, and validate the configuration data against it.
-	schema := result.JSONSchema()
+	// Get the Schema, and validate the configuration data against it.
+	schema := result.Schema()
 
-	validationState := schema.Validate(context.TODO(), config)
-
-	if validationState.IsValid() == false {
-		return result, derp.New(500, "source.NewSource", "Invalid configuration info", config, validationState.Errs)
+	if err := schema.Validate(config); err != nil {
+		return result, derp.Wrap(err, "source.NewSource", "Invalid configuration info", config)
 	}
 
 	// Pass the configuration data into the source adapter

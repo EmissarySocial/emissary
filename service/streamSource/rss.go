@@ -3,8 +3,8 @@ package streamSource
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/schema"
 	"github.com/mmcdole/gofeed"
-	"github.com/qri-io/jsonschema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,14 +28,13 @@ func (rss *RSS) Init(sourceID primitive.ObjectID, config model.StreamSourceConfi
 	return nil
 }
 
-// JSONSchema returns a JSON-Schema object that can validate the configuration data required for this adapter
-func (rss RSS) JSONSchema() jsonschema.Schema {
-	return jsonschema.Schema{}
-}
-
 // JSONForm returns a JSON-Form object that can collect the configuration data required for this adapter
 func (rss RSS) JSONForm() string {
 	return ""
+}
+
+func (rss RSS) Schema() schema.Schema {
+	return schema.Schema{}
 }
 
 // Poll checks the remote data source and returnsa slice of model.Stream objects

@@ -2,7 +2,7 @@ package streamSource
 
 import (
 	"github.com/benpate/ghost/model"
-	"github.com/qri-io/jsonschema"
+	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,14 +15,13 @@ func (todo TODO) Init(sourceID primitive.ObjectID, _ model.StreamSourceConfig) e
 	return nil
 }
 
-// JSONSchema returns a JSON-Schema object that can validate the configuration data required for this adapter
-func (todo TODO) JSONSchema() jsonschema.Schema {
-	return jsonschema.Schema{}
-}
-
 // JSONForm returns a JSON-Form object that collects the configuration data required for this adapter
 func (todo TODO) JSONForm() string {
 	return ""
+}
+
+func (todo TODO) Schema() schema.Schema {
+	return schema.Schema{}
 }
 
 // Poll checks the remote data source and returnsa slice of model.Stream objects

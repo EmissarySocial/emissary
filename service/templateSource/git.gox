@@ -188,7 +188,7 @@ func (g *Git) parseJSONSchema(name string, f *object.File) error {
 			return derp.Wrap(err, "service.connector.git.parseHTMLTemplate", "Error getting file contents")
 		}
 
-		schema := jsonschema.Schema{}
+		schema := schema.Schema{}
 
 		if err := json.Unmarshal(contents, &schema); err != nil {
 			return derp.New(500, "Cannot unmarshal JSON schema", string(contents), err)
