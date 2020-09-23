@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 )
 
@@ -10,11 +9,11 @@ import (
 type TemplateSource interface {
 
 	// List returns a list of the templates that this source can access
-	List() ([]string, *derp.Error)
+	List() ([]string, error)
 
 	// Load tries to locate a Template from the TemplateSource data
-	Load(string) (*model.Template, *derp.Error)
+	Load(string) (*model.Template, error)
 
 	// Watch passes realtime updates to templates back through to the provided channel
-	Watch(chan model.Template) *derp.Error
+	Watch(chan model.Template) error
 }

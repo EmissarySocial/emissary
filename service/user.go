@@ -26,12 +26,12 @@ func (service User) New() *model.User {
 }
 
 // List returns an iterator containing all of the Users who match the provided criteria
-func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an User from the database
-func (service User) Load(criteria expression.Expression) (*model.User, *derp.Error) {
+func (service User) Load(criteria expression.Expression) (*model.User, error) {
 
 	contact := service.New()
 
@@ -43,7 +43,7 @@ func (service User) Load(criteria expression.Expression) (*model.User, *derp.Err
 }
 
 // Save adds/updates an User in the database
-func (service User) Save(stage *model.User, note string) *derp.Error {
+func (service User) Save(stage *model.User, note string) error {
 
 	if err := service.collection.Save(stage, note); err != nil {
 		return derp.Wrap(err, "service.Stage", "Error saving Stage", stage, note)
@@ -53,7 +53,7 @@ func (service User) Save(stage *model.User, note string) *derp.Error {
 }
 
 // Delete removes an User from the database (virtual delete)
-func (service User) Delete(stage *model.User, note string) *derp.Error {
+func (service User) Delete(stage *model.User, note string) error {
 
 	if err := service.collection.Delete(stage, note); err != nil {
 		return derp.Wrap(err, "service.Stage", "Error deleting Stage", stage, note)
@@ -66,6 +66,6 @@ func (service User) Close() {
 	service.factory.Close()
 }
 
-func (service User) LoadByUsername(username string) (*model.User, *derp.Error) {
+func (service User) LoadByUsername(username string) (*model.User, error) {
 	return service.Load(expression.Equal("username", username))
 }

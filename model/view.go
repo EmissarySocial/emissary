@@ -23,7 +23,7 @@ func NewView(html string) View {
 }
 
 // Execute executes this template on the provided data.  It maintains a cache of the compiled template
-func (v *View) Execute(data interface{}) (string, *derp.Error) {
+func (v *View) Execute(data interface{}) (string, error) {
 
 	// If this view has already been compiled, then return the compiled version
 	if v.Compiled == nil {

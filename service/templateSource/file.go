@@ -24,7 +24,7 @@ func NewFile(path string) *File {
 }
 
 // List returns all Templates produced by this TemplateSource
-func (fs *File) List() ([]string, *derp.Error) {
+func (fs *File) List() ([]string, error) {
 
 	list, err := ioutil.ReadDir(fs.Path)
 
@@ -48,7 +48,7 @@ func (fs *File) List() ([]string, *derp.Error) {
 }
 
 // Load tries to find a template sub-directory within the filesystem path
-func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
+func (fs *File) Load(templateID string) (*model.Template, error) {
 
 	result := model.NewTemplate(templateID)
 
@@ -89,7 +89,7 @@ func (fs *File) Load(templateID string) (*model.Template, *derp.Error) {
 	return result, nil
 }
 
-func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
+func (fs *File) appendJSON(template *model.Template, data []byte) error {
 
 	var temp model.Template
 
@@ -106,7 +106,7 @@ func (fs *File) appendJSON(template *model.Template, data []byte) *derp.Error {
 /// REAL TIME UPDATES
 
 // Watch populates a channel of model.Template objects every time a template is updated.
-func (fs *File) Watch(updates chan model.Template) *derp.Error {
+func (fs *File) Watch(updates chan model.Template) error {
 
 	watcher, err := fsnotify.NewWatcher()
 

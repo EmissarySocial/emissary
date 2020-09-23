@@ -26,12 +26,12 @@ func (service Attachment) New() *model.Attachment {
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
-func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Attachment from the database
-func (service Attachment) Load(criteria expression.Expression) (*model.Attachment, *derp.Error) {
+func (service Attachment) Load(criteria expression.Expression) (*model.Attachment, error) {
 
 	attachment := service.New()
 
@@ -43,7 +43,7 @@ func (service Attachment) Load(criteria expression.Expression) (*model.Attachmen
 }
 
 // Save adds/updates an Attachment in the database
-func (service Attachment) Save(attachment *model.Attachment, note string) *derp.Error {
+func (service Attachment) Save(attachment *model.Attachment, note string) error {
 
 	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
@@ -53,7 +53,7 @@ func (service Attachment) Save(attachment *model.Attachment, note string) *derp.
 }
 
 // Delete removes an Attachment from the database (virtual delete)
-func (service Attachment) Delete(attachment *model.Attachment, note string) *derp.Error {
+func (service Attachment) Delete(attachment *model.Attachment, note string) error {
 
 	if err := service.collection.Delete(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error deleting Attachment", attachment, note)

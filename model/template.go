@@ -31,7 +31,7 @@ func NewTemplate(templateID string) *Template {
 }
 
 // View locates and verifies a state/view combination.
-func (template Template) View(stateName string, viewName string) (*View, *derp.Error) {
+func (template Template) View(stateName string, viewName string) (*View, error) {
 
 	// If no view name is specified, then use "DEFAULT" instead.
 	if viewName == "" {
@@ -63,7 +63,7 @@ func (template Template) View(stateName string, viewName string) (*View, *derp.E
 }
 
 // Transition returns the Transition for a particular State/Transition combination.
-func (template Template) Transition(stateID string, transitionID string) (*Transition, *derp.Error) {
+func (template Template) Transition(stateID string, transitionID string) (*Transition, error) {
 
 	if state, ok := template.States[stateID]; ok {
 
@@ -76,7 +76,7 @@ func (template Template) Transition(stateID string, transitionID string) (*Trans
 }
 
 // Form returns the Form for a particular State/Transition combination.
-func (template Template) Form(stateID string, transitionID string) (*form.Form, *derp.Error) {
+func (template Template) Form(stateID string, transitionID string) (*form.Form, error) {
 
 	transition, err := template.Transition(stateID, transitionID)
 

@@ -47,7 +47,7 @@ func (service Template) Start() {
 	}
 }
 
-func (service *Template) AddSource(source TemplateSource) *derp.Error {
+func (service *Template) AddSource(source TemplateSource) error {
 
 	service.Sources = append(service.Sources, source)
 
@@ -77,12 +77,12 @@ func (service *Template) AddSource(source TemplateSource) *derp.Error {
 }
 
 // List returns an iterator containing all of the Templates who match the provided criteria
-func (service *Template) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service *Template) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return nil, derp.New(500, "ghost.service.Template.List", "Unimplemented")
 }
 
 // Load retrieves an Template from the database
-func (service *Template) Load(templateID string) (*model.Template, *derp.Error) {
+func (service *Template) Load(templateID string) (*model.Template, error) {
 
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
@@ -113,7 +113,7 @@ func (service *Template) Cache(template *model.Template) {
 }
 
 // Delete removes an Template from the database (virtual delete)
-func (service Template) Delete(template model.Template, note string) *derp.Error {
+func (service Template) Delete(template model.Template, note string) error {
 	delete(service.Templates, template.TemplateID)
 	return nil
 }

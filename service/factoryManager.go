@@ -36,7 +36,7 @@ func NewFactoryManager(c config.Global) *FactoryManager {
 
 // Add appends a new domain into the domain service IF it does not already exist.  If the domain
 // is already in the FactoryManager, then no additional action is taken.
-func (service *FactoryManager) Add(domain config.Domain) *derp.Error {
+func (service *FactoryManager) Add(domain config.Domain) error {
 
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
@@ -67,14 +67,14 @@ func (service *FactoryManager) DomainCount() int {
 }
 
 // ByContext retrieves a domain using an echo.Context
-func (service *FactoryManager) ByContext(ctx echo.Context) (*Factory, *derp.Error) {
+func (service *FactoryManager) ByContext(ctx echo.Context) (*Factory, error) {
 
 	host := service.NormalizeHostname(ctx.Request().Host)
 	return service.ByDomainName(host)
 }
 
 // ByDomainName retrieves a domain using a Domain Name
-func (service *FactoryManager) ByDomainName(name string) (*Factory, *derp.Error) {
+func (service *FactoryManager) ByDomainName(name string) (*Factory, error) {
 
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()

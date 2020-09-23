@@ -7,13 +7,13 @@ require (
 	github.com/benpate/choose v0.1.1
 	github.com/benpate/convert v0.7.1
 	github.com/benpate/data v0.9.3
-	github.com/benpate/derp v0.15.0
+	github.com/benpate/derp v0.18.0
 	github.com/benpate/form v0.2.1
 	github.com/benpate/html v0.0.1
-	github.com/benpate/list v0.2.0
+	github.com/benpate/list v0.3.0
 	github.com/benpate/path v0.1.3
 	github.com/benpate/presto v0.8.0
-	github.com/benpate/schema v0.8.0
+	github.com/benpate/schema v0.8.1
 	github.com/benpate/steranko v0.1.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9

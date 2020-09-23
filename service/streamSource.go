@@ -27,12 +27,12 @@ func (service StreamSource) New() *model.StreamSource {
 }
 
 // List returns an iterator containing all of the StreamSources who match the provided criteria
-func (service StreamSource) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service StreamSource) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an StreamSource from the database
-func (service StreamSource) Load(criteria expression.Expression) (*model.StreamSource, *derp.Error) {
+func (service StreamSource) Load(criteria expression.Expression) (*model.StreamSource, error) {
 
 	account := service.New()
 
@@ -44,7 +44,7 @@ func (service StreamSource) Load(criteria expression.Expression) (*model.StreamS
 }
 
 // Save adds/updates an StreamSource in the database
-func (service StreamSource) Save(account *model.StreamSource, note string) *derp.Error {
+func (service StreamSource) Save(account *model.StreamSource, note string) error {
 
 	if err := service.collection.Save(account, note); err != nil {
 		return derp.Wrap(err, "service.StreamSource", "Error saving StreamSource", account, note)
@@ -54,7 +54,7 @@ func (service StreamSource) Save(account *model.StreamSource, note string) *derp
 }
 
 // Delete removes an StreamSource from the database (virtual delete)
-func (service StreamSource) Delete(account *model.StreamSource, note string) *derp.Error {
+func (service StreamSource) Delete(account *model.StreamSource, note string) error {
 
 	if err := service.collection.Delete(account, note); err != nil {
 		return derp.Wrap(err, "service.StreamSource", "Error deleting StreamSource", account, note)
@@ -71,17 +71,17 @@ func (service StreamSource) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service StreamSource) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service StreamSource) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service StreamSource) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
+func (service StreamSource) LoadObject(criteria expression.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service StreamSource) SaveObject(object data.Object, note string) *derp.Error {
+func (service StreamSource) SaveObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.StreamSource); ok {
 		return service.Save(object, note)
@@ -92,7 +92,7 @@ func (service StreamSource) SaveObject(object data.Object, note string) *derp.Er
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service StreamSource) DeleteObject(object data.Object, note string) *derp.Error {
+func (service StreamSource) DeleteObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.StreamSource); ok {
 		return service.Delete(object, note)
@@ -112,7 +112,7 @@ func (service StreamSource) Close() {
 /// QUERIES //////////////////////////////////
 
 // ListByMethod identifies all streamSources with a specific "Method" field
-func (service StreamSource) ListByMethod(method model.StreamSourceMethod) (data.Iterator, *derp.Error) {
+func (service StreamSource) ListByMethod(method model.StreamSourceMethod) (data.Iterator, error) {
 
 	criteria := expression.Equal("method", method)
 

@@ -29,7 +29,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain) (*Factory, *derp.Error) {
+func NewFactory(domain config.Domain) (*Factory, error) {
 
 	fmt.Println("Starting Hostname: " + domain.Hostname)
 

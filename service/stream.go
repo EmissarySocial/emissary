@@ -28,12 +28,12 @@ func (service Stream) New() *model.Stream {
 }
 
 // List returns an iterator containing all of the Streams who match the provided criteria
-func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Stream from the database
-func (service Stream) Load(criteria expression.Expression) (*model.Stream, *derp.Error) {
+func (service Stream) Load(criteria expression.Expression) (*model.Stream, error) {
 
 	stream := service.New()
 
@@ -45,7 +45,7 @@ func (service Stream) Load(criteria expression.Expression) (*model.Stream, *derp
 }
 
 // Save adds/updates an Stream in the database
-func (service Stream) Save(stream *model.Stream, note string) *derp.Error {
+func (service Stream) Save(stream *model.Stream, note string) error {
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
@@ -55,7 +55,7 @@ func (service Stream) Save(stream *model.Stream, note string) *derp.Error {
 }
 
 // Delete removes an Stream from the database (virtual delete)
-func (service Stream) Delete(stream *model.Stream, note string) *derp.Error {
+func (service Stream) Delete(stream *model.Stream, note string) error {
 
 	if err := service.collection.Delete(stream, note); err != nil {
 		return derp.Wrap(err, "service.Stream", "Error deleting Stream", stream, note)
@@ -72,17 +72,17 @@ func (service Stream) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service Stream) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, *derp.Error) {
+func (service Stream) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service Stream) LoadObject(criteria expression.Expression) (data.Object, *derp.Error) {
+func (service Stream) LoadObject(criteria expression.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
 // SaveObject wraps the `Save` method as a generic Object
-func (service Stream) SaveObject(object data.Object, note string) *derp.Error {
+func (service Stream) SaveObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Stream); ok {
 		return service.Save(object, note)
@@ -93,7 +93,7 @@ func (service Stream) SaveObject(object data.Object, note string) *derp.Error {
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
-func (service Stream) DeleteObject(object data.Object, note string) *derp.Error {
+func (service Stream) DeleteObject(object data.Object, note string) error {
 
 	if object, ok := object.(*model.Stream); ok {
 		return service.Delete(object, note)
@@ -110,35 +110,35 @@ func (service Stream) Close() {
 
 // QUERIES /////////////////////////
 
-func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, *derp.Error) {
+func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
 		expression.
 			New("parentId", expression.OperatorEqual, parentID).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
-func (service Stream) ListByTemplate(template string) (data.Iterator, *derp.Error) {
+func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(
 		expression.
 			New("template", expression.OperatorEqual, template).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
-func (service Stream) LoadByToken(token string) (*model.Stream, *derp.Error) {
+func (service Stream) LoadByToken(token string) (*model.Stream, error) {
 	return service.Load(
 		expression.
 			New("token", expression.OperatorEqual, token).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
-func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, *derp.Error) {
+func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, error) {
 	return service.Load(
 		expression.
 			New("_id", expression.OperatorEqual, streamID).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
-func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, *derp.Error) {
+func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
 	if stream.HasParent() == false {
 		return nil, derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
@@ -150,7 +150,7 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, *derp.Err
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL
-func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
+func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 	return service.Load(
 		expression.
 			New("sourceUrl", expression.OperatorEqual, url).
@@ -161,7 +161,7 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, *derp.Error) {
 
 // Render generates HTML output for the provided stream.  It looks up the appropriate
 // template/view for this stream, and executes the template.
-func (service Stream) Render(stream *model.Stream, viewName string) (string, *derp.Error) {
+func (service Stream) Render(stream *model.Stream, viewName string) (string, error) {
 
 	templateService := service.factory.Template()
 
@@ -198,7 +198,7 @@ func (service Stream) Render(stream *model.Stream, viewName string) (string, *de
 }
 
 // Transition handles a transition request to move the stream from one state into another state.
-func (service Stream) Transition(stream *model.Stream, template *model.Template, transitionID string, data map[string]interface{}) *derp.Error {
+func (service Stream) Transition(stream *model.Stream, template *model.Template, transitionID string, data map[string]interface{}) error {
 
 	transition, err := template.Transition(stream.State, transitionID)
 

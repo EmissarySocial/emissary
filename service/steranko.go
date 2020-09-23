@@ -17,12 +17,12 @@ func (service SterankoUserService) New() steranko.User {
 }
 
 // Load retrieves a single User from the database
-func (service SterankoUserService) Load(username string) (steranko.User, *derp.Error) {
+func (service SterankoUserService) Load(username string) (steranko.User, error) {
 	return service.userService.LoadByUsername(username)
 }
 
 // Save inserts/updates a single User in the database
-func (service SterankoUserService) Save(user steranko.User, comment string) *derp.Error {
+func (service SterankoUserService) Save(user steranko.User, comment string) error {
 
 	if user, ok := user.(*model.User); ok {
 		return service.userService.Save(user, comment)
@@ -32,7 +32,7 @@ func (service SterankoUserService) Save(user steranko.User, comment string) *der
 }
 
 // Delete removes a single User from the database
-func (service SterankoUserService) Delete(user steranko.User, comment string) *derp.Error {
+func (service SterankoUserService) Delete(user steranko.User, comment string) error {
 
 	if user, ok := user.(*model.User); ok {
 		return service.userService.Delete(user, comment)
@@ -46,6 +46,6 @@ func (service SterankoUserService) Close() {
 	service.userService.Close()
 }
 
-func (service SterankoUserService) RequestPasswordReset(user steranko.User) *derp.Error {
+func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
 	return nil
 }

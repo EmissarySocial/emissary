@@ -19,7 +19,7 @@ type Domain struct {
 	ForwardTo     string   `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
 }
 
-func Load(filename string) (Global, *derp.Error) {
+func Load(filename string) (Global, error) {
 
 	result := Default()
 
