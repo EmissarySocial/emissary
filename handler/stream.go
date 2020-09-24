@@ -4,12 +4,11 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
-	"github.com/benpate/presto"
 	"github.com/labstack/echo/v4"
 )
 
 // GetStream generates the base HTML for a stream
-func GetStream(factoryManager *service.FactoryManager, roles ...presto.RoleFunc) echo.HandlerFunc {
+func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
