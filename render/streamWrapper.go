@@ -4,7 +4,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/benpate/html"
 )
 
 type StreamWrapper struct {
@@ -20,7 +19,7 @@ func NewStreamWrapper(factory *service.Factory, stream *model.Stream) *StreamWra
 	}
 }
 
-func (w *StreamWrapper) Render(viewName string) (string, error) {
+func (w *StreamWrapper) Render(viewName string) (*string, error) {
 
 	templateService := w.factory.Template()
 
@@ -28,7 +27,7 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	template, err := templateService.Load(w.stream.Template)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unable to load Template", w.stream.Template)
+		return nil, derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unable to load Template", w.stream.Template)
 	}
 
 	// Locate / Authenticate the view to use
@@ -36,7 +35,7 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	view, err := template.View(w.stream.State, viewName)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unrecognized view", viewName)
+		return nil, derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unrecognized view", viewName)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -45,15 +44,13 @@ func (w *StreamWrapper) Render(viewName string) (string, error) {
 	result, err := view.Execute(w)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Error rendering view")
+		return nil, derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Error rendering view")
 	}
-
-	result = html.CollapseWhitespace(result)
 
 	// TODO: Add caching here...
 
 	// Success!
-	return result, nil
+	return &result, nil
 }
 
 func (w *StreamWrapper) Token() string {

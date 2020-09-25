@@ -124,23 +124,6 @@ func (factory *Factory) User() User {
 	}
 }
 
-// Steranko returns a fully populated Steranko adapter for the User service.
-func (factory *Factory) Steranko() *steranko.Steranko {
-
-	if factory.steranko == nil {
-
-		userService := SterankoUserService{
-			userService: factory.User(),
-		}
-
-		config := steranko.Config{}
-
-		factory.steranko = steranko.New(userService, config)
-	}
-
-	return factory.steranko
-}
-
 ///////////////////////////////////////
 // WATCHERS
 
@@ -178,7 +161,25 @@ func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 	return factory.realtimeBroker
 }
 
-/// NON MODEL SERVICES
+///////////////////////////////////////
+// NON MODEL SERVICES
+
+// Steranko returns a fully populated Steranko adapter for the User service.
+func (factory *Factory) Steranko() *steranko.Steranko {
+
+	if factory.steranko == nil {
+
+		userService := SterankoUserService{
+			userService: factory.User(),
+		}
+
+		config := steranko.Config{}
+
+		factory.steranko = steranko.New(userService, config)
+	}
+
+	return factory.steranko
+}
 
 func (factory *Factory) Render() *Render {
 	return &Render{

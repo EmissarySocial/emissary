@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
@@ -16,39 +18,43 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return err
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Unrecognized domain"))
 		}
 
 		// Get the stream service
 		streamService := factory.Stream()
-
 		stream, err := streamService.LoadByToken(ctx.Param("token"))
 
 		if err != nil {
-			err = derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service")
-			derp.Report(err)
-			return err
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service"))
 		}
 
-		wrapper := render.NewStreamWrapper(factory, stream)
+		// Render inner content
+		streamWrapper := render.NewStreamWrapper(factory, stream)
+		innerHTML, err := streamWrapper.Render(ctx.Param("view"))
 
-		result, errr := wrapper.Render(ctx.Param("view"))
-
-		if errr != nil {
-			return derp.Report(derp.Wrap(errr, "ghost.handler.GetStream", "Error rendering template"))
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
 		}
 
-		pageService := factory.PageService()
+		// Render wrapper content
+		domainWrapper := render.NewDomainWrapper(factory, streamWrapper, innerHTML)
+		domainView := getDomainView(ctx.Request())
+		result, err := domainWrapper.Render(domainView)
 
-		header, footer := pageService.Render(ctx, stream, ctx.Param("view"))
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering wrapper"))
+		}
 
-		// Success!
-		response := ctx.Response()
-		response.WriteHeader(200)
-		response.Write([]byte(header))
-		response.Write([]byte(result))
-		response.Write([]byte(footer))
-
-		return nil
+		return ctx.HTML(http.StatusOK, *result)
 	}
+}
+
+func getDomainView(r *http.Request) string {
+
+	if r.Header.Get("hx-request") == "true" {
+		return "stream"
+	}
+
+	return "page"
 }
