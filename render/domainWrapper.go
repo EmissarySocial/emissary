@@ -8,17 +8,25 @@ import (
 )
 
 type DomainWrapper struct {
-	factory   *service.Factory
-	stream    *StreamWrapper
-	innerHTML *string
+	factory    *service.Factory
+	stream     *StreamWrapper
+	domainView string
+	streamView string
+	innerHTML  *string
 }
 
-func NewDomainWrapper(factory *service.Factory, stream *StreamWrapper, innerHTML *string) *DomainWrapper {
+func NewDomainWrapper(factory *service.Factory, stream *StreamWrapper, domainView string, streamView string, innerHTML *string) *DomainWrapper {
 
-	return &DomainWrapper{factory: factory, stream: stream, innerHTML: innerHTML}
+	return &DomainWrapper{
+		factory:    factory,
+		stream:     stream,
+		domainView: domainView,
+		streamView: streamView,
+		innerHTML:  innerHTML,
+	}
 }
 
-func (w *DomainWrapper) Render(viewName string) (*string, error) {
+func (w *DomainWrapper) Render() (*string, error) {
 
 	templateService := w.factory.Template()
 
@@ -30,10 +38,10 @@ func (w *DomainWrapper) Render(viewName string) (*string, error) {
 	}
 
 	// Locate / Authenticate the view to use
-	view, err := template.View("default", viewName)
+	view, err := template.View("default", w.domainView)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unrecognized view", viewName)
+		return nil, derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unrecognized view", w.domainView)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -49,6 +57,18 @@ func (w *DomainWrapper) Render(viewName string) (*string, error) {
 
 	// Success!
 	return &result, nil
+}
+
+func (w *DomainWrapper) StreamID() string {
+	return w.stream.StreamID()
+}
+
+func (w *DomainWrapper) Token() string {
+	return w.stream.Token()
+}
+
+func (w *DomainWrapper) View() string {
+	return w.streamView
 }
 
 func (w *DomainWrapper) InnerHTML() template.HTML {

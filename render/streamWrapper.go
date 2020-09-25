@@ -9,6 +9,7 @@ import (
 type StreamWrapper struct {
 	factory *service.Factory
 	stream  *model.Stream
+	view    string
 }
 
 func NewStreamWrapper(factory *service.Factory, stream *model.Stream) *StreamWrapper {
@@ -51,6 +52,10 @@ func (w *StreamWrapper) Render(viewName string) (*string, error) {
 
 	// Success!
 	return &result, nil
+}
+
+func (w *StreamWrapper) StreamID() string {
+	return w.stream.StreamID.String()
 }
 
 func (w *StreamWrapper) Token() string {

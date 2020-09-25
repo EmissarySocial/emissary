@@ -30,17 +30,18 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render inner content
+		streamView := ctx.Param("view")
 		streamWrapper := render.NewStreamWrapper(factory, stream)
-		innerHTML, err := streamWrapper.Render(ctx.Param("view"))
+		innerHTML, err := streamWrapper.Render(streamView)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
 		}
 
 		// Render wrapper content
-		domainWrapper := render.NewDomainWrapper(factory, streamWrapper, innerHTML)
 		domainView := getDomainView(ctx.Request())
-		result, err := domainWrapper.Render(domainView)
+		domainWrapper := render.NewDomainWrapper(factory, streamWrapper, domainView, streamView, innerHTML)
+		result, err := domainWrapper.Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering wrapper"))
