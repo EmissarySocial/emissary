@@ -192,19 +192,19 @@ func (factory *Factory) FormLibrary() form.Library {
 
 /////////////////////// Render Library
 
-// DomainRenderer returns a full populated render.DomainWrapper object
-func (factory *Factory) DomainRenderer(renderer render.Renderer, view string) render.DomainWrapper {
-	return render.NewDomainWrapper(factory.Template(), renderer, view)
+// DomainRenderer returns a full populated render.Domain object
+func (factory *Factory) DomainRenderer(renderer render.Renderer, view string) render.Domain {
+	return render.NewDomain(factory.Template(), renderer, view)
 }
 
-// StreamRenderer returns a fully populated render.StreamWrapper object
-func (factory *Factory) StreamRenderer(stream *model.Stream, view string) render.StreamWrapper {
-	return render.NewStreamWrapper(factory.Template(), factory.Stream(), stream, view)
+// StreamRenderer returns a fully populated render.Stream object
+func (factory *Factory) StreamRenderer(stream *model.Stream, wrapper string, view string) render.Stream {
+	return render.NewStream(factory.Template(), factory.Stream(), stream, wrapper, view)
 }
 
-// FormRenderer returns a fully populated render.FormWrapper object
-func (factory *Factory) FormRenderer(stream *model.Stream, transition string) render.FormWrapper {
-	return render.NewFormWrapper(factory.Template(), factory.FormLibrary(), stream, transition)
+// FormRenderer returns a fully populated render.Form object
+func (factory *Factory) FormRenderer(stream *model.Stream, transition string) render.Form {
+	return render.NewForm(factory.Template(), factory.FormLibrary(), stream, transition)
 }
 
 // RSS returns a fully populated RSS service

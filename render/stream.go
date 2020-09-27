@@ -1,108 +1,116 @@
 package render
 
 import (
+	"bytes"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 )
 
-// StreamWrapper wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
-type StreamWrapper struct {
+// Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
+type Stream struct {
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
+	wrapper         string
 	view            string
 }
 
-// NewStreamWrapper returns a fully initialized StreamWrapper object.
-func NewStreamWrapper(templateService TemplateService, streamService StreamService, stream *model.Stream, view string) StreamWrapper {
+// NewStream returns a fully initialized Stream object.
+func NewStream(templateService TemplateService, streamService StreamService, stream *model.Stream, wrapper string, view string) Stream {
 
-	return StreamWrapper{
+	return Stream{
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
+		wrapper:         wrapper,
 		view:            view,
 	}
 }
 
 // Render generates an HTML output for a stream/view combination.
-func (w StreamWrapper) Render() (string, error) {
+func (w Stream) Render() (string, error) {
 
-	// Try to load the template from the database
-	template, err := w.templateService.Load(w.stream.Template)
+	// Load domain wrapper
+	_, wrapper, err := w.templateService.LoadCompiled("domain", "default", w.wrapper)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unable to load Template", w.stream.Template)
+		return "", derp.Wrap(err, "ghose.render.Stream.Render", "Unable to load domain wrapper")
 	}
 
-	// Locate / Authenticate the view to use
-
-	view, err := template.View(w.stream.State, w.view)
+	// Load stream content
+	_, inner, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.view)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Unrecognized view", w.view)
+		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
 	}
 
-	// TODO: need to enforce permissions somewhere...
+	// Add stream content as a sub-template of the domain wrapper
+	wrapper.AddParseTree("content", inner.Tree)
 
-	// Try to generate the HTML response using the provided data
-	result, err := view.Execute(w)
+	var result bytes.Buffer
 
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.StreamWrapper.Render", "Error rendering view")
+	//
+	if err := wrapper.Execute(&result, w); err != nil {
+		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
 	}
 
 	// TODO: Add caching here...
 
 	// Success!
-	return result, nil
+	return result.String(), nil
 }
 
-func (w StreamWrapper) Stream() StreamWrapper {
+func (w Stream) Stream() Stream {
 	return w
 }
 
 // StreamID returns the unique ID for the stream being rendered
-func (w StreamWrapper) StreamID() string {
+func (w Stream) StreamID() string {
 	return w.stream.StreamID.String()
 }
 
 // Token returns the unique URL token for the stream being rendered
-func (w StreamWrapper) Token() string {
+func (w Stream) Token() string {
 	return w.stream.Token
 }
 
+func (w Stream) View() string {
+	return w.view
+}
+
 // Label returns the Label for the stream being rendered
-func (w StreamWrapper) Label() string {
+func (w Stream) Label() string {
 	return w.stream.Label
 }
 
 // Description returns the description of the stream being rendered
-func (w StreamWrapper) Description() string {
+func (w Stream) Description() string {
 	return w.stream.Description
 }
 
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
-func (w StreamWrapper) ThumbnailImage() string {
+func (w Stream) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
 }
 
 // Data returns the custom data map of the stream being rendered
-func (w StreamWrapper) Data() map[string]interface{} {
+func (w Stream) Data() map[string]interface{} {
 	return w.stream.Data
 }
 
 // Tags returns the tags of the stream being rendered
-func (w StreamWrapper) Tags() []string {
+func (w Stream) Tags() []string {
 	return w.stream.Tags
 }
 
 // HasParent returns TRUE if the stream being rendered has a parend objec
-func (w StreamWrapper) HasParent() bool {
+func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
-// Parent returns a StreamWrapper containing the parent of the current stream
-func (w StreamWrapper) Parent() (*StreamWrapper, error) {
+// Parent returns a Stream containing the parent of the current stream
+func (w Stream) Parent() (*Stream, error) {
 
 	parent, err := w.streamService.LoadParent(w.stream)
 
@@ -110,13 +118,13 @@ func (w StreamWrapper) Parent() (*StreamWrapper, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStreamWrapper(w.templateService, w.streamService, parent, w.view)
+	result := NewStream(w.templateService, w.streamService, parent, w.wrapper, w.view)
 
 	return &result, nil
 }
 
-// Children returns an array of SubStreamWrappers containing all of the child elements of the current stream
-func (w StreamWrapper) Children() ([]SubStreamWrapper, error) {
+// Children returns an array of SubStreams containing all of the child elements of the current stream
+func (w Stream) Children() ([]SubStream, error) {
 
 	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
 
@@ -126,10 +134,10 @@ func (w StreamWrapper) Children() ([]SubStreamWrapper, error) {
 
 	var stream *model.Stream
 
-	result := make([]SubStreamWrapper, iterator.Count())
+	result := make([]SubStream, iterator.Count())
 
 	for index := 0; iterator.Next(stream); index = index + 1 {
-		result[index] = NewSubStreamWrapper(w.templateService, w.streamService, stream, w.view)
+		result[index] = NewSubStream(w.templateService, w.streamService, stream, w.view)
 	}
 
 	return result, nil

@@ -6,16 +6,16 @@ import (
 	"github.com/benpate/ghost/model"
 )
 
-type FormWrapper struct {
+type Form struct {
 	templateService TemplateService
 	library         form.Library
 	stream          *model.Stream
 	transition      string
 }
 
-func NewFormWrapper(templateService TemplateService, library form.Library, stream *model.Stream, transition string) FormWrapper {
+func NewForm(templateService TemplateService, library form.Library, stream *model.Stream, transition string) Form {
 
-	return FormWrapper{
+	return Form{
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
@@ -23,7 +23,7 @@ func NewFormWrapper(templateService TemplateService, library form.Library, strea
 	}
 }
 
-func (w FormWrapper) Render() (string, error) {
+func (w Form) Render() (string, error) {
 
 	template, err := w.templateService.Load(w.stream.Template)
 
@@ -60,14 +60,14 @@ func (w FormWrapper) Render() (string, error) {
 	return html, nil
 }
 
-func (w FormWrapper) Token() string {
+func (w Form) Token() string {
 	return w.stream.Token
 }
 
-func (w FormWrapper) StreamID() string {
+func (w Form) StreamID() string {
 	return w.stream.StreamID.String()
 }
 
-func (w FormWrapper) Label() string {
+func (w Form) Label() string {
 	return w.stream.Label
 }

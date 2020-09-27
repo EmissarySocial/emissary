@@ -11,7 +11,7 @@
 	<div id="stream">
 		<div hx-sse="connect:/{{.Token}}/sse?view={{.View}} swap:{{.StreamID}}">
 			<div id="stream-updates">
-				{{.InnerHTML}}
+				{{ template "content" . }}
 			</div>
 		</div>
 	</div>

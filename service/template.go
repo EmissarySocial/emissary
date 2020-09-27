@@ -1,6 +1,7 @@
 package service
 
 import (
+	"html/template"
 	"sync"
 
 	"github.com/benpate/data"
@@ -101,6 +102,36 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	}
 
 	return nil, derp.New(404, "ghost.sevice.Template.Load", "Could not load Template", templateID, service.Names())
+}
+
+// LoadCompiled returns the compiled template for the requested arguments.
+func (service *Template) LoadCompiled(templateID string, stateName string, viewName string) (*model.Template, *template.Template, error) {
+
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error loading template")
+	}
+
+	state, err := template.View(stateName, viewName)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error loading state")
+	}
+
+	view, err := state.Compiled()
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error getting compiled template")
+	}
+
+	clone, err := view.Clone()
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error cloning template")
+	}
+
+	return template, clone, nil
 }
 
 // Cache adds/updates an Template in the memory cache

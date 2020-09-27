@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
 )
@@ -22,9 +21,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Get the stream service
-		templateService := factory.Template()
 		streamService := factory.Stream()
-
 		stream, err := streamService.LoadByToken(ctx.Param("token"))
 
 		if err != nil {
@@ -32,17 +29,15 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render inner content
-		domainView := "page"
+		var wrapper string
 
 		if ctx.Request().Header.Get("hx-request") == "true" {
-			domainView = "stream"
+			wrapper = "stream"
+		} else {
+			wrapper = "page"
 		}
 
-		pipeline :=
-			render.NewDomainWrapper(templateService,
-				render.NewStreamWrapper(templateService, streamService, stream, ctx.QueryParam("view")),
-				domainView,
-			)
+		pipeline := factory.StreamRenderer(stream, wrapper, ctx.QueryParam("view"))
 
 		result, err := pipeline.Render()
 

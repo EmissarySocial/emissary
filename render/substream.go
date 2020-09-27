@@ -6,19 +6,19 @@ import (
 	"github.com/benpate/html"
 )
 
-// SubStreamWrapper contains a stream -- specifically a child stream of the currently rendering page --
+// SubStream contains a stream -- specifically a child stream of the currently rendering page --
 // and provides a list of functions used to render it into HTML
-type SubStreamWrapper struct {
+type SubStream struct {
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
 	view            string
 }
 
-// NewSubStreamWrapper returns a fully populated SubStreamWrapper
-func NewSubStreamWrapper(templateService TemplateService, streamService StreamService, stream *model.Stream, view string) SubStreamWrapper {
+// NewSubStream returns a fully populated SubStream
+func NewSubStream(templateService TemplateService, streamService StreamService, stream *model.Stream, view string) SubStream {
 
-	return SubStreamWrapper{
+	return SubStream{
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
@@ -27,7 +27,7 @@ func NewSubStreamWrapper(templateService TemplateService, streamService StreamSe
 }
 
 // Render returns the HTML rendering of this SubStream
-func (w *SubStreamWrapper) Render() (string, error) {
+func (w *SubStream) Render() (string, error) {
 
 	// Try to load the template from the database
 	template, err := w.templateService.Load(w.stream.Template)
@@ -61,22 +61,22 @@ func (w *SubStreamWrapper) Render() (string, error) {
 	return result, nil
 }
 
-func (w *SubStreamWrapper) Label() string {
+func (w *SubStream) Label() string {
 	return w.stream.Label
 }
 
-func (w *SubStreamWrapper) Description() string {
+func (w *SubStream) Description() string {
 	return w.stream.Description
 }
 
-func (w *SubStreamWrapper) ThumbnailImage() string {
+func (w *SubStream) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
 }
 
-func (w *SubStreamWrapper) Data() map[string]interface{} {
+func (w *SubStream) Data() map[string]interface{} {
 	return w.stream.Data
 }
 
-func (w *SubStreamWrapper) Tags() []string {
+func (w *SubStream) Tags() []string {
 	return w.stream.Tags
 }
