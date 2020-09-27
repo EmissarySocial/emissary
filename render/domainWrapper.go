@@ -4,47 +4,40 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
 )
 
 // DomainWrapper contains a domain configuration and knows how to render it into HTML
 type DomainWrapper struct {
-	factory    *service.Factory
-	stream     *StreamWrapper
-	domainView string
-	streamView string
-	innerHTML  *string
+	templateService TemplateService
+	renderer        Renderer
+	view            string
 }
 
 // NewDomainWrapper returns a fully initialized DomaainWrapper
-func NewDomainWrapper(factory *service.Factory, stream *StreamWrapper, domainView string, streamView string, innerHTML *string) *DomainWrapper {
+func NewDomainWrapper(templateService TemplateService, renderer Renderer, view string) DomainWrapper {
 
-	return &DomainWrapper{
-		factory:    factory,
-		stream:     stream,
-		domainView: domainView,
-		streamView: streamView,
-		innerHTML:  innerHTML,
+	return DomainWrapper{
+		templateService: templateService,
+		renderer:        renderer,
+		view:            view,
 	}
 }
 
 // Render generates the HTML output of the chrome, or wrapper for this domain
-func (w *DomainWrapper) Render() (*string, error) {
-
-	templateService := w.factory.Template()
+func (w *DomainWrapper) Render() (string, error) {
 
 	// Try to load the template from the database
-	template, err := templateService.Load("domain")
+	template, err := w.templateService.Load("domain")
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unable to load Domain Template")
+		return "", derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unable to load Domain Template")
 	}
 
 	// Locate / Authenticate the view to use
-	view, err := template.View("default", w.domainView)
+	view, err := template.View("default", w.view)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unrecognized view", w.domainView)
+		return "", derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Unrecognized view", w.view)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -53,36 +46,42 @@ func (w *DomainWrapper) Render() (*string, error) {
 	result, err := view.Execute(w)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Error rendering view")
+		return "", derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Error rendering view")
 	}
 
 	// TODO: Add caching here...
 
 	// Success!
-	return &result, nil
+	return result, nil
+}
+
+// Stream returns the StreamWrapper for the stream being generated -- used by templates to render HTML
+func (w *DomainWrapper) Stream() StreamWrapper {
+	return w.renderer.Stream()
 }
 
 // StreamID provides the current StreamID being generated -- used by templates to render HTML
 func (w *DomainWrapper) StreamID() string {
-	return w.stream.StreamID()
+	return w.renderer.Stream().StreamID()
 }
 
 // Token provides the current URL token for the stream being generated -- used by templates to render HTML
 func (w *DomainWrapper) Token() string {
-	return w.stream.Token()
+	return w.renderer.Stream().Token()
 }
 
 // View provides the name of the view being generated -- used by templates to render HTML
 func (w *DomainWrapper) View() string {
-	return w.streamView
+	return w.renderer.Stream().view
 }
 
 // InnerHTML returns the HTML representation of the innerHTML content -- used by templates to render HTML
 func (w *DomainWrapper) InnerHTML() template.HTML {
-	return template.HTML(*w.innerHTML)
-}
+	innerHTML, err := w.renderer.Render()
 
-// Stream returns the StreamWrapper for the stream being generated -- used by templates to render HTML
-func (w *DomainWrapper) Stream() *StreamWrapper {
-	return w.stream
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.render.DomainWrapper.InnerHTML", "Error rendering innerHTML"))
+	}
+
+	return template.HTML(innerHTML)
 }

@@ -22,40 +22,34 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Get the stream service
+		templateService := factory.Template()
 		streamService := factory.Stream()
+
 		stream, err := streamService.LoadByToken(ctx.Param("token"))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream from service"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
 		}
 
 		// Render inner content
-		streamView := ctx.QueryParam("view")
-		streamWrapper := render.NewStreamWrapper(factory, stream)
-		innerHTML, err := streamWrapper.Render(streamView)
+		domainView := "page"
+
+		if ctx.Request().Header.Get("hx-request") == "true" {
+			domainView = "stream"
+		}
+
+		pipeline :=
+			render.NewDomainWrapper(templateService,
+				render.NewStreamWrapper(templateService, streamService, stream, ctx.QueryParam("view")),
+				domainView,
+			)
+
+		result, err := pipeline.Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
 		}
 
-		// Render wrapper content
-		domainView := getDomainView(ctx.Request())
-		domainWrapper := render.NewDomainWrapper(factory, streamWrapper, domainView, streamView, innerHTML)
-		result, err := domainWrapper.Render()
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering wrapper"))
-		}
-
-		return ctx.HTML(http.StatusOK, *result)
+		return ctx.HTML(http.StatusOK, result)
 	}
-}
-
-func getDomainView(r *http.Request) string {
-
-	if r.Header.Get("hx-request") == "true" {
-		return "stream"
-	}
-
-	return "page"
 }

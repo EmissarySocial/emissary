@@ -3,35 +3,34 @@ package render
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/html"
 )
 
 // SubStreamWrapper contains a stream -- specifically a child stream of the currently rendering page --
 // and provides a list of functions used to render it into HTML
 type SubStreamWrapper struct {
-	factory   *service.Factory
-	parentURL string
-	stream    *model.Stream
+	templateService TemplateService
+	streamService   StreamService
+	stream          *model.Stream
+	view            string
 }
 
 // NewSubStreamWrapper returns a fully populated SubStreamWrapper
-func NewSubStreamWrapper(factory *service.Factory, parentURL string, stream *model.Stream) *SubStreamWrapper {
+func NewSubStreamWrapper(templateService TemplateService, streamService StreamService, stream *model.Stream, view string) SubStreamWrapper {
 
-	return &SubStreamWrapper{
-		factory:   factory,
-		parentURL: parentURL,
-		stream:    stream,
+	return SubStreamWrapper{
+		templateService: templateService,
+		streamService:   streamService,
+		stream:          stream,
+		view:            view,
 	}
 }
 
-// Render
-func (w *SubStreamWrapper) Render(viewName string) (string, error) {
-
-	templateService := w.factory.Template()
+// Render returns the HTML rendering of this SubStream
+func (w *SubStreamWrapper) Render() (string, error) {
 
 	// Try to load the template from the database
-	template, err := templateService.Load(w.stream.Template)
+	template, err := w.templateService.Load(w.stream.Template)
 
 	if err != nil {
 		return "", derp.Wrap(err, "service.Stream.Render", "Unable to load Template", w.stream)
@@ -39,10 +38,10 @@ func (w *SubStreamWrapper) Render(viewName string) (string, error) {
 
 	// Locate / Authenticate the view to use
 
-	view, err := template.View(w.stream.State, viewName)
+	view, err := template.View(w.stream.State, w.view)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", viewName)
+		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", w.view)
 	}
 
 	// TODO: need to enforce permissions somewhere...
@@ -60,17 +59,6 @@ func (w *SubStreamWrapper) Render(viewName string) (string, error) {
 
 	// Success!
 	return result, nil
-}
-
-func (w *SubStreamWrapper) RenderWithUpdates(viewName string) (string, error) {
-
-	html, err := w.Render(viewName)
-
-	if err != nil {
-		return "", err
-	}
-
-	return `<div hx-sse="swap:` + w.stream.StreamID.Hex() + `">` + html + `</div>`, nil
 }
 
 func (w *SubStreamWrapper) Label() string {

@@ -57,10 +57,10 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Generate HTML by merging the form with the element library, the data schema, and the data value
-		html, errr := form.HTML(library, *template.Schema, stream)
+		html, err := form.HTML(library, *template.Schema, stream)
 
-		if errr != nil {
-			return derp.Report(derp.Wrap(errr, "ghost.handler.GetTransition", "Error generating form HTML", form))
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error generating form HTML", form))
 		}
 
 		header, footer := pageService.Render(ctx, stream, "")
