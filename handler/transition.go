@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetTransition(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -80,7 +80,7 @@ func GetTransition(factoryManager *service.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func PostTransition(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

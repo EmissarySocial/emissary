@@ -1,5 +1,5 @@
 <div id="stream">
-	<div hx-sse="connect:/{{.Token}}/views/{{.View}}/sse swap:{{.StreamID}}">
+	<div hx-sse="connect:/{{.Token}}/sse?view={{.View}} swap:{{.StreamID}}">
 		<div id="stream-updates">
 			{{.InnerHTML}}
 		</div>

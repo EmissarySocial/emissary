@@ -111,6 +111,8 @@ github.com/benpate/derp v0.15.0 h1:hI6vAaxOaVwAnZDCjhnBIRAqWjmclhUA7PCnC8mt7NM=
 github.com/benpate/derp v0.15.0/go.mod h1:Zne8hUcv/ljV0xIDe58OIbcSSEl7Ckm81oWZ5NCozz0=
 github.com/benpate/derp v0.18.0 h1:u6DH1xgwuEmjtVo5wZGep1SaOpIEchCKrO8rRuNK7Xo=
 github.com/benpate/derp v0.18.0/go.mod h1:Zne8hUcv/ljV0xIDe58OIbcSSEl7Ckm81oWZ5NCozz0=
+github.com/benpate/derp v0.19.0 h1:ge3O4QeXTfePUYFjxNGhepJ3tB43PHNX/pFuHoJmXvI=
+github.com/benpate/derp v0.19.0/go.mod h1:ppa9ihhpc+leDW8d5GKklLicyE6BMuM22MQmObjO8q8=
 github.com/benpate/form v0.1.0 h1:IftsHUaJzgdbF+xgJ13UX0yvgRc7F1nf8vSSJQyBGDA=
 github.com/benpate/form v0.1.0/go.mod h1:7evk9YmTP3JpC2aNAEk0NM5RlwNJ+NNZWTZe65Wm6IQ=
 github.com/benpate/form v0.2.0 h1:KiWlF+SbFiwu6VysSTMRV40DrUBWWoUnM4DL8UW+/AE=
@@ -195,6 +197,8 @@ github.com/benpate/schema v0.7.1/go.mod h1:xyOT2YqGkcE5TtrTKwDmYQRCnGCT7J/aF5CGz
 github.com/benpate/schema v0.8.0/go.mod h1:rmPD1z8OKlYyqOs9RFpITQNktdytRkYOfrezhZlQPFQ=
 github.com/benpate/schema v0.8.2 h1:2R8Sk869nntzpDWD4G0lFGxGEyuHy3jnQeqoDj7IqSs=
 github.com/benpate/schema v0.8.2/go.mod h1:YF6HHp/1TmsGjXaSZ6ycbxOfggGS31KsTquC68zvyGY=
+github.com/benpate/schema v0.9.0 h1:TlFPgMAnVAON7vXA3wKSBi25wrNzYdJKrp451V3jr8g=
+github.com/benpate/schema v0.9.0/go.mod h1:bMdaIwI82CzfzsFq7iYiIwiTjbtrCKw64VbWt7Je7Z4=
 github.com/benpate/steranko v0.1.0/go.mod h1:H9ggrziewEH8UrDLu4xbR23jqN+BneoWP/dpcYJmGfY=
 github.com/benpate/steranko v0.1.2 h1:3tQ3EytPTm+637YCPJmegf3a0feSMS96xzd0IaUV9Kc=
 github.com/benpate/steranko v0.1.2/go.mod h1:QuXhmU9ch06LSDYNV9Zp1rWJgdIaTyxubSOIUkCyxes=

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/benpate/ghost/handler"
+	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
 )
@@ -25,15 +26,13 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.GET("/", handler.TBD)
 
 	// Stream Pages
-	e.GET("/:token", handler.GetStream(factoryManager))
-	e.GET("/:token/forms/:transitionId", handler.GetTransition(factoryManager))
-	e.POST("/:token/forms/:transitionId", handler.PostTransition(factoryManager))
-	e.GET("/:token/views/:view", handler.GetStream(factoryManager))
-	e.GET("/:token/views/:view/sse", handler.ServerSentEvent(factoryManager))
+	e.GET("/:token", handler.GetStream(factoryManager)) // query param ?view=
+	e.GET("/:token/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
+	e.GET("/:token/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
+	e.GET("/:token/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
+	e.GET("/:token/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
+	e.POST("/:token/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
 
-	// e.GET("/:token/:view/websocket", handler.Websocket(broker))
-
-	e.Static("/htmx", "/Users/benpate/Documents/Source Code/github.com/benpate/htmx/src")
 	e.Static("/r", "static")
 
 	// ActivityPub INBOX/OUTBOX

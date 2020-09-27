@@ -1,11 +1,16 @@
 <div>
-	Default | <a href="/{{.Token}}/views/detail" hx-trigger="mousedown">Detail</a>
+	Default | <a href="/{{.Token}}?view=detail" hx-trigger="mousedown">Detail</a>
 </div>
 
 <article>
 	<h3>{{.Label}}</h3>
 	<div>{{.Description}}</div>
 </article>
+
+<div>
+	[ <a href="/{{.Token}}/form/update">UPDATE</a> ]
+</div>
+
 
 <hr>
 FOOTER HERE. with feeling.

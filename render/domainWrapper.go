@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
+// DomainWrapper contains a domain configuration and knows how to render it into HTML
 type DomainWrapper struct {
 	factory    *service.Factory
 	stream     *StreamWrapper
@@ -15,6 +16,7 @@ type DomainWrapper struct {
 	innerHTML  *string
 }
 
+// NewDomainWrapper returns a fully initialized DomaainWrapper
 func NewDomainWrapper(factory *service.Factory, stream *StreamWrapper, domainView string, streamView string, innerHTML *string) *DomainWrapper {
 
 	return &DomainWrapper{
@@ -26,6 +28,7 @@ func NewDomainWrapper(factory *service.Factory, stream *StreamWrapper, domainVie
 	}
 }
 
+// Render generates the HTML output of the chrome, or wrapper for this domain
 func (w *DomainWrapper) Render() (*string, error) {
 
 	templateService := w.factory.Template()
@@ -59,22 +62,27 @@ func (w *DomainWrapper) Render() (*string, error) {
 	return &result, nil
 }
 
+// StreamID provides the current StreamID being generated -- used by templates to render HTML
 func (w *DomainWrapper) StreamID() string {
 	return w.stream.StreamID()
 }
 
+// Token provides the current URL token for the stream being generated -- used by templates to render HTML
 func (w *DomainWrapper) Token() string {
 	return w.stream.Token()
 }
 
+// View provides the name of the view being generated -- used by templates to render HTML
 func (w *DomainWrapper) View() string {
 	return w.streamView
 }
 
+// InnerHTML returns the HTML representation of the innerHTML content -- used by templates to render HTML
 func (w *DomainWrapper) InnerHTML() template.HTML {
 	return template.HTML(*w.innerHTML)
 }
 
+// Stream returns the StreamWrapper for the stream being generated -- used by templates to render HTML
 func (w *DomainWrapper) Stream() *StreamWrapper {
 	return w.stream
 }

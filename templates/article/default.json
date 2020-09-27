@@ -10,9 +10,9 @@
 			"transitions":  {
 				"update": {
 					"label": "Update",
-					"stateId": "default",
+					"nextState": "default",
 					"nextView": "detail",
-					"form": "Default"
+					"form": "default"
 				}
 			}
 		}

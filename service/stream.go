@@ -231,7 +231,7 @@ func (service Stream) Transition(stream *model.Stream, template *model.Template,
 	}
 
 	// Update the stream to the new state
-	stream.State = transition.NextStateID
+	stream.State = transition.NextState
 
 	// TODO:  Actions will be processes here.
 

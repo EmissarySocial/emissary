@@ -30,7 +30,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render inner content
-		streamView := ctx.Param("view")
+		streamView := ctx.QueryParam("view")
 		streamWrapper := render.NewStreamWrapper(factory, stream)
 		innerHTML, err := streamWrapper.Render(streamView)
 

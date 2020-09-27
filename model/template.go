@@ -27,6 +27,7 @@ func NewTemplate(templateID string) *Template {
 		TemplateID: templateID,
 		States:     make(map[string]State),
 		Views:      make(map[string]View),
+		Forms:      make(map[string]form.Form),
 	}
 }
 
@@ -72,7 +73,7 @@ func (template Template) Transition(stateID string, transitionID string) (*Trans
 		}
 	}
 
-	return nil, derp.New(404, "ghost.model.template.Transition", "Unrecognized StateID", stateID)
+	return nil, derp.New(404, "ghost.model.template.Transition", "Unrecognized StateID", stateID, transitionID)
 }
 
 // Form returns the Form for a particular State/Transition combination.
@@ -113,6 +114,12 @@ func (template *Template) Populate(from *Template) {
 	if from.Views != nil {
 		for name, view := range from.Views {
 			template.Views[name] = view
+		}
+	}
+
+	if from.Forms != nil {
+		for name, form := range from.Forms {
+			template.Forms[name] = form
 		}
 	}
 }

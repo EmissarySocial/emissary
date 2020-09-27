@@ -38,9 +38,11 @@ func Text(library form.Library) {
 				tag.Attr("max", s.Maximum.String())
 			}
 
-			if s.Required {
-				tag.Attr("required", "true")
-			}
+			/*
+				if s.Required {
+					tag.Attr("required", "true")
+				}
+			*/
 
 		case schema.Number:
 
@@ -54,9 +56,11 @@ func Text(library form.Library) {
 				tag.Attr("max", s.Maximum.String())
 			}
 
-			if s.Required {
-				tag.Attr("required", true)
-			}
+			/*
+				if s.Required {
+					tag.Attr("required", true)
+				}
+			*/
 
 		case schema.String:
 

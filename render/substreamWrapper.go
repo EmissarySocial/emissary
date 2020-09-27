@@ -7,12 +7,15 @@ import (
 	"github.com/benpate/html"
 )
 
+// SubStreamWrapper contains a stream -- specifically a child stream of the currently rendering page --
+// and provides a list of functions used to render it into HTML
 type SubStreamWrapper struct {
 	factory   *service.Factory
 	parentURL string
 	stream    *model.Stream
 }
 
+// NewSubStreamWrapper returns a fully populated SubStreamWrapper
 func NewSubStreamWrapper(factory *service.Factory, parentURL string, stream *model.Stream) *SubStreamWrapper {
 
 	return &SubStreamWrapper{
@@ -22,6 +25,7 @@ func NewSubStreamWrapper(factory *service.Factory, parentURL string, stream *mod
 	}
 }
 
+// Render
 func (w *SubStreamWrapper) Render(viewName string) (string, error) {
 
 	templateService := w.factory.Template()
@@ -66,8 +70,7 @@ func (w *SubStreamWrapper) RenderWithUpdates(viewName string) (string, error) {
 		return "", err
 	}
 
-	return "<div hx-sse=\"" + w.parentURL + " " + w.stream.StreamID.Hex() + "\">" + html + "</div>", nil
-
+	return `<div hx-sse="swap:` + w.stream.StreamID.Hex() + `">` + html + `</div>`, nil
 }
 
 func (w *SubStreamWrapper) Label() string {

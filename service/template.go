@@ -22,7 +22,7 @@ type Template struct {
 	mutex     sync.RWMutex
 }
 
-func (service Template) Start() {
+func (service *Template) Start() {
 
 	for {
 		template := <-service.Updates
@@ -113,12 +113,12 @@ func (service *Template) Cache(template *model.Template) {
 }
 
 // Delete removes an Template from the database (virtual delete)
-func (service Template) Delete(template model.Template, note string) error {
+func (service *Template) Delete(template model.Template, note string) error {
 	delete(service.Templates, template.TemplateID)
 	return nil
 }
 
-func (service Template) Names() []string {
+func (service *Template) Names() []string {
 
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
