@@ -49,30 +49,20 @@ func (w *DomainWrapper) Render() (string, error) {
 		return "", derp.Wrap(err, "ghost.render.DomainWrapper.Render", "Error rendering view")
 	}
 
-	// TODO: Add caching here...
+	// TODO: Add caching here??
 
 	// Success!
 	return result, nil
 }
 
-// Stream returns the StreamWrapper for the stream being generated -- used by templates to render HTML
-func (w *DomainWrapper) Stream() StreamWrapper {
-	return w.renderer.Stream()
-}
-
 // StreamID provides the current StreamID being generated -- used by templates to render HTML
 func (w *DomainWrapper) StreamID() string {
-	return w.renderer.Stream().StreamID()
+	return w.renderer.StreamID()
 }
 
 // Token provides the current URL token for the stream being generated -- used by templates to render HTML
 func (w *DomainWrapper) Token() string {
-	return w.renderer.Stream().Token()
-}
-
-// View provides the name of the view being generated -- used by templates to render HTML
-func (w *DomainWrapper) View() string {
-	return w.renderer.Stream().view
+	return w.renderer.Token()
 }
 
 // InnerHTML returns the HTML representation of the innerHTML content -- used by templates to render HTML

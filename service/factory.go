@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service/templateSource"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
@@ -181,26 +182,29 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	return factory.steranko
 }
 
-func (factory *Factory) Render() *Render {
-	return &Render{
-		factory: factory,
-	}
-}
-
-func (factory *Factory) PageService() *PageService {
-	return &PageService{}
-}
-
-func (factory *Factory) FormService() *FormService {
-	return &FormService{}
-}
-
 func (factory *Factory) FormLibrary() form.Library {
 
 	library := form.New()
 	vocabulary.All(library)
 
 	return library
+}
+
+/////////////////////// Render Library
+
+// DomainRenderer returns a full populated render.DomainWrapper object
+func (factory *Factory) DomainRenderer(renderer render.Renderer, view string) render.DomainWrapper {
+	return render.NewDomainWrapper(factory.Template(), renderer, view)
+}
+
+// StreamRenderer returns a fully populated render.StreamWrapper object
+func (factory *Factory) StreamRenderer(stream *model.Stream, view string) render.StreamWrapper {
+	return render.NewStreamWrapper(factory.Template(), factory.Stream(), stream, view)
+}
+
+// FormRenderer returns a fully populated render.FormWrapper object
+func (factory *Factory) FormRenderer(stream *model.Stream, transition string) render.FormWrapper {
+	return render.NewFormWrapper(factory.Template(), factory.FormLibrary(), stream, transition)
 }
 
 // RSS returns a fully populated RSS service

@@ -6,148 +6,117 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetForm generates an HTML form for the requested stream/transition
 func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		token := ctx.Param("token")
-		transitionID := ctx.Param("transitionId")
-
+		// Get factory for this context
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
 			return err
 		}
 
+		// Try to load required values
 		streamService := factory.Stream()
-		templateService := factory.Template()
-		pageService := factory.PageService()
-		formService := factory.FormService()
-		library := factory.FormLibrary()
-
+		token := ctx.Param("token")
+		transition := ctx.Param("transitionId")
 		stream, err := streamService.LoadByToken(token)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Stream", token))
 		}
 
-		template, err := templateService.Load(stream.Template)
+		// Create form pipeline.
+		pipeline := factory.DomainRenderer(
+			factory.FormRenderer(stream, transition),
+			"form",
+		)
+
+		// Try to render HTML
+		result, err := pipeline.Render()
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Template", stream.Template))
+			return derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form")
 		}
-
-		transition, err := template.Transition(stream.State, transitionID)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Invalid Transition"))
-		}
-
-		// TODO: Validate that this transition is VALID
-		// TODO: Validate that the USER IS PERMITTED to make this transition.
-
-		if transition == nil {
-			err = derp.New(404, "ghost.handler.GetTransition", "Unrecognized Transition", transitionID)
-		}
-
-		form, err := template.Form(stream.State, transitionID)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Invalid Form", template))
-		}
-
-		// Generate HTML by merging the form with the element library, the data schema, and the data value
-		html, err := form.HTML(library, *template.Schema, stream)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error generating form HTML", form))
-		}
-
-		header, footer := pageService.Render(ctx, stream, "")
-
-		formTop, formBottom := formService.Render(stream, transitionID, transition)
 
 		// Success!
-		response := ctx.Response()
-		response.WriteHeader(200)
-		response.Write([]byte(header))
-		response.Write([]byte(formTop))
-		response.Write([]byte(html))
-		response.Write([]byte(formBottom))
-		response.Write([]byte(footer))
-
-		return nil
+		return ctx.HTML(200, result)
 	}
 }
 
+// PostForm returns an echo.HandlerFunc that accepts form posts
+// and performs actions on streams based on the user's permissions.
 func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		// Get Factory and services required for this step
-		factory, err := factoryManager.ByContext(ctx)
+		/*
+			// Get Factory and services required for this step
+			factory, err := factoryManager.ByContext(ctx)
 
-		if err != nil {
-			return err
-		}
-		// Get parameters from context
-		token := ctx.Param("token")
-		transitionID := ctx.Param("transitionId")
+			if err != nil {
+				return err
+			}
+			// Get parameters from context
+			token := ctx.Param("token")
+			transitionID := ctx.Param("transitionId")
 
-		form := make(map[string]interface{})
+			form := make(map[string]interface{})
 
-		if err := ctx.Bind(&form); err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
-		}
-
-		streamService := factory.Stream()
-		templateService := factory.Template()
-
-		nextView := "default"
-
-		// Load stream
-		stream, err := streamService.LoadByToken(token)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load stream", token))
-		}
-
-		// Load template
-		template, err := templateService.Load(stream.Template)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load template", stream))
-		}
-
-		// Execute transition
-		if transition, err := template.Transition(stream.State, transitionID); err == nil {
-
-			if err := streamService.Transition(stream, template, transitionID, form); err != nil {
-				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
+			if err := ctx.Bind(&form); err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
 			}
 
-			nextView = transition.NextView
-		}
+			streamService := factory.Stream()
+			templateService := factory.Template()
 
-		// Render the "next" view
-		pageService := factory.PageService()
+			nextView := "default"
 
-		// Generate the result
-		result, err := streamService.Render(stream, nextView)
+			// Load stream
+			stream, err := streamService.LoadByToken(token)
 
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error rendering stream"))
-		}
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load stream", token))
+			}
 
-		header, footer := pageService.Render(ctx, stream, nextView)
+			// Load template
+			template, err := templateService.Load(stream.Template)
 
-		// Success!
-		response := ctx.Response()
-		response.WriteHeader(200)
-		response.Write([]byte(header))
-		response.Write([]byte(result))
-		response.Write([]byte(footer))
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load template", stream))
+			}
 
+			// Execute transition
+			if transition, err := template.Transition(stream.State, transitionID); err == nil {
+
+				if err := streamService.Transition(stream, template, transitionID, form); err != nil {
+					return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
+				}
+
+				nextView = transition.NextView
+			}
+
+			// Render the "next" view
+			pageService := factory.PageService()
+
+			// Generate the result
+			result, err := streamService.Render(stream, nextView)
+
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error rendering stream"))
+			}
+
+			header, footer := pageService.Render(ctx, stream, nextView)
+
+			// Success!
+			response := ctx.Response()
+			response.WriteHeader(200)
+			response.Write([]byte(header))
+			response.Write([]byte(result))
+			response.Write([]byte(footer))
+		*/
 		return nil
 	}
 }

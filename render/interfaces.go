@@ -21,5 +21,7 @@ type Renderer interface {
 	// Render returns an HTML rendering of an object.
 	Render() (string, error)
 
-	Stream() StreamWrapper
+	Token() string
+	StreamID() string
+	Label() string
 }
