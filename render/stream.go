@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"html/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -9,6 +10,7 @@ import (
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
+	layout          *template.Template
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
@@ -17,9 +19,10 @@ type Stream struct {
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(templateService TemplateService, streamService StreamService, stream *model.Stream, wrapper string, view string) Stream {
+func NewStream(layout *template.Template, templateService TemplateService, streamService StreamService, stream *model.Stream, wrapper string, view string) Stream {
 
 	return Stream{
+		layout:          layout,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
@@ -31,38 +34,33 @@ func NewStream(templateService TemplateService, streamService StreamService, str
 // Render generates an HTML output for a stream/view combination.
 func (w Stream) Render() (string, error) {
 
-	// Load domain wrapper
-	_, wrapper, err := w.templateService.LoadCompiled("domain", "default", w.wrapper)
+	layout, err := w.layout.Clone()
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghose.render.Stream.Render", "Unable to load domain wrapper")
+		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error cloning template")
 	}
 
 	// Load stream content
-	_, inner, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.view)
+	_, content, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.view)
 
 	if err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
 	}
 
 	// Add stream content as a sub-template of the domain wrapper
-	wrapper.AddParseTree("content", inner.Tree)
+	layout.AddParseTree("content", content.Tree)
 
 	var result bytes.Buffer
 
-	//
-	if err := wrapper.Execute(&result, w); err != nil {
+	// Choose the correct view based on the wrapper provided.
+	if err := layout.ExecuteTemplate(&result, w.wrapper, w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
 	}
 
-	// TODO: Add caching here...
+	// TODO: Add caching...
 
 	// Success!
 	return result.String(), nil
-}
-
-func (w Stream) Stream() Stream {
-	return w
 }
 
 // StreamID returns the unique ID for the stream being rendered
@@ -118,7 +116,7 @@ func (w Stream) Parent() (*Stream, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.templateService, w.streamService, parent, w.wrapper, w.view)
+	result := NewStream(w.layout, w.templateService, w.streamService, parent, w.wrapper, w.view)
 
 	return &result, nil
 }

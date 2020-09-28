@@ -23,6 +23,8 @@ type Template struct {
 	mutex     sync.RWMutex
 }
 
+// Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
+// news that a template has been updated.
 func (service *Template) Start() {
 
 	for {

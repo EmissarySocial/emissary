@@ -1,4 +1,4 @@
-package templateSource
+package templatesource
 
 import (
 	"encoding/json"

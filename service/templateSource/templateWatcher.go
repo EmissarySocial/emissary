@@ -1,4 +1,4 @@
-package templateSource
+package templatesource
 
 /*
 // TemplateWatcher initiates a mongodb change stream to on every updates to Template data objects

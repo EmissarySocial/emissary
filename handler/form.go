@@ -21,24 +21,25 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		// Try to load required values
 		streamService := factory.Stream()
 		token := ctx.Param("token")
-		transition := ctx.Param("transitionId")
+		transitionID := ctx.Param("transitionId")
 		stream, err := streamService.LoadByToken(token)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Stream", token))
 		}
 
-		// Create form pipeline.
-		pipeline := factory.DomainRenderer(
-			factory.FormRenderer(stream, transition),
-			"form",
-		)
+		var wrapper string
+		if ctx.Request().Header.Get("hx-request") == "true" {
+			wrapper = "form-partial"
+		} else {
+			wrapper = "form-full"
+		}
 
-		// Try to render HTML
-		result, err := pipeline.Render()
+		// Render the HTML
+		result, err := factory.FormRenderer(stream, wrapper, transitionID).Render()
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form")
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form"))
 		}
 
 		// Success!

@@ -11,10 +11,9 @@ import (
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/service/templateSource"
+	"github.com/benpate/ghost/service/templatesource"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Factory knows how to create an populate all services
@@ -24,6 +23,7 @@ type Factory struct {
 
 	// singletons (within this domain/factory)
 	templateService *Template
+	layoutService   *Layout
 	templateWatcher chan model.Template
 	realtimeBroker  *RealtimeBroker
 	steranko        *steranko.Steranko
@@ -37,7 +37,6 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 	if err != nil {
-		spew.Dump(err)
 		return nil, derp.Wrap(err, "ghost.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
 	}
 
@@ -54,12 +53,16 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 
 	// Initialize Background Services
 
+	// This loads the web page layout (real-time updates to wait until later)
+	fmt.Println(" - Website Layout.")
+	factory.Layout()
+
 	// TemplateSources
 	templateService := factory.Template()
 
 	for _, path := range domain.TemplatePaths {
 		fmt.Println(" - Template Directory: " + path)
-		fileSource := templateSource.NewFile(path)
+		fileSource := templatesource.NewFile(path)
 		templateService.AddSource(fileSource)
 	}
 
@@ -128,6 +131,18 @@ func (factory *Factory) User() User {
 ///////////////////////////////////////
 // WATCHERS
 
+// Layout service manages layouts
+func (factory *Factory) Layout() *Layout {
+
+	if factory.layoutService == nil {
+		layout, err := NewLayout(factory.domain.LayoutPath)
+		factory.layoutService = &layout
+		derp.Report(err)
+	}
+
+	return factory.layoutService
+}
+
 // StreamWatcher initializes a background watcher and returns a channel containing any streams that have changed.
 func (factory *Factory) StreamWatcher() chan model.Stream {
 
@@ -192,19 +207,18 @@ func (factory *Factory) FormLibrary() form.Library {
 
 /////////////////////// Render Library
 
-// DomainRenderer returns a full populated render.Domain object
-func (factory *Factory) DomainRenderer(renderer render.Renderer, view string) render.Domain {
-	return render.NewDomain(factory.Template(), renderer, view)
-}
-
 // StreamRenderer returns a fully populated render.Stream object
 func (factory *Factory) StreamRenderer(stream *model.Stream, wrapper string, view string) render.Stream {
-	return render.NewStream(factory.Template(), factory.Stream(), stream, wrapper, view)
+
+	layout := factory.Layout()
+	return render.NewStream(layout.Template, factory.Template(), factory.Stream(), stream, wrapper, view)
 }
 
 // FormRenderer returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(stream *model.Stream, transition string) render.Form {
-	return render.NewForm(factory.Template(), factory.FormLibrary(), stream, transition)
+func (factory *Factory) FormRenderer(stream *model.Stream, wrapper string, transition string) render.Form {
+
+	layout := factory.Layout()
+	return render.NewForm(layout.Template, factory.Template(), factory.FormLibrary(), stream, wrapper, transition)
 }
 
 // RSS returns a fully populated RSS service
