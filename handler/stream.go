@@ -29,15 +29,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render inner content
-		var wrapper string
-
-		if ctx.Request().Header.Get("hx-request") == "true" {
-			wrapper = "stream-partial"
-		} else {
-			wrapper = "stream-full"
-		}
-
-		result, err := factory.StreamRenderer(stream, wrapper, ctx.QueryParam("view")).Render()
+		result, err := factory.StreamRenderer(ctx, stream).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))

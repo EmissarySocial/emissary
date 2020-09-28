@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,15 +31,8 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Cannot load Stream", token))
 		}
 
-		var wrapper string
-		if ctx.Request().Header.Get("hx-request") == "true" {
-			wrapper = "form-partial"
-		} else {
-			wrapper = "form-full"
-		}
-
 		// Render the HTML
-		result, err := factory.FormRenderer(stream, wrapper, transitionID).Render()
+		result, err := factory.FormRenderer(ctx, stream, transitionID).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form"))
@@ -71,6 +65,8 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
 		}
 
+		spew.Dump(token, transitionID, form)
+
 		streamService := factory.Stream()
 		templateService := factory.Template()
 
@@ -100,7 +96,15 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			nextView = transition.NextView
 		}
 
-		// Send browser to new location
-		return ctx.Redirect(http.StatusTemporaryRedirect, "/"+stream.Token+"?view="+nextView)
+		/// RENDER THE STREAM HERE
+		ctx.QueryParams().Del("view")
+		ctx.QueryParams().Add("view", nextView)
+		result, err := factory.StreamRenderer(ctx, stream).Render()
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
+		}
+
+		return ctx.HTML(http.StatusOK, result)
 	}
 }

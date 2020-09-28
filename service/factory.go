@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/ghost/service/templatesource"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 )
 
 // Factory knows how to create an populate all services
@@ -208,17 +209,17 @@ func (factory *Factory) FormLibrary() form.Library {
 /////////////////////// Render Library
 
 // StreamRenderer returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(stream *model.Stream, wrapper string, view string) render.Stream {
+func (factory *Factory) StreamRenderer(ctx echo.Context, stream *model.Stream) render.Stream {
 
 	layout := factory.Layout()
-	return render.NewStream(layout.Template, factory.Template(), factory.Stream(), stream, wrapper, view)
+	return render.NewStream(ctx, layout.Template, factory.Template(), factory.Stream(), stream)
 }
 
 // FormRenderer returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(stream *model.Stream, wrapper string, transition string) render.Form {
+func (factory *Factory) FormRenderer(ctx echo.Context, stream *model.Stream, transition string) render.Form {
 
 	layout := factory.Layout()
-	return render.NewForm(layout.Template, factory.Template(), factory.FormLibrary(), stream, wrapper, transition)
+	return render.NewForm(ctx, layout.Template, factory.Template(), factory.FormLibrary(), stream, transition)
 }
 
 // RSS returns a fully populated RSS service

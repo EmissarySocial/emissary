@@ -24,6 +24,8 @@ type Stream struct {
 func (service Stream) New() *model.Stream {
 	return &model.Stream{
 		StreamID: primitive.NewObjectID(),
+		Tags:     make([]string, 0),
+		Data:     make(map[string]interface{}, 0),
 	}
 }
 
@@ -62,50 +64,6 @@ func (service Stream) Delete(stream *model.Stream, note string) error {
 	}
 
 	return nil
-}
-
-//// GENERIC FUNCTIONS //////////////////
-
-// NewObject wraps the `New` method as a generic Object
-func (service Stream) NewObject() data.Object {
-	return service.New()
-}
-
-// ListObjects wraps the `List` method as a generic Object
-func (service Stream) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
-// LoadObject wraps the `Load` method as a generic Object
-func (service Stream) LoadObject(criteria expression.Expression) (data.Object, error) {
-	return service.Load(criteria)
-}
-
-// SaveObject wraps the `Save` method as a generic Object
-func (service Stream) SaveObject(object data.Object, note string) error {
-
-	if object, ok := object.(*model.Stream); ok {
-		return service.Save(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Stream", "Object is not a model.Stream", object, note)
-}
-
-// DeleteObject wraps the `Delete` method as a generic Object
-func (service Stream) DeleteObject(object data.Object, note string) error {
-
-	if object, ok := object.(*model.Stream); ok {
-		return service.Delete(object, note)
-	}
-
-	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.Stream", "Object is not a model.Stream", object, note)
-}
-
-// Close cleans up the service and any outstanding connections.
-func (service Stream) Close() {
-	service.factory.Close()
 }
 
 // QUERIES /////////////////////////

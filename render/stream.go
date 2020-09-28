@@ -6,28 +6,27 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/labstack/echo/v4"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
+	context         echo.Context
 	layout          *template.Template
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
-	wrapper         string
-	view            string
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(layout *template.Template, templateService TemplateService, streamService StreamService, stream *model.Stream, wrapper string, view string) Stream {
+func NewStream(ctx echo.Context, layout *template.Template, templateService TemplateService, streamService StreamService, stream *model.Stream) Stream {
 
 	return Stream{
+		context:         ctx,
 		layout:          layout,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
-		wrapper:         wrapper,
-		view:            view,
 	}
 }
 
@@ -41,7 +40,7 @@ func (w Stream) Render() (string, error) {
 	}
 
 	// Load stream content
-	_, content, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.view)
+	_, content, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.View())
 
 	if err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
@@ -53,7 +52,7 @@ func (w Stream) Render() (string, error) {
 	var result bytes.Buffer
 
 	// Choose the correct view based on the wrapper provided.
-	if err := layout.ExecuteTemplate(&result, w.wrapper, w); err != nil {
+	if err := layout.ExecuteTemplate(&result, w.Layout(), w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
 	}
 
@@ -73,8 +72,22 @@ func (w Stream) Token() string {
 	return w.stream.Token
 }
 
+func (w Stream) Layout() string {
+
+	if w.context.Request().Header.Get("hx-request") == "true" {
+		return "stream-partial"
+	}
+
+	return "stream-full"
+}
+
 func (w Stream) View() string {
-	return w.view
+
+	if view := w.context.QueryParam("view"); view != "" {
+		return view
+	}
+
+	return "default"
 }
 
 // Label returns the Label for the stream being rendered
@@ -116,7 +129,7 @@ func (w Stream) Parent() (*Stream, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.layout, w.templateService, w.streamService, parent, w.wrapper, w.view)
+	result := NewStream(w.context, w.layout, w.templateService, w.streamService, parent)
 
 	return &result, nil
 }
@@ -135,7 +148,7 @@ func (w Stream) Children() ([]SubStream, error) {
 	result := make([]SubStream, iterator.Count())
 
 	for index := 0; iterator.Next(stream); index = index + 1 {
-		result[index] = NewSubStream(w.templateService, w.streamService, stream, w.view)
+		result[index] = NewSubStream(w.templateService, w.streamService, stream, w.View())
 	}
 
 	return result, nil

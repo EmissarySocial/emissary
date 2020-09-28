@@ -7,25 +7,26 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
+	"github.com/labstack/echo/v4"
 )
 
 type Form struct {
+	context         echo.Context
 	layout          *template.Template
 	templateService TemplateService
 	library         form.Library
 	stream          *model.Stream
-	wrapper         string
 	transition      string
 }
 
-func NewForm(layout *template.Template, templateService TemplateService, library form.Library, stream *model.Stream, wrapper string, transition string) Form {
+func NewForm(ctx echo.Context, layout *template.Template, templateService TemplateService, library form.Library, stream *model.Stream, transition string) Form {
 
 	return Form{
+		context:         ctx,
 		layout:          layout,
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
-		wrapper:         wrapper,
 		transition:      transition,
 	}
 }
@@ -44,7 +45,7 @@ func (w Form) Render() (string, error) {
 	var result bytes.Buffer
 
 	// Choose the correct view based on the wrapper provided.
-	if err := layout.ExecuteTemplate(&result, w.wrapper, w); err != nil {
+	if err := layout.ExecuteTemplate(&result, w.Layout(), w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Form.Render", "Error rendering view")
 	}
 
@@ -58,6 +59,15 @@ func (w Form) Token() string {
 
 func (w Form) StreamID() string {
 	return w.stream.StreamID.String()
+}
+
+func (w Form) Layout() string {
+
+	if w.context.Request().Header.Get("hx-request") == "true" {
+		return "form-partial"
+	}
+
+	return "form-full"
 }
 
 func (w Form) FormID() string {
