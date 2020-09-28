@@ -1,5 +1,5 @@
 <h3>Form</h3>
-<form action="/{{.Token}}/form/{{.FormID}}" method="post" _="on submit add .hidden to #submit then take .hidden from #saving">
+<form action="/{{.Token}}/form/{{.FormID}}" method="post" x-="on submit add .hidden to #submit then take .hidden from #saving">
 	{{ .Form }}
 	<input id="submit" type="submit" class="uk-button uk-button-primary" value="Save Changes">
 	<span id="saving" class="uk-button uk-button-disabled" style="display:none;"><i uk-spinner></i> Saving Changes</span>
