@@ -2,6 +2,7 @@ package templatesource
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -108,6 +109,7 @@ func (fs *File) appendJSON(template *model.Template, data []byte) error {
 // Watch populates a channel of model.Template objects every time a template is updated.
 func (fs *File) Watch(updates chan model.Template) error {
 
+	fmt.Println("templateSource.Watch")
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
@@ -134,6 +136,7 @@ func (fs *File) Watch(updates chan model.Template) error {
 			select {
 			case event, ok := <-watcher.Events:
 
+				fmt.Println("templateSource.Watch.receivedEvent")
 				if ok {
 					if event.Op != fsnotify.Write {
 						continue
@@ -148,6 +151,7 @@ func (fs *File) Watch(updates chan model.Template) error {
 						continue
 					}
 
+					fmt.Println("templateSource.Watch.sendingTemplate: " + template.Label)
 					updates <- *template
 				}
 

@@ -48,13 +48,13 @@ func populateTestTemplates(service *Template) {
 
 	{
 		simple, err := testTemplates.Load("simple")
-		service.Cache(simple)
+		service.Save(simple)
 		derp.Report(err)
 	}
 
 	{
 		article, err := testTemplates.Load("article")
-		service.Cache(article)
+		service.Save(article)
 		derp.Report(err)
 	}
 

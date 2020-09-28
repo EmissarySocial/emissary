@@ -12,18 +12,18 @@ import (
 
 type Form struct {
 	context         echo.Context
-	layout          *template.Template
+	layoutService   LayoutService
 	templateService TemplateService
 	library         form.Library
 	stream          *model.Stream
 	transition      string
 }
 
-func NewForm(ctx echo.Context, layout *template.Template, templateService TemplateService, library form.Library, stream *model.Stream, transition string) Form {
+func NewForm(ctx echo.Context, layoutService LayoutService, templateService TemplateService, library form.Library, stream *model.Stream, transition string) Form {
 
 	return Form{
 		context:         ctx,
-		layout:          layout,
+		layoutService:   layoutService,
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
@@ -33,11 +33,7 @@ func NewForm(ctx echo.Context, layout *template.Template, templateService Templa
 
 func (w Form) Render() (string, error) {
 
-	layout, err := w.layout.Clone()
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.Form.Render", "Error cloning template")
-	}
+	layout := w.layoutService.Layout()
 
 	// TODO: Validate that this transition is VALID
 	// TODO: Validate that the USER IS PERMITTED to make this transition.
@@ -58,7 +54,7 @@ func (w Form) Token() string {
 }
 
 func (w Form) StreamID() string {
-	return w.stream.StreamID.String()
+	return w.stream.StreamID.Hex()
 }
 
 func (w Form) Layout() string {

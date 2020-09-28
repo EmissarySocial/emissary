@@ -43,17 +43,17 @@ type RealtimeClient struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory *Factory) *RealtimeBroker {
+func NewRealtimeBroker(streamService Stream, updates chan model.Stream) *RealtimeBroker {
 
 	result := &RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
 		streams:       make(map[string]map[primitive.ObjectID]*RealtimeClient),
-		streamUpdates: factory.StreamWatcher(),
+		streamUpdates: updates,
 		AddClient:     make(chan *RealtimeClient),
 		RemoveClient:  make(chan *RealtimeClient),
 	}
 
-	go result.Listen(factory)
+	go result.Listen(streamService)
 
 	return result
 }
@@ -69,17 +69,11 @@ func NewRealtimeClient(token string, view string) *RealtimeClient {
 	}
 }
 
-// Listen handles
-// the addition & removal of clients, as well as the broadcasting
-// of messages out to clients that are currently attached.
-//
-func (b *RealtimeBroker) Listen(factory *Factory) {
+// Listen handles the addition & removal of clients, as well as
+// the broadcasting of messages out to clients that are currently attached.
+// It is intended to be run in its own goroutine.
+func (b *RealtimeBroker) Listen(streamService Stream) {
 
-	// Get the stream service
-	streamService := factory.Stream()
-
-	// Loop endlessly
-	//
 	for {
 
 		// Block until we receive from one of the

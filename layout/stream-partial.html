@@ -1,7 +1,5 @@
 <div id="stream">
-	<div hx-sse="connect:/{{.Token}}/sse?view={{.View}} swap:{{.StreamID}}">
-		<div id="stream-updates">
-			{{ template "content" . }}
-		</div>
+	<div hx-sse="connect:/{{.Token}}/sse?view={{.View}} swap:message">
+		{{ template "content" . }}
 	</div>
 </div>

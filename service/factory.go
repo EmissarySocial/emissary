@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"html/template"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/mongodb"
@@ -11,7 +12,6 @@ import (
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/service/templatesource"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -25,9 +25,13 @@ type Factory struct {
 	// singletons (within this domain/factory)
 	templateService *Template
 	layoutService   *Layout
-	templateWatcher chan model.Template
-	realtimeBroker  *RealtimeBroker
 	steranko        *steranko.Steranko
+
+	// real-time watchers
+	realtimeBroker        *RealtimeBroker
+	layoutUpdateChannel   chan *template.Template
+	templateUpdateChannel chan model.Template
+	streamUpdateChannel   chan model.Stream
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
@@ -55,20 +59,16 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	// Initialize Background Services
 
 	// This loads the web page layout (real-time updates to wait until later)
-	fmt.Println(" - Website Layout.")
 	factory.Layout()
 
 	// TemplateSources
-	templateService := factory.Template()
-
-	for _, path := range domain.TemplatePaths {
-		fmt.Println(" - Template Directory: " + path)
-		fileSource := templatesource.NewFile(path)
-		templateService.AddSource(fileSource)
-	}
+	factory.Template()
 
 	return &factory, nil
 }
+
+///////////////////////////////////////
+// Domain Model Services
 
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() Attachment {
@@ -78,19 +78,11 @@ func (factory *Factory) Attachment() Attachment {
 	}
 }
 
-// Key returns a fully populated Contact service
+// Key returns a fully populated Key service
 func (factory *Factory) Key() Key {
 	return Key{
 		factory:    factory,
 		collection: factory.Session.Collection(CollectionKey),
-	}
-}
-
-// StreamSource returns a fully populated StreamSource service
-func (factory *Factory) StreamSource() StreamSource {
-	return StreamSource{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionStreamSource),
 	}
 }
 
@@ -102,20 +94,27 @@ func (factory *Factory) Stream() Stream {
 	}
 }
 
+// StreamSource returns a fully populated StreamSource service
+func (factory *Factory) StreamSource() StreamSource {
+	return StreamSource{
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionStreamSource),
+	}
+}
+
 // Template returns a fully populated Template service
 func (factory *Factory) Template() *Template {
 
 	// Initialize service, if necessary
 	if factory.templateService == nil {
-
-		factory.templateService = &Template{
-			Factory:   factory,
-			Sources:   make([]TemplateSource, 0),
-			Templates: make(map[string]*model.Template),
-			Updates:   factory.TemplateWatcher(),
-		}
-
-		go factory.templateService.Start()
+		factory.templateService = NewTemplate(
+			factory.domain.TemplatePaths,
+			factory.LayoutUpdateChannel(),
+			factory.TemplateUpdateChannel(),
+			factory.StreamUpdateChannel(),
+			factory.Layout(),
+			factory.Stream(),
+		)
 	}
 
 	return factory.templateService
@@ -130,52 +129,82 @@ func (factory *Factory) User() User {
 }
 
 ///////////////////////////////////////
-// WATCHERS
+// Render Library
 
-// Layout service manages layouts
+// Layout service manages global website layouts
 func (factory *Factory) Layout() *Layout {
 
 	if factory.layoutService == nil {
-		layout, err := NewLayout(factory.domain.LayoutPath)
-		factory.layoutService = &layout
+		var err error
+		factory.layoutService, err = NewLayout(factory.domain.LayoutPath, factory.LayoutUpdateChannel())
 		derp.Report(err)
 	}
 
 	return factory.layoutService
 }
 
-// StreamWatcher initializes a background watcher and returns a channel containing any streams that have changed.
-func (factory *Factory) StreamWatcher() chan model.Stream {
-
-	if session, ok := factory.Session.(*mongodb.Session); ok {
-
-		if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-			return StreamWatcher(collection.Mongo())
-		}
-	}
-
-	// Fall through means failure.  Just return an "empty" channel for now
-	return make(chan model.Stream)
+// StreamRenderer service returns a fully populated render.Stream object
+func (factory *Factory) StreamRenderer(ctx echo.Context, stream *model.Stream) render.Stream {
+	return render.NewStream(ctx, factory.Layout(), factory.Template(), factory.Stream(), stream)
 }
 
-// TemplateWatcher returns a channel for transmitting templates that have changed.
-func (factory *Factory) TemplateWatcher() chan model.Template {
-
-	if factory.templateWatcher == nil {
-		factory.templateWatcher = make(chan model.Template)
-	}
-
-	return factory.templateWatcher
+// FormRenderer service returns a fully populated render.Form object
+func (factory *Factory) FormRenderer(ctx echo.Context, stream *model.Stream, transition string) render.Form {
+	return render.NewForm(ctx, factory.Layout(), factory.Template(), factory.FormLibrary(), stream, transition)
 }
+
+///////////////////////////////////////
+// Real-Time UpdateChannels
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 
 	if factory.realtimeBroker == nil {
-		factory.realtimeBroker = NewRealtimeBroker(factory)
+		factory.realtimeBroker = NewRealtimeBroker(factory.Stream(), factory.StreamUpdateChannel())
 	}
 
 	return factory.realtimeBroker
+}
+
+// StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
+func (factory *Factory) StreamUpdateChannel() chan model.Stream {
+
+	if factory.streamUpdateChannel == nil {
+
+		if session, ok := factory.Session.(*mongodb.Session); ok {
+
+			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
+				factory.streamUpdateChannel = StreamWatcher(collection.Mongo())
+			}
+		}
+
+		if factory.streamUpdateChannel == nil {
+			// Fall through means failure.  Just return an "empty" channel for now
+			factory.streamUpdateChannel = make(chan model.Stream)
+		}
+	}
+
+	return factory.streamUpdateChannel
+}
+
+// TemplateUpdateChannel returns a channel for transmitting templates that have changed.
+func (factory *Factory) TemplateUpdateChannel() chan model.Template {
+
+	if factory.templateUpdateChannel == nil {
+		factory.templateUpdateChannel = make(chan model.Template)
+	}
+
+	return factory.templateUpdateChannel
+}
+
+// LayoutUpdateChannel returns a channel for transmitting the global layout when it has changed.
+func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
+
+	if factory.layoutUpdateChannel == nil {
+		factory.layoutUpdateChannel = make(chan *template.Template)
+	}
+
+	return factory.layoutUpdateChannel
 }
 
 ///////////////////////////////////////
@@ -198,6 +227,8 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	return factory.steranko
 }
 
+// FormLibrary returns our custom form widget library for
+// use in the form.Form package
 func (factory *Factory) FormLibrary() form.Library {
 
 	library := form.New()
@@ -206,21 +237,8 @@ func (factory *Factory) FormLibrary() form.Library {
 	return library
 }
 
-/////////////////////// Render Library
-
-// StreamRenderer returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(ctx echo.Context, stream *model.Stream) render.Stream {
-
-	layout := factory.Layout()
-	return render.NewStream(ctx, layout.Template, factory.Template(), factory.Stream(), stream)
-}
-
-// FormRenderer returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(ctx echo.Context, stream *model.Stream, transition string) render.Form {
-
-	layout := factory.Layout()
-	return render.NewForm(ctx, layout.Template, factory.Template(), factory.FormLibrary(), stream, transition)
-}
+///////////////////////////////////////
+// External APIs
 
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() RSS {
@@ -234,3 +252,7 @@ func (factory *Factory) Close() {
 	// DO NOT DO THIS OR YOU WILL PERMANENTLY DISCONNECT FROM THE DATABASE
 	// factory.Session.Close()
 }
+
+// Other libraries to make it her, eventually...
+// ActivityPub
+// Service APIs (like Twitter? Slack? Discord?, The FB?)

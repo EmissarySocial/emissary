@@ -2,7 +2,6 @@ package render
 
 import (
 	"bytes"
-	"html/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -12,18 +11,18 @@ import (
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
 	context         echo.Context
-	layout          *template.Template
+	layoutService   LayoutService
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(ctx echo.Context, layout *template.Template, templateService TemplateService, streamService StreamService, stream *model.Stream) Stream {
+func NewStream(ctx echo.Context, layoutService LayoutService, templateService TemplateService, streamService StreamService, stream *model.Stream) Stream {
 
 	return Stream{
 		context:         ctx,
-		layout:          layout,
+		layoutService:   layoutService,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
@@ -33,11 +32,7 @@ func NewStream(ctx echo.Context, layout *template.Template, templateService Temp
 // Render generates an HTML output for a stream/view combination.
 func (w Stream) Render() (string, error) {
 
-	layout, err := w.layout.Clone()
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error cloning template")
-	}
+	layout := w.layoutService.Layout()
 
 	// Load stream content
 	_, content, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.View())
@@ -64,7 +59,7 @@ func (w Stream) Render() (string, error) {
 
 // StreamID returns the unique ID for the stream being rendered
 func (w Stream) StreamID() string {
-	return w.stream.StreamID.String()
+	return w.stream.StreamID.Hex()
 }
 
 // Token returns the unique URL token for the stream being rendered
@@ -129,7 +124,7 @@ func (w Stream) Parent() (*Stream, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.context, w.layout, w.templateService, w.streamService, parent)
+	result := NewStream(w.context, w.layoutService, w.templateService, w.streamService, parent)
 
 	return &result, nil
 }

@@ -8,6 +8,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type LayoutService interface {
+	Layout() *template.Template
+}
+
 type TemplateService interface {
 	Load(string) (*model.Template, error)
 	LoadCompiled(string, string, string) (*model.Template, *template.Template, error)
