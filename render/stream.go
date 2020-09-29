@@ -5,27 +5,28 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/labstack/echo/v4"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	context         echo.Context
 	layoutService   LayoutService
 	templateService TemplateService
 	streamService   StreamService
 	stream          *model.Stream
+	layout          string
+	viewName        string
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(ctx echo.Context, layoutService LayoutService, templateService TemplateService, streamService StreamService, stream *model.Stream) Stream {
+func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream *model.Stream, layout string, view string) Stream {
 
 	return Stream{
-		context:         ctx,
 		layoutService:   layoutService,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
+		layout:          layout,
+		viewName:        view,
 	}
 }
 
@@ -68,21 +69,11 @@ func (w Stream) Token() string {
 }
 
 func (w Stream) Layout() string {
-
-	if w.context.Request().Header.Get("hx-request") == "true" {
-		return "stream-partial"
-	}
-
-	return "stream-full"
+	return w.layout
 }
 
 func (w Stream) View() string {
-
-	if view := w.context.QueryParam("view"); view != "" {
-		return view
-	}
-
-	return "default"
+	return w.viewName
 }
 
 // Label returns the Label for the stream being rendered
@@ -115,6 +106,26 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+func (w Stream) Views() []View {
+
+	template, _ := w.templateService.Load(w.stream.Template)
+
+	result := []View{}
+
+	for _, view := range template.Views {
+
+		// Available views can be filtered here...
+
+		// Add this view to the list.
+		result = append(result, View{
+			Name:  view.Name,
+			Label: view.Label,
+		})
+	}
+
+	return result
+}
+
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent() (*Stream, error) {
 
@@ -124,7 +135,7 @@ func (w Stream) Parent() (*Stream, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.context, w.layoutService, w.templateService, w.streamService, parent)
+	result := NewStream(w.layoutService, w.templateService, w.streamService, parent, w.layout, w.View())
 
 	return &result, nil
 }

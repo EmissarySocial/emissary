@@ -34,7 +34,7 @@ func TestTemplate(t *testing.T) {
 	stream, err := streamService.LoadByToken("1-my-first-stream")
 	assert.Nil(t, err)
 
-	html, err := streamService.Render(stream, "DEFAULT")
+	html, err := streamService.Render(stream, "stream-full", "DEFAULT")
 
 	assert.Nil(t, err)
 	derp.Report(err)

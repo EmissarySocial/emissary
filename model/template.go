@@ -17,7 +17,7 @@ type Template struct {
 	URL         string               `json:"url"         bson:"url"`         // URL where this template is published
 	Schema      *schema.Schema       `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
 	States      map[string]State     `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
-	Views       map[string]View      `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
+	Views       []View               `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
 	Forms       map[string]form.Form `json:"forms"       bson:"forms"`       // Map of Forms (by form.ID) that are available in transitions between states.
 }
 
@@ -26,7 +26,7 @@ func NewTemplate(templateID string) *Template {
 	return &Template{
 		TemplateID: templateID,
 		States:     make(map[string]State),
-		Views:      make(map[string]View),
+		Views:      make([]View, 0),
 		Forms:      make(map[string]form.Form),
 	}
 }
@@ -42,13 +42,17 @@ func (template Template) View(stateName string, viewName string) (*View, error) 
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
 
-		// Verify that this is an allowed view
-		if _, ok := state.Views[viewName]; ok {
+		for _, view := range state.Views {
+
+			if view != viewName {
+				continue
+			}
 
 			// TODO: Check permissions here
-
-			if view, ok := template.Views[viewName]; ok {
-				return &view, nil
+			for _, view := range template.Views {
+				if view.Name == viewName {
+					return &view, nil
+				}
 			}
 		}
 
@@ -112,8 +116,8 @@ func (template *Template) Populate(from *Template) {
 	}
 
 	if from.Views != nil {
-		for name, view := range from.Views {
-			template.Views[name] = view
+		for _, view := range from.Views {
+			template.Views = append(template.Views, view)
 		}
 	}
 

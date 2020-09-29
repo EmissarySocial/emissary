@@ -11,15 +11,11 @@ import (
 
 // View is an individual HTML template that can render a part of a stream
 type View struct {
-	File     string             `json:"file"` // Name of the file in the template package where HTML is stored.
-	HTML     string             `json:"html"` // Raw HTML to render
-	compiled *template.Template `json:"-"`    // Parsed HTML template to render (by merging with Stream dataset)
-}
-
-func NewView(html string) View {
-	return View{
-		HTML: html,
-	}
+	Label       string             `json:"label"`       // Human-friendly label for this view.
+	Name        string             `json:"name"`        // Name of the file in the template package where HTML is stored (without extension).
+	Permissions []string           `json:"permissions"` // View permissions (to implement later)
+	HTML        string             `json:"html"`        // Raw HTML to render
+	compiled    *template.Template `json:"-"`           // Parsed HTML template to render (by merging with Stream dataset)
 }
 
 // Compiled calculates or retrieves the compiled state of this view.
@@ -35,13 +31,13 @@ func (v *View) Compiled() (*template.Template, error) {
 		minified, err := m.String("text/html", v.HTML)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "model.View.Template", "Error minifying template")
+			return nil, derp.Wrap(err, "model.View.Template", "Error minifying template", v.Name)
 		}
 
 		result, err := template.New("").Parse(minified)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "model.View.Template", "Unable to parse template HTML")
+			return nil, derp.Wrap(err, "model.View.Template", "Unable to parse template HTML", v.Name)
 		}
 
 		// Save the value into this view

@@ -1,9 +1,14 @@
 <div>
-	Default | <a href="/{{.Token}}?view=detail" hx-trigger="mousedown">Detail</a>
+	<ul class="uk-tab" uk-tab>
+		{{ range .Views }}
+			<li class="{{if eq .Name $.View}}uk-active{{end}}"><a href="/{{$.Token}}?view={{.Name}}" hx-get="/{{$.Token}}?view={{.Name}}" hx-trigger="mousedown">{{.Label}}</a></li>
+		{{ end }}
+	</ul>
 </div>
 
 <article>
-	<h3>{{.Label}}</h3>
+	THIS IS THE DEFAULT PAGE
+	<h3 >{{.Label}}</h3>
 	<div>{{.Description}}</div>
 </article>
 

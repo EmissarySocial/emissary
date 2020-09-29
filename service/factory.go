@@ -144,8 +144,8 @@ func (factory *Factory) Layout() *Layout {
 }
 
 // StreamRenderer service returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(ctx echo.Context, stream *model.Stream) render.Stream {
-	return render.NewStream(ctx, factory.Layout(), factory.Template(), factory.Stream(), stream)
+func (factory *Factory) StreamRenderer(stream *model.Stream, layout string, view string) render.Stream {
+	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, layout, view)
 }
 
 // FormRenderer service returns a fully populated render.Form object

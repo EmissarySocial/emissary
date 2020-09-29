@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
@@ -76,6 +77,8 @@ func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
 				// If our messageChan was closed, this means that the client has disconnected.
 				break
 			}
+
+			msg = strings.Replace(msg, "\n", " ", -1)
 
 			// Write to the ResponseWriter, `w`.
 			// eventName := "EventName1"

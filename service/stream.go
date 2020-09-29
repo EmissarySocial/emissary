@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/html"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -117,42 +116,9 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 
 ///////////////////
 
-// Render generates HTML output for the provided stream.  It looks up the appropriate
-// template/view for this stream, and executes the template.
-func (service Stream) Render(stream *model.Stream, viewName string) (string, error) {
-
-	templateService := service.factory.Template()
-
-	// Try to load the template from the database
-	template, err := templateService.Load(stream.Template)
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Unable to load Template", stream)
-	}
-
-	// Locate / Authenticate the view to use
-
-	view, err := template.View(stream.State, viewName)
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Unrecognized view", viewName)
-	}
-
-	// TODO: need to enforce permissions somewhere...
-
-	// Try to generate the HTML response using the provided data
-	result, err := view.Execute(stream)
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Stream.Render", "Error rendering view")
-	}
-
-	result = html.CollapseWhitespace(result)
-
-	// TODO: Add caching here...
-
-	// Success!
-	return result, nil
+// Render outputs the stream as an HTML string (or dies trying)
+func (service Stream) Render(stream *model.Stream, layout string, view string) (string, error) {
+	return service.factory.StreamRenderer(stream, layout, view).Render()
 }
 
 // Transition handles a transition request to move the stream from one state into another state.

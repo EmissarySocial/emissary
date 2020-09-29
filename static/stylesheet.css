@@ -1,1 +1,49 @@
+/********************
+* Layout
+*********************/
+* {
+	box-sizing: border-box;
+}
+
+body {
+	position:absolute;
+	height:100%;
+}
+
+#menu {
+	position:absolute;
+	top:0px;
+	bottom:0px;
+	left:0px;
+	width:250px;
+	background-color: #eee;
+	padding:5px 10px;
+	border-right: solid 1px #ddd;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	z-index:2;
+}
+
+#main {
+	margin-left:250px;
+	padding:10px 20px;
+	width:100%;
+}
+
+
+
+/********************
+* Widgets
+*********************/
+
+.uk-nav > li:hover {
+	cursor:pointer;
+	background-color:rgba(0,0,0,0.05)
+}
+/********************
+* Utilities
+*********************/
+
+
 .hidden {display:none}
+

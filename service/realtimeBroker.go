@@ -108,7 +108,7 @@ func (b *RealtimeBroker) Listen(streamService Stream) {
 
 			for _, client := range b.streams[stream.Token] {
 
-				if html, err := streamService.Render(&stream, client.View); err == nil {
+				if html, err := streamService.Render(&stream, "stream-partial", client.View); err == nil {
 					client.WriteChannel <- html
 				} else {
 					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))

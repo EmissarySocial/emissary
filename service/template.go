@@ -41,7 +41,9 @@ func NewTemplate(paths []string, layoutUpdates chan *template.Template, template
 
 	for _, path := range paths {
 		fileSource := templatesource.NewFile(path)
-		result.AddSource(fileSource)
+		if err := result.AddSource(fileSource); err != nil {
+			derp.Report(err)
+		}
 	}
 
 	go result.start()

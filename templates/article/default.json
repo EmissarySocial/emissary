@@ -2,11 +2,7 @@
 	"states": {
 		"default": {
 			"label": "Default",
-			"views": {
-				"default": "all", 
-				"detail": "all",
-				"admin": "admin"
-			},
+			"views": ["default", "detail", "admin"],
 			"transitions":  {
 				"update": {
 					"label": "Update",
@@ -17,6 +13,16 @@
 			}
 		}
 	},
+	"views": [{
+		"name": "default",
+		"label":"Info",
+		"permisions": ["all"]
+	},
+	{
+		"name": "detail",
+		"label":"Details",
+		"permisions": ["all"]
+	}],
 	"forms": {
 		"default": {
 			"kind": "layout-vertical",

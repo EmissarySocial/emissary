@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -66,25 +66,36 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		filename := file.Name()
 		extension := list.Last(file.Name(), ".")
 
-		data, err := ioutil.ReadFile(directory + "/" + filename)
+		if extension == "json" {
 
-		if err != nil {
-			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
-		}
+			data, err := ioutil.ReadFile(directory + "/" + filename)
 
-		switch extension {
+			if err != nil {
+				return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
+			}
 
-		case "json":
-			if err := fs.appendJSON(result, data); err != nil {
+			var temp model.Template
+
+			if err := json.Unmarshal(data, &temp); err != nil {
 				return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file", filename)
 			}
 
-		case "html":
-
-			name := strings.TrimSuffix(list.Last(strings.ToLower(filename), "/"), ".html")
-			view := model.NewView(string(data))
-			result.Views[name] = view
+			result.Populate(&temp)
 		}
+	}
+
+	for index := range result.Views {
+
+		filename := result.Views[index].Name + ".html"
+
+		data, err := ioutil.ReadFile(directory + "/" + filename)
+
+		if err != nil {
+			spew.Dump(err)
+			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
+		}
+
+		result.Views[index].HTML = string(data)
 	}
 
 	return result, nil
