@@ -1,0 +1,9 @@
+<div id="stream">
+	<h3>My Form</h3>
+	<form action="/{{.Token}}/form/{{.FormID}}" method="post" x-="on submit add .hidden to #submit then take .hidden from #saving">
+		{{ .Form }}
+		<input id="submit" type="submit" class="uk-button uk-button-primary" value="Save Changes">
+		<span id="saving" class="uk-button uk-button-disabled" style="display:none;"><i uk-spinner></i> Saving Changes</span>
+		<a href="/{{.Token}}" class="uk-button uk-button-default">Cancel</a>
+	</form>
+</div>

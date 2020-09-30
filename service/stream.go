@@ -15,8 +15,9 @@ const CollectionStream = "Stream"
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	factory    *Factory
-	collection data.Collection
+	factory             *Factory
+	collection          data.Collection
+	streamUpdateChannel chan model.Stream
 }
 
 // New creates a newly initialized Stream that is ready to use
@@ -52,6 +53,8 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
 	}
 
+	service.streamUpdateChannel <- *stream
+
 	return nil
 }
 
@@ -71,6 +74,13 @@ func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, 
 	return service.List(
 		expression.
 			New("parentId", expression.OperatorEqual, parentID).
+			And("journal.deleteDate", expression.OperatorEqual, 0))
+}
+
+func (service Stream) ListByFolder(folderID primitive.ObjectID) (data.Iterator, error) {
+	return service.List(
+		expression.
+			New("folder", expression.OperatorEqual, folderID).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
@@ -117,8 +127,8 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 ///////////////////
 
 // Render outputs the stream as an HTML string (or dies trying)
-func (service Stream) Render(stream *model.Stream, layout string, view string) (string, error) {
-	return service.factory.StreamRenderer(stream, layout, view).Render()
+func (service Stream) Render(stream model.Stream, view string) (string, error) {
+	return service.factory.StreamRenderer(stream, view).Render()
 }
 
 // Transition handles a transition request to move the stream from one state into another state.

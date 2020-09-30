@@ -11,6 +11,7 @@ import (
 type Stream struct {
 	StreamID       primitive.ObjectID     `json:"streamId"        bson:"_id"`            // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID       primitive.ObjectID     `json:"parentId"        bson:"parentId"`       // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	FolderID       primitive.ObjectID     `json:"folderId"        bson:"folderId"`       // Unique identifier of the "folder" where this stream is stored (NOT USED PUBLICLY)
 	Template       string                 `json:"template"        bson:"template"`       // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	State          string                 `json:"state"           bson:"state"`          // Defines the current status for this stream.  Templates define the state machine
 	Token          string                 `json:"token"           bson:"token"`          // Unique value that identifies this element in the URL

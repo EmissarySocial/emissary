@@ -8,6 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Renderer wraps the Render method, which returns an HTML rendering of an object.
+type Renderer interface {
+	// Render returns an HTML rendering of an object.
+	Render() (string, error)
+}
+
+type FolderService interface {
+	New() *model.Folder
+	ListByParent(primitive.ObjectID) (data.Iterator, error)
+}
+
 type LayoutService interface {
 	Layout() *template.Template
 }
@@ -18,17 +29,9 @@ type TemplateService interface {
 }
 
 type StreamService interface {
+	New() *model.Stream
 	LoadByToken(string) (*model.Stream, error)
 	LoadParent(*model.Stream) (*model.Stream, error)
 	ListByParent(primitive.ObjectID) (data.Iterator, error)
-}
-
-// Renderer wraps the Render method, which returns an HTML rendering of an object.
-type Renderer interface {
-	// Render returns an HTML rendering of an object.
-	Render() (string, error)
-
-	Token() string
-	StreamID() string
-	Label() string
+	ListByFolder(primitive.ObjectID) (data.Iterator, error)
 }

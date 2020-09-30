@@ -1,3 +1,4 @@
+
 /********************
 * Layout
 *********************/
@@ -8,6 +9,7 @@
 body {
 	position:absolute;
 	height:100%;
+	width:100%;
 }
 
 #menu {
@@ -16,9 +18,9 @@ body {
 	bottom:0px;
 	left:0px;
 	width:250px;
-	background-color: #eee;
+	background-color: rgb(242,243,245);
 	padding:5px 10px;
-	border-right: solid 1px #ddd;
+	border-right: solid 1px rgb(228,229,232);
 	overflow-y: scroll;
 	overflow-x: hidden;
 	z-index:2;
@@ -29,6 +31,7 @@ body {
 	padding:10px 20px;
 	width:100%;
 }
+
 
 
 
@@ -47,3 +50,31 @@ body {
 
 .hidden {display:none}
 
+
+
+/********************
+* Dark Mode Colors
+*********************/
+
+@media (prefers-color-scheme: dark) {
+	html {
+		color:rgb(220,221,222);
+	}
+	h1, h2, h3, h4, h5{
+		color: white;
+	}
+	body{
+		background-color: rgb(54,57,64);
+	}
+	#menu {
+		background-color: rgb(48,49,55);
+		border-right-color: rgb(31,34,37);
+	}
+
+	.uk-tab > .uk-active > a {
+		color: white;
+	}
+	.uk-nav > li:hover{
+		background-color: rgb(59, 60, 67);
+	}
+}

@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
-	"github.com/labstack/echo/v4"
 )
 
 // Factory knows how to create an populate all services
@@ -78,6 +77,14 @@ func (factory *Factory) Attachment() Attachment {
 	}
 }
 
+// Folder returns a fully populated Folder service
+func (factory *Factory) Folder() Folder {
+	return Folder{
+		factory:    factory,
+		collection: factory.Session.Collection(CollectionKey),
+	}
+}
+
 // Key returns a fully populated Key service
 func (factory *Factory) Key() Key {
 	return Key{
@@ -89,8 +96,9 @@ func (factory *Factory) Key() Key {
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() Stream {
 	return Stream{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionStream),
+		factory:             factory,
+		collection:          factory.Session.Collection(CollectionStream),
+		streamUpdateChannel: factory.StreamUpdateChannel(),
 	}
 }
 
@@ -144,13 +152,18 @@ func (factory *Factory) Layout() *Layout {
 }
 
 // StreamRenderer service returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(stream *model.Stream, layout string, view string) render.Stream {
-	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, layout, view)
+func (factory *Factory) StreamRenderer(stream model.Stream, view string) render.Stream {
+	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, view)
 }
 
 // FormRenderer service returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(ctx echo.Context, stream *model.Stream, transition string) render.Form {
-	return render.NewForm(ctx, factory.Layout(), factory.Template(), factory.FormLibrary(), stream, transition)
+func (factory *Factory) FormRenderer(stream model.Stream, transition string) render.Form {
+	return render.NewForm(factory.Layout(), factory.Template(), factory.FormLibrary(), stream, transition)
+}
+
+// FolderRenderer service returns a fully populated render.Folder object
+func (factory *Factory) FolderRenderer(folder model.Folder, layout string) render.Folder {
+	return render.NewFolder(factory.Layout(), factory.Folder(), factory.Template(), factory.Stream(), folder, layout)
 }
 
 ///////////////////////////////////////

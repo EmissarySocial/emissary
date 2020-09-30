@@ -1,20 +1,16 @@
-<div>
-	<ul class="uk-tab" uk-tab>
-		{{ range .Views }}
-			<li class="{{if eq .Name $.View}}uk-active{{end}}"><a href="/{{$.Token}}?view={{.Name}}" hx-get="/{{$.Token}}?view={{.Name}}" hx-trigger="mousedown">{{.Label}}</a></li>
-		{{ end }}
-	</ul>
-</div>
+THIS IS THE DETAIL PAGE...
+<h3>{{.Label}}</h3>
+
+{{ template "tabs" . }}
 
 <article>
-	THIS IS THE DETAIL PAGE...
-	<h3>{{.Label}}</h3>
-	<div>{{.Description}}</div>
+	<div>{{.Data.title}}</div>
+	<div>{{.Data.description}}</div>
 	{{range .Data.persons}}
 		<item><div>name: {{.name}}</div><div>{{.email}}</div></item>
 	{{end}}
 </article>
-
+<br>
 <div>
 	[ <a href="/{{.Token}}/form/update">UPDATE</a> ]
 </div>

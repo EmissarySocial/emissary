@@ -12,26 +12,26 @@ type Stream struct {
 	layoutService   LayoutService
 	templateService TemplateService
 	streamService   StreamService
-	stream          *model.Stream
-	layout          string
+	stream          model.Stream
 	viewName        string
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream *model.Stream, layout string, view string) Stream {
+func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream model.Stream, view string) Stream {
 
 	return Stream{
 		layoutService:   layoutService,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
-		layout:          layout,
 		viewName:        view,
 	}
 }
 
 // Render generates an HTML output for a stream/view combination.
 func (w Stream) Render() (string, error) {
+
+	var result bytes.Buffer
 
 	layout := w.layoutService.Layout()
 
@@ -42,13 +42,16 @@ func (w Stream) Render() (string, error) {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
 	}
 
-	// Add stream content as a sub-template of the domain wrapper
-	layout.AddParseTree("content", content.Tree)
+	// Combine the two parse trees.
+	// TODO: Could this be done at load time, not for each page request?
+	combined, err := layout.AddParseTree("content", content.Tree)
 
-	var result bytes.Buffer
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to create parse tree")
+	}
 
 	// Choose the correct view based on the wrapper provided.
-	if err := layout.ExecuteTemplate(&result, w.Layout(), w); err != nil {
+	if err := combined.ExecuteTemplate(&result, "stream", w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
 	}
 
@@ -66,10 +69,6 @@ func (w Stream) StreamID() string {
 // Token returns the unique URL token for the stream being rendered
 func (w Stream) Token() string {
 	return w.stream.Token
-}
-
-func (w Stream) Layout() string {
-	return w.layout
 }
 
 func (w Stream) View() string {
@@ -129,13 +128,13 @@ func (w Stream) Views() []View {
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent() (*Stream, error) {
 
-	parent, err := w.streamService.LoadParent(w.stream)
+	parent, err := w.streamService.LoadParent(&w.stream)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.layoutService, w.templateService, w.streamService, parent, w.layout, w.View())
+	result := NewStream(w.layoutService, w.templateService, w.streamService, *parent, w.View())
 
 	return &result, nil
 }

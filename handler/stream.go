@@ -13,6 +13,8 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		var result string
+
 		// Get the service factory
 		factory, err := factoryManager.ByContext(ctx)
 
@@ -28,31 +30,27 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
 		}
 
-		// Render inner content
-		result, err := factory.StreamRenderer(stream, getStreamLayout(ctx), getStreamView(ctx)).Render()
+		// Render page content (full or partial)
+		renderer := factory.StreamRenderer(*stream, getView(ctx))
+		result, err = renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering HTML"))
 		}
 
 		return ctx.HTML(http.StatusOK, result)
 	}
 }
 
-func getStreamLayout(ctx echo.Context) string {
-
-	if ctx.Request().Header.Get("hx-request") == "true" {
-		return "stream-partial"
-	}
-
-	return "stream-full"
-}
-
-func getStreamView(ctx echo.Context) string {
+func getView(ctx echo.Context) string {
 
 	if view := ctx.QueryParam("view"); view != "" {
 		return view
 	}
 
 	return "default"
+}
+
+func isFullPageRequest(ctx echo.Context) bool {
+	return (ctx.Request().Header.Get("hx-request") != "true")
 }

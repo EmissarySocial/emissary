@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,7 +17,7 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return err
+			return derp.Wrap(err, "ghost.handler.GetForm", "Unrecognized domain")
 		}
 
 		// Try to load required values
@@ -32,7 +31,7 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render the HTML
-		result, err := factory.FormRenderer(ctx, stream, transitionID).Render()
+		result, err := factory.FormRenderer(*stream, transitionID).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form"))
@@ -65,8 +64,6 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Cannot load parse form data"))
 		}
 
-		spew.Dump(token, transitionID, form)
-
 		streamService := factory.Stream()
 		templateService := factory.Template()
 
@@ -97,7 +94,7 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		/// RENDER THE STREAM HERE
-		result, err := factory.StreamRenderer(stream, getStreamLayout(ctx), nextView).Render()
+		result, err := factory.StreamRenderer(*stream, nextView).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))
