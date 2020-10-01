@@ -16,7 +16,7 @@ func GetFolder(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetFolder", "Unrecognized domain")
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetFolder", "Unrecognized domain"))
 		}
 
 		token := ctx.Param("token")
@@ -26,14 +26,14 @@ func GetFolder(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		folder, err := folderService.LoadByToken(token)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetFolder", "Unable to load folder", token)
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetFolder", "Unable to load folder", token))
 		}
 
 		renderer := factory.FolderRenderer(*folder, getFolderView(ctx))
 		result, err := renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetFolder", "Error rendering folder")
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetFolder", "Error rendering folder"))
 		}
 
 		return ctx.HTML(http.StatusOK, result)

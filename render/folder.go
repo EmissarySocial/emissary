@@ -49,27 +49,20 @@ func (w Folder) Render() (string, error) {
 	return buffer.String(), nil
 }
 
-// Folders returns renderers for all of the SubFolders within the current Folder.
-func (w Folder) Folders(view string) ([]Folder, error) {
+func (w Folder) AllFolders() ([]FolderListItem, error) {
 
-	var result []Folder
-
-	it, err := w.folderService.ListByParent(w.folder.FolderID)
+	folders, err := w.folderService.ListNested()
 
 	if err != nil {
-		return result, derp.Wrap(err, "ghost.render.Folder.Folders", "Error listing child folders", w.folder)
+		return nil, derp.Wrap(err, "ghost.render.Stream.AllFolders", "Error retrieving all folders")
 	}
 
-	folder := w.folderService.New()
+	return NewFolderList(folders), nil
+}
 
-	for it.Next(folder) {
-
-		// Additional permissions can be enforced here...
-
-		result = append(result, NewFolder(w.layoutService, w.folderService, w.templateService, w.streamService, *folder, view))
-	}
-
-	return result, nil
+// SubFolders returns renderers for all of the SubFolders within the current Folder.
+func (w Folder) SubFolders() []FolderListItem {
+	return NewFolderList(w.folder.SubFolders)
 }
 
 // Streams returns renderers for all Streams contained within this folder.
@@ -86,7 +79,7 @@ func (w Folder) Streams(view string) ([]Stream, error) {
 	stream := w.streamService.New()
 
 	for it.Next(stream) {
-		result = append(result, NewStream(w.layoutService, w.templateService, w.streamService, *stream, view))
+		result = append(result, NewStream(w.layoutService, w.folderService, w.templateService, w.streamService, *stream, view))
 	}
 
 	return result, nil

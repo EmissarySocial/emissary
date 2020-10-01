@@ -25,13 +25,8 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	// Home Page for the website (should probably be a redirect to a "default" space?)
 	e.GET("/", handler.TBD)
 
-	// Stream Pages
-	e.GET("/:token", handler.GetStream(factoryManager)) // query param ?view=
-	e.GET("/:token/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
-	e.GET("/:token/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
-	e.GET("/:token/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
-	e.GET("/:token/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
-	e.POST("/:token/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
+	// Folder Pages
+	e.GET("/folders/:token", handler.GetFolder(factoryManager))
 
 	e.Static("/r", "static")
 
@@ -40,6 +35,14 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.POST("/users/:username/inbox", handler.TBD)
 	e.GET("/users/:username/outbox", handler.TBD)
 	e.POST("/users/:username/outbox", handler.TBD)
+
+	// Stream Pages
+	e.GET("/:token", handler.GetStream(factoryManager)) // query param ?view=
+	e.GET("/:token/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
+	e.GET("/:token/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
+	e.GET("/:token/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
+	e.GET("/:token/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
+	e.POST("/:token/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
 
 	return e
 }

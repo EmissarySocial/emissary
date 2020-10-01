@@ -10,6 +10,7 @@ import (
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
 	layoutService   LayoutService
+	folderService   FolderService
 	templateService TemplateService
 	streamService   StreamService
 	stream          model.Stream
@@ -17,10 +18,11 @@ type Stream struct {
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream model.Stream, view string) Stream {
+func NewStream(layoutService LayoutService, folderService FolderService, templateService TemplateService, streamService StreamService, stream model.Stream, view string) Stream {
 
 	return Stream{
 		layoutService:   layoutService,
+		folderService:   folderService,
 		templateService: templateService,
 		streamService:   streamService,
 		stream:          stream,
@@ -105,6 +107,17 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+func (w Stream) AllFolders() ([]FolderListItem, error) {
+
+	folders, err := w.folderService.ListNested()
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.render.Stream.AllFolders", "Error retrieving all folders")
+	}
+
+	return NewFolderList(folders), nil
+}
+
 func (w Stream) Views() []View {
 
 	template, _ := w.templateService.Load(w.stream.Template)
@@ -134,7 +147,7 @@ func (w Stream) Parent() (*Stream, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.layoutService, w.templateService, w.streamService, *parent, w.View())
+	result := NewStream(w.layoutService, w.folderService, w.templateService, w.streamService, *parent, w.View())
 
 	return &result, nil
 }

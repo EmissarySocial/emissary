@@ -74,3 +74,67 @@ func (service Folder) LoadByToken(token string) (*model.Folder, error) {
 func (service Folder) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(expression.Equal("parentId", parentID))
 }
+
+func (service Folder) ListAsSlice(criteria expression.Expression, options ...option.Option) ([]model.Folder, error) {
+
+	// Query database
+	it, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Folder.ListAsSlice", "Error retrieving folders.")
+	}
+
+	// Transform iterator into a slice
+	result := make([]model.Folder, 0)
+	folder := service.New()
+
+	for it.Next(folder) {
+		result = append(result, *folder)
+	}
+
+	return result, nil
+}
+
+func (service Folder) ListNested() ([]model.Folder, error) {
+
+	criteria := expression.Equal("journal.deleteDate", 0)
+
+	data, err := service.ListAsSlice(criteria, option.SortAsc("depth"), option.SortAsc("sort"))
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Folder.ListNested", "Error retrieving folders")
+	}
+
+	// If there is only one item (or fewer) in the data, then we don't need to scan any further.
+	if len(data) <= 1 {
+		return data, nil
+	}
+
+	for childIndex := len(data) - 1; childIndex >= 0; childIndex = childIndex - 1 {
+
+		// If this is a root-level node, then we're done.
+		if data[childIndex].ParentID.IsZero() {
+			break
+		}
+
+		// Otherwise, walk back up the tree to find our parent
+		for parentIndex := childIndex - 1; parentIndex >= 0; parentIndex = parentIndex - 1 {
+
+			if data[childIndex].ParentID == data[parentIndex].FolderID {
+
+				if len(data[parentIndex].SubFolders) == 0 {
+					data[parentIndex].SubFolders = []model.Folder{data[childIndex]}
+					break
+				}
+
+				data[parentIndex].SubFolders = append([]model.Folder{data[childIndex]}, data[parentIndex].SubFolders...)
+				break
+			}
+		}
+
+		// Remove this node from the bottom of the list and continue scanning upwards.
+		data = data[:childIndex]
+	}
+
+	return data, nil
+}

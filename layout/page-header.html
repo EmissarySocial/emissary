@@ -8,19 +8,21 @@
 <body hx-boost="true" hx-target="#stream" hx-push-url="true">
 	<div id="menu">
 
-		<ul class="uk-nav uk-margin-bottom">
+		{{ range .AllFolders }}
+		<ul class="uk-nav uk-nav-default uk-margin-bottom">
 			<li class="uk-nav-header">
-				Section
-				<span id="badge-1" class="uk-align-right uk-badge" style="background-color:#999">10</span>
+				<a href="/folders/{{.Token}}" hx-trigger="mousedown">
+					{{ .Label }}
+					<span id="badge-1" class="uk-align-right uk-badge" style="background-color:#999">10</span>
+				</a>
 			</li>
-			<li>Item</li>
-			<li>Item</li>
-			<li>Item</li>
-			<li>Item</li>
-			<li>Item</li>
-			<li>Item</li>
+			{{ range .SubFolders }}
+				<li><a href="/folders/{{.Token}}" hx-trigger="mousedown">&middot; {{.Label}}</a></li>
+			{{ end}}
 		</ul>
+		{{ end }}
 
+		<!--
 		<ul class="uk-nav uk-margin-bottom">
 			<li class="uk-nav-header">
 				Section
@@ -46,6 +48,7 @@
 			<li>Item</li>
 			<li>Item</li>
 		</ul>
+		-->
 
 	</div>
 	<div id="main">

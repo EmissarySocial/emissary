@@ -81,7 +81,7 @@ func (factory *Factory) Attachment() Attachment {
 func (factory *Factory) Folder() Folder {
 	return Folder{
 		factory:    factory,
-		collection: factory.Session.Collection(CollectionKey),
+		collection: factory.Session.Collection(CollectionFolder),
 	}
 }
 
@@ -153,7 +153,7 @@ func (factory *Factory) Layout() *Layout {
 
 // StreamRenderer service returns a fully populated render.Stream object
 func (factory *Factory) StreamRenderer(stream model.Stream, view string) render.Stream {
-	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, view)
+	return render.NewStream(factory.Layout(), factory.Folder(), factory.Template(), factory.Stream(), stream, view)
 }
 
 // FormRenderer service returns a fully populated render.Form object

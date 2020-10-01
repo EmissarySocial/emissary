@@ -17,6 +17,7 @@ type Renderer interface {
 type FolderService interface {
 	New() *model.Folder
 	ListByParent(primitive.ObjectID) (data.Iterator, error)
+	ListNested() ([]model.Folder, error)
 }
 
 type LayoutService interface {
