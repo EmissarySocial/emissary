@@ -1,2 +1,23 @@
 
-<h2>Folder Info Goes Here</h2>
+<h2>{{ .Label }}</h2>
+{{.Description}}
+
+<div class="uk-margin-bottom uk-child-width-1-2@s uk-child-width-1-4@m uk-child-width-1-5@l uk-child-width-1-6@xl uk-grid-match" uk-grid>
+{{ range .SubFolders}} 
+	<div hx-get="/folders/{{.Token}}" hx-trigger="click">
+		<div class="uk-card uk-card-default uk-card-hover uk-card-small uk-card-body">
+			<h3 class="uk-card-title">{{.Label}}</h3>
+			{{.Description}}
+		</div>
+	</div>
+{{ end}}
+</div>
+
+<table class="uk-table">
+	{{ range .Streams "dicks" }}
+	<tr>
+		<td>{{.Label}}</td>
+		<td>{{.Description}}</td>
+	</tr>
+	{{ end }}
+</table>

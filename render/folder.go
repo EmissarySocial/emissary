@@ -35,6 +35,10 @@ func (w Folder) Label() string {
 	return w.folder.Label
 }
 
+func (w Folder) Description() string {
+	return w.folder.Description
+}
+
 // Render returns an HTML representation of this Folder.
 func (w Folder) Render() (string, error) {
 
@@ -61,8 +65,22 @@ func (w Folder) AllFolders() ([]FolderListItem, error) {
 }
 
 // SubFolders returns renderers for all of the SubFolders within the current Folder.
-func (w Folder) SubFolders() []FolderListItem {
-	return NewFolderList(w.folder.SubFolders)
+func (w Folder) SubFolders() ([]FolderListItem, error) {
+
+	folders, err := w.folderService.ListByParent(w.folder.FolderID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.render.Folder.SubFolders", "Error retrieving sub-folders", w.folder)
+	}
+
+	result := []FolderListItem{}
+	folder := w.folderService.New()
+
+	for folders.Next(folder) {
+		result = append(result, NewFolderListItem(*folder))
+	}
+
+	return result, nil
 }
 
 // Streams returns renderers for all Streams contained within this folder.

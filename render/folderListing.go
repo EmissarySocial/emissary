@@ -43,3 +43,7 @@ func (w FolderListItem) Token() string {
 func (w FolderListItem) Label() string {
 	return w.folder.Label
 }
+
+func (w FolderListItem) Description() string {
+	return w.folder.Description
+}

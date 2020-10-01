@@ -11,6 +11,7 @@ type Folder struct {
 	ParentID        primitive.ObjectID `json:"parentId" bson:"parentId"`
 	Token           string             `json:"token"    bson:"token"`
 	Label           string             `json:"label"    bson:"label"`
+	Description     string             `json:"description" bson:"description"`
 	Sort            int                `json:"sort"     bson:"sort"` // The sort order of this folder within its container
 	SubFolders      []Folder           `json:"-"        bson:"-"`    // An array of sub-folders (populated after being loaded)
 	journal.Journal `json:"journal" bson:"journal"`
