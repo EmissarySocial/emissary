@@ -10,6 +10,7 @@ body {
 	box-sizing: border-box;
 	position:absolute;
 	height:100%;
+	width:100%;
 }
 
 #menu {
@@ -32,16 +33,12 @@ body {
 }
 
 
-
-
-/********************
-* Widgets
-*********************/
-
-.uk-nav > li:hover {
+.link:hover,
+tr.link:hover > td {
 	cursor:pointer;
 	background-color:rgba(0,0,0,0.05)
 }
+
 /********************
 * Utilities
 *********************/
@@ -75,5 +72,8 @@ body {
 	}
 	.uk-nav > li:hover{
 		background-color: rgb(59, 60, 67);
+	}
+	.uk-nav > li:hover > a {
+		color:white;
 	}
 }

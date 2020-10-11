@@ -31,14 +31,15 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render the HTML
-		result, err := factory.FormRenderer(*stream, transitionID).Render()
+		// Render page content (full or partial)
+		renderer := factory.FormRenderer(*stream, transitionID)
+		result, err := renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetTransition", "Error rendering form"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering HTML"))
 		}
 
-		// Success!
-		return ctx.HTML(200, result)
+		return ctx.HTML(http.StatusOK, result)
 	}
 }
 

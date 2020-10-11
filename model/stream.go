@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -45,19 +46,20 @@ func NewStream() Stream {
 }
 
 // ID returns the primary key of this object
-func (stream *Stream) ID() string {
+func (stream Stream) ID() string {
 	return stream.StreamID.Hex()
 }
 
 // HasParent returns TRUE if this Stream has a valid parentID
-func (stream *Stream) HasParent() bool {
+func (stream Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
 // GetPath implements the path.Getter interface.  It looks up
 // data within this Stream and returns it to the caller.
-func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
+func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
+	spew.Dump("--- stream.GetPath --", p)
 	switch p.Head() {
 
 	case "data":

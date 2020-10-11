@@ -80,7 +80,7 @@ func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, 
 func (service Stream) ListByFolder(folderID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
 		expression.
-			New("folder", expression.OperatorEqual, folderID).
+			New("folderId", expression.OperatorEqual, folderID).
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 

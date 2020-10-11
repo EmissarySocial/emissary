@@ -107,7 +107,7 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
-func (w Stream) AllFolders() ([]FolderListItem, error) {
+func (w Stream) Folders() ([]FolderListItem, error) {
 
 	folders, err := w.folderService.ListNested()
 

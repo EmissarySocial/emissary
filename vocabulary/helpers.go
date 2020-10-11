@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // locateSchema looks up schema and values using a variable path.
@@ -26,6 +27,8 @@ func locateSchema(pathString string, original schema.Schema, value interface{}) 
 
 		if value, err := pathObject.Get(value); err == nil {
 			resultValue = convert.String(value)
+		} else {
+			spew.Dump(err)
 		}
 	}
 

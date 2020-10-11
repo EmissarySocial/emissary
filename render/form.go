@@ -7,20 +7,23 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Form struct {
 	layoutService   LayoutService
+	folderService   FolderService
 	templateService TemplateService
 	library         form.Library
 	stream          model.Stream
 	transition      string
 }
 
-func NewForm(layoutService LayoutService, templateService TemplateService, library form.Library, stream model.Stream, transition string) Form {
+func NewForm(layoutService LayoutService, folderService FolderService, templateService TemplateService, library form.Library, stream model.Stream, transition string) Form {
 
 	return Form{
 		layoutService:   layoutService,
+		folderService:   folderService,
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
@@ -88,5 +91,18 @@ func (w Form) Form() (template.HTML, error) {
 		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Error generating form HTML", form))
 	}
 
+	spew.Dump("FORM RESULT -----------", form, html)
+
 	return template.HTML(html), nil
+}
+
+func (w Form) Folders() ([]FolderListItem, error) {
+
+	folders, err := w.folderService.ListNested()
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.render.Stream.AllFolders", "Error retrieving all folders")
+	}
+
+	return NewFolderList(folders), nil
 }

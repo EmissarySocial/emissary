@@ -53,7 +53,7 @@ func (w Folder) Render() (string, error) {
 	return buffer.String(), nil
 }
 
-func (w Folder) AllFolders() ([]FolderListItem, error) {
+func (w Folder) Folders() ([]FolderListItem, error) {
 
 	folders, err := w.folderService.ListNested()
 

@@ -55,7 +55,6 @@ func Text(library form.Library) {
 			if s.Maximum.IsPresent() {
 				tag.Attr("max", s.Maximum.String())
 			}
-
 			/*
 				if s.Required {
 					tag.Attr("required", true)
