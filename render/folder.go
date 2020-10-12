@@ -30,6 +30,11 @@ func NewFolder(layoutService LayoutService, folderService FolderService, templat
 	}
 }
 
+// Token returns the token of this folder.
+func (w Folder) Token() string {
+	return w.folder.Token
+}
+
 // Label returns the human-friendly label for this folder.
 func (w Folder) Label() string {
 	return w.folder.Label
@@ -101,4 +106,9 @@ func (w Folder) Streams(view string) ([]Stream, error) {
 	}
 
 	return result, nil
+}
+
+// SubTemplates returns an array of templates that can be placed inside this Folder
+func (w Folder) SubTemplates() ([]model.Template) {
+	return w.templateService.ListByContainer("folder")
 }

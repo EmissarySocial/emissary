@@ -6,7 +6,7 @@ require (
 	github.com/benpate/activitystream v0.2.0
 	github.com/benpate/choose v0.1.1
 	github.com/benpate/convert v0.7.2
-	github.com/benpate/data v0.9.4
+	github.com/benpate/data v0.9.6
 	github.com/benpate/derp v0.19.0
 	github.com/benpate/form v0.2.3
 	github.com/benpate/html v0.2.0

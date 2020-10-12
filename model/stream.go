@@ -40,6 +40,7 @@ func NewStream() Stream {
 
 	return Stream{
 		StreamID: primitive.NewObjectID(),
+		State:    "new",
 		Tags:     []string{},
 		Data:     map[string]interface{}{},
 	}

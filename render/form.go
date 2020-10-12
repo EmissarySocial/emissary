@@ -10,6 +10,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+// Form is a wrapper for a specific stream / template / transition that is Render()-ed into an HTML form
 type Form struct {
 	layoutService   LayoutService
 	folderService   FolderService
@@ -19,6 +20,7 @@ type Form struct {
 	transition      string
 }
 
+// NewForm returns a fully populated Form wrapper object.
 func NewForm(layoutService LayoutService, folderService FolderService, templateService TemplateService, library form.Library, stream model.Stream, transition string) Form {
 
 	return Form{
@@ -31,6 +33,7 @@ func NewForm(layoutService LayoutService, folderService FolderService, templateS
 	}
 }
 
+// Render returns the HTML rendering of this Stream
 func (w Form) Render() (string, error) {
 
 	layout := w.layoutService.Layout()
@@ -49,22 +52,27 @@ func (w Form) Render() (string, error) {
 	return result.String(), nil
 }
 
+// Token returns the Token for this Stream
 func (w Form) Token() string {
 	return w.stream.Token
 }
 
+// StreamID returns a string represenation of this StreamID
 func (w Form) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
+// FormID returns the string representation of this FormID
 func (w Form) FormID() string {
 	return w.transition
 }
 
+// Label returns the publicly visible lable for this Form
 func (w Form) Label() string {
 	return w.stream.Label
 }
 
+// Form returns an HTML rendering of this form
 func (w Form) Form() (template.HTML, error) {
 
 	var result template.HTML
@@ -96,6 +104,7 @@ func (w Form) Form() (template.HTML, error) {
 	return template.HTML(html), nil
 }
 
+// Folders returns a slice of all Folders for this domain
 func (w Form) Folders() ([]FolderListItem, error) {
 
 	folders, err := w.folderService.ListNested()
@@ -105,4 +114,9 @@ func (w Form) Folders() ([]FolderListItem, error) {
 	}
 
 	return NewFolderList(folders), nil
+}
+
+// SubTemplates returns a slice of templates that can be placed inside this Stream
+func (w Form) SubTemplates() ([]model.Template) {
+	return w.templateService.ListByContainer(w.stream.Template)
 }

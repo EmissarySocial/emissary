@@ -22,11 +22,8 @@ type Stream struct {
 
 // New creates a newly initialized Stream that is ready to use
 func (service Stream) New() *model.Stream {
-	return &model.Stream{
-		StreamID: primitive.NewObjectID(),
-		Tags:     make([]string, 0),
-		Data:     make(map[string]interface{}, 0),
-	}
+	result := model.NewStream()
+	return &result
 }
 
 // List returns an iterator containing all of the Streams who match the provided criteria

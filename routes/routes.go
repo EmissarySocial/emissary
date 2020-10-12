@@ -26,7 +26,9 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.GET("/", handler.TBD)
 
 	// Folder Pages
-	e.GET("/folders/:token", handler.GetFolder(factoryManager))
+	e.GET("/folders/:folder", handler.GetFolder(factoryManager))
+	e.GET("/folders/:folder/new/:template", handler.GetNewStream(factoryManager))
+	e.GET("/folders/:folder/new/:template", handler.PostNewStream(factoryManager))
 
 	e.Static("/r", "static")
 
@@ -37,12 +39,14 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.POST("/users/:username/outbox", handler.TBD)
 
 	// Stream Pages
-	e.GET("/:token", handler.GetStream(factoryManager)) // query param ?view=
-	e.GET("/:token/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
-	e.GET("/:token/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
-	e.GET("/:token/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
-	e.GET("/:token/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
-	e.POST("/:token/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
+	e.GET("/:stream", handler.GetStream(factoryManager)) // query param ?view=
+	e.GET("/:stream/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
+	e.GET("/:stream/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
+	e.GET("/:stream/new/:template", handler.GetNewStream(factoryManager))
+	e.POST("/:stream/new/:template", handler.PostNewStream(factoryManager))
+	e.GET("/:stream/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
+	e.POST("/:stream/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
 
 	return e
 }

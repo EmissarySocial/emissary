@@ -33,7 +33,7 @@ func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.New(500, "handler.ServerSentEvent", "Streaming Not Supported"))
 		}
 
-		token := ctx.Param("token")
+		token := ctx.Param("stream")
 		view := ctx.Param("view")
 
 		if view == "" {

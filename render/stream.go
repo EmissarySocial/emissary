@@ -171,3 +171,8 @@ func (w Stream) Children() ([]SubStream, error) {
 
 	return result, nil
 }
+
+// SubTemplates returns an array of templates that can be placed inside this Stream
+func (w Stream) SubTemplates() ([]model.Template) {
+	return w.templateService.ListByContainer(w.stream.Template)
+}

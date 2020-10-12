@@ -24,7 +24,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 		// Get the stream service
 		streamService := factory.Stream()
-		stream, err := streamService.LoadByToken(ctx.Param("token"))
+		stream, err := streamService.LoadByToken(ctx.Param("stream"))
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
@@ -41,6 +41,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		return ctx.HTML(http.StatusOK, result)
 	}
 }
+
 
 func getView(ctx echo.Context) string {
 

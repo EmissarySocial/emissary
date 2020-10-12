@@ -19,7 +19,7 @@ func GetFolder(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetFolder", "Unrecognized domain"))
 		}
 
-		token := ctx.Param("token")
+		token := ctx.Param("folder")
 
 		folderService := factory.Folder()
 

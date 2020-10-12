@@ -10,3 +10,12 @@ THIS IS THE DEFAULT PAGE
 <div>
 	<a href="/{{.Token}}/form/update" class="uk-button uk-button-primary">Update Stream</a>
 </div>
+
+
+<h3>New Stream</h3>
+{{ range .SubTemplates}}
+	<div hx-get="/{{$.Token}}/new/{{.TemplateID}}" hx-trigger="click" hx-target="#modal" hx-push-url="true" class="link">
+		<div class="uk-text-bold">{{.Label}}</div>
+		<div class="uk-text-meta">{{.Description}}</div>
+	</div>
+{{ end}}

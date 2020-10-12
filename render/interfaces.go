@@ -27,6 +27,7 @@ type LayoutService interface {
 type TemplateService interface {
 	Load(string) (*model.Template, error)
 	LoadCompiled(string, string, string) (*model.Template, *template.Template, error)
+	ListByContainer(string) []model.Template
 }
 
 type StreamService interface {

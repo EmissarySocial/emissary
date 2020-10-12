@@ -22,7 +22,7 @@ func GetForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 		// Try to load required values
 		streamService := factory.Stream()
-		token := ctx.Param("token")
+		token := ctx.Param("stream")
 		transitionID := ctx.Param("transitionId")
 		stream, err := streamService.LoadByToken(token)
 
@@ -56,7 +56,7 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return err
 		}
 		// Get parameters from context
-		token := ctx.Param("token")
+		token := ctx.Param("stream")
 		transitionID := ctx.Param("transitionId")
 
 		form := make(map[string]interface{})
