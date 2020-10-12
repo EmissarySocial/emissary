@@ -43,7 +43,7 @@ type RealtimeClient struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(streamService Stream, updates chan model.Stream) *RealtimeBroker {
+func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBroker {
 
 	result := &RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
@@ -53,7 +53,7 @@ func NewRealtimeBroker(streamService Stream, updates chan model.Stream) *Realtim
 		RemoveClient:  make(chan *RealtimeClient),
 	}
 
-	go result.Listen(streamService)
+	go result.Listen(factory)
 
 	return result
 }
@@ -72,7 +72,7 @@ func NewRealtimeClient(token string, view string) *RealtimeClient {
 // Listen handles the addition & removal of clients, as well as
 // the broadcasting of messages out to clients that are currently attached.
 // It is intended to be run in its own goroutine.
-func (b *RealtimeBroker) Listen(streamService Stream) {
+func (b *RealtimeBroker) Listen(factory *Factory) {
 
 	for {
 
@@ -108,7 +108,7 @@ func (b *RealtimeBroker) Listen(streamService Stream) {
 
 			for _, client := range b.streams[stream.Token] {
 
-				if html, err := streamService.Render(stream, client.View); err == nil {
+				if html, err := factory.StreamRenderer(stream, client.View).Render(); err == nil {
 					client.WriteChannel <- html
 				} else {
 					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))

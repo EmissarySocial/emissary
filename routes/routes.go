@@ -25,11 +25,6 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	// Home Page for the website (should probably be a redirect to a "default" space?)
 	e.GET("/", handler.TBD)
 
-	// Folder Pages
-	e.GET("/folders/:folder", handler.GetFolder(factoryManager))
-	e.GET("/folders/:folder/new/:template", handler.GetNewStream(factoryManager))
-	e.GET("/folders/:folder/new/:template", handler.PostNewStream(factoryManager))
-
 	e.Static("/r", "static")
 
 	// ActivityPub INBOX/OUTBOX

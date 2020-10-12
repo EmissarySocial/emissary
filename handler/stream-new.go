@@ -8,42 +8,23 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-
+// GetNewStream generates an HTML form where authenticated users can create a new stream
 func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		// Locate the domain we're working in
 		factory, err := factoryManager.ByContext(ctx)
-
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error locating domain"))
 		}
 
-		// Load the parent stream to validate permissions
 		streamService := factory.Stream()
-		parent, err := streamService.LoadByToken(ctx.Param("stream"))
+		stream, err := streamService.NewWithTemplate(ctx.Param("stream"), ctx.Param("template"))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error loading parent stream"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error creating new stream"))
 		}
-
-		// Load the requested template
-		templateService := factory.Template()
-		template, err := templateService.Load(ctx.Param("template"))
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error loading Template"))
-		}
-
-		// Verify that the child stream can be placed inside the parent
-		if !template.CanBeContainedBy(parent.Template) {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Invalid template"))
-		}
-
-		// Create a new stream
-		stream := streamService.New()
-		stream.Template = template.TemplateID
 
 		// Render the HTML
 		// Render page content (full or partial)
@@ -55,22 +36,48 @@ func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		return ctx.HTML(http.StatusOK, result)
-
-		return nil
 	}
 }
 
 func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-		
-		/*
+
+		// Get data from Form POST
+		data := make(map[string]interface{})
+
+		if err := ctx.Bind(data); err != nil {
+			return derp.Wrap(err, "ghost.handler.PostNewStream", "Can't bind POST data")
+		}
+
+		// Locate the domain we're working in
 		factory, err := factoryManager.ByContext(ctx)
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error locating domain"))
+		}
+
+		// Get the steam service and the new stream
+		streamService := factory.Stream()
+		stream, err := streamService.NewWithTemplate(ctx.Param("stream"), ctx.Param("template"))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error locating domain"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error creating new stream"))
 		}
-		*/
-		return nil
+
+		// Execute "create" transition
+		transition, err := streamService.Transition(stream, "create", data);
+		
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error performing transition"))
+		}
+
+		// Render result
+		html, err := factory.StreamRenderer(*stream, transition.NextView).Render()
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error rendering next view"))
+		}
+
+		return ctx.HTML(200, html)
 	}
 }

@@ -11,16 +11,16 @@
 		{{ range .Folders }}
 		<ul class="uk-nav uk-nav-default uk-margin-bottom">
 			<li class="uk-nav-header">
-				<a class="link" href="/folders/{{.Token}}" hx-get="/folders/{{.Token}}" hx-trigger="click">
+				<a class="link" href="/folders/{{.Token}}">
 					{{ .Label }}
 					<span id="badge-1" class="uk-align-right uk-badge" style="background-color:#999">10</span>
 				</a>
 			</li>
 			{{ range .SubFolders }}
-				<li><a class="link" xhref="/folders/{{.Token}}" hx-get="/folders/{{.Token}}" hx-trigger="click">&middot; {{.Label}}</a></li>
+				<li><a class="link" href="/folders/{{.Token}}">&middot; {{.Label}}</a></li>
 			{{ end}}
 		</ul>
 		{{ end }}
 	</div>
 
-	<div id="main" hx-boost="true" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">

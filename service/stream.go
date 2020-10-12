@@ -121,26 +121,79 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 			And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
-///////////////////
 
-// Render outputs the stream as an HTML string (or dies trying)
-func (service Stream) Render(stream model.Stream, view string) (string, error) {
-	return service.factory.StreamRenderer(stream, view).Render()
+// CUSTOM ACTIONS /////////////////
+
+// NewWithTemplate creates a new Stream using the provided Parent and Token information.
+func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
+
+	// Validate inputs
+	if parentToken == "" {
+		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing stream parameter")
+	}
+
+	if templateID == "" {
+		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing template parameter")
+	}
+	
+	// Load the requested template
+	templateService := service.factory.Template()
+	template, err := templateService.Load(templateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Error loading Template")
+	}
+
+	// Load the parent stream to validate permissions
+	stream := service.New()
+	stream.Template = template.TemplateID
+
+	// TODO: Enforce Permissions
+
+	if parentToken != "home" {
+
+		parent, err := service.LoadByToken(parentToken)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Error loading parent stream")
+		}
+
+		// Verify that the child stream can be placed inside the parent
+		if !template.CanBeContainedBy(parent.Template) {
+			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Invalid template")
+		}
+
+		stream.ParentID = parent.StreamID
+	}
+	
+	// Success.  We've made the new stream!
+	return stream, nil
 }
 
+
+///////////////////
+
 // Transition handles a transition request to move the stream from one state into another state.
-func (service Stream) Transition(stream *model.Stream, template *model.Template, transitionID string, data map[string]interface{}) error {
+func (service Stream) Transition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
+
+	templateService := service.factory.Template()
+
+	template, err := templateService.Load(stream.Template)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Can't load Template")
+	}
 
 	transition, err := template.Transition(stream.State, transitionID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
+		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
 	}
 
 	form, ok := template.Forms[transition.Form]
 
 	if !ok {
-		return derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
+		return nil, derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
 	}
 
 	// TODO: where are permissions processed?
@@ -155,7 +208,7 @@ func (service Stream) Transition(stream *model.Stream, template *model.Template,
 		// If we have a value, then set it.
 		if value, ok := data[element.Path]; ok {
 			if err := path.Set(stream, element.Path, value); err != nil {
-				return derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
+				return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
 			}
 		}
 		// TODO: Otherwise?  Should this form throw an error?
@@ -166,5 +219,9 @@ func (service Stream) Transition(stream *model.Stream, template *model.Template,
 
 	// TODO:  Actions will be processes here.
 
-	return service.Save(stream, "stream transition: "+transitionID)
+	if err := service.Save(stream, "stream transition: "+transitionID); err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
+	}
+
+	return transition, nil
 }

@@ -15,7 +15,7 @@
 <h3 class="uk-margin-top uk-margin-bottom">Streams</h3>
 <table class="uk-table uk-table-divider uk-table-striped uk-table-justify uk-table-responsive">
 	{{ range .Streams "none"}}
-	<tr hx-trigger="mousedown" hx-get="/{{.Token}}" class="link">
+	<tr hx-get="/{{.Token}}" hx-target="#main" hx-trigger="click" class="link">
 		<td>{{.Label}}</td>
 		<td>{{.Description}}</td>
 	</tr>
@@ -24,7 +24,7 @@
 
 <h3>New Stream</h3>
 {{ range .SubTemplates}}
-	<div hx-get="/folders/{{$.Token}}/new/{{.TemplateID}}" hx-trigger="click" hx-push-url="true" class="link">
+	<div hx-get="/folders/{{$.Token}}/new/{{.TemplateID}}" hx-target="#main" hx-trigger="click" class="link">
 		<div class="uk-text-bold">{{.Label}}</div>
 		<div class="uk-text-meta">{{.Description}}</div>
 	</div>

@@ -173,7 +173,7 @@ func (factory *Factory) FolderRenderer(folder model.Folder, layout string) rende
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 
 	if factory.realtimeBroker == nil {
-		factory.realtimeBroker = NewRealtimeBroker(factory.Stream(), factory.StreamUpdateChannel())
+		factory.realtimeBroker = NewRealtimeBroker(factory, factory.StreamUpdateChannel())
 	}
 
 	return factory.realtimeBroker
