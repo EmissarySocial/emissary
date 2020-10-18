@@ -28,7 +28,7 @@ func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 		// Render the HTML
 		// Render page content (full or partial)
-		renderer := factory.FormRenderer(*stream, "create")
+		renderer := factory.FormRenderer(*stream, "stream-new.html", "create")
 		result, err := renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
 
 		if err != nil {

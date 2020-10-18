@@ -39,7 +39,7 @@ func (w Stream) Render() (string, error) {
 
 	// Load stream content
 	_, content, err := w.templateService.LoadCompiled(w.stream.Template, w.stream.State, w.View())
-
+	
 	if err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
 	}
@@ -107,6 +107,16 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+
+////////////////////////////////
+
+func (w Stream) CanAddChild() bool {
+	return true
+}
+
+
+////////////////////////////////
+
 func (w Stream) Folders() ([]FolderListItem, error) {
 
 	folders, err := w.folderService.ListNested()
@@ -161,12 +171,12 @@ func (w Stream) Children() ([]SubStream, error) {
 		return nil, derp.Report(derp.Wrap(err, "ghost.render.stream.Children", "Error loading child streams", w.stream))
 	}
 
-	var stream *model.Stream
+	var stream model.Stream
 
 	result := make([]SubStream, iterator.Count())
 
-	for index := 0; iterator.Next(stream); index = index + 1 {
-		result[index] = NewSubStream(w.templateService, w.streamService, stream, w.View())
+	for iterator.Next(&stream) {
+		result = append(result,NewSubStream(w.templateService, w.streamService, &stream, w.View()))
 	}
 
 	return result, nil

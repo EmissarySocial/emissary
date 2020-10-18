@@ -157,8 +157,8 @@ func (factory *Factory) StreamRenderer(stream model.Stream, view string) render.
 }
 
 // FormRenderer service returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(stream model.Stream, transition string) render.Form {
-	return render.NewForm(factory.Layout(), factory.Folder(), factory.Template(), factory.FormLibrary(), stream, transition)
+func (factory *Factory) FormRenderer(stream model.Stream, layout string, transition string) render.Form {
+	return render.NewForm(factory.Layout(), factory.Folder(), factory.Template(), factory.FormLibrary(), stream, layout, transition)
 }
 
 // FolderRenderer service returns a fully populated render.Folder object

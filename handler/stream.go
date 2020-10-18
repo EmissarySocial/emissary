@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/benpate/choose"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
@@ -24,7 +25,8 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 		// Get the stream service
 		streamService := factory.Stream()
-		stream, err := streamService.LoadByToken(ctx.Param("stream"))
+		token := choose.String(ctx.Param("stream"), "home")
+		stream, err := streamService.LoadByToken(token)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))

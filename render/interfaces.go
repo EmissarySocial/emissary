@@ -4,6 +4,8 @@ import (
 	"html/template"
 
 	"github.com/benpate/data"
+	"github.com/benpate/data/expression"
+	"github.com/benpate/data/option"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -34,6 +36,7 @@ type StreamService interface {
 	New() *model.Stream
 	LoadByToken(string) (*model.Stream, error)
 	LoadParent(*model.Stream) (*model.Stream, error)
+	List(expression.Expression, ...option.Option) (data.Iterator, error)
 	ListByParent(primitive.ObjectID) (data.Iterator, error)
 	ListByFolder(primitive.ObjectID) (data.Iterator, error)
 }

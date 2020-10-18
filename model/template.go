@@ -46,34 +46,34 @@ func (template Template) CanBeContainedBy(templateName string) bool {
 // View locates and verifies a state/view combination.
 func (template Template) View(stateName string, viewName string) (*View, error) {
 
-	// If no view name is specified, then use "DEFAULT" instead.
-	if viewName == "" {
-		viewName = "default"
-	}
+	var showView string
 
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
 
 		for _, view := range state.Views {
 
-			if view != viewName {
-				continue
+			// TODO: Check permissions
+
+			if view == viewName {
+				showView = view
+				break
 			}
 
-			// TODO: Check permissions here
+			if showView == "" {
+				showView = view
+			}
+		}
+
+		if showView != "" {
 			for _, view := range template.Views {
-				if view.Name == viewName {
+				if view.Name == showView {
 					return &view, nil
 				}
 			}
 		}
 
-		// If we're not trying the default view, then switch to that view now.
-		if viewName != "default" {
-			return template.View(stateName, "default")
-		}
-
-		return nil, derp.New(500, "ghost.model.TemplateView", "Unauthorized", stateName, viewName)
+		return nil, derp.New(500, "ghost.model.Template.View", "Unauthorized", stateName, viewName)
 	}
 
 	return nil, derp.New(404, "ghost.model.Template.View", "Unrecognized State", template, stateName)

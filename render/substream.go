@@ -61,6 +61,11 @@ func (w *SubStream) Render() (string, error) {
 	return result, nil
 }
 
+func (w *SubStream) Token() string {
+	return w.stream.Token
+}
+
+
 func (w *SubStream) Label() string {
 	return w.stream.Label
 }

@@ -26,9 +26,9 @@ type Stream struct {
 	AuthorURL      string                 `json:"authorURL"       bson:"authorURL"`      // URL address of the person who created this stream
 	Tags           []string               `json:"tags"            bson:"tags"`           // Organizational Tags
 	Data           map[string]interface{} `json:"data"            bson:"data"`           // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	Source         StreamSourceType       `json:"source"          bson:"source"`         // Identifies the remote source
-	SourceID       primitive.ObjectID     `json:"sourceId"        bson:"sourceId"`       // Internal identifier of the source configuration that generated this stream
-	SourceURL      string                 `json:"sourceURL"       bson:"sourceURL"`      // URL of the original document published by the source server
+	Source         StreamSourceType       `json:"source"          bson:"source,omitempty"`    // Identifies the remote source
+	SourceID       primitive.ObjectID     `json:"sourceId"        bson:"sourceId,omitempty"`  // Internal identifier of the source configuration that generated this stream
+	SourceURL      string                 `json:"sourceURL"       bson:"sourceURL,omitempty"` // URL of the original document published by the source server
 	PublishDate    int64                  `json:"publishDate"     bson:"publishDate"`    // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate  int64                  `json:"unpublishDate"   bson:"unpublishDate"`  // Unix timestemp of the date/time when this document will no longer be available on the domain.
 

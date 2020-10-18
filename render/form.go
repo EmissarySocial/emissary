@@ -17,11 +17,12 @@ type Form struct {
 	templateService TemplateService
 	library         form.Library
 	stream          model.Stream
+	layout          string
 	transition      string
 }
 
 // NewForm returns a fully populated Form wrapper object.
-func NewForm(layoutService LayoutService, folderService FolderService, templateService TemplateService, library form.Library, stream model.Stream, transition string) Form {
+func NewForm(layoutService LayoutService, folderService FolderService, templateService TemplateService, library form.Library, stream model.Stream, layout string, transition string) Form {
 
 	return Form{
 		layoutService:   layoutService,
@@ -29,6 +30,7 @@ func NewForm(layoutService LayoutService, folderService FolderService, templateS
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
+		layout:          layout,
 		transition:      transition,
 	}
 }
@@ -44,7 +46,7 @@ func (w Form) Render() (string, error) {
 	var result bytes.Buffer
 
 	// Choose the correct view based on the wrapper provided.
-	if err := layout.ExecuteTemplate(&result, "form", w); err != nil {
+	if err := layout.ExecuteTemplate(&result, w.layout, w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Form.Render", "Error rendering view")
 	}
 

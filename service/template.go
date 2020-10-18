@@ -108,12 +108,14 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 
 	// Look in the local cache first
 	if template, ok := service.templates[templateID]; ok {
-		return template, nil
+		if template != nil {
+			return template, nil
+		}
 	}
 
 	// Otherwise, search all sources for the Template.
 	for index := range service.sources {
-		if template, err := service.sources[index].Load(templateID); err != nil {
+		if template, err := service.sources[index].Load(templateID); err == nil {
 			service.templates[templateID] = template
 			return template, nil
 		}

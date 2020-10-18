@@ -22,9 +22,6 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factoryManager))
 
-	// Home Page for the website (should probably be a redirect to a "default" space?)
-	e.GET("/", handler.TBD)
-
 	e.Static("/r", "static")
 
 	// ActivityPub INBOX/OUTBOX
@@ -34,6 +31,7 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.POST("/users/:username/outbox", handler.TBD)
 
 	// Stream Pages
+	e.GET("/", handler.GetStream(factoryManager)) // query param ?view=
 	e.GET("/:stream", handler.GetStream(factoryManager)) // query param ?view=
 	e.GET("/:stream/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
 	e.GET("/:stream/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))

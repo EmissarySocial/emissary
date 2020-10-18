@@ -69,9 +69,7 @@ func (service Stream) Delete(stream *model.Stream, note string) error {
 
 func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
-		expression.
-			New("parentId", expression.OperatorEqual, parentID).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
+		expression.Equal("parentId", parentID).And("journal.deleteDate", expression.OperatorEqual, 0))
 }
 
 func (service Stream) ListByFolder(folderID primitive.ObjectID) (data.Iterator, error) {
