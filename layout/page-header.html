@@ -7,20 +7,7 @@
 </head>
 <body>
 	<div id="menu" hx-target="#main" hx-push-url="true">
-
-		{{ range .Folders }}
-		<ul class="uk-nav uk-nav-default uk-margin-bottom">
-			<li class="uk-nav-header">
-				<a class="link" href="/folders/{{.Token}}">
-					{{ .Label }}
-					<span id="badge-1" class="uk-align-right uk-badge" style="background-color:#999">10</span>
-				</a>
-			</li>
-			{{ range .SubFolders }}
-				<li><a class="link" href="/folders/{{.Token}}">&middot; {{.Label}}</a></li>
-			{{ end}}
-		</ul>
-		{{ end }}
+		Stream hierarchy goes here...
 	</div>
 
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">

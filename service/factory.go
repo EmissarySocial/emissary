@@ -77,14 +77,6 @@ func (factory *Factory) Attachment() Attachment {
 	}
 }
 
-// Folder returns a fully populated Folder service
-func (factory *Factory) Folder() Folder {
-	return Folder{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionFolder),
-	}
-}
-
 // Key returns a fully populated Key service
 func (factory *Factory) Key() Key {
 	return Key{
@@ -153,17 +145,12 @@ func (factory *Factory) Layout() *Layout {
 
 // StreamRenderer service returns a fully populated render.Stream object
 func (factory *Factory) StreamRenderer(stream model.Stream, view string) render.Stream {
-	return render.NewStream(factory.Layout(), factory.Folder(), factory.Template(), factory.Stream(), stream, view)
+	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, view)
 }
 
 // FormRenderer service returns a fully populated render.Form object
 func (factory *Factory) FormRenderer(stream model.Stream, layout string, transition string) render.Form {
-	return render.NewForm(factory.Layout(), factory.Folder(), factory.Template(), factory.FormLibrary(), stream, layout, transition)
-}
-
-// FolderRenderer service returns a fully populated render.Folder object
-func (factory *Factory) FolderRenderer(folder model.Folder, layout string) render.Folder {
-	return render.NewFolder(factory.Layout(), factory.Folder(), factory.Template(), factory.Stream(), folder, layout)
+	return render.NewForm(factory.Layout(), factory.Template(), factory.FormLibrary(), stream, layout, transition)
 }
 
 ///////////////////////////////////////

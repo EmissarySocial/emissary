@@ -1,13 +1,13 @@
 <div class="uk-margin-bottom">
-	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" hx-target="#main">Table</a> |
-	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" hx-target="#main">Icons</a> |
-	<a href="/{{.Token}}?view=previews" hx-get="/{{.Token}}?view=previews" hx-target="#main">Preview</a>
+	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" hx-trigger="mousedown[button==0]">Table</a> |
+	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" hx-trigger="mousedown[button==0]">Icons</a> |
+	<a href="/{{.Token}}?view=previews" hx-get="/{{.Token}}?view=previews" hx-trigger="mousedown[button==0]">Preview</a>
 </div>
 
 <div class="uk-overflow-auto">
 	<table class="uk-table uk-table-divider uk-table-striped">
 		{{ range .Children }}
-		<tr hx-get="/{{.Token}}" hx-trigger="click" hx-target="#main" class="link">
+		<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
 			<td>{{.Label}}</td>
 			<td>{{.Description}}</td>
 		</tr>

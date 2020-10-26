@@ -1,19 +1,19 @@
 <div class="uk-margin-bottom">
-	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" hx-target="#main">Table</a> |
-	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" hx-target="#main">Icons</a> |
-	<a href="/{{.Token}}?view=previews" hx-get="/{{.Token}}?view=previews" hx-target="#main">Preview</a>
+	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" hx-trigger="mousedown[button==0]">Table</a> |
+	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" hx-trigger="mousedown[button==0]">Icons</a> |
+	<a href="/{{.Token}}?view=previews" hx-get="/{{.Token}}?view=previews" hx-trigger="mousedown[button==0]">Preview</a>
 </div>
 
 <div class="uk-grid">
 	{{ if .CanAddChild }}
 	<div class="uk-width-1-6 uk-width-1-3@m uk-width-1-2@s">
-		<div class="uk-card uk-card-default uk-card-body link" hx-get="/{{.Token}}/new/article" hx-trigger="click" hx-target="#main">
+		<div class="uk-card uk-card-default uk-card-body link" hx-get="/{{.Token}}/new/article" hx-trigger="mousedown[button==0]">
 			<div class="uk-card-title">Add Stream</div>
 		</div>
 	{{ end }}
 	{{ range .Children }}
 	<div class="uk-width-1-6 uk-width-1-3@m uk-width-1-2@s">
-		<div class="uk-card uk-card-default uk-card-body link" hx-get="/{{.Token}}" hx-trigger="click" hx-target="#main">
+		<div class="uk-card uk-card-default uk-card-body link" hx-get="/{{.Token}}" hx-trigger="mousedown[button==0]">
 			<div class="uk-card-title">{{.Label}}</div>
 			<div class="uk-card-body">{{.Description}}</div>
 		</div>

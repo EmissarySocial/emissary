@@ -14,7 +14,7 @@ THIS IS THE DEFAULT PAGE
 
 <h3>New Stream</h3>
 {{ range .SubTemplates}}
-	<div hx-get="/{{$.Token}}/new/{{.TemplateID}}" hx-trigger="click" hx-target="#main" class="link">
+	<div hx-get="/{{$.Token}}/new/{{.TemplateID}}" hx-trigger="mousedown[button==0]" class="link">
 		<div class="uk-text-bold">{{.Label}}</div>
 		<div class="uk-text-meta">{{.Description}}</div>
 	</div>

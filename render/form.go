@@ -13,7 +13,6 @@ import (
 // Form is a wrapper for a specific stream / template / transition that is Render()-ed into an HTML form
 type Form struct {
 	layoutService   LayoutService
-	folderService   FolderService
 	templateService TemplateService
 	library         form.Library
 	stream          model.Stream
@@ -22,11 +21,10 @@ type Form struct {
 }
 
 // NewForm returns a fully populated Form wrapper object.
-func NewForm(layoutService LayoutService, folderService FolderService, templateService TemplateService, library form.Library, stream model.Stream, layout string, transition string) Form {
+func NewForm(layoutService LayoutService, templateService TemplateService, library form.Library, stream model.Stream, layout string, transition string) Form {
 
 	return Form{
 		layoutService:   layoutService,
-		folderService:   folderService,
 		templateService: templateService,
 		library:         library,
 		stream:          stream,
@@ -104,18 +102,6 @@ func (w Form) Form() (template.HTML, error) {
 	spew.Dump("FORM RESULT -----------", form, html)
 
 	return template.HTML(html), nil
-}
-
-// Folders returns a slice of all Folders for this domain
-func (w Form) Folders() ([]FolderListItem, error) {
-
-	folders, err := w.folderService.ListNested()
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.Stream.AllFolders", "Error retrieving all folders")
-	}
-
-	return NewFolderList(folders), nil
 }
 
 // SubTemplates returns a slice of templates that can be placed inside this Stream

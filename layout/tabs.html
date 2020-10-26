@@ -1,5 +1,5 @@
 <ul class="uk-tab">
 	{{ range .Views }}
-		<li class="{{if eq .Name $.View}}uk-active{{end}}"><a href="/{{$.Token}}?view={{.Name}}" hx-get="/{{$.Token}}?view={{.Name}}" hx-trigger="mousedown">{{.Label}}</a></li>
+		<li class="{{if eq .Name $.View}}uk-active{{end}}"><a href="/{{$.Token}}?view={{.Name}}" hx-get="/{{$.Token}}?view={{.Name}}" hx-target="#main" hx-trigger="mousedown[button==0]">{{.Label}}</a></li>
 	{{ end }}
 </ul>
