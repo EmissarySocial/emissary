@@ -16,7 +16,7 @@ func TestDatabase(t *testing.T) {
 
 	value := model.Stream{}
 
-	server, err := mongodb.New("mongodb+srv://sandbox:MLcnoRwsgzqtfdKDbUuEQqP7WwQhtPTNyUHfhQtDLV@cluster0.wfvvk.mongodb.net/ghost?retryWrites=true&w=majority", "ghost")
+	server, err := mongodb.New("mongodb://127.0.0.1/ghost", "ghost")
 	require.Nil(t, err)
 
 	session, err := server.Session(context.TODO())
