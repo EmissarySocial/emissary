@@ -72,7 +72,7 @@ func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render result
-		html, err := factory.StreamRenderer(*stream, transition.NextView).Render()
+		html, err := factory.StreamRenderer(stream, transition.NextView).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error rendering next view"))

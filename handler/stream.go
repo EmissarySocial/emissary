@@ -33,7 +33,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render page content (full or partial)
-		renderer := factory.StreamRenderer(*stream, getView(ctx))
+		renderer := factory.StreamRenderer(stream, getView(ctx))
 		result, err = renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
 
 		if err != nil {

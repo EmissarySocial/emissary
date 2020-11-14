@@ -67,39 +67,57 @@ func (service Stream) Delete(stream *model.Stream, note string) error {
 
 // QUERIES /////////////////////////
 
+// ListByParent returns all Streams that match a particular parentID
 func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
-		expression.Equal("parentId", parentID).And("journal.deleteDate", expression.OperatorEqual, 0))
+		expression.
+			Equal("parentId", parentID).
+			AndEqual("journal.deleteDate", 0))
 }
 
-func (service Stream) ListByFolder(folderID primitive.ObjectID) (data.Iterator, error) {
+// ListTopFolders returns all Streams of type FOLDER at the top of the hierarchy
+func (service Stream) ListTopFolders() (data.Iterator, error) {
 	return service.List(
 		expression.
-			New("folderId", expression.OperatorEqual, folderID).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
+			Equal("template", "folder").
+			AndEqual("parentId", ZeroObjectID()).
+			AndEqual("journal.deleteDate", 0))
 }
 
+// ListByTemplate returns all Streams that use a particular Template
 func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(
 		expression.
-			New("template", expression.OperatorEqual, template).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
+			Equal("template", template).
+			AndEqual("journal.deleteDate", 0))
 }
 
+// LoadByToken returns a single Stream that matches a particular Token 
 func (service Stream) LoadByToken(token string) (*model.Stream, error) {
 	return service.Load(
 		expression.
-			New("token", expression.OperatorEqual, token).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
+			Equal("token", token).
+			AndEqual("journal.deleteDate", 0))
 }
 
+// LoadByID returns a single Stream that matches a particular StreamID
 func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, error) {
 	return service.Load(
 		expression.
-			New("_id", expression.OperatorEqual, streamID).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
+			Equal("_id", streamID).
+			AndEqual("journal.deleteDate", 0))
 }
 
+// LoadBySourceURL locates a single stream that matches the provided SourceURL
+func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
+	return service.Load(
+		expression.
+			Equal("sourceUrl", url).
+			AndEqual("journal.deleteDate", 0))
+}
+
+
+// LoadParent returns the Stream that is the parent of the provided Stream
 func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
 	if stream.HasParent() == false {
@@ -111,24 +129,11 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 	return stream, derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
 }
 
-// LoadBySourceURL locates a single stream that matches the provided SourceURL
-func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
-	return service.Load(
-		expression.
-			New("sourceUrl", expression.OperatorEqual, url).
-			And("journal.deleteDate", expression.OperatorEqual, 0))
-}
-
 
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Parent and Token information.
 func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
-
-	// Validate inputs
-	if parentToken == "" {
-		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing stream parameter")
-	}
 
 	if templateID == "" {
 		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing template parameter")
@@ -146,9 +151,8 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	stream := service.New()
 	stream.Template = template.TemplateID
 
-	// TODO: Enforce Permissions
 
-	if parentToken != "home" {
+	if parentToken != "" {
 
 		parent, err := service.LoadByToken(parentToken)
 

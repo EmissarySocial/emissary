@@ -108,7 +108,7 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 			for _, client := range b.streams[stream.Token] {
 
-				if html, err := factory.StreamRenderer(stream, client.View).Render(); err == nil {
+				if html, err := factory.StreamRenderer(&stream, client.View).Render(); err == nil {
 					client.WriteChannel <- html
 				} else {
 					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))

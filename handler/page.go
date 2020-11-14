@@ -3,6 +3,7 @@ package handler
 import (
 	"strings"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
@@ -23,7 +24,7 @@ func renderPage(layoutService *service.Layout, renderer render.Renderer, fullPag
 		var result strings.Builder
 
 		// Render Header
-		if err := template.ExecuteTemplate(&result, "page-header", renderer); err != nil {
+		if err := template.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, "page-header", renderer); err != nil {
 			return "", derp.Wrap(err, "ghost.handler.fullPage", "Error rendering page header")
 		}
 
@@ -32,7 +33,7 @@ func renderPage(layoutService *service.Layout, renderer render.Renderer, fullPag
 		}
 
 		// Render Footer
-		if err := template.ExecuteTemplate(&result, "page-footer", renderer); err != nil {
+		if err := template.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, "page-footer", renderer); err != nil {
 			return "", derp.Wrap(err, "ghost.handler.fullPage", "Error rendering page header")
 		}
 

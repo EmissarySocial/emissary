@@ -6,11 +6,24 @@
 
 <div class="uk-overflow-auto">
 	<table class="uk-table uk-table-divider uk-table-striped">
-		{{ range .Children }}
-		<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
-			<td>{{.Label}}</td>
-			<td>{{.Description}}</td>
-		</tr>
-		{{ end }}
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Date</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr hx-trigger="click" hx-get="" class="link">
+				<td colspan="3">+ Add</td>
+			</tr>
+			{{ range .Children }}
+			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
+				<td>{{.Label}}</td>
+				<td>{{.Description}}</td>
+				<td>{{.PublishDate}}</td>
+			</tr>
+			{{ end }}
+		</tbody>
 	</table>
 </div>

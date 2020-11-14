@@ -144,7 +144,7 @@ func (factory *Factory) Layout() *Layout {
 }
 
 // StreamRenderer service returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(stream model.Stream, view string) render.Stream {
+func (factory *Factory) StreamRenderer(stream *model.Stream, view string) render.Stream {
 	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, view)
 }
 
@@ -236,6 +236,7 @@ func (factory *Factory) FormLibrary() form.Library {
 
 	return library
 }
+
 
 ///////////////////////////////////////
 // External APIs

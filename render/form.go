@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
@@ -44,7 +45,7 @@ func (w Form) Render() (string, error) {
 	var result bytes.Buffer
 
 	// Choose the correct view based on the wrapper provided.
-	if err := layout.ExecuteTemplate(&result, w.layout, w); err != nil {
+	if err := layout.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, w.layout, w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Form.Render", "Error rendering view")
 	}
 

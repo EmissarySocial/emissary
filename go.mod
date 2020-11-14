@@ -1,15 +1,14 @@
 module github.com/benpate/ghost
 
-go 1.14
+go 1.15
 
 require (
 	github.com/benpate/activitystream v0.2.0
 	github.com/benpate/choose v0.1.1
 	github.com/benpate/convert v0.7.2
-	github.com/benpate/data v0.9.6
+	github.com/benpate/data v0.10.0
 	github.com/benpate/derp v0.19.0
 	github.com/benpate/form v0.2.3
-	github.com/benpate/html v0.2.0
 	github.com/benpate/list v0.3.0
 	github.com/benpate/null v0.5.0
 	github.com/benpate/path v0.1.3
@@ -17,14 +16,15 @@ require (
 	github.com/benpate/steranko v0.1.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/google/go-cmp v0.5.2 // indirect
+	github.com/google/go-cmp v0.5.3 // indirect
 	github.com/gorilla/feeds v1.1.1
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.1.17
+	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/mmcdole/gofeed v1.1.0
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/tdewolff/minify/v2 v2.9.5
-	go.mongodb.org/mongo-driver v1.4.1
+	github.com/tdewolff/minify/v2 v2.9.10
+	go.mongodb.org/mongo-driver v1.4.3
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b //indirect
 )

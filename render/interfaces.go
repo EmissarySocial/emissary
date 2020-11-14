@@ -32,5 +32,5 @@ type StreamService interface {
 	LoadParent(*model.Stream) (*model.Stream, error)
 	List(expression.Expression, ...option.Option) (data.Iterator, error)
 	ListByParent(primitive.ObjectID) (data.Iterator, error)
-	ListByFolder(primitive.ObjectID) (data.Iterator, error)
+	ListTopFolders() (data.Iterator, error)
 }

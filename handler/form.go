@@ -76,7 +76,7 @@ func PostForm(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		/// Render the stream
-		result, err := factory.StreamRenderer(*stream, transition.NextView).Render()
+		result, err := factory.StreamRenderer(stream, transition.NextView).Render()
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering innerHTML"))

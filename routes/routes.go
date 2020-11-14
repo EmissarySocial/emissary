@@ -32,6 +32,9 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 
 	// Stream Pages
 	e.GET("/", handler.GetStream(factoryManager)) // query param ?view=
+	e.GET("/new/:template", handler.GetNewStream(factoryManager))
+	e.POST("/new/:template", handler.PostNewStream(factoryManager))
+
 	e.GET("/:stream", handler.GetStream(factoryManager)) // query param ?view=
 	e.GET("/:stream/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
 	e.GET("/:stream/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))

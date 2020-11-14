@@ -2,7 +2,10 @@ package render
 
 import (
 	"bytes"
+	"time"
 
+	"github.com/Masterminds/sprig/v3"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 )
@@ -12,12 +15,12 @@ type Stream struct {
 	layoutService   LayoutService
 	templateService TemplateService
 	streamService   StreamService
-	stream          model.Stream
+	stream          *model.Stream
 	viewName        string
 }
 
 // NewStream returns a fully initialized Stream object.
-func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream model.Stream, view string) Stream {
+func NewStream(layoutService LayoutService, templateService TemplateService, streamService StreamService, stream *model.Stream, view string) Stream {
 
 	return Stream{
 		layoutService:   layoutService,
@@ -51,7 +54,7 @@ func (w Stream) Render() (string, error) {
 	}
 
 	// Choose the correct view based on the wrapper provided.
-	if err := combined.ExecuteTemplate(&result, "stream", w); err != nil {
+	if err := combined.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, "stream", w); err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
 	}
 
@@ -71,6 +74,7 @@ func (w Stream) Token() string {
 	return w.stream.Token
 }
 
+// View returns the current view being used to render this stream
 func (w Stream) View() string {
 	return w.viewName
 }
@@ -83,6 +87,10 @@ func (w Stream) Label() string {
 // Description returns the description of the stream being rendered
 func (w Stream) Description() string {
 	return w.stream.Description
+}
+
+func (w Stream) PublishDate() time.Time {
+	return time.Unix(w.stream.PublishDate, 0)
 }
 
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
@@ -136,22 +144,35 @@ func (w Stream) Views() []View {
 	return result
 }
 
+// Folders returns all top-level folders for the domain
+func (w Stream) Folders() ([]Stream, error) {
+
+	folders, err := w.streamService.ListTopFolders()
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.render.stream.Folders", "Error loading top-level folders")
+	}
+
+	return w.iteratorToSlice(folders)
+
+}
+
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent() (*Stream, error) {
 
-	parent, err := w.streamService.LoadParent(&w.stream)
+	parent, err := w.streamService.LoadParent(w.stream)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := NewStream(w.layoutService, w.templateService, w.streamService, *parent, w.View())
+	result := NewStream(w.layoutService, w.templateService, w.streamService, parent, w.View())
 
 	return &result, nil
 }
 
-// Children returns an array of SubStreams containing all of the child elements of the current stream
-func (w Stream) Children() ([]SubStream, error) {
+// Children returns an array of Streams containing all of the child elements of the current stream
+func (w Stream) Children() ([]Stream, error) {
 
 	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
 
@@ -159,18 +180,24 @@ func (w Stream) Children() ([]SubStream, error) {
 		return nil, derp.Report(derp.Wrap(err, "ghost.render.stream.Children", "Error loading child streams", w.stream))
 	}
 
-	var stream model.Stream
-
-	result := make([]SubStream, iterator.Count())
-
-	for iterator.Next(&stream) {
-		result = append(result,NewSubStream(w.templateService, w.streamService, &stream, w.View()))
-	}
-
-	return result, nil
+	return w.iteratorToSlice(iterator)
 }
 
 // SubTemplates returns an array of templates that can be placed inside this Stream
 func (w Stream) SubTemplates() ([]model.Template) {
 	return w.templateService.ListByContainer(w.stream.Template)
+}
+
+// iteratorToSlice converts a data.Iterator of Streams into a slice of Streams 
+func (w Stream) iteratorToSlice(iterator data.Iterator) ([]Stream, error) {
+
+	var stream model.Stream
+
+	result := make([]Stream, iterator.Count())
+
+	for iterator.Next(&stream) {
+		result = append(result, NewStream(w.layoutService, w.templateService, w.streamService, &stream, w.View()))
+	}
+
+	return result, nil
 }
