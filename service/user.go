@@ -62,10 +62,12 @@ func (service User) Delete(stage *model.User, note string) error {
 	return nil
 }
 
+// Close closes this service
 func (service User) Close() {
 	service.factory.Close()
 }
 
+// LoadByUsername loads a single model.User object that matches the provided username
 func (service User) LoadByUsername(username string) (*model.User, error) {
 	return service.Load(expression.Equal("username", username))
 }

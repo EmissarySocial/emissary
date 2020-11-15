@@ -46,6 +46,7 @@ func (service SterankoUserService) Close() {
 	service.userService.Close()
 }
 
+// RequestPasswordReset is not currently implemented in this service. (TODO)
 func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
 	return nil
 }

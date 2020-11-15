@@ -52,6 +52,7 @@ func NewTemplate(paths []string, layoutUpdates chan *template.Template, template
 	return result
 }
 
+// AddSource adds a new TemplateSource into this service, and loads all of its templates into the memory cache.
 func (service *Template) AddSource(source TemplateSource) error {
 
 	service.sources = append(service.sources, source)

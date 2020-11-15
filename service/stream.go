@@ -152,8 +152,21 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	stream.Template = template.TemplateID
 
 
-	if parentToken != "" {
+	// If this is a TOP LEVEL item...
+	if parentToken == "top" {
 
+		// verify that it can be placed at the top of the hierarchy
+		if !template.CanBeContainedBy(parentToken) {
+			return nil, derp.New(400, "ghost.service.Stream.NewWithToken", "Invalid template")
+		}
+
+		stream.ParentID = ZeroObjectID()
+
+	} else {
+
+		// Otherwise, verify that it can be placed within its parent stream
+
+		// Load the parent stream
 		parent, err := service.LoadByToken(parentToken)
 
 		if err != nil {

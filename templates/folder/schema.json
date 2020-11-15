@@ -1,7 +1,7 @@
 {
 	"label": "Folder",
 	"description": "Folders can contain any other kind of content for your website.",
-	"containedBy": ["home", "folder"],
+	"containedBy": ["top", "home", "folder"],
 	"states": {
 		"new": {
 			"transitions": {

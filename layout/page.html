@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GH0ST</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
+	<link rel="stylesheet" href="/r/stylesheet.css">
+</head>
+<body>
+	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+		{{template "content"}}
+	</div>
+
+	<div id="menu" hx-target="#main" hx-push-url="true">
+		<div class="bottom">
+			<div class="uk-margin-bottom"><a href="/top/child/folder">+ Add Folder</a></div>
+			{{ range .Folders}}
+				<div><a href="{{.Token}}">{{.Label}}</a></div>
+			{{ end}}
+		</div>
+	</div>
+	
+</body>
+<script src="https://unpkg.com/htmx.org" defer></script>
+</html>

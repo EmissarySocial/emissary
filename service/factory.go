@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
 )
@@ -143,15 +142,26 @@ func (factory *Factory) Layout() *Layout {
 	return factory.layoutService
 }
 
-// StreamRenderer service returns a fully populated render.Stream object
-func (factory *Factory) StreamRenderer(stream *model.Stream, view string) render.Stream {
-	return render.NewStream(factory.Layout(), factory.Template(), factory.Stream(), stream, view)
+// StreamRenderer generates a new stream renderer service.
+func (factory *Factory) StreamRenderer(stream *model.Stream) *Renderer {
+
+	return &Renderer{
+		factory:  factory,
+		stream:   stream,
+	}
 }
 
-// FormRenderer service returns a fully populated render.Form object
-func (factory *Factory) FormRenderer(stream model.Stream, layout string, transition string) render.Form {
-	return render.NewForm(factory.Layout(), factory.Template(), factory.FormLibrary(), stream, layout, transition)
+
+// FormRenderer generates a renderer with options for displaying a form.
+func (factory *Factory) FormRenderer(stream *model.Stream, transition string) *Renderer {
+
+	return &Renderer{
+		factory:  factory,
+		stream:   stream,
+		transition: transition,
+	}
 }
+
 
 ///////////////////////////////////////
 // Real-Time UpdateChannels

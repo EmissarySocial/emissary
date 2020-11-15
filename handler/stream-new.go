@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
@@ -26,19 +24,14 @@ func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error creating new stream"))
 		}
 
-		// Render the HTML
-		// Render page content (full or partial)
-		renderer := factory.FormRenderer(*stream, "stream-new.html", "create")
-		result, err := renderPage(factory.Layout(), renderer, isFullPageRequest(ctx))
+		ctx.SetParamNames("stream", "transition")
+		ctx.SetParamValues("new", "create")
 
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error rendering HTML"))
-		}
-
-		return ctx.HTML(http.StatusOK, result)
+		return renderStream(ctx, factory, stream)
 	}
 }
 
+// PostNewStream accepts POST requests and generates a new stream.
 func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -72,12 +65,12 @@ func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Render result
-		html, err := factory.StreamRenderer(stream, transition.NextView).Render()
+		html, err := factory.StreamRenderer(stream).Render(transition.NextView)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error rendering next view"))
 		}
 
-		return ctx.HTML(200, html)
+		return ctx.HTML(200, string(html))
 	}
 }

@@ -32,16 +32,14 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 
 	// Stream Pages
 	e.GET("/", handler.GetStream(factoryManager)) // query param ?view=
-	e.GET("/new/:template", handler.GetNewStream(factoryManager))
-	e.POST("/new/:template", handler.PostNewStream(factoryManager))
 
 	e.GET("/:stream", handler.GetStream(factoryManager)) // query param ?view=
 	e.GET("/:stream/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
 	e.GET("/:stream/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
-	e.GET("/:stream/new/:template", handler.GetNewStream(factoryManager))
-	e.POST("/:stream/new/:template", handler.PostNewStream(factoryManager))
-	e.GET("/:stream/form/:transitionId", handler.GetForm(factoryManager))   // view a form (partial)
+	e.GET("/:stream/child/:template", handler.GetNewStream(factoryManager))
+	e.POST("/:stream/child/:template", handler.PostNewStream(factoryManager))
+	e.GET("/:stream/form/:transitionId", handler.GetStream(factoryManager))   // view a form (partial)
 	e.POST("/:stream/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
 
 	return e

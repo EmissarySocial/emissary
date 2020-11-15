@@ -48,6 +48,10 @@ func (template Template) View(stateName string, viewName string) (*View, error) 
 
 	var showView string
 
+	if viewName == "" {
+		viewName = "default"
+	}
+
 	// Verify that the requested State exists
 	if state, ok := template.States[stateName]; ok {
 
