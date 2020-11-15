@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// ServerSentEvent generates an echo.HandlerFunc that listens for requests for
+// SSE subscriptions.
 func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {

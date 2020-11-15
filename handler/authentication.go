@@ -5,7 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func PostAuthentication(factoryManager service.FactoryManager) echo.HandlerFunc {
+// PostAuthentication generates an echo.HandlerFunc that calls the Sterakno PostSignin function.
+func PostAuthentication(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
