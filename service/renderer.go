@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"html/template"
+	"net/url"
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
@@ -13,10 +14,9 @@ import (
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	factory    *Factory
-	stream     *model.Stream
-	view       string
-	transition string
+	factory *Factory
+	stream  *model.Stream
+	query   url.Values
 }
 
 // Render generates an HTML output for a stream/view combination.
@@ -25,11 +25,10 @@ func (w Renderer) Render(viewName string) (template.HTML, error) {
 	var result bytes.Buffer
 
 	layout := w.factory.Layout().Layout()
-	w.view = viewName
 
 	// Load stream content
 	_, content, err := w.factory.Template().LoadCompiled(w.stream.Template, w.stream.State, viewName)
-	
+
 	if err != nil {
 		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
 	}
@@ -53,9 +52,8 @@ func (w Renderer) Render(viewName string) (template.HTML, error) {
 	return template.HTML(result.String()), nil
 }
 
-
 // Form returns an HTML rendering of this form
-func (w Renderer) Form() (template.HTML, error) {
+func (w Renderer) Form(transition string) (template.HTML, error) {
 
 	var result template.HTML
 
@@ -68,7 +66,7 @@ func (w Renderer) Form() (template.HTML, error) {
 	// TODO: Validate that this transition is VALID
 	// TODO: Validate that the USER IS PERMITTED to make this transition.
 
-	form, err := t.Form(w.stream.State, w.transition)
+	form, err := t.Form(w.stream.State, transition)
 
 	if err != nil {
 		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Invalid Form", t))
@@ -84,7 +82,6 @@ func (w Renderer) Form() (template.HTML, error) {
 	return template.HTML(html), nil
 }
 
-
 // StreamID returns the unique ID for the stream being rendered
 func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
@@ -93,11 +90,6 @@ func (w Renderer) StreamID() string {
 // Token returns the unique URL token for the stream being rendered
 func (w Renderer) Token() string {
 	return w.stream.Token
-}
-
-// View returns the current view being used to render this stream
-func (w Renderer) View() string {
-	return w.view
 }
 
 // Label returns the Label for the stream being rendered
@@ -135,6 +127,15 @@ func (w Renderer) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+// View returns the string name of the view requested in the URL QueryString
+func (w Renderer) View() string {
+	return w.query.Get("view")
+}
+
+// Transition returns the string name of the transition requested in the URL QueryString
+func (w Renderer) Transition() string {
+	return w.query.Get("transition")
+}
 
 ////////////////////////////////
 
@@ -142,7 +143,6 @@ func (w Renderer) HasParent() bool {
 func (w Renderer) CanAddChild() bool {
 	return true
 }
-
 
 ////////////////////////////////
 
@@ -189,7 +189,7 @@ func (w Renderer) Parent() (*Renderer, error) {
 		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
 	}
 
-	result := w.factory.StreamRenderer(parent)
+	result := w.factory.StreamRenderer(parent, w.query)
 
 	return result, nil
 }
@@ -207,11 +207,11 @@ func (w Renderer) Children() ([]*Renderer, error) {
 }
 
 // SubTemplates returns an array of templates that can be placed inside this Stream
-func (w Renderer) SubTemplates() ([]model.Template) {
+func (w Renderer) SubTemplates() []model.Template {
 	return w.factory.Template().ListByContainer(w.stream.Template)
 }
 
-// iteratorToSlice converts a data.Iterator of Streams into a slice of Streams 
+// iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
 func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
 
 	var stream model.Stream
@@ -219,7 +219,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
 	result := make([]*Renderer, iterator.Count())
 
 	for iterator.Next(&stream) {
-		result = append(result, w.factory.StreamRenderer(&stream))
+		result = append(result, w.factory.StreamRenderer(&stream, w.query))
 	}
 
 	return result, nil

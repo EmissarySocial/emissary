@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/benpate/ghost/handler"
-	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/service"
 	"github.com/labstack/echo/v4"
 )
@@ -33,14 +32,11 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	// Stream Pages
 	e.GET("/", handler.GetStream(factoryManager)) // query param ?view=
 
-	e.GET("/:stream", handler.GetStream(factoryManager)) // query param ?view=
-	e.GET("/:stream/html", handler.GetStream(factoryManager), middleware.MimeType("text/html"))
-	e.GET("/:stream/json", handler.GetStream(factoryManager), middleware.MimeType("application/json"))
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))          // query param ?view=
-	e.GET("/:stream/child/:template", handler.GetNewStream(factoryManager))
-	e.POST("/:stream/child/:template", handler.PostNewStream(factoryManager))
-	e.GET("/:stream/form/:transitionId", handler.GetStream(factoryManager))   // view a form (partial)
-	e.POST("/:stream/form/:transitionId", handler.PostForm(factoryManager)) // post a form (with redirect)
+	e.GET("/:stream", handler.GetStream(factoryManager))           // query param ?view=
+	e.POST("/:stream", handler.PostStream(factoryManager))         // post a form (with redirect)
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager)) // query param ?view=
+	e.GET("/new", handler.GetNewStream(factoryManager))
+	e.POST("/new", handler.PostNewStream(factoryManager))
 
 	return e
 }

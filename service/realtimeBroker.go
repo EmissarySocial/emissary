@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+	"net/url"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -108,7 +109,7 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 			for _, client := range b.streams[stream.Token] {
 
-				if html, err := factory.StreamRenderer(&stream).Render(client.View); err == nil {
+				if html, err := factory.StreamRenderer(&stream, url.Values{}).Render(client.View); err == nil {
 					client.WriteChannel <- string(html)
 				} else {
 					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))

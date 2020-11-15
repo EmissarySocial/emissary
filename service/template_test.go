@@ -1,6 +1,7 @@
 package service
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/benpate/derp"
@@ -34,7 +35,7 @@ func TestTemplate(t *testing.T) {
 	stream, err := streamService.LoadByToken("1-my-first-stream")
 	assert.Nil(t, err)
 
-	html, err := factory.StreamRenderer(stream).Render("default")
+	html, err := factory.StreamRenderer(stream, url.Values{}).Render("default")
 
 	assert.Nil(t, err)
 	derp.Report(err)

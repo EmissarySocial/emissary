@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"net/url"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/mongodb"
@@ -143,25 +144,14 @@ func (factory *Factory) Layout() *Layout {
 }
 
 // StreamRenderer generates a new stream renderer service.
-func (factory *Factory) StreamRenderer(stream *model.Stream) *Renderer {
+func (factory *Factory) StreamRenderer(stream *model.Stream, query url.Values) *Renderer {
 
 	return &Renderer{
-		factory:  factory,
-		stream:   stream,
+		factory: factory,
+		stream:  stream,
+		query:   query,
 	}
 }
-
-
-// FormRenderer generates a renderer with options for displaying a form.
-func (factory *Factory) FormRenderer(stream *model.Stream, transition string) *Renderer {
-
-	return &Renderer{
-		factory:  factory,
-		stream:   stream,
-		transition: transition,
-	}
-}
-
 
 ///////////////////////////////////////
 // Real-Time UpdateChannels
@@ -246,7 +236,6 @@ func (factory *Factory) FormLibrary() form.Library {
 
 	return library
 }
-
 
 ///////////////////////////////////////
 // External APIs
