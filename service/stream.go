@@ -92,7 +92,7 @@ func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
 			AndEqual("journal.deleteDate", 0))
 }
 
-// LoadByToken returns a single Stream that matches a particular Token 
+// LoadByToken returns a single Stream that matches a particular Token
 func (service Stream) LoadByToken(token string) (*model.Stream, error) {
 	return service.Load(
 		expression.
@@ -116,7 +116,6 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 			AndEqual("journal.deleteDate", 0))
 }
 
-
 // LoadParent returns the Stream that is the parent of the provided Stream
 func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
@@ -129,7 +128,6 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 	return stream, derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
 }
 
-
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Parent and Token information.
@@ -138,7 +136,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	if templateID == "" {
 		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing template parameter")
 	}
-	
+
 	// Load the requested template
 	templateService := service.factory.Template()
 	template, err := templateService.Load(templateID)
@@ -150,7 +148,6 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	// Load the parent stream to validate permissions
 	stream := service.New()
 	stream.Template = template.TemplateID
-
 
 	// If this is a TOP LEVEL item...
 	if parentToken == "top" {
@@ -180,11 +177,10 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 
 		stream.ParentID = parent.StreamID
 	}
-	
+
 	// Success.  We've made the new stream!
 	return stream, nil
 }
-
 
 ///////////////////
 

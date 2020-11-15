@@ -219,7 +219,8 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
 	result := make([]*Renderer, iterator.Count())
 
 	for iterator.Next(&stream) {
-		result = append(result, w.factory.StreamRenderer(&stream, w.query))
+		copy := stream
+		result = append(result, w.factory.StreamRenderer(&copy, w.query))
 	}
 
 	return result, nil

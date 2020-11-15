@@ -7,7 +7,7 @@
 </head>
 <body>
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
-		{{template "content"}}
+		{{template "content" .}}
 	</div>
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
