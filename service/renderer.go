@@ -19,69 +19,6 @@ type Renderer struct {
 	query   url.Values
 }
 
-// Render generates an HTML output for a stream/view combination.
-func (w Renderer) Render(viewName string) (template.HTML, error) {
-
-	var result bytes.Buffer
-
-	layout := w.factory.Layout().Layout()
-
-	// Load stream content
-	_, content, err := w.factory.Template().LoadCompiled(w.stream.Template, w.stream.State, viewName)
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
-	}
-
-	// Combine the two parse trees.
-	// TODO: Could this be done at load time, not for each page request?
-	combined, err := layout.AddParseTree("content", content.Tree)
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Unable to create parse tree")
-	}
-
-	// Choose the correct view based on the wrapper provided.
-	if err := combined.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, "stream", w); err != nil {
-		return "", derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering view")
-	}
-
-	// TODO: Add caching...
-
-	// Success!
-	return template.HTML(result.String()), nil
-}
-
-// Form returns an HTML rendering of this form
-func (w Renderer) Form(transition string) (template.HTML, error) {
-
-	var result template.HTML
-
-	t, err := w.factory.Template().Load(w.stream.Template)
-
-	if err != nil {
-		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Cannot load template"))
-	}
-
-	// TODO: Validate that this transition is VALID
-	// TODO: Validate that the USER IS PERMITTED to make this transition.
-
-	form, err := t.Form(w.stream.State, transition)
-
-	if err != nil {
-		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Invalid Form", t))
-	}
-
-	// Generate HTML by merging the form with the element library, the data schema, and the data value
-	html, err := form.HTML(w.factory.FormLibrary(), *t.Schema, w.stream)
-
-	if err != nil {
-		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Error generating form HTML", form))
-	}
-
-	return template.HTML(html), nil
-}
-
 // StreamID returns the unique ID for the stream being rendered
 func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
@@ -173,7 +110,7 @@ func (w Renderer) Folders() ([]*Renderer, error) {
 	folders, err := w.factory.Stream().ListTopFolders()
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.stream.Folders", "Error loading top-level folders")
+		return nil, derp.Wrap(err, "ghost.service.Renderer.Folders", "Error loading top-level folders")
 	}
 
 	return w.iteratorToSlice(folders)
@@ -186,7 +123,7 @@ func (w Renderer) Parent() (*Renderer, error) {
 	parent, err := w.factory.Stream().LoadParent(w.stream)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.render.stream.Parent", "Error loading Parent")
+		return nil, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
 	result := w.factory.StreamRenderer(parent, w.query)
@@ -200,7 +137,7 @@ func (w Renderer) Children() ([]*Renderer, error) {
 	iterator, err := w.factory.Stream().ListByParent(w.stream.StreamID)
 
 	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, "ghost.render.stream.Children", "Error loading child streams", w.stream))
+		return nil, derp.Report(derp.Wrap(err, "ghost.service.Renderer.Children", "Error loading child streams", w.stream))
 	}
 
 	return w.iteratorToSlice(iterator)
@@ -224,4 +161,71 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
 	}
 
 	return result, nil
+}
+
+/// RENDERING METHODS
+
+// Render generates an HTML output for a stream/view combination.
+func (w Renderer) Render(viewName string) (template.HTML, error) {
+
+	var result bytes.Buffer
+
+	layout := w.factory.Layout().Layout()
+
+	// Load stream content
+	_, content, err := w.factory.Template().LoadCompiled(w.stream.Template, w.stream.State, viewName)
+
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.service.Renderer.Render", "Unable to load stream template")
+	}
+
+	// Combine the two parse trees.
+	// TODO: Could this be done at load time, not for each page request?
+	combined, err := layout.AddParseTree("content", content.Tree)
+
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.service.Renderer.Render", "Unable to create parse tree")
+	}
+
+	// Choose the correct view based on the wrapper provided.
+	if err := combined.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, "stream", w); err != nil {
+		return "", derp.Wrap(err, "ghost.service.Renderer.Render", "Error rendering view")
+	}
+
+	// TODO: Add caching...
+
+	// Success!
+	return template.HTML(result.String()), nil
+}
+
+// Form returns an HTML rendering of this form
+func (w Renderer) Form() (template.HTML, error) {
+
+	var result template.HTML
+
+	t, err := w.factory.Template().Load(w.stream.Template)
+
+	if err != nil {
+		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Cannot load template"))
+	}
+
+	// TODO: Validate that this transition is VALID
+	// TODO: Validate that the USER IS PERMITTED to make this transition.
+
+	transition := w.Transition()
+
+	form, err := t.Form(w.stream.State, transition)
+
+	if err != nil {
+		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Invalid Form", t))
+	}
+
+	// Generate HTML by merging the form with the element library, the data schema, and the data value
+	html, err := form.HTML(w.factory.FormLibrary(), *t.Schema, w.stream)
+
+	if err != nil {
+		return result, derp.Report(derp.Wrap(err, "ghost.handler.GetForm", "Error generating form HTML", form))
+	}
+
+	return template.HTML(html), nil
 }

@@ -11,11 +11,12 @@ import (
 
 // View is an individual HTML template that can render a part of a stream
 type View struct {
-	Label       string             `json:"label"`       // Human-friendly label for this view.
-	Name        string             `json:"name"`        // Name of the file in the template package where HTML is stored (without extension).
-	Permissions []string           `json:"permissions"` // View permissions (to implement later)
-	HTML        string             `json:"html"`        // Raw HTML to render
-	compiled    *template.Template `json:"-"`           // Parsed HTML template to render (by merging with Stream dataset)
+	Label       string   `json:"label"`       // Human-friendly label for this view.
+	Name        string   `json:"name"`        // Name of the file in the template package where HTML is stored (without extension).
+	Permissions []string `json:"permissions"` // View permissions (to implement later)
+	HTML        string   `json:"html"`        // Raw HTML to render
+
+	compiled *template.Template // Parsed HTML template to render (by merging with Stream dataset)
 }
 
 // Compiled calculates or retrieves the compiled state of this view.
@@ -31,13 +32,13 @@ func (v *View) Compiled() (*template.Template, error) {
 		minified, err := m.String("text/html", v.HTML)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "model.View.Template", "Error minifying template", v.Name)
+			return nil, derp.Wrap(err, "ghost.model.View.Compiled", "Error minifying template", v.Name)
 		}
 
-		result, err := template.New("").Parse(minified)
+		result, err := template.New(v.Name).Parse(minified)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "model.View.Template", "Unable to parse template HTML", v.Name)
+			return nil, derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", v.Name)
 		}
 
 		// Save the value into this view
@@ -59,7 +60,7 @@ func (v *View) Execute(data interface{}) (string, error) {
 	}
 
 	if err := template.Execute(&buffer, data); err != nil {
-		return "", derp.Wrap(err, "Model.View.Template", "Error executing template", v.HTML, data)
+		return "", derp.Wrap(err, "ghost.model.View.Execute", "Error executing template", v.HTML, data)
 	}
 
 	// Return to caller.  TRUE means that the object has been changed.

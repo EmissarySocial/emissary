@@ -3,8 +3,6 @@ module github.com/benpate/ghost
 go 1.15
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/benpate/activitystream v0.2.0
 	github.com/benpate/choose v0.1.1

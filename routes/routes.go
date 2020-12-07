@@ -23,6 +23,11 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 
 	e.Static("/r", "static")
 
+	// Authentication Pages
+	e.GET("/signin", handler.GetSignIn(factoryManager))
+	e.POST("/signin", handler.PostSignIn(factoryManager))
+	e.POST("/signout", handler.PostSignOut(factoryManager))
+
 	// ActivityPub INBOX/OUTBOX
 	e.GET("/users/:username/inbox", handler.TBD)
 	e.POST("/users/:username/inbox", handler.TBD)
@@ -30,13 +35,12 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	e.POST("/users/:username/outbox", handler.TBD)
 
 	// Stream Pages
-	e.GET("/", handler.GetStream(factoryManager)) // query param ?view=
-
-	e.GET("/:stream", handler.GetStream(factoryManager))           // query param ?view=
-	e.POST("/:stream", handler.PostStream(factoryManager))         // post a form (with redirect)
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager)) // query param ?view=
-	e.GET("/new", handler.GetNewStream(factoryManager))
-	e.POST("/new", handler.PostNewStream(factoryManager))
+	e.GET("/", handler.GetStream(factoryManager))                  // ?view=
+	e.GET("/:stream", handler.GetStream(factoryManager))           // ?view= or ?transition=
+	e.POST("/:stream", handler.PostStream(factoryManager))         // ?transition
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager)) // ?view=
+	e.GET("/new", handler.GetNewStream(factoryManager))            // ?parent=&template=
+	e.POST("/new", handler.PostNewStream(factoryManager))          // ?parent=&template=
 
 	return e
 }

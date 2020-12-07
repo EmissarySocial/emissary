@@ -8,13 +8,13 @@ THIS IS THE DEFAULT PAGE
 </article>
 <br>
 <div>
-	<a href="/{{.Token}}/form/update" class="uk-button uk-button-primary">Update Stream</a>
+	<a hx-get="/{{.Token}}?transition=update" class="uk-button uk-button-primary">Update Stream</a>
 </div>
 
 
 <h3>New Stream</h3>
 {{ range .SubTemplates}}
-	<div hx-get="/{{$.Token}}/new/{{.TemplateID}}" hx-trigger="mousedown[button==0]" class="link">
+	<div hx-get="/new?parent={{$.Token}}&amp;template={{.TemplateID}}" class="link">
 		<div class="uk-text-bold">{{.Label}}</div>
 		<div class="uk-text-meta">{{.Description}}</div>
 	</div>

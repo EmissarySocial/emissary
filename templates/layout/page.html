@@ -12,7 +12,7 @@
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
 		<div class="bottom">
-			<div class="uk-margin-bottom"><a href="/top/child/folder">+ Add Folder</a></div>
+			<div class="uk-margin-bottom"><a href="/new?parentId=top&amp;template=folder">+ Add Folder</a></div>
 			{{ range .Folders}}
 				<div><a href="{{.Token}}">{{.Label}}</a></div>
 			{{ end}}

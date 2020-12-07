@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -50,7 +51,7 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
 	}
 
-	service.streamUpdateChannel <- *stream
+	// service.streamUpdateChannel <- *stream
 
 	return nil
 }
@@ -134,7 +135,7 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
 
 	if templateID == "" {
-		return nil, derp.New(500, "ghost.service.Stream.NewWithToken", "Missing template parameter")
+		return nil, derp.New(500, "ghost.service.Stream.NewWithTemplate", "Missing template parameter")
 	}
 
 	// Load the requested template
@@ -142,7 +143,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	template, err := templateService.Load(templateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Error loading Template")
+		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template")
 	}
 
 	// Load the parent stream to validate permissions
@@ -154,7 +155,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 
 		// verify that it can be placed at the top of the hierarchy
 		if !template.CanBeContainedBy(parentToken) {
-			return nil, derp.New(400, "ghost.service.Stream.NewWithToken", "Invalid template")
+			return nil, derp.New(400, "ghost.service.Stream.NewWithTemplate", "Invalid template")
 		}
 
 		stream.ParentID = ZeroObjectID()
@@ -167,12 +168,12 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 		parent, err := service.LoadByToken(parentToken)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Error loading parent stream")
+			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream")
 		}
 
 		// Verify that the child stream can be placed inside the parent
 		if !template.CanBeContainedBy(parent.Template) {
-			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithToken", "Invalid template")
+			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
 		}
 
 		stream.ParentID = parent.StreamID
@@ -187,6 +188,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 // Transition handles a transition request to move the stream from one state into another state.
 func (service Stream) Transition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
 
+	spew.Dump("1")
 	templateService := service.factory.Template()
 
 	template, err := templateService.Load(stream.Template)
@@ -194,23 +196,27 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Can't load Template")
 	}
+	spew.Dump("2")
 
 	transition, err := template.Transition(stream.State, transitionID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
 	}
+	spew.Dump("3")
 
 	form, ok := template.Forms[transition.Form]
 
 	if !ok {
 		return nil, derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
 	}
+	spew.Dump("4")
 
 	// TODO: where are permissions processed?
 
 	paths := form.AllPaths()
 
+	spew.Dump(paths)
 	// Only look for data in the registered paths for this form.  If other data is present, it will be ignored.
 	for _, element := range paths {
 
@@ -225,6 +231,8 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 		// TODO: Otherwise?  Should this form throw an error?
 	}
 
+	spew.Dump("5")
+
 	// Update the stream to the new state
 	stream.State = transition.NextState
 
@@ -233,6 +241,7 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 	if err := service.Save(stream, "stream transition: "+transitionID); err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
 	}
+	spew.Dump("6")
 
 	return transition, nil
 }

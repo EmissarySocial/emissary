@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -91,8 +90,7 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		data, err := ioutil.ReadFile(directory + "/" + filename)
 
 		if err != nil {
-			spew.Dump(err)
-			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
+			return nil, derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
 		}
 
 		result.Views[index].HTML = string(data)

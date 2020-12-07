@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -107,7 +106,7 @@ func newStream(ctx echo.Context, factoryManager *service.FactoryManager) (*servi
 	}
 
 	streamService := factory.Stream()
-	stream, err := streamService.NewWithTemplate(ctx.QueryParam("parentId"), ctx.QueryParam("template"))
+	stream, err := streamService.NewWithTemplate(ctx.QueryParam("parent"), ctx.QueryParam("template"))
 
 	if err != nil {
 		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error creating new stream"))
@@ -127,12 +126,25 @@ func renderStream(ctx echo.Context, factory *service.Factory, stream *model.Stre
 
 	layoutService := factory.Layout()
 
+	//spew.Dump("---")
+
 	// If there is a "transition" defined, then we're displaying a form
-	if transition := ctx.Param("transition"); transition != "" {
+	if transition := ctx.QueryParam("transition"); transition != "" {
 
 		renderer = factory.StreamRenderer(stream, ctx.QueryParams())
 		compiledTemplate = layoutService.Layout()
 		entryPoint = "form"
+
+		if isFullPageRequest(ctx) {
+			entryPoint = "page"
+
+			// TODO: alias "form" to "content"
+			//compiledTemplate, err = layout.AddParseTree("content", compiledTemplate.Tree)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
+			}
+		}
 
 	} else {
 
@@ -145,48 +157,57 @@ func renderStream(ctx echo.Context, factory *service.Factory, stream *model.Stre
 		template, err := factory.Template().Load(stream.Template)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.render.Stream.Render", "Unable to load stream template")
+			return derp.Wrap(err, "ghost.handler.renderStream", "Unable to load stream template")
 		}
 
 		// Get the View inside of the Template
 		view, err := template.View(stream.State, ctx.QueryParam("view"))
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.render.Stream.Render", "Invalid view")
+			return derp.Wrap(err, "ghost.handler.renderStream", "Invalid view")
 		}
 
 		// Get the "pre-compiled" Template from the View
 		compiledTemplate, err = view.Compiled()
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.render.Stream.Render", "Error getting compiled template")
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error getting compiled template")
 		}
 
 		// By default, the entryPoint is the name of the view
 		entryPoint = view.Name
-	}
 
-	// If this is a full-page request, then alias the current "compiledTemplate" into the layout
-	// templates with the name "content".
-	if isFullPageRequest(ctx) {
-
-		layout := layoutService.Layout()
-
-		// Get the page layout
-		entryPoint = "page"
+		// spew.Dump(template.Label)
+		// spew.Dump(view.Name)
 
 		// Combine the two parse trees.
 		// TODO: Could this be done at load time, not for each page request?
-		compiledTemplate, err = layout.AddParseTree("content", compiledTemplate.Tree)
+		layout := layoutService.Layout()
 
-		if err != nil {
-			return derp.Wrap(err, "ghost.render.Stream.Render", "Unable to create parse tree")
+		// If this is a full-page request then the entry point is the page.
+		if isFullPageRequest(ctx) {
+			entryPoint = "page"
+
+			compiledTemplate, err = layout.AddParseTree("content", compiledTemplate.Tree)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
+			}
+		} else {
+
+			compiledTemplate, err = layout.AddParseTree(entryPoint, compiledTemplate.Tree)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
+			}
 		}
 	}
 
+	// spew.Dump(compiledTemplate.DefinedTemplates())
+
 	// Render the page using the entryPoint to identify the Golang Template.
 	if err := compiledTemplate.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, entryPoint, renderer); err != nil {
-		return derp.Wrap(err, "ghost.render.Stream.Render", "Error rendering partial page")
+		return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering partial page")
 	}
 
 	return ctx.HTML(http.StatusOK, result.String())
@@ -194,6 +215,7 @@ func renderStream(ctx echo.Context, factory *service.Factory, stream *model.Stre
 
 func postStream(ctx echo.Context, factory *service.Factory, stream *model.Stream) error {
 
+	// spew.Dump("--- postStream")
 	// Parse and Bind form data first, so that we don't have to hit the database in cases where there's an error.
 	form := make(map[string]interface{})
 
@@ -204,14 +226,14 @@ func postStream(ctx echo.Context, factory *service.Factory, stream *model.Stream
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transition, err := streamService.Transition(stream, ctx.Param("transitionId"), form)
+	transition, err := streamService.Transition(stream, ctx.QueryParam("transition"), form)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
 	}
 
-	spew.Dump(transition.NextView)
-	return renderStream(ctx, factory, stream)
+	return ctx.Redirect(http.StatusTemporaryRedirect, "/"+stream.Token+"?view="+transition.NextState)
+	//	return renderStream(ctx, factory, stream)
 }
 
 // isFullPageRequest returns TRUE if this is a regular, full-page request (and FALSE if it is an HTMX partial page request)

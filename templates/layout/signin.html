@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="uk-height-1-1">
+<head>
+	<title>Signin : GH0ST</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
+	<link rel="stylesheet" href="/r/stylesheet.css">
+</head>
+<body class="uk-height-1-1">
+	<div class="uk-flex uk-flex-middle uk-flex-center">
+		<div class="uk-card uk-card-default uk-card-body">
+
+			<form action="/login" method="post">
+
+				<h1 class="uk-card-title">Sign In</h1>
+
+				{{ if ne . "" }}<div class="uk-alert uk-alert-danger"><p>{{.}}</p></div>{{ end }}
+
+				<fieldset class="uk-fieldset uk-margin">
+					<label for="username">Username</label>
+					<input type="text" name="username" id="username" class="uk-input">
+				</fieldset>
+
+				<fieldset class="uk-fieldset uk-margin">
+					<label for="password">Password</label>
+					<input type="password" name="password" id="password" class="uk-input">
+				</fieldset>
+
+				<input type="submit" value="Sign In" class="uk-button uk-button-primary">
+			</form>
+		</div>
+	</div>	
+</body>
+</html>
