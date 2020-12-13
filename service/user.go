@@ -43,20 +43,20 @@ func (service User) Load(criteria expression.Expression) (*model.User, error) {
 }
 
 // Save adds/updates an User in the database
-func (service User) Save(stage *model.User, note string) error {
+func (service User) Save(user *model.User, note string) error {
 
-	if err := service.collection.Save(stage, note); err != nil {
-		return derp.Wrap(err, "service.Stage", "Error saving Stage", stage, note)
+	if err := service.collection.Save(user, note); err != nil {
+		return derp.Wrap(err, "service.User", "Error saving User", user, note)
 	}
 
 	return nil
 }
 
 // Delete removes an User from the database (virtual delete)
-func (service User) Delete(stage *model.User, note string) error {
+func (service User) Delete(user *model.User, note string) error {
 
-	if err := service.collection.Delete(stage, note); err != nil {
-		return derp.Wrap(err, "service.Stage", "Error deleting Stage", stage, note)
+	if err := service.collection.Delete(user, note); err != nil {
+		return derp.Wrap(err, "service.User", "Error deleting User", user, note)
 	}
 
 	return nil

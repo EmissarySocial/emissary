@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/steranko"
 )
 
 type Global struct {
@@ -12,12 +13,13 @@ type Global struct {
 }
 
 type Domain struct {
-	Hostname      string   `json:"hostname"`            // Domain name of a virtual server
-	ConnectString string   `json:"connectString"`       // MongoDB connect string
-	DatabaseName  string   `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
-	LayoutPath    string   `json:"layoutPath"`          // Path to the directory where the website layout is saved.
-	TemplatePaths []string `json:"templatePaths"`       // Paths to one or more directories where page templates are defined.
-	ForwardTo     string   `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
+	Hostname      string          `json:"hostname"`            // Domain name of a virtual server
+	ConnectString string          `json:"connectString"`       // MongoDB connect string
+	DatabaseName  string          `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
+	LayoutPath    string          `json:"layoutPath"`          // Path to the directory where the website layout is saved.
+	TemplatePaths []string        `json:"templatePaths"`       // Paths to one or more directories where page templates are defined.
+	ForwardTo     string          `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
+	Steranko      steranko.Config `json:"steranko,omitempty"`  // Configuration to pass through to Steranko
 }
 
 func Load(filename string) (Global, error) {

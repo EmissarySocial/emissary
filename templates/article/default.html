@@ -8,7 +8,12 @@ THIS IS THE DEFAULT PAGE
 </article>
 <br>
 <div>
-	<a hx-get="/{{.Token}}?transition=update" class="uk-button uk-button-primary">Update Stream</a>
+	<span 
+		hx-get="/{{.Token}}?transition=update" 
+		hx-trigger="mousedown[!button]"
+		hx-target="body" 
+		hx-swap="beforeend" 
+		hx-push-url="false" class="uk-button uk-button-primary">Update Stream</span>
 </div>
 
 

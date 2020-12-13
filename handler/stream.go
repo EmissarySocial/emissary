@@ -232,7 +232,11 @@ func postStream(ctx echo.Context, factory *service.Factory, stream *model.Stream
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
 	}
 
-	return ctx.Redirect(http.StatusTemporaryRedirect, "/"+stream.Token+"?view="+transition.NextState)
+	ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+stream.Token+`?view=`+transition.NextState+`"}}`)
+
+	return ctx.NoContent(200)
+
+	// return ctx.Redirect(http.StatusSeeOther, "/"+stream.Token+"?view="+transition.NextState)
 	//	return renderStream(ctx, factory, stream)
 }
 

@@ -219,9 +219,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 			userService: factory.User(),
 		}
 
-		config := steranko.Config{}
-
-		factory.steranko = steranko.New(userService, config)
+		factory.steranko = steranko.New(userService, factory.domain.Steranko)
 	}
 
 	return factory.steranko

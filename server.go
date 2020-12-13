@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/routes"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func main() {
@@ -15,6 +16,9 @@ func main() {
 	fmt.Println("Loading configuration file...")
 
 	c, err := config.Load("./config.json")
+
+	// Debugging for spew
+	spew.Config.DisableMethods = true
 
 	if err != nil {
 		derp.Report(err)

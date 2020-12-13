@@ -14,6 +14,8 @@ func New(factoryManager *service.FactoryManager) *echo.Echo {
 	// Well-Known API calls
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
+	e.Static("/htmx", "../htmx/src")
+
 	e.GET("/favicon.ico", echo.NotFoundHandler)
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryManager))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factoryManager))

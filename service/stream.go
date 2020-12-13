@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -188,7 +187,6 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 // Transition handles a transition request to move the stream from one state into another state.
 func (service Stream) Transition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
 
-	spew.Dump("1")
 	templateService := service.factory.Template()
 
 	template, err := templateService.Load(stream.Template)
@@ -196,27 +194,23 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Can't load Template")
 	}
-	spew.Dump("2")
 
 	transition, err := template.Transition(stream.State, transitionID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
 	}
-	spew.Dump("3")
 
 	form, ok := template.Forms[transition.Form]
 
 	if !ok {
 		return nil, derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
 	}
-	spew.Dump("4")
 
 	// TODO: where are permissions processed?
 
 	paths := form.AllPaths()
 
-	spew.Dump(paths)
 	// Only look for data in the registered paths for this form.  If other data is present, it will be ignored.
 	for _, element := range paths {
 
@@ -231,8 +225,6 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 		// TODO: Otherwise?  Should this form throw an error?
 	}
 
-	spew.Dump("5")
-
 	// Update the stream to the new state
 	stream.State = transition.NextState
 
@@ -241,7 +233,6 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 	if err := service.Save(stream, "stream transition: "+transitionID); err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
 	}
-	spew.Dump("6")
 
 	return transition, nil
 }

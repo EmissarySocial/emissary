@@ -5,29 +5,42 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
 	<link rel="stylesheet" href="/r/stylesheet.css">
 </head>
-<body class="uk-height-1-1">
-	<div class="uk-flex uk-flex-middle uk-flex-center">
+
+<body hx-ext="authentication-header" class="uk-flex uk-flex-middle uk-flex-center">
+	<div class="">
+
 		<div class="uk-card uk-card-default uk-card-body">
 
-			<form action="/login" method="post">
+			<form hx-post="/signin" hx-target="#message" _="on SigninSuccess call signIn()">
 
 				<h1 class="uk-card-title">Sign In</h1>
 
-				{{ if ne . "" }}<div class="uk-alert uk-alert-danger"><p>{{.}}</p></div>{{ end }}
+				<div id="message"></div>
 
 				<fieldset class="uk-fieldset uk-margin">
 					<label for="username">Username</label>
-					<input type="text" name="username" id="username" class="uk-input">
+					<input type="text" name="username" id="username" class="uk-input" required="true" maxlength="50">
 				</fieldset>
 
-				<fieldset class="uk-fieldset uk-margin">
+				<fieldset class="uk-fieldset uk-margin" style="position:relative;">
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" class="uk-input">
+					<input type="password" name="password" id="password" class="uk-input" required="true" maxlength="100" style="box-sizing:border-box; padding-right:4em;">
+					<div style="position:absolute; right:5px; bottom:8px;">
+						<span class="uk-text-meta uk-link" _="on click take .uk-hidden then put 'text' into password.type">SHOW</span>
+						<span class="uk-text-meta uk-link uk-hidden" _="on click take .uk-hidden then put 'password' into password.type">HIDE</span>
+					</div>
 				</fieldset>
 
 				<input type="submit" value="Sign In" class="uk-button uk-button-primary">
 			</form>
 		</div>
-	</div>	
+	</div>
+
+	<!--script src="https://unpkg.com/htmx.org"></script-->
+	<script src="https://unpkg.com/hyperscript.org"></script>
+	<script src="/htmx/htmx.js"></script>
+	<script src="/htmx/ext/authentication-header.js"></script>
+	<script src="/r/script.js"></script>
+	
 </body>
 </html>

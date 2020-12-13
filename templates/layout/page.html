@@ -5,7 +5,7 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
 	<link rel="stylesheet" href="/r/stylesheet.css">
 </head>
-<body>
+<body hx-ext="authentication-header">
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 		{{template "content" .}}
 	</div>
@@ -19,6 +19,13 @@
 		</div>
 	</div>
 	
+
+<!--script src="https://unpkg.com/htmx.org" defer></script-->
+<script src="https://unpkg.com/hyperscript.org"></script>
+<script src="/htmx/htmx.js"></script>
+<script src="/htmx/ext/authentication-header.js"></script>
+<script src="/r/script.js"></script>
+
 </body>
-<script src="https://unpkg.com/htmx.org" defer></script>
+
 </html>

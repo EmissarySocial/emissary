@@ -13,6 +13,7 @@ import (
 type FactoryManager struct {
 	factories map[string]*Factory
 	mutex     sync.RWMutex
+	config    config.Global
 }
 
 // NewFactoryManager uses the provided configuration data to generate a new FactoryManager
@@ -23,6 +24,7 @@ func NewFactoryManager(c config.Global) *FactoryManager {
 	service := &FactoryManager{
 		factories: make(map[string]*Factory, len(c.Domains)),
 		mutex:     sync.RWMutex{},
+		config:    c,
 	}
 
 	for _, domain := range c.Domains {

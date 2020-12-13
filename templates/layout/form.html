@@ -1,6 +1,11 @@
-<h3>{{.Label}}</h3>
-<form action="/{{.Token}}?transition={{.Transition}}" method="post">
-	{{ .Form}}
-	<input type="submit" class="uk-button uk-button-primary" value="Save Changes">
-	<a href="/{{.Token}}" hx-get="/{{.Token}}" class="uk-button uk-button-default">Cancel</a>
-</form>
+<div id="modal" hx-ext="modal">
+	<div class="modal-underlay" _="on click trigger closeModal"></div>
+	<div class="modal-content">
+		<h3>{{.Label}}</h3>
+		<form hx-post="/{{.Token}}?transition={{.Transition}}" hx-swap="beforeend">
+			{{ .Form}}
+			<input type="submit" class="uk-button uk-button-primary" value="Save Changes">
+			<span class="uk-button uk-button-default" onclick="htmx.trigger('#modal', 'closeModal')">Cancel</span>
+		</form>
+	</div>
+</div>
