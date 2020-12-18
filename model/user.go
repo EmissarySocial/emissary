@@ -46,6 +46,7 @@ func (user *User) SetPassword(password string) {
 	user.Password = password
 }
 
+// Claims returns all access privileges given to this user
 func (user *User) Claims() map[string]interface{} {
 	return map[string]interface{}{}
 }

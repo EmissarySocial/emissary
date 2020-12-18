@@ -19,6 +19,7 @@ type Template struct {
 	ContainedBy []string             `json:"containedBy" bson:"containedBy"` // Slice of Templates that can contain Streams that use this Template.
 	URL         string               `json:"url"         bson:"url"`         // URL where this template is published
 	Schema      *schema.Schema       `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
+	Roles       map[string]Role      `json:"roles"       bson:"roles"`       // List of custom roles defined by this template.
 	States      map[string]State     `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
 	Views       []View               `json:"views"       bson:"views"`       // Map of Views (by view.ID) that are available to Streams of this Template.
 	Forms       map[string]form.Form `json:"forms"       bson:"forms"`       // Map of Forms (by form.ID) that are available in transitions between states.
@@ -135,9 +136,7 @@ func (template *Template) Populate(from *Template) {
 	}
 
 	if from.Views != nil {
-		for _, view := range from.Views {
-			template.Views = append(template.Views, view)
-		}
+		template.Views = append(template.Views, from.Views...)
 	}
 
 	if from.Forms != nil {
@@ -147,6 +146,7 @@ func (template *Template) Populate(from *Template) {
 	}
 }
 
+// GetPath implements the path.Getter interface
 func (template Template) GetPath(p path.Path) (interface{}, error) {
 
 	switch p.Head() {
