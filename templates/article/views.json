@@ -1,0 +1,22 @@
+{
+	"views": [
+		{
+			"name": "default",
+			"label": "Info",
+			"roles": [
+				"OWNER",
+				"EDITOR",
+				"READONLY"
+			]
+		},
+		{
+			"name": "detail",
+			"label": "Details",
+			"permisions": [
+				"OWNER",
+				"EDITOR",
+				"READONLY"
+			]
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+	"roles": {
+		"OWNER": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+		},
+		"EDITOR": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"READONLY": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	}
+}
