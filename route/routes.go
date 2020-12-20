@@ -1,13 +1,13 @@
-package routes
+package route
 
 import (
 	"github.com/benpate/ghost/handler"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
 
 // New returns all of the routes required for this application
-func New(factoryManager *service.FactoryManager) *echo.Echo {
+func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	e := echo.New()
 

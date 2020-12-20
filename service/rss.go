@@ -12,7 +12,14 @@ import (
 
 // RSS service generates RSS feeds of the available streams in the database
 type RSS struct {
-	factory *Factory
+	streamService *Stream
+}
+
+// NewRSS returns a fully initialized RSS service
+func NewRSS(streamService *Stream) *RSS {
+	return &RSS{
+		streamService: streamService,
+	}
 }
 
 // Feed generates an RSS data feed based on the provided query criteria.  This feed
@@ -21,11 +28,9 @@ type RSS struct {
 // to the requester.
 func (rss RSS) Feed(criteria ...expression.Expression) (*feeds.JSONFeed, error) {
 
-	streamService := rss.factory.Stream()
-
 	filter := expression.And(criteria...)
 
-	streams, err := streamService.List(filter, option.SortDesc("publishDate"))
+	streams, err := rss.streamService.List(filter, option.SortDesc("publishDate"))
 	stream := model.NewStream()
 
 	if err != nil {

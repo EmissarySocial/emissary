@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"strings"
@@ -6,28 +6,29 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/config"
+	"github.com/benpate/ghost/domain"
 	"github.com/labstack/echo/v4"
 )
 
 // FactoryManager manages all interactions with the FactoryManager collection
 type FactoryManager struct {
-	factories map[string]*Factory
+	factories map[string]*domain.Factory
 	mutex     sync.RWMutex
-	config    config.Global
+	config    config.Config
 }
 
 // NewFactoryManager uses the provided configuration data to generate a new FactoryManager
 // if there are any errors connecting to a domain's datasource, NewFactoryManager will derp.Report
 // the error, but will continue loading without those domains.
-func NewFactoryManager(c config.Global) *FactoryManager {
+func NewFactoryManager(c config.Config) *FactoryManager {
 
 	service := &FactoryManager{
-		factories: make(map[string]*Factory, len(c.Domains)),
+		factories: make(map[string]*domain.Factory, len(c)),
 		mutex:     sync.RWMutex{},
 		config:    c,
 	}
 
-	for _, domain := range c.Domains {
+	for _, domain := range c {
 		if err := service.Add(domain); err != nil {
 			derp.Report(err)
 		}
@@ -38,22 +39,22 @@ func NewFactoryManager(c config.Global) *FactoryManager {
 
 // Add appends a new domain into the domain service IF it does not already exist.  If the domain
 // is already in the FactoryManager, then no additional action is taken.
-func (service *FactoryManager) Add(domain config.Domain) error {
+func (service *FactoryManager) Add(d config.Domain) error {
 
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
 	// If this factory DOES NOT EXIST in the registry...
-	if _, ok := service.factories[domain.Hostname]; !ok {
+	if _, ok := service.factories[d.Hostname]; !ok {
 
-		factory, err := NewFactory(domain)
+		factory, err := domain.NewFactory(d)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.service.FactoryManager.New", "Error creating factory", domain)
+			return derp.Wrap(err, "ghost.service.FactoryManager.New", "Error creating factory", d)
 		}
 
 		// Assign the new factory to the registry
-		service.factories[domain.Hostname] = factory
+		service.factories[d.Hostname] = factory
 	}
 
 	return nil
@@ -69,14 +70,14 @@ func (service *FactoryManager) DomainCount() int {
 }
 
 // ByContext retrieves a domain using an echo.Context
-func (service *FactoryManager) ByContext(ctx echo.Context) (*Factory, error) {
+func (service *FactoryManager) ByContext(ctx echo.Context) (*domain.Factory, error) {
 
 	host := service.NormalizeHostname(ctx.Request().Host)
 	return service.ByDomainName(host)
 }
 
 // ByDomainName retrieves a domain using a Domain Name
-func (service *FactoryManager) ByDomainName(name string) (*Factory, error) {
+func (service *FactoryManager) ByDomainName(name string) (*domain.Factory, error) {
 
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()

@@ -9,13 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CollectionAttachment is the database collection where Attachments are stored
-const CollectionAttachment = "Attachment"
-
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	factory    *Factory
 	collection data.Collection
+}
+
+// NewAttachment returns a fully populated Attachment service
+func NewAttachment(collection data.Collection) *Attachment {
+	return &Attachment{
+		collection: collection,
+	}
 }
 
 // New creates a newly initialized Attachment that is ready to use

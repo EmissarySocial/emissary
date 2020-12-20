@@ -2,12 +2,12 @@ package handler
 
 import (
 	"github.com/benpate/activitystream/writer"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
 
 // GetInbox returns an inbox for a particular ACTOR
-func GetInbox(fm *service.FactoryManager) echo.HandlerFunc {
+func GetInbox(fm *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -21,7 +21,7 @@ func GetInbox(fm *service.FactoryManager) echo.HandlerFunc {
 }
 
 // PostInbox accepts messages to a particular ACTOR
-func PostInbox(fm *service.FactoryManager) echo.HandlerFunc {
+func PostInbox(fm *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -30,7 +30,7 @@ func PostInbox(fm *service.FactoryManager) echo.HandlerFunc {
 }
 
 // GetOutbox returns an inbox for a particular ACTOR
-func GetOutbox(fm *service.FactoryManager) echo.HandlerFunc {
+func GetOutbox(fm *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -39,7 +39,7 @@ func GetOutbox(fm *service.FactoryManager) echo.HandlerFunc {
 }
 
 // PostOutbox accepts messages to a particular ACTOR
-func PostOutbox(fm *service.FactoryManager) echo.HandlerFunc {
+func PostOutbox(fm *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

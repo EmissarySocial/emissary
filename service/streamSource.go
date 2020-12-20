@@ -9,13 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CollectionStreamSource is the database collection where Sources are stored
-const CollectionStreamSource = "StreamSource"
-
 // StreamSource manages all interactions with the StreamSource collection
 type StreamSource struct {
-	factory    *Factory
 	collection data.Collection
+}
+
+// NewStreamSource returns a fully populated StreamSource service
+func NewStreamSource(collection data.Collection) *StreamSource {
+	return &StreamSource{
+		collection: collection,
+	}
 }
 
 // New creates a newly initialized StreamSource that is ready to use

@@ -1,4 +1,4 @@
-package service
+package domain
 
 import (
 	"testing"
@@ -10,13 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-
 func TestService(t *testing.T) {
 
 	spew.Dump(config.Domain{})
 	factory, err := NewFactory(config.Domain{
 		ConnectString: "mongodb://127.0.0.1/ghost",
-		DatabaseName: "ghost",
+		DatabaseName:  "ghost",
 	})
 
 	require.Nil(t, err)

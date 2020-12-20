@@ -15,7 +15,7 @@ func TestLoadTemplates(t *testing.T) {
 	// Load test environment
 	factory := getTestFactory()
 
-	templateService := factory.Template()
+	templateService := NewTemplate() 
 	populateTestTemplates(templateService)
 
 	spew.Dump(templateService)

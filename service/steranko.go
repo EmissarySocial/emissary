@@ -8,7 +8,14 @@ import (
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
 type SterankoUserService struct {
-	userService User
+	userService *User
+}
+
+// NewSterankoUserService returns a fully populated SterankoUserService.
+func NewSterankoUserService(userService *User) *SterankoUserService {
+	return &SterankoUserService{
+		userService: userService,
+	}
 }
 
 // New creates a newly initialized User that is ready to use
@@ -41,12 +48,12 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 	return derp.New(derp.CodeInternalError, "ghost.service.SterankoUserService.Delete", "Steranko User is not a valid object.  This should never happen", user)
 }
 
-// Close cleans up any connections opened by the service.
-func (service SterankoUserService) Close() {
-	service.userService.Close()
-}
-
 // RequestPasswordReset is not currently implemented in this service. (TODO)
 func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
 	return nil
+}
+
+// Close is required to implement the steranko.UserService interface
+func (service SterankoUserService) Close() {
+
 }

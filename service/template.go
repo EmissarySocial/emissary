@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"html/template"
 	"sync"
 
@@ -9,45 +8,37 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service/templatesource"
+	"github.com/davecgh/go-spew/spew"
 )
-
-// CollectionTemplate is the database collection where Templates are stored
-const CollectionTemplate = "Template"
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
 	templates map[string]*model.Template // map of all templates available within this domain
 	mutex     sync.RWMutex               // Mutext that locks access to the templates structure
 
-	sources         []TemplateSource        // array of templateSource objects
-	layoutUpdates   chan *template.Template // READ from this channel when layouts have been updated
-	templateUpdates chan model.Template     // READ from this channel when template files have been updated
-	streamUpdates   chan model.Stream       // WRITE to this channel to notify other services that something has changed
-	layoutService   *Layout
-	streamService   Stream
+	sources       []TemplateSource // array of templateSource objects
+	layoutService *Layout
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(paths []string, layoutUpdates chan *template.Template, templateUpdates chan model.Template, streamUpdates chan model.Stream, layoutService *Layout, streamService Stream) *Template {
+func NewTemplate(paths []string, layoutService *Layout) *Template {
 
 	result := &Template{
-		sources:         make([]TemplateSource, 0),
-		templates:       make(map[string]*model.Template),
-		layoutUpdates:   layoutUpdates,
-		templateUpdates: templateUpdates,
-		streamUpdates:   streamUpdates,
-		layoutService:   layoutService,
-		streamService:   streamService,
+		sources:       make([]TemplateSource, 0),
+		templates:     make(map[string]*model.Template),
+		layoutService: layoutService,
 	}
 
+	spew.Dump("NewTemplate ---- ")
+	spew.Dump(paths)
 	for _, path := range paths {
 		fileSource := templatesource.NewFile(path)
+		spew.Dump(fileSource)
 		if err := result.AddSource(fileSource); err != nil {
+			spew.Dump(err)
 			derp.Report(err)
 		}
 	}
-
-	go result.start()
 
 	return result
 }
@@ -58,7 +49,8 @@ func (service *Template) AddSource(source TemplateSource) error {
 	service.sources = append(service.sources, source)
 
 	list, err := source.List()
-
+	spew.Dump("AddSource --------")
+	spew.Dump(list, err)
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Template.AddSource", "Error listing templates from", source)
 	}
@@ -77,7 +69,7 @@ func (service *Template) AddSource(source TemplateSource) error {
 	}
 
 	// Watch for changes to this TemplateSource
-	source.Watch(service.templateUpdates)
+	// source.Watch(service.templateUpdates)
 
 	return nil
 }
@@ -122,7 +114,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 		}
 	}
 
-	return nil, derp.New(404, "ghost.sevice.Template.Load", "Could not load Template", templateID)
+	return nil, derp.New(404, "ghost.sevice.Template.Load", "Template not found", templateID)
 }
 
 // Save adds/updates an Template in the memory cache
@@ -166,6 +158,7 @@ func (service *Template) LoadCompiled(templateID string, stateName string, viewN
 	return template, clone, nil
 }
 
+/*
 // Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
 // news that a template has been updated.
 func (service *Template) start() {
@@ -209,3 +202,4 @@ func (service *Template) updateTemplate(template *model.Template) {
 		service.streamUpdates <- stream
 	}
 }
+*/

@@ -1,4 +1,4 @@
-package service
+package domain
 
 import (
 	"context"
@@ -12,8 +12,10 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Factory knows how to create an populate all services
@@ -22,8 +24,8 @@ type Factory struct {
 	domain  config.Domain
 
 	// singletons (within this domain/factory)
-	templateService *Template
-	layoutService   *Layout
+	templateService *service.Template
+	layoutService   *service.Layout
 	steranko        *steranko.Steranko
 
 	// real-time watchers
@@ -70,50 +72,35 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 // Domain Model Services
 
 // Attachment returns a fully populated Attachment service
-func (factory *Factory) Attachment() Attachment {
-	return Attachment{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionAttachment),
-	}
-}
-
-// Key returns a fully populated Key service
-func (factory *Factory) Key() Key {
-	return Key{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionKey),
-	}
+func (factory *Factory) Attachment() *service.Attachment {
+	return service.NewAttachment(factory.collection(CollectionAttachment))
 }
 
 // Stream returns a fully populated Stream service
-func (factory *Factory) Stream() Stream {
-	return Stream{
-		factory:             factory,
-		collection:          factory.Session.Collection(CollectionStream),
-		streamUpdateChannel: factory.StreamUpdateChannel(),
-	}
+func (factory *Factory) Stream() *service.Stream {
+	return service.NewStream(
+		factory.Template(),
+		factory.collection(CollectionStream),
+		factory.StreamUpdateChannel(),
+	)
 }
 
 // StreamSource returns a fully populated StreamSource service
-func (factory *Factory) StreamSource() StreamSource {
-	return StreamSource{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionStreamSource),
-	}
+func (factory *Factory) StreamSource() *service.StreamSource {
+	return service.NewStreamSource(factory.collection(CollectionStreamSource))
 }
 
 // Template returns a fully populated Template service
-func (factory *Factory) Template() *Template {
+func (factory *Factory) Template() *service.Template {
+
+	spew.Dump("factory.Template() -----------")
+	spew.Dump(factory.templateService == nil)
 
 	// Initialize service, if necessary
 	if factory.templateService == nil {
-		factory.templateService = NewTemplate(
+		factory.templateService = service.NewTemplate(
 			factory.domain.TemplatePaths,
-			factory.LayoutUpdateChannel(),
-			factory.TemplateUpdateChannel(),
-			factory.StreamUpdateChannel(),
 			factory.Layout(),
-			factory.Stream(),
 		)
 	}
 
@@ -121,22 +108,19 @@ func (factory *Factory) Template() *Template {
 }
 
 // User returns a fully populated User service
-func (factory *Factory) User() User {
-	return User{
-		factory:    factory,
-		collection: factory.Session.Collection(CollectionUser),
-	}
+func (factory *Factory) User() *service.User {
+	return service.NewUser(factory.collection(CollectionUser))
 }
 
 ///////////////////////////////////////
 // Render Library
 
 // Layout service manages global website layouts
-func (factory *Factory) Layout() *Layout {
+func (factory *Factory) Layout() *service.Layout {
 
 	if factory.layoutService == nil {
 		var err error
-		factory.layoutService, err = NewLayout(factory.domain.LayoutPath, factory.LayoutUpdateChannel())
+		factory.layoutService, err = service.NewLayout(factory.domain.LayoutPath, factory.LayoutUpdateChannel())
 		derp.Report(err)
 	}
 
@@ -174,7 +158,7 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 		if session, ok := factory.Session.(*mongodb.Session); ok {
 
 			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-				factory.streamUpdateChannel = StreamWatcher(collection.Mongo())
+				factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
 			}
 		}
 
@@ -215,11 +199,9 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 	if factory.steranko == nil {
 
-		userService := SterankoUserService{
-			userService: factory.User(),
-		}
+		sterankoUserService := service.NewSterankoUserService(factory.User())
 
-		factory.steranko = steranko.New(userService, factory.domain.Steranko)
+		factory.steranko = steranko.New(sterankoUserService, factory.domain.Steranko)
 	}
 
 	return factory.steranko
@@ -239,18 +221,18 @@ func (factory *Factory) FormLibrary() form.Library {
 // External APIs
 
 // RSS returns a fully populated RSS service
-func (factory *Factory) RSS() RSS {
-	return RSS{
-		factory: factory,
-	}
-}
-
-// Close ends any connections opened by this Factory.
-func (factory *Factory) Close() {
-	// DO NOT DO THIS OR YOU WILL PERMANENTLY DISCONNECT FROM THE DATABASE
-	// factory.Session.Close()
+func (factory *Factory) RSS() *service.RSS {
+	return service.NewRSS(factory.Stream())
 }
 
 // Other libraries to make it her, eventually...
 // ActivityPub
 // Service APIs (like Twitter? Slack? Discord?, The FB?)
+
+///////////////////////////////////////
+// Helper functions
+
+// collection returns a data.Collection that matches the requested name.
+func (factory *Factory) collection(name string) data.Collection {
+	return factory.Session.Collection(name)
+}

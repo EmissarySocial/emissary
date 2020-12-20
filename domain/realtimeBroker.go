@@ -1,4 +1,4 @@
-package service
+package domain
 
 import (
 	"log"
@@ -20,13 +20,8 @@ type RealtimeBroker struct {
 	// map of streams being watched.
 	streams map[string]map[primitive.ObjectID]*RealtimeClient
 
-	// Channels that updates are pushed into.
+	// Channel that streams are pushed into when they change.
 	streamUpdates chan model.Stream
-
-	// Create a map of clients, the keys of the map are the channels
-	// over which we can push messages to attached clients.  (The values
-	// are just booleans and are meaningless.)
-	// clients map[chan string]bool
 
 	// Channel into which new clients can be pushed
 	AddClient chan *RealtimeClient

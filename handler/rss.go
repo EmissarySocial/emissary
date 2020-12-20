@@ -2,12 +2,12 @@ package handler
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
 
 // GetRSS returns an RSS data feed for the requested URL
-func GetRSS(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func GetRSS(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

@@ -10,14 +10,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CollectionStream is the database collection where Streams are stored
-const CollectionStream = "Stream"
-
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	factory             *Factory
+	templateService     *Template
 	collection          data.Collection
 	streamUpdateChannel chan model.Stream
+}
+
+// NewStream returns a fully populated Stream service.
+func NewStream(templateService *Template, collection data.Collection, updates chan model.Stream) *Stream {
+	return &Stream{
+		templateService:     templateService,
+		collection:          collection,
+		streamUpdateChannel: updates,
+	}
 }
 
 // New creates a newly initialized Stream that is ready to use
@@ -138,8 +144,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	}
 
 	// Load the requested template
-	templateService := service.factory.Template()
-	template, err := templateService.Load(templateID)
+	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template")
@@ -187,9 +192,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 // Transition handles a transition request to move the stream from one state into another state.
 func (service Stream) Transition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
 
-	templateService := service.factory.Template()
-
-	template, err := templateService.Load(stream.Template)
+	template, err := service.templateService.Load(stream.Template)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Can't load Template")

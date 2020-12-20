@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
-func GetSignIn(factoryManager *service.FactoryManager) echo.HandlerFunc {
+// GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
+func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -35,7 +35,8 @@ func GetSignIn(factoryManager *service.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func PostSignIn(factoryManager *service.FactoryManager) echo.HandlerFunc {
+// PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
+func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -55,9 +56,7 @@ func PostSignIn(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			return ctx.HTML(200, postSigninError("Invalid Request.  Please try again later."))
 		}
 
-		spew.Dump(txn)
 		result := s.Signin(txn)
-		spew.Dump(result)
 
 		if result.Error != nil {
 			return ctx.HTML(200, postSigninError(derp.Message(result.Error)))
@@ -81,7 +80,8 @@ func postSigninError(message string) string {
 	return `<div class="uk-alert uk-alert-danger">` + message + `</div>`
 }
 
-func PostSignOut(factoryManager *service.FactoryManager) echo.HandlerFunc {
+// PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
+func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

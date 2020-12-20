@@ -9,13 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CollectionUser is the database collection where Users are stored
-const CollectionUser = "User"
-
 // User manages all interactions with the User collection
 type User struct {
-	factory    *Factory
 	collection data.Collection
+}
+
+// NewUser returns a fully populated User service
+func NewUser(collection data.Collection) *User {
+	return &User{
+		collection: collection,
+	}
 }
 
 // New creates a newly initialized User that is ready to use
@@ -62,12 +65,15 @@ func (service User) Delete(user *model.User, note string) error {
 	return nil
 }
 
-// Close closes this service
-func (service User) Close() {
-	service.factory.Close()
-}
+///////////////////////////
+// Queries
 
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service User) LoadByUsername(username string) (*model.User, error) {
 	return service.Load(expression.Equal("username", username))
+}
+
+// ListByGroup returns all users that match a provided group name
+func (service User) ListByGroup(group string) (data.Iterator, error) {
+	return service.List(expression.Equal("groupId", group))
 }

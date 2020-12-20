@@ -7,13 +7,14 @@ import (
 	"strings"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/domain"
+	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
 
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE subscriptions.
-func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -42,7 +43,7 @@ func ServerSentEvent(factoryManager *service.FactoryManager) echo.HandlerFunc {
 			view = "default"
 		}
 
-		client := service.NewRealtimeClient(token, view)
+		client := domain.NewRealtimeClient(token, view)
 
 		// Add this client to the map of those that should
 		// receive updates

@@ -5,9 +5,8 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/routes"
-	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/ghost/route"
+	"github.com/benpate/ghost/server"
 )
 
 func main() {
@@ -17,9 +16,6 @@ func main() {
 
 	c, err := config.Load("./config.json")
 
-	// Debugging for spew
-	spew.Config.DisableMethods = true
-
 	if err != nil {
 		derp.Report(err)
 		return
@@ -27,7 +23,7 @@ func main() {
 
 	fmt.Println("Initializing hosts...")
 
-	factoryManager := service.NewFactoryManager(c)
+	factoryManager := server.NewFactoryManager(c)
 
 	if factoryManager.DomainCount() == 0 {
 		fmt.Println("No Domains Configured!!")
@@ -35,7 +31,7 @@ func main() {
 	}
 
 	fmt.Println("Initializing web server...")
-	e := routes.New(factoryManager)
+	e := route.New(factoryManager)
 
 	fmt.Println("Starting web server..")
 	e.Logger.Fatal(e.Start(":80"))

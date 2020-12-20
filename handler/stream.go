@@ -8,13 +8,14 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/benpate/choose"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
 
 // GetStream generates the base HTML for a stream
-func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -29,7 +30,7 @@ func GetStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 }
 
 // GetNewStream generates an HTML form where authenticated users can create a new stream
-func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func GetNewStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -45,7 +46,7 @@ func GetNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 
 // PostStream returns an echo.HandlerFunc that accepts form posts
 // and performs actions on streams based on the user's permissions.
-func PostStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -60,7 +61,7 @@ func PostStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 }
 
 // PostNewStream accepts POST requests and generates a new stream.
-func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
+func PostNewStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -74,7 +75,7 @@ func PostNewStream(factoryManager *service.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func loadStream(ctx echo.Context, factoryManager *service.FactoryManager) (*service.Factory, *model.Stream, error) {
+func loadStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain.Factory, *model.Stream, error) {
 
 	// Get the service factory
 	factory, err := factoryManager.ByContext(ctx)
@@ -97,7 +98,7 @@ func loadStream(ctx echo.Context, factoryManager *service.FactoryManager) (*serv
 	return factory, stream, nil
 }
 
-func newStream(ctx echo.Context, factoryManager *service.FactoryManager) (*service.Factory, *model.Stream, error) {
+func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain.Factory, *model.Stream, error) {
 
 	// Locate the domain we're working in
 	factory, err := factoryManager.ByContext(ctx)
@@ -116,9 +117,9 @@ func newStream(ctx echo.Context, factoryManager *service.FactoryManager) (*servi
 }
 
 // renderStream does the work to generate HTML for a stream and send it to the requester
-func renderStream(ctx echo.Context, factory *service.Factory, stream *model.Stream) error {
+func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	var renderer *service.Renderer
+	var renderer *domain.Renderer
 	var compiledTemplate *template.Template
 	var entryPoint string
 	var result bytes.Buffer
@@ -213,7 +214,7 @@ func renderStream(ctx echo.Context, factory *service.Factory, stream *model.Stre
 	return ctx.HTML(http.StatusOK, result.String())
 }
 
-func postStream(ctx echo.Context, factory *service.Factory, stream *model.Stream) error {
+func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
 
 	// spew.Dump("--- postStream")
 	// Parse and Bind form data first, so that we don't have to hit the database in cases where there's an error.
