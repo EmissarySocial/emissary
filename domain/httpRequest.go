@@ -60,6 +60,11 @@ func (r *HTTPRequest) Groups() []string {
 	return []string{}
 }
 
+// Partial returns TRUE if this is a request for a partial page (HTML fragment), and not a complete HTML page.
+func (r *HTTPRequest) Partial() bool {
+	return (r.request.Header.Get("HX-Request") != "")
+}
+
 func (r *HTTPRequest) objectID(value string) primitive.ObjectID {
 
 	if result, err := primitive.ObjectIDFromHex(value); err == nil {

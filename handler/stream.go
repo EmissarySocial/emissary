@@ -2,10 +2,7 @@ package handler
 
 import (
 	"bytes"
-	"html/template"
-	"net/http"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/benpate/choose"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/domain"
@@ -121,89 +118,42 @@ func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain
 // renderStream does the work to generate HTML for a stream and send it to the requester
 func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	var compiledTemplate *template.Template
-	var entryPoint string
 	var result bytes.Buffer
-	var err error
 
 	layoutService := factory.Layout()
-
-	//spew.Dump("---")
-
 	request := domain.NewHTTPRequest(ctx.Request())
-
-	// Build a StreamRenderer
 	renderer := factory.StreamRenderer(stream, request)
 
-	// If there is a "transition" defined, then we're displaying a form
+	// If there is a "transition" defined, then we're displaying a form (partial page only)
 	if transition := request.Transition(); transition != "" {
 
-		compiledTemplate = layoutService.Layout()
-		entryPoint = "form"
+		template := layoutService.Template
 
-		if isFullPageRequest(ctx) {
-			entryPoint = "page"
-
-			// TODO: alias "form" to "content"
-			//compiledTemplate, err = layout.AddParseTree("content", compiledTemplate.Tree)
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
-			}
+		if err := template.ExecuteTemplate(&result, "form", renderer); err != nil {
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
 		}
 
-	} else {
+		return ctx.HTML(200, result.String())
+	}
 
-		view, ok := stream.View(request.View())
+	// Partial page requests (stream only)
+	if request.Partial() {
 
-		if ok == false {
-			return derp.New(400, "ghost.handler.renderStream", "Invalid View", request.View())
-		}
-
-		// Get the "pre-compiled" Template from the View
-		compiledTemplate, err = view.Compiled()
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Error getting compiled template")
-		}
-
-		// By default, the entryPoint is the name of the view
-		entryPoint = view.ViewID
-
-		// spew.Dump(template.Label)
-		// spew.Dump(view.Name)
-
-		// Combine the two parse trees.
-		// TODO: Could this be done at load time, not for each page request?
-		layout := layoutService.Layout()
-
-		// If this is a full-page request then the entry point is the page.
-		if isFullPageRequest(ctx) {
-			entryPoint = "page"
-
-			compiledTemplate, err = layout.AddParseTree("content", compiledTemplate.Tree)
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
-			}
+		if html, err := renderer.Render(); err == nil {
+			return ctx.HTML(200, string(html))
 		} else {
-
-			compiledTemplate, err = layout.AddParseTree(entryPoint, compiledTemplate.Tree)
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.handler.renderStream", "Unable to create parse tree")
-			}
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering template")
 		}
 	}
 
-	// spew.Dump(compiledTemplate.DefinedTemplates())
+	// Render full page (stream only).
+	template := layoutService.Template
 
-	// Render the page using the entryPoint to identify the Golang Template.
-	if err := compiledTemplate.Funcs(sprig.FuncMap()).ExecuteTemplate(&result, entryPoint, renderer); err != nil {
-		return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering partial page")
+	if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
+		return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
 	}
 
-	return ctx.HTML(http.StatusOK, result.String())
+	return ctx.HTML(200, result.String())
 }
 
 func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
@@ -219,7 +169,7 @@ func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream)
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transition, err := streamService.Transition(stream, ctx.QueryParam("transition"), form)
+	transition, err := streamService.DoTransition(stream, ctx.QueryParam("transition"), form)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))

@@ -23,9 +23,7 @@ func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error getting factory"))
 		}
 
-		layout := factory.Layout()
-
-		template := layout.Layout()
+		template := factory.Layout().Template
 
 		if err := template.ExecuteTemplate(&buffer, "signin", "error message goes here."); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error executing template"))

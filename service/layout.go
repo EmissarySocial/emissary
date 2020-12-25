@@ -14,7 +14,7 @@ import (
 // filesystem.
 type Layout struct {
 	path     string
-	template *template.Template
+	Template *template.Template
 }
 
 // NewLayout returns a fully initialized Layout service.
@@ -31,13 +31,6 @@ func NewLayout(path string, updates chan *template.Template) (*Layout, error) {
 	go layout.start(updates)
 
 	return layout, nil
-}
-
-// Layout returns a clone of the current layout template.
-func (service *Layout) Layout() *template.Template {
-	result, err := service.template.Clone()
-	derp.Report(err)
-	return result
 }
 
 // Load retrieves the template from the disk and parses it into
@@ -82,7 +75,7 @@ func (service *Layout) Load() error {
 	}
 
 	// Success!!
-	service.template = layout
+	service.Template = layout
 	fmt.Println("updated layout service with new layout: ")
 
 	return nil
@@ -118,7 +111,7 @@ func (service *Layout) start(updates chan *template.Template) error {
 					continue
 				}
 
-				updates <- service.template
+				updates <- service.Template
 			}
 
 		case err, ok := <-watcher.Errors:
