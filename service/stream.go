@@ -5,23 +5,27 @@ import (
 	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
+	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	templateService     *Template
 	collection          data.Collection
+	templateService     *Template
+	formLibrary         form.Library
 	streamUpdateChannel chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(templateService *Template, collection data.Collection, updates chan model.Stream) *Stream {
+func NewStream(collection data.Collection, templateService *Template, formLibrary form.Library, updates chan model.Stream) *Stream {
 	return &Stream{
-		templateService:     templateService,
 		collection:          collection,
+		templateService:     templateService,
+		formLibrary:         formLibrary,
 		streamUpdateChannel: updates,
 	}
 }
@@ -43,7 +47,7 @@ func (service Stream) Load(criteria expression.Expression) (*model.Stream, error
 	stream := service.New()
 
 	if err := service.collection.Load(criteria, stream); err != nil {
-		return nil, derp.Wrap(err, "service.Stream", "Error loading Stream", criteria)
+		return nil, derp.Wrap(err, "ghost.service.Stream", "Error loading Stream", criteria)
 	}
 
 	return stream, nil
@@ -53,10 +57,10 @@ func (service Stream) Load(criteria expression.Expression) (*model.Stream, error
 func (service Stream) Save(stream *model.Stream, note string) error {
 
 	if err := service.collection.Save(stream, note); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
+		return derp.Wrap(err, "ghost.service.Stream", "Error saving Stream", stream, note)
 	}
 
-	// service.streamUpdateChannel <- *stream
+	service.streamUpdateChannel <- *stream
 
 	return nil
 }
@@ -65,7 +69,7 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 func (service Stream) Delete(stream *model.Stream, note string) error {
 
 	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error deleting Stream", stream, note)
+		return derp.Wrap(err, "ghost.service.Stream", "Error deleting Stream", stream, note)
 	}
 
 	return nil
@@ -136,79 +140,89 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
 // CUSTOM ACTIONS /////////////////
 
-// NewWithTemplate creates a new Stream using the provided Parent and Token information.
-func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
+// NewWithTemplate creates a new Stream using the provided Template and Parent information.
+func (service Stream) NewWithTemplate(templateID string, parentToken string) (*model.Stream, error) {
 
-	if templateID == "" {
-		return nil, derp.New(500, "ghost.service.Stream.NewWithTemplate", "Missing template parameter")
-	}
-
-	// Load the requested template
+	// Load the requested Template
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template")
+		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template", templateID)
 	}
 
-	// Load the parent stream to validate permissions
+	// Load the parent Stream
+	parent, err := service.LoadByToken(parentToken)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream", parentToken)
+	}
+
+	// Confirm that this Template can be a child of the parent Template
+	if template.CanBeContainedBy(parent.TemplateID) == false {
+		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
+	}
+
+	// Create and populate the new Stream
 	stream := service.New()
-	stream.Template = template.TemplateID
-
-	// If this is a TOP LEVEL item...
-	if parentToken == "top" {
-
-		// verify that it can be placed at the top of the hierarchy
-		if !template.CanBeContainedBy(parentToken) {
-			return nil, derp.New(400, "ghost.service.Stream.NewWithTemplate", "Invalid template")
-		}
-
-		stream.ParentID = ZeroObjectID()
-
-	} else {
-
-		// Otherwise, verify that it can be placed within its parent stream
-
-		// Load the parent stream
-		parent, err := service.LoadByToken(parentToken)
-
-		if err != nil {
-			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream")
-		}
-
-		// Verify that the child stream can be placed inside the parent
-		if !template.CanBeContainedBy(parent.Template) {
-			return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
-		}
-
-		stream.ParentID = parent.StreamID
-	}
+	stream.ParentID = parent.StreamID
+	stream.TemplateID = template.TemplateID
 
 	// Success.  We've made the new stream!
 	return stream, nil
 }
 
-///////////////////
+// View returns the named View for the designated Stream.
+func (service Stream) View(stream *model.Stream, viewName string) (*model.View, error) {
 
-// Transition handles a transition request to move the stream from one state into another state.
-func (service Stream) Transition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
-
-	template, err := service.templateService.Load(stream.Template)
+	state, err := service.State(stream)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Can't load Template")
+		return nil, derp.Wrap(err, "ghost.serice.Stream.View", "Error loading template", stream.TemplateID)
 	}
 
-	transition, err := template.Transition(stream.State, transitionID)
+	view, ok := state.View(viewName)
+
+	if ok == false {
+		return nil, derp.New(500, "ghost.service.Stream.View", "Error loading view", viewName)
+	}
+
+	return view, nil
+}
+
+// Form generates an HTML form for the requested Stream and TransitionID
+func (service Stream) Form(stream *model.Stream, transitionID string) (string, error) {
+
+	_, transition, err := service.Transition(stream, transitionID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Tranition")
+		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Unrecognized State/Transition", transitionID)
 	}
 
-	form, ok := template.Forms[transition.Form]
+	schema, err := service.Schema(stream)
 
-	if !ok {
-		return nil, derp.New(404, "ghost.service.Stream.Transition", "Unrecognized Form for Transition", transition)
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
 	}
+
+	result, err := transition.Form.HTML(service.formLibrary, *schema, stream)
+
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
+	}
+
+	return result, nil
+}
+
+// DoTransition handles a transition request to move the stream from one state into another state.
+func (service Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
+
+	_, transition, err := service.Transition(stream, transitionID)
+
+	if err != nil {
+		return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Transition", transitionID)
+	}
+
+	form := transition.Form
 
 	// TODO: where are permissions processed?
 
@@ -222,20 +236,71 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, data
 		// If we have a value, then set it.
 		if value, ok := data[element.Path]; ok {
 			if err := path.Set(stream, element.Path, value); err != nil {
-				return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
+				return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
 			}
 		}
 		// TODO: Otherwise?  Should this form throw an error?
 	}
 
 	// Update the stream to the new state
-	stream.State = transition.NextState
+	stream.StateID = transition.NextState
 
 	// TODO:  Actions will be processes here.
 
 	if err := service.Save(stream, "stream transition: "+transitionID); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
+		return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
 	}
 
 	return transition, nil
+}
+
+// State returns the detailed State information associated with this Stream
+func (service Stream) State(stream *model.Stream) (*model.State, error) {
+
+	// Locate the Template used by this Stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream)
+	}
+
+	// Populate the Stream with data from the Template
+	state, ok := template.State(stream.StateID)
+
+	if ok == false {
+		return nil, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream)
+	}
+
+	return state, nil
+}
+
+// Transition returns the detailed Transition information assoicated with this Stream
+func (service Stream) Transition(stream *model.Stream, transitionID string) (*model.State, *model.Transition, error) {
+
+	state, err := service.State(stream)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error geting State definition")
+	}
+
+	transition, ok := state.Transition(transitionID)
+
+	if ok == false {
+		return nil, nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error geting Transition")
+	}
+
+	return state, transition, nil
+}
+
+// Schema returns the Schema associated with this Stream
+func (service Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
+
+	// Locate the Template used by this Stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream", "Invalid Template", stream)
+	}
+
+	return template.Schema, nil
 }

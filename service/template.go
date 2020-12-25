@@ -1,7 +1,6 @@
 package service
 
 import (
-	"html/template"
 	"sync"
 
 	"github.com/benpate/data/expression"
@@ -29,8 +28,9 @@ func NewTemplate(paths []string, layoutService *Layout) *Template {
 		layoutService: layoutService,
 	}
 
-	spew.Dump("NewTemplate ---- ")
-	spew.Dump(paths)
+	// spew.Dump("NewTemplate ---- ")
+	// spew.Dump(paths)
+
 	for _, path := range paths {
 		fileSource := templatesource.NewFile(path)
 		spew.Dump(fileSource)
@@ -49,11 +49,13 @@ func (service *Template) AddSource(source TemplateSource) error {
 	service.sources = append(service.sources, source)
 
 	list, err := source.List()
-	spew.Dump("AddSource --------")
-	spew.Dump(list, err)
+
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Template.AddSource", "Error listing templates from", source)
 	}
+
+	// spew.Dump("AddSource --------")
+	// spew.Dump(list, err)
 
 	// Iterate through every template
 	for _, name := range list {
@@ -128,7 +130,7 @@ func (service *Template) Save(template *model.Template) error {
 	return nil
 }
 
-// LoadCompiled returns the compiled template for the requested arguments.
+/*/ LoadCompiled returns the compiled template for the requested arguments.
 func (service *Template) LoadCompiled(templateID string, stateName string, viewName string) (*model.Template, *template.Template, error) {
 
 	template, err := service.Load(templateID)
@@ -158,7 +160,6 @@ func (service *Template) LoadCompiled(templateID string, stateName string, viewN
 	return template, clone, nil
 }
 
-/*
 // Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
 // news that a template has been updated.
 func (service *Template) start() {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"net/url"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/mongodb"
@@ -15,7 +14,6 @@ import (
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Factory knows how to create an populate all services
@@ -25,6 +23,7 @@ type Factory struct {
 
 	// singletons (within this domain/factory)
 	templateService *service.Template
+	streamService   *service.Stream
 	layoutService   *service.Layout
 	steranko        *steranko.Steranko
 
@@ -62,8 +61,11 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	// This loads the web page layout (real-time updates to wait until later)
 	factory.Layout()
 
-	// TemplateSources
+	// Template Service
 	factory.Template()
+
+	// Stream Service
+	factory.Stream()
 
 	return &factory, nil
 }
@@ -78,11 +80,18 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
-	return service.NewStream(
-		factory.Template(),
-		factory.collection(CollectionStream),
-		factory.StreamUpdateChannel(),
-	)
+
+	if factory.streamService == nil {
+
+		factory.streamService = service.NewStream(
+			factory.collection(CollectionStream),
+			factory.Template(),
+			factory.FormLibrary(),
+			factory.StreamUpdateChannel(),
+		)
+	}
+
+	return factory.streamService
 }
 
 // StreamSource returns a fully populated StreamSource service
@@ -92,9 +101,6 @@ func (factory *Factory) StreamSource() *service.StreamSource {
 
 // Template returns a fully populated Template service
 func (factory *Factory) Template() *service.Template {
-
-	spew.Dump("factory.Template() -----------")
-	spew.Dump(factory.templateService == nil)
 
 	// Initialize service, if necessary
 	if factory.templateService == nil {
@@ -128,13 +134,8 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamRenderer generates a new stream renderer service.
-func (factory *Factory) StreamRenderer(stream *model.Stream, query url.Values) *Renderer {
-
-	return &Renderer{
-		factory: factory,
-		stream:  stream,
-		query:   query,
-	}
+func (factory *Factory) StreamRenderer(stream *model.Stream, request *HTTPRequest) *Renderer {
+	return NewRenderer(factory.Stream(), request, stream)
 }
 
 ///////////////////////////////////////

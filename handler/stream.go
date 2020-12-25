@@ -107,7 +107,9 @@ func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain
 	}
 
 	streamService := factory.Stream()
-	stream, err := streamService.NewWithTemplate(ctx.QueryParam("parent"), ctx.QueryParam("template"))
+	request := domain.NewHTTPRequest(ctx.Request())
+
+	stream, err := streamService.NewWithTemplate(request.TemplateID(), request.ParentToken())
 
 	if err != nil {
 		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error creating new stream"))
@@ -119,7 +121,6 @@ func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain
 // renderStream does the work to generate HTML for a stream and send it to the requester
 func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	var renderer *domain.Renderer
 	var compiledTemplate *template.Template
 	var entryPoint string
 	var result bytes.Buffer
@@ -129,10 +130,14 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 
 	//spew.Dump("---")
 
-	// If there is a "transition" defined, then we're displaying a form
-	if transition := ctx.QueryParam("transition"); transition != "" {
+	request := domain.NewHTTPRequest(ctx.Request())
 
-		renderer = factory.StreamRenderer(stream, ctx.QueryParams())
+	// Build a StreamRenderer
+	renderer := factory.StreamRenderer(stream, request)
+
+	// If there is a "transition" defined, then we're displaying a form
+	if transition := request.Transition(); transition != "" {
+
 		compiledTemplate = layoutService.Layout()
 		entryPoint = "form"
 
@@ -149,23 +154,10 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 
 	} else {
 
-		// Otherwise, we only want to display the stream.
+		view, ok := stream.View(request.View())
 
-		// Build a StreamRenderer
-		renderer = factory.StreamRenderer(stream, ctx.QueryParams())
-
-		// Load the Template to display the stream
-		template, err := factory.Template().Load(stream.Template)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Unable to load stream template")
-		}
-
-		// Get the View inside of the Template
-		view, err := template.View(stream.State, ctx.QueryParam("view"))
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Invalid view")
+		if ok == false {
+			return derp.New(400, "ghost.handler.renderStream", "Invalid View", request.View())
 		}
 
 		// Get the "pre-compiled" Template from the View
@@ -176,7 +168,7 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 		}
 
 		// By default, the entryPoint is the name of the view
-		entryPoint = view.Name
+		entryPoint = view.ViewID
 
 		// spew.Dump(template.Label)
 		// spew.Dump(view.Name)

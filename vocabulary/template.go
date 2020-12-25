@@ -10,12 +10,14 @@ import (
 	"github.com/benpate/schema"
 )
 
+// TemplateArgs represents the arguments required to register a template
 type TemplateArgs struct {
 	Form   form.Form
 	Schema schema.Element
 	Value  interface{}
 }
 
+// RegisterTemplate registers an HTML template as a form widget
 func RegisterTemplate(library form.Library, name string, html string) error {
 
 	// Parse the HTML template

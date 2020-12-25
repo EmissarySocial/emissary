@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/schema"
 )
 
+// LayoutHorizontal renders a horizontal container layout in HTML
 func LayoutHorizontal(library form.Library) {
 
 	library.Register("layout-horizontal", func(form form.Form, schema schema.Schema, value interface{}, builder *strings.Builder) error {

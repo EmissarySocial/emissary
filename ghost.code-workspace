@@ -2,6 +2,18 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../slice"
+		},
+		{
+			"path": "../htmx"
+		},
+		{
+			"path": "../form"
+		},
+		{
+			"path": "../data"
 		}
 	],
 	"settings": {}

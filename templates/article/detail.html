@@ -17,3 +17,22 @@ THIS IS THE DETAIL PAGE...
 		{{.Label}}..
 	{{end}}
 </div>
+
+
+---
+So here's the problem.  
+---
+Querying the database requires some sort of permissions check.  
+But I don't know if you have permission to use an object until I know what you want to DO with it.
+The easiest would be to have a single tag that says find all the blah blah's and do blah with it.
+But that feels like baking too much into a single spot.
+
+But, everything comes back here, to the template, and the developer experience.
+That's the breakthrough(?) from today.
+
+
+should I say::  
+
+range .SubTemplates "permission" {
+	template "permission" .
+}

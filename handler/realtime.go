@@ -43,7 +43,8 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			view = "default"
 		}
 
-		client := domain.NewRealtimeClient(token, view)
+		httpRequest := domain.NewHTTPRequest(r)
+		client := domain.NewRealtimeClient(httpRequest, token, view)
 
 		// Add this client to the map of those that should
 		// receive updates

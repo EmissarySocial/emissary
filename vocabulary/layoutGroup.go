@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/schema"
 )
 
+// LayoutGroup renders a vertical widget group in HTML.
 func LayoutGroup(library form.Library) {
 
 	library.Register("layout-group", func(form form.Form, schema schema.Schema, value interface{}, builder *strings.Builder) error {

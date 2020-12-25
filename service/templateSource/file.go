@@ -60,13 +60,13 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Unable to list directory", directory)
 	}
 
+	// JSON files are processed first to build a complete schema of the Template first.
 	for _, file := range files {
 
 		filename := file.Name()
 		extension := list.Last(file.Name(), ".")
 
 		if extension == "json" {
-
 			data, err := ioutil.ReadFile(directory + "/" + filename)
 
 			if err != nil {
@@ -83,17 +83,24 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		}
 	}
 
-	for index := range result.Views {
+	// Views are processed second so that we have a complete schema to insert them into.
+	for _, file := range files {
 
-		filename := result.Views[index].Name + ".html"
+		filename := file.Name()
+		extension := list.Last(file.Name(), ".")
 
-		data, err := ioutil.ReadFile(directory + "/" + filename)
+		if extension == "html" {
+			data, err := ioutil.ReadFile(directory + "/" + filename)
 
-		if err != nil {
-			return nil, derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
+			if err != nil {
+				return nil, derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
+			}
+
+			result.PopulateView(model.View{
+				ViewID: filename,
+				HTML:   string(data),
+			})
 		}
-
-		result.Views[index].HTML = string(data)
 	}
 
 	return result, nil

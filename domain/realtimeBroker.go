@@ -1,9 +1,6 @@
 package domain
 
 import (
-	"log"
-	"net/url"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -30,14 +27,6 @@ type RealtimeBroker struct {
 	RemoveClient chan *RealtimeClient
 }
 
-// RealtimeClient represents a single SSE connection that has subscribed to updates for a particular stream/view combination.
-type RealtimeClient struct {
-	ClientID     primitive.ObjectID // Unique Identifier of this RealtimeClient.
-	Token        string             // Stream.Token of current stream being watched.
-	View         string             // Stream.View of the current stream/view being watched.
-	WriteChannel chan string        // Channel for writing responses to this client.
-}
-
 // NewRealtimeBroker generates a new stream broker
 func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBroker {
 
@@ -52,17 +41,6 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 	go result.Listen(factory)
 
 	return result
-}
-
-// NewRealtimeClient initializes a new realtime client.
-func NewRealtimeClient(token string, view string) *RealtimeClient {
-
-	return &RealtimeClient{
-		ClientID:     primitive.NewObjectID(),
-		Token:        token,
-		View:         view,
-		WriteChannel: make(chan string),
-	}
 }
 
 // Listen handles the addition & removal of clients, as well as
@@ -85,7 +63,7 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 			b.streams[client.Token][client.ClientID] = client
 			b.clients[client.ClientID] = client
 
-			log.Println("Added new client")
+			// log.Println("Added new client")
 
 		case client := <-b.RemoveClient:
 
@@ -98,17 +76,21 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 			close(client.WriteChannel)
 
-			log.Println("Removed client")
+			// log.Println("Removed client")
 
 		case stream := <-b.streamUpdates:
 
 			for _, client := range b.streams[stream.Token] {
 
-				if html, err := factory.StreamRenderer(&stream, url.Values{}).Render(client.View); err == nil {
-					client.WriteChannel <- string(html)
-				} else {
+				renderer := factory.StreamRenderer(&stream, client.HTTPRequest)
+				html, err := renderer.Render()
+
+				if err != nil {
 					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))
+					return
 				}
+
+				client.WriteChannel <- string(html)
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package vocabulary
 
 import "github.com/benpate/form"
 
+// WYSIWYG renders a WYSIWYG widget in HTML.
 func WYSIWYG(library form.Library) {
 
 	/*

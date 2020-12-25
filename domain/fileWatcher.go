@@ -6,10 +6,7 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-func WatchLayout(templateUpdates chan model.Template) {
-
-}
-
+// WatchTemplates may get removed.  I dunno.
 func WatchTemplates(streamService *service.Stream, streamUpdates chan model.Stream, templateUpdates chan model.Template) {
 
 	for {
@@ -27,8 +24,4 @@ func WatchTemplates(streamService *service.Stream, streamUpdates chan model.Stre
 			streamUpdates <- stream
 		}
 	}
-}
-
-func WatchStreams(updates chan model.Stream) {
-
 }
