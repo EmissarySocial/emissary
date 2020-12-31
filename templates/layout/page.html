@@ -7,7 +7,7 @@
 </head>
 <body hx-ext="authentication-header">
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
-		{{template "content" .}}
+		{{.Render}}
 	</div>
 
 	<div id="menu" hx-target="#main" hx-push-url="true">

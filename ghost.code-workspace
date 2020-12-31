@@ -14,6 +14,54 @@
 		},
 		{
 			"path": "../data"
+		},
+		{
+			"path": "../schema"
+		},
+		{
+			"path": "../activitystream"
+		},
+		{
+			"path": "../choose"
+		},
+		{
+			"path": "../convert"
+		},
+		{
+			"path": "../derp"
+		},
+		{
+			"path": "../digit"
+		},
+		{
+			"path": "../html"
+		},
+		{
+			"path": "../list"
+		},
+		{
+			"path": "../maps"
+		},
+		{
+			"path": "../null"
+		},
+		{
+			"path": "../path"
+		},
+		{
+			"path": "../remote"
+		},
+		{
+			"path": "../select"
+		},
+		{
+			"path": "../sniff"
+		},
+		{
+			"path": "../steranko"
+		},
+		{
+			"path": "../test"
 		}
 	],
 	"settings": {}

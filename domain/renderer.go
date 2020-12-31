@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -16,15 +17,17 @@ type Renderer struct {
 	streamService *service.Stream // StreamService is used to load child streams
 	stream        *model.Stream   // Stream to be displayed
 	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
+	view          string
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *model.Stream) *Renderer {
+func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *model.Stream, view string) *Renderer {
 
 	result := Renderer{
 		streamService: streamService,
 		stream:        stream,
 		request:       request,
+		view:          view,
 	}
 
 	return &result
@@ -76,8 +79,44 @@ func (w Renderer) HasParent() bool {
 }
 
 // View returns the string name of the view requested in the URL QueryString
-func (w Renderer) View() string {
-	return w.request.View()
+func (w Renderer) View() (*model.View, error) {
+
+	groups := w.request.Groups()
+	roles := w.stream.Roles(groups...)
+
+	viewName := w.view
+
+	if viewName == "" {
+		viewName = w.request.View()
+	}
+
+	spew.Dump("Trying viewName:" + viewName)
+
+	if state, err := w.streamService.State(w.stream); err == nil {
+
+		spew.Dump("with state: ", state)
+
+		if viewName != "" {
+			if view, ok := state.View(viewName); ok {
+				if view.MatchRoles(roles...) {
+					return view, nil
+				}
+			}
+		}
+
+		for _, view := range state.Views {
+			spew.Dump("Trying view: " + view.ViewID)
+			if view.MatchRoles(roles...) {
+				spew.Dump("success!")
+				return &view, nil
+			}
+		}
+	} else {
+		spew.Dump(err)
+	}
+
+	spew.Dump("failure :(")
+	return nil, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view, w.request.View())
 }
 
 // Transition returns the string name of the transition requested in the URL QueryString
@@ -88,7 +127,7 @@ func (w Renderer) Transition() string {
 ////////////////////////////////
 
 // Parent returns a Stream containing the parent of the current stream
-func (w Renderer) Parent() (*Renderer, error) {
+func (w Renderer) Parent(viewID string) (*Renderer, error) {
 
 	parent, err := w.streamService.LoadParent(w.stream)
 
@@ -96,13 +135,13 @@ func (w Renderer) Parent() (*Renderer, error) {
 		return nil, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result := NewRenderer(w.streamService, w.request, parent)
+	result := NewRenderer(w.streamService, w.request, parent, viewID)
 
 	return result, nil
 }
 
 // Children returns an array of Streams containing all of the child elements of the current stream
-func (w Renderer) Children() ([]*Renderer, error) {
+func (w Renderer) Children(viewID string) ([]*Renderer, error) {
 
 	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
 
@@ -110,11 +149,11 @@ func (w Renderer) Children() ([]*Renderer, error) {
 		return nil, derp.Report(derp.Wrap(err, "ghost.service.Renderer.Children", "Error loading child streams", w.stream))
 	}
 
-	return w.iteratorToSlice(iterator)
+	return w.iteratorToSlice(iterator, viewID)
 }
 
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
-func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
+func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]*Renderer, error) {
 
 	var stream model.Stream
 
@@ -122,7 +161,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator) ([]*Renderer, error) {
 
 	for iterator.Next(&stream) {
 		copy := stream
-		result = append(result, NewRenderer(w.streamService, w.request, &copy))
+		result = append(result, NewRenderer(w.streamService, w.request, &copy, viewID))
 	}
 
 	return result, nil
@@ -135,7 +174,7 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var result bytes.Buffer
 
-	view, err := w.streamService.View(w.stream, w.View())
+	view, err := w.View()
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "ghost.domain.renderer.Render", "Unrecognized view")

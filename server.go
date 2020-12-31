@@ -7,9 +7,12 @@ import (
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/route"
 	"github.com/benpate/ghost/server"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func main() {
+
+	spew.Config.DisableMethods = true
 
 	fmt.Println("Starting GHOST")
 	fmt.Println("Loading configuration file...")

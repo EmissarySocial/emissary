@@ -261,14 +261,14 @@ func (service Stream) State(stream *model.Stream) (*model.State, error) {
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream)
+		return nil, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream.TemplateID)
 	}
 
 	// Populate the Stream with data from the Template
 	state, ok := template.State(stream.StateID)
 
 	if ok == false {
-		return nil, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream)
+		return nil, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
 	}
 
 	return state, nil

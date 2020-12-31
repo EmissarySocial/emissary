@@ -2,56 +2,42 @@
 	"label": "Folder",
 	"description": "Folders can contain any other kind of content for your website.",
 	"containedBy": ["top", "home", "folder"],
-	"states": {
-		"new": {
-			"transitions": {
-				"create": {
-					"label": "Create a New Folder",
-					"nextState": "default",
-					"nextView": "default",
-					"form": "create"
-				}
-			}
-		},
-		"default": {
-			"label": "Folder",
-			"views": ["table", "icons", "previews"],
-			"transitions":  {
-				"update": {
-					"label": "Update Article",
-					"nextState": "default",
-					"nextView": "detail",
-					"form": "default"
+	"states": [{
+		"stateId": "new",
+		"transitions": {
+			"create": {
+				"label": "Create a New Folder",
+				"nextState": "default",
+				"nextView": "default",
+				"form": {
+					"kind": "layout-vertical",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},{
+						"kind": "longtext",
+						"label": "Description",
+						"path": "description"
+					}]
 				}
 			}
 		}
-	},
-	"views": [{
-		"name": "table",
-		"label":"Table",
-		"permisions": ["all"]
-	},
-	{
-		"name": "icons",
-		"label":"Previews",
-		"permisions": ["all"]
-	},{
-		"name": "previews",
-		"label":"Previews",
-		"permisions": ["all"]
-	}],
-	"forms": {
-		"create": {
-			"kind": "layout-vertical",
-			"children": [{
-				"kind": "text",
-				"label": "Label",
-				"path": "label"
-			},{
-				"kind": "longtext",
-				"label": "Description",
-				"path": "description"
-			}]
-		}
-	}
+	}, {
+		"stateId": "default",
+		"label": "Folder",
+		"views": [{
+			"viewId": "table",
+			"label": "Table",
+			"roles": []
+		}, {
+			"viewId": "icons",
+			"label": "Icons",
+			"roles": []
+		}, {
+			"viewId": "previews",
+			"label": "Preview",
+			"roles": []
+		}]
+	}]
 }

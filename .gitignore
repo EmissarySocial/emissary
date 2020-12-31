@@ -20,3 +20,5 @@
 # Application config info
 config.json
 ghost.code-workspace
+*.code-workspace
+ghost.code-workspace

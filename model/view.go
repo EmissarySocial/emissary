@@ -5,6 +5,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 )
@@ -35,18 +36,22 @@ func (v View) MatchAnonymous() bool {
 // If no roles are defined for this View, then access is always granted.
 func (v View) MatchRoles(roles ...string) bool {
 
+	spew.Dump(v)
 	if v.MatchAnonymous() {
+		spew.Dump(true)
 		return true
 	}
 
 	for i := range roles {
 		for j := range v.Roles {
 			if roles[i] == v.Roles[j] {
+				spew.Dump(true)
 				return true
 			}
 		}
 	}
 
+	spew.Dump(false)
 	return false
 }
 

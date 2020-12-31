@@ -122,7 +122,7 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 
 	layoutService := factory.Layout()
 	request := domain.NewHTTPRequest(ctx.Request())
-	renderer := factory.StreamRenderer(stream, request)
+	renderer := factory.StreamRenderer(stream, request, request.View())
 
 	// If there is a "transition" defined, then we're displaying a form (partial page only)
 	if transition := request.Transition(); transition != "" {
