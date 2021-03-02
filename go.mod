@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data v0.10.1
 	github.com/benpate/derp v0.21.0
 	github.com/benpate/form v0.2.4
-	github.com/benpate/list v0.3.0
+	github.com/benpate/list v0.4.0
 	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.2.0
 	github.com/benpate/schema v0.9.3

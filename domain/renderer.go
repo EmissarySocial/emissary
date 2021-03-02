@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -90,11 +89,7 @@ func (w Renderer) View() (*model.View, error) {
 		viewName = w.request.View()
 	}
 
-	spew.Dump("Trying viewName:" + viewName)
-
 	if state, err := w.streamService.State(w.stream); err == nil {
-
-		spew.Dump("with state: ", state)
 
 		if viewName != "" {
 			if view, ok := state.View(viewName); ok {
@@ -105,17 +100,12 @@ func (w Renderer) View() (*model.View, error) {
 		}
 
 		for _, view := range state.Views {
-			spew.Dump("Trying view: " + view.ViewID)
 			if view.MatchRoles(roles...) {
-				spew.Dump("success!")
 				return &view, nil
 			}
 		}
-	} else {
-		spew.Dump(err)
 	}
 
-	spew.Dump("failure :(")
 	return nil, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view, w.request.View())
 }
 
@@ -152,6 +142,18 @@ func (w Renderer) Children(viewID string) ([]*Renderer, error) {
 	return w.iteratorToSlice(iterator, viewID)
 }
 
+// TopLevel returns an array of Streams that have a Zero ParentID
+func (w Renderer) TopLevel(viewID string) ([]*Renderer, error) {
+
+	iterator, err := w.streamService.ListTopFolders()
+
+	if err != nil {
+		return nil, derp.Report(derp.Wrap(err, "ghost.service.Renderer.Children", "Error loading child streams", w.stream))
+	}
+
+	return w.iteratorToSlice(iterator, viewID)
+}
+
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
 func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]*Renderer, error) {
 
@@ -177,21 +179,18 @@ func (w Renderer) Render() (template.HTML, error) {
 	view, err := w.View()
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "ghost.domain.renderer.Render", "Unrecognized view")
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Unrecognized view"))
 	}
 
-	// Get compiled template
-	t, err := view.Compiled()
-
-	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "ghost.domain.renderer.Render", "Error getting compiled view", view)
+	if view.Template == nil {
+		return template.HTML(""), derp.Report(derp.New(500, "ghost.domain.renderer.Render", "Missing Template (probably did not load/compile correctly on startup)", view))
 	}
 
 	// Execut template
-	err = t.Execute(&result, w)
+	err = view.Template.Execute(&result, w)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream)
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
 	}
 
 	// Return result
@@ -204,10 +203,22 @@ func (w Renderer) Form() (template.HTML, error) {
 	html, err := w.streamService.Form(w.stream, w.Transition())
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form")
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
 	}
 
 	return template.HTML(html), nil
+}
+
+// CanAddChild returns TRUE if the current user has permission to add child streams.
+func (w Renderer) CanAddChild() bool {
+	return true
+}
+
+// ChildTemplates lists all templates that can be embedded in the current stream
+func (w Renderer) ChildTemplates() []model.Template {
+
+	// TODO: permissions here...
+	return w.streamService.ChildTemplates(w.stream)
 }
 
 // CanView returns TRUE if this Request is authorized to access this stream/view

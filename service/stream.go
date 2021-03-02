@@ -138,6 +138,11 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 	return stream, derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
 }
 
+// ChildTemplates returns an iterator of Templates that can be added as a sub-stream
+func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
+	return service.templateService.List(expression.Equal("containedBy", stream.TemplateID))
+}
+
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.

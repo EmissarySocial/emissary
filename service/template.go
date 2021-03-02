@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service/templatesource"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -28,14 +27,9 @@ func NewTemplate(paths []string, layoutService *Layout) *Template {
 		layoutService: layoutService,
 	}
 
-	// spew.Dump("NewTemplate ---- ")
-	// spew.Dump(paths)
-
 	for _, path := range paths {
 		fileSource := templatesource.NewFile(path)
-		spew.Dump(fileSource)
 		if err := result.AddSource(fileSource); err != nil {
-			spew.Dump(err)
 			derp.Report(err)
 		}
 	}
@@ -53,9 +47,6 @@ func (service *Template) AddSource(source TemplateSource) error {
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Template.AddSource", "Error listing templates from", source)
 	}
-
-	// spew.Dump("AddSource --------")
-	// spew.Dump(list, err)
 
 	// Iterate through every template
 	for _, name := range list {

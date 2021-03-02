@@ -130,7 +130,7 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 		template := layoutService.Template
 
 		if err := template.ExecuteTemplate(&result, "form", renderer); err != nil {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML form")
 		}
 
 		return ctx.HTML(200, result.String())
@@ -142,7 +142,7 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 		if html, err := renderer.Render(); err == nil {
 			return ctx.HTML(200, string(html))
 		} else {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering template")
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering partial HTML template")
 		}
 	}
 
@@ -158,7 +158,6 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 
 func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	// spew.Dump("--- postStream")
 	// Parse and Bind form data first, so that we don't have to hit the database in cases where there's an error.
 	form := make(map[string]interface{})
 

@@ -1,0 +1,34 @@
+table{
+    border-collapse: collapse;
+}
+
+table > thead > tr > th {
+    border-bottom: solid 2px #ccc;
+    text-align:left;
+    font-weight:600;
+}
+
+table th,
+table td {
+    border-bottom: solid 1px #eee;
+    padding:10px 20px; 
+    margin:0px;
+    border-spacing: 0px;
+}
+
+table tr:nth-child(odd) td {
+    background-color:#fff;
+}
+
+.button {
+    display:inline-block;
+    cursor:pointer;
+    padding:10px 20px;
+    background-color: rgb(189,190,191);
+    border-radius: 5px;
+}
+
+.button.primary {
+    background:linear-gradient(rgb(73,143,247), rgb(51,120,246));
+    color: white;
+}

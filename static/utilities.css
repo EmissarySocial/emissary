@@ -1,0 +1,20 @@
+a:hover,
+.link:hover,
+tr.link:hover > td {
+	cursor:pointer;
+	background-color:rgba(0 ,0, 1, 0.01);
+}
+
+.bold {
+    font-weight:600;
+}
+
+.hidden {display:none}
+
+.space-before {
+    margin-top: 20px;
+}
+
+.space-after {
+    margin-bottom: 20px;
+}

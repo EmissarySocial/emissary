@@ -1,11 +1,10 @@
-<div class="uk-margin-bottom">
-	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" hx-trigger="mousedown[button==0]">Table</a> |
-	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" hx-trigger="mousedown[button==0]">Icons</a> |
-	<a href="/{{.Token}}?view=previews" hx-get="/{{.Token}}?view=previews" hx-trigger="mousedown[button==0]">Preview</a>
+<div class="tabs">
+	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table" class="selected">Table</a>
+	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons">Icons</a>
 </div>
 
-<div class="uk-overflow-auto">
-	<table class="uk-table uk-table-divider uk-table-striped">
+<div>
+	<table>
 		<thead>
 			<tr>
 				<th>Name</th>
@@ -14,10 +13,12 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr hx-trigger="click" hx-get="/new?template=article&amp;parentId={{.StreamID}}" class="link">
-				<td colspan="3">+ Add</td>
-			</tr>
-			{{ range .Children }}
+			{{ if .CanAddChild }}
+				<tr hx-trigger="click" hx-get="/new?template=article&amp;parentId={{.StreamID}}" class="link">
+					<td colspan="3">+ Add</td>
+				</tr>
+			{{ end }}
+			{{ range .Children ""}}
 			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
 				<td>{{.Label}}</td>
 				<td>{{.Description}}</td>

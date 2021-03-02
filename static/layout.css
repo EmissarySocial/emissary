@@ -1,0 +1,47 @@
+body {
+	position:absolute;
+	height:100%;
+	width:100%;
+}
+
+#menu {
+	position:absolute;
+	top:0px;
+	bottom:0px;
+	left:0px;
+	width:250px;
+    color: rgb(60,60,60);
+	background-color: rgb(224,226,226);
+	border-right: solid 1px rgb(211,213,213);
+	overflow-y: scroll;
+	overflow-x: hidden;
+	z-index:2;
+}
+
+#menu > a {
+    color: black;
+    display:block;
+	padding:5px 10px;
+}
+
+/*
+#menu > a:hover {
+    background-color:rgb(200, 201, 202);
+    color: white;
+}
+*/
+
+#main {
+	padding:10px 20px 10px 270px;
+	width:100%;
+}
+
+.grid {
+    display: flexbox;
+    flex-direction: row;
+}
+
+.card {
+    border: solid 1px #f8f8f8;
+    padding:20px;
+}

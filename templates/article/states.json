@@ -1,77 +1,69 @@
 {
-	"states": {
-		"new": {
-			"transitions": {
-				"create": {
-					"label": "Create a New Article",
-					"nextState": "default",
-					"nextView": "default",
-					"form": "create",
-					"roles": [
-						"OWNER",
-						"EDITOR"
-					]
-				}
+	"states": [{
+		"stateId": "new",
+		"transitions": [{
+			"transitionId": "create",
+			"label": "Create a New Article",
+			"nextState": "default",
+			"nextView": "default",
+			"roles": ["OWNER", "EDITOR"],
+			"form": {
+				"kind": "layout-vertical",
+				"children": [
+					{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					}
+				]
 			}
-		},
-		"default": {
-			"label": "Default",
-			"views": [
-				"default",
-				"detail",
-				"admin"
-			],
-			"transitions": {
-				"update": {
-					"label": "Update Article",
-					"nextState": "default",
-					"nextView": "detail",
-					"form": "default",
-					"roles": [
-						"OWNER",
-						"EDITOR"
-					]
-				}
+		}]
+	}, {
+		"stateId":"default",
+		"label": "Default",
+		"views": [
+			{
+				"viewId": "default",
+				"roles": []
+			},
+			{
+				"viewId": "detail",
+				"roles": []
 			}
-		}
-	},
-	"forms": {
-		"create": {
-			"kind": "layout-vertical",
-			"children": [
-				{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				}
-			]
-		},
-		"default": {
-			"kind": "layout-vertical",
-			"label": "Update Form",
-			"description": "This will update the object in this state",
-			"children": [
-				{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				},
-				{
-					"kind": "textarea",
-					"label": "Description",
-					"path": "description"
-				},
-				{
-					"kind": "text",
-					"label": "Custom Data: Title",
-					"path": "data.title"
-				},
-				{
-					"kind": "textarea",
-					"label": "Custom Data: Body",
-					"path": "data.description"
-				}
-			]
-		}
-	}
+		],
+		"transitions": [{
+			"transitionId": "update",
+			"label": "Update Article",
+			"nextState": "default",
+			"nextView": "detail",
+			"roles": ["OWNER", "EDITOR"],
+			"form": {
+				"kind": "layout-vertical",
+				"label": "Update Form",
+				"description": "This will update the object in this state",
+				"children": [
+					{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},
+					{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					},
+					{
+						"kind": "text",
+						"label": "Custom Data: Title",
+						"path": "data.title"
+					},
+					{
+						"kind": "textarea",
+						"label": "Custom Data: Body",
+						"path": "data.description"
+					}
+				]
+			}
+		}]
+	}]
 }

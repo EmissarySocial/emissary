@@ -12,7 +12,6 @@ import (
 
 func TestService(t *testing.T) {
 
-	spew.Dump(config.Domain{})
 	factory, err := NewFactory(config.Domain{
 		ConnectString: "mongodb://127.0.0.1/ghost",
 		DatabaseName:  "ghost",

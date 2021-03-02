@@ -1,6 +1,8 @@
 package model
 
 import (
+	htmlTemplate "html/template"
+
 	"github.com/benpate/choose"
 	"github.com/benpate/data/compare"
 	"github.com/benpate/derp"
@@ -11,16 +13,17 @@ import (
 
 // Template represents an HTML template to be used for generating an HTML page.
 type Template struct {
-	TemplateID  string         `json:"templateId"  bson:"templateId"`  // Internal name/token other objects (like streams) will use to reference this Template.
-	Label       string         `json:"label"       bson:"label"`       // Human-readable label used in management UI.
-	Description string         `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
-	Category    string         `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
-	IconURL     string         `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
-	ContainedBy []string       `json:"containedBy" bson:"containedBy"` // Slice of Templates that can contain Streams that use this Template.
-	URL         string         `json:"url"         bson:"url"`         // URL where this template is published
-	Schema      *schema.Schema `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
-	States      []State        `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
-	Roles       []Role         `json:"roles"       bson:"roles"`       // List of custom roles defined by this template.
+	TemplateID  string                            `json:"templateId"  bson:"templateId"`  // Internal name/token other objects (like streams) will use to reference this Template.
+	Label       string                            `json:"label"       bson:"label"`       // Human-readable label used in management UI.
+	Description string                            `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
+	Category    string                            `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
+	IconURL     string                            `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
+	ContainedBy []string                          `json:"containedBy" bson:"containedBy"` // Slice of Templates that can contain Streams that use this Template.
+	URL         string                            `json:"url"         bson:"url"`         // URL where this template is published
+	Schema      *schema.Schema                    `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
+	States      []State                           `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
+	Roles       []Role                            `json:"roles"       bson:"roles"`       // List of custom roles defined by this template.
+	Views       map[string]*htmlTemplate.Template `json:"-" bson:"-"`                     // In-Memory data structure for all views in this Template
 }
 
 // NewTemplate creates a new, fully initialized Template object
@@ -78,22 +81,6 @@ func (template *Template) Populate(from *Template) {
 	if template.Schema == nil {
 		template.Schema = from.Schema
 	}
-}
-
-// PopulateView updates all views in this template with the provided argument, by
-// searching all States with Views that match the provided view.ViewID.  If one or
-// more matches is found, this function returns TRUE.  Otherwise, it returns FALSE.
-func (template *Template) PopulateView(view View) bool {
-
-	var result bool
-
-	for index := range template.States {
-		if temp := template.States[index].PopulateView(view); temp {
-			result = true
-		}
-	}
-
-	return result
 }
 
 // GetPath implements the path.Getter interface.

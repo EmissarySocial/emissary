@@ -2,30 +2,32 @@
 <html>
 <head>
 	<title>GH0ST</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
-	<link rel="stylesheet" href="/r/stylesheet.css">
+	<link rel="stylesheet" href="/r/reset.css">
+	<link rel="stylesheet" href="/r/layout.css">
+	<link rel="stylesheet" href="/r/colors.css">
+	<link rel="stylesheet" href="/r/forms.css">	
+	<link rel="stylesheet" href="/r/modal.css">
+	<link rel="stylesheet" href="/r/animations.css">
+	<link rel="stylesheet" href="/r/accessibility.css">
+	<link rel="stylesheet" href="/r/utilities.css">
 </head>
-<body hx-ext="authentication-header">
+
+<body hx-ext="preload">
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 		{{.Render}}
 	</div>
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
-		<div class="bottom">
-			<div class="uk-margin-bottom"><a href="/new?parentId=top&amp;template=folder">+ Add Folder</a></div>
-			{{ range .Folders}}
-				<div><a href="{{.Token}}">{{.Label}}</a></div>
-			{{ end}}
-		</div>
+		<a href="/new?parentId=top&amp;template=folder">+ Add Folder</a>
+		{{ range .TopLevel "" }}
+			<a href="{{.Token}}">{{.Label}}</a>
+		{{ end }}
 	</div>
-	
-
-<!--script src="https://unpkg.com/htmx.org" defer></script-->
-<script src="https://unpkg.com/hyperscript.org"></script>
-<script src="/htmx/htmx.js"></script>
-<script src="/htmx/ext/authentication-header.js"></script>
-<script src="/r/script.js"></script>
 
 </body>
+
+<script src="https://unpkg.com/htmx.org"></script>
+<script src="https://unpkg.com/hyperscript.org"></script>
+<script src="https://unpkg.com/htmx.org/dist/ext/preload.js"></script>
 
 </html>

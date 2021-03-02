@@ -1,0 +1,30 @@
+
+/********************
+* Dark Mode Colors
+*********************/
+
+@media (prefers-color-scheme: dark) {
+	html {
+		color:rgb(220,221,222);
+	}
+	h1, h2, h3, h4, h5{
+		color: white;
+	}
+	body{
+		background-color: rgb(54,57,64);
+	}
+	#menu {
+		background-color: rgb(48,49,55);
+		border-right-color: rgb(31,34,37);
+	}
+
+	.uk-tab > .uk-active > a {
+		color: white;
+	}
+	.uk-nav > li:hover{
+		background-color: rgb(59, 60, 67);
+	}
+	.uk-nav > li:hover > a {
+		color:white;
+	}
+}

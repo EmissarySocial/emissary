@@ -3,12 +3,16 @@ package templatesource
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/fsnotify/fsnotify"
+
+	minify "github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 // File is a TemplateSource adapter that can load/save Templates from/to the local filesytem.
@@ -60,22 +64,56 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Unable to list directory", directory)
 	}
 
-	// JSON files are processed first to build a complete schema of the Template first.
+	// Make a data structure for all of the views in the system
+	views := make(map[string]*template.Template, len(files))
+
+	// Create the minifier
+	m := minify.New()
+	m.AddFunc("text/html", html.Minify)
+
+	// Views are processed FIRST so we can generate a list of objects to enter into the different States
 	for _, file := range files {
 
 		filename := file.Name()
-		extension := list.Last(file.Name(), ".")
+		viewID, extension := list.SplitTail(filename, ".")
 
-		if extension == "json" {
-			data, err := ioutil.ReadFile(directory + "/" + filename)
+		// Try to read the file from the filesystem
+		content, err := ioutil.ReadFile(directory + "/" + filename)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
+			continue
+		}
+
+		// Only HTML files beyond this point...
+		switch extension {
+
+		case "html":
+
+			// Try to minify the incoming template... (this should be moved to a different place.)
+			minified, err := m.String("text/html", string(content))
 
 			if err != nil {
-				return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename)
+				derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Error minifying template", content))
+				continue
 			}
+
+			// Try to compile the minified content into a Go Template
+			result, err := template.New(viewID).Parse(minified)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", content))
+				continue
+			}
+
+			// Save the view in the memory structure for the next run through the file list
+			views[viewID] = result
+
+		case "json":
 
 			var temp model.Template
 
-			if err := json.Unmarshal(data, &temp); err != nil {
+			if err := json.Unmarshal(content, &temp); err != nil {
 				return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file", filename)
 			}
 
@@ -83,23 +121,17 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		}
 	}
 
-	// Views are processed second so that we have a complete schema to insert them into.
-	for _, file := range files {
+	// For each state in this Template
+	for stateIndex := range result.States {
 
-		filename := file.Name()
-		extension := list.Last(file.Name(), ".")
+		// For each view in this State
+		for viewIndex := range result.States[stateIndex].Views {
 
-		if extension == "html" {
-			data, err := ioutil.ReadFile(directory + "/" + filename)
+			// Get the ID of this view
+			viewID := (*result).States[stateIndex].Views[viewIndex].ViewID
 
-			if err != nil {
-				return nil, derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
-			}
-
-			result.PopulateView(model.View{
-				ViewID: filename,
-				HTML:   string(data),
-			})
+			// Add (a pointer to) the compiled template into this view.  (Null if missing)
+			result.States[stateIndex].Views[viewIndex].Template = views[viewID]
 		}
 	}
 

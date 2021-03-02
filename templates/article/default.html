@@ -1,26 +1,24 @@
 THIS IS THE DEFAULT PAGE
-<h3 >{{.Label}}</h3>
+<h1 class="space-after">{{.Label}}</h1>
 
-{{ template "tabs" . }}
-
-<article>
+<article class="space-after">
 	<div>{{.Description}}</div>
 </article>
-<br>
-<div>
+
+<div class="space-after">
 	<span 
+		preload
 		hx-get="/{{.Token}}?transition=update" 
-		hx-trigger="mousedown[!button]"
 		hx-target="body" 
 		hx-swap="beforeend" 
-		hx-push-url="false" class="uk-button uk-button-primary">Update Stream</span>
+		hx-push-url="false" 
+		class="button primary">Update Stream</span>
+
+	<span 
+		preload
+		hx-get="/{{.Token}}?transition=update" 
+		hx-target="body" 
+		hx-swap="beforeend" 
+		hx-push-url="false" 
+		class="button">+ Add Stream</span>
 </div>
-
-
-<h3>New Stream</h3>
-{{ range .SubTemplates}}
-	<div hx-get="/new?parent={{$.Token}}&amp;template={{.TemplateID}}" class="link">
-		<div class="uk-text-bold">{{.Label}}</div>
-		<div class="uk-text-meta">{{.Description}}</div>
-	</div>
-{{ end}}

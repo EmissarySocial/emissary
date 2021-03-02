@@ -46,20 +46,6 @@ func (s State) View(viewName string) (*View, bool) {
 	return nil, false
 }
 
-// PopulateView searches for a view that matches the provided arguments.  If there is a
-// match (on ViewID) then the view in this State is updated accordingly and this function
-// returns TRUE.  Otherwise, if no match is found, it returns FALSE.
-func (s *State) PopulateView(view View) bool {
-
-	for index := range s.Views {
-		if s.Views[index].ViewID == view.ViewID {
-			s.Views[index] = view
-			return true
-		}
-	}
-	return false
-}
-
 // MatchAnonymous returns TRUE if this state does not require
 // any access privileges.
 func (s State) MatchAnonymous() bool {

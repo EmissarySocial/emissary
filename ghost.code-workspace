@@ -62,6 +62,15 @@
 		},
 		{
 			"path": "../test"
+		},
+		{
+			"path": "../sseplaceholder"
+		},
+		{
+			"path": "../kids-javascript-demo"
+		},
+		{
+			"path": "../_hyperscript"
 		}
 	],
 	"settings": {}

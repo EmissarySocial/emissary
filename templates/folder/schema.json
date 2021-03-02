@@ -4,39 +4,34 @@
 	"containedBy": ["top", "home", "folder"],
 	"states": [{
 		"stateId": "new",
-		"transitions": {
-			"create": {
-				"label": "Create a New Folder",
-				"nextState": "default",
-				"nextView": "default",
-				"form": {
-					"kind": "layout-vertical",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "longtext",
-						"label": "Description",
-						"path": "description"
-					}]
-				}
+		"transitions": [{
+			"transitionId": "create",
+			"label": "Create a New Folder",
+			"nextState": "default",
+			"nextView": "default",
+			"form": {
+				"kind": "layout-vertical",
+				"children": [{
+					"kind": "text",
+					"label": "Label",
+					"path": "label"
+				},{
+					"kind": "longtext",
+					"label": "Description",
+					"path": "description"
+				}]
 			}
-		}
+		}]
 	}, {
 		"stateId": "default",
-		"label": "Folder",
 		"views": [{
 			"viewId": "table",
-			"label": "Table",
 			"roles": []
 		}, {
 			"viewId": "icons",
-			"label": "Icons",
 			"roles": []
 		}, {
 			"viewId": "previews",
-			"label": "Preview",
 			"roles": []
 		}]
 	}]
