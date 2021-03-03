@@ -90,19 +90,18 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 
 		case "html":
 
-			// Try to minify the incoming template... (this should be moved to a different place.)
-			minified, err := m.String("text/html", string(content))
+			contentString := string(content)
 
-			if err != nil {
-				derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Error minifying template", content))
-				continue
+			// Try to minify the incoming template... (this should be moved to a different place.)
+			if minified, err := m.String("text/html", contentString); err == nil {
+				contentString = minified
 			}
 
 			// Try to compile the minified content into a Go Template
-			result, err := template.New(viewID).Parse(minified)
+			result, err := template.New(viewID).Parse(contentString)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", content))
+				derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", contentString))
 				continue
 			}
 

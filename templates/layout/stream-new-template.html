@@ -1,0 +1,18 @@
+<div id="modal" _="on closeModal add .closing then wait for animationend then remove me">
+	<div class="modal-underlay" _="on click trigger closeModal"></div>
+	<div class="modal-content">
+		<h3 class="space-after">+ Add a Stream</h3>
+		<table>
+			{{ $token := .Token }}
+			{{ range .ChildTemplates}}
+				<tr hx-get="/{{$token}}/new/{{.TemplateID}}" hx-target="#modal" class="link"><td>
+					{{ .Label }}
+				</td></tr>
+			{{ end }}
+		</table>
+
+		<div class="space-before">
+			<span class="button"_="on click trigger closeModal">Close Window</span>
+		</div>
+	</div>
+</div>

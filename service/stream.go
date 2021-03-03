@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -140,13 +141,30 @@ func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
 // ChildTemplates returns an iterator of Templates that can be added as a sub-stream
 func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
-	return service.templateService.List(expression.Equal("containedBy", stream.TemplateID))
+	return service.templateService.ListByContainer(stream.TemplateID)
 }
 
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.
-func (service Stream) NewWithTemplate(templateID string, parentToken string) (*model.Stream, error) {
+func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
+
+	spew.Dump(templateID, parentToken)
+
+	// Exception for putting a folder on the top level...
+	if parentToken == "top" {
+
+		if templateID == "folder" {
+			// Create and populate the new Stream
+			stream := service.New()
+			stream.ParentID = ZeroObjectID()
+			stream.TemplateID = templateID
+
+			return stream, nil
+		}
+
+		return nil, derp.New(400, "ghost.service.Stream.NewWithTemplate", "Top Level Can Only Contain Folders")
+	}
 
 	// Load the requested Template
 	template, err := service.templateService.Load(templateID)

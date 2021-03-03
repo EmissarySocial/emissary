@@ -18,7 +18,14 @@
 	</div>
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
-		<a href="/new?parentId=top&amp;template=folder">+ Add Folder</a>
+
+	<span 
+		hx-get="/top/new/folder" 
+		hx-target="body" 
+		hx-swap="beforeend" 
+		hx-push-url="false" 
+		class="link">+ Add Folder</span>
+
 		{{ range .TopLevel "" }}
 			<a href="{{.Token}}">{{.Label}}</a>
 		{{ end }}

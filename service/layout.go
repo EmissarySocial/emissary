@@ -8,6 +8,9 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
 	"github.com/fsnotify/fsnotify"
+
+	minify "github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
@@ -36,6 +39,10 @@ func NewLayout(path string, updates chan *template.Template) (*Layout, error) {
 // Load retrieves the template from the disk and parses it into
 func (service *Layout) Load() error {
 
+	// Create the minifier
+	m := minify.New()
+	m.AddFunc("text/html", html.Minify)
+
 	// Create a new template.Template to return on success
 	layout := template.New("")
 
@@ -54,17 +61,24 @@ func (service *Layout) Load() error {
 		}
 
 		// Read template file contents into memory
-		contents, err := ioutil.ReadFile(service.path + "/" + file.Name())
+		content, err := ioutil.ReadFile(service.path + "/" + file.Name())
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.service.NewLayout", "Error reading file from filesystem", file.Name())
 		}
 
+		contentString := string(content)
+
+		// Try to minify the incoming template... (this should be moved to a different place.)
+		if minified, err := m.String("text/html", contentString); err == nil {
+			contentString = minified
+		}
+
 		// Parse the current file into an HTML template
-		t, err := template.New("").Parse(string(contents))
+		t, err := template.New("").Parse(contentString)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.service.NewLayout", "Error parsing template file", file.Name(), string(contents))
+			return derp.Wrap(err, "ghost.service.NewLayout", "Error parsing template file", file.Name(), contentString)
 		}
 
 		// Try to append this layout to the ParseTree

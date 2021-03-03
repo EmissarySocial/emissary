@@ -14,8 +14,13 @@
 		</thead>
 		<tbody>
 			{{ if .CanAddChild }}
-				<tr hx-trigger="click" hx-get="/new?template=article&amp;parentId={{.StreamID}}" class="link">
-					<td colspan="3">+ Add</td>
+				<tr 
+					hx-get="/{{.Token}}/new" 
+					hx-target="body" 
+					hx-swap="beforeend" 
+					hx-push-url="false"
+					class="link">
+					<td colspan="3">+ Add Stream</td>
 				</tr>
 			{{ end }}
 			{{ range .Children ""}}

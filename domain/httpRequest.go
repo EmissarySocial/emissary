@@ -45,16 +45,6 @@ func (r *HTTPRequest) UserID() primitive.ObjectID {
 	return primitive.NewObjectID()
 }
 
-// TemplateID returns the requested templateId from the URL query parameter
-func (r *HTTPRequest) TemplateID() string {
-	return r.QueryParam("templateId")
-}
-
-// ParentToken returns the requested parentId from the URL query parameter
-func (r *HTTPRequest) ParentToken() string {
-	return r.QueryParam("parent")
-}
-
 // Groups returns a sorted slice of strings containing the group names that the user behind this request belongs to.
 func (r *HTTPRequest) Groups() []string {
 	return []string{}

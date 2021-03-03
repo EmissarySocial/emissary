@@ -26,6 +26,11 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	}
 }
 
+// GetNewTemplates returns the "new template" page, allowing users to choose a new template to go underneath the current s
+func GetNewTemplates(factoryManager *server.FactoryManager) echo.HandlerFunc {
+	return renderLayout(factoryManager, "stream-new-template")
+}
+
 // GetNewStream generates an HTML form where authenticated users can create a new stream
 func GetNewStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
@@ -104,9 +109,7 @@ func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain
 	}
 
 	streamService := factory.Stream()
-	request := domain.NewHTTPRequest(ctx.Request())
-
-	stream, err := streamService.NewWithTemplate(request.TemplateID(), request.ParentToken())
+	stream, err := streamService.NewWithTemplate(ctx.Param("stream"), ctx.Param("template"))
 
 	if err != nil {
 		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error creating new stream"))
@@ -180,6 +183,34 @@ func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream)
 
 	// return ctx.Redirect(http.StatusSeeOther, "/"+stream.Token+"?view="+transition.NextState)
 	//	return renderStream(ctx, factory, stream)
+}
+
+// renderLayout renders a specific site-wide layout with the given stream
+func renderLayout(factoryManager *server.FactoryManager, templateID string) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+		var result bytes.Buffer
+
+		factory, stream, err := loadStream(ctx, factoryManager)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
+		}
+
+		layoutService := factory.Layout()
+		request := domain.NewHTTPRequest(ctx.Request())
+		renderer := factory.StreamRenderer(stream, request, request.View())
+
+		// Render full page (stream only).
+		template := layoutService.Template
+
+		if err := template.ExecuteTemplate(&result, templateID, renderer); err != nil {
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
+		}
+
+		return ctx.HTML(200, result.String())
+	}
+
 }
 
 // isFullPageRequest returns TRUE if this is a regular, full-page request (and FALSE if it is an HTMX partial page request)

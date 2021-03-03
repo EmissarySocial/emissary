@@ -16,9 +16,15 @@ THIS IS THE DEFAULT PAGE
 
 	<span 
 		preload
-		hx-get="/{{.Token}}?transition=update" 
+		hx-get="/{{.Token}}/new" 
 		hx-target="body" 
 		hx-swap="beforeend" 
 		hx-push-url="false" 
 		class="button">+ Add Stream</span>
+</div>
+
+<div class="space-after">
+	{{ range .Children "" }}
+		<div>.Label</div>
+	{{ end }}
 </div>

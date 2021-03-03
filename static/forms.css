@@ -1,16 +1,19 @@
 table{
     border-collapse: collapse;
+    width:100%;
+    border-bottom: solid 1px #eee;
 }
 
 table > thead > tr > th {
-    border-bottom: solid 2px #ccc;
+    border-bottom: solid 3px #ddd;
+    border-top:none;
     text-align:left;
     font-weight:600;
 }
 
 table th,
 table td {
-    border-bottom: solid 1px #eee;
+    border-top: solid 1px #eee;
     padding:10px 20px; 
     margin:0px;
     border-spacing: 0px;

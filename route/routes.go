@@ -41,8 +41,9 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/:stream", handler.GetStream(factoryManager))           // ?view= or ?transition=
 	e.POST("/:stream", handler.PostStream(factoryManager))         // ?transition
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager)) // ?view=
-	e.GET("/new", handler.GetNewStream(factoryManager))            // ?parent=&template=
-	e.POST("/new", handler.PostNewStream(factoryManager))          // ?parent=&template=
+	e.GET("/:stream/new", handler.GetNewTemplates(factoryManager))
+	e.GET("/:stream/new/:template", handler.GetNewStream(factoryManager))
+	e.POST("/:stream/new/:template", handler.PostNewStream(factoryManager))
 
 	return e
 }
