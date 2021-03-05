@@ -21,20 +21,20 @@
 		"label": "Default",
 		"views": [
 			{
-				"viewId": "default",
+				"viewId": "table",
 				"roles": []
 			},
 			{
-				"viewId": "detail",
+				"viewId": "icons",
 				"roles": []
 			}
 		],
 		"transitions": [{
 			"transitionId": "update",
-			"label": "Update Article",
+			"label": "Update Folder",
 			"nextState": "default",
-			"nextView": "detail",
-			"roles": ["OWNER", "EDITOR"],
+			"nextView": "table",
+			"roles": [],
 			"form": {
 				"kind": "layout-vertical",
 				"label": "Update Form",

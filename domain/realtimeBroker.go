@@ -82,7 +82,7 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 			for _, client := range b.streams[stream.Token] {
 
-				renderer := factory.StreamRenderer(&stream, client.HTTPRequest, client.View)
+				renderer := factory.StreamRenderer(&stream, client.HTTPRequest).SetView(client.View)
 				html, err := renderer.Render()
 
 				if err != nil {

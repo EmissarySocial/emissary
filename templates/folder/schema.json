@@ -1,38 +1,44 @@
 {
 	"label": "Folder",
-	"description": "Folders can contain any other kind of content for your website.",
-	"containedBy": ["top", "home", "folder"],
-	"states": [{
-		"stateId": "new",
-		"transitions": [{
-			"transitionId": "create",
-			"label": "Create a New Folder",
-			"nextState": "default",
-			"nextView": "default",
-			"form": {
-				"kind": "layout-vertical",
-				"children": [{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				},{
-					"kind": "longtext",
-					"label": "Description",
-					"path": "description"
-				}]
+	"description": "Folders can contain all other streams",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"url": "example.com/test-template",
+		"title": "Test Template Schema",
+		"type": "object",
+		"properties": {
+			"class": {
+				"type": "string"
+			},
+			"title": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			},
+			"body": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			},
+			"persons": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string"
+						}
+					}
+				}
 			}
-		}]
-	}, {
-		"stateId": "default",
-		"views": [{
-			"viewId": "table",
-			"roles": []
-		}, {
-			"viewId": "icons",
-			"roles": []
-		}, {
-			"viewId": "previews",
-			"roles": []
-		}]
-	}]
+		},
+		"required": [
+			"class",
+			"title",
+			"body",
+			"persons"
+		]
+	}
 }

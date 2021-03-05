@@ -227,7 +227,7 @@ func (service Stream) Form(stream *model.Stream, transitionID string) (string, e
 		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
 	}
 
-	result, err := transition.Form.HTML(service.formLibrary, *schema, stream)
+	result, err := transition.Form.HTML(service.formLibrary, schema, stream)
 
 	if err != nil {
 		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")

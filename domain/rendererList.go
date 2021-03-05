@@ -230,7 +230,7 @@ func (builder *ListBuilder) Query() ([]*Renderer, error) {
 
 	for it.Next(&stream) {
 		duplicate := stream
-		result = append(result, NewRenderer(builder.streamService, builder.request, &duplicate, builder.view))
+		result = append(result, NewRenderer(builder.streamService, builder.request, &duplicate).SetView(builder.view))
 	}
 
 	return result, nil

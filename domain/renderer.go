@@ -17,16 +17,16 @@ type Renderer struct {
 	stream        *model.Stream   // Stream to be displayed
 	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
 	view          string
+	transition    string
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *model.Stream, view string) *Renderer {
+func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *model.Stream) *Renderer {
 
 	result := Renderer{
 		streamService: streamService,
 		stream:        stream,
 		request:       request,
-		view:          view,
 	}
 
 	return &result
@@ -77,22 +77,22 @@ func (w Renderer) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+// SetView overrides the transition provided in the request parameters.
+func (w *Renderer) SetView(view string) *Renderer {
+	w.view = view
+	return w
+}
+
 // View returns the string name of the view requested in the URL QueryString
 func (w Renderer) View() (*model.View, error) {
 
 	groups := w.request.Groups()
 	roles := w.stream.Roles(groups...)
 
-	viewName := w.view
-
-	if viewName == "" {
-		viewName = w.request.View()
-	}
-
 	if state, err := w.streamService.State(w.stream); err == nil {
 
-		if viewName != "" {
-			if view, ok := state.View(viewName); ok {
+		if w.view != "" {
+			if view, ok := state.View(w.view); ok {
 				if view.MatchRoles(roles...) {
 					return view, nil
 				}
@@ -106,12 +106,18 @@ func (w Renderer) View() (*model.View, error) {
 		}
 	}
 
-	return nil, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view, w.request.View())
+	return nil, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view)
+}
+
+// SetTransition overrides the transition provided in the request parameters.
+func (w *Renderer) SetTransition(transition string) *Renderer {
+	w.transition = transition
+	return w
 }
 
 // Transition returns the string name of the transition requested in the URL QueryString
 func (w Renderer) Transition() string {
-	return w.request.Transition()
+	return w.transition
 }
 
 ////////////////////////////////
@@ -125,7 +131,7 @@ func (w Renderer) Parent(viewID string) (*Renderer, error) {
 		return nil, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result := NewRenderer(w.streamService, w.request, parent, viewID)
+	result := NewRenderer(w.streamService, w.request, parent).SetView(viewID)
 
 	return result, nil
 }
@@ -163,7 +169,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]*Ren
 
 	for iterator.Next(&stream) {
 		copy := stream
-		result = append(result, NewRenderer(w.streamService, w.request, &copy, viewID))
+		result = append(result, NewRenderer(w.streamService, w.request, &copy).SetView(viewID))
 	}
 
 	return result, nil
@@ -197,16 +203,16 @@ func (w Renderer) Render() (template.HTML, error) {
 	return template.HTML(result.String()), nil
 }
 
-// Form returns an HTML rendering of this form
-func (w Renderer) Form() (template.HTML, error) {
+// RenderForm returns an HTML rendering of this form
+func (w Renderer) RenderForm() (template.HTML, error) {
 
-	html, err := w.streamService.Form(w.stream, w.Transition())
+	result, err := w.streamService.Form(w.stream, w.Transition())
 
 	if err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
 	}
 
-	return template.HTML(html), nil
+	return template.HTML(result), nil
 }
 
 // CanAddChild returns TRUE if the current user has permission to add child streams.

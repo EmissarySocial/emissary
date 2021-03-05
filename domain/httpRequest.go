@@ -30,16 +30,6 @@ func (r HTTPRequest) QueryParam(name string) string {
 	return r.request.URL.Query().Get(name)
 }
 
-// View returns the URL query parameter "view" from the HTTP request
-func (r HTTPRequest) View() string {
-	return r.QueryParam("view")
-}
-
-// Transition returns the URL query parameter "transition" from the HTTP request
-func (r HTTPRequest) Transition() string {
-	return r.QueryParam("transition")
-}
-
 // UserID returns the userID of the current user
 func (r *HTTPRequest) UserID() primitive.ObjectID {
 	return primitive.NewObjectID()

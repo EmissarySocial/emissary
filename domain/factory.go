@@ -9,10 +9,10 @@ import (
 	"github.com/benpate/data/mongodb"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
 )
 
@@ -134,8 +134,8 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamRenderer generates a new stream renderer service.
-func (factory *Factory) StreamRenderer(stream *model.Stream, request *HTTPRequest, viewID string) *Renderer {
-	return NewRenderer(factory.Stream(), request, stream, viewID)
+func (factory *Factory) StreamRenderer(stream *model.Stream, request *HTTPRequest) *Renderer {
+	return NewRenderer(factory.Stream(), request, stream)
 }
 
 ///////////////////////////////////////

@@ -37,13 +37,14 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/users/:username/outbox", handler.TBD)
 
 	// Stream Pages
-	e.GET("/", handler.GetStream(factoryManager))                  // ?view=
-	e.GET("/:stream", handler.GetStream(factoryManager))           // ?view= or ?transition=
-	e.POST("/:stream", handler.PostStream(factoryManager))         // ?transition
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager)) // ?view=
-	e.GET("/:stream/new", handler.GetNewTemplates(factoryManager))
-	e.GET("/:stream/new/:template", handler.GetNewStream(factoryManager))
-	e.POST("/:stream/new/:template", handler.PostNewStream(factoryManager))
+	e.GET("/", handler.GetStream(factoryManager))        // ?view=
+	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view= or ?transition=
+	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
+	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
+	e.GET("/:stream/new", handler.GetTemplates(factoryManager))
+	e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
+	e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
 
 	return e
 }

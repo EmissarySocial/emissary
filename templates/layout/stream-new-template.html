@@ -5,7 +5,7 @@
 		<table>
 			{{ $token := .Token }}
 			{{ range .ChildTemplates}}
-				<tr hx-get="/{{$token}}/new/{{.TemplateID}}" hx-target="#modal" class="link"><td>
+				<tr hx-get="/{{$token}}/new/{{.TemplateID}}" hx-target="#modal" hx-swap="outerHTML" class="link"><td>
 					{{ .Label }}
 				</td></tr>
 			{{ end }}

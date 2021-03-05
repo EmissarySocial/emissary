@@ -12,7 +12,6 @@ import (
 type Stream struct {
 	StreamID        primitive.ObjectID     `json:"streamId"        bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID        primitive.ObjectID     `json:"parentId"        bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	FolderID        primitive.ObjectID     `json:"folderId"        bson:"folderId"`            // Unique identifier of the "folder" where this stream is stored (NOT USED PUBLICLY)
 	TemplateID      string                 `json:"templateId"      bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	StateID         string                 `json:"stateId"         bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	GroupRoles      map[string][]string    `json:"groupRoles"      bson:"groupRoles"`          // Map of Role names to the one or more Group names that can perform that role.
@@ -39,8 +38,11 @@ type Stream struct {
 // NewStream returns a fully initialized Stream object.
 func NewStream() Stream {
 
+	streamID := primitive.NewObjectID()
+
 	return Stream{
-		StreamID:   primitive.NewObjectID(),
+		StreamID:   streamID,
+		Token:      streamID.Hex(),
 		StateID:    "new",
 		GroupRoles: make(map[string][]string, 0),
 		Tags:       []string{},

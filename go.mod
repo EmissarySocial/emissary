@@ -6,12 +6,10 @@ require (
 	github.com/aws/aws-sdk-go v1.36.16 // indirect
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/choose v0.1.1
-	github.com/benpate/convert v0.8.1
 	github.com/benpate/data v0.10.1
 	github.com/benpate/derp v0.21.0
-	github.com/benpate/form v0.2.4
+	github.com/benpate/form v0.3.1
 	github.com/benpate/list v0.4.0
-	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.2.0
 	github.com/benpate/schema v0.9.3
 	github.com/benpate/slice v0.0.2

@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="/r/reset.css">
 	<link rel="stylesheet" href="/r/layout.css">
 	<link rel="stylesheet" href="/r/colors.css">
+	<link rel="stylesheet" href="/r/tables.css">	
 	<link rel="stylesheet" href="/r/forms.css">	
 	<link rel="stylesheet" href="/r/modal.css">
 	<link rel="stylesheet" href="/r/animations.css">
@@ -19,15 +20,19 @@
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
 
-	<span 
-		hx-get="/top/new/folder" 
-		hx-target="body" 
-		hx-swap="beforeend" 
-		hx-push-url="false" 
-		class="link">+ Add Folder</span>
+		<a href="/home" hx-get="/home" class="space-before space-after">Home</a>
+
+		<div class="space-before space-after"></div>
+		
+		<a preload
+			hx-get="/top/new/folder" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="link">+ Add Folder</a>
 
 		{{ range .TopLevel "" }}
-			<a href="{{.Token}}">{{.Label}}</a>
+			<a preload hx-get="/{{.Token}}">{{.Label}}</a>
 		{{ end }}
 	</div>
 
