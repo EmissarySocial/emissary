@@ -32,6 +32,10 @@ func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *mo
 	return &result
 }
 
+func (w Renderer) URL() string {
+	return w.request.URL()
+}
+
 // StreamID returns the unique ID for the stream being rendered
 func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()

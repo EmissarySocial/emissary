@@ -1,8 +1,8 @@
-<div id="modal" _="on closeModal add .closing then wait for animationend then remove me">
+<div id="modal">
 	<div class="modal-underlay" _="on click trigger closeModal"></div>
 	<div class="modal-content">
 		<h3>{{.Label}}</h3>
-		<form hx-post="/{{.Token}}/transition/{{.Transition}}" hx-swap="beforeend">
+		<form hx-post="{{.URL}}" hx-swap="beforeend">
 			{{ .RenderForm }}
 			<input type="submit" class="button primary" value="Save Changes">
 			<span class="button"_="on click trigger closeModal">Cancel</span>

@@ -20,6 +20,10 @@ func NewHTTPRequest(original *http.Request) *HTTPRequest {
 	return &HTTPRequest{request: original}
 }
 
+func (r *HTTPRequest) URL() string {
+	return r.request.RequestURI
+}
+
 // Context returns the golang context for this http request
 func (r *HTTPRequest) Context() context.Context {
 	return r.request.Context()

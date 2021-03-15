@@ -60,10 +60,10 @@ func PostNewStreamFromTemplate(factoryManager *server.FactoryManager) echo.Handl
 		factory, stream, err := newStream(ctx, factoryManager)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStream", "Error Loading Stream"))
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostNewStreamFromTemplate", "Error Loading Stream"))
 		}
 
-		return derp.Report(postStream(ctx, factory, stream))
+		return derp.Report(doTransition(ctx, factory, stream, "create"))
 	}
 }
 
@@ -97,7 +97,9 @@ func PostTransition(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStream", "Error Loading Stream"))
 		}
 
-		return derp.Report(postStream(ctx, factory, stream))
+		transition := ctx.Param("transition")
+
+		return derp.Report(doTransition(ctx, factory, stream, transition))
 	}
 }
 
@@ -157,7 +159,7 @@ func loadStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domai
 	factory, err := factoryManager.ByContext(ctx)
 
 	if err != nil {
-		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Unrecognized domain"))
+		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.loadStream", "Unrecognized domain"))
 	}
 
 	// Get the stream service
@@ -168,7 +170,9 @@ func loadStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domai
 	stream, err := streamService.LoadByToken(token)
 
 	if err != nil {
-		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
+		if derp.NotFound(err) == false {
+			return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.loadStream", "Error loading stream"))
+		}
 	}
 
 	return factory, stream, nil
@@ -221,8 +225,8 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 	return ctx.HTML(200, result.String())
 }
 
-// postStream updates a stream with new data from a Form post and executes the requested transition.
-func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {
+// doTransition updates a stream with new data from a Form post and executes the requested transition.
+func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transition string) error {
 
 	// Parse and Bind form data first, so that we don't have to hit the database in cases where there's an error.
 	form := make(map[string]interface{})
@@ -234,13 +238,13 @@ func postStream(ctx echo.Context, factory *domain.Factory, stream *model.Stream)
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transition, err := streamService.DoTransition(stream, ctx.Param("transition"), form)
+	transitionResult, err := streamService.DoTransition(stream, transition, form)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
 	}
 
-	ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+stream.Token+`?view=`+transition.NextState+`"}}`)
+	ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+stream.Token+`?view=`+transitionResult.NextState+`"}}`)
 
 	return ctx.NoContent(200)
 

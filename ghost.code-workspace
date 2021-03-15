@@ -34,9 +34,6 @@
 			"path": "../digit"
 		},
 		{
-			"path": "../html"
-		},
-		{
 			"path": "../list"
 		},
 		{
@@ -71,6 +68,15 @@
 		},
 		{
 			"path": "../_hyperscript"
+		},
+		{
+			"path": "../htmx-ws-reconnect"
+		},
+		{
+			"path": "../html"
+		},
+		{
+			"path": "../htmlconv"
 		}
 	],
 	"settings": {}

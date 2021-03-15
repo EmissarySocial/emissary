@@ -61,7 +61,7 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "ghost.service.Stream", "Error saving Stream", stream, note)
 	}
 
-	service.streamUpdateChannel <- *stream
+	// service.streamUpdateChannel <- *stream
 
 	return nil
 }
