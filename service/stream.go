@@ -90,7 +90,7 @@ func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, 
 func (service Stream) ListTopFolders() (data.Iterator, error) {
 	return service.List(
 		expression.
-			Equal("template", "folder").
+			Equal("templateId", "folder").
 			AndEqual("parentId", ZeroObjectID()).
 			AndEqual("journal.deleteDate", 0))
 }
