@@ -43,12 +43,17 @@
 <script src="https://unpkg.com/htmx.org/dist/ext/preload.js"></script>
 
 <script type="text/hyperscript">
+
 	on closeModal(event) 
 		add .closing to #modal 
-		if event.detail.nextPage is not null then 
-			set window.location to event.detail.nextPage 
-		end 
-		wait for animationend 
+
+		if (not (no event.detail.nextPage))
+			set window.location to event.detail.nextPage
+		end
+
+		wait for animationend
 		remove #modal
+	end
+
 </script>
 </html>
