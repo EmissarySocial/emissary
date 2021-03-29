@@ -103,6 +103,35 @@ func PostTransition(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	}
 }
 
+// GetLayout returns an echo.HandlerFunc that renders a specific site-wide layout with the given stream
+func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+		var result bytes.Buffer
+
+		factory, stream, err := loadStream(ctx, factoryManager)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.GetStream", "Error loading stream"))
+		}
+
+		layoutService := factory.Layout()
+		request := domain.NewHTTPRequest(ctx.Request())
+		renderer := factory.StreamRenderer(stream, request)
+
+		layoutFile := ctx.Param("file")
+
+		// Render full page (stream only).
+		template := layoutService.Template
+
+		if err := template.ExecuteTemplate(&result, layoutFile, renderer); err != nil {
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
+		}
+
+		return ctx.HTML(200, result.String())
+	}
+}
+
 ///////////////////////////////////
 // UTILITY FUNCTIONS
 

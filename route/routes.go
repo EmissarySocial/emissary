@@ -45,6 +45,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/:stream/new", handler.GetTemplates(factoryManager))
 	e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
 	e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
+	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
 
 	return e
 }

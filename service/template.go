@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+	"html/template"
 	"sync"
 
 	"github.com/benpate/data/expression"
@@ -14,17 +16,23 @@ type Template struct {
 	templates map[string]*model.Template // map of all templates available within this domain
 	mutex     sync.RWMutex               // Mutext that locks access to the templates structure
 
-	sources       []TemplateSource // array of templateSource objects
-	layoutService *Layout
+	sources           []TemplateSource // array of templateSource objects
+	layoutService     *Layout
+	layoutUpdates     chan *template.Template
+	templateUpdateIn  chan model.Template
+	templateUpdateOut chan model.Template
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(paths []string, layoutService *Layout) *Template {
+func NewTemplate(paths []string, layoutService *Layout, layoutUpdates chan *template.Template, templateUpdateChannel chan model.Template) *Template {
 
 	result := &Template{
-		sources:       make([]TemplateSource, 0),
-		templates:     make(map[string]*model.Template),
-		layoutService: layoutService,
+		sources:           make([]TemplateSource, 0),
+		templates:         make(map[string]*model.Template),
+		layoutService:     layoutService,
+		layoutUpdates:     layoutUpdates,
+		templateUpdateIn:  make(chan model.Template),
+		templateUpdateOut: templateUpdateChannel,
 	}
 
 	for _, path := range paths {
@@ -34,7 +42,32 @@ func NewTemplate(paths []string, layoutService *Layout) *Template {
 		}
 	}
 
+	go result.start()
+
 	return result
+}
+
+// Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
+// news that a template has been updated.
+func (service *Template) start() {
+
+	for {
+
+		select {
+
+		case <-service.layoutUpdates:
+			fmt.Println("template.start: received update to layout.")
+			for _, template := range service.templates {
+				fmt.Println("template.start: sending update to template: " + template.Label)
+				service.templateUpdateOut <- *template
+			}
+
+		case template := <-service.templateUpdateIn:
+			fmt.Println("template.start: received update to template: " + template.Label)
+			service.Save(&template)
+			service.templateUpdateOut <- template
+		}
+	}
 }
 
 // AddSource adds a new TemplateSource into this service, and loads all of its templates into the memory cache.
@@ -62,7 +95,7 @@ func (service *Template) AddSource(source TemplateSource) error {
 	}
 
 	// Watch for changes to this TemplateSource
-	// source.Watch(service.templateUpdates)
+	source.Watch(service.templateUpdateIn)
 
 	return nil
 }
@@ -120,78 +153,3 @@ func (service *Template) Save(template *model.Template) error {
 
 	return nil
 }
-
-/*/ LoadCompiled returns the compiled template for the requested arguments.
-func (service *Template) LoadCompiled(templateID string, stateName string, viewName string) (*model.Template, *template.Template, error) {
-
-	template, err := service.Load(templateID)
-
-	if err != nil {
-		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error loading template")
-	}
-
-	state, err := template.View(stateName, viewName)
-
-	if err != nil {
-		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error loading state")
-	}
-
-	view, err := state.Compiled()
-
-	if err != nil {
-		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error getting compiled template")
-	}
-
-	clone, err := view.Clone()
-
-	if err != nil {
-		return nil, nil, derp.Wrap(err, "ghost.service.Template.LoadCompiled", "Error cloning template")
-	}
-
-	return template, clone, nil
-}
-
-// Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
-// news that a template has been updated.
-func (service *Template) start() {
-
-	for {
-
-		select {
-
-		case layout := <-service.layoutUpdates:
-			service.updateLayout(layout)
-
-		case template := <-service.templateUpdates:
-			service.Save(&template)
-			service.updateTemplate(&template)
-		}
-	}
-}
-
-func (service *Template) updateLayout(layout *template.Template) {
-
-	fmt.Println(".updateLayout")
-	for _, template := range service.templates {
-		service.updateTemplate(template)
-	}
-}
-
-func (service *Template) updateTemplate(template *model.Template) {
-
-	fmt.Println(".updateTemplate: " + template.Label)
-
-	iterator, err := service.streamService.ListByTemplate(template.TemplateID)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", template))
-		return
-	}
-
-	var stream model.Stream
-
-	for iterator.Next(&stream) {
-		service.streamUpdates <- stream
-	}
-}
-*/

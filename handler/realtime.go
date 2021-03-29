@@ -68,6 +68,8 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Transfer-Encoding", "chunked")
 
+		fmt.Println("handler.realtime: connected new client to token:" + token + ", view:" + view)
+
 		// TODO: Add a timer that fires (once a minute?) to verify that the connection is still open
 		// go func(){}()
 
@@ -86,11 +88,13 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 			// Write to the ResponseWriter, `w`.
 			// eventName := "EventName1"
-			// fmt.Fprintf(w, "event: update\n")
+			// fmt.Fprintf(w, "event: %s\n", stream.StreamID)
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 
 			// Flush the response.  This is only possible if the response supports streaming.
 			f.Flush()
+
+			fmt.Println("handler.ServerSentEvents: stream sent to client: " + client.Token)
 		}
 
 		// Done

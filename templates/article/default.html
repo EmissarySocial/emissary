@@ -1,34 +1,38 @@
-{{ $parent := .Parent ""}}
-<div>
-	<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}</a>
-</div>
+<div hx-sse="connect:/{{.Token}}/sse?view={{.ViewID}} swap:message">
 
-<h1 class="space-after">{{.Label}}</h1>
+	{{ $parent := .Parent ""}}
+	<div>
+		<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}.</a>
+	</div>
 
-<article class="space-after">
-	<div>{{.Description}}</div>
-</article>
+	<h1 class="space-after">{{.Label}}</h1>
 
-<div class="space-after">
-	<span 
-		preload
-		hx-get="/{{.Token}}/transition/update" 
-		hx-target="body" 
-		hx-swap="beforeend" 
-		hx-push-url="false" 
-		class="button primary">Update Stream</span>
+	<article class="space-after">
+		<div>{{.Description}}</div>
+	</article>
 
-	<span 
-		preload
-		hx-get="/{{.Token}}/new" 
-		hx-target="body" 
-		hx-swap="beforeend" 
-		hx-push-url="false" 
-		class="button">+ Add Stream</span>
-</div>
+	<div class="space-after">
+		<span 
+			preload
+			hx-get="/{{.Token}}/transition/update" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="button primary">Update Stream</span>
 
-<div class="space-after">
-	{{ range .Children "" }}
-		<div class="link" hx-get="/{{.Token}}">{{.Label}}</div>
-	{{ end }}
+		<span 
+			preload
+			hx-get="/{{.Token}}/new" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="button">+ Add Stream</span>
+	</div>
+
+	<div class="space-after">
+		{{ range .Children "" }}
+			<div class="link" hx-get="/{{.Token}}">{{.Label}}</div>
+		{{ end }}
+	</div>
+
 </div>

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/benpate/data"
 	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
@@ -9,36 +11,51 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection          data.Collection
-	templateService     *Template
-	formLibrary         form.Library
-	streamUpdateChannel chan model.Stream
+	collection            data.Collection
+	templateService       *Template
+	formLibrary           form.Library
+	templateUpdateChannel chan model.Template
+	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, formLibrary form.Library, updates chan model.Stream) *Stream {
-	return &Stream{
-		collection:          collection,
-		templateService:     templateService,
-		formLibrary:         formLibrary,
-		streamUpdateChannel: updates,
+func NewStream(collection data.Collection, templateService *Template, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
+	result := &Stream{
+		collection:            collection,
+		templateService:       templateService,
+		formLibrary:           formLibrary,
+		templateUpdateChannel: templateUpdateChannel,
+		streamUpdateChannel:   streamUpdateChannel,
 	}
+
+	go result.start()
+
+	return result
 }
 
 // New creates a newly initialized Stream that is ready to use
-func (service Stream) New() *model.Stream {
+func (service *Stream) New() *model.Stream {
 	result := model.NewStream()
 	return &result
 }
 
+// start begins the background watchers used by the Stream Service
+func (service *Stream) start() {
+	for {
+		template := <-service.templateUpdateChannel
+		fmt.Println("streamService.start: received update to template: " + template.Label)
+		service.templateService.Save(&template)
+		service.updateStreamsByTemplate(&template)
+	}
+}
+
 // List returns an iterator containing all of the Streams who match the provided criteria
-func (service Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *Stream) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
@@ -61,7 +78,11 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "ghost.service.Stream", "Error saving Stream", stream, note)
 	}
 
-	// service.streamUpdateChannel <- *stream
+	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
+	go func() {
+		fmt.Println("streamService.Save: sending update update to stream: " + stream.Label)
+		service.streamUpdateChannel <- *stream
+	}()
 
 	return nil
 }
@@ -99,7 +120,7 @@ func (service Stream) ListTopFolders() (data.Iterator, error) {
 func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(
 		expression.
-			Equal("template", template).
+			Equal("templateId", template).
 			AndEqual("journal.deleteDate", 0))
 }
 
@@ -148,8 +169,6 @@ func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.
 func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
-
-	spew.Dump(templateID, parentToken)
 
 	// Exception for putting a folder on the top level...
 	if parentToken == "top" {
@@ -326,4 +345,24 @@ func (service Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
 	}
 
 	return template.Schema, nil
+}
+
+// updateStreamsByTemplate updates every stream that uses a particular template.
+func (service *Stream) updateStreamsByTemplate(template *model.Template) {
+
+	iterator, err := service.ListByTemplate(template.TemplateID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", template))
+		return
+	}
+
+	var stream model.Stream
+
+	for iterator.Next(&stream) {
+		fmt.Println("streamService.updateStreamsByTemplate: Sending stream: " + stream.Label)
+		service.streamUpdateChannel <- stream
+	}
+
+	fmt.Println("streamService.updateStreamsByTemplate: End of Iterator.")
 }

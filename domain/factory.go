@@ -87,6 +87,7 @@ func (factory *Factory) Stream() *service.Stream {
 			factory.collection(CollectionStream),
 			factory.Template(),
 			factory.FormLibrary(),
+			factory.TemplateUpdateChannel(),
 			factory.StreamUpdateChannel(),
 		)
 	}
@@ -107,6 +108,8 @@ func (factory *Factory) Template() *service.Template {
 		factory.templateService = service.NewTemplate(
 			factory.domain.TemplatePaths,
 			factory.Layout(),
+			factory.LayoutUpdateChannel(),
+			factory.TemplateUpdateChannel(),
 		)
 	}
 
@@ -160,12 +163,14 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 
 			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
 				factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
+				fmt.Println("factory.StreamUpdateChannel: created mongodb stream watcher.")
 			}
 		}
 
 		if factory.streamUpdateChannel == nil {
 			// Fall through means failure.  Just return an "empty" channel for now
 			factory.streamUpdateChannel = make(chan model.Stream)
+			fmt.Println("factory.StreamUpdateChannel: created regular channel.")
 		}
 	}
 

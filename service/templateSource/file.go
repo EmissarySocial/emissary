@@ -154,7 +154,7 @@ func (fs *File) appendJSON(template *model.Template, data []byte) error {
 /// REAL TIME UPDATES
 
 // Watch populates a channel of model.Template objects every time a template is updated.
-func (fs *File) Watch(updates chan model.Template) error {
+func (fs *File) Watch(updateChannel chan model.Template) error {
 
 	fmt.Println("templateSource.Watch")
 	watcher, err := fsnotify.NewWatcher()
@@ -199,7 +199,7 @@ func (fs *File) Watch(updates chan model.Template) error {
 					}
 
 					fmt.Println("templateSource.Watch.sendingTemplate: " + template.Label)
-					updates <- *template
+					updateChannel <- *template
 				}
 
 			case err, ok := <-watcher.Errors:

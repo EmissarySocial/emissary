@@ -41,6 +41,11 @@ func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
+// ViewID returns the view identifier being rendered
+func (w Renderer) ViewID() string {
+	return w.view
+}
+
 // Token returns the unique URL token for the stream being rendered
 func (w Renderer) Token() string {
 	return w.stream.Token
