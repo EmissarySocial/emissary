@@ -59,6 +59,9 @@
 	animation-name: fadeOut;
 	animation-duration:150ms;
 	animation-timing-function: ease;
+
+	/* Hide after animation */
+	opacity:0;
 }
 
 #modal.closing > .modal-content {

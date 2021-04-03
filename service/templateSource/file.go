@@ -43,8 +43,12 @@ func (fs *File) List() ([]string, error) {
 	for _, fileInfo := range list {
 
 		if fileInfo.IsDir() {
-			result[counter] = fileInfo.Name()
-			counter = counter + 1
+			name := fileInfo.Name()
+			if (name != "layout") && (name != "static") {
+				fmt.Println(name)
+				result[counter] = fileInfo.Name()
+				counter = counter + 1
+			}
 		}
 	}
 
@@ -137,6 +141,7 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 	return result, nil
 }
 
+/*
 func (fs *File) appendJSON(template *model.Template, data []byte) error {
 
 	var temp model.Template
@@ -149,6 +154,7 @@ func (fs *File) appendJSON(template *model.Template, data []byte) error {
 
 	return nil
 }
+*/
 
 /////////////////////////////////////
 /// REAL TIME UPDATES

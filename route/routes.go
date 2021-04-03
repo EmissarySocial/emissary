@@ -23,7 +23,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factoryManager))
 
-	e.Static("/r", "static")
+	e.Static("/static", "templates/static")
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factoryManager))

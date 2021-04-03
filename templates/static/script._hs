@@ -1,0 +1,19 @@
+	eventsource StreamServer /sse
+		on message
+			for el in <[streamid="${it}"]/>
+				log el
+				send stream:update to it
+			end
+		end
+	end
+
+	on htmx:pushedIntoHistory or htmx:historyRestore
+		log window.location
+	end
+
+	on closeModal(event)
+		add .closing to #modal
+		set window.location to event.detail.nextPage unless no event.detail.nextPage
+		settle
+		remove #modal
+	end
