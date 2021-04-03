@@ -11,8 +11,12 @@
 				"kind": "layout-vertical",
 				"children": [{
 					"kind": "text",
-					"label": "Name",
+					"label": "Title",
 					"path": "label"
+				}, {
+					"kind": "text",
+					"label": "Comment",
+					"path": "data.body"
 				}]
 			}
 		}]
@@ -42,23 +46,8 @@
 				"children": [
 					{
 						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},
-					{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					},
-					{
-						"kind": "text",
-						"label": "Custom Data: Title",
-						"path": "data.title"
-					},
-					{
-						"kind": "textarea",
-						"label": "Custom Data: Body",
-						"path": "data.description"
+						"label": "Comment",
+						"path": "data.body"
 					}
 				]
 			}

@@ -199,7 +199,7 @@ func loadStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domai
 	stream, err := streamService.LoadByToken(token)
 
 	if err != nil {
-		if derp.NotFound(err) == false {
+		if !derp.NotFound(err) {
 			return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.loadStream", "Error loading stream"))
 		}
 	}

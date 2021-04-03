@@ -26,6 +26,7 @@ type Stream struct {
 	AuthorURL       string                 `json:"authorURL"       bson:"authorURL"`           // URL address of the person who created this stream
 	Tags            []string               `json:"tags"            bson:"tags"`                // Organizational Tags
 	Data            map[string]interface{} `json:"data"            bson:"data"`                // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	BubbleUpdates   bool                   `json:"bubbleUpdates"   bson:"bubbleUpdates"`       // If TRUE then updates are sent to the PARENT, instead of THIS stream.  This *should* be controlled by the Template.
 	Source          StreamSourceType       `json:"source"          bson:"source,omitempty"`    // Identifies the remote source
 	SourceID        primitive.ObjectID     `json:"sourceId"        bson:"sourceId,omitempty"`  // Internal identifier of the source configuration that generated this stream
 	SourceURL       string                 `json:"sourceURL"       bson:"sourceURL,omitempty"` // URL of the original document published by the source server
@@ -44,7 +45,7 @@ func NewStream() Stream {
 		StreamID:   streamID,
 		Token:      streamID.Hex(),
 		StateID:    "new",
-		GroupRoles: make(map[string][]string, 0),
+		GroupRoles: make(map[string][]string),
 		Tags:       []string{},
 		Data:       map[string]interface{}{},
 	}

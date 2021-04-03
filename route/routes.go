@@ -15,6 +15,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.Static("/htmx", "../htmx/src")
+	e.Static("/hyperscript", "../_hyperscript/src/lib")
 
 	e.GET("/favicon.ico", echo.NotFoundHandler)
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryManager))

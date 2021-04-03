@@ -1,0 +1,18 @@
+{
+	"label": "Comment",
+	"description": "",
+	"containedBy": ["article"],
+	"schema": {
+		"title": "Comment",
+		"type": "object",
+		"properties": {
+			"body": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			}
+		},
+		"required": [
+			"body"
+		]
+	}
+}

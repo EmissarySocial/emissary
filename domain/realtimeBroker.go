@@ -48,6 +48,8 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 // It is intended to be run in its own goroutine.
 func (b *RealtimeBroker) Listen(factory *Factory) {
 
+	streamService := factory.Stream()
+
 	for {
 
 		// Block until we receive from one of the
@@ -80,18 +82,44 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 		case stream := <-b.streamUpdates:
 
-			for _, client := range b.streams[stream.Token] {
+			// If this stream bubbles updates, then search up the stream hierarchy
+			// until we find a stream that doesn't
+			for !stream.BubbleUpdates {
 
-				renderer := factory.StreamRenderer(&stream, client.HTTPRequest).SetView(client.View)
-				html, err := renderer.Render()
-
-				if err != nil {
-					derp.Report(derp.Wrap(err, "ghost.service.realtime.Listen", "Error rendering stream"))
-					return
+				// Gods forbid we're at the top of the tree.  If so, there's nowhere to go.
+				if !stream.HasParent() {
+					break
 				}
 
-				client.WriteChannel <- string(html)
+				parent, err := streamService.LoadParent(&stream)
+
+				if err != nil {
+					derp.Report(derp.Wrap(err, "ghost.domain.RealtimeBroker", "Error loading parent stream from stream.BubbleUpdates"))
+					break
+				}
+				stream = *parent
+			}
+
+			// Send an update to every client that has subscribed to this stream
+			b.notify(&stream)
+
+			// Try to send updates to every client that has subscribed to this stream's parent
+			if stream.HasParent() {
+				parent, err := streamService.LoadParent(&stream)
+
+				if err != nil {
+					derp.Report(derp.Wrap(err, "ghost.domain.Realtimebroker", "Error loading parent stream to update parent's subscribers."))
+				}
+
+				b.notify(parent)
 			}
 		}
+	}
+}
+
+// notify sends updates for every client that is watching a given stream
+func (b *RealtimeBroker) notify(stream *model.Stream) {
+	for _, client := range b.streams[stream.Token] {
+		client.WriteChannel <- stream.StreamID
 	}
 }

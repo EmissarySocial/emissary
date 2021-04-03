@@ -1,4 +1,4 @@
-<div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update">
+<div hx-get="/{{.Token}}?view=default" hx-trigger="stream:update" stream="{{.StreamID}}">
 
 	{{ $parent := .Parent ""}}
 	<div>
@@ -30,8 +30,8 @@
 	</div>
 
 	<div class="space-after">
-		{{ range .Children "list-item" }}
-			{{.Render}}
+		{{ range .Children "" }}
+			<div class="link" hx-get="/{{.Token}}">{{.Label}}</div>
 		{{ end }}
 	</div>
 

@@ -2,15 +2,15 @@
 <html>
 <head>
 	<title>GH0ST</title>
-	<link rel="stylesheet" href="/r/reset.css">
-	<link rel="stylesheet" href="/r/layout.css">
-	<link rel="stylesheet" href="/r/colors.css">
-	<link rel="stylesheet" href="/r/tables.css">	
-	<link rel="stylesheet" href="/r/forms.css">	
-	<link rel="stylesheet" href="/r/modal.css">
-	<link rel="stylesheet" href="/r/animations.css">
-	<link rel="stylesheet" href="/r/accessibility.css">
-	<link rel="stylesheet" href="/r/utilities.css">
+	<link rel="stylesheet" href="/static/reset.css">
+	<link rel="stylesheet" href="/static/layout.css">
+	<link rel="stylesheet" href="/static/colors.css">
+	<link rel="stylesheet" href="/static/tables.css">	
+	<link rel="stylesheet" href="/static/forms.css">	
+	<link rel="stylesheet" href="/static/modal.css">
+	<link rel="stylesheet" href="/static/animations.css">
+	<link rel="stylesheet" href="/static/accessibility.css">
+	<link rel="stylesheet" href="/static/utilities.css">
 </head>
 
 <body hx-ext="preload">
@@ -38,22 +38,36 @@
 
 </body>
 
-<script src="https://unpkg.com/htmx.org"></script>
-<script src="https://unpkg.com/hyperscript.org"></script>
-<script src="https://unpkg.com/htmx.org/dist/ext/preload.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script>
+<script src="/hyperscript/core.js"></script>
+<script src="/hyperscript/web.js"></script>
+<script src="/hyperscript/eventsource.js"></script>
+
+<script>
+	function query(value) {
+		return document.querySelectorAll(value)
+	}
+</script>
 
 <script type="text/hyperscript">
-
-	on closeModal(event) 
-		add .closing to #modal 
-
-		if (not (no event.detail.nextPage))
-			set window.location to event.detail.nextPage
+	eventsource StreamServer from /{{.Token}}/sse
+		on message
+			for el in query("#" + it)
+				log el
+				send stream:update to it
+			end
 		end
-
-		wait for animationend
-		remove #modal
 	end
 
+	on htmx:pushedIntoHistory or htmx:historyRestore
+		call StreamServer.open(window.location.pathname + "/sse")
+	end
+
+	on closeModal(event)
+		add .closing to #modal
+		set window.location to event.detail.nextPage unless no event.detail.nextPage
+		settle
+		remove #modal
+	end
 </script>
 </html>

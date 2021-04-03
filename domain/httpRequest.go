@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/benpate/ghost/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,7 +11,6 @@ import (
 // to construct an accurate "Vary" header for cached responses.
 type HTTPRequest struct {
 	request *http.Request
-	used    map[string]bool
 }
 
 // NewHTTPRequest wraps an http.Request object
@@ -47,13 +45,4 @@ func (r *HTTPRequest) Groups() []string {
 // Partial returns TRUE if this is a request for a partial page (HTML fragment), and not a complete HTML page.
 func (r *HTTPRequest) Partial() bool {
 	return (r.request.Header.Get("HX-Request") != "")
-}
-
-func (r *HTTPRequest) objectID(value string) primitive.ObjectID {
-
-	if result, err := primitive.ObjectIDFromHex(value); err == nil {
-		return result
-	}
-
-	return service.ZeroObjectID()
 }

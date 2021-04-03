@@ -13,17 +13,18 @@ import (
 
 // Template represents an HTML template to be used for generating an HTML page.
 type Template struct {
-	TemplateID  string                            `json:"templateId"  bson:"templateId"`  // Internal name/token other objects (like streams) will use to reference this Template.
-	Label       string                            `json:"label"       bson:"label"`       // Human-readable label used in management UI.
-	Description string                            `json:"description" bson:"description"` // Human-readable long-description text used in management UI.
-	Category    string                            `json:"category"    bson:"category"`    // Human-readable category (grouping) used in management UI.
-	IconURL     string                            `json:"iconUrl"     bson:"iconUrl"`     // Icon image used in management UI.
-	ContainedBy []string                          `json:"containedBy" bson:"containedBy"` // Slice of Templates that can contain Streams that use this Template.
-	URL         string                            `json:"url"         bson:"url"`         // URL where this template is published
-	Schema      *schema.Schema                    `json:"schema"      bson:"schema"`      // JSON Schema that describes the data required to populate this Template.
-	States      []State                           `json:"states"      bson:"states"`      // Map of States (by state.ID) that Streams of this Template can be in.
-	Roles       []Role                            `json:"roles"       bson:"roles"`       // List of custom roles defined by this template.
-	Views       map[string]*htmlTemplate.Template `json:"-" bson:"-"`                     // In-Memory data structure for all views in this Template
+	TemplateID    string                            `json:"templateId"    bson:"templateId"`    // Internal name/token other objects (like streams) will use to reference this Template.
+	Label         string                            `json:"label"         bson:"label"`         // Human-readable label used in management UI.
+	Description   string                            `json:"description"   bson:"description"`   // Human-readable long-description text used in management UI.
+	Category      string                            `json:"category"      bson:"category"`      // Human-readable category (grouping) used in management UI.
+	IconURL       string                            `json:"iconUrl"       bson:"iconUrl"`       // Icon image used in management UI.
+	ContainedBy   []string                          `json:"containedBy"   bson:"containedBy"`   // Slice of Templates that can contain Streams that use this Template.
+	URL           string                            `json:"url"           bson:"url"`           // URL where this template is published
+	BubbleUpdates bool                              `json:"bubbleUpdates" bson:"bubbleUpdates"` // If TRUE, then updates are registered on the PARENT stream instead of THIS stream.
+	Schema        *schema.Schema                    `json:"schema"        bson:"schema"`        // JSON Schema that describes the data required to populate this Template.
+	States        []State                           `json:"states"        bson:"states"`        // Map of States (by state.ID) that Streams of this Template can be in.
+	Roles         []Role                            `json:"roles"         bson:"roles"`         // List of custom roles defined by this template.
+	Views         map[string]*htmlTemplate.Template `json:"-"             bson:"-"`             // In-Memory data structure for all views in this Template
 }
 
 // NewTemplate creates a new, fully initialized Template object
@@ -65,6 +66,7 @@ func (template *Template) Populate(from *Template) {
 	template.Category = choose.String(template.Category, from.Category)
 	template.IconURL = choose.String(template.IconURL, from.IconURL)
 	template.URL = choose.String(template.URL, from.URL)
+	template.BubbleUpdates = template.BubbleUpdates || from.BubbleUpdates
 
 	if len(from.ContainedBy) > 0 {
 		template.ContainedBy = append(template.ContainedBy, from.ContainedBy...)
@@ -114,34 +116,3 @@ func (template Template) AllViewNames() []string {
 
 	return result
 }
-
-/*
-// Transition returns the Transition for a particular State/Transition combination.
-func (template Template) Transition(stateID string, transitionID string) (*Transition, error) {
-
-	if state, ok := template.State(stateID); ok {
-
-		if transition, ok := state.Transition(transitionID); ok {
-			return &transition, nil
-		}
-	}
-
-	return nil, derp.New(404, "ghost.model.template.Transition", "Unrecognized StateID", stateID, transitionID)
-}
-
-// Form returns the Form for a particular State/Transition combination.
-func (template Template) Form(stateID string, transitionID string) (*form.Form, error) {
-
-	transition, err := template.Transition(stateID, transitionID)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.model.template.Form", "Unable to locate transition", stateID, transitionID)
-	}
-
-	if form, ok := template.Forms[transition.Form]; ok {
-		return &form, nil
-	}
-
-	return nil, derp.New(404, "ghost.model.template.Form", "Undefined form", transition.Form)
-}
-*/

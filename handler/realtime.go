@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/domain"
@@ -28,6 +27,7 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		r := ctx.Request()
 		w := ctx.Response().Writer
+		done := ctx.Request().Context().Done()
 
 		// Make sure that the writer supports flushing.
 		f, ok := w.(http.Flusher)
@@ -50,17 +50,10 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// receive updates
 		b.AddClient <- client
 
-		// Listen to the closing of the http connection via the CloseNotifier
-		if closeNotifier, ok := w.(http.CloseNotifier); ok {
-			notify := closeNotifier.CloseNotify()
-			go func() {
-				<-notify
-				// Remove this client from the map of attached clients
-				// when `EventHandler` exits.
-				b.RemoveClient <- client
-				log.Println("HTTP connection just closed.")
-			}()
-		}
+		// Guarantee that we remove this client from the broker before we leave.
+		defer func() {
+			b.RemoveClient <- client
+		}()
 
 		// Set the headers related to event streaming.
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -70,38 +63,33 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		fmt.Println("handler.realtime: connected new client to token:" + token + ", view:" + view)
 
-		// TODO: Add a timer that fires (once a minute?) to verify that the connection is still open
-		// go func(){}()
-
 		// Don't close the connection, instead loop endlessly.
 		for {
 
+			select {
+			case <-done:
+				log.Println("HTTP connection closed.")
+				return nil
+
 			// Read from our messageChan.
-			msg, open := <-client.WriteChannel
+			case streamID, open := <-client.WriteChannel:
 
-			if !open {
 				// If our messageChan was closed, this means that the client has disconnected.
-				break
+				if !open {
+					return nil
+				}
+
+				// Write to the ResponseWriter, `w`.
+				// eventName := "EventName1"
+				// fmt.Fprintf(w, "event: %s\n", stream.StreamID)
+				fmt.Fprintf(w, "data: %s\n\n", streamID.Hex())
+
+				// Flush the response.  This is only possible if the response supports streaming.
+				f.Flush()
+
+				fmt.Println("handler.ServerSentEvents: stream sent to client: " + client.Token)
 			}
-
-			msg = strings.Replace(msg, "\n", " ", -1)
-
-			// Write to the ResponseWriter, `w`.
-			// eventName := "EventName1"
-			// fmt.Fprintf(w, "event: %s\n", stream.StreamID)
-			fmt.Fprintf(w, "data: %s\n\n", msg)
-
-			// Flush the response.  This is only possible if the response supports streaming.
-			f.Flush()
-
-			fmt.Println("handler.ServerSentEvents: stream sent to client: " + client.Token)
 		}
-
-		// Done
-		// b.RemoveClient <- client
-		log.Println("Finished HTTP request at ", r.URL.Path)
-
-		return nil
 	}
 }
 

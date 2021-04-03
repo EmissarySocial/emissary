@@ -247,7 +247,7 @@ func (w Renderer) CanView(viewName string) bool {
 
 	view, ok := state.View(viewName)
 
-	if ok == false {
+	if !ok {
 		return false
 	}
 
@@ -272,7 +272,7 @@ func (w Renderer) CanTransition(stream *model.Stream, transitionID string) bool 
 
 	transition, ok := state.Transition(transitionID)
 
-	if ok == false {
+	if !ok {
 		return false
 	}
 
