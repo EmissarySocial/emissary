@@ -2,9 +2,9 @@ package service
 
 import (
 	"github.com/benpate/data"
-	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -30,12 +30,12 @@ func (service StreamSource) New() *model.StreamSource {
 }
 
 // List returns an iterator containing all of the StreamSources who match the provided criteria
-func (service StreamSource) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service StreamSource) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an StreamSource from the database
-func (service StreamSource) Load(criteria expression.Expression) (*model.StreamSource, error) {
+func (service StreamSource) Load(criteria exp.Expression) (*model.StreamSource, error) {
 
 	account := service.New()
 
@@ -74,12 +74,12 @@ func (service StreamSource) NewObject() data.Object {
 }
 
 // ListObjects wraps the `List` method as a generic Object
-func (service StreamSource) ListObjects(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service StreamSource) ListObjects(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
 
 // LoadObject wraps the `Load` method as a generic Object
-func (service StreamSource) LoadObject(criteria expression.Expression) (data.Object, error) {
+func (service StreamSource) LoadObject(criteria exp.Expression) (data.Object, error) {
 	return service.Load(criteria)
 }
 
@@ -117,7 +117,7 @@ func (service StreamSource) Close() {
 // ListByMethod identifies all streamSources with a specific "Method" field
 func (service StreamSource) ListByMethod(method model.StreamSourceMethod) (data.Iterator, error) {
 
-	criteria := expression.Equal("method", method)
+	criteria := exp.Equal("method", method)
 
 	return service.List(criteria)
 }

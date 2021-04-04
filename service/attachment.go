@@ -2,9 +2,9 @@ package service
 
 import (
 	"github.com/benpate/data"
-	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,12 +29,12 @@ func (service Attachment) New() *model.Attachment {
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
-func (service Attachment) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Attachment from the database
-func (service Attachment) Load(criteria expression.Expression) (*model.Attachment, error) {
+func (service Attachment) Load(criteria exp.Expression) (*model.Attachment, error) {
 
 	attachment := service.New()
 

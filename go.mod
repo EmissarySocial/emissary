@@ -6,14 +6,18 @@ require (
 	github.com/aws/aws-sdk-go v1.36.16 // indirect
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/choose v0.1.1
-	github.com/benpate/data v0.10.2
+	github.com/benpate/compare v0.0.2
+	github.com/benpate/data v0.11.0
+	github.com/benpate/data-mock v0.0.1
+	github.com/benpate/data-mongo v0.0.1
 	github.com/benpate/derp v0.21.0
+	github.com/benpate/exp v0.0.2
 	github.com/benpate/form v0.3.1
 	github.com/benpate/list v0.4.0
 	github.com/benpate/path v0.2.0
 	github.com/benpate/schema v0.9.3
 	github.com/benpate/slice v0.0.2
-	github.com/benpate/steranko v0.2.1
+	github.com/benpate/steranko v0.2.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/golang/snappy v0.0.2 // indirect
@@ -28,7 +32,6 @@ require (
 	github.com/tdewolff/parse/v2 v2.5.7 // indirect
 	github.com/tidwall/pretty v1.0.2 // indirect
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
 	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect

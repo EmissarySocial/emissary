@@ -3,9 +3,9 @@ package service
 import (
 	"time"
 
-	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/gorilla/feeds"
 )
@@ -26,9 +26,9 @@ func NewRSS(streamService *Stream) *RSS {
 // has a lot of incomplete data at the top level, so we're expecting the handler
 // that calls this to fill in the rest of the gaps before it passes the values back
 // to the requester.
-func (rss RSS) Feed(criteria ...expression.Expression) (*feeds.JSONFeed, error) {
+func (rss RSS) Feed(criteria ...exp.Expression) (*feeds.JSONFeed, error) {
 
-	filter := expression.And(criteria...)
+	filter := exp.And(criteria...)
 
 	streams, err := rss.streamService.List(filter, option.SortDesc("publishDate"))
 	stream := model.NewStream()

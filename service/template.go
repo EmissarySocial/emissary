@@ -5,8 +5,8 @@ import (
 	"html/template"
 	"sync"
 
-	"github.com/benpate/data/expression"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service/templatesource"
 )
@@ -101,7 +101,7 @@ func (service *Template) AddSource(source TemplateSource) error {
 }
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(criteria expression.Expression) []model.Template {
+func (service *Template) List(criteria exp.Expression) []model.Template {
 
 	result := []model.Template{}
 
@@ -116,7 +116,7 @@ func (service *Template) List(criteria expression.Expression) []model.Template {
 
 // ListByContainer returns all model.Templates that match the provided "containedBy" value
 func (service *Template) ListByContainer(containedBy string) []model.Template {
-	return service.List(expression.Contains("containedBy", containedBy))
+	return service.List(exp.Contains("containedBy", containedBy))
 }
 
 // Load retrieves an Template from the database

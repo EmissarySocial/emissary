@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,7 +15,7 @@ type ListBuilder struct {
 	request       *HTTPRequest
 	parentID      primitive.ObjectID
 	currentID     primitive.ObjectID
-	criteria      expression.Expression
+	criteria      exp.Expression
 	options       []option.Option
 	view          string
 }
@@ -40,19 +40,19 @@ func NewListBuilder(streamService *service.Stream, request *HTTPRequest, parentI
 
 // Top makes the builder target the top-level streams
 func (builder *ListBuilder) Top() *ListBuilder {
-	builder.criteria = expression.Equal("parentId", service.ZeroObjectID())
+	builder.criteria = exp.Equal("parentId", service.ZeroObjectID())
 	return builder
 }
 
 // Siblings makes the builder target other streams at the same level as the current
 func (builder *ListBuilder) Siblings() *ListBuilder {
-	builder.criteria = expression.Equal("parentId", builder.parentID)
+	builder.criteria = exp.Equal("parentId", builder.parentID)
 	return builder
 }
 
 // Children makes the builder target child-level streams below the current
 func (builder *ListBuilder) Children() *ListBuilder {
-	builder.criteria = expression.Equal("parentId", builder.currentID)
+	builder.criteria = exp.Equal("parentId", builder.currentID)
 	return builder
 }
 

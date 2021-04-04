@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/benpate/data/expression"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TestRss(t *testing.T) {
 
 	rss := factory.RSS()
 
-	feed, err := rss.Feed(expression.All())
+	feed, err := rss.Feed(exp.All())
 
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(feed.Items))

@@ -1,16 +1,16 @@
 package service
 
 import (
-	"github.com/benpate/data/compare"
-	"github.com/benpate/data/expression"
+	"github.com/benpate/compare"
+	"github.com/benpate/exp"
 	"github.com/benpate/path"
 )
 
 // matcherFunc returns an expression.MatcherFunc that matches any values
 // in a model object that are visible via the path.Getter interface.
-func matcherFunc(getter path.Getter) expression.MatcherFunc {
+func matcherFunc(getter path.Getter) exp.MatcherFunc {
 
-	return func(predicate expression.Predicate) bool {
+	return func(predicate exp.Predicate) bool {
 
 		p := path.New(predicate.Field)
 		field, err := getter.GetPath(p)

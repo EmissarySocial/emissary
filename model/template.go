@@ -4,7 +4,7 @@ import (
 	htmlTemplate "html/template"
 
 	"github.com/benpate/choose"
-	"github.com/benpate/data/compare"
+	"github.com/benpate/compare"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"

@@ -3,7 +3,7 @@ package domain
 import (
 	"testing"
 
-	"github.com/benpate/data/expression"
+	"github.com/benpate/exp"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +21,7 @@ func TestMockDB(t *testing.T) {
 	err := service.Save(stream, "New Stream")
 	assert.Nil(t, err)
 
-	result, err := service.Load(expression.Equal("token", "1-my-first-stream"))
+	result, err := service.Load(exp.Equal("token", "1-my-first-stream"))
 
 	assert.Nil(t, err)
 	spew.Dump(result)

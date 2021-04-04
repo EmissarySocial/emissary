@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	"github.com/benpate/data/mockdb"
+	"github.com/benpate/data-mock"
 )
 
 func getTestFactory() Factory {

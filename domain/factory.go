@@ -6,7 +6,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/data"
-	"github.com/benpate/data/mongodb"
+	"github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"

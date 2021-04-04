@@ -1,19 +1,19 @@
 package model
 
 import (
-	"github.com/benpate/data/expression"
+	"github.com/benpate/exp"
 	"github.com/benpate/form"
 )
 
 // Transition describes a connection from one state to another
 type Transition struct {
-	TransitionID string                `json:"transitionId" bson:"transitionId"`
-	Guard        expression.Expression `json:"guard" bson:"guard"` // Guard expression checks if this Transition is legal or not.
-	Form         form.Form             `json:"form"`               // ID of the User-facing Form to be filled out in order to complete this Transition
-	Roles        []string              `json:"roles"`              // List of Permissions required to apply this Transition.
-	Actions      []Action              `json:"actions"`            // Pipeline of Actions to apply when this Transition is called.
-	NextState    string                `json:"nextState"`          // ID of the State to set after this Transition is complete
-	NextView     string                `json:"nextView"`           // The next view to show after the transition
+	TransitionID string         `json:"transitionId" bson:"transitionId"`
+	Guard        exp.Expression `json:"guard" bson:"guard"` // Guard expression checks if this Transition is legal or not.
+	Form         form.Form      `json:"form"`               // ID of the User-facing Form to be filled out in order to complete this Transition
+	Roles        []string       `json:"roles"`              // List of Permissions required to apply this Transition.
+	Actions      []Action       `json:"actions"`            // Pipeline of Actions to apply when this Transition is called.
+	NextState    string         `json:"nextState"`          // ID of the State to set after this Transition is complete
+	NextView     string         `json:"nextView"`           // The next view to show after the transition
 }
 
 // NewTransition returns a fully populated Transition object

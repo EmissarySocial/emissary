@@ -2,9 +2,9 @@ package service
 
 import (
 	"github.com/benpate/data"
-	"github.com/benpate/data/expression"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,12 +29,12 @@ func (service User) New() *model.User {
 }
 
 // List returns an iterator containing all of the Users who match the provided criteria
-func (service User) List(criteria expression.Expression, options ...option.Option) (data.Iterator, error) {
+func (service User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an User from the database
-func (service User) Load(criteria expression.Expression) (*model.User, error) {
+func (service User) Load(criteria exp.Expression) (*model.User, error) {
 
 	contact := service.New()
 
@@ -70,10 +70,10 @@ func (service User) Delete(user *model.User, note string) error {
 
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service User) LoadByUsername(username string) (*model.User, error) {
-	return service.Load(expression.Equal("username", username))
+	return service.Load(exp.Equal("username", username))
 }
 
 // ListByGroup returns all users that match a provided group name
 func (service User) ListByGroup(group string) (data.Iterator, error) {
-	return service.List(expression.Equal("groupId", group))
+	return service.List(exp.Equal("groupId", group))
 }

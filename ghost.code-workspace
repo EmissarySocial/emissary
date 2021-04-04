@@ -4,82 +4,10 @@
 			"path": "."
 		},
 		{
-			"path": "../slice"
-		},
-		{
-			"path": "../htmx"
-		},
-		{
-			"path": "../form"
-		},
-		{
-			"path": "../data"
-		},
-		{
-			"path": "../schema"
-		},
-		{
-			"path": "../activitystream"
-		},
-		{
-			"path": "../choose"
-		},
-		{
-			"path": "../convert"
-		},
-		{
-			"path": "../derp"
-		},
-		{
-			"path": "../digit"
-		},
-		{
-			"path": "../list"
-		},
-		{
-			"path": "../maps"
-		},
-		{
-			"path": "../null"
-		},
-		{
-			"path": "../path"
-		},
-		{
-			"path": "../remote"
-		},
-		{
-			"path": "../select"
-		},
-		{
-			"path": "../sniff"
+			"path": "../data-mongo"
 		},
 		{
 			"path": "../steranko"
-		},
-		{
-			"path": "../test"
-		},
-		{
-			"path": "../sseplaceholder"
-		},
-		{
-			"path": "../kids-javascript-demo"
-		},
-		{
-			"path": "../_hyperscript"
-		},
-		{
-			"path": "../htmx-ws-reconnect"
-		},
-		{
-			"path": "../html"
-		},
-		{
-			"path": "../htmlconv"
-		},
-		{
-			"path": "../homeschol-timeline"
 		}
 	],
 	"settings": {}
