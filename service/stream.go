@@ -151,7 +151,7 @@ func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
 // LoadParent returns the Stream that is the parent of the provided Stream
 func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
 
-	if stream.HasParent() == false {
+	if !stream.HasParent() {
 		return nil, derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
 	}
 
@@ -200,7 +200,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	}
 
 	// Confirm that this Template can be a child of the parent Template
-	if template.CanBeContainedBy(parent.TemplateID) == false {
+	if !template.CanBeContainedBy(parent.TemplateID) {
 		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
 	}
 
@@ -214,18 +214,18 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 }
 
 // View returns the named View for the designated Stream.
-func (service Stream) View(stream *model.Stream, viewName string) (*model.View, error) {
+func (service Stream) View(stream *model.Stream, viewName string) (model.View, error) {
 
 	state, err := service.State(stream)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.serice.Stream.View", "Error loading template", stream.TemplateID)
+		return model.View{}, derp.Wrap(err, "ghost.serice.Stream.View", "Error loading template", stream.TemplateID)
 	}
 
 	view, ok := state.View(viewName)
 
-	if ok == false {
-		return nil, derp.New(500, "ghost.service.Stream.View", "Error loading view", viewName)
+	if !ok {
+		return model.View{}, derp.New(500, "ghost.service.Stream.View", "Error loading view", viewName)
 	}
 
 	return view, nil
@@ -309,7 +309,7 @@ func (service Stream) State(stream *model.Stream) (*model.State, error) {
 	// Populate the Stream with data from the Template
 	state, ok := template.State(stream.StateID)
 
-	if ok == false {
+	if !ok {
 		return nil, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
 	}
 
@@ -327,7 +327,7 @@ func (service Stream) Transition(stream *model.Stream, transitionID string) (*mo
 
 	transition, ok := state.Transition(transitionID)
 
-	if ok == false {
+	if !ok {
 		return nil, nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error geting Transition")
 	}
 

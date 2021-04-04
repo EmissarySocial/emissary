@@ -14,22 +14,22 @@ import (
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
 	streamService *service.Stream // StreamService is used to load child streams
-	stream        *model.Stream   // Stream to be displayed
 	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
+	stream        model.Stream    // Stream to be displayed
 	view          string
 	transition    string
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream *model.Stream) *Renderer {
+func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream model.Stream) Renderer {
 
 	result := Renderer{
 		streamService: streamService,
-		stream:        stream,
 		request:       request,
+		stream:        stream,
 	}
 
-	return &result
+	return result
 }
 
 func (w Renderer) URL() string {
@@ -93,12 +93,12 @@ func (w *Renderer) SetView(view string) *Renderer {
 }
 
 // View returns the string name of the view requested in the URL QueryString
-func (w Renderer) View() (*model.View, error) {
+func (w Renderer) View() (model.View, error) {
 
 	groups := w.request.Groups()
 	roles := w.stream.Roles(groups...)
 
-	if state, err := w.streamService.State(w.stream); err == nil {
+	if state, err := w.streamService.State(&w.stream); err == nil {
 
 		if w.view != "" {
 			if view, ok := state.View(w.view); ok {
@@ -110,12 +110,12 @@ func (w Renderer) View() (*model.View, error) {
 
 		for _, view := range state.Views {
 			if view.MatchRoles(roles...) {
-				return &view, nil
+				return view, nil
 			}
 		}
 	}
 
-	return nil, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view)
+	return model.View{}, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view)
 }
 
 // SetTransition overrides the transition provided in the request parameters.
@@ -132,21 +132,24 @@ func (w Renderer) Transition() string {
 ////////////////////////////////
 
 // Parent returns a Stream containing the parent of the current stream
-func (w Renderer) Parent(viewID string) (*Renderer, error) {
+func (w Renderer) Parent(viewID string) (Renderer, error) {
 
-	parent, err := w.streamService.LoadParent(w.stream)
+	var result Renderer
+
+	parent, err := w.streamService.LoadParent(&w.stream)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
+		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result := NewRenderer(w.streamService, w.request, parent).SetView(viewID)
+	result = NewRenderer(w.streamService, w.request, *parent)
+	result.SetView(viewID)
 
 	return result, nil
 }
 
 // Children returns an array of Streams containing all of the child elements of the current stream
-func (w Renderer) Children(viewID string) ([]*Renderer, error) {
+func (w Renderer) Children(viewID string) ([]Renderer, error) {
 
 	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
 
@@ -158,7 +161,7 @@ func (w Renderer) Children(viewID string) ([]*Renderer, error) {
 }
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Renderer) TopLevel(viewID string) ([]*Renderer, error) {
+func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 
 	iterator, err := w.streamService.ListTopFolders()
 
@@ -170,15 +173,16 @@ func (w Renderer) TopLevel(viewID string) ([]*Renderer, error) {
 }
 
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
-func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]*Renderer, error) {
+func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Renderer, error) {
 
 	var stream model.Stream
 
-	result := make([]*Renderer, iterator.Count())
+	result := make([]Renderer, iterator.Count())
 
 	for iterator.Next(&stream) {
-		copy := stream
-		result = append(result, NewRenderer(w.streamService, w.request, &copy).SetView(viewID))
+		renderer := NewRenderer(w.streamService, w.request, stream)
+		renderer.SetView(viewID)
+		result = append(result, renderer)
 	}
 
 	return result, nil
@@ -215,7 +219,7 @@ func (w Renderer) Render() (template.HTML, error) {
 // RenderForm returns an HTML rendering of this form
 func (w Renderer) RenderForm() (template.HTML, error) {
 
-	result, err := w.streamService.Form(w.stream, w.Transition())
+	result, err := w.streamService.Form(&w.stream, w.Transition())
 
 	if err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
@@ -233,13 +237,13 @@ func (w Renderer) CanAddChild() bool {
 func (w Renderer) ChildTemplates() []model.Template {
 
 	// TODO: permissions here...
-	return w.streamService.ChildTemplates(w.stream)
+	return w.streamService.ChildTemplates(&w.stream)
 }
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) CanView(viewName string) bool {
 
-	state, err := w.streamService.State(w.stream)
+	state, err := w.streamService.State(&w.stream)
 
 	if err != nil {
 		return false

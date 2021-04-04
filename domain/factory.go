@@ -137,7 +137,7 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamRenderer generates a new stream renderer service.
-func (factory *Factory) StreamRenderer(stream *model.Stream, request *HTTPRequest) *Renderer {
+func (factory *Factory) StreamRenderer(stream model.Stream, request *HTTPRequest) Renderer {
 	return NewRenderer(factory.Stream(), request, stream)
 }
 

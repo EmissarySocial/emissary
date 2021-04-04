@@ -117,7 +117,7 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		layoutService := factory.Layout()
 		request := domain.NewHTTPRequest(ctx.Request())
-		renderer := factory.StreamRenderer(stream, request)
+		renderer := factory.StreamRenderer(*stream, request)
 
 		layoutFile := ctx.Param("file")
 
@@ -149,7 +149,7 @@ func renderLayout(factoryManager *server.FactoryManager, templateID string) echo
 
 		layoutService := factory.Layout()
 		request := domain.NewHTTPRequest(ctx.Request())
-		renderer := factory.StreamRenderer(stream, request)
+		renderer := factory.StreamRenderer(*stream, request)
 
 		// Render full page (stream only).
 		template := layoutService.Template
@@ -213,7 +213,8 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	var result bytes.Buffer
 
 	request := domain.NewHTTPRequest(ctx.Request())
-	renderer := factory.StreamRenderer(stream, request).SetView(ctx.QueryParam("view"))
+	renderer := factory.StreamRenderer(*stream, request)
+	renderer.SetView(ctx.QueryParam("view"))
 
 	// Partial page requests (stream only)
 	if request.Partial() {
@@ -243,7 +244,8 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 
 	layoutService := factory.Layout()
 	request := domain.NewHTTPRequest(ctx.Request())
-	renderer := factory.StreamRenderer(stream, request).SetTransition(transition)
+	renderer := factory.StreamRenderer(*stream, request)
+	renderer.SetTransition(transition)
 
 	template := layoutService.Template
 

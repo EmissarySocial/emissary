@@ -216,9 +216,11 @@ func (builder *ListBuilder) ByDateDesc() *ListBuilder {
 }
 
 // Query calls the database and returns a list of Renderer results
-func (builder *ListBuilder) Query() ([]*Renderer, error) {
+func (builder *ListBuilder) Query() ([]Renderer, error) {
 
-	result := make([]*Renderer, 0)
+	var stream model.Stream
+
+	result := make([]Renderer, 0)
 
 	it, err := builder.streamService.List(builder.criteria, builder.options...)
 
@@ -226,11 +228,10 @@ func (builder *ListBuilder) Query() ([]*Renderer, error) {
 		return nil, derp.Wrap(err, "ghost.domain.ListBuilder.Query", "Error retrieving stream list", builder)
 	}
 
-	var stream model.Stream
-
 	for it.Next(&stream) {
-		duplicate := stream
-		result = append(result, NewRenderer(builder.streamService, builder.request, &duplicate).SetView(builder.view))
+		renderer := NewRenderer(builder.streamService, builder.request, stream)
+		renderer.SetView(builder.view)
+		result = append(result, renderer)
 	}
 
 	return result, nil

@@ -35,15 +35,15 @@ func (s State) Transition(transitionID string) (*Transition, bool) {
 // View searches for the first view in this stream that matches the provided ID.
 // If found, the view is returned along with a TRUE.
 // If no view matches, and empty view is returned along with a FALSE.
-func (s State) View(viewName string) (*View, bool) {
+func (s State) View(viewName string) (View, bool) {
 
 	for _, view := range s.Views {
 		if view.ViewID == viewName {
-			return &view, true
+			return view, true
 		}
 	}
 
-	return nil, false
+	return View{}, false
 }
 
 // MatchAnonymous returns TRUE if this state does not require
