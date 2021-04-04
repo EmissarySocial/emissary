@@ -37,14 +37,9 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		token := ctx.Param("stream")
-		view := ctx.Param("view")
-
-		if view == "" {
-			view = "default"
-		}
 
 		httpRequest := domain.NewHTTPRequest(r)
-		client := domain.NewRealtimeClient(httpRequest, token, view)
+		client := domain.NewRealtimeClient(httpRequest, token)
 
 		// Add this client to the map of those that should
 		// receive updates
@@ -56,14 +51,16 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}()
 
 		// Set the headers related to event streaming.
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Transfer-Encoding", "chunked")
+		f.Flush()
 
-		fmt.Println("handler.realtime: connected new client to token:" + token + ", view:" + view)
+		fmt.Println("handler.realtime: connected new client to token:" + token)
 
-		// Don't close the connection, instead loop endlessly.
+		// Don't close the connection, instead loop until the client closes it (via <-done).
 		for {
 
 			select {
@@ -74,8 +71,11 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			// Read from our messageChan.
 			case streamID, open := <-client.WriteChannel:
 
+				fmt.Println("handler.ServerSentEvent.  Received update for streamID: " + streamID.Hex())
+
 				// If our messageChan was closed, this means that the client has disconnected.
 				if !open {
+					fmt.Println("Not Open.  Cancelling.")
 					return nil
 				}
 
@@ -92,49 +92,3 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 	}
 }
-
-/*
-func Websocket(b *Broker) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-
-		websocket.Handler(func(ws *websocket.Conn) {
-
-			// Make a new channel to receive new messages
-			messageChan := make(chan string)
-
-			// Register the channel with the broker
-			b.newClients <- messageChan
-
-			// When complete, close the channel
-			defer func() {
-				b.defunctClients <- messageChan
-				ws.Close()
-			}()
-
-			// Wait for new messages
-			for {
-
-				// Receive the next message from the channel
-				msg, open := <-messageChan
-
-				// If the channel has closed, then close the connection
-				if !open {
-					break
-				}
-
-				// Hacky wrap for websocket connection.
-				msg = `<div id="stream" hx-ws="connect ws://localhost/ws">` + msg + `</div>`
-
-				// Try to send the message to the client.
-				if err := websocket.Message.Send(ws, msg); err != nil {
-					return
-				}
-			}
-
-		}).ServeHTTP(ctx.Response(), ctx.Request())
-
-		return nil
-	}
-}
-*/

@@ -1,8 +1,11 @@
 package domain
 
 import (
+	"fmt"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -82,9 +85,11 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 		case stream := <-b.streamUpdates:
 
+			spew.Dump("realtime broker: received update to stream: " + stream.Token)
+
 			// If this stream bubbles updates, then search up the stream hierarchy
 			// until we find a stream that doesn't
-			for !stream.BubbleUpdates {
+			for stream.BubbleUpdates {
 
 				// Gods forbid we're at the top of the tree.  If so, there's nowhere to go.
 				if !stream.HasParent() {
@@ -119,7 +124,14 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 // notify sends updates for every client that is watching a given stream
 func (b *RealtimeBroker) notify(stream *model.Stream) {
+
+	fmt.Println(stream.Token)
+	for key := range b.streams {
+		fmt.Println(key)
+	}
+
 	for _, client := range b.streams[stream.Token] {
+		fmt.Println("notifying: " + client.ClientID.Hex())
 		client.WriteChannel <- stream.StreamID
 	}
 }

@@ -18,3 +18,7 @@ tr.link:hover > td {
 .space-after {
     margin-bottom: 20px;
 }
+
+[stream].htmx-settling {
+    background-color:yellow;
+}

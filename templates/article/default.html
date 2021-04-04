@@ -1,4 +1,4 @@
-<div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update">
+<div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
 	{{ $parent := .Parent ""}}
 	<div>

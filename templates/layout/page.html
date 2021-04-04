@@ -52,8 +52,7 @@
 <script type="text/hyperscript">
 	eventsource StreamServer from /{{.Token}}/sse
 		on message
-			for el in query("#" + it)
-				log el
+			for el in query(`[stream="${it}"]`)
 				send stream:update to it
 			end
 		end
