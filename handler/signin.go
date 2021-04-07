@@ -60,14 +60,16 @@ func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return ctx.HTML(200, postSigninError(derp.Message(result.Error)))
 		}
 
-		ctx.SetCookie(&http.Cookie{
-			Name:   "Authentication",
-			Value:  result.JWT,
-			Secure: true,
-		})
+		/*
+			ctx.SetCookie(&http.Cookie{
+				Name:   "Authentication",
+				Value:  result.JWT,
+				Secure: true,
+			})
+		*/
 
 		// Success Response Headers
-		// ctx.Response().Header().Add("Authentication", result.JWT)
+		ctx.Response().Header().Add("Authentication", result.JWT)
 		ctx.Response().Header().Add("HX-Trigger", "SigninSuccess")
 
 		return ctx.NoContent(200)

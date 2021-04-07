@@ -19,16 +19,13 @@
 	}, {
 		"stateId":"default",
 		"label": "Default",
-		"views": [
-			{
-				"viewId": "default",
-				"roles": []
-			},
-			{
-				"viewId": "list-item",
-				"roles": []
-			}
-		],
+		"views": [{
+			"viewId": "default",
+			"roles": []
+		},{
+			"viewId": "list-item",
+			"roles": []
+		}],
 		"transitions": [{
 			"transitionId": "update",
 			"label": "Update Article",
@@ -39,28 +36,63 @@
 				"kind": "layout-vertical",
 				"label": "Update Form",
 				"description": "This will update the object in this state",
-				"children": [
-					{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
+				"children": [{
+					"kind": "text",
+					"label": "Label",
+					"path": "label"
+				},{
+					"kind": "textarea",
+					"label": "Description",
+					"path": "description"
+				},{
+					"kind": "select",
+					"label": "Choose Something",
+					"path": "choose"
+				}]
+			}
+		}, {
+			"transitionId": "share",
+			"label": "Sharing Options",
+			"nextState": "default",
+			"nextView": "detail",
+			"roles": ["OWNER", "EDITOR"],
+			"form": {
+				"kind": "layout-vertical",
+				"label": "Who Do You Want to Share this Content With?",
+				"description": "",
+				"options": {
+					"show-labels": "false"
+				},
+				"children": [{
+					"kind": "option",
+					"label": "Do Not Share This Content",
+					"path": "share",
+					"value": "NONE"
+				},{
+					"kind": "option",
+					"label": "Share with Everybody",
+					"path": "share",
+					"value": "ALL"
+				},{
+					"kind": "option",
+					"label": "Share with Selected People",
+					"path": "share",
+					"value": "SOME"
+				},{
+					"kind": "layout-vertical",
+					"class": "max-rows",
+					"options": {
+						"show-labels": "false"
 					},
-					{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					},
-					{
-						"kind": "text",
-						"label": "Custom Data: Title",
-						"path": "data.title"
-					},
-					{
-						"kind": "textarea",
-						"label": "Custom Data: Body",
-						"path": "data.description"
-					}
-				]
+					"children": [{
+						"kind": "select",
+						"widget": "checkbox",
+						"path": "shareWith",
+						"options": {
+							"provider":"users"
+						}
+					}]
+				}]
 			}
 		}]
 	}]

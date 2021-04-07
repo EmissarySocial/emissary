@@ -1,7 +1,7 @@
 /*************************************
  * INPUT WIDGETS                    */
 
-input:not([type=submit]), textarea {
+input:not([type=submit], [type=checkbox], [type=radio]), textarea {
     border: solid 1px rgb(150,150,150);
     color: rgb(50,50,50);
     padding: 10px 10px;
@@ -36,6 +36,26 @@ button.primary,
     color: white;
 }
 
+
+div.popOpen {
+    height:0px;
+    opacity:0px;
+	
+    /* Animate when opening */
+	animation-name: popOut,fadeOut;
+	animation-duration:150ms;
+	animation-timing-function: ease;
+}
+
+div.popOpen.visible {
+    height:auto;
+    opacity:1;
+
+   	/* Animate when opening */
+	animation-name: popIn,fadeIn;
+	animation-duration:150ms;
+	animation-timing-function: ease;
+ }
 
 /*************************************
  * VERTICAL LAYOUT                   */

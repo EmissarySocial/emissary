@@ -183,6 +183,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 		renderer := NewRenderer(w.streamService, w.request, stream)
 		renderer.SetView(viewID)
 		result = append(result, renderer)
+		stream = model.Stream{}
 	}
 
 	return result, nil

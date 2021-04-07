@@ -22,6 +22,14 @@
 
 		<span 
 			preload
+			hx-get="/{{.Token}}/transition/share" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="button primary">Share</span>
+
+		<span 
+			preload
 			hx-get="/{{.Token}}/new" 
 			hx-target="body" 
 			hx-swap="beforeend" 
@@ -36,3 +44,5 @@
 	</div>
 
 </div>
+
+<a href="/signin">Signin</a>

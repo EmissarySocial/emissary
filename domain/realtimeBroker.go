@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -84,8 +83,6 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 			// log.Println("Removed client")
 
 		case stream := <-b.streamUpdates:
-
-			spew.Dump("realtime broker: received update to stream: " + stream.Token)
 
 			// If this stream bubbles updates, then search up the stream hierarchy
 			// until we find a stream that doesn't

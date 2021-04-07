@@ -1,4 +1,5 @@
 {
+	"id": "ARTICLE",
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
 	"containedBy": [
@@ -10,38 +11,29 @@
 		"title": "Test Template Schema",
 		"type": "object",
 		"properties": {
-			"class": {
-				"type": "string"
-			},
-			"title": {
+			"label": {
 				"type": "string",
 				"description": "The human-readable title for this article"
 			},
-			"body": {
+			"description": {
 				"type": "string",
 				"description": "The HTML content for this article"
 			},
-			"persons": {
-				"description": "Array of people to render on the page",
+			"choose": {
+				"type": "string",
+				"enum": ["Hello", "Darkness", "My", "Old", "Friend"]
+			},
+			"share": {
+				"type": "string",
+				"enum": ["ALL", "SOME", "NONE"]
+			},
+			"shareWith": {
 				"type": "array",
 				"items": {
-					"type": "object",
-					"properties": {
-						"name": {
-							"type": "string"
-						},
-						"email": {
-							"type": "string"
-						}
-					}
+					"type": "string"
 				}
 			}
 		},
-		"required": [
-			"class",
-			"title",
-			"body",
-			"persons"
-		]
+		"required": ["class", "title", "body"]
 	}
 }

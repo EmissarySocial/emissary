@@ -1,0 +1,14 @@
+  <div class="modal">
+    <div class="modal-underlay"></div>
+    <div class="modal-content">
+        <h1>Sharing Settings</h1>
+        <p>How should this stream (<b>{{.Label}}</b>) be shared?</p>
+
+        <form hx-post="/{{.Token}}/sharing">
+            {{.AdminForm "sharing"}}
+
+            <button class="primary">Save Changes</button>
+            <button>Cancel</button>
+        </form>
+    </div>
+  </div>

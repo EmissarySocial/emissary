@@ -3,15 +3,16 @@
 <head>
 	<title>Signin : GH0ST</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
-	<link rel="stylesheet" href="/r/stylesheet.css">
+	<link rel="stylesheet" href="/static/stylesheet.css">
 </head>
 
 <body hx-ext="authentication-header" class="uk-flex uk-flex-middle uk-flex-center">
+
 	<div class="">
 
 		<div class="uk-card uk-card-default uk-card-body">
 
-			<form hx-post="/signin" hx-target="#message" _="on SigninSuccess call signIn()">
+			<form hx-post="/signin" hx-target="#message">
 
 				<h1 class="uk-card-title">Sign In</h1>
 
@@ -36,11 +37,28 @@
 		</div>
 	</div>
 
-	<!--script src="https://unpkg.com/htmx.org"></script-->
+	<script src="https://unpkg.com/htmx.org"></script>
 	<script src="https://unpkg.com/hyperscript.org"></script>
-	<script src="/htmx/htmx.js"></script>
-	<script src="/htmx/ext/authentication-header.js"></script>
-	<script src="/r/script.js"></script>
+	<script src="/static/script.js"></script>
+
+	<script type="text/hyperscript">
+
+		init 
+			set lastPage to document.referrer
+			if lastPage is empty then return null end
+			if (lastPage.indexOf("/signin") >= 0) then return null end
+			call sessionStorage.setItem("signin-return", lastPage)
+		end
+
+		on SigninSuccess
+			set lastPage to sessionStorage.getItem("signin-return")
+			if lastPage then
+				set the window.location to lastPage
+			else
+				set the window.location to "/home"
+			end
+		end
+	</script>
 	
 </body>
 </html>

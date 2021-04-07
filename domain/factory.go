@@ -6,13 +6,13 @@ import (
 	"html/template"
 
 	"github.com/benpate/data"
-	"github.com/benpate/data-mongo"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
 )
 
@@ -217,10 +217,14 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 // use in the form.Form package
 func (factory *Factory) FormLibrary() form.Library {
 
-	library := form.New()
+	library := form.New(factory.OptionProvider())
 	vocabulary.All(library)
 
 	return library
+}
+
+func (factory *Factory) OptionProvider() form.OptionProvider {
+	return service.NewOptionProvider(factory.User())
 }
 
 ///////////////////////////////////////

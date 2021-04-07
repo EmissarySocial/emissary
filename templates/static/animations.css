@@ -19,3 +19,12 @@
 	100% {transform: scale(0.9);}
 } 
 
+@keyframes popIn {
+	0% {height:0px;}
+	100% {height:default;}
+}
+
+@keyframes popOut {
+	0% {height:default;}
+	100% {height:0%;}
+}

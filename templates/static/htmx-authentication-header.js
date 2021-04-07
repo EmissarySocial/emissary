@@ -1,4 +1,3 @@
-// Authentication extension for HTMX
 htmx.defineExtension('authentication-header', {
     onEvent: function(name, evt) {
         if (name == "htmx:configureRequest") {
@@ -9,12 +8,6 @@ htmx.defineExtension('authentication-header', {
         }
     },
     transformResponse: function(text, xhr, elt) {
-
-         // if status is "Unauthorized"
-        if (xhr.status == 401) {
-            window.location = "/signin"
-        }
-
         var authentication = xhr.getResponseHeader("Authentication")
         if (authentication != null) {
             sessionStorage.setItem("Authentication", authentication)

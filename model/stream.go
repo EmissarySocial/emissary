@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
@@ -123,10 +124,18 @@ func (stream Stream) Roles(groups ...string) []string {
 // data within this Stream and returns it to the caller.
 func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
-	switch p.Head() {
+	if p.IsEmpty() {
+		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	}
 
-	case "data":
-		return p.Tail().Get(stream.Data)
+	if p.HasTail() {
+		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	}
+
+	property := p.Head()
+
+	// Properties that can be set
+	switch property {
 
 	case "label":
 		return stream.Label, nil
@@ -136,49 +145,41 @@ func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
 	case "thumbnailImage":
 		return stream.ThumbnailImage, nil
-	}
 
-	return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	default:
+		return stream.Data[property], nil
+	}
 }
 
 // SetPath implements the path.Setter interface.  It takes any data value
 // and tries to set it to the correct path within this Stream.
 func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
-	var property *string
+	if p.IsEmpty() {
+		return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	}
+
+	if p.HasTail() {
+		return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	}
+
+	property := p.Head()
 
 	// Properties that can be set
-	switch p.Head() {
-
-	case "data":
-		return p.Tail().Set(stream.Data, value)
+	switch property {
 
 	case "label":
-		if p.IsTailEmpty() {
-			property = &stream.Label
-		}
+		stream.Label = convert.String(value)
 
 	case "description":
-		if p.IsTailEmpty() {
-			property = &stream.Description
-		}
+		stream.Description = convert.String(value)
 
 	case "thumbnailImage":
-		if p.IsTailEmpty() {
-			property = &stream.ThumbnailImage
-		}
+		stream.ThumbnailImage = convert.String(value)
+
+	default:
+		stream.Data[property] = value
 	}
 
-	// Set property (if it is valid)
-	if property != nil {
-		if v, ok := value.(string); ok {
-			*property = v
-			return nil
-		}
-
-		return derp.New(500, "ghost.model.Stream.SetPath", "Label must be a string", value)
-	}
-
-	// Fall through means failure.  Own it.
-	return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+	return nil
 }
