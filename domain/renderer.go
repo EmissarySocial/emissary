@@ -16,8 +16,8 @@ type Renderer struct {
 	streamService *service.Stream // StreamService is used to load child streams
 	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
 	stream        model.Stream    // Stream to be displayed
-	view          string
-	transition    string
+	viewID        string
+	transitionID  string
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
@@ -43,7 +43,12 @@ func (w Renderer) StreamID() string {
 
 // ViewID returns the view identifier being rendered
 func (w Renderer) ViewID() string {
-	return w.view
+	return w.viewID
+}
+
+// TransitionID returns the view identifier being rendered
+func (w Renderer) TransitionID() string {
+	return w.transitionID
 }
 
 // Token returns the unique URL token for the stream being rendered
@@ -86,49 +91,6 @@ func (w Renderer) HasParent() bool {
 	return w.stream.HasParent()
 }
 
-// SetView overrides the transition provided in the request parameters.
-func (w *Renderer) SetView(view string) *Renderer {
-	w.view = view
-	return w
-}
-
-// View returns the string name of the view requested in the URL QueryString
-func (w Renderer) View() (model.View, error) {
-
-	groups := w.request.Groups()
-	roles := w.stream.Roles(groups...)
-
-	if state, err := w.streamService.State(&w.stream); err == nil {
-
-		if w.view != "" {
-			if view, ok := state.View(w.view); ok {
-				if view.MatchRoles(roles...) {
-					return view, nil
-				}
-			}
-		}
-
-		for _, view := range state.Views {
-			if view.MatchRoles(roles...) {
-				return view, nil
-			}
-		}
-	}
-
-	return model.View{}, derp.New(500, "ghost.domain.Renderer.View", "Missing/Unauthorized View", w.view)
-}
-
-// SetTransition overrides the transition provided in the request parameters.
-func (w *Renderer) SetTransition(transition string) *Renderer {
-	w.transition = transition
-	return w
-}
-
-// Transition returns the string name of the transition requested in the URL QueryString
-func (w Renderer) Transition() string {
-	return w.transition
-}
-
 ////////////////////////////////
 
 // Parent returns a Stream containing the parent of the current stream
@@ -143,7 +105,7 @@ func (w Renderer) Parent(viewID string) (Renderer, error) {
 	}
 
 	result = NewRenderer(w.streamService, w.request, *parent)
-	result.SetView(viewID)
+	result.viewID = viewID
 
 	return result, nil
 }
@@ -181,8 +143,12 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 
 	for iterator.Next(&stream) {
 		renderer := NewRenderer(w.streamService, w.request, stream)
-		renderer.SetView(viewID)
-		result = append(result, renderer)
+		renderer.viewID = viewID
+
+		// Enforce permissions here...
+		if renderer.CanView(viewID) {
+			result = append(result, renderer)
+		}
 		stream = model.Stream{}
 	}
 
@@ -196,7 +162,7 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var result bytes.Buffer
 
-	view, err := w.View()
+	view, err := w.getView()
 
 	if err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Unrecognized view"))
@@ -220,18 +186,19 @@ func (w Renderer) Render() (template.HTML, error) {
 // RenderForm returns an HTML rendering of this form
 func (w Renderer) RenderForm() (template.HTML, error) {
 
-	result, err := w.streamService.Form(&w.stream, w.Transition())
+	transition, err := w.getTransition()
+
+	if err != nil {
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error locating transition"))
+	}
+
+	result, err := w.streamService.Form(&w.stream, transition)
 
 	if err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
 	}
 
 	return template.HTML(result), nil
-}
-
-// CanAddChild returns TRUE if the current user has permission to add child streams.
-func (w Renderer) CanAddChild() bool {
-	return true
 }
 
 // ChildTemplates lists all templates that can be embedded in the current stream
@@ -241,52 +208,98 @@ func (w Renderer) ChildTemplates() []model.Template {
 	return w.streamService.ChildTemplates(&w.stream)
 }
 
+// CanAddChild returns TRUE if the current user has permission to add child streams.
+func (w Renderer) CanAddChild() bool {
+	return true
+}
+
 // CanView returns TRUE if this Request is authorized to access this stream/view
-func (w Renderer) CanView(viewName string) bool {
+func (w Renderer) CanView(viewID string) bool {
+
+	authorization := w.request.Authorization()
+	result, err := w.streamService.CanView(&w.stream, viewID, &authorization)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.domain.Renderer.CanView", "Error in CanView"))
+	}
+
+	return result
+}
+
+// CanTransition returns TRUE is this Renderer is authorized to initiate a transition
+func (w Renderer) CanTransition(transitionID string) bool {
+
+	authorization := w.request.Authorization()
+	result, err := w.streamService.CanTransition(&w.stream, transitionID, &authorization)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.domain.Renderer.CanView", "Error in CanView"))
+	}
+
+	return result
+}
+
+///////////////////////////////////////
+// PRIVATE METHODS
+
+// getView returns the requested view for this Renderer
+func (w Renderer) getView() (*model.View, error) {
+
+	authorization := w.request.Authorization()
+	roles := w.stream.Roles(&authorization)
 
 	state, err := w.streamService.State(&w.stream)
 
 	if err != nil {
-		return false
+		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Missing/Unauthorized View", w.viewID)
 	}
 
-	view, ok := state.View(viewName)
-
-	if !ok {
-		return false
+	if !state.MatchRoles(roles...) {
+		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Unauthorized State", w.stream)
 	}
 
-	if state.MatchAnonymous() && view.MatchAnonymous() {
-		return true
+	if w.viewID != "" {
+		if view, ok := state.View(w.viewID); ok {
+			if view.MatchRoles(roles...) {
+				return &view, nil
+			}
+		}
 	}
 
-	groups := w.request.Groups()
-	roles := w.stream.Roles(groups...)
+	for _, view := range state.Views {
+		if view.MatchRoles(roles...) {
+			return &view, nil
+		}
+	}
 
-	return state.MatchRoles(roles...) && view.MatchRoles(roles...)
+	return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Unrecognized View", w.viewID)
 }
 
-// CanTransition returns TRUE is this Renderer is authorized to initiate a transition
-func (w Renderer) CanTransition(stream *model.Stream, transitionID string) bool {
+// getTransition returns the string name of the transition requested in the URL QueryString
+func (w Renderer) getTransition() (*model.Transition, error) {
 
-	state, err := w.streamService.State(stream)
+	authorization := w.request.Authorization()
+	roles := w.stream.Roles(&authorization)
+
+	state, err := w.streamService.State(&w.stream)
 
 	if err != nil {
-		return false
+		return nil, derp.Wrap(err, "ghost.domain.renderer.getDomain", "Error Getting State")
 	}
 
-	transition, ok := state.Transition(transitionID)
+	if !state.MatchRoles(roles...) {
+		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized State", w.stream)
+	}
+
+	transition, ok := state.Transition(w.transitionID)
 
 	if !ok {
-		return false
+		return nil, derp.New(derp.CodeInternalError, "ghost.domain.Renderer.getTransition", "Unrecognized Transition", w.stream)
 	}
 
-	if state.MatchAnonymous() && transition.MatchAnonymous() {
-		return true
+	if !transition.MatchRoles(roles...) {
+		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
 	}
 
-	groups := w.request.Groups()
-	roles := stream.Roles(groups...)
-
-	return state.MatchRoles(roles...) && transition.MatchRoles(roles...)
+	return transition, nil
 }

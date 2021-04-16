@@ -141,6 +141,20 @@ func (factory *Factory) StreamRenderer(stream model.Stream, request *HTTPRequest
 	return NewRenderer(factory.Stream(), request, stream)
 }
 
+// StreamViewer generates a new stream renderer service, pegged to a specific view.
+func (factory *Factory) StreamViewer(stream model.Stream, request *HTTPRequest, viewID string) Renderer {
+	renderer := NewRenderer(factory.Stream(), request, stream)
+	renderer.viewID = viewID
+	return renderer
+}
+
+// StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
+func (factory *Factory) StreamTransitioner(stream model.Stream, request *HTTPRequest, transitionID string) Renderer {
+	renderer := NewRenderer(factory.Stream(), request, stream)
+	renderer.transitionID = transitionID
+	return renderer
+}
+
 ///////////////////////////////////////
 // Real-Time UpdateChannels
 

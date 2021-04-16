@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
-	"github.com/benpate/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,7 +14,7 @@ type Stream struct {
 	ParentID        primitive.ObjectID     `json:"parentId"        bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
 	TemplateID      string                 `json:"templateId"      bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	StateID         string                 `json:"stateId"         bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	GroupRoles      map[string][]string    `json:"groupRoles"      bson:"groupRoles"`          // Map of Role names to the one or more Group names that can perform that role.
+	Criteria        Criteria               `json:"criteria"        bson:"criteria"`            // Criteria for which users can access this stream.
 	Token           string                 `json:"token"           bson:"token"`               // Unique value that identifies this element in the URL
 	URL             string                 `json:"url"             bson:"url"`                 // Unique URL of this Stream.  This duplicates the "token" field a bit, but it (hopefully?) makes access easier.
 	Label           string                 `json:"label"           bson:"label"`               // Text to display in lists of streams, probably displayed at top of stream page, too.
@@ -43,12 +42,12 @@ func NewStream() Stream {
 	streamID := primitive.NewObjectID()
 
 	return Stream{
-		StreamID:   streamID,
-		Token:      streamID.Hex(),
-		StateID:    "new",
-		GroupRoles: make(map[string][]string),
-		Tags:       []string{},
-		Data:       map[string]interface{}{},
+		StreamID: streamID,
+		Token:    streamID.Hex(),
+		StateID:  "new",
+		Criteria: NewCriteria(),
+		Tags:     []string{},
+		Data:     map[string]interface{}{},
 	}
 }
 
@@ -62,73 +61,11 @@ func (stream Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
-/*
-// MatchAnonymous returns TRUE if this Stream does not
-// require any access permissions
-func (stream Stream) MatchAnonymous() bool {
-	return stream.State.MatchAnonymous()
-}
-
-// MatchRoles returns TRUE if this Stream is accessible
-// by a user with the provided roles .
-func (stream Stream) MatchRoles(roles ...string) bool {
-	return stream.State.MatchRoles(roles...)
-}
-
-// MatchGroups returns TRUE if
-func (stream Stream) MatchGroups(view string, groups ...string) bool {
-
-	roles := stream.Roles(groups...)
-
-	if stream.State.MatchRoles(roles...) {
-		if view, ok := stream.View(view); ok {
-			if view.MatchRoles(roles...) {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// View searches for the first view in this stream that matches the provided ID.
-// If found, the view is returned along with a TRUE.
-// If no view matches, and empty view is returned along with a FALSE.
-func (stream Stream) View(viewID string) (View, bool) {
-	return stream.State.View(viewID)
-}
-
-// Transition returns the transition matching the provided ID, and TRUE.
-// If no transition matches, then an empty transition is returned along with a FALSE.
-func (stream Stream) Transition(transitionID string) (Transition, bool) {
-	return stream.State.Transition(transitionID)
-}
-*/
-
-// Roles returns a unique list of all roles that the provided groups are granted
-// in this stream
-func (stream Stream) Roles(groups ...string) []string {
-
-	result := []string{}
-
-	for _, group := range groups {
-		if roles, ok := stream.GroupRoles[group]; ok {
-			result = slice.AddUnique(result, roles...)
-		}
-	}
-
-	return result
-}
-
 // GetPath implements the path.Getter interface.  It looks up
 // data within this Stream and returns it to the caller.
 func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
 	if p.IsEmpty() {
-		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
-	}
-
-	if p.HasTail() {
 		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
 	}
 
@@ -146,6 +83,9 @@ func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 	case "thumbnailImage":
 		return stream.ThumbnailImage, nil
 
+	case "criteria":
+		return stream.Criteria.GetPath(p.Tail())
+
 	default:
 		return stream.Data[property], nil
 	}
@@ -156,10 +96,6 @@ func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
 	if p.IsEmpty() {
-		return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
-	}
-
-	if p.HasTail() {
 		return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
 	}
 
@@ -177,9 +113,34 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 	case "thumbnailImage":
 		stream.ThumbnailImage = convert.String(value)
 
+	case "criteria":
+		return stream.Criteria.SetPath(p.Tail(), value)
+
 	default:
 		stream.Data[property] = value
 	}
 
 	return nil
+}
+
+func (stream *Stream) Roles(authorization *Authorization) []string {
+
+	result := make([]string, 0)
+
+	if authorization.UserID == stream.AuthorID {
+		result = append(result, "AUTHOR")
+	}
+
+	if roles, ok := stream.Criteria.Roles[authorization.UserID]; ok {
+		result = append(result, roles...)
+	}
+
+	for _, groupID := range authorization.GroupIDs {
+
+		if roles, ok := stream.Criteria.Roles[groupID]; ok {
+			result = append(result, roles...)
+		}
+	}
+
+	return result
 }

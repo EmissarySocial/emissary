@@ -212,9 +212,13 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 
 	var result bytes.Buffer
 
+	view := ctx.QueryParam("view")
 	request := domain.NewHTTPRequest(ctx.Request())
-	renderer := factory.StreamRenderer(*stream, request)
-	renderer.SetView(ctx.QueryParam("view"))
+	renderer := factory.StreamViewer(*stream, request, view)
+
+	if !renderer.CanView(renderer.ViewID()) {
+		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderStream", "Forbidden")
+	}
 
 	// Partial page requests (stream only)
 	if request.Partial() {
@@ -238,14 +242,17 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 }
 
 // renderForm does the work to generate HTML for a stream and send it to the requester
-func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transition string) error {
+func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transitionID string) error {
 
 	var result bytes.Buffer
 
 	layoutService := factory.Layout()
 	request := domain.NewHTTPRequest(ctx.Request())
-	renderer := factory.StreamRenderer(*stream, request)
-	renderer.SetTransition(transition)
+	renderer := factory.StreamTransitioner(*stream, request, transitionID)
+
+	if !renderer.CanTransition(renderer.TransitionID()) {
+		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderForm", "Forbidden")
+	}
 
 	template := layoutService.Template
 
@@ -257,7 +264,15 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 }
 
 // doTransition updates a stream with new data from a Form post and executes the requested transition.
-func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transition string) error {
+func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transitionID string) error {
+
+	// verify authorization
+	request := domain.NewHTTPRequest(ctx.Request())
+	renderer := factory.StreamTransitioner(*stream, request, transitionID)
+
+	if !renderer.CanTransition(renderer.TransitionID()) {
+		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderForm", "Forbidden")
+	}
 
 	// Parse and Bind form data first, so that we don't have to hit the database in cases where there's an error.
 	form := make(map[string]interface{})
@@ -269,7 +284,7 @@ func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transitionResult, err := streamService.DoTransition(stream, transition, form)
+	transitionResult, err := streamService.DoTransition(stream, transitionID, form)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
@@ -278,7 +293,4 @@ func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+stream.Token+`?view=`+transitionResult.NextState+`"}}`)
 
 	return ctx.NoContent(200)
-
-	// return ctx.Redirect(http.StatusSeeOther, "/"+stream.Token+"?view="+transition.NextState)
-	//	return renderStream(ctx, factory, stream)
 }

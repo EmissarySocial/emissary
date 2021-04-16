@@ -13,11 +13,11 @@ require (
 	github.com/benpate/data-mongo v0.0.1
 	github.com/benpate/derp v0.21.0
 	github.com/benpate/exp v0.0.2
-	github.com/benpate/form v0.3.5
+	github.com/benpate/form v0.3.7
 	github.com/benpate/html v0.9.3
 	github.com/benpate/list v0.4.0
 	github.com/benpate/null v0.6.0
-	github.com/benpate/path v0.2.0
+	github.com/benpate/path v0.3.0
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/slice v0.0.2
 	github.com/benpate/steranko v0.2.2

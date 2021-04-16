@@ -230,8 +230,11 @@ func (builder *ListBuilder) Query() ([]Renderer, error) {
 
 	for it.Next(&stream) {
 		renderer := NewRenderer(builder.streamService, builder.request, stream)
-		renderer.SetView(builder.view)
-		result = append(result, renderer)
+
+		if renderer.CanView(builder.view) {
+			renderer.viewID = builder.view
+			result = append(result, renderer)
+		}
 	}
 
 	return result, nil

@@ -1,10 +1,8 @@
 package service
 
 import (
-	"github.com/benpate/convert"
-	"github.com/benpate/data"
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 )
 
@@ -18,37 +16,30 @@ func NewOptionProvider(user *User) OptionProvider {
 	}
 }
 
-func (service OptionProvider) OptionCodes(path string) []form.OptionCode {
+func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error) {
 
 	path = list.Last(path, "/")
 
 	switch path {
 	case "users":
-		if it, err := service.User.List(nil); err == nil {
-			return mapOptionCodes(it, "_id", "displayName")
+		it, err := service.User.List(nil)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "ghost.service.OptionProvider.OptionCodes", "Error connecting to database")
 		}
+
+		record := service.User.New()
+		result := make([]form.OptionCode, it.Count())
+		for it.Next(record) {
+			result = append(result, form.OptionCode{
+				Label: record.DisplayName,
+				Value: record.UserID.Hex(),
+			})
+			record = service.User.New()
+		}
+
+		return result, nil
 	}
 
-	return []form.OptionCode{}
-}
-
-func mapOptionCodes(it data.Iterator, values string, labels string) []form.OptionCode {
-
-	result := make([]form.OptionCode, 0)
-
-	if it == nil {
-		return result
-	}
-
-	data := model.NewGeneric()
-
-	for it.Next(data) {
-		result = append(result, form.OptionCode{
-			Label: convert.String(data[labels]),
-			Value: convert.String(data[values]),
-		})
-		data = model.NewGeneric()
-	}
-
-	return result
+	return nil, derp.New(500, "ghost.service.OptionProvider.OptionCodes", "Unrecognized Path: ", path)
 }

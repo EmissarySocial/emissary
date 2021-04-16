@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -37,12 +38,12 @@ func (r *HTTPRequest) UserID() primitive.ObjectID {
 	return primitive.NewObjectID()
 }
 
-// Groups returns a sorted slice of strings containing the group names that the user behind this request belongs to.
-func (r *HTTPRequest) Groups() []string {
-	return []string{}
-}
-
 // Partial returns TRUE if this is a request for a partial page (HTML fragment), and not a complete HTML page.
 func (r *HTTPRequest) Partial() bool {
 	return (r.request.Header.Get("HX-Request") != "")
+}
+
+// Returns the authorization data for this request
+func (r *HTTPRequest) Authorization() model.Authorization {
+	return model.Authorization{}
 }

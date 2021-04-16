@@ -65,7 +65,7 @@ func getTestSchema() *schema.Schema {
 
 type testOptionProvider bool
 
-func (t testOptionProvider) OptionCodes(_ string) []form.OptionCode {
+func (t testOptionProvider) OptionCodes(_ string) ([]form.OptionCode, error) {
 	return []form.OptionCode{
 		{
 			Label: "This is the first code",
@@ -87,7 +87,7 @@ func (t testOptionProvider) OptionCodes(_ string) []form.OptionCode {
 			Label: "This is the fifth code",
 			Value: "FIVE",
 		},
-	}
+	}, nil
 }
 
 func TestAll(t *testing.T) {

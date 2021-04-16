@@ -165,6 +165,81 @@ func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
 	return service.templateService.ListByContainer(stream.TemplateID)
 }
 
+// PERMISSIONS /////////////////
+
+func (service Stream) CanView(stream *model.Stream, viewID string, authorization *model.Authorization) (bool, error) {
+
+	// Owners can do anything
+	if authorization.IsOwner {
+		return true, nil
+	}
+
+	// Anyone can VIEW public streams
+	if stream.Criteria.Public {
+		return true, nil
+	}
+
+	state, err := service.State(stream)
+
+	if err != nil {
+		return false, derp.Wrap(err, "ghost.service.Stream.CanView", "State Not Found in Template", stream)
+	}
+
+	roles := stream.Roles(authorization)
+
+	// Verify that streams in this State are accessible by the user's roles
+	if !state.MatchRoles(roles...) {
+		return false, nil
+	}
+
+	// Verify that this view is accessible by the user's roles
+	view, ok := state.View(viewID)
+
+	if !ok {
+		return false, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.CanView", "View Not Found in Template", stream)
+	}
+
+	if !view.MatchRoles(roles...) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (service Stream) CanTransition(stream *model.Stream, transitionID string, authorization *model.Authorization) (bool, error) {
+
+	// Owners can do anything
+	if authorization.IsOwner {
+		return true, nil
+	}
+
+	state, err := service.State(stream)
+
+	if err != nil {
+		return false, derp.Wrap(err, "ghost.service.Stream.CanTransition", "State Not Found in Template", stream)
+	}
+
+	roles := stream.Roles(authorization)
+
+	// Verify that streams in this State are accessible by the user's roles
+	if !state.MatchRoles(roles...) {
+		return false, nil
+	}
+
+	// Verify that this view is accessible by the user's roles
+	transition, ok := state.Transition(transitionID)
+
+	if !ok {
+		return false, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.CanTransition", "Transition Not Found in Template", stream)
+	}
+
+	if !transition.MatchRoles(roles...) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.
@@ -232,13 +307,7 @@ func (service Stream) View(stream *model.Stream, viewName string) (model.View, e
 }
 
 // Form generates an HTML form for the requested Stream and TransitionID
-func (service Stream) Form(stream *model.Stream, transitionID string) (string, error) {
-
-	_, transition, err := service.Transition(stream, transitionID)
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Unrecognized State/Transition", transitionID)
-	}
+func (service Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
 
 	schema, err := service.Schema(stream)
 
