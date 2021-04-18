@@ -2,6 +2,7 @@ package route
 
 import (
 	"github.com/benpate/ghost/handler"
+	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
@@ -32,21 +33,21 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/signout", handler.PostSignOut(factoryManager))
 
 	// ActivityPub INBOX/OUTBOX
-	e.GET("/users/:username/inbox", handler.TBD)
-	e.POST("/users/:username/inbox", handler.TBD)
-	e.GET("/users/:username/outbox", handler.TBD)
-	e.POST("/users/:username/outbox", handler.TBD)
+	e.GET("/users/:username/inbox", handler.TBD, middleware.TrySignin)
+	e.POST("/users/:username/inbox", handler.TBD, middleware.TrySignin)
+	e.GET("/users/:username/outbox", handler.TBD, middleware.TrySignin)
+	e.POST("/users/:username/outbox", handler.TBD, middleware.TrySignin)
 
 	// Stream Pages
-	e.GET("/", handler.GetStream(factoryManager))        // ?view=
-	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view= or ?transition=
-	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
-	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
-	e.GET("/:stream/new", handler.GetTemplates(factoryManager))
-	e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
-	e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
-	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
+	e.GET("/", handler.GetStream(factoryManager), middleware.TrySignin)        // ?view=
+	e.GET("/:stream", handler.GetStream(factoryManager), middleware.TrySignin) // ?view= or ?transition=
+	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager), middleware.TrySignin)
+	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager), middleware.TrySignin) // ?transition
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager), middleware.TrySignin)                    // ?view=
+	e.GET("/:stream/new", handler.GetTemplates(factoryManager), middleware.TrySignin)
+	e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager), middleware.TrySignin)
+	e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager), middleware.TrySignin)
+	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager), middleware.TrySignin)
 
 	return e
 }

@@ -13,7 +13,7 @@
 	<link rel="stylesheet" href="/static/utilities.css">
 </head>
 
-<body hx-ext="preload">
+<body hx-ext="preload,authorization">
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 		{{.Render}}
 	</div>

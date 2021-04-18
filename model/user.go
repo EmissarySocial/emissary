@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/ghost/datatype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -51,7 +53,9 @@ func (user *User) SetPassword(password string) {
 func (user *User) Claims() map[string]interface{} {
 
 	result := map[string]interface{}{
-		"groups": datatype.ConvertObjectIDs(user.GroupIDs),
+		"sub": user.UserID.Hex(),                        // Subject of the JWT (UserID)
+		"grp": datatype.ConvertObjectIDs(user.GroupIDs), // GroupIDs that this User belongs to
+		"exp": time.Now().Add(time.Hour).Unix(),         // Expires one hour from now.  (To be refreshed by Steranko)
 	}
 
 	if user.IsOwner {

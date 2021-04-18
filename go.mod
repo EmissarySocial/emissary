@@ -27,4 +27,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.16
 	go.mongodb.org/mongo-driver v1.5.1
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 )

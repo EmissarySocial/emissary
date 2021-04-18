@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/ghost/route"
 	"github.com/benpate/ghost/server"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -35,6 +36,18 @@ func main() {
 
 	fmt.Println("Initializing web server...")
 	e := route.New(factoryManager)
+	e.Use(middleware.Recover())
+
+	/*
+		e.AutoTLSManager = autocert.Manager{
+			HostPolicy: autocert.HostWhitelist(c.DomainNames()...),
+			Cache:      autocert.DirCache(".cache"),
+			Prompt:     autocert.AcceptTOS,
+		}
+
+		fmt.Println("Starting web server..")
+		e.Logger.Fatal(e.StartAutoTLS(":443"))
+	*/
 
 	fmt.Println("Starting web server..")
 	e.Logger.Fatal(e.Start(":80"))

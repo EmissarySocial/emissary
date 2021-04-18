@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"net/http"
-	"time"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/server"
@@ -60,24 +59,22 @@ func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return ctx.HTML(200, postSigninError(derp.Message(result.Error)))
 		}
 
-		/*
-			ctx.SetCookie(&http.Cookie{
-				Name:   "Authentication",
-				Value:  result.JWT,
-				Secure: true,
-			})
-		*/
+		// Set Cookies
+		ctx.SetCookie(&http.Cookie{
+			Name:     "Authorization",
+			Value:    result.JWT,              // Set the cookie's value
+			MaxAge:   63072000,                // Max-Age is 2 YEARS (60s * 60min * 24h * 365d * 2y)
+			Path:     "/",                     // This allows the cookie on all paths of this site.
+			Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
+			HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
+			SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
+			// NOTE: Domain is excluded because it is less restrictive than omitting it. [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies]
+		})
 
-		// Success Response Headers
-		ctx.Response().Header().Add("Authentication", result.JWT)
 		ctx.Response().Header().Add("HX-Trigger", "SigninSuccess")
 
 		return ctx.NoContent(200)
 	}
-}
-
-func postSigninError(message string) string {
-	return `<div class="uk-alert uk-alert-danger">` + message + `</div>`
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
@@ -86,14 +83,31 @@ func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		ctx.SetCookie(&http.Cookie{
-			Name:    "Authentication",
-			Value:   "",
-			Secure:  true,
-			Expires: time.Time{},
+			Name:     cookieName(ctx),         // Get the Cookie name to use for this context.
+			Value:    "",                      // Erase the value of the cookie
+			MaxAge:   0,                       // Expires the cookie immediately
+			Path:     "/",                     // This allows the cookie on all paths of this site.
+			Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
+			HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
+			SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
 		})
 
-		ctx.Redirect(http.StatusSeeOther, "/signin")
-
-		return ctx.NoContent(200)
+		return ctx.Redirect(http.StatusSeeOther, "/signin")
 	}
+}
+
+func postSigninError(message string) string {
+	return `<div class="uk-alert uk-alert-danger">` + message + `</div>`
+}
+
+func cookieName(ctx echo.Context) string {
+
+	// If this is a secure domain...
+	if ctx.IsTLS() {
+		// Use a cookie name that can only be set on an SSL connection, and is "domain-locked"
+		// [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#cookie_prefixes]
+		return "__Host-Authorization"
+	}
+
+	return "Authorization"
 }

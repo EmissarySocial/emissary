@@ -71,6 +71,13 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 }
 
 ///////////////////////////////////////
+// Domain Data Accessors
+
+func (factory *Factory) Hostname() string {
+	return factory.domain.Hostname
+}
+
+///////////////////////////////////////
 // Domain Model Services
 
 // Attachment returns a fully populated Attachment service

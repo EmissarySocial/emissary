@@ -32,3 +32,15 @@ func Load(filename string) (Config, error) {
 func Default() Config {
 	return Config([]Domain{})
 }
+
+// DomainNames returns an array of domains names in this configuration.
+func (config Config) DomainNames() []string {
+
+	result := make([]string, len(config))
+
+	for index := range config {
+		result[index] = config[index].Hostname
+	}
+
+	return result
+}
