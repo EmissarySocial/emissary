@@ -216,10 +216,6 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	request := domain.NewHTTPRequest(ctx.Request())
 	renderer := factory.StreamViewer(*stream, request, view)
 
-	if !renderer.CanView(renderer.ViewID()) {
-		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderStream", "Forbidden")
-	}
-
 	// Partial page requests (stream only)
 	if request.Partial() {
 
@@ -269,6 +265,7 @@ func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	// verify authorization
 	request := domain.NewHTTPRequest(ctx.Request())
 	renderer := factory.StreamTransitioner(*stream, request, transitionID)
+	authorization := request.Authorization()
 
 	if !renderer.CanTransition(renderer.TransitionID()) {
 		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderForm", "Forbidden")
@@ -284,7 +281,7 @@ func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transitionResult, err := streamService.DoTransition(stream, transitionID, form)
+	transitionResult, err := streamService.DoTransition(stream, transitionID, form, &authorization)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))

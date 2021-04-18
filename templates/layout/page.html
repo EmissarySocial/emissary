@@ -31,7 +31,7 @@
 			hx-push-url="false" 
 			class="link">+ Add Folder</a>
 
-		{{ range .TopLevel "" }}
+		{{ range .TopLevel "list-item" }}
 			<a preload hx-get="/{{.Token}}">{{.Label}}</a>
 		{{ end }}
 	</div>

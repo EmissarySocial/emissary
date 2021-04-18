@@ -127,8 +127,18 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 
 	result := make([]string, 0)
 
-	if authorization.UserID == stream.AuthorID {
-		result = append(result, "AUTHOR")
+	if stream.Criteria.Public {
+		result = append(result, "PUBLIC")
+	}
+
+	if !stream.AuthorID.IsZero() {
+		if authorization.UserID == stream.AuthorID {
+			result = append(result, "AUTHOR")
+		}
+	}
+
+	if authorization.IsOwner {
+		result = append(result, "OWNER")
 	}
 
 	if roles, ok := stream.Criteria.Roles[authorization.UserID]; ok {

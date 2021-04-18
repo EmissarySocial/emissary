@@ -18,6 +18,7 @@ type Renderer struct {
 	stream        model.Stream    // Stream to be displayed
 	viewID        string
 	transitionID  string
+	authorization model.Authorization
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
@@ -27,10 +28,14 @@ func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream mod
 		streamService: streamService,
 		request:       request,
 		stream:        stream,
+		authorization: request.Authorization(),
 	}
 
 	return result
 }
+
+////////////////////////////////
+// ACCESSORS FOR THIS STREAM
 
 func (w Renderer) URL() string {
 	return w.request.URL()
@@ -43,11 +48,17 @@ func (w Renderer) StreamID() string {
 
 // ViewID returns the view identifier being rendered
 func (w Renderer) ViewID() string {
+	if w.viewID == "" {
+		return "default"
+	}
 	return w.viewID
 }
 
 // TransitionID returns the view identifier being rendered
 func (w Renderer) TransitionID() string {
+	if w.transitionID == "" {
+		return "default"
+	}
 	return w.transitionID
 }
 
@@ -92,6 +103,7 @@ func (w Renderer) HasParent() bool {
 }
 
 ////////////////////////////////
+// RELATIONSHIPS TO OTHER STREAMS
 
 // Parent returns a Stream containing the parent of the current stream
 func (w Renderer) Parent(viewID string) (Renderer, error) {
@@ -134,6 +146,82 @@ func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 	return w.iteratorToSlice(iterator, viewID)
 }
 
+// ChildTemplates lists all templates that can be embedded in the current stream
+func (w Renderer) ChildTemplates() []model.Template {
+
+	// TODO: permissions here...
+	return w.streamService.ChildTemplates(&w.stream)
+}
+
+///////////////////////////////
+/// RENDERING METHODS
+
+// Render generates an HTML output for a stream/view combination.
+func (w Renderer) Render() (template.HTML, error) {
+
+	var result bytes.Buffer
+
+	view, ok := w.streamService.View(&w.stream, w.ViewID(), &w.authorization)
+
+	if !ok {
+		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.renderer.Render", "Unauthorized View", w.viewID)
+	}
+
+	// If template is missing, there was a compilation error on the template itself
+	if view.Template == nil {
+		return template.HTML(""), derp.Report(derp.New(500, "ghost.domain.renderer.Render", "Missing Template (probably did not load/compile correctly on startup)", view))
+	}
+
+	// Execut template
+	if err := view.Template.Execute(&result, w); err != nil {
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
+	}
+
+	// Return result
+	return template.HTML(result.String()), nil
+}
+
+// RenderForm returns an HTML rendering of this form
+func (w Renderer) RenderForm() (template.HTML, error) {
+
+	transition, ok := w.streamService.Transition(&w.stream, w.TransitionID(), &w.authorization)
+
+	if !ok {
+		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
+	}
+
+	result, err := w.streamService.Form(&w.stream, transition)
+
+	if err != nil {
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
+	}
+
+	return template.HTML(result), nil
+}
+
+/////////////////////
+// PERMISSIONS METHODS
+
+// CanView returns TRUE if this Request is authorized to access this stream/view
+func (w Renderer) CanView(viewID string) bool {
+	_, ok := w.streamService.View(&w.stream, viewID, &w.authorization)
+	return ok
+}
+
+// CanTransition returns TRUE is this Renderer is authorized to initiate a transition
+func (w Renderer) CanTransition(transitionID string) bool {
+	_, ok := w.streamService.Transition(&w.stream, transitionID, &w.authorization)
+	return ok
+}
+
+// CanAddChild returns TRUE if the current user has permission to add child streams.
+func (w Renderer) CanAddChild() bool {
+	return true
+}
+
+///////////////////////////
+// HELPER FUNCTIONS
+
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
 func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Renderer, error) {
 
@@ -153,153 +241,4 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 	}
 
 	return result, nil
-}
-
-/// RENDERING METHODS
-
-// Render generates an HTML output for a stream/view combination.
-func (w Renderer) Render() (template.HTML, error) {
-
-	var result bytes.Buffer
-
-	view, err := w.getView()
-
-	if err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Unrecognized view"))
-	}
-
-	if view.Template == nil {
-		return template.HTML(""), derp.Report(derp.New(500, "ghost.domain.renderer.Render", "Missing Template (probably did not load/compile correctly on startup)", view))
-	}
-
-	// Execut template
-	err = view.Template.Execute(&result, w)
-
-	if err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
-	}
-
-	// Return result
-	return template.HTML(result.String()), nil
-}
-
-// RenderForm returns an HTML rendering of this form
-func (w Renderer) RenderForm() (template.HTML, error) {
-
-	transition, err := w.getTransition()
-
-	if err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error locating transition"))
-	}
-
-	result, err := w.streamService.Form(&w.stream, transition)
-
-	if err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
-	}
-
-	return template.HTML(result), nil
-}
-
-// ChildTemplates lists all templates that can be embedded in the current stream
-func (w Renderer) ChildTemplates() []model.Template {
-
-	// TODO: permissions here...
-	return w.streamService.ChildTemplates(&w.stream)
-}
-
-// CanAddChild returns TRUE if the current user has permission to add child streams.
-func (w Renderer) CanAddChild() bool {
-	return true
-}
-
-// CanView returns TRUE if this Request is authorized to access this stream/view
-func (w Renderer) CanView(viewID string) bool {
-
-	authorization := w.request.Authorization()
-	result, err := w.streamService.CanView(&w.stream, viewID, &authorization)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.domain.Renderer.CanView", "Error in CanView"))
-	}
-
-	return result
-}
-
-// CanTransition returns TRUE is this Renderer is authorized to initiate a transition
-func (w Renderer) CanTransition(transitionID string) bool {
-
-	authorization := w.request.Authorization()
-	result, err := w.streamService.CanTransition(&w.stream, transitionID, &authorization)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.domain.Renderer.CanView", "Error in CanView"))
-	}
-
-	return result
-}
-
-///////////////////////////////////////
-// PRIVATE METHODS
-
-// getView returns the requested view for this Renderer
-func (w Renderer) getView() (*model.View, error) {
-
-	authorization := w.request.Authorization()
-	roles := w.stream.Roles(&authorization)
-
-	state, err := w.streamService.State(&w.stream)
-
-	if err != nil {
-		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Missing/Unauthorized View", w.viewID)
-	}
-
-	if !state.MatchRoles(roles...) {
-		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Unauthorized State", w.stream)
-	}
-
-	if w.viewID != "" {
-		if view, ok := state.View(w.viewID); ok {
-			if view.MatchRoles(roles...) {
-				return &view, nil
-			}
-		}
-	}
-
-	for _, view := range state.Views {
-		if view.MatchRoles(roles...) {
-			return &view, nil
-		}
-	}
-
-	return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getView", "Unrecognized View", w.viewID)
-}
-
-// getTransition returns the string name of the transition requested in the URL QueryString
-func (w Renderer) getTransition() (*model.Transition, error) {
-
-	authorization := w.request.Authorization()
-	roles := w.stream.Roles(&authorization)
-
-	state, err := w.streamService.State(&w.stream)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.domain.renderer.getDomain", "Error Getting State")
-	}
-
-	if !state.MatchRoles(roles...) {
-		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized State", w.stream)
-	}
-
-	transition, ok := state.Transition(w.transitionID)
-
-	if !ok {
-		return nil, derp.New(derp.CodeInternalError, "ghost.domain.Renderer.getTransition", "Unrecognized Transition", w.stream)
-	}
-
-	if !transition.MatchRoles(roles...) {
-		return nil, derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
-	}
-
-	return transition, nil
 }

@@ -52,6 +52,8 @@ func (fs *File) List() ([]string, error) {
 		}
 	}
 
+	result = result[:counter]
+
 	return result, nil
 }
 
@@ -140,21 +142,6 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 
 	return result, nil
 }
-
-/*
-func (fs *File) appendJSON(template *model.Template, data []byte) error {
-
-	var temp model.Template
-
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON in template.json", string(data))
-	}
-
-	template.Populate(&temp)
-
-	return nil
-}
-*/
 
 /////////////////////////////////////
 /// REAL TIME UPDATES

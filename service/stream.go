@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -167,77 +168,72 @@ func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
 
 // PERMISSIONS /////////////////
 
-func (service Stream) CanView(stream *model.Stream, viewID string, authorization *model.Authorization) (bool, error) {
+func (service Stream) View(stream *model.Stream, viewID string, authorization *model.Authorization) (*model.View, bool) {
 
-	// Owners can do anything
-	if authorization.IsOwner {
-		return true, nil
-	}
-
-	// Anyone can VIEW public streams
-	if stream.Criteria.Public {
-		return true, nil
-	}
+	spew.Dump("searching for view:" + viewID + " in stream:" + stream.Label)
+	spew.Dump(authorization)
 
 	state, err := service.State(stream)
 
+	spew.Dump("state.StateID", state.StateID)
+	spew.Dump(err)
 	if err != nil {
-		return false, derp.Wrap(err, "ghost.service.Stream.CanView", "State Not Found in Template", stream)
+		spew.Dump("STATE NOT FOUND")
+		return nil, false
 	}
 
-	roles := stream.Roles(authorization)
-
-	// Verify that streams in this State are accessible by the user's roles
-	if !state.MatchRoles(roles...) {
-		return false, nil
-	}
-
+	spew.Dump("Checking View...")
+	spew.Dump("nil", state.Views == nil)
+	spew.Dump("len", len(state.Views))
 	// Verify that this view is accessible by the user's roles
 	view, ok := state.View(viewID)
 
+	spew.Dump("VIEW:", view.ViewID)
 	if !ok {
-		return false, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.CanView", "View Not Found in Template", stream)
+		spew.Dump("VIEW NOT FOUND")
+		return nil, false
 	}
+
+	roles := stream.Roles(authorization)
+	spew.Dump("roles", roles)
+	spew.Dump("view.Roles", view.Roles)
 
 	if !view.MatchRoles(roles...) {
-		return false, nil
+		spew.Dump("ROLES DO NOT MATCH VIEW")
+		return nil, false
 	}
 
-	return true, nil
+	spew.Dump("SUCCESS!!!")
+	return view, true
 }
 
-func (service Stream) CanTransition(stream *model.Stream, transitionID string, authorization *model.Authorization) (bool, error) {
-
-	// Owners can do anything
-	if authorization.IsOwner {
-		return true, nil
-	}
+func (service Stream) Transition(stream *model.Stream, transitionID string, authorization *model.Authorization) (*model.Transition, bool) {
 
 	state, err := service.State(stream)
 
 	if err != nil {
-		return false, derp.Wrap(err, "ghost.service.Stream.CanTransition", "State Not Found in Template", stream)
+		return nil, false
 	}
 
 	roles := stream.Roles(authorization)
 
 	// Verify that streams in this State are accessible by the user's roles
 	if !state.MatchRoles(roles...) {
-		return false, nil
+		return nil, false
 	}
 
 	// Verify that this view is accessible by the user's roles
 	transition, ok := state.Transition(transitionID)
 
 	if !ok {
-		return false, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.CanTransition", "Transition Not Found in Template", stream)
+		return nil, false
 	}
 
 	if !transition.MatchRoles(roles...) {
-		return false, nil
+		return nil, false
 	}
 
-	return true, nil
+	return transition, true
 }
 
 // CUSTOM ACTIONS /////////////////
@@ -288,7 +284,7 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	return stream, nil
 }
 
-// View returns the named View for the designated Stream.
+/*/ View returns the named View for the designated Stream.
 func (service Stream) View(stream *model.Stream, viewName string) (model.View, error) {
 
 	state, err := service.State(stream)
@@ -305,6 +301,7 @@ func (service Stream) View(stream *model.Stream, viewName string) (model.View, e
 
 	return view, nil
 }
+*/
 
 // Form generates an HTML form for the requested Stream and TransitionID
 func (service Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
@@ -325,12 +322,12 @@ func (service Stream) Form(stream *model.Stream, transition *model.Transition) (
 }
 
 // DoTransition handles a transition request to move the stream from one state into another state.
-func (service Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}) (*model.Transition, error) {
+func (service Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}, authorization *model.Authorization) (*model.Transition, error) {
 
-	_, transition, err := service.Transition(stream, transitionID)
+	transition, ok := service.Transition(stream, transitionID, authorization)
 
-	if err != nil {
-		return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Unrecognized State/Transition", transitionID)
+	if !ok {
+		return nil, derp.New(derp.CodeForbiddenError, "ghost.service.Stream.Transition", "Unauthorized State/Transition", transitionID)
 	}
 
 	form := transition.Form
@@ -385,7 +382,7 @@ func (service Stream) State(stream *model.Stream) (*model.State, error) {
 	return state, nil
 }
 
-// Transition returns the detailed Transition information assoicated with this Stream
+/* Transition returns the detailed Transition information assoicated with this Stream
 func (service Stream) Transition(stream *model.Stream, transitionID string) (*model.State, *model.Transition, error) {
 
 	state, err := service.State(stream)
@@ -402,6 +399,7 @@ func (service Stream) Transition(stream *model.Stream, transitionID string) (*mo
 
 	return state, transition, nil
 }
+*/
 
 // Schema returns the Schema associated with this Stream
 func (service Stream) Schema(stream *model.Stream) (*schema.Schema, error) {

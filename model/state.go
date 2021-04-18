@@ -1,5 +1,7 @@
 package model
 
+import "github.com/davecgh/go-spew/spew"
+
 // State defines an individual state that a Template/Stream can be in.  States are the basis
 // for transitions, forms, and actions.
 type State struct {
@@ -23,9 +25,13 @@ func NewState() State {
 // If not found, an empty transition is returned along with FALSE
 func (s State) Transition(transitionID string) (*Transition, bool) {
 
-	for index := range s.Transitions {
-		if s.Transitions[index].TransitionID == transitionID {
-			return &(s.Transitions[index]), true
+	if s.Transitions == nil {
+		return nil, false
+	}
+
+	for _, transition := range s.Transitions {
+		if transition.TransitionID == transitionID {
+			return &transition, true
 		}
 	}
 
@@ -35,38 +41,39 @@ func (s State) Transition(transitionID string) (*Transition, bool) {
 // View searches for the first view in this stream that matches the provided ID.
 // If found, the view is returned along with a TRUE.
 // If no view matches, and empty view is returned along with a FALSE.
-func (s State) View(viewName string) (View, bool) {
+func (s State) View(viewName string) (*View, bool) {
+
+	spew.Dump("Searching for View: " + viewName)
+
+	if s.Views == nil {
+		spew.Dump("NIL")
+		return nil, false
+	}
 
 	for _, view := range s.Views {
+		spew.Dump("checking: " + view.ViewID)
 		if view.ViewID == viewName {
-			return view, true
+			return &view, true
 		}
 	}
 
-	return View{}, false
-}
-
-// MatchAnonymous returns TRUE if this state does not require
-// any access privileges.
-func (s State) MatchAnonymous() bool {
-	return len(s.Roles) == 0
+	spew.Dump("NO VIEW FOUND")
+	return nil, false
 }
 
 // MatchRoles returns TRUE if one or more of the provided roles matches the requirements for this State.
 // If no roles are defined for this State, then access is always granted.
 func (s State) MatchRoles(roles ...string) bool {
-
-	if s.MatchAnonymous() {
-		return true
-	}
-
-	for i := range roles {
-		for j := range s.Roles {
-			if roles[i] == s.Roles[j] {
-				return true
+	return true
+	/*
+		for i := range s.Roles {
+			for j := range roles {
+				if roles[i] == s.Roles[j] {
+					return true
+				}
 			}
 		}
-	}
 
-	return false
+		return false
+	*/
 }

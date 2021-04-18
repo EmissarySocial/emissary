@@ -1,9 +1,11 @@
 <div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
-	{{ $parent := .Parent ""}}
-	<div>
-		<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}.</a>
-	</div>
+	{{ if .HasParent }}
+		{{ $parent := .Parent "list-item"}}
+		<div>
+			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}.</a>
+		</div>
+	{{ end }}
 
 	<h1 class="space-after">{{.Label}}</h1>
 
@@ -12,6 +14,7 @@
 	</article>
 
 	<div class="space-after">
+		{{ if .CanTransition "update"}}
 		<span 
 			preload
 			hx-get="/{{.Token}}/transition/update" 
@@ -19,7 +22,9 @@
 			hx-swap="beforeend" 
 			hx-push-url="false" 
 			class="button primary">Update Stream</span>
+		{{ end }}
 
+		{{ if .CanTransition "share"}}
 		<span 
 			preload
 			hx-get="/{{.Token}}/transition/share" 
@@ -27,7 +32,9 @@
 			hx-swap="beforeend" 
 			hx-push-url="false" 
 			class="button primary">Share</span>
+		{{ end }}
 
+		{{ if .CanAddChild }}
 		<span 
 			preload
 			hx-get="/{{.Token}}/new" 
@@ -35,6 +42,7 @@
 			hx-swap="beforeend" 
 			hx-push-url="false" 
 			class="button">+ Add Stream</span>
+		{{ end }}
 	</div>
 
 	<div class="space-after">

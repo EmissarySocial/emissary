@@ -21,12 +21,16 @@
 		"label": "Default",
 		"views": [
 			{
-				"viewId": "table",
-				"roles": []
+				"viewId": "list-item",
+				"roles": ["PUBLIC", "EDITOR", "OWNER"]
+			},
+			{
+				"viewId": "default",
+				"roles": ["PUBLIC", "EDITOR", "OWNER"]
 			},
 			{
 				"viewId": "icons",
-				"roles": []
+				"roles": ["PUBLIC", "EDITOR", "OWNER"]
 			}
 		],
 		"transitions": [{

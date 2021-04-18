@@ -23,12 +23,12 @@
 					<td colspan="3">+ Add Stream</td>
 				</tr>
 			{{ end }}
-			{{ range .Children ""}}
-			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
-				<td>{{.Label}}</td>
-				<td>{{.Description}}</td>
-				<td>{{.PublishDate}}</td>
-			</tr>
+			{{ range .Children "list-item"}}
+				<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
+					<td>{{.Label}}</td>
+					<td>{{.Description}}</td>
+					<td>{{.PublishDate}}</td>
+				</tr>
 			{{ end }}
 		</tbody>
 	</table>

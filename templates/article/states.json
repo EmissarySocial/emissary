@@ -6,7 +6,7 @@
 			"label": "Create a New Article",
 			"nextState": "default",
 			"nextView": "default",
-			"roles": ["AUTHOR", "EDITOR"],
+			"roles": ["AUTHOR", "OWNER"],
 			"form": {
 				"kind": "layout-vertical",
 				"children": [{
@@ -21,17 +21,17 @@
 		"label": "Default",
 		"views": [{
 			"viewId": "default",
-			"roles": []
+			"roles": ["PUBLIC","AUTHOR","OWNER"]
 		},{
 			"viewId": "list-item",
-			"roles": []
+			"roles": ["PUBLIC","AUTHOR","OWNER"]
 		}],
 		"transitions": [{
 			"transitionId": "update",
 			"label": "Update Article",
 			"nextState": "default",
 			"nextView": "detail",
-			"roles": ["AUTHOR", "EDITOR"],
+			"roles": ["AUTHOR", "EDITOR","OWNER"],
 			"form": {
 				"kind": "layout-vertical",
 				"label": "Update Form",
@@ -55,7 +55,7 @@
 			"label": "Sharing Options",
 			"nextState": "default",
 			"nextView": "detail",
-			"roles": ["AUTHOR", "EDITOR"],
+			"roles": ["AUTHOR", "EDITOR","OWNER"],
 			"form": {
 				"kind": "layout-vertical",
 				"label": "Who Do You Want to Share this Content With?",
