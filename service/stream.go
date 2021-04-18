@@ -215,19 +215,14 @@ func (service Stream) Transition(stream *model.Stream, transitionID string, auth
 		return nil, false
 	}
 
-	roles := stream.Roles(authorization)
-
-	// Verify that streams in this State are accessible by the user's roles
-	if !state.MatchRoles(roles...) {
-		return nil, false
-	}
-
 	// Verify that this view is accessible by the user's roles
 	transition, ok := state.Transition(transitionID)
 
 	if !ok {
 		return nil, false
 	}
+
+	roles := stream.Roles(authorization)
 
 	if !transition.MatchRoles(roles...) {
 		return nil, false
