@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/ghost/datatype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -50,17 +50,13 @@ func (user *User) SetPassword(password string) {
 // Claims returns all access privileges given to this user
 func (user *User) Claims() map[string]interface{} {
 
-	spew.Dump("Claims!!")
-	return map[string]interface{}{}
-	/*
-		result := map[string]interface{}{
-			"groups": datatype.ConvertObjectIDs(user.GroupIDs),
-		}
+	result := map[string]interface{}{
+		"groups": datatype.ConvertObjectIDs(user.GroupIDs),
+	}
 
-		if user.IsOwner {
-			result["owner"] = "true"
-		}
+	if user.IsOwner {
+		result["owner"] = "true"
+	}
 
-		return result
-	*/
+	return result
 }

@@ -1,7 +1,5 @@
 package model
 
-import "github.com/davecgh/go-spew/spew"
-
 // State defines an individual state that a Template/Stream can be in.  States are the basis
 // for transitions, forms, and actions.
 type State struct {
@@ -41,20 +39,15 @@ func (s State) Transition(transitionID string) (*Transition, bool) {
 // If no view matches, and empty view is returned along with a FALSE.
 func (s State) View(viewName string) (*View, bool) {
 
-	spew.Dump("Searching for View: " + viewName)
-
 	if s.Views == nil {
-		spew.Dump("NIL")
 		return nil, false
 	}
 
 	for _, view := range s.Views {
-		spew.Dump("checking: " + view.ViewID)
 		if view.ViewID == viewName {
 			return &view, true
 		}
 	}
 
-	spew.Dump("NO VIEW FOUND")
 	return nil, false
 }

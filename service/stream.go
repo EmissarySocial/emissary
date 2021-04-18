@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -170,40 +169,25 @@ func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
 
 func (service Stream) View(stream *model.Stream, viewID string, authorization *model.Authorization) (*model.View, bool) {
 
-	spew.Dump("searching for view:" + viewID + " in stream:" + stream.Label)
-	spew.Dump(authorization)
-
 	state, err := service.State(stream)
 
-	spew.Dump("state.StateID", state.StateID)
-	spew.Dump(err)
 	if err != nil {
-		spew.Dump("STATE NOT FOUND")
 		return nil, false
 	}
 
-	spew.Dump("Checking View...")
-	spew.Dump("nil", state.Views == nil)
-	spew.Dump("len", len(state.Views))
 	// Verify that this view is accessible by the user's roles
 	view, ok := state.View(viewID)
 
-	spew.Dump("VIEW:", view.ViewID)
 	if !ok {
-		spew.Dump("VIEW NOT FOUND")
 		return nil, false
 	}
 
 	roles := stream.Roles(authorization)
-	spew.Dump("roles", roles)
-	spew.Dump("view.Roles", view.Roles)
 
 	if !view.MatchRoles(roles...) {
-		spew.Dump("ROLES DO NOT MATCH VIEW")
 		return nil, false
 	}
 
-	spew.Dump("SUCCESS!!!")
 	return view, true
 }
 
