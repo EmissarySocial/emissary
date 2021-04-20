@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/server"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,36 +39,15 @@ func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			ctx.Response().Header().Add("HX-Trigger", "SigninError")
-			return ctx.HTML(200, postSigninError("Invalid Request.  Please try again later."))
+			return derp.New(500, "ghost.handler.PostSignIn", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
 
-		var txn steranko.SigninTransaction
-
-		if err := ctx.Bind(&txn); err != nil {
+		if err := s.SignIn(ctx); err != nil {
 			ctx.Response().Header().Add("HX-Trigger", "SigninError")
-			return ctx.HTML(200, postSigninError("Invalid Request.  Please try again later."))
+			return ctx.HTML(derp.ErrorCode(err), derp.Message(err))
 		}
-
-		result := s.Signin(txn)
-
-		if result.Error != nil {
-			return ctx.HTML(200, postSigninError(derp.Message(result.Error)))
-		}
-
-		// Set Cookies
-		ctx.SetCookie(&http.Cookie{
-			Name:     "Authorization",
-			Value:    result.JWT,              // Set the cookie's value
-			MaxAge:   63072000,                // Max-Age is 2 YEARS (60s * 60min * 24h * 365d * 2y)
-			Path:     "/",                     // This allows the cookie on all paths of this site.
-			Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
-			HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
-			SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
-			// NOTE: Domain is excluded because it is less restrictive than omitting it. [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies]
-		})
 
 		ctx.Response().Header().Add("HX-Trigger", "SigninSuccess")
 
@@ -82,32 +60,18 @@ func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		ctx.SetCookie(&http.Cookie{
-			Name:     cookieName(ctx),         // Get the Cookie name to use for this context.
-			Value:    "",                      // Erase the value of the cookie
-			MaxAge:   0,                       // Expires the cookie immediately
-			Path:     "/",                     // This allows the cookie on all paths of this site.
-			Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
-			HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
-			SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
-		})
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return derp.New(500, "ghost.handler.PostSignOut", "Invalid Request.  Please try again later.")
+		}
+
+		s := factory.Steranko()
+
+		if err := s.SignOut(ctx); err != nil {
+			return derp.Wrap(err, "ghost.handler.PostSignOut", "Error Signing Out")
+		}
 
 		return ctx.Redirect(http.StatusSeeOther, "/signin")
 	}
-}
-
-func postSigninError(message string) string {
-	return `<div class="uk-alert uk-alert-danger">` + message + `</div>`
-}
-
-func cookieName(ctx echo.Context) string {
-
-	// If this is a secure domain...
-	if ctx.IsTLS() {
-		// Use a cookie name that can only be set on an SSL connection, and is "domain-locked"
-		// [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#cookie_prefixes]
-		return "__Host-Authorization"
-	}
-
-	return "Authorization"
 }

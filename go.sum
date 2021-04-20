@@ -38,8 +38,8 @@ github.com/benpate/schema v0.10.2 h1:FVekaiWe8iYkCMGGcnHbep/3PPMyzr2dA8vjlWf3O6U
 github.com/benpate/schema v0.10.2/go.mod h1:kkIBt46zjSnpjQivOOMltU1RuD6r2brFfkgRPv0V/Cw=
 github.com/benpate/slice v0.0.2 h1:O/5BrLDBN9bvxCESkNx9lxga6ghVCRyFQkUnG1HDYpI=
 github.com/benpate/slice v0.0.2/go.mod h1:82mmBNAILzcRiUgVbe5jLf5d+WijVXCULgQ1ZbtCl3I=
-github.com/benpate/steranko v0.2.3 h1:dMMJa0Zj6EaxKMPJJ1cDoOgLT/tcn6Jkln+b3bFb8EM=
-github.com/benpate/steranko v0.2.3/go.mod h1:etuhhlXQYs0XF1YMZnIuVf7UvOreH6uXcHaUdjBTZ8M=
+github.com/benpate/steranko v0.3.3 h1:0rOhbrQEaMVmxQhzR6n4LVQtXfePeUDsJLNPuv0+uUI=
+github.com/benpate/steranko v0.3.3/go.mod h1:etuhhlXQYs0XF1YMZnIuVf7UvOreH6uXcHaUdjBTZ8M=
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927/go.mod h1:h/aW8ynjgkuj+NQRlZcDbAbM1ORAbXjXX77sX7T289U=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

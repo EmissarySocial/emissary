@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/ghost/datatype"
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -50,16 +50,15 @@ func (user *User) SetPassword(password string) {
 }
 
 // Claims returns all access privileges given to this user
-func (user *User) Claims() map[string]interface{} {
+func (user *User) Claims() jwt.Claims {
 
-	result := map[string]interface{}{
-		"sub": user.UserID.Hex(),                        // Subject of the JWT (UserID)
-		"grp": datatype.ConvertObjectIDs(user.GroupIDs), // GroupIDs that this User belongs to
-		"exp": time.Now().Add(time.Hour).Unix(),         // Expires one hour from now.  (To be refreshed by Steranko)
-	}
-
-	if user.IsOwner {
-		result["owner"] = "true"
+	result := JWTClaims{
+		UserID:   user.UserID,
+		GroupIDs: user.GroupIDs,
+		Owner:    user.IsOwner,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().AddDate(10, 0, 0).Unix(), // Expires one hour from now.  (To be refreshed by Steranko)
+		},
 	}
 
 	return result

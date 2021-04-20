@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
@@ -51,6 +52,10 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 // RequestPasswordReset is not currently implemented in this service. (TODO)
 func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
 	return nil
+}
+
+func (service SterankoUserService) NewClaims() jwt.Claims {
+	return model.JWTClaims{}
 }
 
 // Close is required to implement the steranko.UserService interface

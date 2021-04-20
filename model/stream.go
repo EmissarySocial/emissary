@@ -131,6 +131,10 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 		result = append(result, "PUBLIC")
 	}
 
+	if authorization == nil {
+		return result
+	}
+
 	if !stream.AuthorID.IsZero() {
 		if authorization.UserID == stream.AuthorID {
 			result = append(result, "AUTHOR")

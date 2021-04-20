@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -18,7 +19,6 @@ type Renderer struct {
 	stream        model.Stream    // Stream to be displayed
 	viewID        string
 	transitionID  string
-	authorization model.Authorization
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
@@ -28,7 +28,6 @@ func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream mod
 		streamService: streamService,
 		request:       request,
 		stream:        stream,
-		authorization: request.Authorization(),
 	}
 
 	return result
@@ -161,7 +160,7 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var result bytes.Buffer
 
-	view, ok := w.streamService.View(&w.stream, w.ViewID(), &w.authorization)
+	view, ok := w.streamService.View(&w.stream, w.ViewID(), w.request.Authorization())
 
 	if !ok {
 		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.renderer.Render", "Unauthorized View", w.viewID)
@@ -174,6 +173,9 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	// Execut template
 	if err := view.Template.Execute(&result, w); err != nil {
+		spew.Dump(w.viewID)
+		spew.Dump(w.request.Authorization())
+		derp.Report(err)
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
 	}
 
@@ -184,7 +186,7 @@ func (w Renderer) Render() (template.HTML, error) {
 // RenderForm returns an HTML rendering of this form
 func (w Renderer) RenderForm() (template.HTML, error) {
 
-	transition, ok := w.streamService.Transition(&w.stream, w.TransitionID(), &w.authorization)
+	transition, ok := w.streamService.Transition(&w.stream, w.TransitionID(), w.request.Authorization())
 
 	if !ok {
 		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
@@ -204,13 +206,13 @@ func (w Renderer) RenderForm() (template.HTML, error) {
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) CanView(viewID string) bool {
-	_, ok := w.streamService.View(&w.stream, viewID, &w.authorization)
+	_, ok := w.streamService.View(&w.stream, viewID, w.request.Authorization())
 	return ok
 }
 
 // CanTransition returns TRUE is this Renderer is authorized to initiate a transition
 func (w Renderer) CanTransition(transitionID string) bool {
-	_, ok := w.streamService.Transition(&w.stream, transitionID, &w.authorization)
+	_, ok := w.streamService.Transition(&w.stream, transitionID, w.request.Authorization())
 	return ok
 }
 
@@ -227,7 +229,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 
 	var stream model.Stream
 
-	result := make([]Renderer, iterator.Count())
+	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
 		renderer := NewRenderer(w.streamService, w.request, stream)
@@ -237,6 +239,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 		if renderer.CanView(viewID) {
 			result = append(result, renderer)
 		}
+
 		stream = model.Stream{}
 	}
 

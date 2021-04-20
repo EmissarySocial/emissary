@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 
 	minify "github.com/tdewolff/minify/v2"
@@ -92,8 +91,6 @@ func (service *Layout) Load() error {
 	// Success!!
 	service.Template = layout
 	fmt.Println("updated layout service with new layout: ")
-
-	spew.Dump(service.Template.DefinedTemplates())
 
 	return nil
 }

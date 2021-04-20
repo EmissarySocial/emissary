@@ -19,13 +19,13 @@ require (
 	github.com/benpate/path v0.3.0
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/slice v0.0.2
-	github.com/benpate/steranko v0.2.3
+	github.com/benpate/steranko v0.3.3
 	github.com/davecgh/go-spew v1.1.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.2.2
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.16
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 )

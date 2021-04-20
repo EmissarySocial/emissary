@@ -5,18 +5,38 @@ import (
 	"net/http"
 
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // HTTPRequest wraps an HTTP request and tracks the properties of it that have been accessed.  This is used
 // to construct an accurate "Vary" header for cached responses.
 type HTTPRequest struct {
-	request *http.Request
+	request       *http.Request
+	authorization *model.Authorization
 }
 
 // NewHTTPRequest wraps an http.Request object
-func NewHTTPRequest(original *http.Request) *HTTPRequest {
-	return &HTTPRequest{request: original}
+func NewHTTPRequest(ctx echo.Context) *HTTPRequest {
+
+	result := HTTPRequest{
+		request: ctx.Request(),
+	}
+
+	// Get authorization from JWT claims (in context)
+	if context, ok := ctx.(steranko.Context); ok {
+		if claims, ok := context.Token.Claims.(*model.JWTClaims); ok {
+			result.authorization = &model.Authorization{
+				UserID:   claims.UserID,
+				GroupIDs: claims.GroupIDs,
+				IsOwner:  claims.Owner,
+			}
+
+		}
+	}
+
+	return &result
 }
 
 func (r *HTTPRequest) URL() string {
@@ -43,7 +63,6 @@ func (r *HTTPRequest) Partial() bool {
 	return (r.request.Header.Get("HX-Request") != "")
 }
 
-// Returns the authorization data for this request
-func (r *HTTPRequest) Authorization() model.Authorization {
-	return model.Authorization{}
+func (r *HTTPRequest) Authorization() *model.Authorization {
+	return r.authorization
 }

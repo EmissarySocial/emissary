@@ -221,6 +221,11 @@ func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
 ///////////////////////////////////////
 // NON MODEL SERVICES
 
+// Key returns an instance of the Key Manager Service (KMS)
+func (factory *Factory) Key() service.Key {
+	return service.Key{}
+}
+
 // Steranko returns a fully populated Steranko adapter for the User service.
 func (factory *Factory) Steranko() *steranko.Steranko {
 
@@ -228,7 +233,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 		sterankoUserService := service.NewSterankoUserService(factory.User())
 
-		factory.steranko = steranko.New(sterankoUserService, factory.domain.Steranko)
+		factory.steranko = steranko.New(sterankoUserService, factory.Key(), factory.domain.Steranko)
 	}
 
 	return factory.steranko

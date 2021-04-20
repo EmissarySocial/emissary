@@ -24,8 +24,6 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		b := factory.RealtimeBroker()
-
-		r := ctx.Request()
 		w := ctx.Response().Writer
 		done := ctx.Request().Context().Done()
 
@@ -38,7 +36,7 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		token := ctx.Param("stream")
 
-		httpRequest := domain.NewHTTPRequest(r)
+		httpRequest := domain.NewHTTPRequest(ctx)
 		client := domain.NewRealtimeClient(httpRequest, token)
 
 		// Add this client to the map of those that should

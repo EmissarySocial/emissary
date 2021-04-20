@@ -24,7 +24,7 @@ func (v View) MatchRoles(roles ...string) bool {
 
 	for i := range v.Roles {
 		for j := range roles {
-			if roles[i] == v.Roles[j] {
+			if v.Roles[i] == roles[j] {
 				return true
 			}
 		}

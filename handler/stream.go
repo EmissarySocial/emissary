@@ -116,7 +116,7 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		layoutService := factory.Layout()
-		request := domain.NewHTTPRequest(ctx.Request())
+		request := domain.NewHTTPRequest(ctx)
 		renderer := factory.StreamRenderer(*stream, request)
 
 		layoutFile := ctx.Param("file")
@@ -148,7 +148,7 @@ func renderLayout(factoryManager *server.FactoryManager, templateID string) echo
 		}
 
 		layoutService := factory.Layout()
-		request := domain.NewHTTPRequest(ctx.Request())
+		request := domain.NewHTTPRequest(ctx)
 		renderer := factory.StreamRenderer(*stream, request)
 
 		// Render full page (stream only).
@@ -213,7 +213,7 @@ func renderStream(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	var result bytes.Buffer
 
 	view := ctx.QueryParam("view")
-	request := domain.NewHTTPRequest(ctx.Request())
+	request := domain.NewHTTPRequest(ctx)
 	renderer := factory.StreamViewer(*stream, request, view)
 
 	// Partial page requests (stream only)
@@ -243,7 +243,7 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 	var result bytes.Buffer
 
 	layoutService := factory.Layout()
-	request := domain.NewHTTPRequest(ctx.Request())
+	request := domain.NewHTTPRequest(ctx)
 	renderer := factory.StreamTransitioner(*stream, request, transitionID)
 
 	if !renderer.CanTransition(renderer.TransitionID()) {
@@ -263,9 +263,8 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transitionID string) error {
 
 	// verify authorization
-	request := domain.NewHTTPRequest(ctx.Request())
+	request := domain.NewHTTPRequest(ctx)
 	renderer := factory.StreamTransitioner(*stream, request, transitionID)
-	authorization := request.Authorization()
 
 	if !renderer.CanTransition(renderer.TransitionID()) {
 		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderForm", "Forbidden")
@@ -281,7 +280,7 @@ func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Strea
 	streamService := factory.Stream()
 
 	// Execute Transition
-	transitionResult, err := streamService.DoTransition(stream, transitionID, form, &authorization)
+	transitionResult, err := streamService.DoTransition(stream, transitionID, form, request.Authorization())
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostTransition", "Error updating stream"))
