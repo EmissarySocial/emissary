@@ -12,6 +12,7 @@ import (
 // ListBuilder builds slices of Renderers
 type ListBuilder struct {
 	streamService *service.Stream
+	editorService *service.Editor
 	request       *HTTPRequest
 	parentID      primitive.ObjectID
 	currentID     primitive.ObjectID
@@ -21,10 +22,11 @@ type ListBuilder struct {
 }
 
 // NewListBuilder generates a fully-initialized ListBuilder
-func NewListBuilder(streamService *service.Stream, request *HTTPRequest, parentID primitive.ObjectID, currentID primitive.ObjectID) *ListBuilder {
+func NewListBuilder(streamService *service.Stream, editorService *service.Editor, request *HTTPRequest, parentID primitive.ObjectID, currentID primitive.ObjectID) *ListBuilder {
 
 	result := &ListBuilder{
 		streamService: streamService,
+		editorService: editorService,
 		request:       request,
 		parentID:      parentID,
 		currentID:     currentID,
@@ -229,7 +231,7 @@ func (builder *ListBuilder) Query() ([]Renderer, error) {
 	}
 
 	for it.Next(&stream) {
-		renderer := NewRenderer(builder.streamService, builder.request, stream)
+		renderer := NewRenderer(builder.streamService, builder.editorService, builder.request, stream)
 
 		if renderer.CanView(builder.view) {
 			renderer.viewID = builder.view

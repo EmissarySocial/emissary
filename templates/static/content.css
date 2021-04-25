@@ -1,0 +1,35 @@
+.columns {
+    display:flex;
+    flex-direction:row;
+    flex-wrap: wrap;
+    margin-right: -20px;
+}
+
+.columns > .column {
+    margin-right:20px;
+}
+
+.columns-1 > .column {
+
+}
+
+.columns-2 > .column {
+
+}
+
+.columns-3 > .column {
+
+}
+
+.columns-4 > .column {
+
+}
+
+.columns-5 > .column {
+
+}
+
+.columns-6 > .column {
+
+}
+

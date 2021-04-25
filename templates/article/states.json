@@ -23,6 +23,9 @@
 			"viewId": "default",
 			"roles": ["PUBLIC","AUTHOR","OWNER"]
 		},{
+			"viewId": "edit",
+			"roles": ["AUTHOR","OWNER"]
+		},{
 			"viewId": "list-item",
 			"roles": ["PUBLIC","AUTHOR","OWNER"]
 		}],

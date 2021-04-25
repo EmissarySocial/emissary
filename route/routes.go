@@ -22,6 +22,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/favicon.ico", echo.NotFoundHandler)
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryManager))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factoryManager))
+	e.GET("/.well-known/oembed", handler.GetOEmbed(factoryManager))
 
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factoryManager))

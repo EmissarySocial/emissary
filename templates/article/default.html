@@ -1,5 +1,9 @@
 <div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
+	{{ if .CanView "edit"}}
+		<a href="/{{.Token}}?view=edit" style="float:right;">Edit &raquo;</a>
+	{{ end }}
+
 	{{ if .HasParent }}
 		{{ $parent := .Parent "list-item"}}
 		<div>
@@ -13,37 +17,9 @@
 		<div>{{.Description}}</div>
 	</article>
 
-	<div class="space-after">
-		{{ if .CanTransition "update"}}
-		<span 
-			preload
-			hx-get="/{{.Token}}/transition/update" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			hx-push-url="false" 
-			class="button primary">Update Stream</span>
-		{{ end }}
-
-		{{ if .CanTransition "share"}}
-		<span 
-			preload
-			hx-get="/{{.Token}}/transition/share" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			hx-push-url="false" 
-			class="button primary">Share</span>
-		{{ end }}
-
-		{{ if .CanAddChild }}
-		<span 
-			preload
-			hx-get="/{{.Token}}/new" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			hx-push-url="false" 
-			class="button">+ Add Stream</span>
-		{{ end }}
-	</div>
+	<article class="space-after">
+		<div>{{.Content "body"}}</div>
+	</article>
 
 	<div class="space-after">
 		{{ range .Children "list-item" }}
@@ -52,5 +28,3 @@
 	</div>
 
 </div>
-
-<a href="/signin">Signin</a>

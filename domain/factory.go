@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
+	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
@@ -145,19 +146,19 @@ func (factory *Factory) Layout() *service.Layout {
 
 // StreamRenderer generates a new stream renderer service.
 func (factory *Factory) StreamRenderer(stream model.Stream, request *HTTPRequest) Renderer {
-	return NewRenderer(factory.Stream(), request, stream)
+	return NewRenderer(factory.Stream(), factory.Editor(), request, stream)
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
 func (factory *Factory) StreamViewer(stream model.Stream, request *HTTPRequest, viewID string) Renderer {
-	renderer := NewRenderer(factory.Stream(), request, stream)
+	renderer := NewRenderer(factory.Stream(), factory.Editor(), request, stream)
 	renderer.viewID = viewID
 	return renderer
 }
 
 // StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
 func (factory *Factory) StreamTransitioner(stream model.Stream, request *HTTPRequest, transitionID string) Renderer {
-	renderer := NewRenderer(factory.Stream(), request, stream)
+	renderer := NewRenderer(factory.Stream(), factory.Editor(), request, stream)
 	renderer.transitionID = transitionID
 	return renderer
 }
@@ -221,6 +222,26 @@ func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
 ///////////////////////////////////////
 // NON MODEL SERVICES
 
+// ContentLibrary returns our custom form widget library for
+// use in the form.Form package
+func (factory *Factory) ContentLibrary() content.Library {
+	return content.ViewerLibrary()
+}
+
+func (factory *Factory) Editor() *service.Editor {
+	return service.NewEditor()
+}
+
+// FormLibrary returns our custom form widget library for
+// use in the form.Form package
+func (factory *Factory) FormLibrary() form.Library {
+
+	library := form.New(factory.OptionProvider())
+	vocabulary.All(library)
+
+	return library
+}
+
 // Key returns an instance of the Key Manager Service (KMS)
 func (factory *Factory) Key() service.Key {
 	return service.Key{}
@@ -237,16 +258,6 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	}
 
 	return factory.steranko
-}
-
-// FormLibrary returns our custom form widget library for
-// use in the form.Form package
-func (factory *Factory) FormLibrary() form.Library {
-
-	library := form.New(factory.OptionProvider())
-	vocabulary.All(library)
-
-	return library
 }
 
 func (factory *Factory) OptionProvider() form.OptionProvider {

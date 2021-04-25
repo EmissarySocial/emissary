@@ -1,0 +1,60 @@
+<div>
+
+	<div class="space-after">
+		{{ if .CanTransition "update"}}
+		<span 
+			preload
+			hx-get="/{{.Token}}/transition/update" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="button">Info</span>
+		{{ end }}
+
+		{{ if .CanTransition "share"}}
+		<span 
+			preload
+			hx-get="/{{.Token}}/transition/share" 
+			hx-target="body" 
+			hx-swap="beforeend" 
+			hx-push-url="false" 
+			class="button">Share</span>
+		{{ end }}
+
+		<span 
+			preload
+			hx-get="/{{.Token}}" 
+			class="button primary">Done</span>
+	</div>
+
+	<h1 class="space-after">{{.Label}}</h1>
+
+	<article class="space-after">
+		<div>{{.Description}}</div>
+	</article>
+
+	<article class="space-after">
+		<div>{{.ContentEditor "body"}}</div>
+	</article>
+
+    {{ if .CanAddChild }}
+        <div class="space-after">
+            <span 
+                preload
+                hx-get="/{{.Token}}/new" 
+                hx-target="body" 
+                hx-swap="beforeend" 
+                hx-push-url="false" 
+                class="button">+ Add Stream</span>
+        </div>
+	{{ end }}
+  	<div class="space-after">
+
+		{{ range .Children "list-item" }}
+			{{.Render}}
+		{{ end }}
+	</div>
+
+</div>
+
+<a href="/signin">Signin</a>

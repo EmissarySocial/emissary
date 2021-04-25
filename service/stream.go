@@ -263,25 +263,6 @@ func (service Stream) NewWithTemplate(parentToken string, templateID string) (*m
 	return stream, nil
 }
 
-/*/ View returns the named View for the designated Stream.
-func (service Stream) View(stream *model.Stream, viewName string) (model.View, error) {
-
-	state, err := service.State(stream)
-
-	if err != nil {
-		return model.View{}, derp.Wrap(err, "ghost.serice.Stream.View", "Error loading template", stream.TemplateID)
-	}
-
-	view, ok := state.View(viewName)
-
-	if !ok {
-		return model.View{}, derp.New(500, "ghost.service.Stream.View", "Error loading view", viewName)
-	}
-
-	return view, nil
-}
-*/
-
 // Form generates an HTML form for the requested Stream and TransitionID
 func (service Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
 
@@ -360,25 +341,6 @@ func (service Stream) State(stream *model.Stream) (*model.State, error) {
 
 	return state, nil
 }
-
-/* Transition returns the detailed Transition information assoicated with this Stream
-func (service Stream) Transition(stream *model.Stream, transitionID string) (*model.State, *model.Transition, error) {
-
-	state, err := service.State(stream)
-
-	if err != nil {
-		return nil, nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error geting State definition")
-	}
-
-	transition, ok := state.Transition(transitionID)
-
-	if !ok {
-		return nil, nil, derp.Wrap(err, "ghost.service.Stream.Transition", "Error geting Transition")
-	}
-
-	return state, transition, nil
-}
-*/
 
 // Schema returns the Schema associated with this Stream
 func (service Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
