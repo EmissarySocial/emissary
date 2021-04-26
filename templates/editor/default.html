@@ -1,7 +1,12 @@
-<div class="editor-DEFAULT">{{.}}</div>
-<script src="/static/ckeditor5/build/ckeditor.js"></script>
-<script>
-InlineEditor.create( document.querySelector( '.editor-DEFAULT' ), {
+<form id="editor" hx-post="/{{.Stream}}/content" hx-target="#editor" hx-swap="outerHTML" method="post">
+	<input type="hidden" name="content" value="{{.Content}}">
+	<input type="hidden" name="hash" value="{{.Hash}}">
+	<textarea name="html" class="editor">{{.HTML}}</textarea>
+
+    <script src="/static/ckeditor5/build/ckeditor.js"></script>
+
+    <script>
+    ClassicEditor.create( document.querySelector( '.editor' ), {
         
         toolbar: {
             items: [
@@ -50,4 +55,11 @@ InlineEditor.create( document.querySelector( '.editor-DEFAULT' ), {
         console.warn( 'Build id: 7tnd8anyafyl-nohdljl880ze' );
         console.error( error );
     } );
-</script>
+    </script>
+
+    <script type="text/hyperscript">
+        on htmx:beforeRequest from #editor
+            set window.editor.readOnly to true
+    </script>
+
+</form>

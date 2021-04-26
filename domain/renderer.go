@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 )
@@ -78,22 +77,16 @@ func (w Renderer) Description() string {
 	return w.stream.Description
 }
 
-func (w Renderer) Body() template.HTML {
-	library := content.ViewerLibrary()
-	return template.HTML(library.Render(&w.stream.Body))
-}
-
 func (w Renderer) Content(name string) template.HTML {
 	return template.HTML(w.stream.Content[name].HTML)
 }
 
 func (w Renderer) ContentEditor(name string) template.HTML {
-	return template.HTML(w.editorService.Render(w.stream.Content[name].HTML))
-}
-
-func (w Renderer) BodyEditor() template.HTML {
-	library := content.EditorLibrary()
-	return template.HTML(library.Render(&w.stream.Body))
+	content := w.stream.Content[name]
+	content.Stream = w.stream.Token
+	content.Editor = "default"
+	content.Content = name
+	return template.HTML(w.editorService.Render(&content))
 }
 
 // PublishDate returns the PublishDate of the stream being rendered

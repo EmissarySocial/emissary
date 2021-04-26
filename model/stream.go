@@ -1,11 +1,15 @@
 package model
 
 import (
+	"math/rand"
+	"strconv"
+	"time"
+
 	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/content"
 	"github.com/benpate/path"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,7 +25,6 @@ type Stream struct {
 	Label           string                 `json:"label"           bson:"label"`               // Text to display in lists of streams, probably displayed at top of stream page, too.
 	Description     string                 `json:"description"     bson:"description"`         // Brief summary of this stream, used in lists of streams
 	Content         map[string]Content     `json:"content"         bson:"content"`             // Content objects for this stream.
-	Body            content.Item           `json:"body,omitempty"  bson:"body,omitempty"`      // Content item(s) that make up the body content of this stream.
 	ThumbnailImage  string                 `json:"thumbnailImage"  bson:"thumbnailImage"`      // Image to display next to the stream in lists.
 	AuthorID        primitive.ObjectID     `json:"authorId"        bson:"authorId"`            // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
 	AuthorName      string                 `json:"authorName"      bson:"authorName"`          // Full name of the person who created this stream
@@ -49,8 +52,9 @@ func NewStream() Stream {
 		Token:    streamID.Hex(),
 		StateID:  "new",
 		Criteria: NewCriteria(),
-		Tags:     []string{},
-		Data:     map[string]interface{}{},
+		Tags:     make([]string, 0),
+		Content:  make(map[string]Content, 0),
+		Data:     make(map[string]interface{}, 0),
 	}
 }
 
@@ -123,6 +127,29 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 		stream.Data[property] = value
 	}
 
+	return nil
+}
+
+func (stream *Stream) SetContent(c Content) error {
+
+	var key = c.Content // alias this for readability
+
+	spew.Dump("old", stream.Content)
+	spew.Dump("new", c)
+
+	// Verify authenticity..
+	if c.Hash != stream.Content[key].Hash {
+		return derp.New(derp.CodeBadRequestError, "ghost.model.Stream.SetContent", "Invalid Hash")
+	}
+
+	// Reset Random Hash
+	rand.Seed(time.Now().UnixNano())
+	c.Hash = strconv.FormatUint(rand.Uint64(), 36)
+
+	// Update content entry
+	stream.Content[key] = c
+
+	// Success!!
 	return nil
 }
 

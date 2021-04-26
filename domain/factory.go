@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
@@ -26,6 +25,7 @@ type Factory struct {
 	templateService *service.Template
 	streamService   *service.Stream
 	layoutService   *service.Layout
+	editorService   *service.Editor
 	steranko        *steranko.Steranko
 
 	// real-time watchers
@@ -58,6 +58,9 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	}
 
 	// Initialize Background Services
+
+	// Editor Service
+	factory.Editor()
 
 	// This loads the web page layout (real-time updates to wait until later)
 	factory.Layout()
@@ -221,12 +224,6 @@ func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
 
 ///////////////////////////////////////
 // NON MODEL SERVICES
-
-// ContentLibrary returns our custom form widget library for
-// use in the form.Form package
-func (factory *Factory) ContentLibrary() content.Library {
-	return content.ViewerLibrary()
-}
 
 func (factory *Factory) Editor() *service.Editor {
 	return service.NewEditor()

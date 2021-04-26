@@ -1,70 +1,34 @@
 package service
 
 import (
-	"strings"
+	"bytes"
+	"html/template"
+
+	"github.com/benpate/derp"
+	"github.com/benpate/ghost/model"
 )
 
 type Editor struct {
+	template *template.Template
 }
 
 func NewEditor() *Editor {
-	return &Editor{}
+	t, err := template.ParseGlob("./templates/editor/*")
+
+	derp.Report(derp.Wrap(err, "ghost.service.Editor.NewEditor", "Unable to parse editor templates."))
+
+	return &Editor{
+		template: t,
+	}
 }
 
-func (e Editor) Render(content string) string {
-	html := `<div class="editor-DEFAULT">{{.}}</div>
-	<script src="/static/ckeditor5/build/ckeditor.js"></script>
-	<script>
-	InlineEditor.create( document.querySelector( '.editor-DEFAULT' ), {
-			
-			toolbar: {
-				items: [
-					'heading',
-					'|',
-					'bold',
-					'italic',
-					'link',
-					'bulletedList',
-					'numberedList',
-					'|',
-					'outdent',
-					'indent',
-					'|',
-					'imageUpload',
-					'blockQuote',
-					'insertTable',
-					'mediaEmbed',
-					'undo',
-					'redo'
-				]
-			},
-			language: 'en',
-			image: {
-				toolbar: [
-					'imageTextAlternative',
-					'imageStyle:full',
-					'imageStyle:side'
-				]
-			},
-			table: {
-				contentToolbar: [
-					'tableColumn',
-					'tableRow',
-					'mergeTableCells'
-				]
-			},
-			licenseKey: '',
-		} )
-		.then( editor => {
-			window.editor = editor;
-		} )
-		.catch( error => {
-			console.error( 'Oops, something went wrong!' );
-			console.error( 'Please, report the following error on https://github.com/ckeditor/ckeditor5/issues with the build id and the error stack trace:' );
-			console.warn( 'Build id: 7tnd8anyafyl-nohdljl880ze' );
-			console.error( error );
-		} );
-	</script>`
+func (e Editor) Render(content *model.Content) template.HTML {
 
-	return strings.Replace(html, "{{.}}", content, 1)
+	var buffer bytes.Buffer
+
+	if err := e.template.ExecuteTemplate(&buffer, content.Editor+".html", content); err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.Editor.Render", "Error rendering template", content))
+	}
+
+	return template.HTML(buffer.String())
 }

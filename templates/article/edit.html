@@ -1,30 +1,33 @@
 <div>
 
 	<div class="space-after">
-		{{ if .CanTransition "update"}}
-		<span 
-			preload
-			hx-get="/{{.Token}}/transition/update" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			hx-push-url="false" 
-			class="button">Info</span>
-		{{ end }}
-
-		{{ if .CanTransition "share"}}
-		<span 
-			preload
-			hx-get="/{{.Token}}/transition/share" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			hx-push-url="false" 
-			class="button">Share</span>
-		{{ end }}
-
 		<span 
 			preload
 			hx-get="/{{.Token}}" 
-			class="button primary">Done</span>
+			class="button">&laquo; Back</span>
+
+		<button _="on click send submit to #editor" class="button primary">Save</button>
+
+		{{ if .CanTransition "update"}}
+			<span 
+				preload
+				hx-get="/{{.Token}}/transition/update" 
+				hx-target="body" 
+				hx-swap="beforeend" 
+				hx-push-url="false" 
+				class="button">Info</span>
+		{{ end }}
+
+		{{ if .CanTransition "share"}}
+			<span 
+				preload
+				hx-get="/{{.Token}}/transition/share" 
+				hx-target="body" 
+				hx-swap="beforeend" 
+				hx-push-url="false" 
+				class="button">Share</span>
+		{{ end }}
+
 	</div>
 
 	<h1 class="space-after">{{.Label}}</h1>

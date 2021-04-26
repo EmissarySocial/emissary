@@ -42,7 +42,8 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	// Stream Pages
 	e.GET("/", handler.GetStream(factoryManager))        // ?view=
-	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view= or ?transition=
+	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view=
+	e.POST("/:stream/content", handler.PostStreamContent((factoryManager)))
 	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
 	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
