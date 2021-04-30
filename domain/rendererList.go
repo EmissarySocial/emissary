@@ -11,27 +11,27 @@ import (
 
 // ListBuilder builds slices of Renderers
 type ListBuilder struct {
-	streamService *service.Stream
-	editorService *service.Editor
-	request       *HTTPRequest
-	parentID      primitive.ObjectID
-	currentID     primitive.ObjectID
-	criteria      exp.Expression
-	options       []option.Option
-	view          string
+	streamService  *service.Stream
+	libraryService *service.ContentLibrary
+	request        *HTTPRequest
+	parentID       primitive.ObjectID
+	currentID      primitive.ObjectID
+	criteria       exp.Expression
+	options        []option.Option
+	view           string
 }
 
 // NewListBuilder generates a fully-initialized ListBuilder
-func NewListBuilder(streamService *service.Stream, editorService *service.Editor, request *HTTPRequest, parentID primitive.ObjectID, currentID primitive.ObjectID) *ListBuilder {
+func NewListBuilder(streamService *service.Stream, libraryService *service.ContentLibrary, request *HTTPRequest, parentID primitive.ObjectID, currentID primitive.ObjectID) *ListBuilder {
 
 	result := &ListBuilder{
-		streamService: streamService,
-		editorService: editorService,
-		request:       request,
-		parentID:      parentID,
-		currentID:     currentID,
-		options:       make([]option.Option, 0),
-		view:          "list",
+		streamService:  streamService,
+		libraryService: libraryService,
+		request:        request,
+		parentID:       parentID,
+		currentID:      currentID,
+		options:        make([]option.Option, 0),
+		view:           "list",
 	}
 
 	return result.Children()
@@ -231,7 +231,7 @@ func (builder *ListBuilder) Query() ([]Renderer, error) {
 	}
 
 	for it.Next(&stream) {
-		renderer := NewRenderer(builder.streamService, builder.editorService, builder.request, stream)
+		renderer := NewRenderer(builder.streamService, builder.libraryService, builder.request, stream)
 
 		if renderer.CanView(builder.view) {
 			renderer.viewID = builder.view

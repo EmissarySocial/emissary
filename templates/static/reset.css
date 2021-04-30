@@ -16,6 +16,7 @@ td, footer, header, menu, nav, section, video {
 	font-weight: 400;
 	font-style: inherit;
 	font-size: 100%;
+    line-height:135%;
 
     text-decoration: none;
     text-align: left;

@@ -5,10 +5,10 @@ import (
 
 	"github.com/benpate/choose"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/server"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -34,29 +34,28 @@ func PostStreamContent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var content model.Content
+		var transaction struct {
+			Key     string       `form:"key"`
+			Content content.Item `form:"content"`
+		}
 
 		factory, stream, err := loadStream(ctx, factoryManager)
 
 		if err != nil {
-			spew.Dump(err)
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error Loading Stream"))
 		}
 
-		if err := ctx.Bind(&content); err != nil {
-			spew.Dump(err)
+		if err := ctx.Bind(&transaction); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error binding data"))
 		}
 
-		if err := stream.SetContent(content); err != nil {
-			spew.Dump(err)
+		if err := stream.SetContent(transaction.Key, transaction.Content); err != nil {
 			return derp.Report(err)
 		}
 
 		streamService := factory.Stream()
 
-		if err := streamService.Save(stream, "edit content: "+content.Content); err != nil {
-			spew.Dump(err)
+		if err := streamService.Save(stream, "edit content: "+transaction.Key); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error saving stream"))
 		}
 

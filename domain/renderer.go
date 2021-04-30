@@ -13,22 +13,22 @@ import (
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	streamService *service.Stream // StreamService is used to load child streams
-	editorService *service.Editor // Manages WYSIWYG editor components
-	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
-	stream        model.Stream    // Stream to be displayed
-	viewID        string
-	transitionID  string
+	streamService  *service.Stream         // StreamService is used to load child streams
+	libraryService *service.ContentLibrary // LibraryService generates content rendering libraries
+	request        *HTTPRequest            // Additional request info URL params, Authentication, etc.
+	stream         model.Stream            // Stream to be displayed
+	viewID         string
+	transitionID   string
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, editorService *service.Editor, request *HTTPRequest, stream model.Stream) Renderer {
+func NewRenderer(streamService *service.Stream, libraryService *service.ContentLibrary, request *HTTPRequest, stream model.Stream) Renderer {
 
 	result := Renderer{
-		streamService: streamService,
-		editorService: editorService,
-		request:       request,
-		stream:        stream,
+		streamService:  streamService,
+		libraryService: libraryService,
+		request:        request,
+		stream:         stream,
 	}
 
 	return result
@@ -78,15 +78,15 @@ func (w Renderer) Description() string {
 }
 
 func (w Renderer) Content(name string) template.HTML {
-	return template.HTML(w.stream.Content[name].HTML)
+	viewer := w.libraryService.Viewer()
+	item := w.stream.Content[name]
+	return template.HTML(viewer.Render(&item))
 }
 
 func (w Renderer) ContentEditor(name string) template.HTML {
-	content := w.stream.Content[name]
-	content.Stream = w.stream.Token
-	content.Editor = "default"
-	content.Content = name
-	return template.HTML(w.editorService.Render(&content))
+	editor := w.libraryService.Editor()
+	item := w.stream.Content[name]
+	return template.HTML(editor.Render(&item))
 }
 
 // PublishDate returns the PublishDate of the stream being rendered
@@ -128,7 +128,7 @@ func (w Renderer) Parent(viewID string) (Renderer, error) {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result = NewRenderer(w.streamService, w.editorService, w.request, *parent)
+	result = NewRenderer(w.streamService, w.libraryService, w.request, *parent)
 	result.viewID = viewID
 
 	return result, nil
@@ -242,7 +242,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
-		renderer := NewRenderer(w.streamService, w.editorService, w.request, stream)
+		renderer := NewRenderer(w.streamService, w.libraryService, w.request, stream)
 		renderer.viewID = viewID
 
 		// Enforce permissions here...

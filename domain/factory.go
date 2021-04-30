@@ -25,7 +25,6 @@ type Factory struct {
 	templateService *service.Template
 	streamService   *service.Stream
 	layoutService   *service.Layout
-	editorService   *service.Editor
 	steranko        *steranko.Steranko
 
 	// real-time watchers
@@ -58,9 +57,6 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	}
 
 	// Initialize Background Services
-
-	// Editor Service
-	factory.Editor()
 
 	// This loads the web page layout (real-time updates to wait until later)
 	factory.Layout()
@@ -149,19 +145,19 @@ func (factory *Factory) Layout() *service.Layout {
 
 // StreamRenderer generates a new stream renderer service.
 func (factory *Factory) StreamRenderer(stream model.Stream, request *HTTPRequest) Renderer {
-	return NewRenderer(factory.Stream(), factory.Editor(), request, stream)
+	return NewRenderer(factory.Stream(), factory.Library(), request, stream)
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
 func (factory *Factory) StreamViewer(stream model.Stream, request *HTTPRequest, viewID string) Renderer {
-	renderer := NewRenderer(factory.Stream(), factory.Editor(), request, stream)
+	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.viewID = viewID
 	return renderer
 }
 
 // StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
 func (factory *Factory) StreamTransitioner(stream model.Stream, request *HTTPRequest, transitionID string) Renderer {
-	renderer := NewRenderer(factory.Stream(), factory.Editor(), request, stream)
+	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.transitionID = transitionID
 	return renderer
 }
@@ -225,8 +221,8 @@ func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
 ///////////////////////////////////////
 // NON MODEL SERVICES
 
-func (factory *Factory) Editor() *service.Editor {
-	return service.NewEditor()
+func (factory *Factory) Library() *service.ContentLibrary {
+	return &service.ContentLibrary{}
 }
 
 // FormLibrary returns our custom form widget library for
