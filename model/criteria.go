@@ -17,7 +17,7 @@ func NewCriteria() Criteria {
 	return Criteria{
 		Inherit: true,
 		Public:  false,
-		Roles:   make(map[primitive.ObjectID][]string, 0),
+		Roles:   make(map[primitive.ObjectID][]string),
 	}
 }
 

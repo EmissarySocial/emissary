@@ -1,20 +1,23 @@
 package content
 
 import (
+	"strconv"
+
 	"github.com/benpate/html"
-	"github.com/davecgh/go-spew/spew"
 )
 
 const ItemTypeWYSIWYG = "WYSIWYG"
 
-func WYSIWYGViewer(lib *Library, b *html.Builder, pm *PathMaker, item *Item) {
-	content := item.GetString("html")
-	spew.Dump(content)
-	b.WriteString(content)
+func WYSIWYGViewer(lib *Library, b *html.Builder, content Content, id int) {
+	item := content[id]
+	result := item.GetString("html")
+	b.WriteString(result)
 }
 
-func WYSIWYGEditor(lib *Library, b *html.Builder, pm *PathMaker, item *Item) {
-	content := item.GetString("html")
-	pathID := "body." + pm.NextPath(".")
-	b.Div().ID(pathID).Class("ck-editor").InnerHTML(content).Close()
+func WYSIWYGEditor(lib *Library, b *html.Builder, content Content, id int) {
+	item := content[id]
+	result := item.GetString("html")
+	path := "id-" + strconv.Itoa(id)
+
+	b.Div().ID(path).Class("ck-editor").InnerHTML(result).Close()
 }

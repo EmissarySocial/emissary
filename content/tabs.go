@@ -1,49 +1,49 @@
 package content
 
 import (
-	"github.com/benpate/convert"
+	"strconv"
+
 	"github.com/benpate/html"
 )
 
 const ItemTypeTabs = "TABS"
 
-func TabsViewer(lib *Library, builder *html.Builder, pm *PathMaker, item *Item) {
-	labels := convert.SliceOfString(item.GetInterface("labels"))
+func TabsViewer(lib *Library, builder *html.Builder, content Content, id int) {
+	item := content[id]
+	labels := item.GetSliceOfString("labels")
 
 	builder.Div().Class("tabs")
-	for _, label := range labels {
-		id := "#tab-" + pm.NextPath("-")
-		builder.A(id).Class("tabs-label").InnerHTML(label).Close()
+	for index, id := range item.Refs {
+		nodeID := "#id-" + strconv.Itoa(id)
+		label := labels[index]
+		builder.A(nodeID).Class("tabs-label").InnerHTML(label).Close()
 	}
 
-	pm.Rewind(len(labels))
-
-	for index := range item.Kids {
-		id := "tab-" + pm.NextPath("-")
-		builder.Div().ID(id).EndBracket()
-		lib.SubTree(builder, pm, &item.Kids[index])
+	for _, id := range item.Refs {
+		nodeID := "id-" + strconv.Itoa(id)
+		builder.Div().ID(nodeID).EndBracket()
+		lib.SubTree(builder, content, id)
 		builder.Close()
 	}
 
 	builder.Close()
 }
 
-func TabsEditor(lib *Library, builder *html.Builder, pm *PathMaker, item *Item) {
-
-	labels := convert.SliceOfString(item.GetInterface("labels"))
+func TabsEditor(lib *Library, builder *html.Builder, content Content, id int) {
+	item := content[id]
+	labels := item.GetSliceOfString("labels")
 
 	builder.Div().Class("tabs")
-	for _, label := range labels {
-		id := "#tab-" + pm.NextPath("-")
-		builder.A(id).Class("tabs-label").InnerHTML(label).Close()
+	for index, id := range item.Refs {
+		nodeID := "#id-" + strconv.Itoa(id)
+		label := labels[index]
+		builder.A(nodeID).Class("tabs-label").InnerHTML(label).Close()
 	}
 
-	pm.Rewind(len(labels))
-
-	for index := range item.Kids {
-		id := "tab-" + pm.NextPath("-")
-		builder.Div().ID(id).EndBracket()
-		lib.SubTree(builder, pm, &item.Kids[index])
+	for _, id := range item.Refs {
+		nodeID := "id-" + strconv.Itoa(id)
+		builder.Div().ID(nodeID).EndBracket()
+		lib.SubTree(builder, content, id)
 		builder.Close()
 	}
 

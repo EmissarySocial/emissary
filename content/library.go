@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/html"
 )
 
-type Widget func(*Library, *html.Builder, *PathMaker, *Item)
+type Widget func(*Library, *html.Builder, Content, int)
 
 type Library struct {
 	widgets map[string]Widget
@@ -53,25 +53,23 @@ func (library *Library) Register(class string, widget Widget) *Library {
 }
 
 // Render returns the HTML for a specific content.Item, based on the RenderType requested
-func (library *Library) Render(item *Item) string {
+func (library *Library) Render(content Content, id int) string {
 
 	builder := html.New()
-	pm := NewPathMaker()
 
-	if widget, ok := library.widgets[item.Type]; ok {
-		widget(library, builder, &pm, item)
+	if widget, ok := library.widgets[content[id].Type]; ok {
+		widget(library, builder, content, id)
 	}
 
 	return builder.String()
 }
 
 // RenderToBuilder uses the widget library to safely append values to an existing html.Builder
-func (library *Library) SubTree(builder *html.Builder, pm *PathMaker, item *Item) {
+func (library *Library) SubTree(builder *html.Builder, content Content, id int) {
 
-	if widget, ok := library.widgets[item.Type]; ok {
+	if widget, ok := library.widgets[content[id].Type]; ok {
 		subBuilder := builder.SubTree()
-		subPathMaker := pm.SubTree()
-		widget(library, subBuilder, &subPathMaker, item)
+		widget(library, subBuilder, content, id)
 		subBuilder.CloseAll()
 	}
 }

@@ -4,7 +4,9 @@ import "github.com/benpate/html"
 
 const ItemTypeOEmbed = "OEMBED"
 
-func OEmbedViewer(library *Library, builder *html.Builder, pm *PathMaker, item *Item) {
+func OEmbedViewer(library *Library, builder *html.Builder, content Content, id int) {
+
+	item := content[id]
 
 	// If the oEmbed data includes HTML, then just use that and be done.
 	if html := item.GetString("html"); html != "" {
@@ -24,6 +26,6 @@ func OEmbedViewer(library *Library, builder *html.Builder, pm *PathMaker, item *
 	}
 }
 
-func OEmbedEditor(library *Library, builder *html.Builder, pm *PathMaker, item *Item) {
+func OEmbedEditor(library *Library, builder *html.Builder, content Content, id int) {
 	builder.Div().InnerHTML("-- placeholder for oEmbed editor --").Close()
 }

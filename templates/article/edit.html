@@ -37,7 +37,7 @@
 	</article>
 
 	<article class="space-after">
-		<div>{{.ContentEditor "body"}}</div>
+		<div>{{.ContentEditor}}</div>
 	</article>
 
     {{ if .CanAddChild }}
@@ -61,7 +61,7 @@
 </div>
 
 <script src="/static/ckeditor5/build/ckeditor.js"></script>
-<script>
+<script defer>
 	InlineEditor.create( document.querySelector( '.ck-editor' ), {
 		
 		toolbar: {

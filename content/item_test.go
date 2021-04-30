@@ -18,7 +18,7 @@ func TestItem(t *testing.T) {
 func TestItemDecode(t *testing.T) {
 
 	var item Item
-	encoded := `{"type":"TEXT", "map":{"text": "Hello There"}}`
+	encoded := `{"type":"TEXT", "data":{"text": "Hello There"}}`
 
 	err := json.Unmarshal([]byte(encoded), &item)
 

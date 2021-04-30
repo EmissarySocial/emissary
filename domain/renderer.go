@@ -77,16 +77,16 @@ func (w Renderer) Description() string {
 	return w.stream.Description
 }
 
-func (w Renderer) Content(name string) template.HTML {
+func (w Renderer) Content() template.HTML {
 	viewer := w.libraryService.Viewer()
-	item := w.stream.Content[name]
-	return template.HTML(viewer.Render(&item))
+	result := w.stream.Content.Render(viewer)
+	return template.HTML(result)
 }
 
-func (w Renderer) ContentEditor(name string) template.HTML {
+func (w Renderer) ContentEditor() template.HTML {
 	editor := w.libraryService.Editor()
-	item := w.stream.Content[name]
-	return template.HTML(editor.Render(&item))
+	result := w.stream.Content.Render(editor)
+	return template.HTML(result)
 }
 
 // PublishDate returns the PublishDate of the stream being rendered
