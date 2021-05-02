@@ -24,12 +24,12 @@ func WYSIWYGEditor(lib *Library, b *html.Builder, content Content, id int) {
 	on load 
 		set @hx-post to @action
 		set @hx-target to "#toaster"
+		set @hx-swap to "innerHTML"
 		set @hx-trigger to "save"
 		set @hx-push-url to false
 		call htmx.process(me)
 
 	on beforeSave(html)
-	log html
 		tell <[name=html]/> in me
 			set @value to html
 		end
@@ -42,7 +42,7 @@ func WYSIWYGEditor(lib *Library, b *html.Builder, content Content, id int) {
 			wait for blur
 			set editor.isReadOnly to true
 			send beforeSave(html:editor.getData()) to closest <form/>
-			wait for htmx:afterOnLoad
+			wait for htmx:afterOnLoad from window
 			set editor.isReadOnly to false
 		end
 	end`

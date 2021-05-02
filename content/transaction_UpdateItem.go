@@ -2,7 +2,6 @@ package content
 
 import (
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type UpdateItemTransaction struct {
@@ -12,8 +11,6 @@ type UpdateItemTransaction struct {
 }
 
 func (txn UpdateItemTransaction) Execute(content *Content) error {
-
-	spew.Dump(txn)
 
 	err := content.UpdateItem(txn.ItemID, txn.Data, txn.Hash)
 	return derp.Wrap(err, "content.UpdateItemTransaction", "Error updating item")

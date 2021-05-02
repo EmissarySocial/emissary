@@ -2,8 +2,10 @@ package handler
 
 import (
 	"bytes"
+	"math/rand"
 
 	"github.com/benpate/choose"
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/domain"
@@ -62,6 +64,7 @@ func PostStreamContent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error saving stream"))
 		}
 
+		ctx.String(200, convert.String(rand.Int63()))
 		// ctx.Response().Header().Add("HX-Redirect", "/"+stream.Token)
 		return ctx.NoContent(200)
 	}
