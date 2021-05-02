@@ -34,7 +34,7 @@ func Select(library form.Library) {
 			for _, option := range options {
 				label := b.Label(f.ID)
 
-				input := b.Input().ID(f.ID).Name(f.Path).Value(option.Value).Attr("type", "checkbox")
+				input := b.Input("checkbox", f.Path).ID(f.ID).Value(option.Value)
 
 				if compare.Contains(valueSlice, option.Value) {
 					input.Attr("checked", "true")
@@ -57,11 +57,9 @@ func Select(library form.Library) {
 			for _, option := range options {
 				label := b.Label(f.ID)
 
-				input := b.Input().
+				input := b.Input("radio", f.Path).
 					ID(f.ID).
-					Name(f.Path).
-					Value(option.Value).
-					Type("radio")
+					Value(option.Value)
 
 				if valueString == option.Value {
 					input.Attr("checked", "true")

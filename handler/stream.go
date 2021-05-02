@@ -34,32 +34,35 @@ func PostStreamContent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var transaction struct {
-			Key     string       `form:"key"`
-			Content content.Item `form:"content"`
-		}
-
 		factory, stream, err := loadStream(ctx, factoryManager)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error Loading Stream"))
 		}
 
-		if err := ctx.Bind(&transaction); err != nil {
+		body := make(map[string]interface{})
+
+		if err := ctx.Bind(&body); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error binding data"))
 		}
 
-		if err := stream.SetContent(transaction.Key, transaction.Content); err != nil {
-			return derp.Report(err)
+		transaction, err := content.ParseTransaction(body)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error parsing transaction", body))
+		}
+
+		if err := transaction.Execute(&stream.Content); err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error executing transaction", transaction))
 		}
 
 		streamService := factory.Stream()
 
-		if err := streamService.Save(stream, "edit content: "+transaction.Key); err != nil {
+		if err := streamService.Save(stream, "edit content: "+transaction.Description()); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamContent", "Error saving stream"))
 		}
 
-		ctx.Response().Header().Add("HX-Redirect", "/"+stream.Token)
+		// ctx.Response().Header().Add("HX-Redirect", "/"+stream.Token)
 		return ctx.NoContent(200)
 	}
 }

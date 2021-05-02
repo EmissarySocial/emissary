@@ -31,11 +31,9 @@ func Option(library form.Library) {
 
 		b.Label(f.ID)
 
-		b.Input().
+		b.Input(format, f.Path).
 			ID(f.ID).
-			Name(f.Path).
 			Value(valueString).
-			Type(format).
 			Class(f.CSSClass).
 			InnerHTML(f.Label)
 

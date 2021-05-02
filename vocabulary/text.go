@@ -22,9 +22,8 @@ func Text(library form.Library) {
 		valueString := convert.String(value)
 
 		// Start building a new tag
-		tag := b.Input().
+		tag := b.Input("text", f.Path).
 			ID(f.ID).
-			Name(f.Path).
 			Value(valueString)
 
 		// Enumeration Options

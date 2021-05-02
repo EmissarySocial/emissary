@@ -10,6 +10,6 @@ func (contentLibrary ContentLibrary) Viewer() content.Library {
 }
 
 // Viewer returns a content library used to EDIT content.Items
-func (contentLibrary ContentLibrary) Editor() content.Library {
-	return content.EditorLibrary()
+func (contentLibrary ContentLibrary) Editor(endpoint string) content.Library {
+	return content.EditorLibrary(endpoint)
 }

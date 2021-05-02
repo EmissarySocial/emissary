@@ -27,8 +27,8 @@ github.com/benpate/exp v0.0.2/go.mod h1:H1xq7SSNHUDA6RrCVGeh7hTK4Ts+5WA/zeFze1Jv
 github.com/benpate/form v0.3.7 h1:RkvFa4oOFdtohdj1x64pt/IkLHrmmp8W0AAoFxjKwC4=
 github.com/benpate/form v0.3.7/go.mod h1:eikWXp9UzXvY96de3aIlyCffLuvmy12lyZR+rO4BrA4=
 github.com/benpate/html v0.9.3/go.mod h1:LfFlgbO4BW7dMxGdlFHv1viDdfrw54YDkE5jmWQDapw=
-github.com/benpate/html v0.10.2 h1:p+nrypg1vQY7QiT8LfSx3TPaoCoYyVQODT/plyCH0mY=
-github.com/benpate/html v0.10.2/go.mod h1:LfFlgbO4BW7dMxGdlFHv1viDdfrw54YDkE5jmWQDapw=
+github.com/benpate/html v0.11.0 h1:493Z6UzwgeKWh2KTRenhn6M8jNKxG0YDdgjk0hqftrY=
+github.com/benpate/html v0.11.0/go.mod h1:LfFlgbO4BW7dMxGdlFHv1viDdfrw54YDkE5jmWQDapw=
 github.com/benpate/htmlconv v0.3.0 h1:UzIONnBJWtzBB3pYfKxlkq5JCsMq/+ImpAqNEmvFGcQ=
 github.com/benpate/htmlconv v0.3.0/go.mod h1:9P8tQ62E5L/KF2wTNI0szRTKs3b9WlOHj4Gxmp66rf4=
 github.com/benpate/list v0.4.0 h1:da3D4pYWTFEb1i+Tj/a3uR9N969a7y5JOclVy2gYUfs=

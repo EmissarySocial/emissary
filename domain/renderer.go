@@ -84,7 +84,7 @@ func (w Renderer) Content() template.HTML {
 }
 
 func (w Renderer) ContentEditor() template.HTML {
-	editor := w.libraryService.Editor()
+	editor := w.libraryService.Editor("/" + w.Token() + "/content")
 	result := w.stream.Content.Render(editor)
 	return template.HTML(result)
 }

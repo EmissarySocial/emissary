@@ -7,7 +7,8 @@ import (
 type Widget func(*Library, *html.Builder, Content, int)
 
 type Library struct {
-	widgets map[string]Widget
+	widgets  map[string]Widget
+	Endpoint string
 }
 
 func NewLibrary() Library {
@@ -31,8 +32,9 @@ func ViewerLibrary() Library {
 	return result
 }
 
-func EditorLibrary() Library {
+func EditorLibrary(endpoint string) Library {
 	result := NewLibrary()
+	result.Endpoint = endpoint
 
 	result.Register(ItemTypeText, TextEditor)
 	result.Register(ItemTypeWYSIWYG, WYSIWYGEditor)
