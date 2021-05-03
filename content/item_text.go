@@ -20,5 +20,5 @@ func TextEditor(lib *Library, b *html.Builder, content Content, id int) {
 	item := content[id]
 	result := item.GetString("text")
 	path := "id-" + strconv.Itoa(id)
-	b.Container("textarea").ID(path).Class("content-editor").InnerHTML(result).Close()
+	b.Container("textarea").ID(path).Class("content-editor").InnerHTML(result)
 }
