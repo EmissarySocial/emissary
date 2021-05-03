@@ -153,7 +153,7 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) StreamViewer(ctx echo.Context, stream *model.Stream, viewID string) Renderer {
+func (factory *Factory) StreamViewer(ctx echo.Context, stream model.Stream, viewID string) Renderer {
 	request := NewHTTPRequest(ctx)
 	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.viewID = viewID
@@ -161,7 +161,7 @@ func (factory *Factory) StreamViewer(ctx echo.Context, stream *model.Stream, vie
 }
 
 // StreamEditor generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) StreamEditor(ctx echo.Context, stream *model.Stream) Renderer {
+func (factory *Factory) StreamEditor(ctx echo.Context, stream model.Stream) Renderer {
 	request := NewHTTPRequest(ctx)
 	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.viewID = "edit"
@@ -170,7 +170,7 @@ func (factory *Factory) StreamEditor(ctx echo.Context, stream *model.Stream) Ren
 }
 
 // StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
-func (factory *Factory) StreamTransitioner(ctx echo.Context, stream *model.Stream, transitionID string) Renderer {
+func (factory *Factory) StreamTransitioner(ctx echo.Context, stream model.Stream, transitionID string) Renderer {
 	request := NewHTTPRequest(ctx)
 	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.transitionID = transitionID

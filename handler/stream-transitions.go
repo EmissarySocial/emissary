@@ -84,7 +84,7 @@ func PostTransition(factoryManager *server.FactoryManager) echo.HandlerFunc {
 func doTransition(ctx echo.Context, factory *domain.Factory, stream *model.Stream, transitionID string) error {
 
 	// verify authorization
-	renderer := factory.StreamTransitioner(ctx, stream, transitionID)
+	renderer := factory.StreamTransitioner(ctx, *stream, transitionID)
 
 	if !renderer.CanTransition(renderer.TransitionID()) {
 		return derp.New(derp.CodeForbiddenError, "ghost.handler.stream.renderForm", "Forbidden")

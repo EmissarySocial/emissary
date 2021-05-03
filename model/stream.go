@@ -58,8 +58,9 @@ func NewStream() Stream {
 		Content: content.Content{
 			0: {
 				Type: "CONTAINER",
+				Refs: []int{1},
 				Data: datatype.Map{
-					"children": []int{1},
+					"style": "ROWS",
 				},
 			},
 			1: {

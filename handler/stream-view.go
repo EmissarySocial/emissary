@@ -22,7 +22,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Get the renderer
-		renderer := factory.StreamViewer(ctx, stream, ctx.Param("view"))
+		renderer := factory.StreamViewer(ctx, *stream, ctx.Param("view"))
 
 		// Render the draft stream
 		return derp.Report(renderStream(ctx, factory, renderer))

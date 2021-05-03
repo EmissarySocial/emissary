@@ -29,7 +29,7 @@ func GetStreamDraft(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Get the renderer
-		renderer := factory.StreamEditor(ctx, draft)
+		renderer := factory.StreamEditor(ctx, *draft)
 
 		// Render the draft stream
 		return derp.Report(renderStream(ctx, factory, renderer))

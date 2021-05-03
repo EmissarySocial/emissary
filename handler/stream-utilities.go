@@ -46,7 +46,7 @@ func renderForm(ctx echo.Context, factory *domain.Factory, stream *model.Stream,
 	var result bytes.Buffer
 
 	// Get the renderer
-	renderer := factory.StreamTransitioner(ctx, stream, transitionID)
+	renderer := factory.StreamTransitioner(ctx, *stream, transitionID)
 
 	// Verify authorization
 	if !renderer.CanTransition(renderer.TransitionID()) {

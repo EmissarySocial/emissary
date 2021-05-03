@@ -34,7 +34,7 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Get the renderer
-		renderer := factory.StreamViewer(ctx, stream, "default")
+		renderer := factory.StreamViewer(ctx, *stream, "default")
 
 		// Render full page (stream only).
 		layoutService := factory.Layout()
