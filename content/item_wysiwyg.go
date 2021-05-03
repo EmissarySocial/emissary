@@ -53,7 +53,7 @@ func WYSIWYGEditor(lib *Library, b *html.Builder, content Content, id int) {
 		b.Input("hidden", "itemId").Value(idString)
 		b.Input("hidden", "hash").Value(item.Hash)
 		b.Input("hidden", "html")
-		b.Div().ID(path).Class("ck-editor").Script(wysiwygScript).InnerHTML(result)
+		b.Div().ID(path).Class("ck-editor editor-widget").Script(wysiwygScript).InnerHTML(result)
 	}
 
 	b.CloseAll()

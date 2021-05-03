@@ -7,7 +7,7 @@
 			hx-get="/{{.Token}}" 
 			class="button">&laquo; Back</span>
 
-		<button _="on click send submit to #editor" class="button primary">Save</button>
+		<button hx-post="/{{.Token}}/draft/publish" class="button primary">Publish</button>
 
 		{{ if .CanTransition "update"}}
 			<span 

@@ -1,7 +1,7 @@
 <div hx-get="{{.Token}}?view={{.ViewID}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
 	{{ if .CanView "edit"}}
-		<a href="/{{.Token}}?view=edit" class="button primary" preload style="float:right;">Edit</a>
+		<a href="/{{.Token}}/draft" class="button primary" preload style="float:right;">Edit</a>
 	{{ end }}
 
 	{{ if .HasParent }}

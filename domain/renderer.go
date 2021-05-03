@@ -16,13 +16,14 @@ type Renderer struct {
 	streamService  *service.Stream         // StreamService is used to load child streams
 	libraryService *service.ContentLibrary // LibraryService generates content rendering libraries
 	request        *HTTPRequest            // Additional request info URL params, Authentication, etc.
-	stream         model.Stream            // Stream to be displayed
-	viewID         string
-	transitionID   string
+	stream         *model.Stream           // Stream to be displayed
+	viewID         string                  // The view to use for the `Render` function
+	transitionID   string                  // If not empty, then this renderer can invoke transitions
+	editable       bool                    // If TRUE, then this renderer can invoke editors
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, libraryService *service.ContentLibrary, request *HTTPRequest, stream model.Stream) Renderer {
+func NewRenderer(streamService *service.Stream, libraryService *service.ContentLibrary, request *HTTPRequest, stream *model.Stream) Renderer {
 
 	result := Renderer{
 		streamService:  streamService,
@@ -77,14 +78,22 @@ func (w Renderer) Description() string {
 	return w.stream.Description
 }
 
+// Returns the body content as an HTML template
 func (w Renderer) Content() template.HTML {
 	viewer := w.libraryService.Viewer()
 	result := w.stream.Content.Render(viewer)
 	return template.HTML(result)
 }
 
+// Returns editable HTML for the body content (requires `editable` flat)
 func (w Renderer) ContentEditor() template.HTML {
-	editor := w.libraryService.Editor("/" + w.Token() + "/content")
+
+	// Require the `editable` flag to use this
+	if !w.editable {
+		return template.HTML("")
+	}
+
+	editor := w.libraryService.Editor("/" + w.Token() + "/draft")
 	result := w.stream.Content.Render(editor)
 	return template.HTML(result)
 }
@@ -115,6 +124,19 @@ func (w Renderer) HasParent() bool {
 }
 
 ////////////////////////////////
+// REQUEST INFO
+
+// Authorization returns the authorization data for this request.
+func (w Renderer) Authorization() *model.Authorization {
+	return w.request.authorization
+}
+
+// Returns TRUE if this is a partial request.
+func (w Renderer) Partial() bool {
+	return w.request.Partial()
+}
+
+////////////////////////////////
 // RELATIONSHIPS TO OTHER STREAMS
 
 // Parent returns a Stream containing the parent of the current stream
@@ -122,13 +144,13 @@ func (w Renderer) Parent(viewID string) (Renderer, error) {
 
 	var result Renderer
 
-	parent, err := w.streamService.LoadParent(&w.stream)
+	parent, err := w.streamService.LoadParent(w.stream)
 
 	if err != nil {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result = NewRenderer(w.streamService, w.libraryService, w.request, *parent)
+	result = NewRenderer(w.streamService, w.libraryService, w.request, parent)
 	result.viewID = viewID
 
 	return result, nil
@@ -162,7 +184,7 @@ func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 func (w Renderer) ChildTemplates() []model.Template {
 
 	// TODO: permissions here...
-	return w.streamService.ChildTemplates(&w.stream)
+	return w.streamService.ChildTemplates(w.stream)
 }
 
 ///////////////////////////////
@@ -173,7 +195,7 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var result bytes.Buffer
 
-	view, ok := w.streamService.View(&w.stream, w.ViewID(), w.request.Authorization())
+	view, ok := w.streamService.View(w.stream, w.ViewID(), w.request.Authorization())
 
 	if !ok {
 		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.renderer.Render", "Unauthorized View", w.viewID)
@@ -196,13 +218,13 @@ func (w Renderer) Render() (template.HTML, error) {
 // RenderForm returns an HTML rendering of this form
 func (w Renderer) RenderForm() (template.HTML, error) {
 
-	transition, ok := w.streamService.Transition(&w.stream, w.TransitionID(), w.request.Authorization())
+	transition, ok := w.streamService.Transition(w.stream, w.TransitionID(), w.request.Authorization())
 
 	if !ok {
 		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
 	}
 
-	result, err := w.streamService.Form(&w.stream, transition)
+	result, err := w.streamService.Form(w.stream, transition)
 
 	if err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
@@ -216,13 +238,13 @@ func (w Renderer) RenderForm() (template.HTML, error) {
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) CanView(viewID string) bool {
-	_, ok := w.streamService.View(&w.stream, viewID, w.request.Authorization())
+	_, ok := w.streamService.View(w.stream, viewID, w.request.Authorization())
 	return ok
 }
 
 // CanTransition returns TRUE is this Renderer is authorized to initiate a transition
 func (w Renderer) CanTransition(transitionID string) bool {
-	_, ok := w.streamService.Transition(&w.stream, transitionID, w.request.Authorization())
+	_, ok := w.streamService.Transition(w.stream, transitionID, w.request.Authorization())
 	return ok
 }
 
@@ -242,7 +264,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
-		renderer := NewRenderer(w.streamService, w.libraryService, w.request, stream)
+		renderer := NewRenderer(w.streamService, w.libraryService, w.request, &stream)
 		renderer.viewID = viewID
 
 		// Enforce permissions here...
