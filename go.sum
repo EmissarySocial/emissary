@@ -10,12 +10,11 @@ github.com/benpate/compare v0.0.4 h1:RFswCSGTpb/Nbt12bfDmsDDGXu/hC8EbS/hd5xkVXNY
 github.com/benpate/compare v0.0.4/go.mod h1:zmD5F0MljM9f2b0EByHcElUPptfBL/JO9oKsoif8XDo=
 github.com/benpate/convert v0.9.2 h1:uc4WJTrFrF9nk4x5TxxKETv0R5H7sB0KrF6fPsutv94=
 github.com/benpate/convert v0.9.2/go.mod h1:hAck9D6nSY4irEXPGa0jljn/S1ThzfQCMXJ5JyDwaX0=
-github.com/benpate/data v0.11.0 h1:84NN8LKgaAnYk/DjJv8rR4plPSoLbTylNZRcRRz0pRg=
 github.com/benpate/data v0.11.0/go.mod h1:uta+dIMMsVC6DJiN5AJPjUX38qMkv5oadogIIzccuCI=
+github.com/benpate/data v0.11.1 h1:Y2M4t+mljwmK7nHRzw8OPQcFEFPYX//WrgmyAAEKpFs=
+github.com/benpate/data v0.11.1/go.mod h1:ruobRFHU15zUrdWxBB4XO+qitZxPO15cVRo5WVjik/c=
 github.com/benpate/data-mock v0.0.1 h1:Od1Couyvg+lSUlRR1J5Ec2F4l9ColseaINZruEvdMDA=
 github.com/benpate/data-mock v0.0.1/go.mod h1:WIerzLxoSYroAs8Uxwt0RpFdBJhUtPriXuAISn+Hoto=
-github.com/benpate/data-mongo v0.0.2 h1:12tyWKizLDWV4noPRWk50WQPgKwIr8espKmWYinEF6I=
-github.com/benpate/data-mongo v0.0.2/go.mod h1:Mq7hx5UGWKADSAZ6yqTsCO9aloAn9Y/X61S/Jxux17o=
 github.com/benpate/datatype v0.0.3 h1:23gn4niC2n2WrdnYnVnCkEYOxBuGwUbLRdPHuQ4v4oQ=
 github.com/benpate/datatype v0.0.3/go.mod h1:c0Tsyrg7t9xvnE3JvfiP6RsI47SjizkVUtUmXxuM7AY=
 github.com/benpate/derp v0.20.1/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
