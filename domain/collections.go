@@ -6,6 +6,9 @@ const CollectionAttachment = "Attachment"
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"
 
+// CollectionStreamDraft is the database collection where draft changes to streams are stored
+const CollectionStreamDraft = "StreamDraft"
+
 // CollectionStreamSource is the database collection where Sources are stored
 const CollectionStreamSource = "StreamSource"
 

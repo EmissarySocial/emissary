@@ -6,14 +6,15 @@ import (
 	"html/template"
 
 	"github.com/benpate/data"
-	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
+	mongodb "github.com/benpate/ghost/data-mongo"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 )
 
 // Factory knows how to create an populate all services
@@ -102,6 +103,14 @@ func (factory *Factory) Stream() *service.Stream {
 	return factory.streamService
 }
 
+func (factory *Factory) StreamDraft() *service.StreamDraft {
+
+	return service.NewStreamDraft(
+		factory.collection(CollectionStreamDraft),
+		factory.Stream(),
+	)
+}
+
 // StreamSource returns a fully populated StreamSource service
 func (factory *Factory) StreamSource() *service.StreamSource {
 	return service.NewStreamSource(factory.collection(CollectionStreamSource))
@@ -143,20 +152,26 @@ func (factory *Factory) Layout() *service.Layout {
 	return factory.layoutService
 }
 
-// StreamRenderer generates a new stream renderer service.
-func (factory *Factory) StreamRenderer(stream model.Stream, request *HTTPRequest) Renderer {
-	return NewRenderer(factory.Stream(), factory.Library(), request, stream)
-}
-
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) StreamViewer(stream model.Stream, request *HTTPRequest, viewID string) Renderer {
+func (factory *Factory) StreamViewer(ctx echo.Context, stream *model.Stream, viewID string) Renderer {
+	request := NewHTTPRequest(ctx)
 	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.viewID = viewID
 	return renderer
 }
 
+// StreamEditor generates a new stream renderer service, pegged to a specific view.
+func (factory *Factory) StreamEditor(ctx echo.Context, stream *model.Stream) Renderer {
+	request := NewHTTPRequest(ctx)
+	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
+	renderer.viewID = "edit"
+	renderer.editable = true
+	return renderer
+}
+
 // StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
-func (factory *Factory) StreamTransitioner(stream model.Stream, request *HTTPRequest, transitionID string) Renderer {
+func (factory *Factory) StreamTransitioner(ctx echo.Context, stream *model.Stream, transitionID string) Renderer {
+	request := NewHTTPRequest(ctx)
 	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
 	renderer.transitionID = transitionID
 	return renderer
