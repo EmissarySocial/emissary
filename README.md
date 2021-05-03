@@ -17,7 +17,7 @@ Malicious algorithms with global reach churn human beings into ad revenue.  It d
 
 # What is It?
 
-Ghost is the placeholder name for a new kind of decentralized, private media server that will connect people instead of driving them apart, and will return power and privacy to users and content creators.
+Ghost is a new kind of decentralized, private media server that will connect people instead of driving them apart, and will return power and privacy to users and content creators.
 
 ## Decentralized
 When completed, this will be a new kind of personal media server, meant to be an open, [federated](https://en.wikipedia.org/wiki/Fediverse) replacement for many of the closed, centralized services that we all use today.  
@@ -41,8 +41,8 @@ Ghost must be extremely service-provider-friendly: easy to virtualize, provision
 * [Server Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 * [oEmbed](https://oembed.com)
 
-## Technologies in Use
-| Tools | Info|
+## Toolkit
+| Tool | Info|
 |---|---|
 | [Go](https://golang.org) | Single file executable server, compiled for every OS and architecture |
 | [Mongodb](https://mongodb.org) | Database server (possibly swappable) |
@@ -52,5 +52,5 @@ Ghost must be extremely service-provider-friendly: easy to virtualize, provision
 
 
 # Pitch In!
-Ghost is a placeholder name that will change in the near future.  There's a lot to do, and I'd love to have your help.  Please get in touch or submit a pull request) 👻
+There's a lot to do, and I'd love to have your help.  If you're interested in building the federated web, please get in touch or submit a pull request. 👻
 
