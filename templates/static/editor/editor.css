@@ -2,7 +2,8 @@
 
 div.container-insert-point {
     background-color:rgb(250,250,250);
-    cursor:context-menu;
+    /*cursor:context-menu;*/
+    cursor: copy;
 }
 
 
@@ -11,11 +12,11 @@ div.container-insert-point:hover {
 }
 
 div.container[data-style=ROWS] > div.container-insert-point {
-    height:20px;
+    height:15px;
 }
 
 div.container[data-style=COLUMNS] > div.container-insert-point {
-    width:20px;
+    width:15px;
 }
 
 
