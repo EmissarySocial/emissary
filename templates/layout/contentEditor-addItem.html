@@ -12,6 +12,15 @@
             WYSIWYG
         </form>
 
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
+            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
+            <input type="hidden" name="itemType" value="COLUMNS">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            COLUMNS
+        </form>
+
         <button _="on click trigger closeModal">Cancel</button>
     </div>
 </div>

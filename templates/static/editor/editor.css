@@ -1,8 +1,13 @@
 /** CONTAINERS ****/
 
+div.container-insert-point {
+    background-color:rgb(250,250,250);
+    cursor:context-menu;
+}
+
+
 div.container-insert-point:hover {
     background-color:cornflowerblue;
-    cursor:context-menu;
 }
 
 div.container[data-style=ROWS] > div.container-insert-point {
@@ -10,7 +15,6 @@ div.container[data-style=ROWS] > div.container-insert-point {
 }
 
 div.container[data-style=COLUMNS] > div.container-insert-point {
-    height:100%;
     width:20px;
 }
 

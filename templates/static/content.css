@@ -1,34 +1,33 @@
-div.container-COLUMNS {
+div.container[data-style="COLUMNS"] {
+    box-sizing: border-box;
     display:flex;
     flex-direction:row;
     flex-wrap: wrap;
-    margin-right: -20px;
 }
 
-div.container-COLUMNS > div.container-item {
-    margin-right:20px;
+div.container[data-style="COLUMNS"] > div.container-item {
+    flex-grow:1;
 }
 
-div.container-COLUMNS-1 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=1] > div.container-item {
 }
 
-div.container-COLUMNS-2 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=2] > div.container-item {
+    
 }
 
-div.container-COLUMNS-3 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=3] > div.container-item {
+    
 }
 
-div.container-COLUMNS-4 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=4] > div.container-item {
+    
 }
 
-div.container-COLUMNS-5 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=5] > div.container-item {
+    
 }
 
-div.container-COLUMNS-6 > div.container-item {
-
+div.container[data-style="COLUMNS"][data-size=6] > div.container-item {
+    
 }
