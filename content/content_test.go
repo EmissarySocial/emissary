@@ -11,37 +11,37 @@ import (
 func getTestContent() Content {
 	return Content{
 		{
-			Type: "CONTAINER",
-			Refs: []int{1, 2, 3, 4},
-			Hash: "home",
+			Type:  "CONTAINER",
+			Refs:  []int{1, 2, 3, 4},
+			Check: "home",
 			Data: datatype.Map{
 				"style": "ROWS",
 			},
 		},
 		{
-			Type: "WYSIWYG",
-			Hash: "secret1",
+			Type:  "WYSIWYG",
+			Check: "secret1",
 			Data: datatype.Map{
 				"html": "This is the <b>html</b>",
 			},
 		},
 		{
-			Type: "WYSIWYG",
-			Hash: "secret2",
+			Type:  "WYSIWYG",
+			Check: "secret2",
 			Data: datatype.Map{
 				"html": "This is the second WYSIWYG section",
 			},
 		},
 		{
-			Type: "WYSIWYG",
-			Hash: "secret3",
+			Type:  "WYSIWYG",
+			Check: "secret3",
 			Data: datatype.Map{
 				"html": "This is the third.",
 			},
 		},
 		{
-			Type: "WYSIWYG",
-			Hash: "secret4",
+			Type:  "WYSIWYG",
+			Check: "secret4",
 			Data: datatype.Map{
 				"html": "You guessed it.  Fourth section here.",
 			},
@@ -53,11 +53,30 @@ func TestAdd(t *testing.T) {
 
 	content := getTestContent()
 
-	newItem := Item{Type: "WYSIWYG", Data: datatype.Map{"html": "This is how we do it baby"}}
-
 	require.NotContains(t, content[0].Refs, 5)
 
-	content.AddReference(0, newItem, "home")
+	{
+		txn := NewItemTransaction{
+			ParentID:   0,
+			ChildIndex: 0,
+			ItemType:   "WYSIWYG",
+			Check:      "home",
+		}
+
+		txn.Execute(&content)
+	}
+
+	{
+		txn := UpdateItemTransaction{
+			ItemID: 5,
+			Check:  content[5].Check,
+			Data: datatype.Map{
+				"html": "This is how we do it baby",
+			},
+		}
+
+		txn.Execute(&content)
+	}
 
 	require.Equal(t, 6, len(content))
 	require.Equal(t, "WYSIWYG", content[5].Type)

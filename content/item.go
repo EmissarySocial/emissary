@@ -12,10 +12,10 @@ import (
 // Item represents a single piece of content.  It will be rendered by one of several rendering
 // Libraries, using the custom data it contains.
 type Item struct {
-	Type string       `json:"type" bson:"type"`
-	Refs []int        `json:"refs" bson:"refs"`
-	Data datatype.Map `json:"data" bson:"data"`
-	Hash string       `json:"hash" bson:"hash"` // A random code or nonce to authenticate requests
+	Type  string       `json:"type"           bson:"type"`           // The type of contem item (WYSIWYG, CONTAINER, OEMBED, ETC...)
+	Check string       `json:"check"          bson:"check"`          // A random code or nonce to authenticate requests
+	Refs  []int        `json:"refs,omitempty" bson:"refs,omitempty"` // Indexes of sub-items contained by this item
+	Data  datatype.Map `json:"data,omitempty" bson:"data,omitempty"` // Additional data specific to this item type.
 }
 
 // NewItem returns a fully initialized Item
@@ -25,15 +25,15 @@ func NewItem(t string) Item {
 		Data: make(datatype.Map),
 	}
 
-	result.NewHash()
+	result.NewChecksum()
 	return result
 }
 
 // NewHash updates the hash value for this item
-func (item *Item) NewHash() {
+func (item *Item) NewChecksum() {
 	seed := time.Now().Unix()
 	source := rand.NewSource(seed)
-	item.Hash = strconv.FormatInt(source.Int63(), 36) + strconv.FormatInt(source.Int63(), 36)
+	item.Check = strconv.FormatInt(source.Int63(), 36) + strconv.FormatInt(source.Int63(), 36)
 }
 
 // Surface setters from the data struct.
@@ -74,18 +74,10 @@ func (item *Item) DeletePath(p path.Path) error {
 }
 
 // AddReference adds a new "sub-item" reference to this item
-func (item *Item) AddReference(to int) {
-
-	// first, verify that we don't already have
-	// a ref to this same item
-	for index := range item.Refs {
-		if item.Refs[index] == to {
-			return
-		}
-	}
-
-	// fall through means we can add a new ref.
-	item.Refs = append(item.Refs, to)
+func (item *Item) AddReference(id int, index int) {
+	item.Refs = append(item.Refs, 0)
+	copy(item.Refs[index+1:], item.Refs[index:])
+	item.Refs[index] = id
 }
 
 // UpdateReference migrates references from an old value to a new one

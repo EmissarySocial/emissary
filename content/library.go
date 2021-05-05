@@ -28,6 +28,7 @@ func ViewerLibrary() Library {
 	result.Register(ItemTypeOEmbed, OEmbedViewer)
 	result.Register(ItemTypeContainer, ContainerViewer)
 	result.Register(ItemTypeTabs, TabsViewer)
+	result.Register(ItemTypeWebRTC, WebRTCViewer)
 
 	return result
 }

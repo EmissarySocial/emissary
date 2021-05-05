@@ -13,7 +13,7 @@ require (
 	github.com/benpate/derp v0.21.0
 	github.com/benpate/exp v0.0.2
 	github.com/benpate/form v0.3.7
-	github.com/benpate/html v0.11.0
+	github.com/benpate/html v0.11.1
 	github.com/benpate/htmlconv v0.3.0
 	github.com/benpate/list v0.4.0
 	github.com/benpate/null v0.6.0

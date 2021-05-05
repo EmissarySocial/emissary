@@ -10,6 +10,6 @@ func TestLibrary(t *testing.T) {
 	lib := ViewerLibrary()
 	content := getTestContent()
 	result := content.Render(lib)
-	expected := `<div class="container container-ROWS container-size-4"><div>This is the <b>html</b></div><div>This is the second WYSIWYG section</div><div>This is the third.</div><div>You guessed it.  Fourth section here.</div></div>`
+	expected := `<div class="container" data-style="ROWS" data-size="4"><div class="container-item">This is the <b>html</b></div><div class="container-item">This is the second WYSIWYG section</div><div class="container-item">This is the third.</div><div class="container-item">You guessed it.  Fourth section here.</div></div>`
 	require.Equal(t, expected, result)
 }

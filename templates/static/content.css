@@ -32,11 +32,3 @@ div.container-COLUMNS-5 > div.container-item {
 div.container-COLUMNS-6 > div.container-item {
 
 }
-
-div.container-ROWS > div.container-item-editable {
-    margin-bottom: 20px;
-}
-
-div.container-item-editable .ck-content.ck-blurred {
-    border: 1px solid hsla(0, 0%, 0%, 0.15)!important;
-}

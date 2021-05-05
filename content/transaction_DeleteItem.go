@@ -2,7 +2,7 @@ package content
 
 type DeleteItemTransaction struct {
 	ItemID int    `json:"itemId" form:"itemId"`
-	Hash   string `json:"hash"   form:"hash"`
+	Check  string `json:"check"  form:"check"`
 }
 
 func (txn DeleteItemTransaction) Execute(content *Content) error {

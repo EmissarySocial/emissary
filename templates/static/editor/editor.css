@@ -1,0 +1,21 @@
+/** CONTAINERS ****/
+
+div.container-insert-point:hover {
+    background-color:cornflowerblue;
+    cursor:context-menu;
+}
+
+div.container[data-style=ROWS] > div.container-insert-point {
+    height:20px;
+}
+
+div.container[data-style=COLUMNS] > div.container-insert-point {
+    height:100%;
+    width:20px;
+}
+
+
+/** WYSIWYG *******/
+.ck-content.ck-blurred {
+    border: 1px solid hsla(0, 0%, 0%, 0.15)!important;
+}

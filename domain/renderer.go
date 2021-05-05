@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -93,6 +94,8 @@ func (w Renderer) ContentEditor() template.HTML {
 		return template.HTML("")
 	}
 
+	spew.Dump(w.stream)
+
 	editor := w.libraryService.Editor("/" + w.Token() + "/draft")
 	result := w.stream.Content.Render(editor)
 	return template.HTML(result)
@@ -134,6 +137,11 @@ func (w Renderer) Authorization() *model.Authorization {
 // Returns TRUE if this is a partial request.
 func (w Renderer) Partial() bool {
 	return w.request.Partial()
+}
+
+// Returns the request parameter
+func (w Renderer) QueryParam(param string) string {
+	return w.request.QueryParam(param)
 }
 
 ////////////////////////////////

@@ -1,7 +1,6 @@
 package content
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 )
 
@@ -12,35 +11,8 @@ func (content Content) Render(library Library) string {
 	return library.Render(content, 0)
 }
 
-// AddReference adds a new content item to the content section
-func (content *Content) AddReference(parentID int, item Item, hash string) (int, error) {
-
-	// Bounds check
-	if (parentID < 0) || (parentID >= len(*content)) {
-		return 0, derp.New(500, "content.Create", "Index out of bounds", parentID, item)
-	}
-
-	// Hash check
-	if hash != (*content)[parentID].Hash {
-		return 0, derp.New(derp.CodeForbiddenError, "content.Create", "Invalid Hash Value")
-	}
-
-	// Reset the Hash for each new item
-	item.NewHash()
-
-	// Add the new item to the content container.
-	newID := len(*content)
-	*content = append(*content, item)
-
-	// Add a reference to the new item in the parent.
-	(*content)[parentID].AddReference(newID)
-
-	// Success!
-	return newID, nil
-}
-
 // DeleteReference removes an item from a parent
-func (content Content) DeleteReference(parentID int, deleteID int, hash string) error {
+func (content Content) DeleteReference(parentID int, deleteID int, check string) error {
 
 	// Bounds check
 	if (parentID < 0) || (parentID >= len(content)) {
@@ -52,14 +24,14 @@ func (content Content) DeleteReference(parentID int, deleteID int, hash string) 
 		return derp.New(500, "content.Create", "Child index out of bounds", parentID, deleteID)
 	}
 
-	// Hash check
-	if hash != content[parentID].Hash {
-		return derp.New(derp.CodeForbiddenError, "content.Create", "Invalid Hash Value")
+	// validate checksum
+	if check != content[parentID].Check {
+		return derp.New(derp.CodeForbiddenError, "content.Create", "Invalid Checksum")
 	}
 
 	// Remove the references to the deleted Item
 	for _, childID := range content[deleteID].Refs {
-		content.DeleteReference(deleteID, childID, content[deleteID].Hash)
+		content.DeleteReference(deleteID, childID, content[deleteID].Check)
 	}
 
 	// Remove teh deleted item
@@ -69,24 +41,6 @@ func (content Content) DeleteReference(parentID int, deleteID int, hash string) 
 	content[parentID].DeleteReference(deleteID)
 
 	// Success!
-	return nil
-}
-
-// UpdateItem updates the content of an item in place.
-func (content Content) UpdateItem(itemID int, data datatype.Map, hash string) error {
-
-	// Bounds check
-	if (itemID < 0) || (itemID >= len(content)) {
-		return derp.New(500, "content.Create", "Index out of bounds", itemID)
-	}
-
-	// Hash check
-	if hash != content[itemID].Hash {
-		return derp.New(derp.CodeForbiddenError, "content.Create", "Invalid Hash Value")
-	}
-
-	// Update data
-	content[itemID].Data = data
 	return nil
 }
 

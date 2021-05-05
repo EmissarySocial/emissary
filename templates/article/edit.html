@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="/static/editor/editor.css" />
+<script type="text/hyperscript" src="/static/editor/editor.hs"></script>
+<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
 
 <div>
 
@@ -28,6 +31,8 @@
 				hx-push-url="false" 
 				class="button">Share</span>
 		{{ end }}
+
+		<span id="toaster"></span>
 
 	</div>
 
@@ -61,48 +66,4 @@
 
 </div>
 
-<div id="toaster"></div>
-
 <script src="/static/ckeditor5/build/ckeditor.js"></script>
-
-<script>
-	window.wysiwygConfig = {
-		toolbar: {
-			items: [
-				'heading',
-				'|',
-				'bold',
-				'italic',
-				'link',
-				'bulletedList',
-				'numberedList',
-				'|',
-				'outdent',
-				'indent',
-				'|',
-				'imageUpload',
-				'blockQuote',
-				'insertTable',
-				'mediaEmbed',
-				'undo',
-				'redo'
-			]
-		},
-		language: 'en',
-		image: {
-			toolbar: [
-				'imageTextAlternative',
-				'imageStyle:full',
-				'imageStyle:side'
-			]
-		},
-		table: {
-			contentToolbar: [
-				'tableColumn',
-				'tableRow',
-				'mergeTableCells'
-			]
-		},
-		licenseKey: ''
-	}
-</script>

@@ -56,24 +56,4 @@
 	}
 </script>
 
-<script type="text/hyperscript">
-	eventsource StreamServer from /{{.Token}}/sse
-		on message
-			for el in query(`[stream="${it}"]`)
-				send stream:update to it
-			end
-		end
-	end
-
-	on htmx:pushedIntoHistory or htmx:historyRestore
-		call StreamServer.open(window.location.pathname + "/sse")
-	end
-
-	on closeModal(event)
-		add .closing to #modal
-		set window.location to event.detail.nextPage unless no event.detail.nextPage
-		settle
-		remove #modal
-	end
-</script>
 </html>

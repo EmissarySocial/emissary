@@ -1,10 +1,6 @@
 package model
 
 import (
-	"math/rand"
-	"strconv"
-	"time"
-
 	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/datatype"
@@ -139,25 +135,6 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 		stream.Data[property] = value
 	}
 
-	return nil
-}
-
-func (stream *Stream) SetContent(path string, item content.Item) error {
-
-	/* / Verify authenticity..
-	if c.Hash != stream.Content[key].Hash {
-		return derp.New(derp.CodeBadRequestError, "ghost.model.Stream.SetContent", "Invalid Hash")
-	}
-	*/
-
-	// Reset Random Hash
-	rand.Seed(time.Now().UnixNano())
-	item.Hash = strconv.FormatUint(rand.Uint64(), 36)
-
-	// Update content entry
-	// stream.Content[path] = item
-
-	// Success!!
 	return nil
 }
 
