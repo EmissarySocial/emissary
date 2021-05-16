@@ -1,49 +1,92 @@
 package content
 
 import (
-	"github.com/benpate/derp"
+	"github.com/benpate/html"
 )
 
 // Content represents a complete package of content
 type Content []Item
 
-func (content Content) Render(library Library) string {
-	return library.Render(content, 0)
+func (content Content) View() string {
+	builder := html.New()
+	widget := content.Widget(0)
+
+	widget.View(builder, content, 0)
+	return builder.String()
 }
 
-// DeleteReference removes an item from a parent
-func (content Content) DeleteReference(parentID int, deleteID int, check string) error {
+func (content *Content) Widget(id int) Widget {
 
 	// Bounds check
-	if (parentID < 0) || (parentID >= len(content)) {
-		return derp.New(500, "content.Create", "Parent index out of bounds", parentID, deleteID)
+	if (id < 0) || (id >= len(*content)) {
+		return Nil{}
 	}
 
-	// Bounds check
-	if (deleteID < 0) || (deleteID >= len(content)) {
-		return derp.New(500, "content.Create", "Child index out of bounds", parentID, deleteID)
+	itemType := (*content)[id].Type
+
+	switch itemType {
+
+	case ItemTypeContainer:
+		return Container{}
+	case ItemTypeHTML:
+		return HTML{}
+	case ItemTypeOEmbed:
+		return OEmbed{}
+	case ItemTypeTabs:
+		return Tabs{}
+	case ItemTypeText:
+		return Text{}
+	case ItemTypeWYSIWYG:
+		return WYSIWYG{}
+	default:
+		return Nil{}
 	}
-
-	// validate checksum
-	if check != content[parentID].Check {
-		return derp.New(derp.CodeForbiddenError, "content.Create", "Invalid Checksum")
-	}
-
-	// Remove the references to the deleted Item
-	for _, childID := range content[deleteID].Refs {
-		content.DeleteReference(deleteID, childID, content[deleteID].Check)
-	}
-
-	// Remove teh deleted item
-	content[deleteID] = Item{}
-
-	// Remove the deleted item from the parent's list of child references
-	content[parentID].DeleteReference(deleteID)
-
-	// Success!
-	return nil
 }
 
+func (content Content) Edit(endpoint string) string {
+	builder := html.New()
+	widget := content.Widget(0)
+
+	widget.Edit(builder, content, 0, endpoint)
+	return builder.String()
+}
+
+func (content Content) viewSubTree(builder *html.Builder, id int) {
+	subBuilder := builder.SubTree()
+	widget := content.Widget(id)
+
+	widget.View(subBuilder, content, id)
+	subBuilder.CloseAll()
+}
+
+func (content Content) editSubTree(builder *html.Builder, id int, endpoint string) {
+	subBuilder := builder.SubTree()
+	widget := content.Widget(id)
+
+	widget.Edit(subBuilder, content, id, endpoint)
+	subBuilder.CloseAll()
+}
+
+// GetItem returns a pointer to the item at the desired index
+func (content Content) GetItem(id int) *Item {
+	return &(content[id])
+}
+
+func (content Content) GetParent(id int) (int, *Item) {
+
+	for itemIndex := range content {
+		for refIndex := range content[itemIndex].Refs {
+			if content[itemIndex].Refs[refIndex] == id {
+				return itemIndex, &(content[itemIndex])
+			}
+		}
+	}
+
+	return -1, nil
+}
+
+// Compact removes any unused items in the content slice
+// and reorganizes references
 func (content *Content) Compact() {
 	front := 0
 	back := len(*content) - 1

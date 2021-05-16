@@ -3,13 +3,16 @@ package content
 import (
 	"strconv"
 
+	"github.com/benpate/datatype"
 	"github.com/benpate/html"
 )
 
 const ItemTypeTabs = "TABS"
 
-func TabsViewer(lib *Library, builder *html.Builder, content Content, id int) {
-	item := content[id]
+type Tabs struct{}
+
+func (widget Tabs) View(builder *html.Builder, content Content, id int) {
+	item := content.GetItem(id)
 	labels := item.GetSliceOfString("labels")
 
 	builder.Div().Class("tabs")
@@ -22,15 +25,15 @@ func TabsViewer(lib *Library, builder *html.Builder, content Content, id int) {
 	for _, id := range item.Refs {
 		nodeID := "id-" + strconv.Itoa(id)
 		builder.Div().ID(nodeID).EndBracket()
-		lib.SubTree(builder, content, id)
+		content.viewSubTree(builder, id)
 		builder.Close()
 	}
 
 	builder.Close()
 }
 
-func TabsEditor(lib *Library, builder *html.Builder, content Content, id int) {
-	item := content[id]
+func (widget Tabs) Edit(builder *html.Builder, content Content, id int, endpoint string) {
+	item := content.GetItem(id)
 	labels := item.GetSliceOfString("labels")
 
 	builder.Div().Class("tabs")
@@ -43,9 +46,26 @@ func TabsEditor(lib *Library, builder *html.Builder, content Content, id int) {
 	for _, id := range item.Refs {
 		nodeID := "id-" + strconv.Itoa(id)
 		builder.Div().ID(nodeID).EndBracket()
-		lib.SubTree(builder, content, id)
+		content.editSubTree(builder, id, endpoint)
 		builder.Close()
 	}
 
 	builder.Close()
+}
+
+func (widget Tabs) DefaultChildren() []Item {
+	return []Item{
+		{
+			Type: "CONTAINER",
+			Data: datatype.Map{
+				"style": "COLUMNS",
+			},
+		},
+		{
+			Type: "CONTAINER",
+			Data: datatype.Map{
+				"style": "COLUMNS",
+			},
+		},
+	}
 }

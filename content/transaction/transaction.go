@@ -1,23 +1,24 @@
-package content
+package transaction
 
 import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/content"
 )
 
 type Transaction interface {
-	Execute(*Content) error
+	Execute(*content.Content) error
 	Description() string
 }
 
-func ParseTransaction(in map[string]interface{}) (Transaction, error) {
+func Parse(in map[string]interface{}) (Transaction, error) {
 
 	data := datatype.Map(in)
 
 	switch data.GetString("type") {
 
 	case "new-item":
-		return NewItemTransaction{
+		return NewItem{
 			ParentID:   data.GetInt("parentId"),
 			ChildIndex: data.GetInt("childIndex"),
 			ItemType:   data.GetString("itemType"),
@@ -26,7 +27,7 @@ func ParseTransaction(in map[string]interface{}) (Transaction, error) {
 
 	case "update-item":
 
-		return UpdateItemTransaction{
+		return UpdateItem{
 			ItemID: data.GetInt("itemId"),
 			Data:   extractData(in),
 			Check:  data.GetString("check"),
@@ -34,14 +35,14 @@ func ParseTransaction(in map[string]interface{}) (Transaction, error) {
 
 	case "delete-item":
 
-		return DeleteItemTransaction{
+		return DeleteItem{
 			ItemID: data.GetInt("itemId"),
 			Check:  data.GetString("check"),
 		}, nil
 
 	case "move-item":
 
-		return MoveItemTransaction{
+		return MoveItem{
 			ItemID:      data.GetInt("itemId"),
 			NewParentID: data.GetInt("newParentId"),
 			Position:    data.GetInt("position"),

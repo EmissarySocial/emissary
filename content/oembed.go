@@ -2,11 +2,11 @@ package content
 
 import "github.com/benpate/html"
 
-const ItemTypeOEmbed = "OEMBED"
+type OEmbed struct{}
 
-func OEmbedViewer(library *Library, builder *html.Builder, content Content, id int) {
+func (widget OEmbed) View(builder *html.Builder, content Content, id int) {
 
-	item := content[id]
+	item := content.GetItem(id)
 
 	// If the oEmbed data includes HTML, then just use that and be done.
 	if html := item.GetString("html"); html != "" {
@@ -21,11 +21,10 @@ func OEmbedViewer(library *Library, builder *html.Builder, content Content, id i
 		builder.Empty("img").
 			Attr("src", item.GetString("url")).
 			Attr("width", item.GetString("width")).
-			Attr("height", item.GetString("height")).
-			Close()
+			Attr("height", item.GetString("height"))
 	}
 }
 
-func OEmbedEditor(library *Library, builder *html.Builder, content Content, id int) {
-	builder.Div().InnerHTML("-- placeholder for oEmbed editor --").Close()
+func (widget OEmbed) Edit(builder *html.Builder, content Content, id int, endpoint string) {
+	builder.Div().InnerHTML("-- placeholder for oEmbed editor --")
 }

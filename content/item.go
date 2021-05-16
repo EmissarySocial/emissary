@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benpate/datatype"
-	"github.com/benpate/path"
 )
 
 // Item represents a single piece of content.  It will be rendered by one of several rendering
@@ -36,43 +35,6 @@ func (item *Item) NewChecksum() {
 	item.Check = strconv.FormatInt(source.Int63(), 36) + strconv.FormatInt(source.Int63(), 36)
 }
 
-// Surface setters from the data struct.
-func (item *Item) GetString(key string) string {
-	return item.Data.GetString(key)
-}
-
-func (item *Item) GetInt(key string) int {
-	return item.Data.GetInt(key)
-}
-
-func (item *Item) GetSliceOfInt(key string) []int {
-	return item.Data.GetSliceOfInt(key)
-}
-
-func (item *Item) GetSliceOfString(key string) []string {
-	return item.Data.GetSliceOfString(key)
-}
-
-func (item *Item) GetInterface(key string) interface{} {
-	return item.Data.GetInterface(key)
-}
-
-// GetPath implemnts the path.Getter interface
-func (item *Item) GetPath(p path.Path) (interface{}, error) {
-	return item.Data.GetPath(p)
-}
-
-// SetPath implements the path.Setter interface
-func (item *Item) SetPath(p path.Path, value interface{}) error {
-	return item.Data.SetPath(p, value)
-}
-
-// DeletePath implements the path.Deleter interface
-func (item *Item) DeletePath(p path.Path) error {
-	// return item.Data.DeletePath(p)
-	return nil
-}
-
 // AddReference adds a new "sub-item" reference to this item
 func (item *Item) AddReference(id int, index int) {
 	item.Refs = append(item.Refs, 0)
@@ -98,4 +60,27 @@ func (item *Item) DeleteReference(id int) {
 			return
 		}
 	}
+}
+
+////////////////////////////////////
+// Data Getters
+
+func (item *Item) GetString(key string) string {
+	return item.Data.GetString(key)
+}
+
+func (item *Item) GetInt(key string) int {
+	return item.Data.GetInt(key)
+}
+
+func (item *Item) GetSliceOfInt(key string) []int {
+	return item.Data.GetSliceOfInt(key)
+}
+
+func (item *Item) GetSliceOfString(key string) []string {
+	return item.Data.GetSliceOfString(key)
+}
+
+func (item *Item) GetInterface(key string) interface{} {
+	return item.Data.GetInterface(key)
 }

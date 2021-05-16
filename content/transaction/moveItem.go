@@ -1,16 +1,18 @@
-package content
+package transaction
 
-type MoveItemTransaction struct {
+import "github.com/benpate/ghost/content"
+
+type MoveItem struct {
 	ItemID      int    `json:"itemId"      form:"itemId"`
 	NewParentID int    `json:"newParentId" form:"newParentId"`
 	Position    int    `json:"position"    form:"position"`
 	Check       string `json:"check"       form:"check"`
 }
 
-func (txn MoveItemTransaction) Execute(content *Content) error {
+func (txn MoveItem) Execute(c *content.Content) error {
 	return nil
 }
 
-func (txn MoveItemTransaction) Description() string {
+func (txn MoveItem) Description() string {
 	return "Move Item"
 }

@@ -8,8 +8,10 @@ import (
 
 const ItemTypeContainer = "CONTAINER"
 
-func ContainerViewer(library *Library, builder *html.Builder, content Content, id int) {
-	item := content[id]
+type Container struct{}
+
+func (widget Container) View(builder *html.Builder, content Content, id int) {
+	item := content.GetItem(id)
 
 	builder.Div().
 		Class("container").
@@ -18,13 +20,13 @@ func ContainerViewer(library *Library, builder *html.Builder, content Content, i
 
 	for _, index := range item.Refs {
 		builder.Div().Class("container-item")
-		library.SubTree(builder, content, index)
+		content.viewSubTree(builder, index)
 		builder.Close()
 	}
 }
 
-func ContainerEditor(library *Library, builder *html.Builder, content Content, id int) {
-	item := content[id]
+func (widget Container) Edit(builder *html.Builder, content Content, id int, endpoint string) {
+	item := content.GetItem(id)
 
 	builder.Div().
 		Class("container").
@@ -36,9 +38,13 @@ func ContainerEditor(library *Library, builder *html.Builder, content Content, i
 	for _, index := range item.Refs {
 		builder.Div().Script("install containerInsertPoint").Close()
 		builder.Div().Class("container-item")
-		library.SubTree(builder, content, index)
+		content.editSubTree(builder, index, endpoint)
 		builder.Close()
 	}
 	builder.Div().Script("install containerInsertPoint").Close()
 	builder.Close()
+}
+
+func (widget Container) Default() Item {
+	return Item{}
 }
