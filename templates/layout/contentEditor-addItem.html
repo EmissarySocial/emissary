@@ -3,7 +3,7 @@
 	<div class="modal-content">
         <h1>Add a Section</h1>
 
-        <form hx-post="/{{.Token}}/draft" hx-trigger="click">
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
             <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
             <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
@@ -12,15 +12,47 @@
             WYSIWYG
         </form>
 
-        <form hx-post="/{{.Token}}/draft" hx-trigger="click">
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
             <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
             <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
-            <input type="hidden" name="itemType" value="COLUMNS">
+            <input type="hidden" name="itemType" value="CONTAINER">
+            <input type="hidden" name="style" value="COLUMNS">
             <input type="hidden" name="check" value="{{.QueryParam `check`}}">
-            COLUMNS
+            Columns
         </form>
 
-        <button _="on click trigger closeModal">Cancel</button>
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
+            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
+            <input type="hidden" name="itemType" value="CONTAINER">
+            <input type="hidden" name="style" value="ROWS">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            Rows
+        </form>
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
+            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
+            <input type="hidden" name="itemType" value="OEMBED">
+            <input type="hidden" name="style" value="IMAGE">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            Image
+        </form>
+        
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
+            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
+            <input type="hidden" name="itemType" value="OEMBED">
+            <input type="hidden" name="style" value="VIDEO">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            Video
+        </form>
+        
+        <button data-script="on click trigger closeModal">Cancel</button>
     </div>
 </div>

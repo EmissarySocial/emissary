@@ -1,0 +1,12 @@
+{
+	"id": "RSS-ARTICLE",
+	"label": "RSS Article",
+	"description": "Link to an external article from an RSS Feed.",
+	"containedBy": [
+		"rss-folder"
+	],
+	"schema": {
+		"type": "object",
+		"properties": {}
+	}
+}

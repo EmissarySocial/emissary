@@ -27,6 +27,7 @@ button,
     padding:10px 20px;
     background-color: rgb(189,190,191);
     border-radius: 5px;
+    border:none;
 }
 
 input[type=submit].primary,

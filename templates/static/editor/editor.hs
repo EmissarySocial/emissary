@@ -43,39 +43,43 @@ behavior containerInsertPoint
 
 		fetch `${url}`
 		put it at end of document's body
-		call htmx.process(#modal)
+		call _hyperscript.processNode(#modal)
 
 
 --------------------------------
 -- WYSIWYG Editor
 
-behavior wysiwygForm
+behavior wysiwyg
 
-	init
-		set @hx-post to @action
-		set @hx-target to "#toaster"
-		set @hx-swap to "innerHTML"
-		set @hx-trigger to "save"
-		set @hx-push-url to false
-		call htmx.process(me)
+init
 
-	on beforeSave(html)
-		tell <[name=html]/> in me
-			set @value to html
-		end
-		trigger save		
+	-- get editor config
+	fetch "/static/editor/wysiwyg.json" as json
+	put it into config
 
-behavior wysiwygEditor
+	-- initialize ckEditor
+	set editorNode to first <.ck-editor/> in me
+	set my editor to InlineEditor.create(editorNode, config)
 
-	init 
-		fetch "/static/editor/wysiwyg.json" as json
-		put it into config
-		set editor to InlineEditor.create(me, config)
-		repeat forever
-			wait for blur
-			set editor.isReadOnly to true
-			send beforeSave(html:editor.getData()) to closest <form/>
-			wait for htmx:afterOnLoad from window
-			set editor.isReadOnly to false
-		end
+	-- initialize the htmx form
+	set @hx-post to @action
+	set @hx-target to "#toaster"
+	set @hx-swap to "innerHTML"
+	set @hx-trigger to "save"
+	set @hx-push-url to false
+	call htmx.process(me)
 
+	set hidden to first <[name=html]/> in me
+	set hidden@value to my editor.getData()
+
+on blur from <.ck-editor/>
+
+	set hidden to first <[name=html]/> in me
+	if my editor.getData() is not hidden@value then 
+		set hidden@value to my editor.getData()
+		trigger save
+	end
+
+-- need a better way of detecting a page change.
+-- on htmx:beforeSwap from window
+--	destroy() my editor

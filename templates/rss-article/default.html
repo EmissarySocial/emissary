@@ -1,0 +1,23 @@
+<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
+<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
+
+<div>
+
+	{{ if .HasParent }}
+		{{ $parent := .Parent "list-item"}}
+		<div>
+			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}.</a>
+		</div>
+	{{ end }}
+
+	<h1 class="space-after">{{.Label}}</h1>
+
+	<article class="space-after">
+		<div>{{.Description}}</div>
+	</article>
+
+	<article class="space-after">
+		<div>{{.Content}}</div>
+	</article>
+
+</div>

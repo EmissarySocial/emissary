@@ -1,0 +1,37 @@
+{
+	"states": [{
+		"stateId":"unread",
+		"label": "Unread",
+		"views": [{
+			"viewId": "default",
+			"roles": ["OWNER"]
+		},{
+			"viewId": "list-item",
+			"roles": ["OWNER"]
+		}],
+		"transitions": [{
+			"transitionId": "read",
+			"label": "Mark Read",
+			"nextState": "read",
+			"nextView": "default",
+			"roles": ["OWNER"]
+		}]
+	}, {
+		"stateId":"read",
+		"label": "Read",
+		"views": [{
+			"viewId": "default",
+			"roles": ["OWNER"]
+		},{
+			"viewId": "list-item",
+			"roles": ["OWNER"]
+		}],
+		"transitions": [{
+			"transitionId": "unread",
+			"label": "Mark Unread",
+			"nextState": "unead",
+			"nextView": "default",
+			"roles": ["OWNER"]
+		}]
+	}]
+}

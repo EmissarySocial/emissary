@@ -23,10 +23,11 @@ type Factory struct {
 	domain  config.Domain
 
 	// singletons (within this domain/factory)
-	templateService *service.Template
-	streamService   *service.Stream
-	layoutService   *service.Layout
-	steranko        *steranko.Steranko
+	templateService     *service.Template
+	streamService       *service.Stream
+	layoutService       *service.Layout
+	subscriptionService *service.Subscription
+	steranko            *steranko.Steranko
 
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
@@ -67,6 +68,9 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 
 	// Stream Service
 	factory.Stream()
+
+	// Subscription Service
+	factory.Subscription()
 
 	return &factory, nil
 }
@@ -116,6 +120,18 @@ func (factory *Factory) StreamSource() *service.StreamSource {
 	return service.NewStreamSource(factory.collection(CollectionStreamSource))
 }
 
+// Subscription returns a fully populated Subscription service
+func (factory *Factory) Subscription() service.Subscription {
+
+	if factory.subscriptionService == nil {
+		fmt.Println("Initializing Subscriptions Service...")
+		factory.subscriptionService = service.NewSubscription(factory.collection(CollectionSubscription), factory.Stream())
+		go factory.subscriptionService.Run()
+	}
+
+	return *factory.subscriptionService
+}
+
 // Template returns a fully populated Template service
 func (factory *Factory) Template() *service.Template {
 
@@ -155,7 +171,7 @@ func (factory *Factory) Layout() *service.Layout {
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
 func (factory *Factory) StreamViewer(ctx echo.Context, stream model.Stream, viewID string) Renderer {
 	request := NewHTTPRequest(ctx)
-	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
+	renderer := NewRenderer(factory.Stream(), request, stream)
 	renderer.viewID = viewID
 	return renderer
 }
@@ -163,7 +179,7 @@ func (factory *Factory) StreamViewer(ctx echo.Context, stream model.Stream, view
 // StreamEditor generates a new stream renderer service, pegged to a specific view.
 func (factory *Factory) StreamEditor(ctx echo.Context, stream model.Stream) Renderer {
 	request := NewHTTPRequest(ctx)
-	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
+	renderer := NewRenderer(factory.Stream(), request, stream)
 	renderer.viewID = "edit"
 	renderer.editable = true
 	return renderer
@@ -172,7 +188,7 @@ func (factory *Factory) StreamEditor(ctx echo.Context, stream model.Stream) Rend
 // StreamTransitioner generates a new stream renderer service, pegged to a specific transition.
 func (factory *Factory) StreamTransitioner(ctx echo.Context, stream model.Stream, transitionID string) Renderer {
 	request := NewHTTPRequest(ctx)
-	renderer := NewRenderer(factory.Stream(), factory.Library(), request, stream)
+	renderer := NewRenderer(factory.Stream(), request, stream)
 	renderer.transitionID = transitionID
 	return renderer
 }
@@ -235,10 +251,6 @@ func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
 
 ///////////////////////////////////////
 // NON MODEL SERVICES
-
-func (factory *Factory) Library() *service.ContentLibrary {
-	return &service.ContentLibrary{}
-}
 
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package

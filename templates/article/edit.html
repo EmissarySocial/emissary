@@ -8,9 +8,20 @@
 		<span 
 			preload
 			hx-get="/{{.Token}}" 
-			class="button">&laquo; Back</span>
+			class="button">Save Draft</span>
+
+			<span 
+				preload
+				hx-delete="/{{.Token}}/draft" 
+				hx-target="body" 
+				hx-swap="beforeend" 
+				hx-push-url="false" 
+				hx-confirm="Are you sure you want to DELETE this draft?"
+				class="button">Cancel</span>
 
 		<button hx-post="/{{.Token}}/draft/publish" class="button primary">Publish</button>
+		&nbsp;
+		&nbsp;
 
 		{{ if .CanTransition "update"}}
 			<span 
@@ -42,7 +53,7 @@
 		<div>{{.Description}}</div>
 	</article>
 
-	<article class="space-after">
+	<article class="content-editor">
 		<div>{{.ContentEditor}}</div>
 	</article>
 

@@ -15,9 +15,15 @@
 	<link rel="stylesheet" href="/static/animations.css">
 	<link rel="stylesheet" href="/static/accessibility.css">
 	<link rel="stylesheet" href="/static/utilities.css">
+
+	<script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script>
+	<script src="/hyperscript/core.js"></script>
+	<script src="/hyperscript/web.js"></script>
+	<script src="/hyperscript/eventsource.js"></script>
+
 </head>
 
-<body hx-ext="preload,authorization">
+<body hx-ext="preload">
 
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 		{{.Render}}
@@ -44,11 +50,6 @@
 	</div>
 
 </body>
-
-<script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script>
-<script src="/hyperscript/core.js"></script>
-<script src="/hyperscript/web.js"></script>
-<script src="/hyperscript/eventsource.js"></script>
 
 <script>
 	function query(value) {

@@ -1,0 +1,26 @@
+{
+	"label": "RSS Folder",
+	"description": "RSS Folders listen for new articles from other websites.",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"title": "RSS Folder",
+		"type": "object",
+		"properties": {
+			"feeds": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	}
+}

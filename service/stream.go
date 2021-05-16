@@ -111,8 +111,7 @@ func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, 
 func (service Stream) ListTopFolders() (data.Iterator, error) {
 	return service.List(
 		exp.
-			Equal("templateId", "folder").
-			AndEqual("parentId", ZeroObjectID()).
+			Equal("parentId", ZeroObjectID()).
 			AndEqual("journal.deleteDate", 0))
 }
 
@@ -141,11 +140,11 @@ func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, erro
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL
-func (service Stream) LoadBySourceURL(url string) (*model.Stream, error) {
+func (service Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL string) (*model.Stream, error) {
 	return service.Load(
 		exp.
-			Equal("sourceUrl", url).
-			AndEqual("journal.deleteDate", 0))
+			Equal("parentId", parentStreamID).
+			AndEqual("sourceUrl", sourceURL))
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream

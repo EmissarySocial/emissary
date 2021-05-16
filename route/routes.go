@@ -35,16 +35,17 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/signout", handler.PostSignOut(factoryManager))
 
 	// ActivityPub INBOX/OUTBOX
-	e.GET("/users/:username/inbox", handler.TBD)
-	e.POST("/users/:username/inbox", handler.TBD)
-	e.GET("/users/:username/outbox", handler.TBD)
-	e.POST("/users/:username/outbox", handler.TBD)
+	e.GET("/inbox", handler.GetInbox(factoryManager))
+	e.POST("/inbox", handler.PostInbox(factoryManager))
+	e.GET("/outbox", handler.GetOutbox(factoryManager))
+	e.POST("/outbox", handler.PostOutbox(factoryManager))
 
 	// Stream Pages
-	e.GET("/", handler.GetStream(factoryManager))                   // ?view=
-	e.GET("/:stream", handler.GetStream(factoryManager))            // ?view=
-	e.GET("/:stream/draft", handler.GetStreamDraft(factoryManager)) // ?view=
-	e.POST("/:stream/draft", handler.PostStreamDraft((factoryManager)))
+	e.GET("/", handler.GetStream(factoryManager))        // ?view=
+	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view=
+	e.GET("/:stream/draft", handler.GetStreamDraft(factoryManager))
+	e.POST("/:stream/draft", handler.PostStreamDraft(factoryManager))
+	e.DELETE("/:stream/draft", handler.DeleteStreamDraft(factoryManager))
 	e.POST("/:stream/draft/publish", handler.PublishStreamDraft(factoryManager))
 	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
 	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition

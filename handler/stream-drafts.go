@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/choose"
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/content"
+	"github.com/benpate/ghost/content/transaction"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/server"
@@ -55,21 +55,21 @@ func PostStreamDraft(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error binding data"))
 		}
 
-		transaction, err := content.ParseTransaction(body)
+		txn, err := transaction.Parse(body)
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error parsing transaction", body))
 		}
 
 		// Try to execute the transaction
-		if err := transaction.Execute(&(draft.Content)); err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error executing transaction", transaction))
+		if err := txn.Execute(&(draft.Content)); err != nil {
+			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error executing transaction", txn))
 		}
 
 		// Try to save the draft
 		service := factory.StreamDraft()
 
-		if err := service.Save(draft, "edit content: "+transaction.Description()); err != nil {
+		if err := service.Save(draft, "edit content: "+txn.Description()); err != nil {
 			return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error saving stream"))
 		}
 
@@ -111,6 +111,28 @@ func PublishStreamDraft(factoryManager *server.FactoryManager) echo.HandlerFunc 
 	}
 }
 
+// DeleteStreamDraft removes a draft version from the database
+func DeleteStreamDraft(factoryManager *server.FactoryManager) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		factory, draft, err := loadStreamDraft(factoryManager, ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.handler.DeleteStreamDraft", "Error loading draft")
+		}
+
+		draftService := factory.StreamDraft()
+
+		if err := draftService.Delete(draft, "delete draft"); err != nil {
+			return derp.Wrap(err, "ghost.handler.DeleteStreamDraft", "Error deleting Draft")
+		}
+
+		ctx.Response().Header().Add("HX-Redirect", "/"+draft.Token)
+		return ctx.NoContent(200)
+	}
+}
+
 ///////////////////////////////////////////////////////////
 // UTILITIES
 
@@ -123,6 +145,8 @@ func loadStreamDraft(factoryManager *server.FactoryManager, ctx echo.Context) (*
 	if err != nil {
 		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.loadStream", "Unrecognized domain"))
 	}
+
+	// TODO: Permissions!!!
 
 	// Get the stream service
 	service := factory.StreamDraft()

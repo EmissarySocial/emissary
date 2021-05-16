@@ -1,0 +1,18 @@
+<div class="tabs">
+	<a href="/{{.Token}}?view=table" hx-get="/{{.Token}}?view=table">Table</a>
+	<a href="/{{.Token}}?view=icons" hx-get="/{{.Token}}?view=icons" class="selected">Icons</a>
+</div>
+
+<div class="grid">
+	{{ if .CanAddChild }}
+		<div class="card" hx-get="/{{.Token}}/new/article">
+			<div class="uk-card-title">Add Stream</div>
+		</div>
+	{{ end }}
+	{{ range .Children ""}}
+		<div class="card" hx-get="/{{.Token}}">
+			<div class="uk-card-title">{{.Label}}</div>
+			<div class="uk-card-body">{{.Description}}</div>
+		</div>
+	{{ end }}
+</div>

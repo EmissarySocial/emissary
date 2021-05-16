@@ -9,28 +9,25 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	streamService  *service.Stream         // StreamService is used to load child streams
-	libraryService *service.ContentLibrary // LibraryService generates content rendering libraries
-	request        *HTTPRequest            // Additional request info URL params, Authentication, etc.
-	stream         model.Stream            // Stream to be displayed
-	viewID         string                  // The view to use for the `Render` function
-	transitionID   string                  // If not empty, then this renderer can invoke transitions
-	editable       bool                    // If TRUE, then this renderer can invoke editors
+	streamService *service.Stream // StreamService is used to load child streams
+	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
+	stream        model.Stream    // Stream to be displayed
+	viewID        string          // The view to use for the `Render` function
+	transitionID  string          // If not empty, then this renderer can invoke transitions
+	editable      bool            // If TRUE, then this renderer can invoke editors
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, libraryService *service.ContentLibrary, request *HTTPRequest, stream model.Stream) Renderer {
+func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream model.Stream) Renderer {
 
 	result := Renderer{
-		streamService:  streamService,
-		libraryService: libraryService,
-		request:        request,
-		stream:         stream,
+		streamService: streamService,
+		request:       request,
+		stream:        stream,
 	}
 
 	return result
@@ -81,8 +78,7 @@ func (w Renderer) Description() string {
 
 // Returns the body content as an HTML template
 func (w Renderer) Content() template.HTML {
-	viewer := w.libraryService.Viewer()
-	result := w.stream.Content.Render(viewer)
+	result := w.stream.Content.View()
 	return template.HTML(result)
 }
 
@@ -94,10 +90,7 @@ func (w Renderer) ContentEditor() template.HTML {
 		return template.HTML("")
 	}
 
-	spew.Dump(w.stream)
-
-	editor := w.libraryService.Editor("/" + w.Token() + "/draft")
-	result := w.stream.Content.Render(editor)
+	result := w.stream.Content.Edit("/" + w.Token() + "/draft")
 	return template.HTML(result)
 }
 
@@ -158,7 +151,7 @@ func (w Renderer) Parent(viewID string) (Renderer, error) {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result = NewRenderer(w.streamService, w.libraryService, w.request, *parent)
+	result = NewRenderer(w.streamService, w.request, *parent)
 	result.viewID = viewID
 
 	return result, nil
@@ -272,7 +265,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
-		renderer := NewRenderer(w.streamService, w.libraryService, w.request, stream)
+		renderer := NewRenderer(w.streamService, w.request, stream)
 		renderer.viewID = viewID
 
 		// Enforce permissions here...

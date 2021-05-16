@@ -1,12 +1,21 @@
-eventsource StreamServer from /{{.Token}}/sse
-        on message
-            for el in query(`[stream="${it}"]`)
-                send stream:update to it
-            end
+
+init 
+
+    log "hey howdy"
+    set location to window.location + "/sse"
+    log location
+    call StreamServer.connect(location)
+
+
+eventsource StreamServer
+
+    on message
+        for el in <[stream=`${it}`]/>
+            send stream:update to it
         end
     end
 
     on htmx:pushedIntoHistory or htmx:historyRestore
         call StreamServer.open(window.location.pathname + "/sse")
     end
-end
+
