@@ -35,26 +35,26 @@ func (service *Subscription) New() *model.Subscription {
 
 func (service *Subscription) Run() {
 
-	// ticker := time.NewTicker(time.Minute)
-	// defer ticker.Stop()
+	ticker := time.NewTicker(20 * time.Minute)
+	defer ticker.Stop()
 
-	// for {
-	// 	<-ticker.C
-	fmt.Println(".. Polling Subscriptions")
-	it, err := service.ListPollable()
+	for {
+		<-ticker.C
+		fmt.Println(".. Polling Subscriptions")
+		it, err := service.ListPollable()
 
-	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.Subscription.Run", "Error listing pollable subscriptions"))
-		// continue
+		if err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.Subscription.Run", "Error listing pollable subscriptions"))
+			continue
+		}
+
+		subscription := model.Subscription{}
+
+		for it.Next(&subscription) {
+			service.pollSubscription(&subscription)
+			subscription = model.Subscription{}
+		}
 	}
-
-	subscription := model.Subscription{}
-
-	for it.Next(&subscription) {
-		service.pollSubscription(&subscription)
-		subscription = model.Subscription{}
-	}
-	// }
 }
 
 func (service *Subscription) pollSubscription(sub *model.Subscription) {
@@ -79,8 +79,6 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 	stream, err := service.streamService.LoadBySource(sub.ParentStreamID, item.Link)
 
-	spew.Dump(item.Title, sub.ParentStreamID, item.Link)
-
 	if err != nil {
 
 		// Anything but a "not found" error is a real error
@@ -102,9 +100,6 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 	if item.UpdatedParsed != nil {
 		updateDate = item.UpdatedParsed.Unix()
 	}
-
-	spew.Dump(stream.SourceUpdated, updateDate)
-	spew.Dump(stream.SourceUpdated != updateDate)
 
 	// If stream has been updated since previous save, then set new values
 	if stream.SourceUpdated != updateDate {
