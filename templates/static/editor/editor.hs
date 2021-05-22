@@ -26,24 +26,33 @@ def getContainerType(node)
 --------------------------------
 -- Containers
 
-behavior containerInsertPoint
+behavior containerInsert
 
 	init
-		add .container-insert-point
+		add .container-insert
+
+		log "here?"
+
+	on mouseover
+		log my dataset
 
 	on click
-		set container to closest .container
-		set parentId to container[@data-id]
-		set style to container[@data-style]
-		set check to container[@data-check]
-		set childIndex to getMyPosition(me, "container-insert-point")
+
+log "here"
+		set body to {
+			"type": "new-item",
+            "itemType": "WYSIWYG",
+            "itemId": @data-itemId,
+            "place": @data-place,
+            "check": @data-check
+		}
+
+		log body as JSON
 
 		set url to the location's href
-		set url to url.replace("/draft", `/layout/contentEditor-addItem?style=${style}&parentId=${parentId}&childIndex=${childIndex}&check=${check}`)
-
-		fetch `${url}`
-		put it at end of document's body
-		call _hyperscript.processNode(#modal)
+ 
+		fetch `${url}` {method:"POST", headers:{"Content-Type": "application/json"}, body: body as JSON}
+		reload() the window's location
 
 
 --------------------------------

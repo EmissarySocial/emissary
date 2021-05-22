@@ -19,10 +19,10 @@ func Parse(in map[string]interface{}) (Transaction, error) {
 
 	case "new-item":
 		return NewItem{
-			ParentID:   data.GetInt("parentId"),
-			ChildIndex: data.GetInt("childIndex"),
-			ItemType:   data.GetString("itemType"),
-			Check:      data.GetString("check"),
+			ItemID: data.GetInt("itemId"),
+			Place:  data.GetString("place"),
+			Type:   data.GetString("itemTtype"),
+			Check:  data.GetString("check"),
 		}, nil
 
 	case "update-item":

@@ -1,10 +1,7 @@
 
 init 
 
-    log "hey howdy"
-    set location to window.location + "/sse"
-    log location
-    call StreamServer.connect(location)
+    call StreamServer.connect(window.location + "/sse")
 
 
 eventsource StreamServer

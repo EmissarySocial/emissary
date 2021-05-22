@@ -1,6 +1,10 @@
 package content
 
 import (
+	"math/rand"
+	"strconv"
+	"time"
+
 	"github.com/benpate/html"
 )
 
@@ -12,7 +16,7 @@ func (content Content) View() string {
 	widget := content.Widget(0)
 
 	widget.View(builder, content, 0)
-	return builder.String()
+	return builder.String() // + "<pre>" + spew.Sdump(content) + "</pre>"
 }
 
 func (content *Content) Widget(id int) Widget {
@@ -48,7 +52,7 @@ func (content Content) Edit(endpoint string) string {
 	widget := content.Widget(0)
 
 	widget.Edit(builder, content, 0, endpoint)
-	return builder.String()
+	return builder.String() // + "<pre>" + spew.Sdump(content) + "</pre>"
 }
 
 func (content Content) viewSubTree(builder *html.Builder, id int) {
@@ -65,6 +69,15 @@ func (content Content) editSubTree(builder *html.Builder, id int, endpoint strin
 
 	widget.Edit(subBuilder, content, id, endpoint)
 	subBuilder.CloseAll()
+}
+
+// AddItem adds a new item to this content structure, and returns the new item's index
+func (content *Content) AddItem(item Item) int {
+	newID := len(*content)
+
+	*content = append(*content, item)
+
+	return newID
 }
 
 // GetItem returns a pointer to the item at the desired index
@@ -123,4 +136,11 @@ func (content Content) move(from int, to int) {
 	for index := range content {
 		content[index].UpdateReference(from, to)
 	}
+}
+
+// NewChecksum generates a new checksum value to be inserted into a content.Item
+func NewChecksum() string {
+	seed := time.Now().Unix()
+	source := rand.NewSource(seed)
+	return strconv.FormatInt(source.Int63(), 36) + strconv.FormatInt(source.Int63(), 36)
 }

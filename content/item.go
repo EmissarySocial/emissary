@@ -1,10 +1,6 @@
 package content
 
 import (
-	"math/rand"
-	"strconv"
-	"time"
-
 	"github.com/benpate/datatype"
 )
 
@@ -30,9 +26,7 @@ func NewItem(t string) Item {
 
 // NewHash updates the hash value for this item
 func (item *Item) NewChecksum() {
-	seed := time.Now().Unix()
-	source := rand.NewSource(seed)
-	item.Check = strconv.FormatInt(source.Int63(), 36) + strconv.FormatInt(source.Int63(), 36)
+	item.Check = NewChecksum()
 }
 
 // AddReference adds a new "sub-item" reference to this item

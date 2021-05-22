@@ -5,50 +5,46 @@
 
         <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
-            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
-            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
             <input type="hidden" name="itemType" value="WYSIWYG">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
             <input type="hidden" name="check" value="{{.QueryParam `check`}}">
             WYSIWYG
         </form>
 
         <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
-            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
-            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
-            <input type="hidden" name="itemType" value="CONTAINER">
-            <input type="hidden" name="style" value="COLUMNS">
+            <input type="hidden" name="itemType" value="HTML">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
             <input type="hidden" name="check" value="{{.QueryParam `check`}}">
-            Columns
+            HTML
+        </form>
+
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="TEXT">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            TEXT
         </form>
 
         <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
-            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
-            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
-            <input type="hidden" name="itemType" value="CONTAINER">
-            <input type="hidden" name="style" value="ROWS">
-            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
-            Rows
-        </form>
-
-        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
-            <input type="hidden" name="type" value="new-item">
-            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
-            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
             <input type="hidden" name="itemType" value="OEMBED">
-            <input type="hidden" name="style" value="IMAGE">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
             <input type="hidden" name="check" value="{{.QueryParam `check`}}">
             Image
         </form>
         
-
         <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
             <input type="hidden" name="type" value="new-item">
-            <input type="hidden" name="parentId" value="{{.QueryParam `parentId`}}">
-            <input type="hidden" name="childIndex" value="{{.QueryParam `childIndex`}}">
             <input type="hidden" name="itemType" value="OEMBED">
-            <input type="hidden" name="style" value="VIDEO">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
             <input type="hidden" name="check" value="{{.QueryParam `check`}}">
             Video
         </form>

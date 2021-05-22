@@ -1,33 +1,33 @@
-div.container[data-style="COLUMNS"] {
+div.container[data-style="COLS"] {
     box-sizing: border-box;
     display:flex;
     flex-direction:row;
     flex-wrap: wrap;
 }
 
-div.container[data-style="COLUMNS"] > div.container-item {
+div.container[data-style="COLS"] > div.container-item {
     flex-grow:1;
 }
 
-div.container[data-style="COLUMNS"][data-size=1] > div.container-item {
+div.container[data-style="COLS"][data-size=1] > div.container-item {
 }
 
-div.container[data-style="COLUMNS"][data-size=2] > div.container-item {
+div.container[data-style="COLS"][data-size=2] > div.container-item {
     
 }
 
-div.container[data-style="COLUMNS"][data-size=3] > div.container-item {
+div.container[data-style="COLS"][data-size=3] > div.container-item {
     
 }
 
-div.container[data-style="COLUMNS"][data-size=4] > div.container-item {
+div.container[data-style="COLS"][data-size=4] > div.container-item {
     
 }
 
-div.container[data-style="COLUMNS"][data-size=5] > div.container-item {
+div.container[data-style="COLS"][data-size=5] > div.container-item {
     
 }
 
-div.container[data-style="COLUMNS"][data-size=6] > div.container-item {
+div.container[data-style="COLS"][data-size=6] > div.container-item {
     
 }

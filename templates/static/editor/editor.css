@@ -1,51 +1,80 @@
 .content-editor {
-    background-color:rgb(250,250,250);
-    padding:20px;
-    margin-bottom:40px;
+	background-color:rgb(250,250,250);
+	padding:10px;
+	margin-bottom:40px;
 }
 
 /** CONTAINERS ****/
 
-div.container-insert-point {
-    /*cursor:context-menu;*/
-    cursor: copy;
+div.container {
+	position:relative;
+	padding:0px;
+	align-items:stretch;
+	align-content: top;
+}
+
+div.container > div.container-item {
+	position:relative;
+	box-sizing: border-box;
+	padding: 5px;
+}
+
+div.container[data-style=COLS] > div.container-item > div.container[data-style=ROWS] > div.container-item:first-child {
+	padding-top: 0px!important;
+}
+
+div.container[data-style=ROWS] > div.container-item > div.container[data-style=COLS] > div.container-item:first-child {
+	padding-left: 0px!important;
 }
 
 
-div.container-insert-point:hover {
-    background-color:cornflowerblue;
+/* INSERTION POINTS */
+
+div.container-insert {
+	cursor: copy;
+	position:absolute;
+	z-index:2;
+	border-radius:5px;
 }
 
-div.container[data-style=ROWS] > div.container-insert-point {
-    height:10px;
+div.container-insert:hover {
+	background-color:cornflowerblue;
 }
 
-div.container[data-style=ROWS] > div.container-insert-point:first-child {
-    margin-top:-10px;
+div.container-insert[data-place=ABOVE] {
+	top:-10px;
+	height:15px;
+	left:0px;
+	right:0px;
 }
 
-div.container[data-style=ROWS] > div.container-insert-point:last-child {
-    margin-bottom:-10px;
+div.container-insert[data-place=BELOW] {
+	bottom:-10px;
+	height:15px;
+	left:0px;
+	right:0px;
 }
 
-div.container[data-style=COLUMNS] > div.container-insert-point {
-    width:10px;
+div.container-insert[data-place=LEFT] {
+	left:-10px;
+	top:0px;
+	bottom:0px;
+	width:15px;
 }
 
-div.container[data-style=COLUMNS] > div.container-insert-point:first-child {
-    margin-left:-10px;
-}
-
-div.container[data-style=COLUMNS] > div.container-insert-point:last-child {
-    margin-right:-10px;
+div.container-insert[data-place=RIGHT] {
+	right:-10px;
+	top:0px;
+	bottom:0px;
+	width:15px;
 }
 
 
 /** WYSIWYG *******/
 .ck-content {
-    background-color:white;
+	background-color:white;
 }
 
 .ck-content.ck-blurred {
-    border: 1px solid hsla(0, 0%, 0%, 0.15)!important;
+	border: 1px solid rgb(240,240,240)!important; /* hsla(0, 0%, 0%, 0.15)!important; */
 }
