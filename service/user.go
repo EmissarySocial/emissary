@@ -15,15 +15,15 @@ type User struct {
 }
 
 // NewUser returns a fully populated User service
-func NewUser(collection data.Collection) *User {
-	return &User{
+func NewUser(collection data.Collection) User {
+	return User{
 		collection: collection,
 	}
 }
 
 // New creates a newly initialized User that is ready to use
-func (service User) New() *model.User {
-	return &model.User{
+func (service User) New() model.User {
+	return model.User{
 		UserID: primitive.NewObjectID(),
 	}
 }
@@ -34,15 +34,13 @@ func (service User) List(criteria exp.Expression, options ...option.Option) (dat
 }
 
 // Load retrieves an User from the database
-func (service User) Load(criteria exp.Expression) (*model.User, error) {
+func (service User) Load(criteria exp.Expression, result *model.User) error {
 
-	contact := service.New()
-
-	if err := service.collection.Load(criteria, contact); err != nil {
-		return nil, derp.Wrap(err, "service.User", "Error loading User", criteria)
+	if err := service.collection.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "service.User", "Error loading User", criteria)
 	}
 
-	return contact, nil
+	return nil
 }
 
 // Save adds/updates an User in the database
@@ -69,8 +67,9 @@ func (service User) Delete(user *model.User, note string) error {
 // Queries
 
 // LoadByUsername loads a single model.User object that matches the provided username
-func (service User) LoadByUsername(username string) (*model.User, error) {
-	return service.Load(exp.Equal("username", username))
+func (service User) LoadByUsername(username string, result *model.User) error {
+	criteria := exp.Equal("username", username)
+	return service.Load(criteria, result)
 }
 
 // ListByGroup returns all users that match a provided group name

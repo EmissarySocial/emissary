@@ -73,6 +73,7 @@ func newStream(ctx echo.Context, factoryManager *server.FactoryManager) (*domain
 
 	// Locate the domain we're working in
 	factory, err := factoryManager.ByContext(ctx)
+
 	if err != nil {
 		return nil, nil, derp.Report(derp.Wrap(err, "ghost.handler.GetNewStream", "Error locating domain"))
 	}
@@ -112,3 +113,38 @@ func loadStream(factoryManager *server.FactoryManager, ctx echo.Context) (*domai
 
 	return factory, stream, nil
 }
+
+// loadStreamTemplate returns the stream (and its corresponding template) requested in the context
+func loadStreamTemplate(factoryManager *server.FactoryManager, ctx echo.Context) (*model.Template, *model.Stream, error) {
+
+	factory, stream, err := loadStream(factoryManager, ctx)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.handler.loadStreamTemplate", "Unrecognized Domain")
+	}
+
+	templateService := factory.Template()
+
+	template, err := templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.handler.loadStreamTemplate", "Unrecognized Template")
+	}
+
+	return template, stream, nil
+}
+
+/*
+func loadStreamAction(factoryManager *server.FactoryManager, ctx echo.Context) (*model.Stream, *model.Action, error) {
+
+	template, stream, err := loadStreamTemplate(factoryManager, ctx)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "ghost.handler.loadStreamAction", "Error Loading Stream and Template")
+	}
+
+	action := template.Actions[ctx.Param("action")]
+
+
+}
+*/

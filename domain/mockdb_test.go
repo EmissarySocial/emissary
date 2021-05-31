@@ -18,11 +18,11 @@ func TestMockDB(t *testing.T) {
 
 	stream.Token = "1-my-first-stream"
 
-	err := service.Save(stream, "New Stream")
+	err := service.Save(&stream, "New Stream")
 	assert.Nil(t, err)
 
-	result, err := service.Load(exp.Equal("token", "1-my-first-stream"))
+	err = service.Load(exp.Equal("token", "1-my-first-stream"), &stream)
 
 	assert.Nil(t, err)
-	spew.Dump(result)
+	spew.Dump(stream)
 }

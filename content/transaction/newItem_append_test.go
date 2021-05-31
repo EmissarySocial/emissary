@@ -28,10 +28,10 @@ func TestAddItem_AppendContainer_Above(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 0,
-		Place:  "ABOVE",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   0,
+		Place:    "ABOVE",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -71,10 +71,10 @@ func TestAddItem_AppendContainer_Below(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 0,
-		Place:  "BELOW",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   0,
+		Place:    "BELOW",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -114,10 +114,10 @@ func TestAddItem_AppendContainer_Left(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 0,
-		Place:  "LEFT",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   0,
+		Place:    "LEFT",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -157,10 +157,10 @@ func TestAddItem_AppendContainer_Right(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 0,
-		Place:  "RIGHT",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   0,
+		Place:    "RIGHT",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)

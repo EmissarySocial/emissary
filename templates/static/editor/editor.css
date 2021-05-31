@@ -8,7 +8,7 @@
 
 div.container {
 	position:relative;
-	padding:0px;
+	padding:10px;
 	align-items:stretch;
 	align-content: top;
 }
@@ -19,6 +19,7 @@ div.container > div.container-item {
 	padding: 5px;
 }
 
+/*
 div.container[data-style=COLS] > div.container-item > div.container[data-style=ROWS] > div.container-item:first-child {
 	padding-top: 0px!important;
 }
@@ -26,7 +27,7 @@ div.container[data-style=COLS] > div.container-item > div.container[data-style=R
 div.container[data-style=ROWS] > div.container-item > div.container[data-style=COLS] > div.container-item:first-child {
 	padding-left: 0px!important;
 }
-
+*/
 
 /* INSERTION POINTS */
 

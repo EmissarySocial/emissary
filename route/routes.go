@@ -40,19 +40,31 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/outbox", handler.GetOutbox(factoryManager))
 	e.POST("/outbox", handler.PostOutbox(factoryManager))
 
-	// Stream Pages
-	e.GET("/", handler.GetStream(factoryManager))        // ?view=
-	e.GET("/:stream", handler.GetStream(factoryManager)) // ?view=
-	e.GET("/:stream/draft", handler.GetStreamDraft(factoryManager))
-	e.POST("/:stream/draft", handler.PostStreamDraft(factoryManager))
-	e.DELETE("/:stream/draft", handler.DeleteStreamDraft(factoryManager))
-	e.POST("/:stream/draft/publish", handler.PublishStreamDraft(factoryManager))
-	e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
-	e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
-	e.GET("/:stream/new", handler.GetTemplates(factoryManager))
-	e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
-	e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
+	/*
+		// Stream Pages
+		e.GET("/", handler.GetStream(factoryManager))        // ?view=
+		e.GET("/:stream", handler.GetStream(factoryManager)) // ?view=
+		e.GET("/:stream/draft", handler.GetStreamDraft(factoryManager))
+		e.POST("/:stream/draft", handler.PostStreamDraft(factoryManager))
+		e.DELETE("/:stream/draft", handler.DeleteStreamDraft(factoryManager))
+		e.POST("/:stream/draft/publish", handler.PublishStreamDraft(factoryManager))
+		e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
+		e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
+		e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
+		e.GET("/:stream/new", handler.GetTemplates(factoryManager))
+		e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
+		e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
+		e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
+	*/
+
+	/// REFACTORED STREAM PAGES
+
+	e.GET("/", handler.GetStream(factoryManager))
+	e.GET("/:stream", handler.GetStream(factoryManager))
+	e.GET("/:stream/:action", handler.GetAction(factoryManager))
+	e.POST("/:stream/:action", handler.PostAction(factoryManager))
+	e.DELETE("/:stream", handler.PostAction(factoryManager))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
 
 	return e

@@ -1,0 +1,79 @@
+{
+	"label": "Chat Message",
+	"description": "Single message in a chatroom",
+	"containedBy": ["chatroom"],
+	"schema": {
+		"type": "object",
+		"properties": {},
+		"required": []
+	},
+	"states": {
+		"awaiting-moderation": {
+			"label": "Awaiting Moderation",
+			"description": "New messages by `moderated-participants` that have not yet been approved by a `moderator`."
+		}, 
+		"visible": {
+			"label": "Visible",
+			"description": "Comment is visible to all `participant`s"
+		}, 
+		"hidden": {
+			"label": "Hidden",
+			"description": "Comment has been hidden by `moderator`s"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Domain Owners have full control over this chatroom"
+		},
+		"moderator": {
+			"label": "Moderator",
+			"description": "Moderators have full control over this chatroom."
+		},
+		"participant": {
+			"label": "Participant",
+			"description": "Participants can add new chat messages."
+		},
+		"moderated-participant": {
+			"label": "Author",
+			"description": "Authors can edit their existing chat messages."
+		}
+	},
+	"actions": {
+		"view": {
+			"states": [],
+			"roles": ["participant", "moderated-paricipant"],
+			"method": "get"
+		},
+		"edit":{
+			"states": [],
+			"roles": ["owner", "moderator"],
+			"method": "edit",
+			"form": {
+				"kind": "layout-vertical",
+				"children": [{
+					"kind": "text",
+					"label": "Edit this Comment",
+					"path": "description"
+				}]
+			}
+		},
+		"hide": {
+			"states": ["awaiting-moderation", "visible"],
+			"roles": ["moderator"],
+			"method": "new-state",
+			"new-state":"hidden"
+		},
+		"show": {
+			"states": ["awaiting-moderation", "hidden"],
+			"roles": ["moderator"],
+			"method": "new-state",
+			"new-state":"hidden"
+		},
+		"delete": {
+			"method": "delete",
+			"states": [],
+			"roles":["owner", "moderator"]
+		}
+	}
+}

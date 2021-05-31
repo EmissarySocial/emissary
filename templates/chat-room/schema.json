@@ -1,0 +1,77 @@
+{
+	"label": "Chat Room",
+	"description": "Realtime chat room contains chat items",
+	"containedBy": ["folder", "top"],
+	"schema": {
+		"type": "object",
+		"properties": {}
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"description": "Chatrooms do not have any additional states"
+		}
+	},
+	"roles": {
+		"participant": {
+			"label": "Participant",
+			"decription": "Participants can add messages directly into this chatroom."
+		},
+		"moderated-participant": {
+			"label": "Moderated Participant",
+			"description": "Moderated participants can add messages, but their messages must be approved by a moderator before being visible by others."
+		},
+		"moderator": {
+			"label": "Moderator",
+			"description": "Moderators can update chatroom settings, and can approve messages by moderated participants."
+		}
+	},
+	"actions": {
+		"create": {
+			"states": ["default"],
+			"roles": ["admin"],
+			"method": "create",
+			"form": {
+				"kind": "layout-vertical",
+				"children": [{
+					"kind": "text",
+					"label": "Label",
+					"path": "label"
+				}, {
+					"kind": "longtext",
+					"label": "Description",
+					"path": "description"
+				}]
+			}
+		},
+		"view": {
+			"states": ["default"],
+			"roles": ["participant", "moderated-participant"],
+			"method": "get"
+		},
+		"edit": {
+			"states": ["default"],
+			"roles": ["moderator"],
+			"method": "edit-data"
+		},
+		"delete": {
+			"states": ["default"],
+			"roles": ["moderator"],
+			"method": "delete"
+		},
+		"moderated-comment": {
+			"states": ["default"],
+			"roles":["moderated-participant"],
+			"method": "create-child",
+			"child-state": "awaiting-moderation",
+			"child-templates": ["chat"]
+		},
+		"comment": {
+			"states": ["default"],
+			"roles":["participant", "moderator"],
+			"method": "add-child",
+			"child-state": "visible",
+			"child-templates": ["chat"]
+		}
+	}
+}

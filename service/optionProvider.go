@@ -7,10 +7,10 @@ import (
 )
 
 type OptionProvider struct {
-	User *User
+	User User
 }
 
-func NewOptionProvider(user *User) OptionProvider {
+func NewOptionProvider(user User) OptionProvider {
 	return OptionProvider{
 		User: user,
 	}
@@ -30,7 +30,7 @@ func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error
 
 		record := service.User.New()
 		result := make([]form.OptionCode, it.Count())
-		for it.Next(record) {
+		for it.Next(&record) {
 			result = append(result, form.OptionCode{
 				Label: record.DisplayName,
 				Value: record.UserID.Hex(),

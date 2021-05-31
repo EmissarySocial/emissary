@@ -28,10 +28,10 @@ func TestAddItem_InsertContainer_Above(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 1,
-		Place:  "ABOVE",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   1,
+		Place:    "ABOVE",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -78,10 +78,10 @@ func TestAddItem_InsertContainer_Above2(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 2,
-		Place:  "ABOVE",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   2,
+		Place:    "ABOVE",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -100,7 +100,7 @@ func TestAddItem_InsertContainer_Above2(t *testing.T) {
 	require.Equal(t, "HTML", c[3].Type)
 	require.Empty(t, c[3].Data["html"])
 
-	expected := `<div class="container" data-style="ROWS" data-size="2"><div class="container-item">This is the first item</div><div class="container-item"></div><div class="container-item">This is the second item</div></div>`
+	expected := `<div class="container" data-style="ROWS" data-size="3"><div class="container-item">This is the first item</div><div class="container-item"></div><div class="container-item">This is the second item</div></div>`
 	require.Equal(t, expected, c.View())
 }
 
@@ -124,10 +124,10 @@ func TestAddItem_InsertContainer_Below(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 1,
-		Place:  "BELOW",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   1,
+		Place:    "BELOW",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -167,10 +167,10 @@ func TestAddItem_InsertContainer_Left(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 1,
-		Place:  "LEFT",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   1,
+		Place:    "LEFT",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)
@@ -210,10 +210,10 @@ func TestAddItem_InsertContainer_Right(t *testing.T) {
 		},
 	}
 	txn := NewItem{
-		ItemID: 1,
-		Place:  "RIGHT",
-		Type:   "HTML",
-		Check:  "123",
+		ItemID:   1,
+		Place:    "RIGHT",
+		ItemType: "HTML",
+		Check:    "123",
 	}
 
 	err := txn.Execute(&c)

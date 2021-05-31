@@ -17,12 +17,21 @@ func Parse(in map[string]interface{}) (Transaction, error) {
 
 	switch data.GetString("type") {
 
+	case "change-type":
+
+		return ChangeType{
+			ItemID:   data.GetInt("itemId"),
+			ItemType: data.GetString("itemType"),
+			Check:    data.GetString("check"),
+		}, nil
+
 	case "new-item":
+
 		return NewItem{
-			ItemID: data.GetInt("itemId"),
-			Place:  data.GetString("place"),
-			Type:   data.GetString("itemTtype"),
-			Check:  data.GetString("check"),
+			ItemID:   data.GetInt("itemId"),
+			Place:    data.GetString("place"),
+			ItemType: data.GetString("itemType"),
+			Check:    data.GetString("check"),
 		}, nil
 
 	case "update-item":

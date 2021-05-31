@@ -9,24 +9,32 @@ import (
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
 type SterankoUserService struct {
-	userService *User
+	userService User
 }
 
 // NewSterankoUserService returns a fully populated SterankoUserService.
-func NewSterankoUserService(userService *User) *SterankoUserService {
-	return &SterankoUserService{
+func NewSterankoUserService(userService User) SterankoUserService {
+	return SterankoUserService{
 		userService: userService,
 	}
 }
 
 // New creates a newly initialized User that is ready to use
 func (service SterankoUserService) New() steranko.User {
-	return service.userService.New()
+	result := service.userService.New()
+	return &result
 }
 
 // Load retrieves a single User from the database
 func (service SterankoUserService) Load(username string) (steranko.User, error) {
-	return service.userService.LoadByUsername(username)
+
+	user := service.userService.New()
+
+	if err := service.userService.LoadByUsername(username, &user); err != nil {
+		return nil, derp.Wrap(err, "ghost.service.SterankoUserService.Load", "Error loading user")
+	}
+
+	return &user, nil
 }
 
 // Save inserts/updates a single User in the database

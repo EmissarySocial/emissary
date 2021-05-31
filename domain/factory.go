@@ -54,23 +54,58 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	}
 
 	factory := Factory{
-		Session: session,
-		domain:  domain,
+		Session:               session,
+		domain:                domain,
+		templateUpdateChannel: make(chan model.Template),
+		layoutUpdateChannel:   make(chan *template.Template),
 	}
+
+	// Initialize Communication Channels
+
+	if session, ok := factory.Session.(*mongodb.Session); ok {
+
+		if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
+			factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
+		}
+	}
+
+	if factory.streamUpdateChannel == nil {
+		// Fall through means failure.  Just return an "empty" channel for now
+		factory.streamUpdateChannel = make(chan model.Stream)
+	}
+
+	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
 	// Initialize Background Services
 
 	// This loads the web page layout (real-time updates to wait until later)
-	factory.Layout()
+	factory.layoutService = service.NewLayout(
+		factory.domain.LayoutPath,
+		factory.LayoutUpdateChannel(),
+	)
 
 	// Template Service
-	factory.Template()
+	factory.templateService = service.NewTemplate(
+		factory.domain.TemplatePaths,
+		factory.Layout(),
+		factory.LayoutUpdateChannel(),
+		factory.TemplateUpdateChannel(),
+	)
 
 	// Stream Service
-	factory.Stream()
+	factory.streamService = service.NewStream(
+		factory.collection(CollectionStream),
+		factory.Template(),
+		factory.FormLibrary(),
+		factory.TemplateUpdateChannel(),
+		factory.StreamUpdateChannel(),
+	)
 
 	// Subscription Service
-	factory.Subscription()
+	factory.subscriptionService = service.NewSubscription(
+		factory.collection(CollectionSubscription),
+		factory.Stream(),
+	)
 
 	return &factory, nil
 }
@@ -87,32 +122,23 @@ func (factory *Factory) Hostname() string {
 
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
-	return service.NewAttachment(factory.collection(CollectionAttachment))
+	result := service.NewAttachment(factory.collection(CollectionAttachment))
+	return &result
 }
 
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
-
-	if factory.streamService == nil {
-
-		factory.streamService = service.NewStream(
-			factory.collection(CollectionStream),
-			factory.Template(),
-			factory.FormLibrary(),
-			factory.TemplateUpdateChannel(),
-			factory.StreamUpdateChannel(),
-		)
-	}
-
 	return factory.streamService
 }
 
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 
-	return service.NewStreamDraft(
+	result := service.NewStreamDraft(
 		factory.collection(CollectionStreamDraft),
 		factory.Stream(),
 	)
+
+	return &result
 }
 
 // StreamSource returns a fully populated StreamSource service
@@ -121,35 +147,17 @@ func (factory *Factory) StreamSource() *service.StreamSource {
 }
 
 // Subscription returns a fully populated Subscription service
-func (factory *Factory) Subscription() service.Subscription {
-
-	if factory.subscriptionService == nil {
-		fmt.Println("Initializing Subscriptions Service...")
-		factory.subscriptionService = service.NewSubscription(factory.collection(CollectionSubscription), factory.Stream())
-		go factory.subscriptionService.Run()
-	}
-
-	return *factory.subscriptionService
+func (factory *Factory) Subscription() *service.Subscription {
+	return factory.subscriptionService
 }
 
 // Template returns a fully populated Template service
 func (factory *Factory) Template() *service.Template {
-
-	// Initialize service, if necessary
-	if factory.templateService == nil {
-		factory.templateService = service.NewTemplate(
-			factory.domain.TemplatePaths,
-			factory.Layout(),
-			factory.LayoutUpdateChannel(),
-			factory.TemplateUpdateChannel(),
-		)
-	}
-
 	return factory.templateService
 }
 
 // User returns a fully populated User service
-func (factory *Factory) User() *service.User {
+func (factory *Factory) User() service.User {
 	return service.NewUser(factory.collection(CollectionUser))
 }
 
@@ -158,13 +166,6 @@ func (factory *Factory) User() *service.User {
 
 // Layout service manages global website layouts
 func (factory *Factory) Layout() *service.Layout {
-
-	if factory.layoutService == nil {
-		var err error
-		factory.layoutService, err = service.NewLayout(factory.domain.LayoutPath, factory.LayoutUpdateChannel())
-		derp.Report(err)
-	}
-
 	return factory.layoutService
 }
 
@@ -198,54 +199,21 @@ func (factory *Factory) StreamTransitioner(ctx echo.Context, stream model.Stream
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
-
-	if factory.realtimeBroker == nil {
-		factory.realtimeBroker = NewRealtimeBroker(factory, factory.StreamUpdateChannel())
-	}
-
 	return factory.realtimeBroker
 }
 
 // StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
 func (factory *Factory) StreamUpdateChannel() chan model.Stream {
-
-	if factory.streamUpdateChannel == nil {
-
-		if session, ok := factory.Session.(*mongodb.Session); ok {
-
-			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-				factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
-				fmt.Println("factory.StreamUpdateChannel: created mongodb stream watcher.")
-			}
-		}
-
-		if factory.streamUpdateChannel == nil {
-			// Fall through means failure.  Just return an "empty" channel for now
-			factory.streamUpdateChannel = make(chan model.Stream)
-			fmt.Println("factory.StreamUpdateChannel: created regular channel.")
-		}
-	}
-
 	return factory.streamUpdateChannel
 }
 
 // TemplateUpdateChannel returns a channel for transmitting templates that have changed.
 func (factory *Factory) TemplateUpdateChannel() chan model.Template {
-
-	if factory.templateUpdateChannel == nil {
-		factory.templateUpdateChannel = make(chan model.Template)
-	}
-
 	return factory.templateUpdateChannel
 }
 
 // LayoutUpdateChannel returns a channel for transmitting the global layout when it has changed.
 func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
-
-	if factory.layoutUpdateChannel == nil {
-		factory.layoutUpdateChannel = make(chan *template.Template)
-	}
-
 	return factory.layoutUpdateChannel
 }
 
@@ -270,14 +238,11 @@ func (factory *Factory) Key() service.Key {
 // Steranko returns a fully populated Steranko adapter for the User service.
 func (factory *Factory) Steranko() *steranko.Steranko {
 
-	if factory.steranko == nil {
-
-		sterankoUserService := service.NewSterankoUserService(factory.User())
-
-		factory.steranko = steranko.New(sterankoUserService, factory.Key(), factory.domain.Steranko)
-	}
-
-	return factory.steranko
+	return steranko.New(
+		service.NewSterankoUserService(factory.User()),
+		factory.Key(),
+		factory.domain.Steranko,
+	)
 }
 
 func (factory *Factory) OptionProvider() form.OptionProvider {

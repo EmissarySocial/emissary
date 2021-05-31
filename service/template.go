@@ -26,7 +26,7 @@ type Template struct {
 // NewTemplate returns a fully initialized Template service.
 func NewTemplate(paths []string, layoutService *Layout, layoutUpdates chan *template.Template, templateUpdateChannel chan model.Template) *Template {
 
-	result := &Template{
+	result := Template{
 		sources:           make([]TemplateSource, 0),
 		templates:         make(map[string]*model.Template),
 		layoutService:     layoutService,
@@ -44,7 +44,7 @@ func NewTemplate(paths []string, layoutService *Layout, layoutUpdates chan *temp
 
 	go result.start()
 
-	return result
+	return &result
 }
 
 // Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for

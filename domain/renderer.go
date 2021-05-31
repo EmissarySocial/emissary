@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"bytes"
 	"html/template"
 	"time"
 
@@ -143,15 +142,14 @@ func (w Renderer) QueryParam(param string) string {
 // Parent returns a Stream containing the parent of the current stream
 func (w Renderer) Parent(viewID string) (Renderer, error) {
 
+	var parent model.Stream
 	var result Renderer
 
-	parent, err := w.streamService.LoadParent(&w.stream)
-
-	if err != nil {
+	if err := w.streamService.LoadParent(&w.stream, &parent); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result = NewRenderer(w.streamService, w.request, *parent)
+	result = NewRenderer(w.streamService, w.request, parent)
 	result.viewID = viewID
 
 	return result, nil
@@ -191,6 +189,7 @@ func (w Renderer) ChildTemplates() []model.Template {
 ///////////////////////////////
 /// RENDERING METHODS
 
+/*
 // Render generates an HTML output for a stream/view combination.
 func (w Renderer) Render() (template.HTML, error) {
 
@@ -233,24 +232,26 @@ func (w Renderer) RenderForm() (template.HTML, error) {
 
 	return template.HTML(result), nil
 }
+*/
 
 /////////////////////
 // PERMISSIONS METHODS
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
-func (w Renderer) CanView(viewID string) bool {
-	_, ok := w.streamService.View(&w.stream, viewID, w.request.Authorization())
-	return ok
-}
+func (w Renderer) UserCan(actionID string) bool {
 
-// CanTransition returns TRUE is this Renderer is authorized to initiate a transition
-func (w Renderer) CanTransition(transitionID string) bool {
-	_, ok := w.streamService.Transition(&w.stream, transitionID, w.request.Authorization())
-	return ok
+	action, err := w.streamService.Action(&w.stream, actionID)
+
+	if err != nil {
+		return false
+	}
+
+	return action.UserCan(&w.stream, w.request.Authorization())
 }
 
 // CanAddChild returns TRUE if the current user has permission to add child streams.
 func (w Renderer) CanAddChild() bool {
+	// TODO: real permissions here
 	return true
 }
 
@@ -269,7 +270,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 		renderer.viewID = viewID
 
 		// Enforce permissions here...
-		if renderer.CanView(viewID) {
+		if renderer.UserCan(viewID) {
 			result = append(result, renderer)
 		}
 

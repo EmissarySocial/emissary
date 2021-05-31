@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,7 +24,8 @@ type Stream struct {
 
 // NewStream returns a fully populated Stream service.
 func NewStream(collection data.Collection, templateService *Template, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
-	result := &Stream{
+
+	result := Stream{
 		collection:            collection,
 		templateService:       templateService,
 		formLibrary:           formLibrary,
@@ -35,13 +35,12 @@ func NewStream(collection data.Collection, templateService *Template, formLibrar
 
 	go result.start()
 
-	return result
+	return &result
 }
 
 // New creates a newly initialized Stream that is ready to use
-func (service *Stream) New() *model.Stream {
-	result := model.NewStream()
-	return &result
+func (service *Stream) New() model.Stream {
+	return model.NewStream()
 }
 
 // start begins the background watchers used by the Stream Service
@@ -60,19 +59,17 @@ func (service *Stream) List(criteria exp.Expression, options ...option.Option) (
 }
 
 // Load retrieves an Stream from the database
-func (service Stream) Load(criteria exp.Expression) (*model.Stream, error) {
-
-	stream := service.New()
+func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error {
 
 	if err := service.collection.Load(criteria, stream); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream", "Error loading Stream", criteria)
+		return derp.Wrap(err, "ghost.service.Stream", "Error loading Stream", criteria)
 	}
 
-	return stream, nil
+	return nil
 }
 
 // Save adds/updates an Stream in the database
-func (service Stream) Save(stream *model.Stream, note string) error {
+func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, "ghost.service.Stream", "Error saving Stream", stream, note)
@@ -88,7 +85,7 @@ func (service Stream) Save(stream *model.Stream, note string) error {
 }
 
 // Delete removes an Stream from the database (virtual delete)
-func (service Stream) Delete(stream *model.Stream, note string) error {
+func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 	if err := service.collection.Delete(stream, note); err != nil {
 		return derp.Wrap(err, "ghost.service.Stream", "Error deleting Stream", stream, note)
@@ -100,7 +97,7 @@ func (service Stream) Delete(stream *model.Stream, note string) error {
 // QUERIES /////////////////////////
 
 // ListByParent returns all Streams that match a particular parentID
-func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
+func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
 		exp.
 			Equal("parentId", parentID).
@@ -108,7 +105,7 @@ func (service Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, 
 }
 
 // ListTopFolders returns all Streams of type FOLDER at the top of the hierarchy
-func (service Stream) ListTopFolders() (data.Iterator, error) {
+func (service *Stream) ListTopFolders() (data.Iterator, error) {
 	return service.List(
 		exp.
 			Equal("parentId", ZeroObjectID()).
@@ -116,7 +113,7 @@ func (service Stream) ListTopFolders() (data.Iterator, error) {
 }
 
 // ListByTemplate returns all Streams that use a particular Template
-func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
+func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(
 		exp.
 			Equal("templateId", template).
@@ -124,146 +121,102 @@ func (service Stream) ListByTemplate(template string) (data.Iterator, error) {
 }
 
 // LoadByToken returns a single Stream that matches a particular Token
-func (service Stream) LoadByToken(token string) (*model.Stream, error) {
-	return service.Load(
-		exp.
-			Equal("token", token).
-			AndEqual("journal.deleteDate", 0))
+func (service *Stream) LoadByToken(token string, result *model.Stream) error {
+
+	criteria := exp.
+		Equal("token", token).
+		AndEqual("journal.deleteDate", 0)
+
+	return service.Load(criteria, result)
 }
 
 // LoadByID returns a single Stream that matches a particular StreamID
-func (service Stream) LoadByID(streamID primitive.ObjectID) (*model.Stream, error) {
-	return service.Load(
-		exp.
-			Equal("_id", streamID).
-			AndEqual("journal.deleteDate", 0))
+func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
+
+	criteria := exp.
+		Equal("_id", streamID).
+		AndEqual("journal.deleteDate", 0)
+
+	return service.Load(criteria, result)
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL
-func (service Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL string) (*model.Stream, error) {
-	return service.Load(
-		exp.
-			Equal("parentId", parentStreamID).
-			AndEqual("sourceUrl", sourceURL))
+func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL string, result *model.Stream) error {
+
+	criteria := exp.
+		Equal("parentId", parentStreamID).
+		AndEqual("sourceUrl", sourceURL)
+
+	return service.Load(criteria, result)
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream
-func (service Stream) LoadParent(stream *model.Stream) (*model.Stream, error) {
+func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) error {
 
 	if !stream.HasParent() {
-		return nil, derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
+		return derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
 	}
 
-	stream, err := service.LoadByID(stream.ParentID)
+	if err := service.LoadByID(stream.ParentID, parent); err != nil {
+		derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
+	}
 
-	return stream, derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
+	return nil
 }
 
 // ChildTemplates returns an iterator of Templates that can be added as a sub-stream
-func (service Stream) ChildTemplates(stream *model.Stream) []model.Template {
+func (service *Stream) ChildTemplates(stream *model.Stream) []model.Template {
 	return service.templateService.ListByContainer(stream.TemplateID)
-}
-
-// PERMISSIONS /////////////////
-
-func (service Stream) View(stream *model.Stream, viewID string, authorization *model.Authorization) (*model.View, bool) {
-
-	state, err := service.State(stream)
-
-	if err != nil {
-		return nil, false
-	}
-
-	// Verify that this view is accessible by the user's roles
-	view, ok := state.View(viewID)
-
-	if !ok {
-		return nil, false
-	}
-
-	roles := stream.Roles(authorization)
-
-	if !view.MatchRoles(roles...) {
-		return nil, false
-	}
-
-	return view, true
-}
-
-func (service Stream) Transition(stream *model.Stream, transitionID string, authorization *model.Authorization) (*model.Transition, bool) {
-
-	state, err := service.State(stream)
-
-	if err != nil {
-		return nil, false
-	}
-
-	// Verify that this view is accessible by the user's roles
-	transition, ok := state.Transition(transitionID)
-
-	if !ok {
-		return nil, false
-	}
-
-	roles := stream.Roles(authorization)
-
-	if !transition.MatchRoles(roles...) {
-		return nil, false
-	}
-
-	return transition, true
 }
 
 // CUSTOM ACTIONS /////////////////
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.
-func (service Stream) NewWithTemplate(parentToken string, templateID string) (*model.Stream, error) {
+func (service *Stream) NewWithTemplate(parentToken string, templateID string, result *model.Stream) error {
 
 	// Exception for putting a folder on the top level...
 	if parentToken == "top" {
 
 		if templateID == "folder" {
 			// Create and populate the new Stream
-			stream := service.New()
-			stream.ParentID = ZeroObjectID()
-			stream.TemplateID = templateID
+			result.ParentID = ZeroObjectID()
+			result.TemplateID = templateID
 
-			return stream, nil
+			return nil
 		}
 
-		return nil, derp.New(400, "ghost.service.Stream.NewWithTemplate", "Top Level Can Only Contain Folders")
+		return derp.New(400, "ghost.service.Stream.NewWithTemplate", "Top Level Can Only Contain Folders")
 	}
 
 	// Load the requested Template
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template", templateID)
+		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template", templateID)
 	}
 
-	// Load the parent Stream
-	parent, err := service.LoadByToken(parentToken)
+	var parent model.Stream
 
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream", parentToken)
+	// Load the parent Stream
+	if err := service.LoadByToken(parentToken, &parent); err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream", parentToken)
 	}
 
 	// Confirm that this Template can be a child of the parent Template
 	if !template.CanBeContainedBy(parent.TemplateID) {
-		return nil, derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
+		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
 	}
 
 	// Create and populate the new Stream
-	stream := service.New()
-	stream.ParentID = parent.StreamID
-	stream.TemplateID = template.TemplateID
+	result.ParentID = parent.StreamID
+	result.TemplateID = template.TemplateID
 
 	// Success.  We've made the new stream!
-	return stream, nil
+	return nil
 }
 
 // Form generates an HTML form for the requested Stream and TransitionID
-func (service Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
+func (service *Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
 
 	schema, err := service.Schema(stream)
 
@@ -280,8 +233,9 @@ func (service Stream) Form(stream *model.Stream, transition *model.Transition) (
 	return result, nil
 }
 
+/*
 // DoTransition handles a transition request to move the stream from one state into another state.
-func (service Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}, authorization *model.Authorization) (*model.Transition, error) {
+func (service *Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}, authorization *model.Authorization) (*model.Transition, error) {
 
 	transition, ok := service.Transition(stream, transitionID, authorization)
 
@@ -320,38 +274,53 @@ func (service Stream) DoTransition(stream *model.Stream, transitionID string, da
 
 	return transition, nil
 }
+*/
 
 // State returns the detailed State information associated with this Stream
-func (service Stream) State(stream *model.Stream) (*model.State, error) {
+func (service *Stream) State(stream *model.Stream) (model.State, error) {
 
 	// Locate the Template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream.TemplateID)
+		return model.State{}, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream.TemplateID)
 	}
 
 	// Populate the Stream with data from the Template
 	state, ok := template.State(stream.StateID)
 
 	if !ok {
-		return nil, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
+		return state, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
 	}
 
 	return state, nil
 }
 
 // Schema returns the Schema associated with this Stream
-func (service Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
+func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
 
 	// Locate the Template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream", "Invalid Template", stream)
+		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
 	}
 
 	return template.Schema, nil
+}
+
+func (service *Stream) Action(stream *model.Stream, actionID string) (model.Action, error) {
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
+	}
+
+	if action, ok := template.Action(actionID); ok {
+		return action, nil
+	}
+
+	return nil, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.Action", "Unrecognized action", actionID)
 }
 
 // updateStreamsByTemplate updates every stream that uses a particular template.
@@ -369,6 +338,7 @@ func (service *Stream) updateStreamsByTemplate(template *model.Template) {
 	for iterator.Next(&stream) {
 		fmt.Println("streamService.updateStreamsByTemplate: Sending stream: " + stream.Label)
 		service.streamUpdateChannel <- stream
+		stream = model.Stream{}
 	}
 
 	fmt.Println("streamService.updateStreamsByTemplate: End of Iterator.")

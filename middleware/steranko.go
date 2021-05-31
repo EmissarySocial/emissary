@@ -8,6 +8,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type GhostContext struct {
+	steranko.Context
+	authorization *model.Authorization
+}
+
+// TODO: populate authorization
+func (ctx GhostContext) Authorization() model.Authorization {
+
+	if ctx.authorization == nil {
+		ctx.authorization = &model.Authorization{}
+	}
+
+	return *ctx.authorization
+}
+
 /*
 // Adapter to steranko.Middleware
 func Steranko(factoryManager *server.FactoryManager) echo.MiddlewareFunc {
@@ -52,9 +67,11 @@ func Steranko(factoryManager *server.FactoryManager) echo.MiddlewareFunc {
 					// TODO: Token Expiration / Renewal
 					// TODO: Errors on failed token parsing?
 
-					return next(steranko.Context{
-						Context: ctx,
-						Token:   token,
+					return next(GhostContext{
+						Context: steranko.Context{
+							Context: ctx,
+							Token:   token,
+						},
 					})
 				}
 			}

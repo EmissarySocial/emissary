@@ -7,8 +7,8 @@ import (
 
 // StreamLike interface wraps services that can perform basic operations on model.Streams
 type StreamLike interface {
-	Load(exp.Expression) (*model.Stream, error)
+	Load(exp.Expression, *model.Stream) error
 	Save(*model.Stream, string) error
 	Delete(*model.Stream, string) error
-	ByToken(string) (*model.Stream, error)
+	ByToken(string, *model.Stream) error
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -22,10 +21,15 @@ type Subscription struct {
 
 // NewSubscription returns a fully populated Subscription service.
 func NewSubscription(collection data.Collection, streamService *Stream) *Subscription {
-	return &Subscription{
+
+	result := Subscription{
 		collection:    collection,
 		streamService: streamService,
 	}
+
+	go result.start()
+
+	return &result
 }
 
 // New creates a newly initialized Subscription that is ready to use
@@ -33,7 +37,7 @@ func (service *Subscription) New() *model.Subscription {
 	return model.NewSubscription()
 }
 
-func (service *Subscription) Run() {
+func (service *Subscription) start() {
 
 	ticker := time.NewTicker(20 * time.Minute)
 	defer ticker.Stop()
@@ -77,7 +81,9 @@ func (service *Subscription) pollSubscription(sub *model.Subscription) {
 
 func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.Item) error {
 
-	stream, err := service.streamService.LoadBySource(sub.ParentStreamID, item.Link)
+	var stream model.Stream
+
+	err := service.streamService.LoadBySource(sub.ParentStreamID, item.Link, &stream)
 
 	if err != nil {
 
@@ -86,7 +92,6 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 			return derp.Wrap(err, "ghost.service.Subscription.Poll", "Error loading local stream")
 		}
 
-		spew.Dump("NEW")
 		// Fall through means "not found" which means "make a new stream"
 		stream = service.streamService.New()
 		stream.TemplateID = "rss-article"
@@ -110,7 +115,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 		stream.PublishDate = item.PublishedParsed.Unix()
 		stream.SourceUpdated = updateDate
 
-		if err := service.streamService.Save(stream, "Imported from RSS feed"); err != nil {
+		if err := service.streamService.Save(&stream, "Imported from RSS feed"); err != nil {
 			return derp.Wrap(err, "ghost.service.Subscription.Poll", "Error saving stream")
 		}
 	}
@@ -124,15 +129,13 @@ func (service *Subscription) List(criteria exp.Expression, options ...option.Opt
 }
 
 // Load retrieves an Subscription from the database
-func (service *Subscription) Load(criteria exp.Expression) (*model.Subscription, error) {
+func (service *Subscription) Load(criteria exp.Expression, result *model.Subscription) error {
 
-	subscription := service.New()
-
-	if err := service.collection.Load(criteria, subscription); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Subscription", "Error loading Subscription", criteria)
+	if err := service.collection.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "ghost.service.Subscription", "Error loading Subscription", criteria)
 	}
 
-	return subscription, nil
+	return nil
 }
 
 // Save adds/updates an Subscription in the database

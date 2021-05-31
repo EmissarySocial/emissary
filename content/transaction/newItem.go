@@ -11,10 +11,10 @@ const newItemPositionBefore = 0
 const newItemPositionAfter = 1
 
 type NewItem struct {
-	ItemID int    `json:"itemId" form:"itemId"` // ID of the root item that will be added to
-	Place  string `json:"place"  form:"place"`  // ABOVE, BELOW, LEFT, RIGHT
-	Type   string `json:"type"   form:"type"`   // Type of content item to add
-	Check  string `json:"check"  form:"check"`  // Checksum to validation transaction.
+	ItemID   int    `json:"itemId"   form:"itemId"`   // ID of the root item that will be added to
+	Place    string `json:"place"    form:"place"`    // ABOVE, BELOW, LEFT, RIGHT
+	ItemType string `json:"itemType" form:"itemType"` // Type of content item to add
+	Check    string `json:"check"    form:"check"`    // Checksum to validation transaction.
 }
 
 // Execute performs the NewItem transaction on the provided content structure
@@ -33,7 +33,7 @@ func (txn NewItem) Execute(c *content.Content) error {
 
 	// Create a new item to insert into the content
 	newItem := content.Item{
-		Type:  content.ItemTypeWYSIWYG,
+		Type:  txn.ItemType,
 		Check: content.NewChecksum(),
 	}
 
@@ -130,7 +130,7 @@ func (txn NewItem) Execute(c *content.Content) error {
 }
 
 func (txn NewItem) Description() string {
-	return "New Item (" + txn.Type + ")"
+	return "New Item (" + txn.ItemType + ")"
 }
 
 func addFirstRef(c *content.Content, parentID int, newItem content.Item) {

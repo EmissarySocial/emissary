@@ -21,19 +21,19 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(path string, updates chan *template.Template) (*Layout, error) {
+func NewLayout(path string, updates chan *template.Template) *Layout {
 
 	layout := &Layout{
 		path: path,
 	}
 
 	if err := layout.Load(); err != nil {
-		return layout, derp.Wrap(err, "ghost.service.NewLayout", "Error creating new Layout service", path)
+		panic(err)
 	}
 
 	go layout.start(updates)
 
-	return layout, nil
+	return layout
 }
 
 // Load retrieves the template from the disk and parses it into

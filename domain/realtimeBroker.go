@@ -84,6 +84,8 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 		case stream := <-b.streamUpdates:
 
+			var parent model.Stream
+
 			// If this stream bubbles updates, then search up the stream hierarchy
 			// until we find a stream that doesn't
 			for stream.BubbleUpdates {
@@ -93,23 +95,21 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 					break
 				}
 
-				parent, err := streamService.LoadParent(&stream)
-
-				if err != nil {
+				if err := streamService.LoadParent(&stream, &parent); err != nil {
 					derp.Report(derp.Wrap(err, "ghost.domain.RealtimeBroker", "Error loading parent stream from stream.BubbleUpdates"))
 					break
 				}
-				stream = *parent
+
+				stream = parent
 			}
 
 			// Send an update to every client that has subscribed to this stream
-			b.notify(&stream)
+			b.notify(stream)
 
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
-				parent, err := streamService.LoadParent(&stream)
 
-				if err != nil {
+				if err := streamService.LoadParent(&stream, &parent); err != nil {
 					derp.Report(derp.Wrap(err, "ghost.domain.Realtimebroker", "Error loading parent stream to update parent's subscribers."))
 				}
 
@@ -120,7 +120,7 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 }
 
 // notify sends updates for every client that is watching a given stream
-func (b *RealtimeBroker) notify(stream *model.Stream) {
+func (b *RealtimeBroker) notify(stream model.Stream) {
 
 	fmt.Println(stream.Token)
 	for key := range b.streams {

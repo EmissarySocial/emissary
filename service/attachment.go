@@ -15,15 +15,15 @@ type Attachment struct {
 }
 
 // NewAttachment returns a fully populated Attachment service
-func NewAttachment(collection data.Collection) *Attachment {
-	return &Attachment{
+func NewAttachment(collection data.Collection) Attachment {
+	return Attachment{
 		collection: collection,
 	}
 }
 
 // New creates a newly initialized Attachment that is ready to use
-func (service Attachment) New() *model.Attachment {
-	return &model.Attachment{
+func (service Attachment) New() model.Attachment {
+	return model.Attachment{
 		AttachmentID: primitive.NewObjectID(),
 	}
 }
@@ -34,15 +34,13 @@ func (service Attachment) List(criteria exp.Expression, options ...option.Option
 }
 
 // Load retrieves an Attachment from the database
-func (service Attachment) Load(criteria exp.Expression) (*model.Attachment, error) {
+func (service Attachment) Load(criteria exp.Expression, result *model.Attachment) error {
 
-	attachment := service.New()
-
-	if err := service.collection.Load(criteria, attachment); err != nil {
-		return nil, derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
+	if err := service.collection.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
 	}
 
-	return attachment, nil
+	return nil
 }
 
 // Save adds/updates an Attachment in the database
