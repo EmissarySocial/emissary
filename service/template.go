@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service/templatesource"
+	"github.com/benpate/schema"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -152,4 +153,58 @@ func (service *Template) Save(template *model.Template) error {
 	service.templates[template.TemplateID] = template
 
 	return nil
+}
+
+// State returns the detailed State information associated with this Stream
+func (service *Template) State(templateID string, stateID string) (model.State, error) {
+
+	// Try to find the Template used by this Stream
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return model.State{}, derp.Wrap(err, "ghost.service.Template.State", "Invalid Template", templateID)
+	}
+
+	// Try to find the state data for the state that the stream is in
+	state, ok := template.State(stateID)
+
+	if !ok {
+		return state, derp.New(500, "ghost.service.Template.State", "Invalid state", templateID, stateID)
+	}
+
+	// Success!
+	return state, nil
+}
+
+// Schema returns the Schema associated with this Stream
+func (service *Template) Schema(templateID string) (*schema.Schema, error) {
+
+	// Try to locate the Template used by this Stream
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+	}
+
+	// Return the Schema defined in this template.
+	return template.Schema, nil
+}
+
+// Action returns the action definition that matches the stream and type provided
+func (service *Template) Action(templateID string, actionID string) (model.ActionConfig, error) {
+
+	// Try to find the Template used by this Stream
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return model.ActionConfig{}, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+	}
+
+	// Try to find the action in the Template
+	if action, ok := template.ActionConfig(actionID); ok {
+		return action, nil
+	}
+
+	// Not Found :(
+	return model.ActionConfig{}, derp.New(derp.CodeBadRequestError, "ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
 }

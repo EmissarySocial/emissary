@@ -13,14 +13,30 @@ import (
 )
 
 type MoveState struct {
-	Info
 	Form       form.Form
 	NewStateID string
+	CommonInfo
 }
 
 // Get displays a form for users to fill out in the browser
 func (action MoveState) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
-	return nil
+
+	templateService := factory.Template()
+	formLibrary := factory.FormLibrary()
+
+	schema, err := templateService.Schema(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
+	}
+
+	result, err := action.Form.HTML(formLibrary, schema, stream)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
+	}
+
+	return ctx.HTML(http.StatusOK, result)
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state

@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/action"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -216,79 +215,22 @@ func (service *Stream) NewWithTemplate(parentToken string, templateID string, re
 	return nil
 }
 
-// Form generates an HTML form for the requested Stream and TransitionID
-func (service *Stream) Form(stream *model.Stream, transition *model.Transition) (string, error) {
-
-	schema, err := service.Schema(stream)
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
-	}
-
-	result, err := transition.Form.HTML(service.formLibrary, schema, stream)
-
-	if err != nil {
-		return "", derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
-	}
-
-	return result, nil
-}
-
 // State returns the detailed State information associated with this Stream
 func (service *Stream) State(stream *model.Stream) (model.State, error) {
-
-	// Try to find the Template used by this Stream
-	template, err := service.templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return model.State{}, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream.TemplateID)
-	}
-
-	// Try to find the state data for the state that the stream is in
-	state, ok := template.State(stream.StateID)
-
-	if !ok {
-		return state, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
-	}
-
-	// Success!
-	return state, nil
+	return service.templateService.State(stream.TemplateID, stream.StateID)
 }
 
 // Schema returns the Schema associated with this Stream
 func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
-
-	// Try to locate the Template used by this Stream
-	template, err := service.templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
-	}
-
-	// Return the Schema defined in this template.
-	return template.Schema, nil
+	return service.templateService.Schema(stream.TemplateID)
 }
 
 // Action returns the action definition that matches the stream and type provided
-func (service *Stream) Action(stream *model.Stream, actionID string) (action.Action, error) {
-
-	// Try to find the Template used by this Stream
-	template, err := service.templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
-	}
-
-	// Try to find the action in the Template
-	if action, ok := template.Action(actionID); ok {
-		return action, nil
-	}
-
-	// Success!
-	return nil, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.Action", "Unrecognized action", actionID)
+func (service *Stream) Action(stream *model.Stream, actionID string) (model.ActionConfig, error) {
+	return service.templateService.Action(stream.TemplateID, actionID)
 }
 
-// updateStreamsByTemplate updates every stream that uses a particular template.
+// updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
 func (service *Stream) updateStreamsByTemplate(template *model.Template) {
 
 	iterator, err := service.ListByTemplate(template.TemplateID)

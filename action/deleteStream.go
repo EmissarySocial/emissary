@@ -10,7 +10,7 @@ import (
 )
 
 type DeleteStream struct {
-	Info
+	CommonInfo
 }
 
 func (action DeleteStream) Get(ctx echo.Context, factory *domain.Factory, stream *model.Stream) error {

@@ -1,17 +1,15 @@
 package action
 
-import (
-	"github.com/benpate/ghost/model"
-)
+import "github.com/benpate/ghost/model"
 
-type Info struct {
-	ActionID string
-	States   []string
-	Roles    []string
+type CommonInfo struct {
+	ActionID string   `json:"actionId"`
+	States   []string `json:"states"`
+	Roles    []string `json:"roles"`
 }
 
 // UserCan returns TRUE if this action is permitted on this stream (using the provided authorization)
-func (info Info) UserCan(stream *model.Stream, authorization *model.Authorization) bool {
+func (info CommonInfo) UserCan(stream *model.Stream, authorization *model.Authorization) bool {
 
 	if len(info.States) > 0 {
 		if !matchOne(info.States, stream.StateID) {

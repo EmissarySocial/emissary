@@ -57,11 +57,11 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	/// REFACTORED STREAM PAGES
 
-	e.GET("/", handler.GetStream(factoryManager))
-	e.GET("/:stream", handler.GetStream(factoryManager))
-	e.GET("/:stream/:action", handler.GetAction(factoryManager))
-	e.POST("/:stream/:action", handler.PostAction(factoryManager))
-	e.DELETE("/:stream", handler.PostAction(factoryManager))
+	e.GET("/", handler.HandleAction(factoryManager))
+	e.GET("/:stream", handler.HandleAction(factoryManager))
+	e.GET("/:stream/:action", handler.HandleAction(factoryManager))
+	e.POST("/:stream/:action", handler.HandleAction(factoryManager))
+	e.DELETE("/:stream", handler.HandleAction(factoryManager))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
 

@@ -8,21 +8,35 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
 	"github.com/benpate/steranko"
 )
 
 // UpdateData updates the specific data in a stream
 type UpdateData struct {
-	streamService *service.Stream
-	Form          form.Form
-	Info
+	Form form.Form
+	CommonInfo
 }
 
 // Get displays a form where users can update stream data
 func (action UpdateData) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
-	return nil
+
+	templateService := factory.Template()
+	formLibrary := factory.FormLibrary()
+
+	schema, err := templateService.Schema(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
+	}
+
+	result, err := action.Form.HTML(formLibrary, schema, stream)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
+	}
+
+	return ctx.HTML(http.StatusOK, result)
 }
 
 // Post updates the stream with approved data from the request body.

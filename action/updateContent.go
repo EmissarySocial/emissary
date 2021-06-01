@@ -8,7 +8,7 @@ import (
 
 // UpdateContent manages the content.Content in a stream.
 type UpdateContent struct {
-	Info
+	CommonInfo
 }
 
 func (action UpdateContent) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {

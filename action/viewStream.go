@@ -10,7 +10,7 @@ import (
 )
 
 type ViewStream struct {
-	Info
+	CommonInfo
 }
 
 // Get renders the Stream HTML to the context
@@ -18,7 +18,7 @@ func (action ViewStream) Get(ctx steranko.Context, factory *domain.Factory, stre
 
 	var result bytes.Buffer
 
-	renderer := factory.StreamViewer(ctx, *stream, action.Info.ActionID)
+	renderer := factory.StreamViewer(ctx, *stream, action.CommonInfo.ActionID)
 
 	// Partial page requests
 	if renderer.Partial() {

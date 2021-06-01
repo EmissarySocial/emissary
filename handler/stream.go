@@ -67,7 +67,7 @@ func HandleAction(factoryManager *server.FactoryManager) echo.HandlerFunc {
 }
 
 // getStreamAndAction locates the correct stream and action objects referenced by the current context
-func getStreamAndAction(ctx echo.Context, factory *domain.Factory, stream *model.Stream, action action.Action) error {
+func getStreamAndAction(ctx echo.Context, factory *domain.Factory, stream *model.Stream, result action.Action) error {
 
 	var streamID string
 	var actionID string
@@ -94,7 +94,7 @@ func getStreamAndAction(ctx echo.Context, factory *domain.Factory, stream *model
 	if ctx.Request().Method == http.MethodDelete {
 		actionID = "delete"
 	} else {
-		actionID = ctx.Param("action")
+		actionID = choose.String(ctx.Param("action"), "home")
 	}
 
 	// Check for missing actions
@@ -103,7 +103,7 @@ func getStreamAndAction(ctx echo.Context, factory *domain.Factory, stream *model
 	}
 
 	// Set the action
-	action = template.Actions[actionID]
+	result = action.Parse(template.Actions[actionID])
 
 	// Silence means success.
 	return nil

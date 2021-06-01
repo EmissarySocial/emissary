@@ -12,3 +12,12 @@ type Action interface {
 	Post(steranko.Context, *domain.Factory, *model.Stream) error
 	UserCan(*model.Stream, *model.Authorization) bool
 }
+
+func Parse(config model.ActionConfig) Action {
+
+	switch config.Method {
+
+	}
+
+	return nil
+}
