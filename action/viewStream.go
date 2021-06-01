@@ -15,6 +15,13 @@ type ViewStream struct {
 	layoutService *service.Layout
 }
 
+func NewAction_ViewStream(config *model.ActionConfig, layoutService *service.Layout) ViewStream {
+	return ViewStream{
+		CommonInfo:    NewCommonInfo(config),
+		layoutService: layoutService,
+	}
+}
+
 // Get renders the Stream HTML to the context
 func (action ViewStream) Get(ctx steranko.Context, stream *model.Stream) error {
 

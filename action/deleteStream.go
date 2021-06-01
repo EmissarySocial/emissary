@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
 type DeleteStream struct {
@@ -21,11 +21,11 @@ func NewAction_DeleteStream(config *model.ActionConfig, streamService *service.S
 	}
 }
 
-func (action DeleteStream) Get(ctx echo.Context, stream *model.Stream) error {
+func (action DeleteStream) Get(ctx steranko.Context, stream *model.Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.model.action.DeleteStream.Get", "Unsupported Method")
 }
 
-func (action DeleteStream) Post(ctx echo.Context, stream *model.Stream) error {
+func (action DeleteStream) Post(ctx steranko.Context, stream *model.Stream) error {
 
 	var parent model.Stream
 

@@ -25,14 +25,14 @@ func (factory *Factory) ParseAction(config *model.ActionConfig) action.Action {
 		return action.NewAction_UpdateContent(config, factory.Stream())
 
 	case "update-data":
-		return action.NewAction_UpdateData(config, factory.Stream())
+		return action.NewAction_UpdateData(config, factory.Template(), factory.Stream(), factory.FormLibrary())
 
 	case "update-state":
-		return action.NewAction_UpdateState(config, factory.Stream())
+		return action.NewAction_UpdateState(config, factory.Template(), factory.Stream(), factory.FormLibrary())
 
 	// case "view-stream":
 	default:
-		return action.NewAction_ViewStream(config, factory.Stream())
+		return action.NewAction_ViewStream(config, factory.Layout())
 	}
 
 }

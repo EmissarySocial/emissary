@@ -38,7 +38,7 @@ func (action CreateTopStream) Get(ctx steranko.Context, _ *model.Stream) error {
 	return nil
 }
 
-func (action CreateTopStream) Put(ctx steranko.Context, _ *model.Stream) error {
+func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
