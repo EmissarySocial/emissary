@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/ghost/action"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -233,93 +234,57 @@ func (service *Stream) Form(stream *model.Stream, transition *model.Transition) 
 	return result, nil
 }
 
-/*
-// DoTransition handles a transition request to move the stream from one state into another state.
-func (service *Stream) DoTransition(stream *model.Stream, transitionID string, data map[string]interface{}, authorization *model.Authorization) (*model.Transition, error) {
-
-	transition, ok := service.Transition(stream, transitionID, authorization)
-
-	if !ok {
-		return nil, derp.New(derp.CodeForbiddenError, "ghost.service.Stream.Transition", "Unauthorized State/Transition", transitionID)
-	}
-
-	form := transition.Form
-
-	// TODO: where are permissions processed?
-
-	paths := form.AllPaths()
-
-	// Only look for data in the registered paths for this form.  If other data is present, it will be ignored.
-	for _, element := range paths {
-
-		// TODO: What about form validation?  Can this happen HERE as well as in the template schema?
-
-		// If we have a value, then set it.
-		if value, ok := data[element.Path]; ok {
-			if err := path.Set(stream, element.Path, value); err != nil {
-				return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Error updating stream", element, value)
-			}
-		}
-		// TODO: Otherwise?  Should this form throw an error?
-	}
-
-	// Update the stream to the new state
-	stream.StateID = transition.NextState
-
-	// TODO:  Actions will be processes here.
-
-	if err := service.Save(stream, "stream transition: "+transitionID); err != nil {
-		return transition, derp.Wrap(err, "ghost.service.Stream.Transition", "Error saving stream")
-	}
-
-	return transition, nil
-}
-*/
-
 // State returns the detailed State information associated with this Stream
 func (service *Stream) State(stream *model.Stream) (model.State, error) {
 
-	// Locate the Template used by this Stream
+	// Try to find the Template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
 		return model.State{}, derp.Wrap(err, "ghost.service.Stream.State", "Invalid Template", stream.TemplateID)
 	}
 
-	// Populate the Stream with data from the Template
+	// Try to find the state data for the state that the stream is in
 	state, ok := template.State(stream.StateID)
 
 	if !ok {
 		return state, derp.New(500, "ghost.service.Stream.State", "Invalid state", stream.StateID)
 	}
 
+	// Success!
 	return state, nil
 }
 
 // Schema returns the Schema associated with this Stream
 func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
 
-	// Locate the Template used by this Stream
+	// Try to locate the Template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
 	}
 
+	// Return the Schema defined in this template.
 	return template.Schema, nil
 }
 
-func (service *Stream) Action(stream *model.Stream, actionID string) (model.Action, error) {
+// Action returns the action definition that matches the stream and type provided
+func (service *Stream) Action(stream *model.Stream, actionID string) (action.Action, error) {
+
+	// Try to find the Template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "ghost.service.Stream.Action", "Invalid Template", stream)
 	}
 
+	// Try to find the action in the Template
 	if action, ok := template.Action(actionID); ok {
 		return action, nil
 	}
 
+	// Success!
 	return nil, derp.New(derp.CodeBadRequestError, "ghost.service.Stream.Action", "Unrecognized action", actionID)
 }
 

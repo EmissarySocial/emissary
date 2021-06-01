@@ -6,23 +6,21 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
 type ViewStream struct {
-	streamService *service.Stream
 	Info
 }
 
-func (action ViewStream) Get(ctx echo.Context, stream *model.Stream) (string, error) {
+// Get renders the Stream HTML to the context
+func (action ViewStream) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
 
 	var result bytes.Buffer
 
-	renderer := domain.NewRenderer(action.streamService, request, *stream)
-	renderer.view = action.Info.ActionID
+	renderer := factory.StreamViewer(ctx, *stream, action.Info.ActionID)
 
-	// Partial page requests (stream only)
+	// Partial page requests
 	if renderer.Partial() {
 
 		if html, err := renderer.Render(); err == nil {
@@ -32,7 +30,7 @@ func (action ViewStream) Get(ctx echo.Context, stream *model.Stream) (string, er
 		}
 	}
 
-	// Render full page (stream only).
+	// Render full page
 	layoutService := factory.Layout()
 	template := layoutService.Template
 
@@ -41,9 +39,9 @@ func (action ViewStream) Get(ctx echo.Context, stream *model.Stream) (string, er
 	}
 
 	return ctx.HTML(200, result.String())
-
 }
 
-func (action ViewStream) Post(request domain.HTTPRequest, stream *model.Stream) (string, error) {
-	return "", nil
+// Post is not supported for this action.
+func (action ViewStream) Post(ctx steranko.Context, stream *model.Stream) error {
+	return derp.New(derp.CodeBadRequestError, "ghost.action.ViewStream.Post", "Unsupported Method")
 }

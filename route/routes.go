@@ -2,7 +2,6 @@ package route
 
 import (
 	"github.com/benpate/ghost/handler"
-	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
 )
@@ -11,23 +10,22 @@ import (
 func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	e := echo.New()
-	e.Use(middleware.Steranko(factoryManager))
 
 	// Well-Known API calls
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
-
-	e.Static("/htmx", "../htmx/src")
-	e.Static("/hyperscript", "../_hyperscript/src/lib")
 
 	e.GET("/favicon.ico", echo.NotFoundHandler)
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryManager))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factoryManager))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factoryManager))
 
+	// Local links for static resources
+	e.Static("/htmx", "../htmx/src")
+	e.Static("/hyperscript", "../_hyperscript/src/lib")
+	e.Static("/static", "templates/static")
+
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factoryManager))
-
-	e.Static("/static", "templates/static")
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factoryManager))

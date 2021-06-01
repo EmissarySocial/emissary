@@ -4,29 +4,31 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
+	"github.com/benpate/steranko"
 )
 
 type CreateChild struct {
-	streamService *service.Stream
-	childStateID  string
-	templateID    string
+	ChildStateID string
+	TemplateID   string
 	Info
 }
 
-func (action CreateChild) Get(request domain.HTTPRequest, stream *model.Stream) (string, error) {
+func (action CreateChild) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) (string, error) {
 	return "", nil
 }
 
-func (action CreateChild) Put(request domain.HTTPRequest, stream *model.Stream) (string, error) {
+func (action CreateChild) Put(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) (string, error) {
 
-	child := action.streamService.New()
+	streamService := factory.Stream()
+	child := streamService.New()
+
+	authorization := getAuthorization(ctx)
 
 	child.ParentID = stream.StreamID
-	child.AuthorID = request.Authorization().UserID
-	child.StateID = action.childStateID
+	child.AuthorID = authorization.UserID
+	child.StateID = action.ChildStateID
 
-	if err := action.streamService.Save(&child, "created"); err != nil {
+	if err := streamService.Save(&child, "created"); err != nil {
 		return "", derp.Wrap(err, "ghost.action.CreateChild.Post", "Error saving child")
 	}
 

@@ -1,7 +1,6 @@
 package action
 
 import (
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
 )
 
@@ -11,8 +10,8 @@ type Info struct {
 	Roles    []string
 }
 
-// Returns TRUE if the request is authorized to execute this action with the provided stream
-func (info Info) UserCan(request *domain.HTTPRequest, stream *model.Stream) bool {
+// UserCan returns TRUE if this action is permitted on this stream (using the provided authorization)
+func (info Info) UserCan(stream *model.Stream, authorization *model.Authorization) bool {
 
 	if len(info.States) > 0 {
 		if !matchOne(info.States, stream.StateID) {
@@ -21,8 +20,6 @@ func (info Info) UserCan(request *domain.HTTPRequest, stream *model.Stream) bool
 	}
 
 	if len(info.Roles) > 0 {
-
-		authorization := request.Authorization()
 		roles := stream.Roles(authorization)
 
 		if !matchAny(roles, info.Roles) {
@@ -33,6 +30,7 @@ func (info Info) UserCan(request *domain.HTTPRequest, stream *model.Stream) bool
 	return true
 }
 
+// matchOne returns TRUE if the value matches one (or more) of the values in the slice
 func matchOne(slice []string, value string) bool {
 	for index := range slice {
 		if slice[index] == value {
@@ -43,6 +41,7 @@ func matchOne(slice []string, value string) bool {
 	return false
 }
 
+// matchAny returns TRUE if any of the values in slice1 are equal to any of the values in slice2
 func matchAny(slice1 []string, slice2 []string) bool {
 
 	for index1 := range slice1 {

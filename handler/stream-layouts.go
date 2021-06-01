@@ -8,19 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetTemplates is a shortcut for the `GetLayout` handler, that only returns the
-// template for creating new streams.
-func GetTemplates(factoryManager *server.FactoryManager) echo.HandlerFunc {
-
-	handler := GetLayout(factoryManager)
-
-	return func(ctx echo.Context) error {
-		ctx.SetParamNames("stream", "file")
-		ctx.SetParamValues(ctx.Param("stream"), "stream-new-template")
-		return handler(ctx)
-	}
-}
-
 // GetLayout returns an echo.HandlerFunc that renders a specific site-wide layout with the given stream
 func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 

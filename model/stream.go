@@ -156,7 +156,7 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 		}
 	}
 
-	if authorization.IsOwner {
+	if authorization.DomainOwner {
 		result = append(result, "OWNER")
 	}
 

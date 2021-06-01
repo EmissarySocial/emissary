@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"bytes"
 	"html/template"
 	"time"
 
@@ -189,7 +190,6 @@ func (w Renderer) ChildTemplates() []model.Template {
 ///////////////////////////////
 /// RENDERING METHODS
 
-/*
 // Render generates an HTML output for a stream/view combination.
 func (w Renderer) Render() (template.HTML, error) {
 
@@ -206,7 +206,7 @@ func (w Renderer) Render() (template.HTML, error) {
 		return template.HTML(""), derp.Report(derp.New(500, "ghost.domain.renderer.Render", "Missing Template (probably did not load/compile correctly on startup)", view))
 	}
 
-	// Execut template
+	// Execute template
 	if err := view.Template.Execute(&result, w); err != nil {
 		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
 	}
@@ -232,7 +232,6 @@ func (w Renderer) RenderForm() (template.HTML, error) {
 
 	return template.HTML(result), nil
 }
-*/
 
 /////////////////////
 // PERMISSIONS METHODS

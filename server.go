@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/route"
 	"github.com/benpate/ghost/server"
+	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -29,14 +30,11 @@ func main() {
 
 	factoryManager := server.NewFactoryManager(c)
 
-	if factoryManager.DomainCount() == 0 {
-		fmt.Println("No Domains Configured!!")
-		return
-	}
-
 	fmt.Println("Initializing web server...")
 	e := route.New(factoryManager)
 	e.Use(middleware.Recover())
+	// TODO: implement echo.Security middleware
+	e.Use(steranko.Middleware(factoryManager))
 
 	/*
 		e.AutoTLSManager = autocert.Manager{

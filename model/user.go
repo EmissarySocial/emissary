@@ -52,12 +52,13 @@ func (user *User) SetPassword(password string) {
 // Claims returns all access privileges given to this user
 func (user *User) Claims() jwt.Claims {
 
-	result := JWTClaims{
-		UserID:   user.UserID,
-		GroupIDs: user.GroupIDs,
-		Owner:    user.IsOwner,
+	result := Authorization{
+		UserID:      user.UserID,
+		GroupIDs:    user.GroupIDs,
+		DomainOwner: user.IsOwner,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().AddDate(10, 0, 0).Unix(), // Expires one hour from now.  (To be refreshed by Steranko)
+			IssuedAt:  time.Now().Unix(),                   // Current create date.  (Used by Steranko to refresh tokens)
+			ExpiresAt: time.Now().AddDate(10, 0, 0).Unix(), // Expires ten years from now (but re-validated sooner by Steranko)
 		},
 	}
 

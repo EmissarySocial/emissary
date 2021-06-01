@@ -26,15 +26,19 @@ func (service SterankoUserService) New() steranko.User {
 }
 
 // Load retrieves a single User from the database
-func (service SterankoUserService) Load(username string) (steranko.User, error) {
+func (service SterankoUserService) Load(username string, result steranko.User) error {
 
-	user := service.userService.New()
+	user, ok := result.(*model.User)
 
-	if err := service.userService.LoadByUsername(username, &user); err != nil {
-		return nil, derp.Wrap(err, "ghost.service.SterankoUserService.Load", "Error loading user")
+	if !ok {
+		return derp.New(derp.CodeInternalError, "ghost.service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
 	}
 
-	return &user, nil
+	if err := service.userService.LoadByUsername(username, user); err != nil {
+		return derp.Wrap(err, "ghost.service.SterankoUserService.Load", "Error loading user")
+	}
+
+	return nil
 }
 
 // Save inserts/updates a single User in the database
@@ -63,7 +67,7 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 }
 
 func (service SterankoUserService) NewClaims() jwt.Claims {
-	return model.JWTClaims{}
+	return model.Authorization{}
 }
 
 // Close is required to implement the steranko.UserService interface

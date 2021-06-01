@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/domain"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -32,6 +33,10 @@ func NewFactoryManager(c config.Config) *FactoryManager {
 		if err := service.Add(domain); err != nil {
 			derp.Report(err)
 		}
+	}
+
+	if len(service.factories) == 0 {
+		panic("no domains configured")
 	}
 
 	return service
@@ -102,4 +107,17 @@ func (service *FactoryManager) NormalizeHostname(hostname string) string {
 	}
 
 	return hostname
+}
+
+// Steranko implements the steranko.Factory method, used for locating the specific
+// steranko instance used by a domain.
+func (service *FactoryManager) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
+
+	factory, err := service.ByContext(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "ghost.server.FactoryManager.Steranko", "Unable to locate factory for this domain")
+	}
+
+	return factory.Steranko(), nil
 }

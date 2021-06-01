@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,18 +21,6 @@ func NewHTTPRequest(ctx echo.Context) *HTTPRequest {
 
 	result := HTTPRequest{
 		request: ctx.Request(),
-	}
-
-	// Get authorization from JWT claims (in context)
-	if context, ok := ctx.(steranko.Context); ok {
-		if claims, ok := context.Token.Claims.(*model.JWTClaims); ok {
-			result.authorization = &model.Authorization{
-				UserID:   claims.UserID,
-				GroupIDs: claims.GroupIDs,
-				IsOwner:  claims.Owner,
-			}
-
-		}
 	}
 
 	return &result

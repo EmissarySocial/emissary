@@ -20,7 +20,7 @@ require (
 	github.com/benpate/path v0.4.1
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/slice v0.0.2
-	github.com/benpate/steranko v0.3.3
+	github.com/benpate/steranko v0.4.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
@@ -28,6 +28,6 @@ require (
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/stretchr/testify v1.7.0
-	github.com/tdewolff/minify/v2 v2.9.16
+	github.com/tdewolff/minify/v2 v2.9.17
 	go.mongodb.org/mongo-driver v1.5.2
 )
