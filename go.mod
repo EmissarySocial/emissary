@@ -12,14 +12,13 @@ require (
 	github.com/benpate/datatype v0.0.3
 	github.com/benpate/derp v0.21.1
 	github.com/benpate/exp v0.0.2
-	github.com/benpate/form v0.3.7
+	github.com/benpate/form v0.3.8
 	github.com/benpate/html v0.11.1
 	github.com/benpate/htmlconv v0.3.1
 	github.com/benpate/list v0.4.0
 	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.4.1
 	github.com/benpate/schema v0.10.2
-	github.com/benpate/slice v0.0.2
 	github.com/benpate/steranko v0.4.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

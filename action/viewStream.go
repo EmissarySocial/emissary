@@ -4,17 +4,19 @@ import (
 	"bytes"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 	"github.com/benpate/steranko"
 )
 
 type ViewStream struct {
 	CommonInfo
+
+	layoutService *service.Layout
 }
 
 // Get renders the Stream HTML to the context
-func (action ViewStream) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func (action ViewStream) Get(ctx steranko.Context, stream *model.Stream) error {
 
 	var result bytes.Buffer
 
@@ -31,8 +33,7 @@ func (action ViewStream) Get(ctx steranko.Context, factory *domain.Factory, stre
 	}
 
 	// Render full page
-	layoutService := factory.Layout()
-	template := layoutService.Template
+	template := action.layoutService.Template
 
 	if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
 		return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")

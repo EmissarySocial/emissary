@@ -215,6 +215,11 @@ func (service *Stream) NewWithTemplate(parentToken string, templateID string, re
 	return nil
 }
 
+// Template returns the Templateassociated with this Stream
+func (service *Stream) Template(templateID string) (*model.Template, error) {
+	return service.templateService.Load(templateID)
+}
+
 // State returns the detailed State information associated with this Stream
 func (service *Stream) State(stream *model.Stream) (model.State, error) {
 	return service.templateService.State(stream.TemplateID, stream.StateID)

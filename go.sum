@@ -28,9 +28,8 @@ github.com/benpate/derp v0.21.1/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8f
 github.com/benpate/exp v0.0.1/go.mod h1:zcZXwwo5KU1tjHy+E3XmHqt0O4hi4CBVCXvP+S4BZZw=
 github.com/benpate/exp v0.0.2 h1:apzPKyco3jkrt04vCFat35n78z7Hr+/A0AAWW3YE4B8=
 github.com/benpate/exp v0.0.2/go.mod h1:H1xq7SSNHUDA6RrCVGeh7hTK4Ts+5WA/zeFze1Jv3VI=
-github.com/benpate/form v0.3.7 h1:RkvFa4oOFdtohdj1x64pt/IkLHrmmp8W0AAoFxjKwC4=
-github.com/benpate/form v0.3.7/go.mod h1:eikWXp9UzXvY96de3aIlyCffLuvmy12lyZR+rO4BrA4=
-github.com/benpate/html v0.9.3/go.mod h1:LfFlgbO4BW7dMxGdlFHv1viDdfrw54YDkE5jmWQDapw=
+github.com/benpate/form v0.3.8 h1:IJMpwAP1yiEhz8N/MpGS7FB6+H1iKgYxQXdkMb3aMw0=
+github.com/benpate/form v0.3.8/go.mod h1:PwdcZ1oNtyxUy246S33Fbn2mtlj92/apg84CVrwvJhc=
 github.com/benpate/html v0.11.1 h1:s9V9nIWOQe0awtBT1WDkZgxVV6ba7lEVgnOI0eesPuw=
 github.com/benpate/html v0.11.1/go.mod h1:LfFlgbO4BW7dMxGdlFHv1viDdfrw54YDkE5jmWQDapw=
 github.com/benpate/htmlconv v0.3.1 h1:25DAbra+ozCWiSin84K4F8pf3hNMwaoNnH4IaE2UUac=
@@ -40,15 +39,12 @@ github.com/benpate/list v0.4.0/go.mod h1:WAtfxD27A/GNVNL/LQD8kecQM7BB7sbfE5uoDrx
 github.com/benpate/null v0.6.0 h1:7ienEL2uuXls6zKAjrmPAHL6GE1MQyw2RqDGCSkWIeo=
 github.com/benpate/null v0.6.0/go.mod h1:ObR4S/eyKgPvABPJhSmvNkF0Ma4I9m/icDc0vaJcUw8=
 github.com/benpate/path v0.2.0/go.mod h1:Ww1r+6Kcal8x4HdIfWTGRMhgvG+TykBRrOuL4WQcb7M=
-github.com/benpate/path v0.3.0/go.mod h1:YdwkwXhI2YjCu/P4x+KUSMrpB6Na36SX4F/ohLwkwzE=
 github.com/benpate/path v0.4.0/go.mod h1:NlcH/jI4VoGgndQ9rEQmP2HBXb+9Jj5vBtgN6zk92sQ=
 github.com/benpate/path v0.4.1 h1:49wBjiEixFg93mK09XSm2P+6ibXVamrrqTgxdVpgOoc=
 github.com/benpate/path v0.4.1/go.mod h1:sbQantQgf2uJcpHMjcDwA/M7NsDjbYPoqxRvc9panfk=
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.10.2 h1:FVekaiWe8iYkCMGGcnHbep/3PPMyzr2dA8vjlWf3O6U=
 github.com/benpate/schema v0.10.2/go.mod h1:kkIBt46zjSnpjQivOOMltU1RuD6r2brFfkgRPv0V/Cw=
-github.com/benpate/slice v0.0.2 h1:O/5BrLDBN9bvxCESkNx9lxga6ghVCRyFQkUnG1HDYpI=
-github.com/benpate/slice v0.0.2/go.mod h1:82mmBNAILzcRiUgVbe5jLf5d+WijVXCULgQ1ZbtCl3I=
 github.com/benpate/steranko v0.4.2 h1:B0RXNY0F7NKckk03IAY9JAFt0Y7VmZwVrRw2o8qI51o=
 github.com/benpate/steranko v0.4.2/go.mod h1:SBve8CBWX76fU5SmfL9cTxRcUzzIW0dNj6UFRTf13a4=
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927/go.mod h1:h/aW8ynjgkuj+NQRlZcDbAbM1ORAbXjXX77sX7T289U=

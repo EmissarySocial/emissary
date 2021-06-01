@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/benpate/compare"
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 	"github.com/benpate/steranko"
 )
 
@@ -14,17 +15,29 @@ type CreateStream struct {
 	ChildStateID string
 	TemplateID   []string
 	CommonInfo
+
+	streamService *service.Stream
+}
+
+func NewAction_CreateStream(config *model.ActionConfig, streamService *service.Stream) CreateStream {
+	return CreateStream{
+		ChildStateID: convert.String(config.Args["childStateId"]),
+		TemplateID:   convert.SliceOfString(config.Args["templateId"]),
+		CommonInfo:   NewCommonInfo(config),
+
+		streamService: streamService,
+	}
 }
 
 type createStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action CreateStream) Get(ctx steranko.Context, factory *domain.Factory, parent *model.Stream) error {
+func (action CreateStream) Get(ctx steranko.Context, parent *model.Stream) error {
 	return nil
 }
 
-func (action CreateStream) Put(ctx steranko.Context, factory *domain.Factory, parent *model.Stream) error {
+func (action CreateStream) Put(ctx steranko.Context, parent *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
@@ -38,17 +51,13 @@ func (action CreateStream) Put(ctx steranko.Context, factory *domain.Factory, pa
 		return derp.New(derp.CodeBadRequestError, "ghost.action.CreateStream.Post", "Invalid Template", formData.TemplateID)
 	}
 
-	// Get required services
-	templateService := factory.Template()
-	streamService := factory.Stream()
-
 	// Create new child stream
-	child := streamService.New()
+	var child model.Stream
 
 	authorization := getAuthorization(ctx)
 
 	// Try to load the template that will be used
-	template, err := templateService.Load(formData.TemplateID)
+	template, err := action.streamService.Template(formData.TemplateID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.action.CreateStream.Post", "Undefined template", formData.TemplateID)
@@ -59,13 +68,13 @@ func (action CreateStream) Put(ctx steranko.Context, factory *domain.Factory, pa
 		return derp.Wrap(err, "ghost.action.CreateStream.Post", "Invalid template")
 	}
 
-	// Set
+	// Set Default Values
 	child.ParentID = parent.StreamID
 	child.StateID = action.ChildStateID
 	child.AuthorID = authorization.UserID
 
 	// Try to save the new child
-	if err := streamService.Save(&child, "created"); err != nil {
+	if err := action.streamService.Save(&child, "created"); err != nil {
 		return derp.Wrap(err, "ghost.action.CreateStream.Post", "Error saving child")
 	}
 

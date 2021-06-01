@@ -4,8 +4,18 @@ import "github.com/benpate/ghost/model"
 
 type CommonInfo struct {
 	ActionID string   `json:"actionId"`
+	Method   string   `json:"method"`
 	States   []string `json:"states"`
 	Roles    []string `json:"roles"`
+}
+
+func NewCommonInfo(config *model.ActionConfig) CommonInfo {
+	return CommonInfo{
+		ActionID: config.ActionID,
+		Method:   config.Method,
+		States:   config.States,
+		Roles:    config.Roles,
+	}
 }
 
 // UserCan returns TRUE if this action is permitted on this stream (using the provided authorization)

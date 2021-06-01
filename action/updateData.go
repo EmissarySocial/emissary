@@ -6,8 +6,8 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
 	"github.com/benpate/steranko"
 )
@@ -16,21 +16,34 @@ import (
 type UpdateData struct {
 	Form form.Form
 	CommonInfo
+
+	templateService *service.Template
+	streamService   *service.Stream
+	formLibrary     form.Library
+}
+
+func NewAction_UpdateData(config *model.ActionConfig, templateService *service.Template, streamService *service.Stream, formLibrary form.Library) UpdateData {
+
+	return UpdateData{
+		Form:       newForm(config.Args["form"]),
+		CommonInfo: NewCommonInfo(config),
+
+		templateService: templateService,
+		streamService:   streamService,
+		formLibrary:     formLibrary,
+	}
 }
 
 // Get displays a form where users can update stream data
-func (action UpdateData) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func (action UpdateData) Get(ctx steranko.Context, stream *model.Stream) error {
 
-	templateService := factory.Template()
-	formLibrary := factory.FormLibrary()
-
-	schema, err := templateService.Schema(stream.TemplateID)
+	schema, err := action.templateService.Schema(stream.TemplateID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
 	}
 
-	result, err := action.Form.HTML(formLibrary, schema, stream)
+	result, err := action.Form.HTML(action.formLibrary, schema, stream)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
@@ -40,7 +53,7 @@ func (action UpdateData) Get(ctx steranko.Context, factory *domain.Factory, stre
 }
 
 // Post updates the stream with approved data from the request body.
-func (action UpdateData) Post(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func (action UpdateData) Post(ctx steranko.Context, stream *model.Stream) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
@@ -58,8 +71,7 @@ func (action UpdateData) Post(ctx steranko.Context, factory *domain.Factory, str
 	}
 
 	// Try to update the stream
-	streamService := factory.Stream()
-	if err := streamService.Save(stream, "Moved to new State"); err != nil {
+	if err := action.streamService.Save(stream, "Moved to new State"); err != nil {
 		return derp.Wrap(err, "ghost.action.MoveState.Post", "Error updating state")
 	}
 

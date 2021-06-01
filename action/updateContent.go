@@ -1,7 +1,6 @@
 package action
 
 import (
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
 )
@@ -11,9 +10,9 @@ type UpdateContent struct {
 	CommonInfo
 }
 
-func (action UpdateContent) Get(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func (action UpdateContent) Get(ctx steranko.Context, stream *model.Stream) error {
 	return nil
 }
-func (action UpdateContent) Post(ctx steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func (action UpdateContent) Post(ctx steranko.Context, stream *model.Stream) error {
 	return nil
 }

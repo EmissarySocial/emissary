@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
 )
@@ -16,4 +17,14 @@ func getAuthorization(ctx steranko.Context) model.Authorization {
 	}
 
 	return model.Authorization{}
+}
+
+func newForm(data interface{}) form.Form {
+	var result form.Form
+
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		result.UnmarshalMap(dataMap)
+	}
+
+	return result
 }
