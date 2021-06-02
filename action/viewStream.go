@@ -9,21 +9,22 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// ViewStream is an action that renders HTML for a stream.
 type ViewStream struct {
-	CommonInfo
-
+	config        model.ActionConfig
 	layoutService *service.Layout
 }
 
-func NewAction_ViewStream(config *model.ActionConfig, layoutService *service.Layout) ViewStream {
+// NewAction_ViewStream generates a fully initialized ViewStream action.
+func NewAction_ViewStream(config model.ActionConfig, layoutService *service.Layout) ViewStream {
 	return ViewStream{
-		CommonInfo:    NewCommonInfo(config),
+		config:        config,
 		layoutService: layoutService,
 	}
 }
 
 // Get renders the Stream HTML to the context
-func (action ViewStream) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action *ViewStream) Get(ctx steranko.Context, stream *model.Stream) error {
 
 	var result bytes.Buffer
 
@@ -50,6 +51,11 @@ func (action ViewStream) Get(ctx steranko.Context, stream *model.Stream) error {
 }
 
 // Post is not supported for this action.
-func (action ViewStream) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action *ViewStream) Post(ctx steranko.Context, stream *model.Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.action.ViewStream.Post", "Unsupported Method")
+}
+
+// Config returns the configuration information for this action
+func (action *ViewStream) Config() model.ActionConfig {
+	return action.config
 }

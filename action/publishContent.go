@@ -8,22 +8,25 @@ import (
 
 // PublishContent manages the content.Content in a stream.
 type PublishContent struct {
-	CommonInfo
-
+	config        model.ActionConfig
 	streamService *service.Stream
 }
 
-func NewAction_PublishContent(config *model.ActionConfig, streamService *service.Stream) PublishContent {
+func NewAction_PublishContent(config model.ActionConfig, streamService *service.Stream) PublishContent {
 	return PublishContent{
-		CommonInfo: NewCommonInfo(config),
-
+		config:        config,
 		streamService: streamService,
 	}
 }
 
-func (action PublishContent) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action *PublishContent) Get(ctx steranko.Context, stream *model.Stream) error {
 	return nil
 }
-func (action PublishContent) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action *PublishContent) Post(ctx steranko.Context, stream *model.Stream) error {
 	return nil
+}
+
+// Config returns the configuration information for this action
+func (action *PublishContent) Config() model.ActionConfig {
+	return action.config
 }

@@ -7,27 +7,28 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/action"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/steranko"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	streamService *service.Stream // StreamService is used to load child streams
-	request       *HTTPRequest    // Additional request info URL params, Authentication, etc.
-	stream        model.Stream    // Stream to be displayed
-	viewID        string          // The view to use for the `Render` function
-	transitionID  string          // If not empty, then this renderer can invoke transitions
-	editable      bool            // If TRUE, then this renderer can invoke editors
+	ctx           *steranko.Context // Contains request context and authentication data.
+	streamService *service.Stream   // StreamService is used to load child streams
+	stream        *model.Stream     // Stream to be displayed
+	action        action.Action
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream model.Stream) Renderer {
+func NewRenderer(ctx *steranko.Context, streamService *service.Stream, stream *model.Stream, action action.Action) Renderer {
 
 	result := Renderer{
+		ctx:           ctx,
 		streamService: streamService,
-		request:       request,
 		stream:        stream,
+		action:        action,
 	}
 
 	return result
@@ -37,7 +38,7 @@ func NewRenderer(streamService *service.Stream, request *HTTPRequest, stream mod
 // ACCESSORS FOR THIS STREAM
 
 func (w Renderer) URL() string {
-	return w.request.URL()
+	return w.ctx.Request().URL.RequestURI()
 }
 
 // StreamID returns the unique ID for the stream being rendered
@@ -45,20 +46,9 @@ func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
-// ViewID returns the view identifier being rendered
+// ActionID returns the view identifier being rendered
 func (w Renderer) ViewID() string {
-	if w.viewID == "" {
-		return "default"
-	}
-	return w.viewID
-}
-
-// TransitionID returns the view identifier being rendered
-func (w Renderer) TransitionID() string {
-	if w.transitionID == "" {
-		return "default"
-	}
-	return w.transitionID
+	return w.action.Config().ActionID
 }
 
 // Token returns the unique URL token for the stream being rendered
@@ -84,12 +74,6 @@ func (w Renderer) Content() template.HTML {
 
 // Returns editable HTML for the body content (requires `editable` flat)
 func (w Renderer) ContentEditor() template.HTML {
-
-	// Require the `editable` flag to use this
-	if !w.editable {
-		return template.HTML("")
-	}
-
 	result := w.stream.Content.Edit("/" + w.Token() + "/draft")
 	return template.HTML(result)
 }
@@ -122,38 +106,30 @@ func (w Renderer) HasParent() bool {
 ////////////////////////////////
 // REQUEST INFO
 
-// Authorization returns the authorization data for this request.
-func (w Renderer) Authorization() *model.Authorization {
-	return w.request.authorization
-}
-
 // Returns TRUE if this is a partial request.
 func (w Renderer) Partial() bool {
-	return w.request.Partial()
+	return (w.ctx.Request().Header.Get("HX-Request") != "")
 }
 
 // Returns the request parameter
 func (w Renderer) QueryParam(param string) string {
-	return w.request.QueryParam(param)
+	return w.ctx.QueryParam(param)
 }
 
 ////////////////////////////////
 // RELATIONSHIPS TO OTHER STREAMS
 
 // Parent returns a Stream containing the parent of the current stream
-func (w Renderer) Parent(viewID string) (Renderer, error) {
+func (w Renderer) Parent(actionID string) (Renderer, error) {
 
 	var parent model.Stream
 	var result Renderer
 
-	if err := w.streamService.LoadParent(&w.stream, &parent); err != nil {
+	if err := w.streamService.LoadParent(w.stream, &parent); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	result = NewRenderer(w.streamService, w.request, parent)
-	result.viewID = viewID
-
-	return result, nil
+	return NewRenderer(w.ctx, w.streamService, &parent, nil), nil
 }
 
 // Children returns an array of Streams containing all of the child elements of the current stream
@@ -184,7 +160,7 @@ func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 func (w Renderer) ChildTemplates() []model.Template {
 
 	// TODO: permissions here...
-	return w.streamService.ChildTemplates(&w.stream)
+	return w.streamService.ChildTemplates(w.stream)
 }
 
 ///////////////////////////////
@@ -195,42 +171,16 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var result bytes.Buffer
 
-	view, ok := w.streamService.View(&w.stream, w.ViewID(), w.request.Authorization())
+	if templateText, ok := w.action.Config().Args["template"]; ok {
+		if templateCompiled, ok := templateText.(*template.Template); ok {
 
-	if !ok {
-		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.renderer.Render", "Unauthorized View", w.viewID)
+			if err := templateCompiled.Execute(&result, w); err == nil {
+				return template.HTML(result.String()), nil
+			}
+		}
 	}
 
-	// If template is missing, there was a compilation error on the template itself
-	if view.Template == nil {
-		return template.HTML(""), derp.Report(derp.New(500, "ghost.domain.renderer.Render", "Missing Template (probably did not load/compile correctly on startup)", view))
-	}
-
-	// Execute template
-	if err := view.Template.Execute(&result, w); err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.renderer.Render", "Error executing template", w.stream))
-	}
-
-	// Return result
-	return template.HTML(result.String()), nil
-}
-
-// RenderForm returns an HTML rendering of this form
-func (w Renderer) RenderForm() (template.HTML, error) {
-
-	transition, ok := w.streamService.Transition(&w.stream, w.TransitionID(), w.request.Authorization())
-
-	if !ok {
-		return template.HTML(""), derp.New(derp.CodeForbiddenError, "ghost.domain.Renderer.getTransition", "Unauthorized Transition", w.stream)
-	}
-
-	result, err := w.streamService.Form(&w.stream, transition)
-
-	if err != nil {
-		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.domain.Renderer.Form", "Error generating HTML form"))
-	}
-
-	return template.HTML(result), nil
+	return template.HTML(""), derp.New(derp.CodeInternalError, "ghost.domain.renderer.Render", "Error executing template", w.stream)
 }
 
 /////////////////////
@@ -239,19 +189,28 @@ func (w Renderer) RenderForm() (template.HTML, error) {
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) UserCan(actionID string) bool {
 
-	action, err := w.streamService.Action(&w.stream, actionID)
+	authorization, err := w.getAuthorization()
 
 	if err != nil {
 		return false
 	}
 
-	return action.UserCan(&w.stream, w.request.Authorization())
+	return w.action.UserCan(w.stream, authorization)
 }
 
-// CanAddChild returns TRUE if the current user has permission to add child streams.
-func (w Renderer) CanAddChild() bool {
-	// TODO: real permissions here
-	return true
+// Authorization returns the authorization data for this request.
+func (w Renderer) getAuthorization() (*model.Authorization, error) {
+	claims, err := w.ctx.Authorization()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if authorization, ok := claims.(*model.Authorization); ok {
+		return authorization, nil
+	}
+
+	return nil, derp.New(derp.CodeBadRequestError, "ghost.domain.Renderer.Authorization", "Invalid authorization", claims)
 }
 
 ///////////////////////////
@@ -265,8 +224,7 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Rend
 	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
-		renderer := NewRenderer(w.streamService, w.request, stream)
-		renderer.viewID = viewID
+		renderer := NewRenderer(w.ctx, w.streamService, stream, nil)
 
 		// Enforce permissions here...
 		if renderer.UserCan(viewID) {

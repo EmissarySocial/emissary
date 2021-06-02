@@ -3,7 +3,6 @@ package action
 import (
 	"net/http"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -14,22 +13,16 @@ import (
 )
 
 type UpdateState struct {
-	Form       form.Form
-	NewStateID string
-	CommonInfo
-
+	config          model.ActionConfig
 	templateService *service.Template
 	streamService   *service.Stream
 	formLibrary     form.Library
 }
 
-func NewAction_UpdateState(config *model.ActionConfig, templateService *service.Template, streamService *service.Stream, formLibrary form.Library) UpdateState {
+func NewAction_UpdateState(config model.ActionConfig, templateService *service.Template, streamService *service.Stream, formLibrary form.Library) UpdateState {
 
 	return UpdateState{
-		Form:       newForm(config.Args["form"]),
-		NewStateID: convert.String(config.Args["newStateId"]),
-		CommonInfo: NewCommonInfo(config),
-
+		config:          config,
 		templateService: templateService,
 		streamService:   streamService,
 		formLibrary:     formLibrary,
@@ -37,7 +30,7 @@ func NewAction_UpdateState(config *model.ActionConfig, templateService *service.
 }
 
 // Get displays a form for users to fill out in the browser
-func (action UpdateState) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action *UpdateState) Get(ctx steranko.Context, stream *model.Stream) error {
 
 	schema, err := action.templateService.Schema(stream.TemplateID)
 
@@ -55,7 +48,7 @@ func (action UpdateState) Get(ctx steranko.Context, stream *model.Stream) error 
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (action UpdateState) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action *UpdateState) Post(ctx steranko.Context, stream *model.Stream) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
@@ -81,6 +74,12 @@ func (action UpdateState) Post(ctx steranko.Context, stream *model.Stream) error
 	}
 
 	// Redirect the browser to the default page.
-	ctx.Request().Header.Add("HX-Redirect", "/"+stream.Token)
+	ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+stream.Token+`"}}`)
+
 	return ctx.NoContent(http.StatusOK)
+}
+
+// Config returns the configuration information for this action
+func (action *UpdateState) Config() model.ActionConfig {
+	return action.config
 }

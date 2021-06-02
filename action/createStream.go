@@ -4,27 +4,22 @@ import (
 	"net/http"
 
 	"github.com/benpate/compare"
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/steranko"
 )
 
+//CreateStream is an action that can add new sub-streams to the domain.
 type CreateStream struct {
-	ChildStateID string
-	TemplateID   []string
-	CommonInfo
-
+	config        model.ActionConfig
 	streamService *service.Stream
 }
 
-func NewAction_CreateStream(config *model.ActionConfig, streamService *service.Stream) CreateStream {
+// NewAction_CreateStream returns a fully initialized CreateSubStream record
+func NewAction_CreateStream(config model.ActionConfig, streamService *service.Stream) CreateStream {
 	return CreateStream{
-		ChildStateID: convert.String(config.Args["childStateId"]),
-		TemplateID:   convert.SliceOfString(config.Args["templateId"]),
-		CommonInfo:   NewCommonInfo(config),
-
+		config:        config,
 		streamService: streamService,
 	}
 }
@@ -33,11 +28,11 @@ type createStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action CreateStream) Get(ctx steranko.Context, parent *model.Stream) error {
+func (action *CreateStream) Get(ctx steranko.Context, parent *model.Stream) error {
 	return nil
 }
 
-func (action CreateStream) Post(ctx steranko.Context, parent *model.Stream) error {
+func (action *CreateStream) Post(ctx steranko.Context, parent *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
@@ -81,4 +76,9 @@ func (action CreateStream) Post(ctx steranko.Context, parent *model.Stream) erro
 	// Success!  Send response to client
 	ctx.Response().Header().Add("Hx-Redirect", "/"+child.Token)
 	return ctx.NoContent(http.StatusOK)
+}
+
+// Config returns the configuration information for this action
+func (action *CreateStream) Config() model.ActionConfig {
+	return action.config
 }

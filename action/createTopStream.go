@@ -3,7 +3,6 @@ package action
 import (
 	"net/http"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
@@ -12,19 +11,14 @@ import (
 )
 
 type CreateTopStream struct {
-	ChildStateID string
-	TemplateID   string
-	CommonInfo
-
+	config        model.ActionConfig
 	streamService *service.Stream
 }
 
-func NewAction_CreateTopStream(config *model.ActionConfig, streamService *service.Stream) CreateTopStream {
+func NewAction_CreateTopStream(config model.ActionConfig, streamService *service.Stream) CreateTopStream {
 
 	return CreateTopStream{
-		ChildStateID:  convert.String(config.Args["childStateId"]),
-		TemplateID:    convert.String(config.Args["templateId"]),
-		CommonInfo:    NewCommonInfo(config),
+		config:        config,
 		streamService: streamService,
 	}
 }
@@ -98,4 +92,9 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 	// Success! Write response to client
 	ctx.Response().Header().Add("HX-Redirect", "/"+child.Token)
 	return ctx.NoContent(http.StatusOK)
+}
+
+// Config returns the configuration information for this action
+func (action *CreateTopStream) Config() model.ActionConfig {
+	return action.config
 }
