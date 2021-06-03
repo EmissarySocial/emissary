@@ -10,22 +10,22 @@ import (
 )
 
 type DeleteStream struct {
-	config        model.ActionConfig
+	model.ActionConfig
 	streamService *service.Stream
 }
 
 func NewAction_DeleteStream(config model.ActionConfig, streamService *service.Stream) DeleteStream {
 	return DeleteStream{
-		config:        config,
+		ActionConfig:  config,
 		streamService: streamService,
 	}
 }
 
-func (action *DeleteStream) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action DeleteStream) Get(ctx steranko.Context, stream *model.Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.model.action.DeleteStream.Get", "Unsupported Method")
 }
 
-func (action *DeleteStream) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action DeleteStream) Post(ctx steranko.Context, stream *model.Stream) error {
 
 	var parent model.Stream
 
@@ -39,9 +39,4 @@ func (action *DeleteStream) Post(ctx steranko.Context, stream *model.Stream) err
 
 	ctx.Response().Header().Add("hx-redirect", "/"+parent.Token)
 	return ctx.NoContent(http.StatusNoContent)
-}
-
-// Config returns the configuration information for this action
-func (action *DeleteStream) Config() model.ActionConfig {
-	return action.config
 }

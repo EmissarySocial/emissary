@@ -9,17 +9,18 @@ import (
 
 // ActionConfig stores the configuration information for each Action that can be taken on a Stream
 type ActionConfig struct {
-	ActionID string       `json:"actionId"`
-	Method   string       `json:"method"`
-	States   []string     `json:"states"`
-	Roles    []string     `json:"roles"`
-	Args     datatype.Map `json:"args"`
+	ActionID string   `json:"actionId"`
+	Method   string   `json:"method"`
+	States   []string `json:"states"`
+	Roles    []string `json:"roles"`
+
+	datatype.Map `json:"args"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface
-func (actionConfig ActionConfig) UnmarshalJSON(data []byte) error {
+func (actionConfig *ActionConfig) UnmarshalJSON(data []byte) error {
 
-	actionConfig.Args = make(datatype.Map)
+	actionConfig.Map = make(datatype.Map)
 
 	dataMap := make(map[string]interface{})
 
@@ -38,7 +39,7 @@ func (actionConfig ActionConfig) UnmarshalJSON(data []byte) error {
 		case "roles":
 			actionConfig.Roles = convert.SliceOfString(value)
 		default:
-			actionConfig.Args[key] = value
+			actionConfig.Map[key] = value
 		}
 	}
 

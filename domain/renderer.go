@@ -17,12 +17,12 @@ import (
 type Renderer struct {
 	ctx           *steranko.Context // Contains request context and authentication data.
 	streamService *service.Stream   // StreamService is used to load child streams
-	stream        *model.Stream     // Stream to be displayed
+	stream        model.Stream      // Stream to be displayed
 	action        action.Action
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(ctx *steranko.Context, streamService *service.Stream, stream *model.Stream, action action.Action) Renderer {
+func NewRenderer(ctx *steranko.Context, streamService *service.Stream, stream model.Stream, action action.Action) Renderer {
 
 	result := Renderer{
 		ctx:           ctx,
@@ -125,11 +125,11 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 	var parent model.Stream
 	var result Renderer
 
-	if err := w.streamService.LoadParent(w.stream, &parent); err != nil {
+	if err := w.streamService.LoadParent(&w.stream, &parent); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	return NewRenderer(w.ctx, w.streamService, &parent, nil), nil
+	return NewRenderer(w.ctx, w.streamService, parent, nil), nil
 }
 
 // Children returns an array of Streams containing all of the child elements of the current stream
@@ -160,7 +160,7 @@ func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 func (w Renderer) ChildTemplates() []model.Template {
 
 	// TODO: permissions here...
-	return w.streamService.ChildTemplates(w.stream)
+	return w.streamService.ChildTemplates(&w.stream)
 }
 
 ///////////////////////////////
@@ -195,7 +195,7 @@ func (w Renderer) UserCan(actionID string) bool {
 		return false
 	}
 
-	return w.action.UserCan(w.stream, authorization)
+	return w.action.UserCan(&w.stream, authorization)
 }
 
 // Authorization returns the authorization data for this request.

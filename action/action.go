@@ -10,5 +10,4 @@ type Action interface {
 	Get(steranko.Context, *model.Stream) error
 	Post(steranko.Context, *model.Stream) error
 	UserCan(*model.Stream, *model.Authorization) bool
-	Config() *model.ActionConfig
 }

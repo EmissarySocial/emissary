@@ -12,14 +12,14 @@ import (
 
 //CreateStream is an action that can add new sub-streams to the domain.
 type CreateStream struct {
-	config        model.ActionConfig
+	model.ActionConfig
 	streamService *service.Stream
 }
 
 // NewAction_CreateStream returns a fully initialized CreateSubStream record
 func NewAction_CreateStream(config model.ActionConfig, streamService *service.Stream) CreateStream {
 	return CreateStream{
-		config:        config,
+		ActionConfig:  config,
 		streamService: streamService,
 	}
 }
@@ -28,11 +28,11 @@ type createStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action *CreateStream) Get(ctx steranko.Context, parent *model.Stream) error {
+func (action CreateStream) Get(ctx steranko.Context, parent *model.Stream) error {
 	return nil
 }
 
-func (action *CreateStream) Post(ctx steranko.Context, parent *model.Stream) error {
+func (action CreateStream) Post(ctx steranko.Context, parent *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
@@ -42,7 +42,7 @@ func (action *CreateStream) Post(ctx steranko.Context, parent *model.Stream) err
 	}
 
 	// Validate that the requested template is allowed by this action
-	if !compare.Contains(action.TemplateID, formData.TemplateID) {
+	if !compare.Contains(action.templateID(), formData.TemplateID) {
 		return derp.New(derp.CodeBadRequestError, "ghost.action.CreateStream.Post", "Invalid Template", formData.TemplateID)
 	}
 
@@ -65,7 +65,7 @@ func (action *CreateStream) Post(ctx steranko.Context, parent *model.Stream) err
 
 	// Set Default Values
 	child.ParentID = parent.StreamID
-	child.StateID = action.ChildStateID
+	child.StateID = action.childState()
 	child.AuthorID = authorization.UserID
 
 	// Try to save the new child
@@ -78,7 +78,12 @@ func (action *CreateStream) Post(ctx steranko.Context, parent *model.Stream) err
 	return ctx.NoContent(http.StatusOK)
 }
 
-// Config returns the configuration information for this action
-func (action *CreateStream) Config() model.ActionConfig {
-	return action.config
+// childState is a shortcut to the config value
+func (action CreateStream) childState() string {
+	return action.GetString("childState")
+}
+
+// childState is a shortcut to the config value
+func (action CreateStream) templateID() string {
+	return action.GetString("templateId")
 }

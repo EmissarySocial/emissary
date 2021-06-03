@@ -170,7 +170,7 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) Renderer(ctx *steranko.Context, stream *model.Stream, actionID string) (Renderer, error) {
+func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
 
 	// Try to retrieve the action from the template
 	action, err := factory.getAction(stream.TemplateID, actionID)
@@ -200,28 +200,28 @@ func (factory *Factory) getAction(templateID string, actionID string) (action.Ac
 	switch config.Method {
 
 	case "create-stream":
-		return action.NewAction_CreateStream(&config, factory.Stream()), nil
+		return action.NewAction_CreateStream(config, factory.Stream()), nil
 
 	case "create-top-stream":
-		return action.NewAction_CreateTopStream(&config, factory.Stream()), nil
+		return action.NewAction_CreateTopStream(config, factory.Stream()), nil
 
 	case "delete-stream":
-		return action.NewAction_DeleteStream(&config, factory.Stream()), nil
+		return action.NewAction_DeleteStream(config, factory.Stream()), nil
 
 	case "publish-content":
-		return action.NewAction_PublishContent(&config, factory.Stream()), nil
+		return action.NewAction_PublishContent(config, factory.Stream()), nil
 
 	case "update-content":
-		return action.NewAction_UpdateContent(&config, factory.Stream()), nil
+		return action.NewAction_UpdateContent(config, factory.Stream()), nil
 
 	case "update-data":
-		return action.NewAction_UpdateData(&config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
+		return action.NewAction_UpdateData(config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
 
 	case "update-state":
-		return action.NewAction_UpdateState(&config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
+		return action.NewAction_UpdateState(config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
 
 	case "view-stream":
-		return action.NewAction_ViewStream(&config, factory.Layout()), nil
+		return action.NewAction_ViewStream(config, factory.Layout()), nil
 	}
 
 	// Fall through means we have an unrecognized action

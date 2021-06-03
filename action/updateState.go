@@ -13,7 +13,7 @@ import (
 )
 
 type UpdateState struct {
-	config          model.ActionConfig
+	model.ActionConfig
 	templateService *service.Template
 	streamService   *service.Stream
 	formLibrary     form.Library
@@ -22,7 +22,7 @@ type UpdateState struct {
 func NewAction_UpdateState(config model.ActionConfig, templateService *service.Template, streamService *service.Stream, formLibrary form.Library) UpdateState {
 
 	return UpdateState{
-		config:          config,
+		ActionConfig:    config,
 		templateService: templateService,
 		streamService:   streamService,
 		formLibrary:     formLibrary,
@@ -30,7 +30,7 @@ func NewAction_UpdateState(config model.ActionConfig, templateService *service.T
 }
 
 // Get displays a form for users to fill out in the browser
-func (action *UpdateState) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateState) Get(ctx steranko.Context, stream *model.Stream) error {
 
 	schema, err := action.templateService.Schema(stream.TemplateID)
 
@@ -38,7 +38,7 @@ func (action *UpdateState) Get(ctx steranko.Context, stream *model.Stream) error
 		return derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
 	}
 
-	result, err := action.Form.HTML(action.formLibrary, schema, stream)
+	result, err := action.form().HTML(action.formLibrary, schema, stream)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
@@ -48,7 +48,7 @@ func (action *UpdateState) Get(ctx steranko.Context, stream *model.Stream) error
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (action *UpdateState) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateState) Post(ctx steranko.Context, stream *model.Stream) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
@@ -57,7 +57,7 @@ func (action *UpdateState) Post(ctx steranko.Context, stream *model.Stream) erro
 	}
 
 	// Put approved form data into the stream
-	allPaths := action.Form.AllPaths()
+	allPaths := action.form().AllPaths()
 	for _, field := range allPaths {
 		p := path.New(field.Path)
 		if err := stream.SetPath(p, body); err != nil {
@@ -66,7 +66,7 @@ func (action *UpdateState) Post(ctx steranko.Context, stream *model.Stream) erro
 	}
 
 	// Move stream to a new state
-	stream.StateID = action.NewStateID
+	stream.StateID = action.newStateID()
 
 	// Try to update the stream
 	if err := action.streamService.Save(stream, "Moved to new State"); err != nil {
@@ -79,7 +79,17 @@ func (action *UpdateState) Post(ctx steranko.Context, stream *model.Stream) erro
 	return ctx.NoContent(http.StatusOK)
 }
 
-// Config returns the configuration information for this action
-func (action *UpdateState) Config() model.ActionConfig {
-	return action.config
+func (action UpdateState) form() form.Form {
+	result, err := form.Parse(action.GetInterface("form"))
+
+	if err != nil {
+		derp.Report(err)
+	}
+
+	return result
+}
+
+// newStateID is a shortcut to the config value
+func (action UpdateState) newStateID() string {
+	return action.GetString("newStateId")
 }

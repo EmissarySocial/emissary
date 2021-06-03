@@ -11,14 +11,14 @@ import (
 )
 
 type CreateTopStream struct {
-	config        model.ActionConfig
+	model.ActionConfig
 	streamService *service.Stream
 }
 
 func NewAction_CreateTopStream(config model.ActionConfig, streamService *service.Stream) CreateTopStream {
 
 	return CreateTopStream{
-		config:        config,
+		ActionConfig:  config,
 		streamService: streamService,
 	}
 }
@@ -92,9 +92,4 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 	// Success! Write response to client
 	ctx.Response().Header().Add("HX-Redirect", "/"+child.Token)
 	return ctx.NoContent(http.StatusOK)
-}
-
-// Config returns the configuration information for this action
-func (action *CreateTopStream) Config() model.ActionConfig {
-	return action.config
 }

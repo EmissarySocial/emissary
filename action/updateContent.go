@@ -8,25 +8,20 @@ import (
 
 // UpdateContent manages the content.Content in a stream.
 type UpdateContent struct {
-	config        model.ActionConfig
+	model.ActionConfig
 	streamService *service.Stream
 }
 
 func NewAction_UpdateContent(config model.ActionConfig, streamService *service.Stream) UpdateContent {
 	return UpdateContent{
-		config:        config,
+		ActionConfig:  config,
 		streamService: streamService,
 	}
 }
 
-func (action *UpdateContent) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateContent) Get(ctx steranko.Context, stream *model.Stream) error {
 	return nil
 }
-func (action *UpdateContent) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateContent) Post(ctx steranko.Context, stream *model.Stream) error {
 	return nil
-}
-
-// Config returns the configuration information for this action
-func (action *UpdateContent) Config() model.ActionConfig {
-	return action.config
 }
