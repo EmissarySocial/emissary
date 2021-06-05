@@ -124,8 +124,8 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 				return nil, derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", contentString))
 			}
 
-			// Save the view in the memory structure for the next run through the file list
-			result.Actions[actionID].Args["template"] = contentTemplate
+			// Put the parsed/minified template into the custom data of the action.
+			result.Actions[actionID].Map["template"] = contentTemplate
 		}
 	}
 

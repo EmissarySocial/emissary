@@ -8,10 +8,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/action"
 	"github.com/benpate/ghost/config"
 	mongodb "github.com/benpate/ghost/data-mongo"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/ghost/vocabulary"
 	"github.com/benpate/steranko"
@@ -170,62 +170,10 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
-
-	// Try to retrieve the action from the template
-	action, err := factory.getAction(stream.TemplateID, actionID)
-
-	if err != nil {
-		return Renderer{}, derp.Wrap(err, "ghost.factory.Renderer", "Can't locate action", stream)
-	}
+func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (render.Renderer, error) {
 
 	// Create and return the new Renderer
-	renderer := NewRenderer(ctx, factory.Stream(), stream, action)
-	return renderer, nil
-}
-
-// getActions locates and populates the action.Action for a specific template and actionID
-func (factory *Factory) getAction(templateID string, actionID string) (action.Action, error) {
-
-	// Load the template and action from the templateService
-	templateService := factory.Template()
-
-	config, err := templateService.Action(templateID, actionID)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "ghost.factory.getAction", "Invalid actionID", templateID, actionID)
-	}
-
-	// Populate the action with the data from
-	switch config.Method {
-
-	case "create-stream":
-		return action.NewAction_CreateStream(config, factory.Stream()), nil
-
-	case "create-top-stream":
-		return action.NewAction_CreateTopStream(config, factory.Stream()), nil
-
-	case "delete-stream":
-		return action.NewAction_DeleteStream(config, factory.Stream()), nil
-
-	case "publish-content":
-		return action.NewAction_PublishContent(config, factory.Stream()), nil
-
-	case "update-content":
-		return action.NewAction_UpdateContent(config, factory.Stream()), nil
-
-	case "update-data":
-		return action.NewAction_UpdateData(config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
-
-	case "update-state":
-		return action.NewAction_UpdateState(config, factory.Template(), factory.Stream(), factory.FormLibrary()), nil
-
-	case "view-stream":
-		return action.NewAction_ViewStream(config, factory.Layout()), nil
-	}
-
-	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "ghost.factory.getAction", "Invalid action configuration", config)
+	return render.NewRenderer(factory, ctx, stream, actionID)
 }
 
 ///////////////////////////////////////

@@ -47,7 +47,7 @@ func (actionConfig *ActionConfig) UnmarshalJSON(data []byte) error {
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (actionConfig *ActionConfig) UserCan(stream *Stream, authorization *Authorization) bool {
+func (actionConfig ActionConfig) UserCan(stream *Stream, authorization *Authorization) bool {
 
 	if len(actionConfig.States) > 0 {
 		if !matchOne(actionConfig.States, stream.StateID) {

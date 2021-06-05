@@ -1,37 +1,42 @@
-package domain
+package render
 
 import (
-	"bytes"
 	"html/template"
 	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/action"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/steranko"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	ctx           *steranko.Context // Contains request context and authentication data.
-	streamService *service.Stream   // StreamService is used to load child streams
-	stream        model.Stream      // Stream to be displayed
-	action        action.Action
+	factory Factory           // Internal interface to the domain.Factory
+	ctx     *steranko.Context // Contains request context and authentication data.
+	stream  model.Stream      // Stream to be displayed
+	action  Action            // Action to perform when this stream is rendered
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(ctx *steranko.Context, streamService *service.Stream, stream model.Stream, action action.Action) Renderer {
+func NewRenderer(factory Factory, sterankoContext *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
 
-	result := Renderer{
-		ctx:           ctx,
-		streamService: streamService,
-		stream:        stream,
-		action:        action,
+	authorization := getAuthorization(sterankoContext)
+
+	action, err := NewAction(factory, &stream, &authorization, actionID)
+
+	if err != nil {
+		return Renderer{}, derp.Wrap(err, "ghost.render.NewRenderer", "Cannot parse Action", stream, actionID)
 	}
 
-	return result
+	result := Renderer{
+		factory: factory,
+		ctx:     sterankoContext,
+		stream:  stream,
+		action:  action,
+	}
+
+	return result, nil
 }
 
 ////////////////////////////////
@@ -46,9 +51,8 @@ func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
-// ActionID returns the view identifier being rendered
-func (w Renderer) ViewID() string {
-	return w.action.Config().ActionID
+func (w Renderer) TemplateID() string {
+	return w.stream.TemplateID
 }
 
 // Token returns the unique URL token for the stream being rendered
@@ -106,11 +110,6 @@ func (w Renderer) HasParent() bool {
 ////////////////////////////////
 // REQUEST INFO
 
-// Returns TRUE if this is a partial request.
-func (w Renderer) Partial() bool {
-	return (w.ctx.Request().Header.Get("HX-Request") != "")
-}
-
 // Returns the request parameter
 func (w Renderer) QueryParam(param string) string {
 	return w.ctx.QueryParam(param)
@@ -125,42 +124,41 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 	var parent model.Stream
 	var result Renderer
 
-	if err := w.streamService.LoadParent(&w.stream, &parent); err != nil {
+	streamService := w.factory.Stream()
+
+	if err := streamService.LoadParent(&w.stream, &parent); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Renderer.Parent", "Error loading Parent")
 	}
 
-	return NewRenderer(w.ctx, w.streamService, parent, nil), nil
+	return NewRenderer(w.factory, w.ctx, parent, actionID)
 }
 
 // Children returns an array of Streams containing all of the child elements of the current stream
 func (w Renderer) Children(viewID string) ([]Renderer, error) {
 
-	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
+	streamService := w.factory.Stream()
+
+	iterator, err := streamService.ListByParent(w.stream.StreamID)
 
 	if err != nil {
 		return nil, derp.Report(derp.Wrap(err, "ghost.service.Renderer.Children", "Error loading child streams", w.stream))
 	}
 
-	return w.iteratorToSlice(iterator, viewID)
+	return iteratorToSlice(w.factory, w.ctx, iterator, viewID)
 }
 
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 
-	iterator, err := w.streamService.ListTopFolders()
+	streamService := w.factory.Stream()
+
+	iterator, err := streamService.ListTopFolders()
 
 	if err != nil {
 		return nil, derp.Report(derp.Wrap(err, "ghost.service.Renderer.Children", "Error loading child streams", w.stream))
 	}
 
-	return w.iteratorToSlice(iterator, viewID)
-}
-
-// ChildTemplates lists all templates that can be embedded in the current stream
-func (w Renderer) ChildTemplates() []model.Template {
-
-	// TODO: permissions here...
-	return w.streamService.ChildTemplates(&w.stream)
+	return iteratorToSlice(w.factory, w.ctx, iterator, viewID)
 }
 
 ///////////////////////////////
@@ -168,19 +166,8 @@ func (w Renderer) ChildTemplates() []model.Template {
 
 // Render generates an HTML output for a stream/view combination.
 func (w Renderer) Render() (template.HTML, error) {
-
-	var result bytes.Buffer
-
-	if templateText, ok := w.action.Config().Args["template"]; ok {
-		if templateCompiled, ok := templateText.(*template.Template); ok {
-
-			if err := templateCompiled.Execute(&result, w); err == nil {
-				return template.HTML(result.String()), nil
-			}
-		}
-	}
-
-	return template.HTML(""), derp.New(derp.CodeInternalError, "ghost.domain.renderer.Render", "Error executing template", w.stream)
+	result, err := w.action.Get(w)
+	return template.HTML(result), derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML")
 }
 
 /////////////////////
@@ -188,50 +175,27 @@ func (w Renderer) Render() (template.HTML, error) {
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) UserCan(actionID string) bool {
-
-	authorization, err := w.getAuthorization()
-
-	if err != nil {
-		return false
-	}
-
-	return w.action.UserCan(&w.stream, authorization)
-}
-
-// Authorization returns the authorization data for this request.
-func (w Renderer) getAuthorization() (*model.Authorization, error) {
-	claims, err := w.ctx.Authorization()
-
-	if err != nil {
-		return nil, err
-	}
-
-	if authorization, ok := claims.(*model.Authorization); ok {
-		return authorization, nil
-	}
-
-	return nil, derp.New(derp.CodeBadRequestError, "ghost.domain.Renderer.Authorization", "Invalid authorization", claims)
+	authorization := getAuthorization(w.ctx)
+	return w.action.UserCan(&w.stream, &authorization)
 }
 
 ///////////////////////////
 // HELPER FUNCTIONS
 
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
-func (w Renderer) iteratorToSlice(iterator data.Iterator, viewID string) ([]Renderer, error) {
+func iteratorToSlice(factory Factory, sterankoContext *steranko.Context, iterator data.Iterator, actionID string) ([]Renderer, error) {
 
 	var stream model.Stream
 
 	result := make([]Renderer, 0, iterator.Count())
 
 	for iterator.Next(&stream) {
-		renderer := NewRenderer(w.ctx, w.streamService, stream, nil)
-
-		// Enforce permissions here...
-		if renderer.UserCan(viewID) {
+		if renderer, err := NewRenderer(factory, sterankoContext, stream, actionID); err == nil {
 			result = append(result, renderer)
 		}
 
 		stream = model.Stream{}
+
 	}
 
 	return result, nil

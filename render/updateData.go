@@ -1,4 +1,4 @@
-package action
+package render
 
 import (
 	"net/http"
@@ -7,45 +7,45 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
 	"github.com/benpate/steranko"
 )
 
 // UpdateData updates the specific data in a stream
 type UpdateData struct {
+	factory Factory
 	model.ActionConfig
-	templateService *service.Template
-	streamService   *service.Stream
-	formLibrary     form.Library
 }
 
-func NewAction_UpdateData(config model.ActionConfig, templateService *service.Template, streamService *service.Stream, formLibrary form.Library) UpdateData {
+func NewAction_UpdateData(factory Factory, config model.ActionConfig) UpdateData {
 
 	return UpdateData{
-		ActionConfig:    config,
-		templateService: templateService,
-		streamService:   streamService,
-		formLibrary:     formLibrary,
+		factory:      factory,
+		ActionConfig: config,
 	}
 }
 
 // Get displays a form where users can update stream data
-func (action UpdateData) Get(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateData) Get(renderer Renderer) (string, error) {
 
-	schema, err := action.templateService.Schema(stream.TemplateID)
+	templateService := action.factory.Template()
+	formLibrary := action.factory.FormLibrary()
 
-	if err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Form", "Invalid Schema")
-	}
-
-	result, err := action.form().HTML(action.formLibrary, schema, stream)
+	// Try to find the schema for this Template
+	schema, err := templateService.Schema(renderer.TemplateID())
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Form", "Error generating form")
+		return "", derp.Wrap(err, "ghost.render.UpdateData.Get", "Invalid Schema")
 	}
 
-	return ctx.HTML(http.StatusOK, result)
+	// Try to render the Form HTML
+	result, err := action.form().HTML(formLibrary, schema, renderer.stream)
+
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.render.UpdateData.Get", "Error generating form")
+	}
+
+	return result, nil
 }
 
 // Post updates the stream with approved data from the request body.
@@ -54,7 +54,7 @@ func (action UpdateData) Post(ctx steranko.Context, stream *model.Stream) error 
 	// Collect form POST information
 	body := datatype.Map{}
 	if err := ctx.Bind(&body); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.action.UpdateData.Post", "Error binding body")
+		return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateData.Post", "Error binding body")
 	}
 
 	// Put approved form data into the stream
@@ -62,13 +62,15 @@ func (action UpdateData) Post(ctx steranko.Context, stream *model.Stream) error 
 	for _, field := range allPaths {
 		p := path.New(field.Path)
 		if err := stream.SetPath(p, body); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.action.UpdateData.Post", "Error seting value", field)
+			return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateData.Post", "Error seting value", field)
 		}
 	}
 
 	// Try to update the stream
-	if err := action.streamService.Save(stream, "Moved to new State"); err != nil {
-		return derp.Wrap(err, "ghost.action.MoveState.Post", "Error updating state")
+	streamService := action.factory.Stream()
+
+	if err := streamService.Save(stream, "Moved to new State"); err != nil {
+		return derp.Wrap(err, "ghost.render.UpdateData.Post", "Error updating state")
 	}
 
 	// Redirect the browser to the default page.

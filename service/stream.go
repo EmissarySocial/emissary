@@ -230,9 +230,9 @@ func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
 	return service.templateService.Schema(stream.TemplateID)
 }
 
-// Action returns the action definition that matches the stream and type provided
-func (service *Stream) Action(stream *model.Stream, actionID string) (model.ActionConfig, error) {
-	return service.templateService.Action(stream.TemplateID, actionID)
+// ActionConfig returns the action definition that matches the stream and type provided
+func (service *Stream) ActionConfig(stream *model.Stream, actionID string) (model.ActionConfig, error) {
+	return service.templateService.ActionConfig(stream.TemplateID, actionID)
 }
 
 // updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.

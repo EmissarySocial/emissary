@@ -57,14 +57,14 @@ func (service *Template) start() {
 		select {
 
 		case <-service.layoutUpdates:
-			fmt.Println("template.start: received update to layout.")
+			// fmt.Println("template.start: received update to layout.")
 			for _, template := range service.templates {
 				fmt.Println("template.start: sending update to template: " + template.Label)
 				service.templateUpdateOut <- *template
 			}
 
 		case template := <-service.templateUpdateIn:
-			fmt.Println("template.start: received update to template: " + template.Label)
+			// fmt.Println("template.start: received update to template: " + template.Label)
 			service.Save(&template)
 			service.templateUpdateOut <- template
 		}
@@ -190,8 +190,8 @@ func (service *Template) Schema(templateID string) (*schema.Schema, error) {
 	return template.Schema, nil
 }
 
-// Action returns the action definition that matches the stream and type provided
-func (service *Template) Action(templateID string, actionID string) (model.ActionConfig, error) {
+// ActionConfig returns the action definition that matches the stream and type provided
+func (service *Template) ActionConfig(templateID string, actionID string) (model.ActionConfig, error) {
 
 	// Try to find the Template used by this Stream
 	template, err := service.Load(templateID)

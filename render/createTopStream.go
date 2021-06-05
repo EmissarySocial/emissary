@@ -1,25 +1,24 @@
-package action
+package render
 
 import (
 	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateTopStream struct {
 	model.ActionConfig
-	streamService *service.Stream
+	factory Factory
 }
 
-func NewAction_CreateTopStream(config model.ActionConfig, streamService *service.Stream) CreateTopStream {
+func NewAction_CreateTopStream(factory Factory, config model.ActionConfig) CreateTopStream {
 
 	return CreateTopStream{
-		ActionConfig:  config,
-		streamService: streamService,
+		factory:      factory,
+		ActionConfig: config,
 	}
 }
 
@@ -28,8 +27,8 @@ type createTopStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action CreateTopStream) Get(ctx steranko.Context, _ *model.Stream) error {
-	return nil
+func (action CreateTopStream) Get(renderer Renderer) (string, error) {
+	return "", nil
 }
 
 func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error {
@@ -39,17 +38,18 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 	var child model.Stream
 
 	if err := ctx.Bind(&formData); err != nil {
-		return derp.Wrap(err, "ghost.action.CreateTopStream.Post", "Cannot bind form data")
+		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Cannot bind form data")
 	}
 
-	// Get required services
-	template, err := action.streamService.Template(formData.TemplateID)
+	// Try to load the template
+	streamService := action.factory.Stream()
+	template, err := streamService.Template(formData.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.action.CreateTopStream.Post", "Invalid template")
+		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Invalid template")
 	}
 
-	authorization := getAuthorization(ctx)
+	authorization := getAuthorization(&ctx)
 
 	// Create new child stream
 	child.TemplateID = "folder"
@@ -62,7 +62,7 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 
 		// Verify that this template can live on the top level
 		if !template.CanBeContainedBy("top") {
-			return derp.New(derp.CodeBadRequestError, "ghost.action.CreateTopStream.Post", "Cannot place template on top", formData.TemplateID)
+			return derp.New(derp.CodeBadRequestError, "ghost.render.CreateTopStream.Post", "Cannot place template on top", formData.TemplateID)
 		}
 
 	} else {
@@ -71,13 +71,13 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 		var parent model.Stream
 
 		// Try to load the parent stream
-		if err := action.streamService.LoadByToken(formData.Parent, &parent); err != nil {
-			return derp.Wrap(err, "ghost.action.CreateTopStream.Post", "Error loading parent stream")
+		if err := streamService.LoadByToken(formData.Parent, &parent); err != nil {
+			return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error loading parent stream")
 		}
 
 		// Confirm that this Template can be a child of the parent Template
 		if !template.CanBeContainedBy(parent.TemplateID) {
-			return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
+			return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Template cannot be placed in parent")
 		}
 
 		// Everything checks out.  Assign the child to the parent
@@ -85,8 +85,8 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 	}
 
 	// Save the new child
-	if err := action.streamService.Save(&child, "created"); err != nil {
-		return derp.Wrap(err, "ghost.action.CreateTopStream.Post", "Error saving child")
+	if err := streamService.Save(&child, "created"); err != nil {
+		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error saving child")
 	}
 
 	// Success! Write response to client

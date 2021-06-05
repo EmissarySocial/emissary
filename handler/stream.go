@@ -1,125 +1,150 @@
 package handler
 
 import (
+	"bytes"
 	"net/http"
 
-	"github.com/benpate/choose"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/action"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
-func HandleAction(factoryManager *server.FactoryManager) echo.HandlerFunc {
+// GetStream handles GET requests
+func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		var stream model.Stream
-		var action action.Action
-		var err error
 
 		// Try to get the factory
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.HandleAction", "Unrecognized Domain")
+			return derp.Wrap(err, "ghost.handler.StreamGet", "Unrecognized Domain")
+		}
+
+		// Try to load the stream using request data
+		streamService := factory.Stream()
+		streamToken := getStreamToken(ctx)
+
+		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+			return derp.Wrap(err, "ghost.handler.StreamGet", "Error loading Stream", streamToken)
 		}
 
 		// Cast the context to a sterankoContext (so we can access the underlying Authorization)
+		sterankoContext := ctx.(*steranko.Context)
+		actionID := getActionID(ctx)
+		renderer, err := render.NewRenderer(factory, sterankoContext, stream, actionID)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.handler.StreamGet", "Error creating renderer")
+		}
+
+		// If this is a partial page request, then we only need to render the stream content.
+		if isPartialPageRequest(ctx) {
+			result, err := renderer.Render()
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.StreamGet", "Error rendering content")
+			}
+
+			return ctx.HTML(http.StatusOK, string(result))
+		}
+
+		// Fall through means we're rendering this with the full page layout template
+		var result bytes.Buffer
+		layoutService := factory.Layout()
+		template := layoutService.Template
+
+		if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
+			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
+		}
+
+		return ctx.HTML(200, result.String())
+	}
+
+}
+
+// PostStream handles POST/DELETE requests
+func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		var stream model.Stream
+
+		// Try to get the factory
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.handler.StreamPost", "Unrecognized Domain")
+		}
+
+		// Try to load the stream using request data
+		streamToken := getStreamToken(ctx)
+		actionID := getActionID(ctx)
+		streamService := factory.Stream()
+
+		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+			return derp.Wrap(err, "ghost.handler.StreamPost", "Error loading Stream", streamToken)
+		}
+
+		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(steranko.Context)
-
-		// Try to get the user's authorization
-		authorization, err := getAuthorization(sterankoContext)
+		authorization := getAuthorization(&sterankoContext)
+		action, err := render.NewAction(factory, &stream, &authorization, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.HandleAction", "Error getting authorization")
+			return derp.Wrap(err, "ghost.handler.StreamPost", "Error finding actionConfig", stream, actionID)
 		}
 
-		// Try to load the requested stream and action
-		if err := getStreamAndAction(ctx, factory, &stream, action); err != nil {
-			return derp.Wrap(err, "ghost.handler.HandleAction", "Error loading stream")
-		}
-
-		// Verify user's permissions
-		if !action.UserCan(&stream, &authorization) {
-			return derp.New(derp.CodeForbiddenError, "ghost.handler.HandleAction", "Unauthorized")
-		}
-
-		// Call the appropriate method (get or post)
-		if ctx.Request().Method == http.MethodGet {
-			err = action.Get(sterankoContext, factory, &stream)
-
-		} else {
-			err = action.Post(sterankoContext, factory, &stream)
-		}
-
-		// Handle errors
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.HandleAction", "Error executing action")
-		}
-
-		// Success
-		return nil
+		// Almost done.  Let the action finish the request and
+		// determine what response/headers to send back to the client.
+		return action.Post(sterankoContext, &stream)
 	}
 }
 
-// getStreamAndAction locates the correct stream and action objects referenced by the current context
-func getStreamAndAction(ctx echo.Context, factory *domain.Factory, stream *model.Stream, result action.Action) error {
-
-	var streamID string
-	var actionID string
-
-	// Try to load the stream from the database
-	streamService := factory.Stream()
-
-	streamID = choose.String(ctx.Param("stream"), "home")
-
-	if err := streamService.LoadByToken(streamID, stream); err != nil {
-		return derp.Wrap(err, "ghost.handler.getStreamAndAction", "Error Loading Stream")
-	}
-
-	// Try to load the template used by this stream
-	templateService := factory.Template()
-
-	template, err := templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.handler.getStreamAndAction", "Error Loading Template")
-	}
-
-	// Calculate the actionID
-	if ctx.Request().Method == http.MethodDelete {
-		actionID = "delete"
-	} else {
-		actionID = choose.String(ctx.Param("action"), "home")
-	}
-
-	// Check for missing actions
-	if _, ok := template.Actions[actionID]; !ok {
-		return derp.New(derp.CodeInternalError, "ghost.handler.getStreamAndAction", "Invalid Action")
-	}
-
-	// Set the action
-	result = action.Parse(template.Actions[actionID])
-
-	// Silence means success.
-	return nil
+// isPartialPageRequest returns TRUE if this request was made by `hx-get`
+func isPartialPageRequest(ctx echo.Context) bool {
+	return (ctx.Request().Header.Get("HX-Request") != "")
 }
 
 // getAuthorization unwraps the model.Authorization object that is embedded in the context.
-func getAuthorization(ctx steranko.Context) (model.Authorization, error) {
+func getAuthorization(sterankoContext *steranko.Context) model.Authorization {
 
 	// get the authorization from the steranko.Context.  The context can ONLY be this one type.
-	authorization, err := ctx.Authorization()
+	authorization, err := sterankoContext.Authorization()
 
 	// handle errors
 	if err != nil {
-		return model.Authorization{}, derp.Wrap(err, "ghost.handler.getAuthorization", "Error retrieving authorization from context")
+		return model.Authorization{}
 	}
 
 	// Cast the result as a model.Authorization object.  The authorization can ONLY be this one type.
-	return authorization.(model.Authorization), nil
+	return authorization.(model.Authorization)
+}
+
+// getStreamToken returns the :stream token from the Request (or a default)
+func getStreamToken(ctx echo.Context) string {
+	if token := ctx.Param("stream"); token != "" {
+		return token
+	}
+
+	return "home"
+}
+
+// getActionID returns the :action token from the Request (or a default)
+func getActionID(ctx echo.Context) string {
+
+	if ctx.Request().Method == http.MethodDelete {
+		return "delete"
+	}
+
+	if actionID := ctx.Param("action"); actionID != "" {
+		return actionID
+	}
+
+	return "default"
 }
