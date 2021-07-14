@@ -1,9 +1,9 @@
 <div class="comment">
-	{{ if .State == "HIDDEN" }}
+	{{ if .State eq "hidden" }}
 		- Hidden by moderator -
 	{{ end }}
 
-	{{ if .State == "VISIBLE" }}
+	{{ if .State eq "visible" }}
 		{{.Description}}
 	{{ end }}
 </div>

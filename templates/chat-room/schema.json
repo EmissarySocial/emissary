@@ -62,14 +62,14 @@
 		"moderated-comment": {
 			"states": ["default"],
 			"roles":["moderated-participant"],
-			"method": "create-child",
+			"method": "create-stream",
 			"child-state": "awaiting-moderation",
 			"child-templates": ["chat"]
 		},
 		"comment": {
 			"states": ["default"],
 			"roles":["participant", "moderator"],
-			"method": "add-child",
+			"method": "create-stream",
 			"child-state": "visible",
 			"child-templates": ["chat"]
 		}

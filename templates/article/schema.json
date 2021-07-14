@@ -1,14 +1,8 @@
 {
-	"id": "ARTICLE",
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
-	"containedBy": [
-		"folder",
-		"article"
-	],
+	"containedBy": ["folder", "article"],
 	"schema": {
-		"url": "example.com/test-template",
-		"title": "Test Template Schema",
 		"type": "object",
 		"properties": {
 			"label": {
@@ -35,5 +29,54 @@
 			}
 		},
 		"required": ["class", "title", "body"]
+	},
+	"states": {
+		"default": {
+			"label": "Default State",
+			"description": "All articles only have one state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}, 
+		"editor": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"view": {
+			"method": "view-stream"
+		},
+		"draft": {
+			"states": ["default"],
+			"roles": ["owner", "editor"],
+			"method": "update-draft"
+		},
+		"properties": {
+			"states": ["default"],
+			"roles": ["owner", "editor"],
+			"method": "update-data",
+			"form": {
+				"kind": "layout-vertical",
+				"label": "Update Form",
+				"description": "This will update the object in this state",
+				"children": [{
+					"kind": "text",
+					"label": "Label",
+					"path": "label"
+				},{
+					"kind": "textarea",
+					"label": "Description",
+					"path": "description"
+				}]
+			}
+		}
 	}
 }

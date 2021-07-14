@@ -79,11 +79,11 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 		content, err := ioutil.ReadFile(directory + "/schema.json")
 
 		if err != nil {
-			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file: schema.json")
+			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file: schema.json", templateID)
 		}
 
 		if err := json.Unmarshal(content, result); err != nil {
-			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file: schema.json")
+			return nil, derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file: schema.json", templateID)
 		}
 	}
 
@@ -100,7 +100,7 @@ func (fs *File) Load(templateID string) (*model.Template, error) {
 
 			// Verify that the action is already defined in the schema.json
 			if _, ok := result.Actions[actionID]; !ok {
-				return nil, derp.New(derp.CodeInternalError, "ghost.service.templateSource.File.Load", "Missing action", actionID)
+				return nil, derp.New(derp.CodeInternalError, "ghost.service.templateSource.File.Load", "Missing action", templateID, actionID)
 			}
 
 			// Try to read the file from the filesystem

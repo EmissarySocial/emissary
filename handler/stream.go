@@ -146,5 +146,5 @@ func getActionID(ctx echo.Context) string {
 		return actionID
 	}
 
-	return "default"
+	return "view"
 }

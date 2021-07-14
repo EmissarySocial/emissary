@@ -6,39 +6,52 @@
 		"url": "example.com/test-template",
 		"title": "Test Template Schema",
 		"type": "object",
-		"properties": {
-			"class": {
-				"type": "string"
-			},
-			"title": {
-				"type": "string",
-				"description": "The human-readable title for this article"
-			},
-			"body": {
-				"type": "string",
-				"description": "The HTML content for this article"
-			},
-			"persons": {
-				"description": "Array of people to render on the page",
-				"type": "array",
-				"items": {
-					"type": "object",
-					"properties": {
-						"name": {
-							"type": "string"
-						},
-						"email": {
-							"type": "string"
-						}
-					}
-				}
+		"properties": {}
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"description": "Folders only have one state"
+		}
+	},
+	"roles": {
+		"editor": {
+			"label": "Editor",
+			"description": "Editors can manage all content in this folder"
+		},
+		"viewer": {
+			"label": "Viewer",
+			"description": "Viewers can access folder contents, but can not add new items"
+		}
+	},
+	"actions": {
+		"view": {
+			"method": "view-stream"
+		},
+		"view-icons": {
+			"method": "view-stream"
+		},
+		"edit": {
+			"label": "Edit folder",
+			"method": "update-data",
+			"form": {
+				"kind": "layout-vertical",
+				"label": "Update Form",
+				"description": "This will update the object in this state",
+				"children": [{
+					"kind": "text",
+					"label": "Label",
+					"path": "label"
+				},
+				{
+					"kind": "textarea",
+					"label": "Description",
+					"path": "description"
+				}]
 			}
 		},
-		"required": [
-			"class",
-			"title",
-			"body",
-			"persons"
-		]
+		"delete": {},
+		"add-child": {},
+		"add-top": {}
 	}
 }

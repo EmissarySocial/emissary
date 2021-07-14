@@ -22,5 +22,46 @@
 				}
 			}
 		}
+	},
+	"states": {
+		"default": {
+			"label": "RSS Folders only have a default state",
+			"description": "Array of people to render on the page"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+		},
+		"editor": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"default": {
+			"method": "view-stream"
+		},
+		"edit": {
+			"method": "update-data",
+			"form": {
+				"kind": "layout-vertical",
+				"roles": ["owner", "editor"],
+				"children": [{
+					"kind": "text",
+					"label": "Name",
+					"path": "label"
+				}, {
+					"kind": "textarea",
+					"label": "Description",
+					"path": "description"
+				}]
+			}
+		}
 	}
-}
+}	
