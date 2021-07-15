@@ -28,9 +28,6 @@
 		"view": {
 			"method": "view-stream"
 		},
-		"view-icons": {
-			"method": "view-stream"
-		},
 		"edit": {
 			"label": "Edit folder",
 			"method": "update-data",

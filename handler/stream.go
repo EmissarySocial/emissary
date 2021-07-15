@@ -60,12 +60,11 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		template := layoutService.Template
 
 		if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
-			return derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template")
+			return derp.Report(derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template"))
 		}
 
 		return ctx.HTML(200, result.String())
 	}
-
 }
 
 // PostStream handles POST/DELETE requests

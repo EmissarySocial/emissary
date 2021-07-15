@@ -166,8 +166,14 @@ func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
 
 // Render generates an HTML output for a stream/view combination.
 func (w Renderer) Render() (template.HTML, error) {
+
 	result, err := w.action.Get(w)
-	return template.HTML(result), derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML")
+
+	if err != nil {
+		return template.HTML(""), derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML"))
+	}
+
+	return template.HTML(result), nil
 }
 
 /////////////////////

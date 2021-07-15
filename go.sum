@@ -7,8 +7,6 @@ github.com/aws/aws-sdk-go v1.34.28 h1:sscPpn/Ns3i0F4HPEWAVcwdIRaZZCuL7llJ2/60yPI
 github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
 github.com/benpate/activitystream v0.2.1 h1:8EAQdvSVp3B6qMGvo+eiAvUV91qP+btsUwJulok6Dho=
 github.com/benpate/activitystream v0.2.1/go.mod h1:GRovgI7jot8pYuu+wNnJUG5+FjtFC+CdI7PRcEX9OhE=
-github.com/benpate/choose v0.1.1 h1:XKggJd4tUP1++xb/BKkzjgxNYSxmq8mZx2V/loa/gDw=
-github.com/benpate/choose v0.1.1/go.mod h1:G2cRkuOCEhnShscBIOvBR+/ilo4ahgSJFpKDqXAEaBY=
 github.com/benpate/compare v0.0.2/go.mod h1:falOuJI4Xf4Eu6SXWb54Vc4I+LvDa01Q4JG2p+wAAlQ=
 github.com/benpate/compare v0.0.4 h1:RFswCSGTpb/Nbt12bfDmsDDGXu/hC8EbS/hd5xkVXNY=
 github.com/benpate/compare v0.0.4/go.mod h1:zmD5F0MljM9f2b0EByHcElUPptfBL/JO9oKsoif8XDo=
@@ -45,8 +43,8 @@ github.com/benpate/path v0.4.1/go.mod h1:sbQantQgf2uJcpHMjcDwA/M7NsDjbYPoqxRvc9p
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.10.2 h1:FVekaiWe8iYkCMGGcnHbep/3PPMyzr2dA8vjlWf3O6U=
 github.com/benpate/schema v0.10.2/go.mod h1:kkIBt46zjSnpjQivOOMltU1RuD6r2brFfkgRPv0V/Cw=
-github.com/benpate/steranko v0.4.2 h1:B0RXNY0F7NKckk03IAY9JAFt0Y7VmZwVrRw2o8qI51o=
-github.com/benpate/steranko v0.4.2/go.mod h1:SBve8CBWX76fU5SmfL9cTxRcUzzIW0dNj6UFRTf13a4=
+github.com/benpate/steranko v0.4.3 h1:MLcGAKtNHpd8cjoN11Ulnd2IHHJvzslI3D8PHhJGTbA=
+github.com/benpate/steranko v0.4.3/go.mod h1:SBve8CBWX76fU5SmfL9cTxRcUzzIW0dNj6UFRTf13a4=
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927/go.mod h1:h/aW8ynjgkuj+NQRlZcDbAbM1ORAbXjXX77sX7T289U=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

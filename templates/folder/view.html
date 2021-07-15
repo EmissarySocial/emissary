@@ -1,35 +1,28 @@
-<div class="tabs">
-	<a href="/{{.Token}}" hx-get="/{{.Token}}" class="selected">Table</a>
-	<a href="/{{.Token}}/view-icons" hx-get="/{{.Token}}/view-icons">Icons</a>
-</div>
-
-<div>
-	<table>
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Description</th>
-				<th>Date</th>
+<table>
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Description</th>
+			<th>Date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ if .UserCan "add-child" }}
+			<tr 
+				hx-get="/{{.Token}}/new" 
+				hx-target="body" 
+				hx-swap="beforeend" 
+				hx-push-url="false"
+				class="link">
+				<td colspan="3">+ Add Stream</td>
 			</tr>
-		</thead>
-		<tbody>
-			{{ if .CanAddChild }}
-				<tr 
-					hx-get="/{{.Token}}/new" 
-					hx-target="body" 
-					hx-swap="beforeend" 
-					hx-push-url="false"
-					class="link">
-					<td colspan="3">+ Add Stream</td>
-				</tr>
-			{{ end }}
-			{{ range .Children "list-item"}}
-				<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
-					<td>{{.Label}}</td>
-					<td>{{.Description}}</td>
-					<td>{{.PublishDate}}</td>
-				</tr>
-			{{ end }}
-		</tbody>
-	</table>
-</div>
+		{{ end }}
+		{{ range .Children "view"}}
+			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
+				<td>{{.Label}}</td>
+				<td>{{.Description}}</td>
+				<td>{{.PublishDate}}</td>
+			</tr>
+		{{ end }}
+	</tbody>
+</table>
