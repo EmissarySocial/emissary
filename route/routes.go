@@ -1,8 +1,13 @@
 package route
 
 import (
+	"net/http"
+	"net/url"
+
+	"github.com/benpate/derp"
 	"github.com/benpate/ghost/handler"
 	"github.com/benpate/ghost/server"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -64,6 +69,25 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
+
+	// CUSTOM ERROR HANDLER
+
+	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
+
+		errorCode := derp.ErrorCode(err)
+
+		switch errorCode {
+		case derp.CodeForbiddenError:
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(ctx.Request().RequestURI))
+			return
+		}
+
+		// Fall through to general error handler
+		if ctx.Request().Host == "localhost" {
+			ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+		}
+		ctx.String(derp.ErrorCode(err), derp.Message(err))
+	}
 
 	return e
 }

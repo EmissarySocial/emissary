@@ -77,6 +77,16 @@
 					"path": "description"
 				}]
 			}
+		},
+		"add-child": {
+			"states": ["default"],
+			"roles": ["owner", "editor"],
+			"method": "add-child"
+		},
+		"share": {
+			"states": ["default"],
+			"roles": ["owner", "editor"],
+			"method": "update-sharing"
 		}
 	}
 }
