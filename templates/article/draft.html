@@ -23,17 +23,17 @@
 		&nbsp;
 		&nbsp;
 
-		{{ if .CanTransition "update"}}
+		{{ if .UserCan "properties"}}
 			<span 
 				preload
-				hx-get="/{{.Token}}/transition/update" 
+				hx-get="/{{.Token}}/properties" 
 				hx-target="body" 
 				hx-swap="beforeend" 
 				hx-push-url="false" 
 				class="button">Info</span>
 		{{ end }}
 
-		{{ if .CanTransition "share"}}
+		{{ if .UserCan "share"}}
 			<span 
 				preload
 				hx-get="/{{.Token}}/transition/share" 
@@ -57,7 +57,7 @@
 		<div>{{.ContentEditor}}</div>
 	</article>
 
-    {{ if .CanAddChild }}
+    {{ if .UserCan "add-child" }}
         <div class="space-after">
             <span 
                 preload
@@ -70,8 +70,8 @@
 	{{ end }}
   	<div class="space-after">
 
-		{{ range .Children "list-item" }}
-			{{.Render}}
+		{{ range .Children "view" }}
+			<a href="{{.Token}}">{{.Label}}</a><br>
 		{{ end }}
 	</div>
 

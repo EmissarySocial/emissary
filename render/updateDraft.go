@@ -21,6 +21,7 @@ func NewAction_UpdateDraft(factory Factory, config model.ActionConfig) UpdateDra
 func (action UpdateDraft) Get(renderer Renderer) (string, error) {
 	return "", nil
 }
+
 func (action UpdateDraft) Post(ctx steranko.Context, stream *model.Stream) error {
 	return nil
 }
