@@ -36,7 +36,7 @@ func (action ViewStream) Get(stream Renderer) (string, error) {
 }
 
 // Post is not supported for this action.
-func (action ViewStream) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action ViewStream) Post(ctx *steranko.Context, stream *model.Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.ViewStream.Get", "Unsupported Method")
 }
 

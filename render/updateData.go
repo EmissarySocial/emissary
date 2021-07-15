@@ -49,7 +49,7 @@ func (action UpdateData) Get(renderer Renderer) (string, error) {
 }
 
 // Post updates the stream with approved data from the request body.
-func (action UpdateData) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateData) Post(ctx *steranko.Context, stream *model.Stream) error {
 
 	// Collect form POST information
 	body := datatype.Map{}

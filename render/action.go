@@ -9,7 +9,7 @@ import (
 // Action configures an individual action function that will be executed when a stream transitions from one state to another.
 type Action interface {
 	Get(Renderer) (string, error)
-	Post(steranko.Context, *model.Stream) error
+	Post(*steranko.Context, *model.Stream) error
 	UserCan(*model.Stream, *model.Authorization) bool
 }
 

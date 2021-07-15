@@ -57,24 +57,6 @@
 		<div>{{.ContentEditor}}</div>
 	</article>
 
-    {{ if .UserCan "add-child" }}
-        <div class="space-after">
-            <span 
-                preload
-                hx-get="/{{.Token}}/new" 
-                hx-target="body" 
-                hx-swap="beforeend" 
-                hx-push-url="false" 
-                class="button">+ Add Stream</span>
-        </div>
-	{{ end }}
-  	<div class="space-after">
-
-		{{ range .Children "view" }}
-			<a href="{{.Token}}">{{.Label}}</a><br>
-		{{ end }}
-	</div>
-
 </div>
 
 <script src="/static/ckeditor5/build/ckeditor.js"></script>

@@ -27,7 +27,6 @@ type Factory struct {
 	streamService       *service.Stream
 	layoutService       *service.Layout
 	subscriptionService *service.Subscription
-	steranko            *steranko.Steranko
 
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker

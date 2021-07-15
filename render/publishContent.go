@@ -21,6 +21,6 @@ func NewAction_PublishContent(factory Factory, config model.ActionConfig) Publis
 func (action PublishContent) Get(renderer Renderer) (string, error) {
 	return "", nil
 }
-func (action PublishContent) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action PublishContent) Post(ctx *steranko.Context, stream *model.Stream) error {
 	return nil
 }

@@ -24,7 +24,7 @@ func (action DeleteStream) Get(renderer Renderer) (string, error) {
 	return "", nil
 }
 
-func (action DeleteStream) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action DeleteStream) Post(ctx *steranko.Context, stream *model.Stream) error {
 
 	var parent model.Stream
 

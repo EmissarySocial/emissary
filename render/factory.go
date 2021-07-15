@@ -9,6 +9,7 @@ import (
 // It is used to pass the domain.Factory internally.
 type Factory interface {
 	Stream() *service.Stream
+	StreamDraft() *service.StreamDraft
 	Template() *service.Template
 	FormLibrary() form.Library
 }

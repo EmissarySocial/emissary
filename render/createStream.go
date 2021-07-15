@@ -31,7 +31,7 @@ func (action CreateStream) Get(renderer Renderer) (string, error) {
 	return "", nil
 }
 
-func (action CreateStream) Post(ctx steranko.Context, parent *model.Stream) error {
+func (action CreateStream) Post(ctx *steranko.Context, parent *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
@@ -48,7 +48,7 @@ func (action CreateStream) Post(ctx steranko.Context, parent *model.Stream) erro
 	// Create new child stream
 	var child model.Stream
 
-	authorization := getAuthorization(&ctx)
+	authorization := getAuthorization(ctx)
 
 	// Try to load the template that will be used
 

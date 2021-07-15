@@ -55,8 +55,8 @@
 			"method": "view-stream"
 		},
 		"draft": {
-			"states": ["default"],
-			"roles": ["owner", "editor"],
+			"_states": ["default"],
+			"_roles": ["owner", "editor"],
 			"method": "update-draft"
 		},
 		"properties": {

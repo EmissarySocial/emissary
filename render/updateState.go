@@ -47,7 +47,7 @@ func (action UpdateState) Get(renderer Renderer) (string, error) {
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (action UpdateState) Post(ctx steranko.Context, stream *model.Stream) error {
+func (action UpdateState) Post(ctx *steranko.Context, stream *model.Stream) error {
 
 	// Collect form POST information
 	body := datatype.Map{}

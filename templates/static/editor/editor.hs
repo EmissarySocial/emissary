@@ -31,14 +31,8 @@ behavior containerInsert
 	init
 		add .container-insert
 
-		log "here?"
-
-	on mouseover
-		log my dataset
-
 	on click
 
-log "here"
 		set body to {
 			"type": "new-item",
             "itemType": "WYSIWYG",
@@ -47,13 +41,10 @@ log "here"
             "check": @data-check
 		}
 
-		log body as JSON
-
 		set url to the location's href
  
 		fetch `${url}` {method:"POST", headers:{"Content-Type": "application/json"}, body: body as JSON}
 		reload() the window's location
-
 
 --------------------------------
 -- WYSIWYG Editor

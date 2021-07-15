@@ -91,8 +91,8 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
-		sterankoContext := ctx.(steranko.Context)
-		authorization := getAuthorization(&sterankoContext)
+		sterankoContext := ctx.(*steranko.Context)
+		authorization := getAuthorization(sterankoContext)
 		action, err := render.NewAction(factory, &stream, &authorization, actionID)
 
 		if err != nil {

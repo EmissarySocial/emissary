@@ -31,7 +31,7 @@ func (action CreateTopStream) Get(renderer Renderer) (string, error) {
 	return "", nil
 }
 
-func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error {
+func (action CreateTopStream) Post(ctx *steranko.Context, _ *model.Stream) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
@@ -49,7 +49,7 @@ func (action CreateTopStream) Post(ctx steranko.Context, _ *model.Stream) error 
 		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Invalid template")
 	}
 
-	authorization := getAuthorization(&ctx)
+	authorization := getAuthorization(ctx)
 
 	// Create new child stream
 	child.TemplateID = "folder"
