@@ -3,7 +3,6 @@ package domain
 import (
 	"fmt"
 
-	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -50,7 +49,7 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 // It is intended to be run in its own goroutine.
 func (b *RealtimeBroker) Listen(factory *Factory) {
 
-	streamService := factory.Stream()
+	//streamService := factory.Stream()
 
 	for {
 
@@ -84,37 +83,26 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 		case stream := <-b.streamUpdates:
 
-			var parent model.Stream
-
-			// If this stream bubbles updates, then search up the stream hierarchy
-			// until we find a stream that doesn't
-			for stream.BubbleUpdates {
-
-				// Gods forbid we're at the top of the tree.  If so, there's nowhere to go.
-				if !stream.HasParent() {
-					break
-				}
-
-				if err := streamService.LoadParent(&stream, &parent); err != nil {
-					derp.Report(derp.Wrap(err, "ghost.domain.RealtimeBroker", "Error loading parent stream from stream.BubbleUpdates"))
-					break
-				}
-
-				stream = parent
-			}
-
 			// Send an update to every client that has subscribed to this stream
 			b.notify(stream)
+
+			/***********
+			Halt notification on parents for now, because of null pointer errors..
 
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
 
+				parent := model.NewStream()
+				parent.Label = "Populated..."
+
 				if err := streamService.LoadParent(&stream, &parent); err != nil {
 					derp.Report(derp.Wrap(err, "ghost.domain.Realtimebroker", "Error loading parent stream to update parent's subscribers."))
+					continue
 				}
 
 				b.notify(parent)
 			}
+			*/
 		}
 	}
 }

@@ -158,7 +158,7 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 	}
 
 	if err := service.LoadByID(stream.ParentID, parent); err != nil {
-		derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
+		return derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
 	}
 
 	return nil

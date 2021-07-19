@@ -55,13 +55,15 @@
 			"method": "view-stream"
 		},
 		"draft": {
-			"_states": ["default"],
 			"_roles": ["owner", "editor"],
 			"method": "update-draft"
 		},
+		"publish": {
+			"_roles": ["owner", "editor"],
+			"method": "publish-draft"
+		},
 		"properties": {
-			"states": ["default"],
-			"roles": ["owner", "editor"],
+			"_roles": ["owner", "editor"],
 			"method": "update-data",
 			"form": {
 				"kind": "layout-vertical",

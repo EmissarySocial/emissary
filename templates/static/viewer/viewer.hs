@@ -12,7 +12,10 @@ eventsource StreamServer
         end
     end
 
-    on htmx:pushedIntoHistory or htmx:historyRestore
+    on htmx:pushedIntoHistory 
+        call StreamServer.open(window.location.pathname + "/sse")
+    
+    on htmx:historyRestore
         call StreamServer.open(window.location.pathname + "/sse")
     end
 

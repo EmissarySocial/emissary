@@ -41,8 +41,11 @@ func NewAction(factory Factory, stream *model.Stream, authorization *model.Autho
 	case "delete-stream":
 		return NewAction_DeleteStream(factory, actionConfig), nil
 
-	case "publish-content":
-		return NewAction_PublishContent(factory, actionConfig), nil
+	case "delete-draft":
+		return NewAction_DeleteDraft(factory, actionConfig), nil
+
+	case "publish-draft":
+		return NewAction_PublishDraft(factory, actionConfig), nil
 
 	case "update-draft":
 		return NewAction_UpdateDraft(factory, actionConfig), nil
