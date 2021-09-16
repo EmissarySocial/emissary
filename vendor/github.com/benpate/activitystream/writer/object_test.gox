@@ -1,0 +1,54 @@
+package writer
+
+import "testing"
+
+func TestExample1(t *testing.T) {
+
+	note := Note().
+		Summary("A note").
+		Content("My dog has fleas.")
+}
+
+func TestExample2(t *testing.T) {
+	note := Note().
+		Namespace("ext", "https://canine-extension.example/terms/").
+		Summary("A note").
+		Content("My dog has fleas.").
+		ExtProperty("ext", "nose", 0).
+		ExtProperty("ext", "smell", "terrible")
+}
+
+func TestExample3(t *testing.T) {
+
+	note := Note()
+
+	note.Context = Combine(DefaultContext(), Context{}.Namespace("css", "http://www.w3.org/ns/oa#styledBy"))
+
+	note.Summary("A note").
+		Content("My dog has fleas.").
+		Property("css", "http://www.csszengarden.com/217/217.css?v=8may2013")
+}
+
+func TestExample4(t *testing.T) {
+
+	record := activity.Create(
+		actor.Person("http://www.test.example/martin"),
+		document.Image("http://example.org/foo.jpg"),
+	).
+		Summary("Martin created an image")
+}
+
+func TestExample5(t *testing.T) {
+
+	record := activity.Add(
+		actor.Person("http://www.test.example/martin").
+			Name("Martin Smith").
+			URL("http://example.org/martin").
+			Image(Link("http://example.org/martin/image.jpg").MediaType("image/jpg")),
+		document.Article("http://www.test.example/blog/abc123/xyz").
+			URL("http:/example.org/blog/2011/02/entry").
+			Name("Why I love Activity Streams"),
+		collection.OrderedCollection("http://example.org/blog").
+			Name("Martin's Blog"),
+	)
+}

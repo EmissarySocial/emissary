@@ -6,10 +6,10 @@ import (
 	"html/template"
 
 	"github.com/benpate/data"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/config"
-	mongodb "github.com/benpate/ghost/data-mongo"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
