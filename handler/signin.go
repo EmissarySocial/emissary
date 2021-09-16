@@ -72,6 +72,7 @@ func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.PostSignOut", "Error Signing Out")
 		}
 
-		return ctx.Redirect(http.StatusSeeOther, "/signin")
+		ctx.Response().Header().Add("HX-Redirect", "/signin")
+		return ctx.NoContent(http.StatusNoContent)
 	}
 }

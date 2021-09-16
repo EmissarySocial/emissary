@@ -23,7 +23,7 @@ func NewRenderer(factory Factory, sterankoContext *steranko.Context, stream mode
 
 	authorization := getAuthorization(sterankoContext)
 
-	action, err := NewAction(factory, &stream, &authorization, actionID)
+	action, err := NewAction(factory, &stream, authorization, actionID)
 
 	if err != nil {
 		return Renderer{}, derp.Wrap(err, "ghost.render.NewRenderer", "Cannot parse Action", stream, actionID)
@@ -179,10 +179,15 @@ func (w Renderer) Render() (template.HTML, error) {
 /////////////////////
 // PERMISSIONS METHODS
 
+// IsSignedIn returns TRUE if the user is signed in
+func (w Renderer) IsAuthenticated() bool {
+	return getAuthorization(w.ctx).IsAuthenticated()
+}
+
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) UserCan(actionID string) bool {
 	authorization := getAuthorization(w.ctx)
-	return w.action.UserCan(&w.stream, &authorization)
+	return w.action.UserCan(&w.stream, authorization)
 }
 
 ///////////////////////////

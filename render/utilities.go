@@ -6,14 +6,15 @@ import (
 )
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
-func getAuthorization(ctx *steranko.Context) model.Authorization {
+func getAuthorization(ctx *steranko.Context) *model.Authorization {
 
 	if claims, err := ctx.Authorization(); err == nil {
 
-		if auth, ok := claims.(model.Authorization); ok {
+		if auth, ok := claims.(*model.Authorization); ok {
 			return auth
 		}
 	}
 
-	return model.Authorization{}
+	result := model.NewAuthorization()
+	return &result
 }

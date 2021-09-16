@@ -28,7 +28,12 @@
 
 		<a href="/home" hx-get="/home" class="space-before space-after">Home</a>
 
-		<a href="/signin" class="space-after">Signin</a>
+		{{ if .IsAuthenticated }}
+			<a href="/profile" class="space-after">My Profile</a>
+			<a hx-post="/signout" hx-target="body" class="space-after">Sign Out</a>
+		{{ else }}
+			<a href="/signin" class="space-after">Sign In</a>
+		{{ end }}
 
 		<div class="space-before space-after"></div>
 		
@@ -46,7 +51,8 @@
 
 </body>
 
-<script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script>
+<!--script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script-->
+<script src="/htmx/htmx.js"></script>
 <script src="/hyperscript/core.js"></script>
 <script src="/hyperscript/web.js"></script>
 <script src="/hyperscript/eventsource.js"></script>

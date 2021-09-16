@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
@@ -66,8 +66,9 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 	return nil
 }
 
+// NewClaims creates a new JWT claim object
 func (service SterankoUserService) NewClaims() jwt.Claims {
-	return model.Authorization{}
+	return model.NewAuthorization()
 }
 
 // Close is required to implement the steranko.UserService interface
