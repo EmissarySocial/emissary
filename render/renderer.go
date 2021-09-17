@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/list"
 	"github.com/benpate/steranko"
 )
 
@@ -107,6 +108,10 @@ func (w Renderer) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+func (w Renderer) IsCurrentStream() bool {
+	return w.stream.Token == list.Head(w.ctx.Path(), "/")
+}
+
 ////////////////////////////////
 // REQUEST INFO
 
@@ -148,7 +153,7 @@ func (w Renderer) Children(viewID string) ([]Renderer, error) {
 }
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Renderer) TopLevel(viewID string) ([]Renderer, error) {
+func (w Renderer) TopFolders(viewID string) ([]Renderer, error) {
 
 	streamService := w.factory.Stream()
 
@@ -186,8 +191,15 @@ func (w Renderer) IsAuthenticated() bool {
 
 // CanView returns TRUE if this Request is authorized to access this stream/view
 func (w Renderer) UserCan(actionID string) bool {
+
 	authorization := getAuthorization(w.ctx)
-	return w.action.UserCan(&w.stream, authorization)
+	action, err := NewAction(w.factory, &w.stream, authorization, actionID)
+
+	if err != nil {
+		return false
+	}
+
+	return action.UserCan(&w.stream, authorization)
 }
 
 ///////////////////////////

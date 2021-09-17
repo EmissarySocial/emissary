@@ -5,7 +5,7 @@ tr.link:hover > td {
 	background-color:rgba(0 ,0, 1, 0.01);
 }
 
-.bold {
+b, strong, .bold {
     font-weight:600;
 }
 

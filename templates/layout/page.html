@@ -26,27 +26,29 @@
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
 
-		<a href="/home" hx-get="/home" class="space-before space-after">Home</a>
+		<a href="/home" hx-get="/home" class="space-before">Home</a>
 
-		{{ if .IsAuthenticated }}
-			<a href="/profile" class="space-after">My Profile</a>
-			<a hx-post="/signout" hx-target="body" class="space-after">Sign Out</a>
-		{{ else }}
-			<a href="/signin" class="space-after">Sign In</a>
+		{{ range .TopFolders "view" }}
+			<a preload hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
 		{{ end }}
 
-		<div class="space-before space-after"></div>
-		
-		<a preload
+		{{ if .UserCan "create-top-folder"}}
+		<a
 			hx-get="/top/new/folder" 
 			hx-target="body" 
 			hx-swap="beforeend" 
 			hx-push-url="false" 
 			class="link">+ Add Folder</a>
-
-		{{ range .TopLevel "list-item" }}
-			<a preload hx-get="/{{.Token}}">{{.Label}}</a>
 		{{ end }}
+
+
+		{{ if .IsAuthenticated }}
+			<a href="/profile" class="space-before">My Profile</a>
+			<a hx-post="/signout" hx-target="body">Sign Out</a>
+		{{ else }}
+			<a href="/signin">Sign In</a>
+		{{ end }}
+		
 	</div>
 
 </body>

@@ -49,13 +49,20 @@ func (actionConfig *ActionConfig) UnmarshalJSON(data []byte) error {
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (actionConfig ActionConfig) UserCan(stream *Stream, authorization *Authorization) bool {
 
+	// If present, "States" limits the states where this action can take place
 	if len(actionConfig.States) > 0 {
+		// If states are present, then the current state MUST be included in the list.
+		// Otherwise, reject this action.
 		if !matchOne(actionConfig.States, stream.StateID) {
 			return false
 		}
 	}
 
+	// If present, "Roles" limits the user roles that can take this action
 	if len(actionConfig.Roles) > 0 {
+
+		// The user must have AT LEAST ONE of the named roles to take this action.
+		// If not, reject this action.
 		roles := stream.Roles(authorization)
 
 		if !matchAny(roles, actionConfig.Roles) {
@@ -63,6 +70,7 @@ func (actionConfig ActionConfig) UserCan(stream *Stream, authorization *Authoriz
 		}
 	}
 
+	// All filters have passed.  Allow this action.
 	return true
 }
 

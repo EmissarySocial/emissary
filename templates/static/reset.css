@@ -1,5 +1,4 @@
 html {
-    line-height:1.15; /* correct line height in all browsers */
     -webkit-text-size-adjust: 100%; /* prevents font size changes after orientation changes in iOS */
 }
 
@@ -13,10 +12,10 @@ td, footer, header, menu, nav, section, video {
     box-sizing: border-box;
 
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-	font-weight: 400;
+	font-weight: 300;
 	font-style: inherit;
-	font-size: 100%;
-    line-height:135%;
+	font-size: 13pt;
+    line-height:150%;
 
     text-decoration: none;
     text-align: left;
@@ -25,7 +24,6 @@ td, footer, header, menu, nav, section, video {
 
 body {
     background-color: white;
-    line-height: 1;
     color: black;
 }
 

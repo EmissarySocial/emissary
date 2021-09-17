@@ -81,14 +81,16 @@
 			}
 		},
 		"add-child": {
-			"states": ["default"],
 			"roles": ["owner", "editor"],
 			"method": "add-child"
 		},
 		"share": {
-			"states": ["default"],
 			"roles": ["owner", "editor"],
 			"method": "update-sharing"
+		},
+		"create-top-folder": {
+			"_roles": ["owner"],
+			"method": "create-top-stream"
 		}
 	}
 }
