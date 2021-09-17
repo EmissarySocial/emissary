@@ -1,8 +1,6 @@
 package steranko
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -27,39 +25,6 @@ func (s *Steranko) createJWT(user User) (string, error) {
 	}
 
 	return signedString, nil
-}
-
-// setJWT applies a JWT token to the response context, using configuration
-// options to determine if a header value or a cookie should be used.
-func (s *Steranko) setJWT(ctx echo.Context, token string) {
-
-	// Set Cookies
-	ctx.SetCookie(&http.Cookie{
-		Name:     cookieName(ctx),
-		Value:    token,                   // Set the cookie's value
-		MaxAge:   63072000,                // Max-Age is 2 YEARS (60s * 60min * 24h * 365d * 2y)
-		Path:     "/",                     // This allows the cookie on all paths of this site.
-		Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
-		HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
-		SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
-		// NOTE: Domain is excluded because it is less restrictive than omitting it. [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies]
-	})
-
-	// TODO: refresh tokens after XX amount of time.
-	/* Remove old code for now. May want to re-enable authentication tokens in the header at some point in the future.
-
-	// Return Tokens??
-	location, name := list.Split(s.Config.Token, ":")
-
-	if location == "cookie" {
-		ctx.SetCookie(&http.Cookie{
-			Name:  name,
-			Value: token,
-		})
-	} else {
-		ctx.Response().Header().Set(name, token)
-	}
-	*/
 }
 
 // cookieName returns the correct cookie name to use, based on the kind of connection.

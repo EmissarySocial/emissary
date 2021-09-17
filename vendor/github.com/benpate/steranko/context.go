@@ -2,7 +2,6 @@ package steranko
 
 import (
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
@@ -43,8 +42,6 @@ func (ctx *Context) Authorization() (jwt.Claims, error) {
 		// Save this value in the context for next time.
 		ctx.claims = claims
 	}
-
-	spew.Dump("context.Authorization", ctx.claims)
 
 	return ctx.claims, nil
 }

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -12,14 +11,14 @@ type Authorization struct {
 	GroupIDs    []primitive.ObjectID `json:"G"` // IDs for all server-level groups that the User belongs to
 	DomainOwner bool                 `json:"D"` // If TRUE, then this user is an owner of this domain
 
-	jwt.StandardClaims // By embedding the "StandardClaims" object, this record can support standard behaviors, like token expieration, etc.
+	jwt.StandardClaims // By embedding the "StandardClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
 
 // NewAuthorization generates a fully initialized Authorization object.
 func NewAuthorization() Authorization {
 
 	result := Authorization{
-		UserID:      primitive.NewObjectID(),
+		UserID:      primitive.NilObjectID,
 		GroupIDs:    []primitive.ObjectID{},
 		DomainOwner: false,
 	}
@@ -32,18 +31,13 @@ func NewAuthorization() Authorization {
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
 func (authorization *Authorization) IsAuthenticated() bool {
 
-	spew.Dump(authorization)
-
 	if authorization.UserID.IsZero() {
-		spew.Dump("zero")
 		return false
 	}
 
 	if authorization.StandardClaims.Valid() != nil {
-		spew.Dump("invalid")
 		return false
 	}
 
-	spew.Dump("true")
 	return true
 }

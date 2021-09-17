@@ -33,7 +33,16 @@ func (s *Steranko) SignIn(ctx echo.Context) error {
 		return derp.New(derp.CodeInternalError, "steranko.Signin", "Internal error.  Please try again later.")
 	}
 
-	s.setJWT(ctx, token)
+	ctx.SetCookie(&http.Cookie{
+		Name:     cookieName(ctx),
+		Value:    token,                   // Set the cookie's value
+		MaxAge:   63072000,                // Max-Age is 2 YEARS (60s * 60min * 24h * 365d * 2y)
+		Path:     "/",                     // This allows the cookie on all paths of this site.
+		Secure:   ctx.IsTLS(),             // Set secure cookies if we're on a secure connection
+		HttpOnly: true,                    // Cookies should only be accessible via HTTPS (not client-side scripts)
+		SameSite: http.SameSiteStrictMode, // Strict same-site policy prevents cookies from being used by other sites.
+		// NOTE: Domain is excluded because it is less restrictive than omitting it. [https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies]
+	})
 
 	return nil
 }

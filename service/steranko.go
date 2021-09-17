@@ -68,7 +68,8 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 
 // NewClaims creates a new JWT claim object
 func (service SterankoUserService) NewClaims() jwt.Claims {
-	return model.NewAuthorization()
+	result := model.NewAuthorization()
+	return &result
 }
 
 // Close is required to implement the steranko.UserService interface
