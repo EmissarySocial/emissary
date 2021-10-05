@@ -93,7 +93,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		authorization := getAuthorization(sterankoContext)
-		action, err := render.NewAction(factory, &stream, &authorization, actionID)
+		action, err := render.NewAction(factory, &stream, authorization, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.StreamPost", "Error finding actionConfig", stream, actionID)
@@ -111,18 +111,18 @@ func isPartialPageRequest(ctx echo.Context) bool {
 }
 
 // getAuthorization unwraps the model.Authorization object that is embedded in the context.
-func getAuthorization(sterankoContext *steranko.Context) model.Authorization {
+func getAuthorization(sterankoContext *steranko.Context) *model.Authorization {
 
 	// get the authorization from the steranko.Context.  The context can ONLY be this one type.
 	authorization, err := sterankoContext.Authorization()
 
 	// handle errors
 	if err != nil {
-		return model.Authorization{}
+		return &model.Authorization{}
 	}
 
 	// Cast the result as a model.Authorization object.  The authorization can ONLY be this one type.
-	return authorization.(model.Authorization)
+	return authorization.(*model.Authorization)
 }
 
 // getStreamToken returns the :stream token from the Request (or a default)
