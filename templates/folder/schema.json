@@ -49,6 +49,10 @@
 		},
 		"delete": {},
 		"add-child": {},
-		"add-top": {}
+		"add-top": {},
+		"create-top-folder": {
+			"_roles": ["owner"],
+			"method": "create-top-stream"
+		}
 	}
 }

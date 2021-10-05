@@ -37,7 +37,7 @@ func (element *Element) Name(value string) *Element {
 
 // Script adds a "data-script" attribute to the Element (hyperscript)
 func (element *Element) Script(value string) *Element {
-	return element.Attr("data-script", value)
+	return element.Attr("_", value)
 }
 
 // Type adds a "type" attribute to the Element

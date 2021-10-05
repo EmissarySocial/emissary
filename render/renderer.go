@@ -112,6 +112,11 @@ func (w Renderer) IsCurrentStream() bool {
 	return w.stream.Token == list.Head(w.ctx.Path(), "/")
 }
 
+func (w Renderer) Roles() []string {
+	authorization := getAuthorization(w.ctx)
+	return w.stream.Roles(authorization)
+}
+
 ////////////////////////////////
 // REQUEST INFO
 

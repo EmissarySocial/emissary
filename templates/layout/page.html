@@ -16,6 +16,14 @@
 	<link rel="stylesheet" href="/static/accessibility.css">
 	<link rel="stylesheet" href="/static/utilities.css">
 
+	<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
+	<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
+
+	<!--
+	<script src="https://unpkg.com/hyperscript.org"></script>
+	<script src="https://unpkg.com/htmx.org"></script>
+	-->
+
 </head>
 
 <body hx-ext="preload">
@@ -32,31 +40,28 @@
 			<a preload hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
 		{{ end }}
 
-		{{ if .UserCan "create-top-folder"}}
-		<a
-			hx-get="/top/new/folder" 
+		{{ if .UserCan "manage-folders"}}
+		<a script="install modal('/admin/folders')" class="link">
+		<!--	hx-get="/admin/folders" 
 			hx-target="body" 
 			hx-swap="beforeend" 
 			hx-push-url="false" 
-			class="link">+ Add Folder</a>
+			class="link"-->
+			Manage Folders</a>
 		{{ end }}
-
 
 		{{ if .IsAuthenticated }}
 			<a href="/profile" class="space-before">My Profile</a>
 			<a hx-post="/signout" hx-target="body">Sign Out</a>
 		{{ else }}
-			<a href="/signin">Sign In</a>
+			<a href="/signin" class="space-before">Sign In</a>
 		{{ end }}
 		
 	</div>
 
-</body>
+	<script src="/htmx/htmx.js"></script>
+	<script src="/hyperscript/_hyperscript.js"></script>
 
-<!--script src="https://cdn.jsdelivr.net/gh/bigskysoftware/htmx@dev/src/htmx.js"></script-->
-<script src="/htmx/htmx.js"></script>
-<script src="/hyperscript/core.js"></script>
-<script src="/hyperscript/web.js"></script>
-<script src="/hyperscript/eventsource.js"></script>
+</body>
 
 </html>

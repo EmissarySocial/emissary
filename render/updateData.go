@@ -45,7 +45,8 @@ func (action UpdateData) Get(renderer Renderer) (string, error) {
 		return "", derp.Wrap(err, "ghost.render.UpdateData.Get", "Error generating form")
 	}
 
-	return result, nil
+	// Wrap result as a modal dialog
+	return WrapModalForm(renderer, result), nil
 }
 
 // Post updates the stream with approved data from the request body.

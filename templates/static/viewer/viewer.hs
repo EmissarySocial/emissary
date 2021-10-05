@@ -1,7 +1,7 @@
 
 init 
-
-    call StreamServer.connect(window.location + "/sse")
+    log (window.location + "/sse")
+    -- call StreamServer.connect(window.location + "/sse")
 
 
 eventsource StreamServer

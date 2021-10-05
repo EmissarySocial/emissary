@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/static/editor/editor.css" />
 <script type="text/hyperscript" src="/static/editor/editor.hs"></script>
-<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
+<script src="/static/ckeditor5/build/ckeditor.js"></script>
 
 <div>
 
@@ -24,13 +24,7 @@
 		&nbsp;
 
 		{{ if .UserCan "properties"}}
-			<span 
-				preload
-				hx-get="/{{.Token}}/properties" 
-				hx-target="body" 
-				hx-swap="beforeend" 
-				hx-push-url="false" 
-				class="button">Info</span>
+			<span script="install AsModal()" hx-get="/{{.Token}}/properties" class="button">Info</span>
 		{{ end }}
 
 		{{ if .UserCan "share"}}
@@ -58,5 +52,3 @@
 	</article>
 
 </div>
-
-<script src="/static/ckeditor5/build/ckeditor.js"></script>

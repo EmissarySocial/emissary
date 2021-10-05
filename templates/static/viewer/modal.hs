@@ -1,7 +1,14 @@
-on click from .modal-underlay 
-    log event
-    log #modal
-    send closeModal to #modal
+behavior AsModal()
+
+    init
+        put "body" into [@hx-target]
+        put "beforeend" into [@hx-swap]
+        put "false" into [@hx-push-url]
+        put "true" into [@data-preload]
+
+        call htmx.process(me)
+    end
+end
 
 on closeModal(event)
     add .closing to #modal

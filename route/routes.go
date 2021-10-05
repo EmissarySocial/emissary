@@ -25,8 +25,8 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factoryManager))
 
 	// Local links for static resources
-	e.Static("/htmx", "../htmx/src")
-	e.Static("/hyperscript", "../_hyperscript/src/lib")
+	e.Static("/htmx", "../htmx/dist")
+	e.Static("/hyperscript", "../_hyperscript/dist")
 	e.Static("/static", "templates/static")
 
 	// RSS Feed

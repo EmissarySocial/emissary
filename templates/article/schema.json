@@ -55,7 +55,7 @@
 			"method": "view-stream"
 		},
 		"draft": {
-			"_roles": ["owner", "editor"],
+			"roles": ["owner", "editor"],
 			"method": "update-draft"
 		},
 		"publish": {

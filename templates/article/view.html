@@ -1,10 +1,11 @@
-<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
-<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
-
 <div hx-get="{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
-	{{ if .UserCan "edit"}}
-		<a href="/{{.Token}}/draft" class="button primary" preload style="float:right;">Edit</a>
+	{{ if .UserCan "draft"}}
+		<a href="/{{.Token}}/draft" class="button" preload style="float:right;">Edit</a>
+	{{ end }}
+
+	{{ if .UserCan "properties"}}
+		<span script="install AsModal" hx-get="/{{.Token}}/properties" style="float:right;" class="button">Info</span>
 	{{ end }}
 
 	{{ if .HasParent }}
@@ -31,3 +32,5 @@
 	</div>
 
 </div>
+
+{{.Roles}}
