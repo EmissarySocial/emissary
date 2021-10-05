@@ -1,7 +1,0 @@
-{
-	"roles": [{
-		"roleId": "OWNER",
-		"label": "Domain Owner",
-		"decription": "Full control"
-	}]
-}

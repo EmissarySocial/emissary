@@ -10,6 +10,8 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -43,7 +45,6 @@ func (service *Subscription) start() {
 	defer ticker.Stop()
 
 	for {
-		<-ticker.C
 		fmt.Println(".. Polling Subscriptions")
 		it, err := service.ListPollable()
 
@@ -58,6 +59,8 @@ func (service *Subscription) start() {
 			service.pollSubscription(&subscription)
 			subscription = model.Subscription{}
 		}
+
+		<-ticker.C
 	}
 }
 
@@ -107,13 +110,36 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 	}
 
 	// If stream has been updated since previous save, then set new values
-	if stream.SourceUpdated != updateDate {
+	if true || stream.SourceUpdated != updateDate {
 
 		stream.Label = item.Title
 		stream.Description = item.Description
 		stream.Content = content.FromHTML(item.Content)
 		stream.PublishDate = item.PublishedParsed.Unix()
 		stream.SourceUpdated = updateDate
+
+		if item.Author == nil {
+			stream.AuthorName = ""
+			// stream.AuthorEmail = ""
+		} else {
+			stream.AuthorName = item.Author.Name
+			// stream.AuthorEmail = item.Author.Email
+		}
+
+		if item.Image != nil {
+			stream.ThumbnailImage = item.Image.URL
+		} else {
+			stream.ThumbnailImage = ""
+
+			// Search for an image in the enclosures
+			for _, enclosure := range item.Enclosures {
+				spew.Dump(enclosure)
+				if list.Head(enclosure.Type, "/") == "image" {
+					stream.ThumbnailImage = enclosure.URL
+					break
+				}
+			}
+		}
 
 		if err := service.streamService.Save(&stream, "Imported from RSS feed"); err != nil {
 			return derp.Wrap(err, "ghost.service.Subscription.Poll", "Error saving stream")

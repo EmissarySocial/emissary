@@ -1,5 +1,4 @@
 {
-	"id": "RSS-ARTICLE",
 	"label": "RSS Article",
 	"description": "Link to an external article from an RSS Feed.",
 	"containedBy": [
@@ -8,5 +7,45 @@
 	"schema": {
 		"type": "object",
 		"properties": {}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+		}
+	},
+	"states": {
+		"unread": {
+			"label": "Unread"
+		}, 
+		"read": {
+			"label": "Read"
+		}
+	},
+	"actions": {
+		"view": {
+			"method": "view-stream",
+			"then": [{
+				"method": "update-state",
+				"states": ["unread"],
+				"args": {
+					"newStateId": "read"
+				}
+			}]
+		},
+		"mark-read": {
+			"method": "update-state",
+			"args": {
+				"newStateId": "read"
+			},
+			"states": ["unread"]
+		},
+		"mark-unread": {
+			"method": "update-state",
+			"args": {
+				"newStateId": "unread"
+			},
+			"states": ["read"]
+		}
 	}
 }
