@@ -11,12 +11,22 @@ b, strong, .bold {
 
 .hidden {display:none}
 
+.space-above,
 .space-before {
     margin-top: 20px;
 }
 
+.space-below,
 .space-after {
     margin-bottom: 20px;
+}
+
+.space-left {
+    margin-left:20px;
+}
+
+.space-right {
+    margin-right: 20px;
 }
 
 [stream].htmx-settling {

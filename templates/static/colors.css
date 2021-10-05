@@ -1,7 +1,6 @@
 
 /********************
 * Dark Mode Colors
-*********************/
 
 @media (prefers-color-scheme: dark) {
 	html {
@@ -28,3 +27,4 @@
 		color:white;
 	}
 }
+*********************/
