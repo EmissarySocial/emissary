@@ -59,7 +59,7 @@ func (action UpdateState) Post(ctx *steranko.Context, stream *model.Stream) erro
 	allPaths := action.form().AllPaths()
 	for _, field := range allPaths {
 		p := path.New(field.Path)
-		if err := stream.SetPath(p, body); err != nil {
+		if err := stream.SetPath(p, body[p.String()]); err != nil {
 			return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateState.Post", "Error seting value", field)
 		}
 	}

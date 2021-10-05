@@ -62,7 +62,7 @@ func (action UpdateData) Post(ctx *steranko.Context, stream *model.Stream) error
 	allPaths := action.form().AllPaths()
 	for _, field := range allPaths {
 		p := path.New(field.Path)
-		if err := stream.SetPath(p, body); err != nil {
+		if err := stream.SetPath(p, body[p.String()]); err != nil {
 			return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateData.Post", "Error seting value", field)
 		}
 	}
@@ -70,7 +70,7 @@ func (action UpdateData) Post(ctx *steranko.Context, stream *model.Stream) error
 	// Try to update the stream
 	streamService := action.factory.Stream()
 
-	if err := streamService.Save(stream, "Moved to new State"); err != nil {
+	if err := streamService.Save(stream, "Properties Updated"); err != nil {
 		return derp.Wrap(err, "ghost.render.UpdateData.Post", "Error updating state")
 	}
 
