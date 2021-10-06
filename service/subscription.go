@@ -45,6 +45,7 @@ func (service *Subscription) start() {
 	defer ticker.Stop()
 
 	for {
+		<-ticker.C
 		fmt.Println(".. Polling Subscriptions")
 		it, err := service.ListPollable()
 
@@ -59,8 +60,6 @@ func (service *Subscription) start() {
 			service.pollSubscription(&subscription)
 			subscription = model.Subscription{}
 		}
-
-		<-ticker.C
 	}
 }
 

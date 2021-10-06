@@ -5,16 +5,28 @@ import (
 
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
+	"github.com/benpate/derp"
 )
 
 // ActionConfig stores the configuration information for each Action that can be taken on a Stream
 type ActionConfig struct {
-	ActionID string   `json:"actionId"`
-	Method   string   `json:"method"`
-	States   []string `json:"states"`
-	Roles    []string `json:"roles"`
+	ActionID string         `json:"actionId"`
+	Method   string         `json:"method"`
+	States   []string       `json:"states"`
+	Roles    []string       `json:"roles"`
+	Then     []ActionConfig `json:"then"`
 
 	datatype.Map `json:"args"`
+}
+
+// NewActionConfig returns a fully initialized ActionConfig object
+func NewActionConfig() ActionConfig {
+	return ActionConfig{
+		States: make([]string, 0),
+		Roles:  make([]string, 0),
+		Then:   make([]ActionConfig, 0),
+		Map:    datatype.NewMap(),
+	}
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface
@@ -28,6 +40,12 @@ func (actionConfig *ActionConfig) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	return actionConfig.UnmarshalMap(dataMap)
+}
+
+// UnmarshalMap copies data from a generic map into this ActionConfig
+func (actionConfig *ActionConfig) UnmarshalMap(dataMap map[string]interface{}) error {
+
 	for key, value := range dataMap {
 		switch key {
 		case "actionId":
@@ -38,12 +56,51 @@ func (actionConfig *ActionConfig) UnmarshalJSON(data []byte) error {
 			actionConfig.States = convert.SliceOfString(value)
 		case "roles":
 			actionConfig.Roles = convert.SliceOfString(value)
+		case "then":
+			then, err := convertSliceOfActionConfig(value)
+			if err != nil {
+				return derp.Wrap(err, "ghost.model.ActionConfig.UnmarshalMap", "Error processing 'then' properties")
+			}
+			actionConfig.Then = then
+
 		default:
 			actionConfig.Map[key] = value
 		}
 	}
 
 	return nil
+}
+
+// convertSliceOfActionConfig attempts to generate a slice of action
+func convertSliceOfActionConfig(data interface{}) ([]ActionConfig, error) {
+
+	// Empty data sets are okay.
+	if data == nil {
+		return make([]ActionConfig, 0), nil
+	}
+
+	// Try to convert the data into an array/slice
+	if sliceOfInterface, ok := data.([]interface{}); ok {
+
+		result := make([]ActionConfig, len(sliceOfInterface))
+
+		for index, value := range sliceOfInterface {
+
+			result[index] = NewActionConfig()
+
+			if dataMap, ok := value.(map[string]interface{}); ok {
+
+				if err := result[index].UnmarshalMap(dataMap); err != nil {
+					return nil, derp.Wrap(err, "ghost.model.convertSliceOfActionConfig", "Error unmarshalling map")
+				}
+			}
+		}
+
+		return result, nil
+	}
+
+	// Fall through means this is not a slice
+	return nil, derp.New(derp.CodeBadRequestError, "ghost.model.convertSliceOfActionConfig", "Invalid type", data)
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)

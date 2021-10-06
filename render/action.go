@@ -29,6 +29,12 @@ func NewAction(factory Factory, stream *model.Stream, authorization *model.Autho
 		return nil, derp.New(derp.CodeForbiddenError, "ghost.render.NewAction", "Forbidden", stream, authorization)
 	}
 
+	return NewActionFromConfig(factory, actionConfig)
+}
+
+// NewActionFromConfig uses an ActionConfig object to create a new action
+func NewActionFromConfig(factory Factory, actionConfig model.ActionConfig) (Action, error) {
+
 	// Populate the action with the data from
 	switch actionConfig.Method {
 

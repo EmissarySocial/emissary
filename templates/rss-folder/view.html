@@ -11,10 +11,18 @@
 						</div>
 					</td>
 					<td>
-						<div class="bold">{{.Label}}</div>
-						<div class="light space-below">{{.Description}}</div>
+						<div class="bold">{{.Label}}
+							{{ if eq .StateID "unread" }}
+							<span hx-post="/{{.Token}}/mark-read"
+							hx-trigger="revealed"
+							hx-swap="outerHTML"
+							hx-target="this"
+							hx-push-url="false"></span>
+							{{ end }}
+						</div>
+						<div class="light">{{.Description}}</div>
+						<div class="small light space-below">{{.PublishDate}}</div>
 					</td>
-					<td>{{.PublishDate}}</td>
 				</tr>
 			{{ end }}
 		</tbody>

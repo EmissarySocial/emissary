@@ -52,6 +52,11 @@ func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
+// StateID returns the current state of the stream being renderer
+func (w Renderer) StateID() string {
+	return w.stream.StateID
+}
+
 func (w Renderer) TemplateID() string {
 	return w.stream.TemplateID
 }

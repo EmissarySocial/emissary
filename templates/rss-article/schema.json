@@ -24,28 +24,17 @@
 	},
 	"actions": {
 		"view": {
-			"method": "view-stream",
-			"then": [{
-				"method": "update-state",
-				"states": ["unread"],
-				"args": {
-					"newStateId": "read"
-				}
-			}]
+			"method": "view-stream"
 		},
 		"mark-read": {
 			"method": "update-state",
-			"args": {
-				"newStateId": "read"
-			},
-			"states": ["unread"]
+			"states": ["unread"],
+			"newStateId": "read"
 		},
 		"mark-unread": {
 			"method": "update-state",
-			"args": {
-				"newStateId": "unread"
-			},
-			"states": ["read"]
+			"states": ["read"],
+			"newStateId": "unread"
 		}
 	}
 }

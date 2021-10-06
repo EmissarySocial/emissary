@@ -9,6 +9,11 @@ import (
 // Map implements some quality of life extensions to a standard map[string]interface{}
 type Map map[string]interface{}
 
+// NewMap returns a fully initialized Map object.
+func NewMap() Map {
+	return Map(map[string]interface{}{})
+}
+
 // GetInterface returns a named option without any conversion.  You get what you get.
 func (m Map) GetInterface(name string) interface{} {
 	return m[name]
