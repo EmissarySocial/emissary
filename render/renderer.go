@@ -2,7 +2,6 @@ package render
 
 import (
 	"html/template"
-	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -89,8 +88,8 @@ func (w Renderer) ContentEditor() template.HTML {
 }
 
 // PublishDate returns the PublishDate of the stream being rendered
-func (w Renderer) PublishDate() time.Time {
-	return time.Unix(w.stream.PublishDate, 0)
+func (w Renderer) PublishDate() int64 {
+	return w.stream.PublishDate
 }
 
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered

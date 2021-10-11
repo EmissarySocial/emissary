@@ -21,7 +21,7 @@
 			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
 				<td>{{.Label}}</td>
 				<td>{{.Description}}</td>
-				<td>{{.PublishDate}}</td>
+				<td><div script="install PrettyDate(date:{{.PublishDate}})"></div></td>
 			</tr>
 		{{ end }}
 	</tbody>
