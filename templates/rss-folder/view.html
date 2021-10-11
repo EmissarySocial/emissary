@@ -1,4 +1,10 @@
 <div>
+	<div style="float:right;">
+		{{if .UserCan "info"}}
+			<span class="button" hx-get="/{{.Token}}/info" script="install AsModal()">Info</span>
+		{{end }}
+	</div>
+	<h1>{{.Label}}</h1>
 	<table>
 		<tbody>
 			{{ range .Children "view"}}
