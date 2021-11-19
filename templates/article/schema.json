@@ -54,22 +54,22 @@
 		"view": {
 			"roles": [],
 			"states": [],
-			"command": "view"
+			"step": "view-stream"
 		},
 		"draft": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"command": "draft"
+			"step": "draft"
 		},
 		"publish": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"command": "draft-publish"
+			"step": "draft-publish"
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"commands": [{
+			"steps": [{
 				"method": "data",
 				"form": {
 					"kind": "layout-vertical",
@@ -90,17 +90,17 @@
 		"add-child": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"command": "add-child"
+			"step": "add-child"
 		},
 		"share": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"command": "update-sharing"
+			"step": "update-sharing"
 		},
 		"create-top-folder": {
 			"roles": ["owner"],
 			"states": [],
-			"command": "create-top-stream"
+			"step": "create-top-stream"
 		}
 	}
 }

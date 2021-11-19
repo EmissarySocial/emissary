@@ -45,5 +45,5 @@ func NewStep(factory Factory, config datatype.Map) (Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "ghost.remder.NewAction", "Invalid action configuration", config)
+	return nil, derp.New(derp.CodeInternalError, "ghost.render.NewStep", "Invalid action configuration", config)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 )
 
 // mustTemplate guarantees that a value is a template.Template, or else it is replaced with an empty template.
@@ -18,6 +19,11 @@ func mustTemplate(data interface{}) *template.Template {
 	}
 
 	return template.New("mising")
+}
+
+// isPartialPageRequest returns TRUE if this request was made by `hx-get`
+func isPartialPageRequest(ctx echo.Context) bool {
+	return (ctx.Request().Header.Get("HX-Request") != "")
 }
 
 // getActionID returns the :action token from the Request (or a default)

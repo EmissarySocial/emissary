@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 
 	"encoding/json"
 	"io/ioutil"
@@ -142,6 +143,12 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 		}
 	}
 
+	t.Validate()
+
+	if t.TemplateID == "article" {
+		spew.Dump(t.Actions)
+	}
+
 	// Save the Template into the memory cache
 	service.Save(t)
 
@@ -153,8 +160,8 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
  * REAL-TIME UPDATES
  *******************************************/
 
-// watch must be run as a goroutine, and constantly monitors the "Updates" channel for
-// news that a template has been updated.
+// watch must be run as a goroutine, and constantly monitors the
+// "Updates" channel for news that a template has been updated.
 func (service *Template) watch() {
 
 	watcher, err := fsnotify.NewWatcher()

@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Template represents an HTML template to be used for generating an HTML page.
@@ -52,7 +53,13 @@ func (template *Template) State(stateID string) (State, bool) {
 }
 
 func (template *Template) Action(actionID string) (Action, bool) {
+	spew.Dump("----------------")
+	spew.Dump("Template Service.Action()")
+	spew.Dump(actionID)
+
 	action, ok := template.Actions[actionID]
+
+	spew.Dump(action, ok)
 	return action, ok
 }
 
@@ -72,4 +79,14 @@ func (template *Template) GetPath(p path.Path) (interface{}, error) {
 	}
 
 	return nil, derp.New(500, "ghost.model.Template.GetPath", "Unrecognized Path", p)
+}
+
+// Validate runs any post-processing required after a Template is parsed by the TemplateService
+func (template *Template) Validate() {
+
+	for actionID, action := range template.Actions {
+		action.ActionID = actionID
+		action.Validate()
+		template.Actions[actionID] = action
+	}
 }

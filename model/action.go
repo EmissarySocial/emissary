@@ -9,8 +9,8 @@ type Action struct {
 	ActionID string         `json:"actionID" bson:"actionID"` // Unique ID for this action.
 	Roles    []string       `json:"roles"    bson:"roles"`    // List of roles required to execute this Action.  If empty, then none are required.
 	States   []string       `json:"states"   bson:"states"`   // List of states required to execute this Action.  If empty, then one are required.
-	Step     string         `json:"command"  bson:"command"`  // Shortcut for a single step to execute for this Action (all parameters are defaults)
-	Steps    []datatype.Map `json:"commands" bson:"commands"` // List of steps to execute when GET-ing or POST-ing this Action.
+	Step     string         `json:"step"     bson:"step"`     // Shortcut for a single step to execute for this Action (all parameters are defaults)
+	Steps    []datatype.Map `json:"steps"    bson:"steps"`    // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
 // NewAction returns a fully initialized Action
@@ -48,6 +48,21 @@ func (action Action) UserCan(stream *Stream, authorization *Authorization) bool 
 
 	// All filters have passed.  Allow this action.
 	return true
+}
+
+// Validate runs any required post-processing steps after
+// an action is loaded from JSON
+func (action *Action) Validate() {
+
+	if len(action.Steps) == 0 {
+		if action.Step != "" {
+			// Convert action.Step into a default action
+			action.Steps = []datatype.Map{{
+				"method": action.Step,
+			}}
+			action.Step = ""
+		}
+	}
 }
 
 // matchOne returns TRUE if the value matches one (or more) of the values in the slice

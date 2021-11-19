@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -26,6 +27,9 @@ func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, ac
 	// Try to load the Template associated with this Stream
 	templateService := factory.Template()
 	template, err := templateService.Load(stream.TemplateID)
+
+	spew.Dump(template.TemplateID)
+	spew.Dump(template.Actions)
 
 	if err != nil {
 		return Renderer{}, model.Action{}, derp.Wrap(err, "ghost.render.NewRenderer", "Cannot load Stream Template", stream)

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -42,10 +43,16 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
 		}
 
+		spew.Dump(stream)
+		spew.Dump(action)
+
 		// Execute all of the steps of the requested action
 		for _, stepInfo := range action.Steps {
 
+			spew.Dump(stepInfo)
 			step, err := render.NewStep(factory, stepInfo)
+
+			spew.Dump(step)
 
 			if err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
@@ -157,26 +164,6 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		return nil
 	}
-}
-
-// isPartialPageRequest returns TRUE if this request was made by `hx-get`
-func isPartialPageRequest(ctx echo.Context) bool {
-	return (ctx.Request().Header.Get("HX-Request") != "")
-}
-
-// getAuthorization unwraps the model.Authorization object that is embedded in the context.
-func getAuthorization(sterankoContext *steranko.Context) *model.Authorization {
-
-	// get the authorization from the steranko.Context.  The context can ONLY be this one type.
-	authorization, err := sterankoContext.Authorization()
-
-	// handle errors
-	if err != nil {
-		return &model.Authorization{}
-	}
-
-	// Cast the result as a model.Authorization object.  The authorization can ONLY be this one type.
-	return authorization.(*model.Authorization)
 }
 
 // getStreamToken returns the :stream token from the Request (or a default)
