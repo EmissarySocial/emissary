@@ -83,7 +83,7 @@ func (service *Subscription) pollSubscription(sub *model.Subscription) {
 
 func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.Item) error {
 
-	var stream model.Stream
+	stream := model.NewStream()
 
 	err := service.streamService.LoadBySource(sub.ParentStreamID, item.Link, &stream)
 
@@ -95,7 +95,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 		}
 
 		// Fall through means "not found" which means "make a new stream"
-		stream = service.streamService.New()
+		stream = model.NewStream()
 		stream.TemplateID = "rss-article"
 		stream.ParentID = sub.ParentStreamID
 		stream.SourceURL = item.Link

@@ -1,12 +1,9 @@
-package render
+package command
 
 import (
 	"html/template"
-	"net/http"
 
-	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
@@ -18,38 +15,6 @@ func mustTemplate(data interface{}) *template.Template {
 	}
 
 	return template.New("mising")
-}
-
-// getActionID returns the :action token from the Request (or a default)
-func getActionID(ctx *steranko.Context) string {
-
-	if ctx.Request().Method == http.MethodDelete {
-		return "delete"
-	}
-
-	if actionID := ctx.Param("action"); actionID != "" {
-		return actionID
-	}
-
-	return "view"
-}
-
-// getAction locates and populates the action.Action for a specific template and actionID
-func getAction(templateService *service.Template, stream *model.Stream, authorization *model.Authorization, actionID string) (model.Action, error) {
-
-	// Try to find the action based on the stream and actionID
-	result, err := templateService.Action(stream.TemplateID, actionID)
-
-	if err != nil {
-		return model.Action{}, derp.Wrap(err, "ghost.render.NewAction", "Could not create action", stream, actionID)
-	}
-
-	// Enforce user permissions here.
-	if !result.UserCan(stream, authorization) {
-		return model.Action{}, derp.New(derp.CodeForbiddenError, "ghost.render.NewAction", "Forbidden", stream, authorization)
-	}
-
-	return result, nil
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
@@ -66,7 +31,7 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModalForm(renderer *Renderer, content string) string {
+func WrapModalForm(renderer Renderer, content string) string {
 
 	b := html.New()
 

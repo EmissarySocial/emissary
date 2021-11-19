@@ -85,7 +85,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 
 	// Template Service
 	factory.templateService = service.NewTemplate(
-		factory.domain.TemplatePaths,
+		factory.domain.TemplatePath,
 		factory.Layout(),
 		factory.LayoutUpdateChannel(),
 		factory.TemplateUpdateChannel(),
@@ -172,7 +172,8 @@ func (factory *Factory) Layout() *service.Layout {
 func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (render.Renderer, error) {
 
 	// Create and return the new Renderer
-	return render.NewRenderer(factory, ctx, stream, actionID)
+	renderer, _, err := render.NewRenderer(factory, ctx, stream, actionID)
+	return renderer, err
 }
 
 ///////////////////////////////////////

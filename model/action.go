@@ -4,44 +4,44 @@ import (
 	"github.com/benpate/datatype"
 )
 
-// ActionConfig stores the configuration information for each Action that can be taken on a Stream
-type ActionConfig struct {
-	ActionID string         `json:"actionId"`
-	Method   string         `json:"method"`
-	States   []string       `json:"states"`
-	Roles    []string       `json:"roles"`
-	Commands []datatype.Map `json:"commands"`
+// Action holds the data for actions that can be performed on any Stream from a particular Template.
+type Action struct {
+	ActionID string         `json:"actionID" bson:"actionID"` // Unique ID for this action.
+	Roles    []string       `json:"roles"    bson:"roles"`    // List of roles required to execute this Action.  If empty, then none are required.
+	States   []string       `json:"states"   bson:"states"`   // List of states required to execute this Action.  If empty, then one are required.
+	Step     string         `json:"command"  bson:"command"`  // Shortcut for a single step to execute for this Action (all parameters are defaults)
+	Steps    []datatype.Map `json:"commands" bson:"commands"` // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
-// NewActionConfig returns a fully initialized ActionConfig object
-func NewActionConfig() ActionConfig {
-	return ActionConfig{
-		States:   make([]string, 0),
-		Roles:    make([]string, 0),
-		Commands: make([]datatype.Map, 0),
+// NewAction returns a fully initialized Action
+func NewAction() Action {
+	return Action{
+		Roles:  make([]string, 0),
+		States: make([]string, 0),
+		Steps:  make([]datatype.Map, 0),
 	}
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (actionConfig ActionConfig) UserCan(stream *Stream, authorization *Authorization) bool {
+func (action Action) UserCan(stream *Stream, authorization *Authorization) bool {
 
 	// If present, "States" limits the states where this action can take place
-	if len(actionConfig.States) > 0 {
+	if len(action.States) > 0 {
 		// If states are present, then the current state MUST be included in the list.
 		// Otherwise, reject this action.
-		if !matchOne(actionConfig.States, stream.StateID) {
+		if !matchOne(action.States, stream.StateID) {
 			return false
 		}
 	}
 
 	// If present, "Roles" limits the user roles that can take this action
-	if len(actionConfig.Roles) > 0 {
+	if len(action.Roles) > 0 {
 
 		// The user must have AT LEAST ONE of the named roles to take this action.
 		// If not, reject this action.
 		roles := stream.Roles(authorization)
 
-		if !matchAny(roles, actionConfig.Roles) {
+		if !matchAny(roles, action.Roles) {
 			return false
 		}
 	}

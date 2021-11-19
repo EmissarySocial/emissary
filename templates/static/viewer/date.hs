@@ -1,8 +1,6 @@
 behavior PrettyDate(date)
 
 	on load
-		make a Date from (date * 1000) called original
-		set done to false
 
 		repeat until done
 
@@ -15,51 +13,17 @@ behavior PrettyDate(date)
 
 				if seconds < 30 then
 					set my innerHTML to "a few seconds ago"
-					wait ((30 * 1000) - miliseconds) ms -- wait until 30-second mark
+					return
+					-- wait ((30 * 1000) - miliseconds) ms -- wait until 30-second mark
 				else
 					set my innerHTML to "30 seconds ago"
-					wait ((60 * 1000) - miliseconds) ms -- wait until 60-second mark
+					return
+					-- wait ((60 * 1000) - miliseconds) ms -- wait until 60-second mark
 				end
 
 			else
-
-				set hours to Math.floor(minutes / 60)
-
-				if hours == 0 then 
-					set my innerHTML to pluralize(minutes, "minute")
-					wait (((minutes + 1) * 60 * 1000) - miliseconds) ms -- wait until next minute turns
-				else
-					
-					set days to Math.floor(hours / 24)
-
-					if days == 0 then
-						set my innerHTML to pluralize(hours, "hour")
-						set done to true
-					else
-
-						set months to monthDiff(original, now)
-
-						if months == 0 then
-							set my innerHTML to pluralize(days, "day")
-							set done to true
-						else 
-							
-							set years to Math.floor(months / 12)
-							
-							if years == 0 then 
-								set my innerHTML to pluralize(months, "month")
-								set done to true
-							else
-								set my innerHTML to pluralize(years, "year")
-								set done to true
-							end -- if years
-
-						end -- if months
-
-					end -- if days
-
-				end -- if hours
-
+				set my innerHTML to "more than 1 minute"
+				return
 			end -- if minutes
 
 		end -- repeat

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"net/http"
 
 	"github.com/benpate/derp"
@@ -23,7 +22,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamGet", "Unrecognized Domain")
+			return derp.Wrap(err, "ghost.handler.PostStream", "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
@@ -31,39 +30,83 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamGet", "Error loading Stream", streamToken)
+			return derp.Wrap(err, "ghost.handler.PostStream", "Error loading Stream", streamToken)
 		}
 
-		// Cast the context to a sterankoContext (so we can access the underlying Authorization)
+		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := render.NewRenderer(factory, sterankoContext, stream, actionID)
+		renderer, action, err := render.NewRenderer(factory, sterankoContext, stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamGet", "Error creating renderer")
+			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
 		}
 
-		// If this is a partial page request, then we only need to render the stream content.
-		if isPartialPageRequest(ctx) {
-			result, err := renderer.Render()
+		// Execute all of the steps of the requested action
+		for _, stepInfo := range action.Steps {
+
+			step, err := render.NewStep(factory, stepInfo)
 
 			if err != nil {
-				return derp.Wrap(err, "ghost.handler.StreamGet", "Error rendering content")
+				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
 			}
 
-			return ctx.HTML(http.StatusOK, string(result))
+			if err := step.Get(&renderer); err != nil {
+				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
+			}
 		}
 
-		// Fall through means we're rendering this with the full page layout template
-		var result bytes.Buffer
-		layoutService := factory.Layout()
-		template := layoutService.Template
+		return nil
 
-		if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template"))
-		}
+		/*
+			var stream model.Stream
 
-		return ctx.HTML(200, result.String())
+			// Try to get the factory
+			factory, err := factoryManager.ByContext(ctx)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.StreamGet", "Unrecognized Domain")
+			}
+
+			// Try to load the stream using request data
+			streamService := factory.Stream()
+			streamToken := getStreamToken(ctx)
+
+			if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+				return derp.Wrap(err, "ghost.handler.StreamGet", "Error loading Stream", streamToken)
+			}
+
+			// Cast the context to a sterankoContext (so we can access the underlying Authorization)
+			sterankoContext := ctx.(*steranko.Context)
+			actionID := getActionID(ctx)
+			renderer, _, err := render.NewRenderer(factory, sterankoContext, stream, actionID)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.handler.StreamGet", "Error creating renderer")
+			}
+
+			// If this is a partial page request, then we only need to render the stream content.
+			if isPartialPageRequest(ctx) {
+				result, err := renderer.Render()
+
+				if err != nil {
+					return derp.Wrap(err, "ghost.handler.StreamGet", "Error rendering content")
+				}
+
+				return ctx.HTML(http.StatusOK, string(result))
+			}
+
+			// Fall through means we're rendering this with the full page layout template
+			var result bytes.Buffer
+			layoutService := factory.Layout()
+			template := layoutService.Template
+
+			if err := template.ExecuteTemplate(&result, "page", renderer); err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.renderStream", "Error rendering HTML template"))
+			}
+
+			return ctx.HTML(200, result.String())
+		*/
 	}
 }
 
@@ -78,30 +121,41 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamPost", "Unrecognized Domain")
+			return derp.Wrap(err, "ghost.handler.PostStream", "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
-		streamToken := getStreamToken(ctx)
-		actionID := getActionID(ctx)
 		streamService := factory.Stream()
+		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamPost", "Error loading Stream", streamToken)
+			return derp.Wrap(err, "ghost.handler.PostStream", "Error loading Stream", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
-		authorization := getAuthorization(sterankoContext)
-		action, err := render.NewAction(factory, &stream, authorization, actionID)
+		actionID := getActionID(ctx)
+		renderer, action, err := render.NewRenderer(factory, sterankoContext, stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StreamPost", "Error finding actionConfig", stream, actionID)
+			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
 		}
 
-		// Almost done.  Let the action finish the request and
-		// determine what response/headers to send back to the client.
-		return action.Post(sterankoContext, &stream)
+		// Execute all of the steps of the requested action
+		for _, stepInfo := range action.Steps {
+
+			step, err := render.NewStep(factory, stepInfo)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
+			}
+
+			if err := step.Post(&renderer); err != nil {
+				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
+			}
+		}
+
+		return nil
 	}
 }
 

@@ -46,6 +46,18 @@ func Parse(data interface{}) (Form, error) {
 	return result, derp.New(derp.CodeInternalError, "form.Parse", "Cannot Parse Value: Unknown Datatype", data)
 }
 
+// MustParse guarantees that a value has been parsed into a Form, or else it panics the application.
+func MustParse(data interface{}) Form {
+
+	result, err := Parse(data)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
 // UnmarshalMap parses data from a generic structure (map[string]interface{}) into a Form record.
 func (form *Form) UnmarshalMap(data map[string]interface{}) error {
 

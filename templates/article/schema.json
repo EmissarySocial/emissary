@@ -52,45 +52,55 @@
 	},
 	"actions": {
 		"view": {
-			"method": "view-stream"
+			"roles": [],
+			"states": [],
+			"command": "view"
 		},
 		"draft": {
 			"roles": ["owner", "editor"],
-			"method": "update-draft"
+			"states": [],
+			"command": "draft"
 		},
 		"publish": {
-			"_roles": ["owner", "editor"],
-			"method": "publish-draft"
+			"roles": ["owner", "editor"],
+			"states": [],
+			"command": "draft-publish"
 		},
 		"properties": {
-			"_roles": ["owner", "editor"],
-			"method": "update-data",
-			"form": {
-				"kind": "layout-vertical",
-				"label": "Update Form",
-				"description": "This will update the object in this state",
-				"children": [{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				},{
-					"kind": "textarea",
-					"label": "Description",
-					"path": "description"
-				}]
-			}
+			"roles": ["owner", "editor"],
+			"states": [],
+			"commands": [{
+				"method": "data",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Update Form",
+					"description": "This will update the object in this state",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}]
 		},
 		"add-child": {
 			"roles": ["owner", "editor"],
-			"method": "add-child"
+			"states": [],
+			"command": "add-child"
 		},
 		"share": {
 			"roles": ["owner", "editor"],
-			"method": "update-sharing"
+			"states": [],
+			"command": "update-sharing"
 		},
 		"create-top-folder": {
-			"_roles": ["owner"],
-			"method": "create-top-stream"
+			"roles": ["owner"],
+			"states": [],
+			"command": "create-top-stream"
 		}
 	}
 }

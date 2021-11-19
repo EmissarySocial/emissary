@@ -33,25 +33,27 @@ func NewStream(collection data.Collection, templateService *Template, formLibrar
 		streamUpdateChannel:   streamUpdateChannel,
 	}
 
-	go result.start()
+	go result.watch()
 
 	return &result
 }
 
-// New creates a newly initialized Stream that is ready to use
-func (service *Stream) New() model.Stream {
-	return model.NewStream()
-}
+/*******************************************
+ * REAL-TIME UPDATES
+ *******************************************/
 
 // start begins the background watchers used by the Stream Service
-func (service *Stream) start() {
+func (service *Stream) watch() {
 	for {
 		template := <-service.templateUpdateChannel
-		fmt.Println("streamService.start: received update to template: " + template.Label)
 		service.templateService.Save(&template)
 		service.updateStreamsByTemplate(&template)
 	}
 }
+
+/*******************************************
+ * PERSISTENCE FUNCTIONS
+ *******************************************/
 
 // List returns an iterator containing all of the Streams who match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -94,7 +96,9 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	return nil
 }
 
-// QUERIES /////////////////////////
+/*******************************************
+ * QUERIES
+ *******************************************/
 
 // ListByParent returns all Streams that match a particular parentID
 func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
@@ -165,11 +169,13 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 }
 
 // ChildTemplates returns an iterator of Templates that can be added as a sub-stream
-func (service *Stream) ChildTemplates(stream *model.Stream) []model.Template {
+func (service *Stream) ChildTemplates(stream *model.Stream) []*model.Template {
 	return service.templateService.ListByContainer(stream.TemplateID)
 }
 
-// CUSTOM ACTIONS /////////////////
+/*******************************************
+ * CUSTOM ACTIONS
+ *******************************************/
 
 // NewWithTemplate creates a new Stream using the provided Template and Parent information.
 func (service *Stream) NewWithTemplate(parentToken string, templateID string, result *model.Stream) error {
@@ -230,9 +236,9 @@ func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
 	return service.templateService.Schema(stream.TemplateID)
 }
 
-// ActionConfig returns the action definition that matches the stream and type provided
-func (service *Stream) ActionConfig(stream *model.Stream, actionID string) (model.ActionConfig, error) {
-	return service.templateService.ActionConfig(stream.TemplateID, actionID)
+// Action returns the action definition that matches the stream and type provided
+func (service *Stream) Action(stream *model.Stream, actionID string) (model.Action, error) {
+	return service.templateService.Action(stream.TemplateID, actionID)
 }
 
 // updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.

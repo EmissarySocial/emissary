@@ -3,22 +3,24 @@ package render
 import (
 	"net/http"
 
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateTopStream struct {
-	model.ActionConfig
-	factory Factory
+	factory    Factory
+	parent     string
+	templateID string
 }
 
-func NewAction_CreateTopStream(factory Factory, config model.ActionConfig) CreateTopStream {
+func NewCreateTopStream(factory Factory, config datatype.Map) CreateTopStream {
 
 	return CreateTopStream{
-		factory:      factory,
-		ActionConfig: config,
+		factory:    factory,
+		parent:     config.GetString("parent"),
+		templateID: config.GetString("templateId"),
 	}
 }
 
@@ -27,17 +29,17 @@ type createTopStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action CreateTopStream) Get(renderer Renderer) (string, error) {
-	return "", nil
+func (action CreateTopStream) Get(renderer *Renderer) error {
+	return nil
 }
 
-func (action CreateTopStream) Post(ctx *steranko.Context, _ *model.Stream) error {
+func (action CreateTopStream) Post(renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
 	var child model.Stream
 
-	if err := ctx.Bind(&formData); err != nil {
+	if err := renderer.ctx.Bind(&formData); err != nil {
 		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Cannot bind form data")
 	}
 
@@ -49,7 +51,7 @@ func (action CreateTopStream) Post(ctx *steranko.Context, _ *model.Stream) error
 		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Invalid template")
 	}
 
-	authorization := getAuthorization(ctx)
+	authorization := getAuthorization(renderer.ctx)
 
 	// Create new child stream
 	child.TemplateID = "folder"
@@ -90,6 +92,6 @@ func (action CreateTopStream) Post(ctx *steranko.Context, _ *model.Stream) error
 	}
 
 	// Success! Write response to client
-	ctx.Response().Header().Add("HX-Redirect", "/"+child.Token)
-	return ctx.NoContent(http.StatusOK)
+	renderer.ctx.Response().Header().Add("HX-Redirect", "/"+child.Token)
+	return renderer.ctx.NoContent(http.StatusOK)
 }

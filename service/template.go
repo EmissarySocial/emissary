@@ -1,56 +1,181 @@
 package service
 
 import (
-	"fmt"
 	"html/template"
 	"sync"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service/templatesource"
 	"github.com/benpate/schema"
+
+	"encoding/json"
+	"io/ioutil"
+
+	"github.com/benpate/list"
+	"github.com/fsnotify/fsnotify"
+
+	minify "github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates map[string]*model.Template // map of all templates available within this domain
-	mutex     sync.RWMutex               // Mutext that locks access to the templates structure
+	templates map[string]model.Template // map of all templates available within this domain
+	mutex     sync.RWMutex              // Mutext that locks access to the templates structure
+	path      string                    // Filesystem path to the template directory
 
-	sources           []TemplateSource // array of templateSource objects
 	layoutService     *Layout
 	layoutUpdates     chan *template.Template
-	templateUpdateIn  chan model.Template
 	templateUpdateOut chan model.Template
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(paths []string, layoutService *Layout, layoutUpdates chan *template.Template, templateUpdateChannel chan model.Template) *Template {
+func NewTemplate(path string, layoutService *Layout, layoutUpdates chan *template.Template, templateUpdateChannel chan model.Template) *Template {
 
-	result := Template{
-		sources:           make([]TemplateSource, 0),
-		templates:         make(map[string]*model.Template),
+	service := &Template{
+		templates:         make(map[string]model.Template),
+		path:              path,
 		layoutService:     layoutService,
 		layoutUpdates:     layoutUpdates,
-		templateUpdateIn:  make(chan model.Template),
 		templateUpdateOut: templateUpdateChannel,
 	}
 
-	for _, path := range paths {
-		fileSource := templatesource.NewFile(path)
-		if err := result.AddSource(fileSource); err != nil {
-			derp.Report(err)
+	// Load all templates from the filesystem
+	list, err := ioutil.ReadDir(path)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.List", "Unable to list files in filesystem", path))
+		return service
+	}
+
+	// Use a separate counter because not all files will be included in the result
+	for _, fileInfo := range list {
+
+		if fileInfo.IsDir() {
+			name := fileInfo.Name()
+			switch name {
+			case "layout": // Skip "layout" folder because it's handled by the LayoutService
+			case "static": // Skip "static" folder because it's served directly to the client
+
+			default:
+				// Add all other directories into the Template service as Templates
+				template := model.NewTemplate(name)
+				if err := service.loadFromFilesystem(&template); err == nil {
+					service.Save(&template)
+				}
+			}
 		}
 	}
 
-	go result.start()
+	go service.watch()
 
-	return &result
+	return service
 }
 
-// Start is meant to be run as a goroutine, and constantly monitors the "Updates" channel for
+// loadFromFilesystem locates and parses a Template sub-directory within the filesystem path
+func (service *Template) loadFromFilesystem(t *model.Template) error {
+
+	directory := service.path + "/" + t.TemplateID
+	files, err := ioutil.ReadDir(directory)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Unable to list directory", directory)
+	}
+
+	// Create the minifier
+	m := minify.New()
+	m.AddFunc("text/html", html.Minify)
+
+	// Load the schema.json file
+	{
+		content, err := ioutil.ReadFile(directory + "/schema.json")
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file: schema.json", t.TemplateID)
+		}
+
+		if err := json.Unmarshal(content, t); err != nil {
+			return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file: schema.json", t.TemplateID)
+		}
+	}
+
+	// Views are processed FIRST so we can generate a list of objects to enter into the different States
+	for _, file := range files {
+
+		filename := file.Name()
+		actionID, extension := list.SplitTail(filename, ".")
+
+		// Only HTML files beyond this point...
+		switch extension {
+
+		case "html":
+
+			// Verify that the action is already defined in the schema.json
+			if _, ok := t.Actions[actionID]; !ok {
+				return derp.New(derp.CodeInternalError, "ghost.service.templateSource.File.Load", "Missing action", t.TemplateID, actionID)
+			}
+
+			// Try to read the file from the filesystem
+			content, err := ioutil.ReadFile(directory + "/" + filename)
+
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
+			}
+
+			contentString := string(content)
+
+			// Try to minify the incoming template... (this should be moved to a different place.)
+			if minified, err := m.String("text/html", contentString); err == nil {
+				contentString = minified
+			}
+
+			// Try to compile the minified content into a Go Template
+			contentTemplate, err := template.New(actionID).Parse(contentString)
+
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", contentString))
+			}
+
+			// Put the parsed/minified template into the list of template files
+			t.Files[actionID] = contentTemplate
+		}
+	}
+
+	// Save the Template into the memory cache
+	service.Save(t)
+
+	// Return to caller.
+	return nil
+}
+
+/*******************************************
+ * REAL-TIME UPDATES
+ *******************************************/
+
+// watch must be run as a goroutine, and constantly monitors the "Updates" channel for
 // news that a template has been updated.
-func (service *Template) start() {
+func (service *Template) watch() {
+
+	watcher, err := fsnotify.NewWatcher()
+
+	if err != nil {
+		panic(err)
+	}
+
+	files, err := ioutil.ReadDir(service.path)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
+				panic(err)
+			}
+		}
+	}
 
 	for {
 
@@ -59,56 +184,51 @@ func (service *Template) start() {
 		case <-service.layoutUpdates:
 			// fmt.Println("template.start: received update to layout.")
 			for _, template := range service.templates {
-				fmt.Println("template.start: sending update to template: " + template.Label)
-				service.templateUpdateOut <- *template
+				service.loadFromFilesystem(&template)
+				service.templateUpdateOut <- template
 			}
 
-		case template := <-service.templateUpdateIn:
-			// fmt.Println("template.start: received update to template: " + template.Label)
+		case event, ok := <-watcher.Events:
+
+			if !ok {
+				continue
+			}
+
+			if event.Op != fsnotify.Write {
+				continue
+			}
+
+			templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
+			template := model.NewTemplate(templateName)
+			if err := service.loadFromFilesystem(&template); err != nil {
+				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error loading changes to template", event, templateName))
+				continue
+			}
+
 			service.Save(&template)
 			service.templateUpdateOut <- template
+
+		case err, ok := <-watcher.Errors:
+
+			if ok {
+				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error watching filesystem"))
+			}
 		}
 	}
 }
 
-// AddSource adds a new TemplateSource into this service, and loads all of its templates into the memory cache.
-func (service *Template) AddSource(source TemplateSource) error {
-
-	service.sources = append(service.sources, source)
-
-	list, err := source.List()
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.service.Template.AddSource", "Error listing templates from", source)
-	}
-
-	// Iterate through every template
-	for _, name := range list {
-
-		template, err := source.Load(name)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.service.Template.AddSource", "Error loading template", name)
-		}
-
-		// Save the template in memory.
-		service.Save(template)
-	}
-
-	// Watch for changes to this TemplateSource
-	source.Watch(service.templateUpdateIn)
-
-	return nil
-}
+/*******************************************
+ * PERSISTENCE FUNCTIONS
+ *******************************************/
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(criteria exp.Expression) []model.Template {
+func (service *Template) List(criteria exp.Expression) []*model.Template {
 
-	result := []model.Template{}
+	result := []*model.Template{}
 
 	for _, template := range service.templates {
-		if criteria.Match(matcherFunc(template)) {
-			result = append(result, *template)
+		if criteria.Match(matcherFunc(&template)) {
+			result = append(result, &template)
 		}
 	}
 
@@ -116,7 +236,7 @@ func (service *Template) List(criteria exp.Expression) []model.Template {
 }
 
 // ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []model.Template {
+func (service *Template) ListByContainer(containedBy string) []*model.Template {
 	return service.List(exp.Contains("containedBy", containedBy))
 }
 
@@ -128,17 +248,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 
 	// Look in the local cache first
 	if template, ok := service.templates[templateID]; ok {
-		if template != nil {
-			return template, nil
-		}
-	}
-
-	// Otherwise, search all sources for the Template.
-	for index := range service.sources {
-		if template, err := service.sources[index].Load(templateID); err == nil {
-			service.templates[templateID] = template
-			return template, nil
-		}
+		return &template, nil
 	}
 
 	return nil, derp.New(404, "ghost.sevice.Template.Load", "Template not found", templateID)
@@ -150,10 +260,15 @@ func (service *Template) Save(template *model.Template) error {
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
-	service.templates[template.TemplateID] = template
+	delete(service.templates, template.TemplateID)
+	service.templates[template.TemplateID] = *template
 
 	return nil
 }
+
+/*******************************************
+ * OTHER DATA ACCESS FUNCTIONS
+ *******************************************/
 
 // State returns the detailed State information associated with this Stream
 func (service *Template) State(templateID string, stateID string) (model.State, error) {
@@ -191,20 +306,20 @@ func (service *Template) Schema(templateID string) (*schema.Schema, error) {
 }
 
 // ActionConfig returns the action definition that matches the stream and type provided
-func (service *Template) ActionConfig(templateID string, actionID string) (model.ActionConfig, error) {
+func (service *Template) Action(templateID string, actionID string) (model.Action, error) {
 
 	// Try to find the Template used by this Stream
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return model.ActionConfig{}, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+		return model.Action{}, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
 	}
 
 	// Try to find the action in the Template
-	if action, ok := template.ActionConfig(actionID); ok {
+	if action, ok := template.Action(actionID); ok {
 		return action, nil
 	}
 
 	// Not Found :(
-	return model.ActionConfig{}, derp.New(derp.CodeBadRequestError, "ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
+	return model.Action{}, derp.New(derp.CodeBadRequestError, "ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
 }

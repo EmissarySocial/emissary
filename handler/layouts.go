@@ -37,7 +37,7 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Try to make a renderer.  This also includes permissions...
-		renderer, err := render.NewRenderer(factory, sterankoContext, stream, "default")
+		renderer, _, err := render.NewRenderer(factory, sterankoContext, stream, "default")
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.renderStream", "Error generating renderer")

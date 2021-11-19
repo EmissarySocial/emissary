@@ -11,8 +11,10 @@ behavior AsModal()
 end
 
 on closeModal(event)
-    if #modal is undefined then return end
-    add .closing to #modal
-    set window.location to event.detail.nextPage unless no event.detail.nextPage
-    settle
-    remove #modal
+    if #modal is not empty then 
+        add .closing to #modal
+        set window.location to event.detail.nextPage unless no event.detail.nextPage
+        settle
+        remove #modal
+    end
+end
