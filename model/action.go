@@ -54,6 +54,7 @@ func (action Action) UserCan(stream *Stream, authorization *Authorization) bool 
 // an action is loaded from JSON
 func (action *Action) Validate() {
 
+	// Convert single "step" shortcut into a list of actual steps
 	if len(action.Steps) == 0 {
 		if action.Step != "" {
 			// Convert action.Step into a default action
@@ -63,6 +64,12 @@ func (action *Action) Validate() {
 			action.Step = ""
 		}
 	}
+
+	// Push actionID into every step.
+	for i := range action.Steps {
+		action.Steps[i]["actionId"] = action.ActionID
+	}
+
 }
 
 // matchOne returns TRUE if the value matches one (or more) of the values in the slice

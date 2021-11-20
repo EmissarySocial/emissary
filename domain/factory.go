@@ -192,14 +192,14 @@ func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	case "delete-stream":
 		return render.NewDeleteStream(factory.Stream(), stepInfo), nil
 
-	case "delete-draft":
-		return render.NewDeleteDraft(factory.StreamDraft(), stepInfo), nil
+	case "draft-edit":
+		return render.NewDraftEdit(factory.StreamDraft(), stepInfo), nil
 
-	case "publish-draft":
-		return render.NewPublishDraft(factory.Stream(), factory.StreamDraft(), stepInfo), nil
+	case "draft-delete":
+		return render.NewDraftDelete(factory.StreamDraft(), stepInfo), nil
 
-	case "update-draft":
-		return render.NewUpdateDraft(factory.StreamDraft(), stepInfo), nil
+	case "draft-publish":
+		return render.NewDraftPublish(factory.Stream(), factory.StreamDraft(), stepInfo), nil
 
 	case "update-data":
 		return render.NewUpdateData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
@@ -212,7 +212,7 @@ func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "ghost.render.NewStep", "Invalid action configuration", stepInfo)
+	return nil, derp.New(derp.CodeInternalError, "ghost.factory.RenderStep", "Unrecognized action configuration", stepInfo)
 }
 
 ///////////////////////////////////////

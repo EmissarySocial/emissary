@@ -14,12 +14,12 @@ type ViewStream struct {
 }
 
 // NewAction_ViewStream generates a fully initialized ViewStream step.
-func NewViewStream(actionID string, stepInfo datatype.Map) ViewStream {
+func NewViewStream(stepInfo datatype.Map) ViewStream {
 
 	filename := stepInfo.GetString("file")
 
 	if filename == "" {
-		filename = actionID
+		filename = stepInfo.GetString("actionId")
 	}
 
 	return ViewStream{

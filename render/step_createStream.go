@@ -18,7 +18,7 @@ type CreateStream struct {
 }
 
 // NewCreateStream returns a fully initialized CreateSubStream record
-func NewCreateStream(streamService *service.Stream, actionID string, command datatype.Map) CreateStream {
+func NewCreateStream(streamService *service.Stream, command datatype.Map) CreateStream {
 	return CreateStream{
 		streamService: streamService,
 		childState:    command.GetString("childState"),

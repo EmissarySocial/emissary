@@ -59,7 +59,7 @@
 		"draft": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"step": "draft"
+			"step": "draft-edit"
 		},
 		"publish": {
 			"roles": ["owner", "editor"],

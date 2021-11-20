@@ -8,24 +8,24 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-type DeleteDraft struct {
+type DraftDelete struct {
 	draftService *service.StreamDraft
 }
 
-func NewDeleteDraft(draftService *service.StreamDraft, config datatype.Map) DeleteDraft {
-	return DeleteDraft{
+func NewDraftDelete(draftService *service.StreamDraft, config datatype.Map) DraftDelete {
+	return DraftDelete{
 		draftService: draftService,
 	}
 }
 
-func (step DeleteDraft) Get(renderer *Renderer) error {
+func (step DraftDelete) Get(renderer *Renderer) error {
 	return nil
 }
 
-func (step DeleteDraft) Post(renderer *Renderer) error {
+func (step DraftDelete) Post(renderer *Renderer) error {
 
 	if err := step.draftService.Delete(&renderer.stream, "Deleted"); err != nil {
-		return derp.Wrap(err, "ghost.render.DeleteDraft.Post", "Error deleting stream")
+		return derp.Wrap(err, "ghost.render.DraftDelete.Post", "Error deleting stream")
 	}
 
 	renderer.ctx.Response().Header().Add("hx-redirect", "/"+renderer.stream.Token)
