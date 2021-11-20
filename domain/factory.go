@@ -178,13 +178,13 @@ func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, act
 }
 
 // RenderStep uses an Step object to create a new action
-func (factory *Factory) RenderStep(actionID string, stepInfo datatype.Map) (render.Step, error) {
+func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 
 	// Populate the action with the data from
 	switch stepInfo["method"] {
 
 	case "create-stream":
-		return render.NewCreateStream(factory.Stream(), actionID, stepInfo), nil
+		return render.NewCreateStream(factory.Stream(), stepInfo), nil
 
 	case "create-top-stream":
 		return render.NewCreateTopStream(factory.Stream(), stepInfo), nil
@@ -208,7 +208,7 @@ func (factory *Factory) RenderStep(actionID string, stepInfo datatype.Map) (rend
 		return render.NewUpdateState(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
 
 	case "view-stream":
-		return render.NewViewStream(actionID, stepInfo), nil
+		return render.NewViewStream(stepInfo), nil
 	}
 
 	// Fall through means we have an unrecognized action

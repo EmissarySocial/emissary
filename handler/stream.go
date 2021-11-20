@@ -46,7 +46,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Execute all of the steps of the requested action
 		for _, stepInfo := range action.Steps {
 
-			step, err := factory.RenderStep(action.ActionID, stepInfo)
+			step, err := factory.RenderStep(stepInfo)
 
 			if err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
@@ -97,7 +97,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Execute all of the steps of the requested action
 		for _, stepInfo := range action.Steps {
 
-			step, err := factory.RenderStep(actionID, stepInfo)
+			step, err := factory.RenderStep(stepInfo)
 
 			if err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
