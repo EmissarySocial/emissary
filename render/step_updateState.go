@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -29,7 +29,7 @@ func NewUpdateState(templateService *service.Template, streamService *service.St
 }
 
 // Get displays a form for users to fill out in the browser
-func (step UpdateState) Get(renderer *Renderer) error {
+func (step UpdateState) Get(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to find the schema for the requested template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
@@ -45,11 +45,13 @@ func (step UpdateState) Get(renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.UpdateState.Get", "Error generating form")
 	}
 
-	return renderer.ctx.HTML(http.StatusOK, result)
+	buffer.Write([]byte(result))
+
+	return nil
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step UpdateState) Post(renderer *Renderer) error {
+func (step UpdateState) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
@@ -77,5 +79,5 @@ func (step UpdateState) Post(renderer *Renderer) error {
 	// Redirect the browser to the default page.
 	renderer.ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+renderer.stream.Token+`"}}`)
 
-	return renderer.ctx.NoContent(http.StatusOK)
+	return nil
 }

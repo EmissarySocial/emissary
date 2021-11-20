@@ -21,7 +21,7 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(path string, updates chan *template.Template) *Layout {
+func NewLayout(path string, updates chan bool) *Layout {
 
 	layout := &Layout{
 		path: path,
@@ -99,7 +99,7 @@ func (service *Layout) Load() error {
 // on the path that contains the layout.  Any updates to the layout files will reload the
 // layout Template, and push it into the Updates channel, so that any waiting pages can be
 // refreshed dynamically.
-func (service *Layout) start(updates chan *template.Template) error {
+func (service *Layout) start(updates chan bool) error {
 
 	watcher, err := fsnotify.NewWatcher()
 
@@ -125,7 +125,7 @@ func (service *Layout) start(updates chan *template.Template) error {
 					continue
 				}
 
-				updates <- service.Template
+				updates <- true
 			}
 
 		case err, ok := <-watcher.Errors:

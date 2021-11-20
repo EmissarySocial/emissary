@@ -1,15 +1,6 @@
 package handler
 
-import (
-	"bytes"
-
-	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/server"
-	"github.com/benpate/steranko"
-	"github.com/labstack/echo/v4"
-)
-
+/*
 // GetLayout returns an echo.HandlerFunc that renders a specific site-wide layout with the given stream
 func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
@@ -54,3 +45,4 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		return ctx.HTML(200, result.String())
 	}
 }
+*/

@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -29,7 +29,7 @@ func NewUpdateData(templateService *service.Template, streamService *service.Str
 }
 
 // Get displays a form where users can update stream data
-func (step UpdateData) Get(renderer *Renderer) error {
+func (step UpdateData) Get(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to find the schema for this Template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
@@ -46,11 +46,12 @@ func (step UpdateData) Get(renderer *Renderer) error {
 	}
 
 	// Wrap result as a modal dialog
-	return renderer.ctx.HTML(http.StatusOK, WrapModalForm(renderer, result))
+	buffer.Write([]byte(WrapModalForm(renderer, result)))
+	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step UpdateData) Post(renderer *Renderer) error {
+func (step UpdateData) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
@@ -75,5 +76,5 @@ func (step UpdateData) Post(renderer *Renderer) error {
 
 	// Redirect the browser to the default page.
 	renderer.ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+renderer.stream.Token+`"}}`)
-	return renderer.ctx.NoContent(http.StatusNoContent)
+	return nil
 }

@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/compare"
 	"github.com/benpate/datatype"
@@ -30,11 +30,11 @@ type createStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (step CreateStream) Get(renderer *Renderer) error {
+func (step CreateStream) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step CreateStream) Post(renderer *Renderer) error {
+func (step CreateStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
@@ -78,5 +78,5 @@ func (step CreateStream) Post(renderer *Renderer) error {
 
 	// Success!  Send response to client
 	renderer.ctx.Response().Header().Add("Hx-Redirect", "/"+child.Token)
-	return renderer.ctx.NoContent(http.StatusOK)
+	return nil
 }

@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"fmt"
-	"html/template"
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -31,7 +30,7 @@ type Factory struct {
 
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
-	layoutUpdateChannel   chan *template.Template
+	layoutUpdateChannel   chan bool
 	templateUpdateChannel chan model.Template
 	streamUpdateChannel   chan model.Stream
 }
@@ -57,7 +56,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		Session:               session,
 		domain:                domain,
 		templateUpdateChannel: make(chan model.Template),
-		layoutUpdateChannel:   make(chan *template.Template),
+		layoutUpdateChannel:   make(chan bool),
 	}
 
 	// Initialize Communication Channels
@@ -173,46 +172,13 @@ func (factory *Factory) Layout() *service.Layout {
 func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (render.Renderer, error) {
 
 	// Create and return the new Renderer
-	renderer, err := render.NewRenderer(factory.Template(), factory.Stream(), ctx, stream, actionID)
+	renderer, err := render.NewRenderer(factory, ctx, stream, actionID)
 	return renderer, err
 }
 
 // RenderStep uses an Step object to create a new action
 func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
-
-	// Populate the action with the data from
-	switch stepInfo["method"] {
-
-	case "create-stream":
-		return render.NewCreateStream(factory.Stream(), stepInfo), nil
-
-	case "create-top-stream":
-		return render.NewCreateTopStream(factory.Stream(), stepInfo), nil
-
-	case "delete-stream":
-		return render.NewDeleteStream(factory.Stream(), stepInfo), nil
-
-	case "draft-edit":
-		return render.NewDraftEdit(factory.StreamDraft(), stepInfo), nil
-
-	case "draft-delete":
-		return render.NewDraftDelete(factory.StreamDraft(), stepInfo), nil
-
-	case "draft-publish":
-		return render.NewDraftPublish(factory.Stream(), factory.StreamDraft(), stepInfo), nil
-
-	case "update-data":
-		return render.NewUpdateData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
-
-	case "update-state":
-		return render.NewUpdateState(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
-
-	case "view-stream":
-		return render.NewViewStream(stepInfo), nil
-	}
-
-	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "ghost.factory.RenderStep", "Unrecognized action configuration", stepInfo)
+	return render.NewStep(factory, stepInfo)
 }
 
 ///////////////////////////////////////
@@ -234,7 +200,7 @@ func (factory *Factory) TemplateUpdateChannel() chan model.Template {
 }
 
 // LayoutUpdateChannel returns a channel for transmitting the global layout when it has changed.
-func (factory *Factory) LayoutUpdateChannel() chan *template.Template {
+func (factory *Factory) LayoutUpdateChannel() chan bool {
 	return factory.layoutUpdateChannel
 }
 

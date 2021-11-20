@@ -52,7 +52,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
 			}
 
-			if err := step.Get(&renderer); err != nil {
+			if err := step.Get(ctx.Response(), &renderer); err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
 			}
 		}
@@ -103,7 +103,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
 			}
 
-			if err := step.Post(&renderer); err != nil {
+			if err := step.Post(ctx.Response(), &renderer); err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
 			}
 		}

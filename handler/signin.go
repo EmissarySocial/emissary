@@ -15,17 +15,20 @@ func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var buffer bytes.Buffer
-		factory, err := factoryManager.ByContext(ctx)
 
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error getting factory"))
-		}
+		/*
+			factory, err := factoryManager.ByContext(ctx)
 
-		template := factory.Layout().Template
+			if err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error getting factory"))
+			}
 
-		if err := template.ExecuteTemplate(&buffer, "signin", "error message goes here."); err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error executing template"))
-		}
+			template := factory.Layout().Template
+
+			if err := template.ExecuteTemplate(&buffer, "signin", "error message goes here."); err != nil {
+				return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error executing template"))
+			}
+		*/
 
 		return ctx.HTML(200, buffer.String())
 	}

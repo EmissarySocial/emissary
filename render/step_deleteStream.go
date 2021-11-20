@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -19,11 +19,11 @@ func NewDeleteStream(streamService *service.Stream, config datatype.Map) DeleteS
 	}
 }
 
-func (step DeleteStream) Get(renderer *Renderer) error {
+func (step DeleteStream) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step DeleteStream) Post(renderer *Renderer) error {
+func (step DeleteStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	var parent model.Stream
 
@@ -36,5 +36,5 @@ func (step DeleteStream) Post(renderer *Renderer) error {
 	}
 
 	renderer.ctx.Response().Header().Add("hx-redirect", "/"+parent.Token)
-	return renderer.ctx.NoContent(http.StatusNoContent)
+	return nil
 }

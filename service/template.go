@@ -26,12 +26,12 @@ type Template struct {
 	path      string                    // Filesystem path to the template directory
 
 	layoutService     *Layout
-	layoutUpdates     chan *template.Template
+	layoutUpdates     chan bool
 	templateUpdateOut chan model.Template
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(path string, layoutService *Layout, layoutUpdates chan *template.Template, templateUpdateChannel chan model.Template) *Template {
+func NewTemplate(path string, layoutService *Layout, layoutUpdates chan bool, templateUpdateChannel chan model.Template) *Template {
 
 	service := &Template{
 		templates:         make(map[string]model.Template),

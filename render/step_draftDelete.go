@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -18,16 +18,16 @@ func NewDraftDelete(draftService *service.StreamDraft, config datatype.Map) Draf
 	}
 }
 
-func (step DraftDelete) Get(renderer *Renderer) error {
+func (step DraftDelete) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step DraftDelete) Post(renderer *Renderer) error {
+func (step DraftDelete) Post(buffer io.Writer, renderer *Renderer) error {
 
 	if err := step.draftService.Delete(&renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.DraftDelete.Post", "Error deleting stream")
 	}
 
 	renderer.ctx.Response().Header().Add("hx-redirect", "/"+renderer.stream.Token)
-	return renderer.ctx.NoContent(http.StatusNoContent)
+	return nil
 }

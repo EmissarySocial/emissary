@@ -1,7 +1,7 @@
 package render
 
 import (
-	"net/http"
+	"io"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -30,11 +30,11 @@ type createTopStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (step CreateTopStream) Get(renderer *Renderer) error {
+func (step CreateTopStream) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step CreateTopStream) Post(renderer *Renderer) error {
+func (step CreateTopStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
@@ -93,5 +93,5 @@ func (step CreateTopStream) Post(renderer *Renderer) error {
 
 	// Success! Write response to client
 	renderer.ctx.Response().Header().Add("HX-Redirect", "/"+child.Token)
-	return renderer.ctx.NoContent(http.StatusOK)
+	return nil
 }

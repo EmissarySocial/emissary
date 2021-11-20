@@ -43,41 +43,22 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/outbox", handler.GetOutbox(factoryManager))
 	e.POST("/outbox", handler.PostOutbox(factoryManager))
 
-	/*
-		// Stream Pages
-		e.GET("/", handler.GetStream(factoryManager))        // ?view=
-		e.GET("/:stream", handler.GetStream(factoryManager)) // ?view=
-		e.GET("/:stream/draft", handler.GetStreamDraft(factoryManager))
-		e.POST("/:stream/draft", handler.PostStreamDraft(factoryManager))
-		e.DELETE("/:stream/draft", handler.DeleteStreamDraft(factoryManager))
-		e.POST("/:stream/draft/publish", handler.PublishStreamDraft(factoryManager))
-		e.GET("/:stream/transition/:transition", handler.GetTransition(factoryManager))
-		e.POST("/:stream/transition/:transition", handler.PostTransition(factoryManager)) // ?transition
-		e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))                    // ?view=
-		e.GET("/:stream/new", handler.GetTemplates(factoryManager))
-		e.GET("/:stream/new/:template", handler.GetNewStreamFromTemplate(factoryManager))
-		e.POST("/:stream/new/:template", handler.PostNewStreamFromTemplate(factoryManager))
-		e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
-	*/
-
-	/// REFACTORED STREAM PAGES
-
+	// STREAM PAGES
 	e.GET("/", handler.GetStream(factoryManager))
 	e.GET("/:stream", handler.GetStream(factoryManager))
 	e.GET("/:stream/:action", handler.GetStream(factoryManager))
 	e.POST("/:stream/:action", handler.PostStream(factoryManager))
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
-	e.GET("/:stream/layout/:file", handler.GetLayout(factoryManager))
+
+	// TODO: Can SSE support be moved into a custom render step?
+	// e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 
 	// CUSTOM ERROR HANDLER
 
 	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
 
-		errorCode := derp.ErrorCode(err)
-
-		switch errorCode {
-		case derp.CodeForbiddenError:
+		// If Forbidden error, then redirect the user to the signin page.
+		if derp.ErrorCode(err) == derp.CodeForbiddenError {
 			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(ctx.Request().RequestURI))
 			return
 		}

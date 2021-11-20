@@ -1,31 +1,31 @@
 package render
 
 import (
+	"bytes"
 	"html/template"
 	"net/http"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/list"
 	"github.com/benpate/steranko"
 )
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	templateService *service.Template // Template Service required to access template data
-	streamService   *service.Stream   // Stream Service required to load parent/sibling/child streams.
-	ctx             *steranko.Context // Contains request context and authentication data.
-	template        *model.Template   // Template that the Stream uses
-	action          model.Action      // Action being executed
-	stream          model.Stream      // Stream to be displayed
+	factory  Factory           // Factory interface is required for locating other services.
+	ctx      *steranko.Context // Contains request context and authentication data.
+	template *model.Template   // Template that the Stream uses
+	action   model.Action      // Action being executed
+	stream   model.Stream      // Stream to be displayed
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(templateService *service.Template, streamService *service.Stream, ctx *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
+func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
 
 	// Try to load the Template associated with this Stream
+	templateService := factory.Template()
 	template, err := templateService.Load(stream.TemplateID)
 
 	if err != nil {
@@ -48,13 +48,41 @@ func NewRenderer(templateService *service.Template, streamService *service.Strea
 
 	// Success.  Populate Renderer
 	return Renderer{
-		templateService: templateService,
-		streamService:   streamService,
-		ctx:             ctx,
-		stream:          stream,
-		template:        template,
-		action:          action,
+		factory:  factory,
+		ctx:      ctx,
+		stream:   stream,
+		template: template,
+		action:   action,
 	}, nil
+}
+
+/*******************************************
+ * RENDER FUNCTION
+ *******************************************/
+
+// Render generates the string value for this Renderer
+func (w *Renderer) Render() (string, error) {
+
+	var buffer bytes.Buffer
+
+	// For each step in the action pipeline...
+	for _, stepInfo := range w.action.Steps {
+
+		// Get Action Step
+		step, err := NewStep(w.factory, stepInfo)
+
+		if err != nil {
+			return "", derp.Wrap(err, "ghost.render.Renderer.Render", "Error parsing step", stepInfo)
+		}
+
+		// Execute step (write HTML to buffer, update context)
+		if err := step.Get(&buffer, w); err != nil {
+			return "", derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML")
+		}
+	}
+
+	// Success!
+	return buffer.String(), nil
 }
 
 /*******************************************
@@ -170,7 +198,9 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 	var parent model.Stream
 	var result Renderer
 
-	if err := w.streamService.LoadParent(&w.stream, &parent); err != nil {
+	streamService := w.factory.Stream()
+
+	if err := streamService.LoadParent(&w.stream, &parent); err != nil {
 		return result, derp.Wrap(err, "ghost.renderer.Renderer.Parent", "Error loading Parent")
 	}
 
@@ -186,7 +216,8 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 // Children returns an array of Streams containing all of the child elements of the current stream
 func (w Renderer) Children(action string) ([]Renderer, error) {
 
-	iterator, err := w.streamService.ListByParent(w.stream.StreamID)
+	streamService := w.factory.Stream()
+	iterator, err := streamService.ListByParent(w.stream.StreamID)
 
 	if err != nil {
 		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Renderer.Children", "Error loading child streams", w.stream))
@@ -198,7 +229,8 @@ func (w Renderer) Children(action string) ([]Renderer, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Renderer) TopFolders(action string) ([]Renderer, error) {
 
-	iterator, err := w.streamService.ListTopFolders()
+	streamService := w.factory.Stream()
+	iterator, err := streamService.ListTopFolders()
 
 	if err != nil {
 		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Renderer.Children", "Error loading child streams", w.stream))
@@ -253,5 +285,5 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, actionID string) []Ren
 
 // newRenderer is a shortcut to the NewRenderer function that reuses the values present in this current Renderer
 func (w Renderer) newRenderer(stream model.Stream, actionID string) (Renderer, error) {
-	return NewRenderer(w.templateService, w.streamService, w.ctx, stream, actionID)
+	return NewRenderer(w.factory, w.ctx, stream, actionID)
 }

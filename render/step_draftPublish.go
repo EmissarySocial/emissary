@@ -1,6 +1,8 @@
 package render
 
 import (
+	"io"
+
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -20,11 +22,11 @@ func NewDraftPublish(streamService *service.Stream, draftService *service.Stream
 	}
 }
 
-func (step DraftPublish) Get(renderer *Renderer) error {
+func (step DraftPublish) Get(buffer io.Writer, renderer *Renderer) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.DraftPublish", "GET not implemented")
 }
 
-func (step DraftPublish) Post(renderer *Renderer) error {
+func (step DraftPublish) Post(buffer io.Writer, renderer *Renderer) error {
 
 	var draft model.Stream
 
@@ -38,13 +40,12 @@ func (step DraftPublish) Post(renderer *Renderer) error {
 		return derp.Report(derp.Wrap(err, "ghost.handler.DraftPublish.Post", "Error publishing draft"))
 	}
 
-	renderer.ctx.Response().Header().Add("HX-Redirect", "/"+draft.Token)
-	renderer.ctx.NoContent(200)
-
 	// Try to delete the draft... it's ok to fail silently because we have already published this to the main collection
 	if err := step.draftService.Delete(&draft, "published"); err != nil {
 		derp.Report(derp.Wrap(err, "ghost.handler.DraftPublish.Post", "Error deleting published draft"))
 	}
+
+	renderer.ctx.Response().Header().Add("HX-Redirect", "/"+draft.Token)
 
 	return nil
 }

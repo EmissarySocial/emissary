@@ -1,10 +1,9 @@
 package render
 
 import (
-	"bytes"
 	"html/template"
+	"io"
 	"math/rand"
-	"net/http"
 
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
@@ -27,23 +26,21 @@ func NewDraftEdit(draftService *service.StreamDraft, command datatype.Map) Draft
 	}
 }
 
-func (step DraftEdit) Get(renderer *Renderer) error {
-
-	var result bytes.Buffer
+func (step DraftEdit) Get(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
 	if err := step.draftService.LoadByID(renderer.stream.StreamID, &renderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.DraftEdit.Get", "Error loading Draft")
 	}
 
-	if err := step.template.Execute(&result, renderer); err != nil {
+	if err := step.template.Execute(buffer, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.DraftEdit.Get", "Error executing template")
 	}
 
-	return renderer.ctx.HTML(http.StatusOK, result.String())
+	return nil
 }
 
-func (step DraftEdit) Post(renderer *Renderer) error {
+func (step DraftEdit) Post(buffer io.Writer, renderer *Renderer) error {
 
 	var draft model.Stream
 
@@ -77,5 +74,6 @@ func (step DraftEdit) Post(renderer *Renderer) error {
 	}
 
 	// Return response to caller
-	return renderer.ctx.String(http.StatusOK, convert.String(rand.Int63()))
+	buffer.Write([]byte(convert.String(rand.Int63())))
+	return nil
 }
