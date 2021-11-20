@@ -2,7 +2,6 @@ package render
 
 import (
 	"bytes"
-	"html/template"
 	"net/http"
 
 	"github.com/benpate/datatype"
@@ -11,19 +10,21 @@ import (
 
 // ViewStream renders HTML for a stream.
 type ViewStream struct {
-	template *template.Template
+	filename string
 }
 
 // NewAction_ViewStream generates a fully initialized ViewStream step.
-func NewViewStream(_ Factory, command datatype.Map) ViewStream {
-	result := ViewStream{}
-	t := command.GetInterface("template")
+func NewViewStream(actionID string, stepInfo datatype.Map) ViewStream {
 
-	if t, ok := t.(*template.Template); ok {
-		result.template = t
+	filename := stepInfo.GetString("file")
+
+	if filename == "" {
+		filename = actionID
 	}
 
-	return result
+	return ViewStream{
+		filename: filename,
+	}
 }
 
 // Get renders the Stream HTML to the context
@@ -31,9 +32,13 @@ func (step ViewStream) Get(renderer *Renderer) error {
 
 	var result bytes.Buffer
 
-	t := step.template
+	template, ok := renderer.template.HTMLTemplate(step.filename)
 
-	if err := t.Execute(&result, renderer); err != nil {
+	if !ok {
+		return derp.New(derp.CodeBadRequestError, "ghost.renderer.ViewStream.Get", "Cannot find template", step.filename)
+	}
+
+	if err := template.Execute(&result, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.ViewStream.Get", "Error executing template")
 	}
 

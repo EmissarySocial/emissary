@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Template represents an HTML template to be used for generating an HTML page.
@@ -52,15 +51,16 @@ func (template *Template) State(stateID string) (State, bool) {
 	return state, ok
 }
 
+// Action returns the action object for a specified name
 func (template *Template) Action(actionID string) (Action, bool) {
-	spew.Dump("----------------")
-	spew.Dump("Template Service.Action()")
-	spew.Dump(actionID)
-
 	action, ok := template.Actions[actionID]
-
-	spew.Dump(action, ok)
 	return action, ok
+}
+
+// HTMLTemplate returns a named html/template
+func (template *Template) HTMLTemplate(filename string) (*template.Template, bool) {
+	result, ok := template.Files[filename]
+	return result, ok
 }
 
 // GetPath implements the path.Getter interface.

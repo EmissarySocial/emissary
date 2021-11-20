@@ -7,21 +7,22 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 )
 
 // CreateStream is an action that can add new sub-streams to the domain.
 type CreateStream struct {
-	factory    Factory
-	childState string
-	templateID string
+	streamService *service.Stream
+	childState    string
+	templateID    string
 }
 
 // NewCreateStream returns a fully initialized CreateSubStream record
-func NewCreateStream(factory Factory, command datatype.Map) CreateStream {
+func NewCreateStream(streamService *service.Stream, actionID string, command datatype.Map) CreateStream {
 	return CreateStream{
-		factory:    factory,
-		childState: command.GetString("childState"),
-		templateID: command.GetString("tempalteId"),
+		streamService: streamService,
+		childState:    command.GetString("childState"),
+		templateID:    command.GetString("tempalteId"),
 	}
 }
 
@@ -54,8 +55,7 @@ func (step CreateStream) Post(renderer *Renderer) error {
 
 	// Try to load the template that will be used
 
-	streamService := step.factory.Stream()
-	template, err := streamService.Template(formData.TemplateID)
+	template, err := step.streamService.Template(formData.TemplateID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Undefined template", formData.TemplateID)
@@ -72,7 +72,7 @@ func (step CreateStream) Post(renderer *Renderer) error {
 	child.AuthorID = authorization.UserID
 
 	// Try to save the new child
-	if err := streamService.Save(&child, "created"); err != nil {
+	if err := step.streamService.Save(&child, "created"); err != nil {
 		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Error saving child")
 	}
 

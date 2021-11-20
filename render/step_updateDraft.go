@@ -11,47 +11,44 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/content/transaction"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 )
 
 // UpdateDraft manages the content.Content in a stream.
 type UpdateDraft struct {
-	factory  Factory
-	template *template.Template
+	draftService *service.StreamDraft
+	template     *template.Template
 }
 
-func NewUpdateDraft(factory Factory, command datatype.Map) UpdateDraft {
+func NewUpdateDraft(draftService *service.StreamDraft, command datatype.Map) UpdateDraft {
 	return UpdateDraft{
-		factory:  factory,
-		template: mustTemplate(command.GetInterface("template")),
+		draftService: draftService,
+		template:     mustTemplate(command.GetInterface("template")),
 	}
 }
 
-func (action UpdateDraft) Get(renderer *Renderer) error {
+func (step UpdateDraft) Get(renderer *Renderer) error {
 
 	var result bytes.Buffer
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	service := action.factory.StreamDraft()
-
-	if err := service.LoadByID(renderer.stream.StreamID, &renderer.stream); err != nil {
+	if err := step.draftService.LoadByID(renderer.stream.StreamID, &renderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.UpdateDraft.Post", "Error loading Draft")
 	}
 
-	if err := action.template.Execute(&result, renderer); err != nil {
+	if err := step.template.Execute(&result, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.UpdateDraft.Get", "Error executing template")
 	}
 
 	return renderer.ctx.HTML(http.StatusOK, result.String())
 }
 
-func (action UpdateDraft) Post(renderer *Renderer) error {
+func (step UpdateDraft) Post(renderer *Renderer) error {
 
 	var draft model.Stream
 
 	// Try to load the stream draft from the database
-	service := action.factory.StreamDraft()
-
-	if err := service.LoadByID(renderer.stream.StreamID, &draft); err != nil {
+	if err := step.draftService.LoadByID(renderer.stream.StreamID, &draft); err != nil {
 		return derp.Wrap(err, "ghost.renderer.UpdateDraft.Post", "Error loading Draft")
 	}
 
@@ -75,7 +72,7 @@ func (action UpdateDraft) Post(renderer *Renderer) error {
 
 	// Try to save the draft
 
-	if err := service.Save(&draft, "edit content: "+txn.Description()); err != nil {
+	if err := step.draftService.Save(&draft, "edit content: "+txn.Description()); err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PostStreamDraft", "Error saving stream"))
 	}
 

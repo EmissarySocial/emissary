@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
@@ -172,8 +173,46 @@ func (factory *Factory) Layout() *service.Layout {
 func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (render.Renderer, error) {
 
 	// Create and return the new Renderer
-	renderer, _, err := render.NewRenderer(factory, ctx, stream, actionID)
+	renderer, err := render.NewRenderer(factory.Template(), factory.Stream(), ctx, stream, actionID)
 	return renderer, err
+}
+
+// RenderStep uses an Step object to create a new action
+func (factory *Factory) RenderStep(actionID string, stepInfo datatype.Map) (render.Step, error) {
+
+	// Populate the action with the data from
+	switch stepInfo["method"] {
+
+	case "create-stream":
+		return render.NewCreateStream(factory.Stream(), actionID, stepInfo), nil
+
+	case "create-top-stream":
+		return render.NewCreateTopStream(factory.Stream(), stepInfo), nil
+
+	case "delete-stream":
+		return render.NewDeleteStream(factory.Stream(), stepInfo), nil
+
+	case "delete-draft":
+		return render.NewDeleteDraft(factory.StreamDraft(), stepInfo), nil
+
+	case "publish-draft":
+		return render.NewPublishDraft(factory.Stream(), factory.StreamDraft(), stepInfo), nil
+
+	case "update-draft":
+		return render.NewUpdateDraft(factory.StreamDraft(), stepInfo), nil
+
+	case "update-data":
+		return render.NewUpdateData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
+
+	case "update-state":
+		return render.NewUpdateState(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
+
+	case "view-stream":
+		return render.NewViewStream(actionID, stepInfo), nil
+	}
+
+	// Fall through means we have an unrecognized action
+	return nil, derp.New(derp.CodeInternalError, "ghost.render.NewStep", "Invalid action configuration", stepInfo)
 }
 
 ///////////////////////////////////////

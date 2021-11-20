@@ -6,21 +6,22 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateTopStream struct {
-	factory    Factory
-	parent     string
-	templateID string
+	streamService *service.Stream
+	parent        string
+	templateID    string
 }
 
-func NewCreateTopStream(factory Factory, config datatype.Map) CreateTopStream {
+func NewCreateTopStream(streamService *service.Stream, config datatype.Map) CreateTopStream {
 
 	return CreateTopStream{
-		factory:    factory,
-		parent:     config.GetString("parent"),
-		templateID: config.GetString("templateId"),
+		streamService: streamService,
+		parent:        config.GetString("parent"),
+		templateID:    config.GetString("templateId"),
 	}
 }
 
@@ -29,11 +30,11 @@ type createTopStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (action CreateTopStream) Get(renderer *Renderer) error {
+func (step CreateTopStream) Get(renderer *Renderer) error {
 	return nil
 }
 
-func (action CreateTopStream) Post(renderer *Renderer) error {
+func (step CreateTopStream) Post(renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
@@ -44,8 +45,7 @@ func (action CreateTopStream) Post(renderer *Renderer) error {
 	}
 
 	// Try to load the template
-	streamService := action.factory.Stream()
-	template, err := streamService.Template(formData.TemplateID)
+	template, err := step.streamService.Template(formData.TemplateID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Invalid template")
@@ -73,7 +73,7 @@ func (action CreateTopStream) Post(renderer *Renderer) error {
 		var parent model.Stream
 
 		// Try to load the parent stream
-		if err := streamService.LoadByToken(formData.Parent, &parent); err != nil {
+		if err := step.streamService.LoadByToken(formData.Parent, &parent); err != nil {
 			return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error loading parent stream")
 		}
 
@@ -87,7 +87,7 @@ func (action CreateTopStream) Post(renderer *Renderer) error {
 	}
 
 	// Save the new child
-	if err := streamService.Save(&child, "created"); err != nil {
+	if err := step.streamService.Save(&child, "created"); err != nil {
 		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error saving child")
 	}
 

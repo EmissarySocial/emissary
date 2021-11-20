@@ -4,38 +4,37 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/service"
 )
 
 // PublishDraft manages the content.Content in a stream.
 type PublishDraft struct {
-	factory Factory
+	streamService *service.Stream
+	draftService  *service.StreamDraft
 }
 
-func NewPublishDraft(factory Factory, config datatype.Map) PublishDraft {
+func NewPublishDraft(streamService *service.Stream, draftService *service.StreamDraft, config datatype.Map) PublishDraft {
 	return PublishDraft{
-		factory: factory,
+		streamService: streamService,
+		draftService:  draftService,
 	}
 }
 
-func (action PublishDraft) Get(renderer *Renderer) error {
+func (step PublishDraft) Get(renderer *Renderer) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.PublishDraft", "GET not implemented")
 }
 
-func (action PublishDraft) Post(renderer *Renderer) error {
+func (step PublishDraft) Post(renderer *Renderer) error {
 
 	var draft model.Stream
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	draftService := action.factory.StreamDraft()
-
-	if err := draftService.LoadByID(renderer.stream.StreamID, &draft); err != nil {
+	if err := step.draftService.LoadByID(renderer.stream.StreamID, &draft); err != nil {
 		return derp.Wrap(err, "ghost.renderer.UpdateDraft.Post", "Error loading Draft")
 	}
 
 	// Try to save the draft into the Stream collection
-	streamService := action.factory.Stream()
-
-	if err := streamService.Save(&draft, ""); err != nil {
+	if err := step.streamService.Save(&draft, ""); err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.PublishStreamDraft", "Error publishing draft"))
 	}
 
@@ -43,7 +42,7 @@ func (action PublishDraft) Post(renderer *Renderer) error {
 	renderer.ctx.NoContent(200)
 
 	// Try to delete the draft... it's ok to fail silently because we have already published this to the main collection
-	if err := draftService.Delete(&draft, "published"); err != nil {
+	if err := step.draftService.Delete(&draft, "published"); err != nil {
 		derp.Report(derp.Wrap(err, "ghost.handler.PublishStreamDraft", "Error deleting published draft"))
 	}
 

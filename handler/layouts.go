@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -37,7 +36,7 @@ func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Try to make a renderer.  This also includes permissions...
-		renderer, _, err := render.NewRenderer(factory, sterankoContext, stream, "default")
+		renderer, err := factory.Renderer(sterankoContext, stream, "view")
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.renderStream", "Error generating renderer")

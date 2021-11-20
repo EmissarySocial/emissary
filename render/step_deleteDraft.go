@@ -5,27 +5,26 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/service"
 )
 
 type DeleteDraft struct {
-	factory Factory
+	draftService *service.StreamDraft
 }
 
-func NewDeleteDraft(factory Factory, config datatype.Map) DeleteDraft {
+func NewDeleteDraft(draftService *service.StreamDraft, config datatype.Map) DeleteDraft {
 	return DeleteDraft{
-		factory: factory,
+		draftService: draftService,
 	}
 }
 
-func (action DeleteDraft) Get(renderer *Renderer) error {
+func (step DeleteDraft) Get(renderer *Renderer) error {
 	return nil
 }
 
-func (action DeleteDraft) Post(renderer *Renderer) error {
+func (step DeleteDraft) Post(renderer *Renderer) error {
 
-	draftService := action.factory.StreamDraft()
-
-	if err := draftService.Delete(&renderer.stream, "Deleted"); err != nil {
+	if err := step.draftService.Delete(&renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.DeleteDraft.Post", "Error deleting stream")
 	}
 

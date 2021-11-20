@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 
 	"encoding/json"
 	"io/ioutil"
@@ -144,10 +143,6 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 	}
 
 	t.Validate()
-
-	if t.TemplateID == "article" {
-		spew.Dump(t.Actions)
-	}
 
 	// Save the Template into the memory cache
 	service.Save(t)
