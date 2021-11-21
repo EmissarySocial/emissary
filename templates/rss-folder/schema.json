@@ -45,23 +45,25 @@
 	},
 	"actions": {
 		"view": {
-			"method": "view-stream"
+			"step": "view-stream"
 		},
 		"edit": {
-			"method": "update-data",
-			"form": {
-				"kind": "layout-vertical",
-				"roles": ["owner", "editor"],
-				"children": [{
-					"kind": "text",
-					"label": "Name",
-					"path": "label"
-				}, {
-					"kind": "textarea",
-					"label": "Description",
-					"path": "description"
-				}]
-			}
+			"steps": [{
+				"step": "update-data",
+				"form": {
+					"kind": "layout-vertical",
+					"roles": ["owner", "editor"],
+					"children": [{
+						"kind": "text",
+						"label": "Name",
+						"path": "label"
+					}, {
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}]
 		},
 		"info": {
 			"method": "update-data",

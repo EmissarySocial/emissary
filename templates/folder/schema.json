@@ -26,30 +26,38 @@
 	},
 	"actions": {
 		"view": {
-			"method": "view-stream"
+			"step": "view-stream"
 		},
 		"edit": {
-			"label": "Edit folder",
-			"method": "update-data",
-			"form": {
-				"kind": "layout-vertical",
-				"label": "Update Form",
-				"description": "This will update the object in this state",
-				"children": [{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				},
-				{
-					"kind": "textarea",
-					"label": "Description",
-					"path": "description"
-				}]
-			}
+			"steps":[{
+				"label": "Edit folder",
+				"method": "update-data",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Update Form",
+					"description": "This will update the object in this state",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},
+					{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}]
 		},
-		"delete": {},
-		"add-child": {},
-		"add-top": {},
+		"delete": {
+			"step": "delete-stream"
+		},
+		"add-child": {
+			"step": "add-child"
+		},
+		"add-top": {
+			"step": "add-top"
+		},
 		"create-top-folder": {
 			"_roles": ["owner"],
 			"method": "create-top-stream"
