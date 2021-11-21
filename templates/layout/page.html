@@ -19,44 +19,43 @@
 	<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
 	<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
 	<script type="text/hyperscript" src="/static/viewer/date.hs"></script>
-
-	<!--
-	<script src="https://unpkg.com/hyperscript.org"></script>
-	<script src="https://unpkg.com/htmx.org"></script>
-	-->
-
 </head>
 
 <body hx-ext="preload">
 
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
-		{{.Render}}
+		{{- .Render -}}
 	</div>
 
 	<div id="menu" hx-target="#main" hx-push-url="true">
 
 		<a href="/home" hx-get="/home" class="space-before">Home</a>
 
-		{{ range .TopFolders "view" }}
-			<a preload hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
-		{{ end }}
+		{{- range .TopFolders "view" -}}
+			<a hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
+		{{- end -}}
 
-		{{ if .UserCan "manage-folders"}}
+		{{- if .UserCan "manage-folders" -}}
 		<a script="install modal('/admin/folders')" class="link">
 			Manage Folders</a>
-		{{ end }}
+		{{- end -}}
 
-		{{ if .IsAuthenticated }}
+		{{- if .IsAuthenticated -}}
 			<a href="/profile" class="space-before">My Profile</a>
 			<a hx-post="/signout" hx-target="body">Sign Out</a>
-		{{ else }}
+		{{- else -}}
 			<a href="/signin" class="space-before">Sign In</a>
-		{{ end }}
+		{{- end -}}
 		
 	</div>
 
 	<script src="/htmx/htmx.js"></script>
-	<script src="/hyperscript/_hyperscript.js"></script>
+	<script src="/htmx/ext/preload.js"></script>
+	
+	<!--
+	<script src="https://unpkg.com/hyperscript.org"></script>
+	<script src="/hyperscript/_hyperscript_web.min.js"></script>
+	-->
 
 </body>
 </html>

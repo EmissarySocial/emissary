@@ -1,19 +1,19 @@
 <div hx-get="{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
-	{{ if .UserCan "draft"}}
-		<a href="/{{.Token}}/draft" class="button" preload style="float:right;">Edit</a>
-	{{ end }}
+	{{- if .UserCan "draft" -}}
+		<a href="/{{.Token}}/draft" class="button" style="float:right;">Edit</a>
+	{{- end -}}
 
-	{{ if .UserCan "properties"}}
+	{{- if .UserCan "properties" -}}
 		<span script="install AsModal" hx-get="/{{.Token}}/properties" style="float:right;" class="button">Info</span>
-	{{ end }}
+	{{- end -}}
 
-	{{ if .HasParent }}
-		{{ $parent := .Parent "view"}}
+	{{- if .HasParent -}}
+		{{- $parent := .Parent "view" -}}
 		<div>
-			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" preload>&laquo; {{$parent.Label}}.</a>
+			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
 		</div>
-	{{ end }}
+	{{- end -}}
 
 	<h1 class="space-after">{{.Label}}</h1>
 
@@ -28,9 +28,9 @@
 	</article>
 
 	<div class="space-after">
-		{{ range .Children "view" }}
+		{{- range .Children "view" -}}
 			<a href="/{{.Token}}">{{.Label}}</a><br>
-		{{ end }}
+		{{- end -}}
 	</div>
 
 </div>
