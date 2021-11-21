@@ -10,7 +10,8 @@ import (
 	"github.com/benpate/path"
 )
 
-type UpdateState struct {
+// StepStreamState represents an action-step that can change a Stream's state
+type StepStreamState struct {
 	templateService *service.Template
 	streamService   *service.Stream
 	formLibrary     form.Library
@@ -18,9 +19,9 @@ type UpdateState struct {
 	form            form.Form
 }
 
-func NewUpdateState(templateService *service.Template, streamService *service.Stream, formLibrary form.Library, stepInfo datatype.Map) UpdateState {
+func NewStepStreamState(templateService *service.Template, streamService *service.Stream, formLibrary form.Library, stepInfo datatype.Map) StepStreamState {
 
-	return UpdateState{
+	return StepStreamState{
 		templateService: templateService,
 		streamService:   streamService,
 		newStateID:      stepInfo.GetString("newStateID"),
@@ -29,20 +30,20 @@ func NewUpdateState(templateService *service.Template, streamService *service.St
 }
 
 // Get displays a form for users to fill out in the browser
-func (step UpdateState) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamState) Get(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to find the schema for the requested template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.UpdateState.Get", "Invalid Schema")
+		return derp.Wrap(err, "ghost.render.StepStreamState.Get", "Invalid Schema")
 	}
 
 	// Try to render the form in HTML
 	result, err := step.form.HTML(step.formLibrary, schema, renderer.stream)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.UpdateState.Get", "Error generating form")
+		return derp.Wrap(err, "ghost.render.StepStreamState.Get", "Error generating form")
 	}
 
 	buffer.Write([]byte(result))
@@ -51,12 +52,12 @@ func (step UpdateState) Get(buffer io.Writer, renderer *Renderer) error {
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step UpdateState) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamState) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Collect form POST information
 	body := datatype.Map{}
 	if err := renderer.ctx.Bind(&body); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateState.Post", "Error binding body")
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamState.Post", "Error binding body")
 	}
 
 	// Put approved form data into the stream
@@ -64,7 +65,7 @@ func (step UpdateState) Post(buffer io.Writer, renderer *Renderer) error {
 	for _, field := range allPaths {
 		p := path.New(field.Path)
 		if err := renderer.stream.SetPath(p, body[p.String()]); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.UpdateState.Post", "Error seting value", field)
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamState.Post", "Error seting value", field)
 		}
 	}
 
@@ -73,7 +74,7 @@ func (step UpdateState) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to update the stream
 	if err := step.streamService.Save(renderer.stream, "Moved to new State"); err != nil {
-		return derp.Wrap(err, "ghost.render.UpdateState.Post", "Error updating state")
+		return derp.Wrap(err, "ghost.render.StepStreamState.Post", "Error updating state")
 	}
 
 	// Redirect the browser to the default page.

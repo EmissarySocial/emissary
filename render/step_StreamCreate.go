@@ -10,16 +10,16 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-// CreateStream is an action that can add new sub-streams to the domain.
-type CreateStream struct {
+// StepStreamCreate is an action that can add new sub-streams to the domain.
+type StepStreamCreate struct {
 	streamService *service.Stream
 	childState    string
 	templateID    string
 }
 
-// NewCreateStream returns a fully initialized CreateSubStream record
-func NewCreateStream(streamService *service.Stream, command datatype.Map) CreateStream {
-	return CreateStream{
+// NewStepStreamCreate returns a fully initialized StepStreamCreate record
+func NewStepStreamCreate(streamService *service.Stream, command datatype.Map) StepStreamCreate {
+	return StepStreamCreate{
 		streamService: streamService,
 		childState:    command.GetString("childState"),
 		templateID:    command.GetString("tempalteId"),
@@ -30,22 +30,22 @@ type createStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (step CreateStream) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamCreate) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step CreateStream) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamCreate) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createStreamFormData
 
 	if err := renderer.ctx.Bind(&formData); err != nil {
-		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Cannot bind form data")
+		return derp.Wrap(err, "ghost.render.StepStreamCreate.Post", "Cannot bind form data")
 	}
 
 	// Validate that the requested template is allowed by this step
 	if !compare.Contains(step.templateID, formData.TemplateID) {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.CreateStream.Post", "Invalid Template", formData.TemplateID)
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamCreate.Post", "Invalid Template", formData.TemplateID)
 	}
 
 	// Create new child stream
@@ -58,12 +58,12 @@ func (step CreateStream) Post(buffer io.Writer, renderer *Renderer) error {
 	template, err := step.streamService.Template(formData.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Undefined template", formData.TemplateID)
+		return derp.Wrap(err, "ghost.render.StepStreamCreate.Post", "Undefined template", formData.TemplateID)
 	}
 
 	// Confirm that this Template can be a child of the parent Template
 	if !template.CanBeContainedBy(renderer.stream.TemplateID) {
-		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Invalid template")
+		return derp.Wrap(err, "ghost.render.StepStreamCreate.Post", "Invalid template")
 	}
 
 	// Set Default Values
@@ -73,7 +73,7 @@ func (step CreateStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to save the new child
 	if err := step.streamService.Save(&child, "created"); err != nil {
-		return derp.Wrap(err, "ghost.render.CreateStream.Post", "Error saving child")
+		return derp.Wrap(err, "ghost.render.StepStreamCreate.Post", "Error saving child")
 	}
 
 	// Success!  Send response to client

@@ -10,15 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type CreateTopStream struct {
+// StepTopFolderCreate represents an action that can create top-level folders in the Domain
+type StepTopFolderCreate struct {
 	streamService *service.Stream
 	parent        string
 	templateID    string
 }
 
-func NewCreateTopStream(streamService *service.Stream, config datatype.Map) CreateTopStream {
+// NewStepTopFolderCreate returns a fully parsed StepTopFolderCreate object
+func NewStepTopFolderCreate(streamService *service.Stream, config datatype.Map) StepTopFolderCreate {
 
-	return CreateTopStream{
+	return StepTopFolderCreate{
 		streamService: streamService,
 		parent:        config.GetString("parent"),
 		templateID:    config.GetString("templateId"),
@@ -30,25 +32,25 @@ type createTopStreamFormData struct {
 	TemplateID string `form:"templateId"`
 }
 
-func (step CreateTopStream) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopFolderCreate) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step CreateTopStream) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopFolderCreate) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Retrieve formData from request body
 	var formData createTopStreamFormData
 	var child model.Stream
 
 	if err := renderer.ctx.Bind(&formData); err != nil {
-		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Cannot bind form data")
+		return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Cannot bind form data")
 	}
 
 	// Try to load the template
 	template, err := step.streamService.Template(formData.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Invalid template")
+		return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Invalid template")
 	}
 
 	authorization := getAuthorization(renderer.ctx)
@@ -64,7 +66,7 @@ func (step CreateTopStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 		// Verify that this template can live on the top level
 		if !template.CanBeContainedBy("top") {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.CreateTopStream.Post", "Cannot place template on top", formData.TemplateID)
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepTopFolderCreate.Post", "Cannot place template on top", formData.TemplateID)
 		}
 
 	} else {
@@ -74,12 +76,12 @@ func (step CreateTopStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 		// Try to load the parent stream
 		if err := step.streamService.LoadByToken(formData.Parent, &parent); err != nil {
-			return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error loading parent stream")
+			return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Error loading parent stream")
 		}
 
 		// Confirm that this Template can be a child of the parent Template
 		if !template.CanBeContainedBy(parent.TemplateID) {
-			return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Template cannot be placed in parent")
+			return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Template cannot be placed in parent")
 		}
 
 		// Everything checks out.  Assign the child to the parent
@@ -88,7 +90,7 @@ func (step CreateTopStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Save the new child
 	if err := step.streamService.Save(&child, "created"); err != nil {
-		return derp.Wrap(err, "ghost.render.CreateTopStream.Post", "Error saving child")
+		return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Error saving child")
 	}
 
 	// Success! Write response to client
