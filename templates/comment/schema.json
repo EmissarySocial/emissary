@@ -14,11 +14,11 @@
 		}, 
 		"visible": {
 			"label": "Visible",
-			"description": "Comment is visible to all `participant`s"
+			"description": "Comment is visible to all participants"
 		}, 
 		"hidden": {
 			"label": "Hidden",
-			"description": "Comment has been hidden by `moderator`s"
+			"description": "Comment has been hidden by moderators"
 		}
 	},
 	"roles": {

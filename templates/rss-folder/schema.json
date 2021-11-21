@@ -45,29 +45,11 @@
 	},
 	"actions": {
 		"view": {
-			"step": "view-stream"
+			"step": "stream-HTML"
 		},
-		"edit": {
-			"steps": [{
-				"step": "update-data",
-				"form": {
-					"kind": "layout-vertical",
-					"roles": ["owner", "editor"],
-					"children": [{
-						"kind": "text",
-						"label": "Name",
-						"path": "label"
-					}, {
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}]
-				}
-			}]
-		},
-		"info": {
-			"method": "update-data",
-			"roles": ["owner"]
+		"delete": {
+			"roles": ["owner"],
+			"step": "stream-delete"
 		}
 	}
 }	

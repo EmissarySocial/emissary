@@ -27,6 +27,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "draft-publish":
 		return NewStepStreamDraftPublish(factory.Stream(), factory.StreamDraft(), stepInfo), nil
 
+	case "form":
+		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
+
 	case "stream-create":
 		return NewStepStreamCreate(factory.Stream(), stepInfo), nil
 
@@ -36,8 +39,14 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "stream-delete":
 		return NewStepStreamDelete(factory.Stream(), stepInfo), nil
 
+	case "stream-save":
+		return NewStepStreamSave(factory.Stream(), stepInfo), nil
+
+	case "stream-share":
+		return NewStepStreamShare(stepInfo), nil
+
 	case "stream-state":
-		return NewStepStreamState(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
+		return NewStepStreamState(stepInfo), nil
 
 	case "stream-html":
 		return NewStepStreamHTML(stepInfo), nil

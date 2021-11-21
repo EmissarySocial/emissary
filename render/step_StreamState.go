@@ -4,81 +4,32 @@ import (
 	"io"
 
 	"github.com/benpate/datatype"
-	"github.com/benpate/derp"
-	"github.com/benpate/form"
-	"github.com/benpate/ghost/service"
-	"github.com/benpate/path"
 )
 
 // StepStreamState represents an action-step that can change a Stream's state
 type StepStreamState struct {
-	templateService *service.Template
-	streamService   *service.Stream
-	formLibrary     form.Library
-	newStateID      string
-	form            form.Form
+	newState string
 }
 
-func NewStepStreamState(templateService *service.Template, streamService *service.Stream, formLibrary form.Library, stepInfo datatype.Map) StepStreamState {
+func NewStepStreamState(stepInfo datatype.Map) StepStreamState {
 
 	return StepStreamState{
-		templateService: templateService,
-		streamService:   streamService,
-		newStateID:      stepInfo.GetString("newStateID"),
-		form:            form.MustParse(stepInfo.GetInterface("form")),
+		newState: stepInfo.GetString("newState"),
 	}
 }
 
 // Get displays a form for users to fill out in the browser
 func (step StepStreamState) Get(buffer io.Writer, renderer *Renderer) error {
-
-	// Try to find the schema for the requested template
-	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamState.Get", "Invalid Schema")
-	}
-
-	// Try to render the form in HTML
-	result, err := step.form.HTML(step.formLibrary, schema, renderer.stream)
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamState.Get", "Error generating form")
-	}
-
-	buffer.Write([]byte(result))
-
 	return nil
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
 func (step StepStreamState) Post(buffer io.Writer, renderer *Renderer) error {
 
-	// Collect form POST information
-	body := datatype.Map{}
-	if err := renderer.ctx.Bind(&body); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamState.Post", "Error binding body")
-	}
-
-	// Put approved form data into the stream
-	allPaths := step.form.AllPaths()
-	for _, field := range allPaths {
-		p := path.New(field.Path)
-		if err := renderer.stream.SetPath(p, body[p.String()]); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamState.Post", "Error seting value", field)
-		}
-	}
-
 	// Move stream to a new state
-	renderer.stream.StateID = step.newStateID
+	renderer.stream.StateID = step.newState
 
-	// Try to update the stream
-	if err := step.streamService.Save(renderer.stream, "Moved to new State"); err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamState.Post", "Error updating state")
-	}
-
-	// Redirect the browser to the default page.
-	renderer.ctx.Response().Header().Add("HX-Trigger", `{"closeModal":{"nextPage":"/`+renderer.stream.Token+`"}}`)
+	// TODO: post-change hooks??
 
 	return nil
 }

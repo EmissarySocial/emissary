@@ -26,16 +26,15 @@
 	},
 	"actions": {
 		"view": {
-			"step": "view-stream"
+			"step": "stream-HTML"
 		},
 		"edit": {
 			"steps":[{
-				"label": "Edit folder",
-				"method": "update-data",
+				"method": "form",
+				"label": "Edit Folder",
 				"form": {
 					"kind": "layout-vertical",
 					"label": "Update Form",
-					"description": "This will update the object in this state",
 					"children": [{
 						"kind": "text",
 						"label": "Label",
@@ -47,20 +46,23 @@
 						"path": "description"
 					}]
 				}
+			}, {
+				"method": "stream-data",
+				"fields": ["label", "description"]
+			}, {
+				"method": "stream-save",
+				"comment": "Updated Folder"
 			}]
 		},
 		"delete": {
-			"step": "delete-stream"
+			"step": "stream-delete"
 		},
 		"add-child": {
-			"step": "add-child"
+			"step": "stream-create"
 		},
 		"add-top": {
-			"step": "add-top"
-		},
-		"create-top-folder": {
-			"_roles": ["owner"],
-			"method": "create-top-stream"
+			"roles": ["owner"],
+			"method": "top-folder-create"
 		}
 	}
 }

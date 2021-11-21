@@ -54,7 +54,7 @@
 		"view": {
 			"roles": [],
 			"states": [],
-			"step": "view-stream"
+			"step": "stream-html"
 		},
 		"draft": {
 			"roles": ["owner", "editor"],
@@ -70,7 +70,7 @@
 			"roles": ["owner", "editor"],
 			"states": [],
 			"steps": [{
-				"method": "data",
+				"method": "form",
 				"form": {
 					"kind": "layout-vertical",
 					"label": "Update Form",
@@ -85,22 +85,28 @@
 						"path": "description"
 					}]
 				}
+			}, {
+				"method": "stream-data",
+				"fields": ["label", "description"]
+			},{
+				"method": "stream-save",
+				"comment": "Updated label and description"
 			}]
 		},
 		"add-child": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"step": "add-child"
+			"step": "stream-create"
 		},
 		"share": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"step": "update-sharing"
+			"step": "stream-share"
 		},
-		"create-top-folder": {
+		"top-folder-create": {
 			"roles": ["owner"],
 			"states": [],
-			"step": "create-top-stream"
+			"step": "top-folder-create"
 		}
 	}
 }
