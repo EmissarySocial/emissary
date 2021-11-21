@@ -41,8 +41,7 @@
 	<!--script src="https://unpkg.com/hyperscript.org"></script-->
 
 	<script src="/htmx/htmx.js"></script>
-	<script src="/hyperscript/core.js"></script>
-	<script src="/hyperscript/web.js"></script>
+	<script src="/hyperscript/_hyperscript_web.min.js"></script>
 
 	<script type="text/hyperscript">
 
@@ -54,11 +53,13 @@
 		end
 
 		on SigninSuccess
+			log "SigninSuccess"
 			set lastPage to sessionStorage.getItem("signin-return")
+			log lastPage
 			if lastPage then
-				set the window.location to lastPage
+				set the window's location to lastPage
 			else
-				set the window.location to "/home"
+				go to url "/home"
 			end
 		end
 	</script>
