@@ -29,7 +29,7 @@ func NewDraftEdit(draftService *service.StreamDraft, command datatype.Map) Draft
 func (step DraftEdit) Get(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := step.draftService.LoadByID(renderer.stream.StreamID, &renderer.stream); err != nil {
+	if err := step.draftService.LoadByID(renderer.stream.StreamID, renderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.DraftEdit.Get", "Error loading Draft")
 	}
 

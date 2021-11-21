@@ -169,7 +169,7 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 // StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) Renderer(ctx *steranko.Context, stream model.Stream, actionID string) (render.Renderer, error) {
+func (factory *Factory) Renderer(ctx *steranko.Context, stream *model.Stream, actionID string) (render.Renderer, error) {
 
 	// Create and return the new Renderer
 	renderer, err := render.NewRenderer(factory, ctx, stream, actionID)

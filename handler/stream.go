@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"net/http"
 
 	"github.com/benpate/derp"
@@ -21,7 +22,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Unrecognized Domain")
+			return derp.Wrap(err, "ghost.handler.GetStream", "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
@@ -29,35 +30,37 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Error loading Stream", streamToken)
+			return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := factory.Renderer(sterankoContext, stream, actionID)
+		renderer, err := factory.Renderer(sterankoContext, &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
+			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")
 		}
 
-		action := renderer.Action()
-
-		// Execute all of the steps of the requested action
-		for _, stepInfo := range action.Steps {
-
-			step, err := factory.RenderStep(stepInfo)
+		// Partial Page requests are simpler.
+		if renderer.IsPartialRequest() {
+			result, err := renderer.Render()
 
 			if err != nil {
-				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
+				return derp.Wrap(err, "ghost.handler.GetStream", "Error rendering stream")
 			}
-
-			if err := step.Get(ctx.Response(), &renderer); err != nil {
-				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
-			}
+			return ctx.HTML(http.StatusOK, string(result))
 		}
 
-		return nil
+		// Full Page requests require the layout service
+		layoutService := factory.Layout()
+		var buffer bytes.Buffer
+
+		if err := layoutService.Template.ExecuteTemplate(&buffer, "page", &renderer); err != nil {
+			return derp.Wrap(err, "ghost.renderer.GetStream", "Error rendering full-page content")
+		}
+
+		return ctx.HTML(http.StatusOK, buffer.String())
 	}
 }
 
@@ -86,7 +89,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := factory.Renderer(sterankoContext, stream, actionID)
+		renderer, err := factory.Renderer(sterankoContext, &stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")

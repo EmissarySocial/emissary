@@ -27,11 +27,11 @@ func (step DeleteStream) Post(buffer io.Writer, renderer *Renderer) error {
 
 	var parent model.Stream
 
-	if err := step.streamService.LoadParent(&renderer.stream, &parent); err != nil {
+	if err := step.streamService.LoadParent(renderer.stream, &parent); err != nil {
 		return derp.Wrap(err, "ghost.render.DeleteStream.Post", "Error loading parent stream")
 	}
 
-	if err := step.streamService.Delete(&renderer.stream, "Deleted"); err != nil {
+	if err := step.streamService.Delete(renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.DeleteStream.Post", "Error deleting stream")
 	}
 

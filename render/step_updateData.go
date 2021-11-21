@@ -70,7 +70,7 @@ func (step UpdateData) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// Try to update the stream
 
-	if err := step.streamService.Save(&renderer.stream, "Properties Updated"); err != nil {
+	if err := step.streamService.Save(renderer.stream, "Properties Updated"); err != nil {
 		return derp.Wrap(err, "ghost.render.UpdateData.Post", "Error updating state")
 	}
 

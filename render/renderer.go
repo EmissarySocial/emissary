@@ -17,12 +17,12 @@ type Renderer struct {
 	factory  Factory           // Factory interface is required for locating other services.
 	ctx      *steranko.Context // Contains request context and authentication data.
 	template *model.Template   // Template that the Stream uses
-	action   model.Action      // Action being executed
-	stream   model.Stream      // Stream to be displayed
+	action   *model.Action     // Action being executed
+	stream   *model.Stream     // Stream to be displayed
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
-func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, actionID string) (Renderer, error) {
+func NewRenderer(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Renderer, error) {
 
 	// Try to load the Template associated with this Stream
 	templateService := factory.Template()
@@ -42,7 +42,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, ac
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
-	if !action.UserCan(&stream, authorization) {
+	if !action.UserCan(stream, authorization) {
 		return Renderer{}, derp.New(http.StatusForbidden, "ghost.render.NewRenderer", "Forbidden")
 	}
 
@@ -52,7 +52,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, ac
 		ctx:      ctx,
 		stream:   stream,
 		template: template,
-		action:   action,
+		action:   &action,
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, stream model.Stream, ac
  *******************************************/
 
 // Render generates the string value for this Renderer
-func (w *Renderer) Render() (string, error) {
+func (w Renderer) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
@@ -72,17 +72,18 @@ func (w *Renderer) Render() (string, error) {
 		step, err := NewStep(w.factory, stepInfo)
 
 		if err != nil {
-			return "", derp.Wrap(err, "ghost.render.Renderer.Render", "Error parsing step", stepInfo)
+			return "", derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error parsing step", stepInfo))
 		}
 
 		// Execute step (write HTML to buffer, update context)
-		if err := step.Get(&buffer, w); err != nil {
-			return "", derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML")
+		if err := step.Get(&buffer, &w); err != nil {
+			return "", derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML"))
 		}
 	}
 
 	// Success!
-	return buffer.String(), nil
+	return template.HTML(buffer.String()), nil
+
 }
 
 /*******************************************
@@ -184,8 +185,13 @@ func (w Renderer) QueryParam(param string) string {
 }
 
 // Action returns the complete information for the action being performed.
-func (w Renderer) Action() model.Action {
+func (w Renderer) Action() *model.Action {
 	return w.action
+}
+
+// IsPartialRequest returns TRUE if this is a partial page request from htmx.
+func (w Renderer) IsPartialRequest() bool {
+	return (w.ctx.Request().Header.Get("HX-Request") != "")
 }
 
 /*******************************************
@@ -195,19 +201,18 @@ func (w Renderer) Action() model.Action {
 // Parent returns a Stream containing the parent of the current stream
 func (w Renderer) Parent(actionID string) (Renderer, error) {
 
-	var parent model.Stream
-	var result Renderer
+	parent := model.NewStream()
 
 	streamService := w.factory.Stream()
 
-	if err := streamService.LoadParent(&w.stream, &parent); err != nil {
-		return result, derp.Wrap(err, "ghost.renderer.Renderer.Parent", "Error loading Parent")
+	if err := streamService.LoadParent(w.stream, &parent); err != nil {
+		return Renderer{}, derp.Wrap(err, "ghost.renderer.Renderer.Parent", "Error loading Parent")
 	}
 
-	renderer, err := w.newRenderer(parent, actionID)
+	renderer, err := w.newRenderer(&parent, actionID)
 
 	if err != nil {
-		return renderer, derp.Wrap(err, "ghost.renderer.Renderer.Parent", "Unable to create new Renderer")
+		return Renderer{}, derp.Wrap(err, "ghost.renderer.Renderer.Parent", "Unable to create new Renderer")
 	}
 
 	return renderer, nil
@@ -258,7 +263,7 @@ func (w Renderer) UserCan(actionID string) bool {
 
 	authorization := getAuthorization(w.ctx)
 
-	return action.UserCan(&w.stream, authorization)
+	return action.UserCan(w.stream, authorization)
 }
 
 ///////////////////////////
@@ -267,23 +272,27 @@ func (w Renderer) UserCan(actionID string) bool {
 // iteratorToSlice converts a data.Iterator of Streams into a slice of Streams
 func (w Renderer) iteratorToSlice(iterator data.Iterator, actionID string) []Renderer {
 
-	var stream model.Stream
+	var stream *model.Stream
+	result := make([]Renderer, iterator.Count())
 
-	result := make([]Renderer, 0, iterator.Count())
+	// This allocates a new memory space for the new stream value
+	stream = new(model.Stream)
 
-	for iterator.Next(&stream) {
+	for iterator.Next(stream) {
+
+		// Try to create a new Renderer for each Stream in the Iterator
 		if renderer, err := w.newRenderer(stream, actionID); err == nil {
 			result = append(result, renderer)
 		}
 
 		// Overwrite stream so that no values leak from one record to the other. grrrr.
-		stream = model.Stream{}
+		stream = new(model.Stream)
 	}
 
 	return result
 }
 
 // newRenderer is a shortcut to the NewRenderer function that reuses the values present in this current Renderer
-func (w Renderer) newRenderer(stream model.Stream, actionID string) (Renderer, error) {
+func (w Renderer) newRenderer(stream *model.Stream, actionID string) (Renderer, error) {
 	return NewRenderer(w.factory, w.ctx, stream, actionID)
 }

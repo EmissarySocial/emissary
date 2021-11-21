@@ -72,7 +72,7 @@ func (step UpdateState) Post(buffer io.Writer, renderer *Renderer) error {
 	renderer.stream.StateID = step.newStateID
 
 	// Try to update the stream
-	if err := step.streamService.Save(&renderer.stream, "Moved to new State"); err != nil {
+	if err := step.streamService.Save(renderer.stream, "Moved to new State"); err != nil {
 		return derp.Wrap(err, "ghost.render.UpdateState.Post", "Error updating state")
 	}
 
