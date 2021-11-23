@@ -33,16 +33,19 @@ table {
 }
 
 h1 {
-    font-size: 36pt;
+    font-size: 24pt;
     margin-top:30px;
+    font-weight:600;
 }
 
 h2 {
-    font-size: 24pt;
+    font-size: 20pt;
     margin-top:30px;
+    font-weight:600;
 }
 
 h3 {
     font-size: 18pt;
     margin-top:30px;
+    font-weight:500;
 }

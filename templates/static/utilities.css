@@ -1,3 +1,7 @@
+a, .link {
+    color: #00f;
+}
+
 a:hover,
 .link:hover,
 tr.link:hover > td {

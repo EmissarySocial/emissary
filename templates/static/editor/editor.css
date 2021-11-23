@@ -70,6 +70,10 @@ div.container-insert[data-place=RIGHT] {
 	width:15px;
 }
 
+div.container-item {
+	border: solid 1px #eee;
+	background-color:#fff;
+}
 
 /** WYSIWYG *******/
 .ck-content {
