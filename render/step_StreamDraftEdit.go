@@ -1,7 +1,6 @@
 package render
 
 import (
-	"html/template"
 	"io"
 	"math/rand"
 
@@ -16,24 +15,37 @@ import (
 // StepStreamDraftEdit represents an action-step that can edit/update content.Content in a streamDraft.
 type StepStreamDraftEdit struct {
 	draftService *service.StreamDraft
-	template     *template.Template
+	filename     string
 }
 
-func NewStepStreamDraftEdit(draftService *service.StreamDraft, command datatype.Map) StepStreamDraftEdit {
+func NewStepStreamDraftEdit(draftService *service.StreamDraft, stepInfo datatype.Map) StepStreamDraftEdit {
+
+	filename := stepInfo.GetString("file")
+
+	if filename == "" {
+		filename = stepInfo.GetString("actionId")
+	}
+
 	return StepStreamDraftEdit{
 		draftService: draftService,
-		template:     mustTemplate(command.GetInterface("template")),
+		filename:     filename,
 	}
 }
 
 func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer *Renderer) error {
+
+	template, ok := renderer.template.HTMLTemplate(step.filename)
+
+	if !ok {
+		return derp.New(derp.CodeBadRequestError, "ghost.renderer.StepStreamHTML.Get", "Cannot find template", step.filename)
+	}
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
 	if err := step.draftService.LoadByID(renderer.stream.StreamID, renderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.StepStreamDraftEdit.Get", "Error loading Draft")
 	}
 
-	if err := step.template.Execute(buffer, renderer); err != nil {
+	if err := template.Execute(buffer, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDraftEdit.Get", "Error executing template")
 	}
 

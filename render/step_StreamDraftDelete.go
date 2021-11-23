@@ -29,6 +29,6 @@ func (step StepStreamDraftDelete) Post(buffer io.Writer, renderer *Renderer) err
 		return derp.Wrap(err, "ghost.render.StepStreamDraftDelete.Post", "Error deleting stream")
 	}
 
-	renderer.ctx.Response().Header().Add("hx-redirect", "/"+renderer.stream.Token)
+	renderer.ctx.Response().Header().Set("hx-redirect", "/"+renderer.stream.Token)
 	return nil
 }

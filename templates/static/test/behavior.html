@@ -1,0 +1,24 @@
+<html>
+<head>
+	<script src="https://unpkg.com/hyperscript.org"></script>
+    <script type="text/hyperscript">
+        behavior fail
+            init
+                repeat until done
+
+                    if false then
+                        set my innerHTML to "never"
+                        return
+                    end
+
+                    set my innerHTML to "Success?"
+                    return
+                end
+            end
+        end
+    </script>
+</head>
+<body>
+    <div _="install fail()">failure :(</div>
+</body>
+</html>

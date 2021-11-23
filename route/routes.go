@@ -26,6 +26,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	// Local links for static resources
 	e.Static("/htmx", "../htmx/dist")
+	e.Static("/htmx/ext", "../htmx/src/ext")
 	e.Static("/hyperscript", "../_hyperscript/dist")
 	e.Static("/static", "templates/static")
 

@@ -151,6 +151,11 @@ func (w Renderer) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
 }
 
+// SourceURL returns the thumbnail image URL of the stream being rendered
+func (w Renderer) SourceURL() string {
+	return w.stream.SourceURL
+}
+
 // Data returns the custom data map of the stream being rendered
 func (w Renderer) Data() map[string]interface{} {
 	return w.stream.Data
