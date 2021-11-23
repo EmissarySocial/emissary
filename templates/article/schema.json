@@ -56,16 +56,6 @@
 			"states": [],
 			"step": "stream-html"
 		},
-		"draft": {
-			"roles": ["owner", "editor"],
-			"states": [],
-			"step": "draft-edit"
-		},
-		"publish": {
-			"roles": ["owner", "editor"],
-			"states": [],
-			"step": "draft-publish"
-		},
 		"properties": {
 			"roles": ["owner", "editor"],
 			"states": [],
@@ -92,6 +82,18 @@
 				"method": "stream-save",
 				"comment": "Updated label and description"
 			}]
+		},
+		"draft": {
+			"roles": ["owner", "editor"],
+			"step": "draft-edit"
+		},
+		"draft-delete": {
+			"roles": ["owner", "editor"],
+			"step": "draft-delete"
+		},
+		"draft-publish": {
+			"roles": ["owner", "editor"],
+			"step": "draft-publish"
 		},
 		"add-child": {
 			"roles": ["owner", "editor"],

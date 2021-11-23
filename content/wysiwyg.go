@@ -23,6 +23,11 @@ func (widget WYSIWYG) Edit(b *html.Builder, content Content, id int, endpoint st
 	b.Input("hidden", "type").Value("update-item")
 	b.Input("hidden", "itemId").Value(idString)
 	b.Input("hidden", "check").Value(item.Check)
-	b.Input("hidden", "html")
-	b.Div().Class("ck-editor").InnerHTML(result)
+	// b.Input("hidden", "html")
+	// b.Div().Class("ck-editor").InnerHTML(result)
+	b.Container("tinymce-editor").
+		Attr("api-key", "o8etv9vsc3mjoi00zgzvo78nlpmulqd9koli9e82j1dsi2q3").
+		Attr("menu-bar", "false").
+		InnerHTML(result).
+		Close()
 }

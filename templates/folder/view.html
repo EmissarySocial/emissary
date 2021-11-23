@@ -1,4 +1,4 @@
-<table>
+<table class="table">
 	<thead>
 		<tr>
 			<th>Name</th>
@@ -14,11 +14,11 @@
 				hx-swap="beforeend" 
 				hx-push-url="false"
 				class="link">
-				<td colspan="3">+ Add Stream</td>
+				<td colspan="3" class="link">+ Add Stream</td>
 			</tr>
 		{{ end }}
 		{{ range .Children "view"}}
-			<tr hx-get="/{{.Token}}" hx-trigger="click" class="link">
+			<tr hx-get="/{{.Token}}" hx-trigger="click">
 				<td>{{.Label}}</td>
 				<td>{{.Description}}</td>
 				<td><div script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div></td>

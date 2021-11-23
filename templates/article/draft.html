@@ -1,7 +1,11 @@
 <link rel="stylesheet" href="/static/editor/editor.css" />
-<script type="text/hyperscript" src="/static/editor/editor.hs"></script>
+<link rel="stylesheet" href="//cdn.quilljs.com/1.3.6/quill.bubble.css">
+<!--
 <script src="/static/ckeditor5/build/ckeditor.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@tinymce/tinymce-webcomponent@1/dist/tinymce-webcomponent.js"></script>
+-->
+<script type="text/hyperscript" src="/static/editor/editor.hs"></script>
+<script src="//cdn.quilljs.com/1.3.6/quill.js"></script>
 <div>
 
 	<div class="space-after">
@@ -12,22 +16,22 @@
 
 			<span 
 				preload
-				hx-delete="/{{.Token}}/draft" 
+				hx-post="/{{.Token}}/draft-delete" 
 				hx-target="body" 
 				hx-swap="beforeend" 
 				hx-push-url="false" 
 				hx-confirm="Are you sure you want to DELETE this draft?"
 				class="button">Cancel</span>
 
-		<button hx-post="/{{.Token}}/publish" class="button primary">Publish</button>
+		<button hx-post="/{{.Token}}/draft-publish" class="button primary">Publish</button>
 		&nbsp;
 		&nbsp;
 
-		{{ if .UserCan "properties"}}
+		{{- if .UserCan "properties" -}}
 			<span script="install AsModal()" hx-get="/{{.Token}}/properties" class="button">Info</span>
-		{{ end }}
+		{{- end -}}
 
-		{{ if .UserCan "share"}}
+		{{- if .UserCan "share" -}}
 			<span 
 				preload
 				hx-get="/{{.Token}}/transition/share" 
@@ -35,7 +39,7 @@
 				hx-swap="beforeend" 
 				hx-push-url="false" 
 				class="button">Share</span>
-		{{ end }}
+		{{- end -}}
 
 		<span id="toaster"></span>
 
