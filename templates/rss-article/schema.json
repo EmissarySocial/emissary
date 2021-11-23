@@ -24,7 +24,7 @@
 	},
 	"actions": {
 		"view": {
-			"method": "stream-HTML"
+			"step": "stream-html"
 		},
 		"mark-read": {
 			"states": ["unread"],

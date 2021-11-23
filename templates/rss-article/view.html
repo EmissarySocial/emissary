@@ -1,13 +1,26 @@
-<div>
+<div style="max-width:900px;">
 
-	<h1 class="space-after">{{.Label}}</h1>
+	{{- if .HasParent -}}
+		{{- $parent := .Parent "view" -}}
+		<div class="space-after">
+			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
+		</div>
+	{{- end -}}
 
+	<h1 class="space-after"><a href="{{.SourceURL}}" target="_blank" class="bold">{{.Label}}</a></h1>
+
+	{{- if ne .Description "" -}}
 	<article class="space-after">
 		<div>{{.Description}}</div>
 	</article>
+	{{- end -}}
 
 	<article class="space-after">
 		<div>{{.Content}}</div>
 	</article>
 
 </div>
+
+<style>
+	img {max-width:100%;}
+</style>

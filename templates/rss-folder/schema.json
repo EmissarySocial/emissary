@@ -45,7 +45,7 @@
 	},
 	"actions": {
 		"view": {
-			"step": "stream-HTML"
+			"step": "stream-html"
 		},
 		"delete": {
 			"roles": ["owner"],

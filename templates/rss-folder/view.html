@@ -5,10 +5,10 @@
 		{{end }}
 	</div>
 	<h1>{{.Label}}</h1>
-	<table>
+	<table class="table">
 		<tbody>
 			{{ range .Children "view"}}
-				<tr hx-get="/{{.Token}}" hx-push-url="true" class="link">
+				<tr hx-get="/{{.Token}}" hx-push-url="true">
 					<td>
 						<div class="space-right space-below" style="background-color:#EEE; height:150px; width:200px; overflow:hidden; border:solid 1px #CCC;">
 							{{if ne .ThumbnailImage ""}}
@@ -27,7 +27,7 @@
 							{{ end }}
 						</div>
 						<div class="light">{{.Description}}</div>
-						<div class="small light space-below" script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div>
+						<div class="small light space-below" script="install PrettyDate(date:{{.PublishDate}})">[{{.PublishDate}}]</div>
 					</td>
 				</tr>
 			{{ end }}
