@@ -87,3 +87,29 @@ func SliceOfFloat(value interface{}) []float64 {
 
 	return make([]float64, 0)
 }
+
+// SliceOfMap converts the value into a slice of map[string]interface{}.
+// It works with []interface{}, []map[string]interface{}.
+// If the passed value cannot be converted, then an empty slice is returned.
+func SliceOfMap(value interface{}) []map[string]interface{} {
+
+	switch value := value.(type) {
+
+	case []map[string]interface{}:
+		return value
+
+	case []interface{}:
+		result := make([]map[string]interface{}, len(value))
+		for index, v := range value {
+
+			if mapValue, ok := v.(map[string]interface{}); ok {
+				result[index] = mapValue
+			} else {
+				result[index] = map[string]interface{}{}
+			}
+		}
+		return result
+	}
+
+	return make([]map[string]interface{}, 0)
+}

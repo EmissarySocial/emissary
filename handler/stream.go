@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -70,6 +71,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var stream model.Stream
+		var buffer bytes.Buffer
 
 		// Try to get the factory
 		factory, err := factoryManager.ByContext(ctx)
@@ -97,18 +99,8 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		action := renderer.Action()
 
-		// Execute all of the steps of the requested action
-		for _, stepInfo := range action.Steps {
-
-			step, err := factory.RenderStep(stepInfo)
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.renderer.PostStream", "Error initializing command", stepInfo)
-			}
-
-			if err := step.Post(ctx.Response(), &renderer); err != nil {
-				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing command", stepInfo)
-			}
+		if err := render.DoPipeline(&renderer, &buffer, action.Steps, render.ActionMethodPost); err != nil {
+			return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
 		}
 
 		return nil

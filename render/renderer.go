@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/benpate/data"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
@@ -19,6 +20,7 @@ type Renderer struct {
 	template *model.Template   // Template that the Stream uses
 	action   *model.Action     // Action being executed
 	stream   *model.Stream     // Stream to be displayed
+	inputs   datatype.Map      // Body parameters posted by client
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
@@ -65,20 +67,9 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	// For each step in the action pipeline...
-	for _, stepInfo := range w.action.Steps {
-
-		// Get Action Step
-		step, err := NewStep(w.factory, stepInfo)
-
-		if err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error parsing step", stepInfo))
-		}
-
-		// Execute step (write HTML to buffer, update context)
-		if err := step.Get(&buffer, &w); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML"))
-		}
+	// Execute step (write HTML to buffer, update context)
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Renderer.Render", "Error generating HTML"))
 	}
 
 	// Success!
@@ -269,6 +260,14 @@ func (w Renderer) UserCan(actionID string) bool {
 	authorization := getAuthorization(w.ctx)
 
 	return action.UserCan(w.stream, authorization)
+}
+
+// CanCreate returns all of the templates that can be created underneath
+// the current stream.
+func (w Renderer) CanCreate() []model.Option {
+
+	templateService := w.factory.Template()
+	return templateService.ListByContainer(w.template.TemplateID)
 }
 
 ///////////////////////////

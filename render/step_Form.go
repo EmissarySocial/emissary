@@ -16,6 +16,7 @@ type StepForm struct {
 	form            form.Form
 }
 
+// NewStepForm returns a fully initialized StepForm object
 func NewStepForm(templateService *service.Template, formLibrary form.Library, command datatype.Map) StepForm {
 
 	return StepForm{
@@ -50,16 +51,21 @@ func (step StepForm) Get(buffer io.Writer, renderer *Renderer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepForm) Post(buffer io.Writer, renderer *Renderer) error {
 
+	// Try to find the schema for this Template
+	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.render.StepForm.Get", "Invalid Schema")
+	}
+
 	// Collect form POST information
-	body := datatype.Map{}
-	if err := renderer.ctx.Bind(&body); err != nil {
+	if err := renderer.ctx.Bind(&renderer.inputs); err != nil {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
-	// TODO: Validate input
-	// TODO: save input SOMEWHERE in the Request.
+	if err := schema.Validate(renderer.inputs); err != nil {
+		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", renderer.inputs)
+	}
 
-	// Redirect the browser to the default page.
-	renderer.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"/`+renderer.stream.Token+`"}}`)
 	return nil
 }

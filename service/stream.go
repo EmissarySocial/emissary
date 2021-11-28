@@ -169,7 +169,7 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 }
 
 // ChildTemplates returns an iterator of Templates that can be added as a sub-stream
-func (service *Stream) ChildTemplates(stream *model.Stream) []*model.Template {
+func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
 	return service.templateService.ListByContainer(stream.TemplateID)
 }
 

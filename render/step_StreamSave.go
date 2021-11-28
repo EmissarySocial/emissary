@@ -12,6 +12,8 @@ import (
 type StepStreamSave struct {
 	streamService *service.Stream
 	comment       string
+	forward       string
+	trigger       string
 }
 
 func NewStepStreamSave(streamService *service.Stream, stepInfo datatype.Map) StepStreamSave {
@@ -19,6 +21,8 @@ func NewStepStreamSave(streamService *service.Stream, stepInfo datatype.Map) Ste
 	return StepStreamSave{
 		streamService: streamService,
 		comment:       stepInfo.GetString("comment"),
+		forward:       stepInfo.GetString("forward"),
+		trigger:       stepInfo.GetString("trigger"),
 	}
 }
 
@@ -35,5 +39,5 @@ func (step StepStreamSave) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepStreamSave.Post", "Error saving Stream")
 	}
 
-	return nil
+	return forwardOrTrigger(renderer, step.forward, step.trigger)
 }

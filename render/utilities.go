@@ -1,21 +1,14 @@
 package render
 
 import (
+	"bytes"
 	"html/template"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
-
-// mustTemplate guarantees that a value is a template.Template, or else it is replaced with an empty template.
-func mustTemplate(data interface{}) *template.Template {
-	if t, ok := data.(*template.Template); ok {
-		return t
-	}
-
-	return template.New("mising")
-}
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
 func getAuthorization(ctx *steranko.Context) *model.Authorization {
@@ -57,4 +50,50 @@ func WrapModalForm(renderer *Renderer, content string) string {
 	b.CloseAll()
 
 	return b.String()
+}
+
+func forwardOrTrigger(renderer *Renderer, forward string, trigger string) error {
+
+	if forward != "" {
+
+		forward, err := executeSingleTemplate(forward, renderer)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.render.forwardOrTrigger", "Error getting template")
+		}
+
+		renderer.ctx.Response().Header().Set("HX-Redirect", forward)
+		return nil
+	}
+
+	if trigger != "" {
+
+		trigger, err := executeSingleTemplate(trigger, renderer)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.render.forwardOrTrigger", "Error getting template")
+		}
+
+		renderer.ctx.Response().Header().Set("HX-Trigger", trigger)
+		return nil
+	}
+
+	return nil
+}
+
+func executeSingleTemplate(t string, renderer *Renderer) (string, error) {
+
+	executable, err := template.New("").Parse(t)
+
+	if err != nil {
+		return "", derp.Wrap(err, "ghost.render.executeSingleTemplate", "Error parsing template", t)
+	}
+
+	var buffer bytes.Buffer
+
+	if err := executable.Execute(&buffer, renderer); err != nil {
+		return "", derp.Wrap(err, "ghost.render.executeSingleTemplate", "Error executing template", t)
+	}
+
+	return buffer.String(), nil
 }

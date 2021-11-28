@@ -80,7 +80,7 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 	files, err := ioutil.ReadDir(directory)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Unable to list directory", directory)
+		return derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Unable to list directory", directory)
 	}
 
 	// Create the minifier
@@ -92,11 +92,11 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 		content, err := ioutil.ReadFile(directory + "/schema.json")
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file: schema.json", t.TemplateID)
+			return derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Cannot read file: schema.json", t.TemplateID)
 		}
 
 		if err := json.Unmarshal(content, t); err != nil {
-			return derp.Wrap(err, "ghost.service.templateSource.File.Load", "Invalid JSON configuration file: schema.json", t.TemplateID)
+			return derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Invalid JSON configuration file: schema.json", t.TemplateID)
 		}
 	}
 
@@ -111,16 +111,11 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 
 		case "html":
 
-			// Verify that the action is already defined in the schema.json
-			if _, ok := t.Actions[actionID]; !ok {
-				return derp.New(derp.CodeInternalError, "ghost.service.templateSource.File.Load", "Missing action", t.TemplateID, actionID)
-			}
-
 			// Try to read the file from the filesystem
 			content, err := ioutil.ReadFile(directory + "/" + filename)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.Load", "Cannot read file", filename))
+				return derp.Report(derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Cannot read file", filename))
 			}
 
 			contentString := string(content)
@@ -134,7 +129,7 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 			contentTemplate, err := template.New(actionID).Parse(contentString)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "ghost.model.View.Compiled", "Unable to parse template HTML", contentString))
+				return derp.Report(derp.Wrap(err, "ghost.service.Tmplate.loadFromFilesystem", "Unable to parse template HTML", contentString))
 			}
 
 			// Put the parsed/minified template into the list of template files
@@ -203,7 +198,7 @@ func (service *Template) watch() {
 			templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
 			template := model.NewTemplate(templateName)
 			if err := service.loadFromFilesystem(&template); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error loading changes to template", event, templateName))
+				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error loading changes to template", event, templateName))
 				continue
 			}
 
@@ -213,7 +208,7 @@ func (service *Template) watch() {
 		case err, ok := <-watcher.Errors:
 
 			if ok {
-				derp.Report(derp.Wrap(err, "ghost.service.templateSource.File", "Error watching filesystem"))
+				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error watching filesystem"))
 			}
 		}
 	}
@@ -224,13 +219,19 @@ func (service *Template) watch() {
  *******************************************/
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(criteria exp.Expression) []*model.Template {
+func (service *Template) List(criteria exp.Expression) []model.Option {
 
-	result := []*model.Template{}
+	result := []model.Option{}
 
 	for _, template := range service.templates {
 		if criteria.Match(matcherFunc(&template)) {
-			result = append(result, &template)
+			result = append(result, model.Option{
+				Value:       template.TemplateID,
+				Label:       template.Label,
+				Description: template.Description,
+				IconURL:     template.IconURL,
+				Group:       template.Category,
+			})
 		}
 	}
 
@@ -238,7 +239,7 @@ func (service *Template) List(criteria exp.Expression) []*model.Template {
 }
 
 // ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []*model.Template {
+func (service *Template) ListByContainer(containedBy string) []model.Option {
 	return service.List(exp.Contains("containedBy", containedBy))
 }
 

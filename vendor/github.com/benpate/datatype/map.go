@@ -36,17 +36,29 @@ func (m Map) GetInt(name string) int {
 
 // GetSliceOfString returns a named option as a slice of strings
 func (m Map) GetSliceOfString(name string) []string {
-	return convert.SliceOfString((m[name]))
+	return convert.SliceOfString(m[name])
 }
 
 // GetSliceOfInt returns a named option as a slice of int values
 func (m Map) GetSliceOfInt(name string) []int {
-	return convert.SliceOfInt((m[name]))
+	return convert.SliceOfInt(m[name])
 }
 
 // GetSliceOfFloat returns a named option as a slice of float64 values
 func (m Map) GetSliceOfFloat(name string) []float64 {
-	return convert.SliceOfFloat((m[name]))
+	return convert.SliceOfFloat(m[name])
+}
+
+// GetSliceOfMap returns a named option as a slice of datatype.Map objects.
+func (m Map) GetSliceOfMap(name string) []Map {
+	value := convert.SliceOfMap(m[name])
+	result := make([]Map, len(value))
+
+	for index := range value {
+		result[index] = Map(value[index])
+	}
+
+	return result
 }
 
 func (m Map) GetPath(p path.Path) (interface{}, error) {

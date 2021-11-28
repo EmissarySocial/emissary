@@ -1,18 +1,19 @@
+<!DOCTYPE html>
 <html>
 <head>
 	<script src="https://unpkg.com/hyperscript.org"></script>
     <script type="text/hyperscript">
         behavior fail
             init
-                repeat until done
-
-                    if false then
+                repeat forever
+                    set value to 1
+                    if value == 0
                         set my innerHTML to "never"
-                        return
+                        exit
                     end
 
-                    set my innerHTML to "Success?"
-                    return
+                    set my innerHTML to "Success!"
+                    exit
                 end
             end
         end

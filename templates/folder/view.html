@@ -7,22 +7,19 @@
 		</tr>
 	</thead>
 	<tbody>
-		{{ if .UserCan "add-child" }}
-			<tr 
-				hx-get="/{{.Token}}/new" 
-				hx-target="body" 
-				hx-swap="beforeend" 
-				hx-push-url="false"
+		{{- if .UserCan "new" -}}
+			<tr script="install AsModal()"
+				hx-get="/{{.Token}}/new"
 				class="link">
 				<td colspan="3" class="link">+ Add Stream</td>
 			</tr>
-		{{ end }}
-		{{ range .Children "view"}}
+		{{- end -}}
+		{{- range .Children "view" -}}
 			<tr hx-get="/{{.Token}}" hx-trigger="click">
 				<td>{{.Label}}</td>
 				<td>{{.Description}}</td>
-				<td><div script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div></td>
+				<td></td>
 			</tr>
-		{{ end }}
+		{{- end -}}
 	</tbody>
 </table>

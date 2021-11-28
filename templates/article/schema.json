@@ -51,16 +51,26 @@
 		}
 	},
 	"actions": {
+		"create": {
+			"steps": [{
+				"step": "form",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Add an Article",
+					"children": [{
+						"kind": "text",
+						"label": "Label"
+					}]
+				}
+			}]
+		},
 		"view": {
-			"roles": [],
-			"states": [],
-			"step": "stream-html"
+			"steps": [{"step":"view-html"}]
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
-			"states": [],
 			"steps": [{
-				"method": "form",
+				"step": "form-html",
 				"form": {
 					"kind": "layout-vertical",
 					"label": "Update Form",
@@ -76,39 +86,29 @@
 					}]
 				}
 			}, {
-				"method": "stream-data",
+				"step": "edit-data",
 				"fields": ["label", "description"]
 			},{
-				"method": "stream-save",
-				"comment": "Updated label and description"
+				"method": "save",
+				"comment": "Updated by {{.Author}}"
 			}]
 		},
 		"draft": {
 			"roles": ["owner", "editor"],
-			"step": "draft-edit"
+			"step": "edit-draft"
 		},
 		"draft-delete": {
 			"roles": ["owner", "editor"],
-			"step": "draft-delete"
+			"step": "delete-draft"
 		},
 		"draft-publish": {
 			"roles": ["owner", "editor"],
-			"step": "draft-publish"
+			"step": "publish-draft"
 		},
 		"add-child": {
 			"roles": ["owner", "editor"],
 			"states": [],
-			"step": "stream-create"
-		},
-		"share": {
-			"roles": ["owner", "editor"],
-			"states": [],
-			"step": "stream-share"
-		},
-		"top-folder-create": {
-			"roles": ["owner"],
-			"states": [],
-			"step": "top-folder-create"
+			"step": "new-child"
 		}
 	}
 }

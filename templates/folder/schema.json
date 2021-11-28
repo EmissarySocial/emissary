@@ -3,10 +3,10 @@
 	"description": "Folders can contain all other streams",
 	"containedBy": ["top", "folder"],
 	"schema": {
-		"url": "example.com/test-template",
-		"title": "Test Template Schema",
 		"type": "object",
-		"properties": {}
+		"properties": {
+			"layout": {"type": "string", "options": ["table", "grid"]}
+		}
 	},
 	"states": {
 		"default": {
@@ -25,12 +25,19 @@
 		}
 	},
 	"actions": {
-		"view": {
-			"step": "stream-html"
+		"create": {
+			"steps":[{
+				"step": "set-defaults",
+				"label": "New Folder"
+			}, {
+				"step": "save",
+				"comment": "Created by {{.Author}}",
+				"forwardTo": "/{{.Token}}/edit"
+			}]
 		},
 		"edit": {
 			"steps":[{
-				"method": "form",
+				"step": "form-html",
 				"label": "Edit Folder",
 				"form": {
 					"kind": "layout-vertical",
@@ -39,30 +46,53 @@
 						"kind": "text",
 						"label": "Label",
 						"path": "label"
-					},
-					{
+					},{
 						"kind": "textarea",
 						"label": "Description",
 						"path": "description"
+					}, {
+						"kind": "select",
+						"label": "Layout",
+						"path": "layout"
 					}]
 				}
 			}, {
-				"method": "stream-data",
+				"step": "set-data",
 				"fields": ["label", "description"]
 			}, {
-				"method": "stream-save",
-				"comment": "Updated Folder"
+				"step": "save",
+				"comment": "Updated Folder",
+				"trigger": "closeModal"
 			}]
 		},
+		"view": {
+			"steps": [{"step":"view-html"}]
+		},
 		"delete": {
-			"step": "stream-delete"
+			"steps": [{"step":"delete"}]
 		},
-		"add-child": {
-			"step": "stream-create"
+		"new": {
+			"steps":[{
+				"step": "new-child",
+				"withChild": [
+					{"step": "set-defaults"},
+					{"step": "save"}
+				]
+			}]
 		},
-		"add-top": {
+		"top": {
 			"roles": ["owner"],
-			"method": "top-folder-create"
+			"steps": [{
+				"step": "new-sibling",
+				"withSibling": [{
+					"step": "set-defaults",
+					"label": "New Folder"
+				}, {
+					"step": "save",
+					"comment": "Created Folder",
+					"forwardTo": "/{{.Token}}"
+				}]
+			}]
 		}
 	}
 }

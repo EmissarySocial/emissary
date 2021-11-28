@@ -47,10 +47,13 @@ func (object Object) Validate(value interface{}) error {
 
 	result := derp.NewCollector()
 
-	for key, schema := range object.Properties {
-
-		if errs := schema.Validate(mapValue[key]); errs != nil {
-			result.Add(Rollup(errs, key))
+	for key, value := range mapValue {
+		if schema, ok := object.Properties[key]; ok {
+			if errs := schema.Validate(value); errs != nil {
+				result.Add(Rollup(errs, key))
+			}
+		} else {
+			delete(mapValue, key)
 		}
 	}
 
