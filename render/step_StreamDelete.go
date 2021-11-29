@@ -12,11 +12,13 @@ import (
 // StepStreamDelete represents an action-step that can delete a Stream from the Domain
 type StepStreamDelete struct {
 	streamService *service.Stream
+	draftService  *service.StreamDraft
 }
 
-func NewStepStreamDelete(streamService *service.Stream, config datatype.Map) StepStreamDelete {
+func NewStepStreamDelete(streamService *service.Stream, draftService *service.StreamDraft, config datatype.Map) StepStreamDelete {
 	return StepStreamDelete{
 		streamService: streamService,
+		draftService:  draftService,
 	}
 }
 
@@ -36,6 +38,10 @@ func (step StepStreamDelete) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream")
 	}
 
-	renderer.ctx.Response().Header().Add("hx-redirect", "/"+parent.Token)
+	if err := step.draftService.Delete(renderer.stream, "Deleted"); err != nil {
+		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream draft")
+	}
+
+	renderer.ctx.Response().Header().Set("HX-Redirect", "/"+parent.Token)
 	return nil
 }

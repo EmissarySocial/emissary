@@ -76,6 +76,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "if":
 		return NewStepIfCondition(stepInfo), nil
 
+	case "forward-to":
+		return NewStepForwardTo(stepInfo), nil
+
 	}
 
 	// Fall through means we have an unrecognized action
