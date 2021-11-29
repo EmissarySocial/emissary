@@ -26,7 +26,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepCreateSibling(factory.Stream(), stepInfo), nil
 
 	case "delete":
-		return NewStepStreamDelete(factory.Stream(), stepInfo), nil
+		return NewStepStreamDelete(factory.Stream(), factory.StreamDraft(), stepInfo), nil
 
 	case "form-html":
 		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
