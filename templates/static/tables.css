@@ -1,5 +1,6 @@
 table.table {
     width:100%;
+    border-top: solid 1px #eee;
 }
 
 table.table th {
