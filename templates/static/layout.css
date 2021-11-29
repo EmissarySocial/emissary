@@ -12,8 +12,8 @@ body {
 	left:0px;
 	width:250px;
     color: rgb(60,60,60);
-	background-color: rgb(224,226,226);
-	border-right: solid 1px rgb(211,213,213);
+	background-color: rgb(244,245,246);
+	border-right: solid 1px rgb(211,212,213);
 	overflow-y: scroll;
 	overflow-x: hidden;
 	z-index:2;

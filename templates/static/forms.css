@@ -29,9 +29,10 @@ button,
     display:inline-block;
     cursor:pointer;
     padding:10px 20px;
-    background-color: rgb(189,190,191);
+    background-color: rgb(200,201, 202);
     border-radius: 5px;
     border:none;
+    color: black;
 }
 
 input[type=submit].primary,
