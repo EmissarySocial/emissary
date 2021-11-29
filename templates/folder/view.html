@@ -11,12 +11,12 @@
 			<tr script="install AsModal()"
 				hx-get="/{{.Token}}/new"
 				class="link">
-				<td colspan="3" class="link">+ Add Stream</td>
+				<td colspan="3" class="link"><i class="fa-solid fa-circle-plus"></i> Add Stream</td>
 			</tr>
 		{{- end -}}
 		{{- range .Children "view" -}}
 			<tr hx-get="/{{.Token}}" hx-trigger="click">
-				<td>{{.Label}}</td>
+				<td><i class="fa-regular fa-file-lines"></i> {{.Label}}</td>
 				<td>{{.Description}}</td>
 				<td></td>
 			</tr>

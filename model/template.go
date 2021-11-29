@@ -15,7 +15,7 @@ type Template struct {
 	Label       string                        `json:"label"         bson:"label"`       // Human-readable label used in management UI.
 	Description string                        `json:"description"   bson:"description"` // Human-readable long-description text used in management UI.
 	Category    string                        `json:"category"      bson:"category"`    // Human-readable category (grouping) used in management UI.
-	IconURL     string                        `json:"iconUrl"       bson:"iconUrl"`     // Icon image used in management UI.
+	Icon        string                        `json:"icon"          bson:"icon"`        // Icon image used in management UI.
 	ContainedBy []string                      `json:"containedBy"   bson:"containedBy"` // Slice of Templates that can contain Streams that use this Template.
 	URL         string                        `json:"url"           bson:"url"`         // URL where this template is published
 	Schema      *schema.Schema                `json:"schema"        bson:"schema"`      // JSON Schema that describes the data required to populate this Template.

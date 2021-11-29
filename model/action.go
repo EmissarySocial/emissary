@@ -59,7 +59,7 @@ func (action *Action) Validate() {
 		if action.Step != "" {
 			// Convert action.Step into a default action
 			action.Steps = []datatype.Map{{
-				"method": action.Step,
+				"step": action.Step,
 			}}
 			action.Step = ""
 		}

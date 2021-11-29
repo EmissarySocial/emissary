@@ -3,17 +3,22 @@
 	<div class="modal-content">
 		<form hx-post="/{{.Token}}/new">
 			<h2>+ Add Stream</h2>
-
-			<table class="space-below">
+			<table class="table space-below">
+				{{- $parent := . -}}
 				{{- range $index, $template := .CanCreate -}}
-					<tr hx-get="/{{.Label}}/new" script="install AsModal">
-						<td>{{$template.Label}}</td>
+					<tr hx-post="/{{$parent.Token}}/new?templateId={{$template.Value}}">
+						<td>
+							<i class="{{$template.Icon}} fa-3x gray"></i>
+						</td>
+						<td width="100%">
+							<div class="big bold">{{$template.Label}}</div>
+							<div class="small gray">{{$template.Description}}</div>
+						</td>
 					</tr>
 				{{- end -}}
 			</table>
 			<div>
-				<input type="submit" class="btn primary" value="Add Stream"/>
-				<button class="btn" script="on click trigger closeModal">Cancel</button>
+				<button class="btn" script="on click trigger closeModal">Close Window</button>
 			</div>
 		</form>
 	</div>

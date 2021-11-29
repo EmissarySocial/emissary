@@ -1,6 +1,7 @@
 {
 	"label": "Folder",
 	"description": "Folders can contain all other streams",
+	"icon": "fa-regular fa-folder",
 	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",
@@ -74,9 +75,10 @@
 		"new": {
 			"steps":[{
 				"step": "new-child",
+				"comment": "Created by {{.Author}}",
 				"withChild": [
-					{"step": "set-defaults"},
-					{"step": "save"}
+					{"step": "save", "comment": "Created by {{.Author}}"},
+					{"step": "forward-to", "url": "/{{.Token}}/edit"}
 				]
 			}]
 		},

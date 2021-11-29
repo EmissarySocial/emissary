@@ -229,7 +229,7 @@ func (service *Template) List(criteria exp.Expression) []model.Option {
 				Value:       template.TemplateID,
 				Label:       template.Label,
 				Description: template.Description,
-				IconURL:     template.IconURL,
+				Icon:        template.Icon,
 				Group:       template.Category,
 			})
 		}
