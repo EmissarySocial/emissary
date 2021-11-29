@@ -1,11 +1,7 @@
 <div hx-get="{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
-	{{- if .UserCan "draft" -}}
-		<a href="/{{.Token}}/draft" class="button" style="float:right;">Edit</a>
-	{{- end -}}
-
-	{{- if .UserCan "properties" -}}
-		<span script="install AsModal" hx-get="/{{.Token}}/properties" style="float:right;" class="button">Info</span>
+	{{- if .UserCan "edit" -}}
+		<a href="/{{.Token}}/edit" class="button" style="float:right;">Edit</a>
 	{{- end -}}
 
 	{{- if .HasParent -}}

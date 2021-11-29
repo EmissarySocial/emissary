@@ -1,6 +1,7 @@
 {
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
+	"icon": "fa-regular fa-file-lines",
 	"containedBy": ["folder", "article"],
 	"schema": {
 		"type": "object",
@@ -51,21 +52,31 @@
 		}
 	},
 	"actions": {
-		"create": {
-			"steps": [{
-				"step": "form",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Add an Article",
-					"children": [{
-						"kind": "text",
-						"label": "Label"
-					}]
-				}
-			}]
+		"init": {
+			"steps": [
+				{"step": "set-defaults", "label": "New Article"},
+				{"step": "forward-to", "url": "/{{.Token}}/edit"}
+			]
 		},
 		"view": {
-			"steps": [{"step":"view-html"}]
+			"step": "view-html"
+		},
+		"edit": {
+			"roles": ["owner", "editor"],
+			"step": "edit-draft",
+			"file": "draft"
+		},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		},
+		"delete-draft": {
+			"roles": ["owner", "editor"],
+			"step": "delete-draft"
+		},
+		"publish-draft": {
+			"roles": ["owner", "editor"],
+			"step": "publish-draft"
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
@@ -89,26 +100,9 @@
 				"step": "edit-data",
 				"fields": ["label", "description"]
 			},{
-				"method": "save",
+				"step": "save",
 				"comment": "Updated by {{.Author}}"
 			}]
-		},
-		"draft": {
-			"roles": ["owner", "editor"],
-			"step": "edit-draft"
-		},
-		"draft-delete": {
-			"roles": ["owner", "editor"],
-			"step": "delete-draft"
-		},
-		"draft-publish": {
-			"roles": ["owner", "editor"],
-			"step": "publish-draft"
-		},
-		"add-child": {
-			"roles": ["owner", "editor"],
-			"states": [],
-			"step": "new-child"
 		}
 	}
 }
