@@ -46,7 +46,19 @@ func Last(value string, delimiter string) string {
 		return value
 	}
 
-	return value[index+1:]
+	return value[index+len(delimiter):]
+}
+
+// LastDelim returns the LAST item in a string-based-list
+func LastDelim(value string, delimiter string) string {
+
+	index := strings.LastIndex(value, delimiter)
+
+	if index == -1 {
+		return value
+	}
+
+	return value[index:]
 }
 
 // Split returns the FIRST element, and the REST element in one function call
@@ -58,7 +70,7 @@ func Split(value string, delimiter string) (string, string) {
 		return value, ""
 	}
 
-	return value[:index], value[index+1:]
+	return value[:index], value[index+len(delimiter):]
 
 }
 
@@ -71,7 +83,7 @@ func SplitTail(value string, delimiter string) (string, string) {
 		return value, ""
 	}
 
-	return value[:index], value[index+1:]
+	return value[:index], value[index+len(delimiter):]
 
 }
 
