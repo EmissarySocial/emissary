@@ -65,6 +65,25 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 	return nil
 }
 
+// DeleteByStream removes all attachments from the provided stream (virtual delete)
+func (service *Attachment) DeleteByStream(streamID primitive.ObjectID, note string) error {
+
+	var attachment model.Attachment
+	it, err := service.ListByStream(streamID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Attachment.DeleteByStream", "Error listing attachments", streamID)
+	}
+
+	for it.Next(&attachment) {
+		if err := service.Delete(&attachment, note); err != nil {
+			return derp.Wrap(err, "ghost.service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
+		}
+	}
+
+	return nil
+}
+
 /*******************************************
  * CUSTOM QUERIES
  *******************************************/

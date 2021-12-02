@@ -240,6 +240,27 @@ func (w Renderer) TopFolders(action string) ([]Renderer, error) {
 	return w.iteratorToSlice(iterator, action), nil
 }
 
+// Attachments lists all attachments for this stream.
+func (w Renderer) Attachments() ([]model.Attachment, error) {
+
+	var result []model.Attachment
+
+	attachmentService := w.factory.Attachment()
+	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
+
+	if err != nil {
+		return result, derp.Wrap(err, "ghost.renderer.Renderer.Attachments", "Error listing attachments")
+	}
+
+	attachment := new(model.Attachment)
+	for iterator.Next(attachment) {
+		result = append(result, *attachment)
+		attachment = new(model.Attachment)
+	}
+
+	return result, nil
+}
+
 /////////////////////
 // PERMISSIONS METHODS
 

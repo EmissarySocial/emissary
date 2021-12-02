@@ -1,35 +1,12 @@
 {
-	"label": "Photograph",
-	"description": "For regular use. Contains text, images, and more.",
-	"icon": "fa-regular fa-file-lines",
+	"label": "Photo Post",
+	"description": "Individual photograph or slideshow to include in your photo album.",
+	"icon": "fa-regular fa-image",
 	"containedBy": ["photo-album"],
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {
-				"type": "string",
-				"description": "The human-readable title for this article"
-			},
-			"description": {
-				"type": "string",
-				"description": "The HTML content for this article"
-			},
-			"choose": {
-				"type": "string",
-				"enum": ["Hello", "Darkness", "My", "Old", "Friend"]
-			},
-			"share": {
-				"type": "string",
-				"enum": ["ALL", "SOME", "NONE"]
-			},
-			"shareWith": {
-				"type": "array",
-				"items": {
-					"type": "string"
-				}
-			}
-		},
-		"required": ["class", "title", "body"]
+		}
 	},
 	"states": {
 		"default": {
@@ -54,8 +31,8 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-defaults", "label": "New Article"},
-				{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				{"step": "save"},
+				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},
 		"view": {
@@ -63,46 +40,18 @@
 		},
 		"edit": {
 			"roles": ["owner", "editor"],
-			"step": "edit-draft",
-			"file": "draft"
+			"step": "view-html"
+		},
+		"attachments": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "upload-attachments"},
+				{"step": "forward-to", "url":"/{{.Token}}"}
+			]
 		},
 		"delete": {
 			"roles": ["owner"],
 			"step": "delete"
-		},
-		"delete-draft": {
-			"roles": ["owner", "editor"],
-			"step": "delete-draft"
-		},
-		"publish-draft": {
-			"roles": ["owner", "editor"],
-			"step": "publish-draft"
-		},
-		"properties": {
-			"roles": ["owner", "editor"],
-			"steps": [{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Update Form",
-					"description": "This will update the object in this state",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}]
-				}
-			}, {
-				"step": "edit-data",
-				"fields": ["label", "description"]
-			},{
-				"step": "save",
-				"comment": "Updated by {{.Author}}"
-			}]
 		}
 	}
 }

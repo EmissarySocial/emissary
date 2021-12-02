@@ -3,6 +3,7 @@ body {
 	height:100%;
 	width:100%;
 	background-color: white;
+	box-sizing: border-box;
 }
 
 #menu {
@@ -17,6 +18,7 @@ body {
 	overflow-y: scroll;
 	overflow-x: hidden;
 	z-index:2;
+	box-sizing: border-box;
 }
 
 #menu > a {
@@ -31,10 +33,30 @@ body {
     color: black;
 }
 
+#menu-bar {
+	position:sticky;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	background-color: #f2f4f8;
+	border-bottom: solid 1px #dde1e6;
+	padding:5px;
+	text-align:right;
+	box-sizing: border-box;
+}
+
+#menu-bar button,
+#menu-bar .button {
+	font-size:10pt;
+	padding: 5px 10px;
+	margin-right:2px;
+}
 
 #main {
 	padding:10px 20px 10px 270px;
 	width:100%;
+	max-width:100%;
+	box-sizing: border-box;
 }
 
 .grid {

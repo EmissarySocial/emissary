@@ -1,13 +1,15 @@
 <div hx-get="{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
-	{{- if .UserCan "edit" -}}
-		<a href="/{{.Token}}/edit" class="button" style="float:right;">Edit</a>
-	{{- end -}}
+	<div id="menu-bar">
+		{{- if .UserCan "edit" -}}
+			<a href="/{{.Token}}/edit" class="button">Edit</a>
+		{{- end -}}
+	</div>
 
 	{{- if .HasParent -}}
 		{{- $parent := .Parent "view" -}}
-		<div>
-			<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
+		<div id="breadcrumns">
+			<a hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
 		</div>
 	{{- end -}}
 

@@ -1,43 +1,27 @@
-<link rel="stylesheet" href="/static/editor/editor.css" />
+<div id="menu-bar">
 
-<div>
+	<button hx-get="/{{.Token}}/view">View</button>
 
-	<div class="space-after">
+	{{- if .UserCan "properties" -}}
+		<button script="install AsModal()" hx-get="/{{.Token}}/properties">Info</button>
+	{{- end -}}
 
-			<span 
-				script="install AsModal"
-				hx-post="/{{.Token}}/delete-draft" 
-				hx-confirm="Are you sure you want to DELETE this draft?"
-				class="button">Cancel</span>
-
-		<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
-		&nbsp;
-		&nbsp;
-
-		{{- if .UserCan "properties" -}}
-			<span script="install AsModal()" hx-get="/{{.Token}}/properties" class="button">Info</span>
-		{{- end -}}
-
-		{{- if .UserCan "delete" -}}
-			<span hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete" class="button">Delete</span>
-		{{- end -}}
-
-		<span id="toaster"></span>
-
-	</div>
-
-	<h1 class="space-after">{{.Label}}</h1>
-
-	<article class="space-after">
-		<div>{{.Description}}</div>
-	</article>
-
-	<article>
-		{{- range $index, $photo := .Children "view" -}}
-			<div class="card">
-				<img src="{{$photo.URL}}"/>
-			</div>
-		{{- end -}}
-	</article>
+	{{- if .UserCan "delete" -}}
+		<button hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete</button>
+	{{- end -}}
 
 </div>
+
+<h1 class="space-after">{{.Label}}</h1>
+
+<article class="space-after">
+	<div>{{.Description}}</div>
+</article>
+
+<article>
+	{{- range $index, $photo := .Children "view" -}}
+		<div class="card">
+			<img src="{{$photo.URL}}"/>
+		</div>
+	{{- end -}}
+</article>

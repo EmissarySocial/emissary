@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepAttachmentUpload represents an action that can edit a top-level folder in the Domain
@@ -29,6 +30,8 @@ func (step StepAttachmentUpload) Get(buffer io.Writer, renderer *Renderer) error
 
 func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) error {
 
+	spew.Dump("Attachment Upload")
+
 	form, err := renderer.ctx.MultipartForm()
 
 	if err != nil {
@@ -40,10 +43,14 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 
 	for _, fileHeader := range files {
 
+		spew.Dump(fileHeader)
+
 		// Each attachment is tracked separately, so make a new attachment for each file in the upload.
 		attachment := renderer.stream.NewAttachment()
 		attachment.Original = fileHeader.Filename
 		attachment.Filename = attachment.AttachmentID.Hex()
+
+		spew.Dump(attachment)
 
 		source, err := fileHeader.Open()
 
@@ -68,6 +75,8 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 		if err := step.attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error saving attachment", attachment)
 		}
+
+		spew.Dump("SAVED???", attachment)
 	}
 
 	return nil

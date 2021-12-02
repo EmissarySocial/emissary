@@ -1,14 +1,12 @@
-{{ if .UserCan "edit" }}
-	<a href="/{{.Token}}/edit" class="button">Edit</a>
-{{ end }}
-
-{{- if .UserCan "properties" -}}
-	<a href="/{{.Token}}/properties" class="button">Info</a>
-{{- end -}}
+<div id="menu-bar">
+	{{ if .UserCan "edit" }}
+		<a href="/{{.Token}}/edit" class="button">Edit</a>
+	{{ end }}
+</div>
 
 {{- if .HasParent -}}
 	{{- $parent := .Parent "view" -}}
-	<div>
+	<div id="breadcrumbs">
 		<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
 	</div>
 {{- end -}}

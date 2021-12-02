@@ -11,6 +11,10 @@ tr.link:hover > td {
 	--background-color:#f4f4f4;
 }
 
+.clickable {
+	cursor:pointer;
+}
+
 b, strong, .bold {
 	font-weight:600;
 }

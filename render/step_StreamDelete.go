@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 )
 
@@ -28,12 +27,6 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Renderer) error {
 
 func (step StepStreamDelete) Post(buffer io.Writer, renderer *Renderer) error {
 
-	var parent model.Stream
-
-	if err := step.streamService.LoadParent(renderer.stream, &parent); err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error loading parent stream")
-	}
-
 	if err := step.streamService.Delete(renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream")
 	}
@@ -42,6 +35,5 @@ func (step StepStreamDelete) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream draft")
 	}
 
-	renderer.ctx.Response().Header().Set("HX-Redirect", "/"+parent.Token)
 	return nil
 }

@@ -74,8 +74,11 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepAttachmentUpload(factory.Stream(), factory.Attachment(), stepInfo), nil
 
 	// CONTROL LOGIC
-	case "for-each-child":
-		return NewStepForChildren(factory.Stream(), stepInfo), nil
+	case "with-children":
+		return NewStepWithChildren(factory.Stream(), stepInfo), nil
+
+	case "with-parent":
+		return NewStepWithParent(factory.Stream(), stepInfo), nil
 
 	case "if":
 		return NewStepIfCondition(stepInfo), nil

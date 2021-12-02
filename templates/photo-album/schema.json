@@ -57,15 +57,18 @@
 				"step": "new-child",
 				"template": ["photo-post"],
 				"withChild": [
-					{"step": "save"},
-					{"step": "upload-attachments"},
-					{"step": "forward-to", "url": "/{{.Token}}/edit"}
+					{"step": "upload-attachments"}
 				]
 			}]
 		},
 		"delete": {
 			"roles": ["owner"],
-			"step": "delete"
+			"steps": [
+				{"step": "delete"},
+				{"step": "with-parent", "steps": [
+					{"step": "forward-to", "url": "/{{.Token}}"}
+				]}
+			]
 		},
 		"properties": {
 			"roles": ["owner", "editor"],

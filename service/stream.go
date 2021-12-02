@@ -16,6 +16,7 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection            data.Collection
+	attachmentService     *Attachment
 	templateService       *Template
 	formLibrary           form.Library
 	templateUpdateChannel chan model.Template
@@ -23,11 +24,12 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
+func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
 
 	result := Stream{
 		collection:            collection,
 		templateService:       templateService,
+		attachmentService:     attachmentService,
 		formLibrary:           formLibrary,
 		templateUpdateChannel: templateUpdateChannel,
 		streamUpdateChannel:   streamUpdateChannel,
@@ -89,8 +91,35 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 // Delete removes an Stream from the database (virtual delete)
 func (service *Stream) Delete(stream *model.Stream, note string) error {
 
+	if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting attachments", stream, note)
+	}
+
+	if err := service.DeleteChildren(stream, note); err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note)
+	}
+
 	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream", "Error deleting Stream", stream, note)
+		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting Stream", stream, note)
+	}
+
+	return nil
+}
+
+// DeleteChildren removes all child streams from the provided stream (virtual delete)
+func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
+
+	var child model.Stream
+	it, err := service.ListByParent(stream.StreamID)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error listing child streams", stream)
+	}
+
+	for it.Next(&child) {
+		if err := service.Delete(&child, note); err != nil {
+			return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child stream", child)
+		}
 	}
 
 	return nil
