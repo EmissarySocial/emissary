@@ -1,0 +1,97 @@
+{
+	"label": "Photo Album",
+	"description": "For regular use. Contains text, images, and more.",
+	"icon": "fa-regular fa-images",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"heading": {
+				"type": "string",
+				"description": "The human-readable heading for this photo album"
+			},
+			"introduction": {
+				"type": "string",
+				"description": "Text description at top of page"
+			}
+		},
+		"required": []
+	},
+	"states": {
+		"default": {
+			"label": "Default State",
+			"description": "Photo Albums only have one state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}, 
+		"editor": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"init": {
+			"steps": [
+				{"step": "set-defaults", "label": "New Photo Album", "description": "Enter a brief description here. 🌈"},
+				{"step": "forward-to", "url": "/{{.Token}}/edit"}
+			]
+		},
+		"view": {
+			"step": "view-html"
+		},
+		"edit": {
+			"roles": ["owner", "editor", "author"],
+			"step": "view-html"
+		},
+		"attachments": {
+			"roles": ["owner", "editor", "author"],
+			"steps": [{
+				"step": "new-child",
+				"template": ["photo-post"],
+				"withChild": [
+					{"step": "save"},
+					{"step": "upload-attachments"},
+					{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				]
+			}]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		},
+		"properties": {
+			"roles": ["owner", "editor"],
+			"steps": [{
+				"step": "form-html",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Update Form",
+					"description": "This will update the object in this state",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}, {
+				"step": "edit-data",
+				"fields": ["label", "description"]
+			},{
+				"step": "save",
+				"comment": "Updated by {{.Author}}"
+			}]
+		}
+	}
+}

@@ -76,6 +76,13 @@ func (stream Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
+// NewAttachment creates a new file Attachment linked to this Stream.
+func (stream Stream) NewAttachment() Attachment {
+	result := NewAttachment()
+	result.StreamID = stream.StreamID
+	return result
+}
+
 // GetPath implements the path.Getter interface.  It looks up
 // data within this Stream and returns it to the caller.
 func (stream Stream) GetPath(p path.Path) (interface{}, error) {

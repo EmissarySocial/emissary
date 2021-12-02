@@ -1,0 +1,30 @@
+{{ if .UserCan "edit" }}
+	<a href="/{{.Token}}/edit" class="button">Edit</a>
+{{ end }}
+
+{{- if .UserCan "properties" -}}
+	<a href="/{{.Token}}/properties" class="button">Info</a>
+{{- end -}}
+
+{{- if .HasParent -}}
+	{{- $parent := .Parent "view" -}}
+	<div>
+		<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
+	</div>
+{{- end -}}
+
+<h1 class="space-after">{{.Data "heading"}}</h1>
+
+<article class="space-after">
+	<div>{{.Data "introduction"}}</div>
+</article>
+
+<div class="space-after">
+	{{- range .Children "view" -}}
+		<a href="/{{.Token}}">{{.Label}}</a><br>
+	{{- end -}}
+</div>
+
+{{.UserCan "edit"}}
+
+{{.Roles}}

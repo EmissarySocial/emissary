@@ -1,6 +1,7 @@
 {
 	"label": "Chat Room",
 	"description": "Realtime chat room contains chat items",
+	"icon": "fa-regular fa-message",
 	"containedBy": ["folder", "top"],
 	"schema": {
 		"type": "object",
@@ -27,51 +28,36 @@
 		}
 	},
 	"actions": {
-		"create": {
-			"states": ["default"],
-			"roles": ["admin"],
-			"method": "create",
-			"form": {
-				"kind": "layout-vertical",
-				"children": [{
-					"kind": "text",
-					"label": "Label",
-					"path": "label"
-				}, {
-					"kind": "longtext",
-					"label": "Description",
-					"path": "description"
-				}]
-			}
-		},
 		"view": {
 			"states": ["default"],
 			"roles": ["participant", "moderated-participant"],
-			"method": "get"
-		},
-		"edit": {
-			"states": ["default"],
-			"roles": ["moderator"],
-			"method": "edit-data"
+			"step": "view-html"
 		},
 		"delete": {
 			"states": ["default"],
 			"roles": ["moderator"],
-			"method": "delete"
+			"step": "delete"
 		},
 		"moderated-comment": {
 			"states": ["default"],
 			"roles":["moderated-participant"],
-			"method": "create-stream",
-			"child-state": "awaiting-moderation",
-			"child-templates": ["chat"]
+			"steps": [{
+				"step": "create-child",
+				"state": "awaiting-moderation",
+				"template": "chat-message",
+				"withChild": [{
+					"step": "save"
+				}]
+			}]
 		},
 		"comment": {
 			"states": ["default"],
 			"roles":["participant", "moderator"],
-			"method": "create-stream",
-			"child-state": "visible",
-			"child-templates": ["chat"]
+			"steps": [{
+				"step": "create-child", 
+				"childState": "visible",
+				"withChild": [{"step": "save"}]
+			}]
 		}
 	}
 }

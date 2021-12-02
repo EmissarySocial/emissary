@@ -2,8 +2,8 @@
  * INPUT WIDGETS                    */
 
 input:not([type=submit], [type=checkbox], [type=radio]), textarea {
-    border: solid 1px rgb(150,150,150);
-    color: rgb(50,50,50);
+    border: solid 1px #878d96;
+    color: #21272a;
     padding: 10px 10px;
     line-height:100%;
     width:100%;
@@ -29,10 +29,17 @@ button,
     display:inline-block;
     cursor:pointer;
     padding:10px 20px;
-    background-color: rgb(200,201, 202);
+    background-color: #dde1e6;
     border-radius: 5px;
     border:none;
     color: black;
+}
+
+input[type=submit]:hover,
+button:hover,
+.button:hover {
+    color:black;
+    background-color: #c1c7cd;
 }
 
 input[type=submit].primary,

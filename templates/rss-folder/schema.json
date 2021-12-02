@@ -1,6 +1,7 @@
 {
 	"label": "RSS Folder",
 	"description": "RSS Folders listen for new articles from other websites.",
+	"icon": "fa-solid fa-rss",
 	"containedBy": ["top", "folder"],
 	"schema": {
 		"title": "RSS Folder",
@@ -45,11 +46,11 @@
 	},
 	"actions": {
 		"view": {
-			"step": "stream-html"
+			"step": "view-html"
 		},
 		"delete": {
 			"roles": ["owner"],
-			"step": "stream-delete"
+			"step": "delete"
 		}
 	}
 }	

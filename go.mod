@@ -16,7 +16,6 @@ require (
 	github.com/benpate/html v0.11.1
 	github.com/benpate/htmlconv v0.3.1
 	github.com/benpate/list v0.4.0
-	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.4.1
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/steranko v0.4.3
@@ -26,6 +25,7 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/mmcdole/gofeed v1.1.3
+	github.com/spf13/afero v1.6.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.22
 	go.mongodb.org/mongo-driver v1.7.2
@@ -34,6 +34,7 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
+	github.com/benpate/null v0.6.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect

@@ -1,0 +1,34 @@
+<link rel="stylesheet" href="/static/editor/uploader.css" />
+<script type="text/hyperscript" src="/static/editor/uploader.hs"></script>
+
+<div style="float:right;">
+
+	{{- if .UserCan "properties" -}}
+		<!--span script="install AsModal()" hx-get="/{{.Token}}/properties" class="button">Info</span-->
+	{{- end -}}
+
+	{{- if .UserCan "delete" -}}
+		<span hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete" class="button">Delete</span>
+	{{- end -}}
+
+</div>
+
+<h1 class="space-after">{{.Label}}</h1>
+
+<article class="space-after">
+	<div>{{.Description}}</div>
+</article>
+
+{{- $children := .Children "view" -}}
+
+<article>
+
+	<div class="uploader" _="install Uploader(url:'/{{.StreamID}}/attachments')"></div>
+
+	{{- range $index, $photo := $children -}}
+		<div class="card">
+			<img src="{{$photo.URL}}"/>
+		</div>
+	{{- end -}}
+</article>
+

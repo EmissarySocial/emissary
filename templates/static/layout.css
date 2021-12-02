@@ -12,8 +12,8 @@ body {
 	left:0px;
 	width:250px;
     color: rgb(60,60,60);
-	background-color: rgb(244,245,246);
-	border-right: solid 1px rgb(211,212,213);
+	background-color: #f2f4f8;
+	border-right: solid 1px #dde1e6;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	z-index:2;
@@ -25,12 +25,12 @@ body {
 	padding:5px 10px;
 }
 
-/*
+
 #menu > a:hover {
-    background-color:rgb(200, 201, 202);
-    color: white;
+    background-color:#dde1e6;
+    color: black;
 }
-*/
+
 
 #main {
 	padding:10px 20px 10px 270px;

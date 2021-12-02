@@ -148,8 +148,8 @@ func (w Renderer) SourceURL() string {
 }
 
 // Data returns the custom data map of the stream being rendered
-func (w Renderer) Data() map[string]interface{} {
-	return w.stream.Data
+func (w Renderer) Data(value string) interface{} {
+	return w.stream.Data[value]
 }
 
 // Tags returns the tags of the stream being rendered

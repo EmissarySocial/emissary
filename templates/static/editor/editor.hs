@@ -23,4 +23,6 @@ behavior wysiwyg
 
 init
 	make a Quill from me, {theme:"bubble"} called quill
-	log quill
+
+on blur
+	log me		

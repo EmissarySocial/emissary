@@ -16,7 +16,6 @@ func Contains(value1 interface{}, value2 interface{}) bool {
 		if value2, ok := convert.StringOk(value2, ""); ok {
 			return strings.Contains(value1, value2)
 		}
-		return false
 
 	case []string:
 
@@ -27,7 +26,6 @@ func Contains(value1 interface{}, value2 interface{}) bool {
 					return true
 				}
 			}
-			return false
 		}
 
 	case []int:
@@ -39,7 +37,6 @@ func Contains(value1 interface{}, value2 interface{}) bool {
 					return true
 				}
 			}
-			return false
 		}
 
 	case []float64:
@@ -51,7 +48,6 @@ func Contains(value1 interface{}, value2 interface{}) bool {
 					return true
 				}
 			}
-			return false
 		}
 	}
 

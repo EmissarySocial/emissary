@@ -19,7 +19,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// Well-Known API calls
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
-	e.GET("/favicon.ico", echo.NotFoundHandler)
+	e.GET("/favicon.ico", handler.GetFavicon(factoryManager))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factoryManager))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factoryManager))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factoryManager))
@@ -50,6 +50,10 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/:stream/:action", handler.GetStream(factoryManager))
 	e.POST("/:stream/:action", handler.PostStream(factoryManager))
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
+
+	//	e.POST("/:stream/attachments", handler.CreateAttachment(factoryManager))
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
+	//	e.DELETE("/:stream/attachments/:attachment", handler.DeleteAttachment(factoryManager))
 
 	// TODO: Can SSE support be moved into a custom render step?
 	// e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))

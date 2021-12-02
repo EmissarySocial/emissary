@@ -71,7 +71,6 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var stream model.Stream
-		var buffer bytes.Buffer
 
 		// Try to get the factory
 		factory, err := factoryManager.ByContext(ctx)
@@ -99,7 +98,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		action := renderer.Action()
 
-		if err := render.DoPipeline(&renderer, &buffer, action.Steps, render.ActionMethodPost); err != nil {
+		if err := render.DoPipeline(&renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
 		}
 

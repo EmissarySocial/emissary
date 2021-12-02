@@ -6,6 +6,7 @@ import (
 )
 
 type Factory interface {
+	Attachment() *service.Attachment
 	FormLibrary() form.Library
 	Layout() *service.Layout
 	Stream() *service.Stream
