@@ -1,0 +1,88 @@
+.show {
+	display:inherit;
+}
+
+.hide {
+	display:none;
+}
+
+.container {
+	position: relative;
+}
+
+@media screen and (max-width:35.5em) {
+
+	.container {
+		width:100%;
+		margin:0px;		
+		padding:10px;
+	}
+
+	.show-xs {
+		display:inherit;
+	}
+
+	.hide-xs {
+		display:none;
+	}
+}
+
+@media screen and (min-width:35.5em) {
+
+	.container {
+		width:100%;
+	}
+
+	.show-sm {
+		display:inherit;
+	}
+
+	.hide-sm {
+		display:none;
+	}
+}
+
+@media screen and (min-width:48em) {
+
+	.container {
+		width:44em;
+	}
+
+	.show-md {
+		display:inherit;
+	}
+
+	.hide-md {
+		display:none;
+	}
+}
+
+@media screen and (min-width:64em) {
+
+	.container {
+		width:60em;
+	}
+
+	.show-lg {
+		display:inherit;
+	}
+
+	.hide-lg {
+		display:none;
+	}
+}
+
+@media screen and (min-width:80em) {
+
+	.container {
+		width:76em;
+	}
+
+	.show-xl {
+		display:inherit;
+	}
+
+	.hide-xl {
+		display:none;
+	}
+}

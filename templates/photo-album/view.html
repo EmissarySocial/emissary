@@ -1,32 +1,26 @@
-<div id="menu-bar">
-	{{ if .UserCan "edit" }}
+{{ if .UserCan "edit" }}
+	<div id="menu-bar">
 		<a href="/{{.Token}}/edit" class="button">Edit</a>
-	{{ end }}
-</div>
-
-{{- if .HasParent -}}
-	{{- $parent := .Parent "view" -}}
-	<div id="breadcrumbs">
-		<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
 	</div>
-{{- end -}}
+{{ end }}
 
-{{- if ne "" (.Data "heading") -}}
-	<h1 class="space-after">{{.Data "heading"}}</h1>
-{{- end -}}
+<h1>{{.Label}}</h1>
 
-{{- if ne "" (.Data "introduction") -}}
 <article class="space-after">
-	<div>{{.Data "introduction"}}</div>
+	<div>{{.Description}}</div>
 </article>
-{{- end -}}
 
-<div class="space-after pure-g">
+<div class="pure-g card-group">
 	{{- $token := .Token -}}
 	{{- range .Children "view" -}}
-		<div class="pure-u-1 pure-u-md-1-3">
+		<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
 			<div hx-get="/{{.Token}}"  class="card" style="overflow:hidden; aspect-ratio:1;">
-				<img src="/{{$token}}/attachments/{{.ThumbnailImage}}" style="height:100%; position:absolute; left:0px; object-fit:cover;">
+				<picture>
+					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">
+					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=200" media="(min-width:786px)">
+					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=150" media="(min-width:568px)">
+					<img src="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=7=1024" style="height:100%; position:absolute; left:0px; object-fit:cover;">
+				</picture>
 			</div>
 		</div>
 	{{- end -}}

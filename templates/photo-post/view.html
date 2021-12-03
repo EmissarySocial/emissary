@@ -13,10 +13,4 @@
 
 {{$attachment := .Attachment}}
 
-
-<img src="/{{.Token}}/attachments/{{$attachment.Filename}}" class="responsive">
-<hr>
-({{.ThumbnailImage}})
-{{.Attachments}}
-<hr>
-{{.Roles}}
+<img src="/{{.Token}}/attachments/{{$attachment.Filename}}" style="width:100%;">

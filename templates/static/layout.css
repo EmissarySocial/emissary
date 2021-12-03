@@ -1,49 +1,75 @@
+/****************************
+ * Page-Layout classes
+ ****************************/
+
+* {
+	 box-sizing: border-box;
+}
+
 body {
 	position:absolute;
 	height:100%;
 	width:100%;
 	background-color: var(--gray10);
 	color: var(--black);
-	box-sizing: border-box;
+
+	display: flex;
+	flex-direction:column-reverse;
+	justify-content: flex-end;
 }
 
-#menu {
-	position:absolute;
+header {
+	position:sticky;
 	top:0px;
-	bottom:0px;
-	left:0px;
-	width:250px;
-    color: var(black);
+	left: 0px;
+	right: 0px;
+
+    color: var(--gray30);
 	font-weight:300;
-	background-color: var(--gray20);
-	border-right: solid 1px var(--gray40);
-	overflow-y: scroll;
-	overflow-x: hidden;
-	z-index:2;
-	box-sizing: border-box;
+	background-color: var(--gray90);
+	display: flex;
+	justify-content: center;
+	flex-wrap:wrap;
 }
 
-#menu > a {
-    color: var(--black);
-    display:block;
-	padding:5px 10px;
+header .container {
+	display: flex;
 }
 
-
-#menu > a:hover {
-    background-color:var(--gray30);
-    color: var(--black);
+header .container div {
+	display: flex;
+	flex-grow:1;
+	justify-content: flex-start;
 }
+
+header .container div:last-child {
+	justify-content: flex-end;
+}
+
+header a {
+    color: var(--gray30);
+    display:inline-block;
+	padding:15px 10px;
+}
+
+header a:hover {
+    color: var(--white);
+    background-color:var(--gray80);
+}
+
+main {
+	display: flex;
+	justify-content: center;
+	padding-top: 40px;
+}
+
 
 #menu-bar {
 	position:absolute;
 	top: 0px;
 	right: 0px;
 	width: auto;
-	padding:10px 5px 5px 10px;
-	box-sizing: border-box;
 	text-align:right;
-	background-color: var(--white);
 }
 
 #menu-bar button,
@@ -55,16 +81,4 @@ body {
 
 #breadcrumbs {
 	margin-bottom:20px;
-}
-
-#main {
-	padding:10px 20px 10px 270px;
-	width:100%;
-	max-width:100%;
-	box-sizing: border-box;
-}
-
-.grid {
-    display: flexbox;
-    flex-direction: row;
 }

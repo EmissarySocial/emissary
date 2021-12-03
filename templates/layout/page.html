@@ -9,47 +9,47 @@
 	<link rel="stylesheet" href="/static/pure-grids-responsive-min.css">
 	<link rel="stylesheet" href="/static/colors.css">
 
-	<link rel="stylesheet" href="/static/animations.css">
 	<link rel="stylesheet" href="/static/accessibility.css">
+	<link rel="stylesheet" href="/static/animations.css">
 	<link rel="stylesheet" href="/static/cards.css">
 	<link rel="stylesheet" href="/static/content.css">
 	<link rel="stylesheet" href="/static/forms.css">	
 	<link rel="stylesheet" href="/static/layout.css">
 	<link rel="stylesheet" href="/static/modal.css">
+	<link rel="stylesheet" href="/static/responsive.css">	
 	<link rel="stylesheet" href="/static/tables.css">	
 	<link rel="stylesheet" href="/static/typography.css">	
-	<link rel="stylesheet" href="/static/utilities.css">
 
 	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
 </head>
 
-<body>
+<body hx-target="#page" hx-swap="innerHTML" hx-push-url="true">
 
-	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
-		{{- .Render -}}
-	</div>
+	<main>
+		<div id="page" class="container">
+			{{- .Render -}}
+		</div>
+	</main>
 
-	<div id="menu" hx-target="#main" hx-push-url="true">
+	<header>
+		<div class="container">
+			<div>
+				{{- range .TopFolders "view" -}}
+					<a hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
+				{{- end -}}
+			</div>
+			<div>
+				{{- if .IsAuthenticated -}}
+					<a href="/profile">Profile</a>
+					<a href="/settings">Settings</a>
+					<a hx-post="/signout" hx-target="body">Sign Out</a>
+				{{- else -}}
+					<a href="/signin">Sign In</a>
+				{{- end -}}
+			</div>
+		</div>
 
-		<a href="/home" hx-get="/home" class="space-before">Home</a>
-
-		{{- range .TopFolders "view" -}}
-			<a hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
-		{{- end -}}
-
-		{{- if .UserCan "manage-folders" -}}
-		<a script="install modal('/admin/folders')" class="link">
-			Manage Folders</a>
-		{{- end -}}
-
-		{{- if .IsAuthenticated -}}
-			<a href="/profile" class="space-before">My Profile</a>
-			<a hx-post="/signout" hx-target="body">Sign Out</a>
-		{{- else -}}
-			<a href="/signin" class="space-before">Sign In</a>
-		{{- end -}}
-		
-	</div>
+	</header>
 
 	<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
 	<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>

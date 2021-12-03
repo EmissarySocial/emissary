@@ -1,3 +1,7 @@
+.card-group {
+    margin-right: -5px;
+}
+
 .card {
     box-sizing: border-box;
     border: solid 1px var(--gray20);
@@ -7,7 +11,11 @@
     position:relative;
 }
 
+
 @media screen and (min-width:64em) {
+    .card-group {
+        margin-right: -20px;
+    }
     .card {
         margin: 0px 20px 20px 0px;
     }

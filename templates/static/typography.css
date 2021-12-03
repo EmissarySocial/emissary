@@ -1,22 +1,29 @@
+* {
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/****************************
+ * Headings
+ ****************************/
 
 h1 {
     font-size: 24pt;
-    margin-top:30px;
-    margin-bottom:10px;
-    font-weight:600;
+    margin-top:0px;
+    margin-bottom:20px;
+    font-weight:500;
 }
 
 h2 {
     font-size: 20pt;
-    margin-top:30px;
-    margin-bottom:10px;
-    font-weight:600;
+    margin-top:0px;
+    margin-bottom:20px;
+    font-weight:500;
 }
 
 h3 {
     font-size: 18pt;
-    margin-top:30px;
-    margin-bottom:10px;
+    margin-top:0px;
+    margin-bottom:20px;
     font-weight:500;
 }
 
@@ -25,3 +32,55 @@ h2:first-child,
 h3:first-child {
     margin-top: 0px;
 }
+
+
+/****************************
+ * Block-Level classes
+ ****************************/
+
+.space-above,
+.space-before {
+    margin-top: 20px;
+}
+
+.space-below,
+.space-after {
+    margin-bottom: 20px;
+}
+
+.space-left {
+    margin-left:20px;
+}
+
+.space-right {
+    margin-right: 20px;
+}
+
+
+/****************************
+ * Element-Level classes
+ ****************************/
+
+b, strong, .bold {
+	font-weight:600;
+}
+
+a, .link {
+	color:#0043ce;
+	text-decoration:none;
+}
+
+a:hover,
+.link:hover,
+tr.link:hover > td {
+	cursor:pointer;
+	color: #0f62fe;
+	--background-color:#f4f4f4;
+}
+
+.clickable,
+[hx-get],
+[hx-post] {
+	cursor:pointer;
+}
+
