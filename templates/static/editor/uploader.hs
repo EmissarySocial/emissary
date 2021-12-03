@@ -3,14 +3,14 @@ behavior Uploader(url, accept)
 init
 	set result to ""
 	append `Drag Files Into This Box, or Click to Choose Files`
-	append `<form hx-post="${url}" hx-encoding="multipart/form-data" style="display:none;">`
-	append `<input type="file" name="files" accept="${accept}" multiple/>`
+	append `<form hx-post="${url}" hx-encoding="multipart/form-data">`
+	append `<input type="file" name="file" accept="${accept}"/>`
 	append `</form>`
 	put it at the end of me
 	call htmx.process(me)
 
 on click 
-	send click to the first <input[type="file"]/> in me
+	send click to the <input[type="file"]/> in me
 
 on change 
 	log "got it"
@@ -33,10 +33,11 @@ on drop(dataTransfer)
 
 	for file in dataTransfer.files
 		make a FormData called formData
-		call formData.append("files", file)
+		call formData.append("file", file)
+		fetch `${url}` {method:"POST", body:formData} as text
 	end
 
-	fetch `${url}` {method:"POST", body:formData} as text
-	set the window's location to the `${result}`
+	set the window's location to the result
 
 end
+

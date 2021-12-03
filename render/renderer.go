@@ -175,7 +175,12 @@ func (w Renderer) Roles() []string {
  * REQUEST INFO
  *******************************************/
 
-// Returns the request parameter
+// Returns the request method
+func (w Renderer) Method() string {
+	return w.ctx.Request().Method
+}
+
+// Returns the designated request parameter
 func (w Renderer) QueryParam(param string) string {
 	return w.ctx.QueryParam(param)
 }
@@ -240,11 +245,27 @@ func (w Renderer) TopFolders(action string) ([]Renderer, error) {
 	return w.iteratorToSlice(iterator, action), nil
 }
 
+func (w Renderer) Attachment() (model.Attachment, error) {
+
+	var attachment model.Attachment
+
+	attachmentService := w.factory.Attachment()
+	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
+
+	if err != nil {
+		return attachment, derp.Wrap(err, "ghost.renderer.Renderer.Attachments", "Error listing attachments")
+	}
+
+	// Just get a single attachment from the Iterator
+	iterator.Next(&attachment)
+
+	return attachment, nil
+}
+
 // Attachments lists all attachments for this stream.
 func (w Renderer) Attachments() ([]model.Attachment, error) {
 
-	var result []model.Attachment
-
+	result := []model.Attachment{}
 	attachmentService := w.factory.Attachment()
 	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
 

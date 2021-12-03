@@ -8,7 +8,7 @@
 
 	{{- if .HasParent -}}
 		{{- $parent := .Parent "view" -}}
-		<div id="breadcrumns">
+		<div id="breadcrumbs">
 			<a hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
 		</div>
 	{{- end -}}

@@ -53,6 +53,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "set-defaults":
 		return NewStepStreamDefaults(stepInfo), nil
 
+	case "set-thumbnail":
+		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
+
 	case "set-sharing":
 		return NewStepStreamShare(stepInfo), nil
 

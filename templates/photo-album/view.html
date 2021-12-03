@@ -11,18 +11,23 @@
 	</div>
 {{- end -}}
 
-<h1 class="space-after">{{.Data "heading"}}</h1>
+{{- if ne "" (.Data "heading") -}}
+	<h1 class="space-after">{{.Data "heading"}}</h1>
+{{- end -}}
 
+{{- if ne "" (.Data "introduction") -}}
 <article class="space-after">
 	<div>{{.Data "introduction"}}</div>
 </article>
+{{- end -}}
 
-<div class="space-after">
+<div class="space-after pure-g">
+	{{- $token := .Token -}}
 	{{- range .Children "view" -}}
-		<a href="/{{.Token}}">{{.Label}}</a><br>
+		<div class="pure-u-1 pure-u-md-1-3">
+			<div hx-get="/{{.Token}}"  class="card" style="overflow:hidden; aspect-ratio:1;">
+				<img src="/{{$token}}/attachments/{{.ThumbnailImage}}" style="height:100%; position:absolute; left:0px; object-fit:cover;">
+			</div>
+		</div>
 	{{- end -}}
 </div>
-
-{{.UserCan "edit"}}
-
-{{.Roles}}

@@ -81,7 +81,6 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 	child.StateID = step.childState
 	child.TemplateID = templateID
 	child.AuthorID = authorization.UserID
-	child.Label = "New Article"
 	child.Token = child.StreamID.Hex()
 
 	childRenderer, err := renderer.newRenderer(&child, "view")

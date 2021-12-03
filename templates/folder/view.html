@@ -9,8 +9,7 @@
 	<tbody>
 		{{- if .UserCan "new" -}}
 			<tr script="install AsModal()"
-				hx-get="/{{.Token}}/new"
-				class="link">
+				hx-get="/{{.Token}}/new">
 				<td colspan="3" class="link"><i class="fa-solid fa-circle-plus"></i> Add Stream</td>
 			</tr>
 		{{- end -}}

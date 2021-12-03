@@ -1,35 +1,29 @@
-
-.gray {
-	color:#666;
+:root {
+	--white: #ffffff;
+	--gray10: #f4f4f4;
+	--gray20: #e0e0e0;
+	--gray30: #c6c6c6;
+	--gray40: #a8a8a8;
+	--gray50: #8d8d8d;
+	--gray60: #6f6f6f;
+	--gray70: #525252;
+	--gray80: #393939;
+	--gray90: #262626;
+	--black: 000000;
 }
-
-
-/********************
-* Dark Mode Colors
 
 @media (prefers-color-scheme: dark) {
-	html {
-		color:rgb(220,221,222);
-	}
-	h1, h2, h3, h4, h5{
-		color: white;
-	}
-	body{
-		background-color: rgb(54,57,64);
-	}
-	#menu {
-		background-color: rgb(48,49,55);
-		border-right-color: rgb(31,34,37);
-	}
-
-	.uk-tab > .uk-active > a {
-		color: white;
-	}
-	.uk-nav > li:hover{
-		background-color: rgb(59, 60, 67);
-	}
-	.uk-nav > li:hover > a {
-		color:white;
+	:root {
+		--black: #ffffff;
+		--gray90: #f4f4f4;
+		--gray80: #e0e0e0;
+		--gray70: #c6c6c6;
+		--gray60: #a8a8a8;
+		--gray50: #8d8d8d;
+		--gray40: #6f6f6f;
+		--gray30: #525252;
+		--gray20: #393939;
+		--gray10: #262626;
+		--white: #000000;
 	}
 }
-*********************/

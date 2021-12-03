@@ -55,11 +55,15 @@
 			"roles": ["owner", "editor", "author"],
 			"steps": [{
 				"step": "new-child",
-				"template": ["photo-post"],
+				"template": "photo-post",
 				"withChild": [
-					{"step": "upload-attachments"}
-				]
-			}]
+					{"step": "save"},
+					{"step": "upload-attachments"},
+					{"step": "set-thumbnail"},
+					{"step": "save"},
+					{"step": "forward-to", "url": "/{{.Token}}"}
+				]}
+			]
 		},
 		"delete": {
 			"roles": ["owner"],

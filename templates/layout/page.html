@@ -3,13 +3,15 @@
 <head>
 	<title>GH0ST</title>
 
-	<meta name="viewport" content="width=device-width">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="stylesheet" href="/static/reset.css">
+	<link rel="stylesheet" href="/static/pure-min.css">
+	<link rel="stylesheet" href="/static/pure-grids-responsive-min.css">
+	<link rel="stylesheet" href="/static/colors.css">
 
 	<link rel="stylesheet" href="/static/animations.css">
 	<link rel="stylesheet" href="/static/accessibility.css">
-	<link rel="stylesheet" href="/static/colors.css">
+	<link rel="stylesheet" href="/static/cards.css">
 	<link rel="stylesheet" href="/static/content.css">
 	<link rel="stylesheet" href="/static/forms.css">	
 	<link rel="stylesheet" href="/static/layout.css">
@@ -21,7 +23,7 @@
 	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
 </head>
 
-<body hx-ext="preload">
+<body>
 
 	<div id="main" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 		{{- .Render -}}
@@ -51,10 +53,8 @@
 
 	<script type="text/hyperscript" src="/static/viewer/viewer.hs"></script>
 	<script type="text/hyperscript" src="/static/viewer/modal.hs"></script>
-	<!--script type="text/hyperscript" src="/static/viewer/date.hs"></script-->
 
 	<script type="text/javascript" src="/htmx/htmx.js"></script>
-	<script type="text/javascript" src="/htmx/ext/preload.js"></script>
 	<script type="module" src="/hyperscript/_hyperscript_web.modern.js"e></script>
 	
 </body>

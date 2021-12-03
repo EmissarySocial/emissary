@@ -11,7 +11,12 @@
 	</div>
 {{- end -}}
 
+{{$attachment := .Attachment}}
+
+
+<img src="/{{.Token}}/attachments/{{$attachment.Filename}}" class="responsive">
 <hr>
+({{.ThumbnailImage}})
 {{.Attachments}}
 <hr>
 {{.Roles}}

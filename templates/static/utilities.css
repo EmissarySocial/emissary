@@ -11,7 +11,9 @@ tr.link:hover > td {
 	--background-color:#f4f4f4;
 }
 
-.clickable {
+.clickable,
+[hx-get],
+[hx-post] {
 	cursor:pointer;
 }
 

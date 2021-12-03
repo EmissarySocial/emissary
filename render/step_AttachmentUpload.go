@@ -43,15 +43,12 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 
 	for _, fileHeader := range files {
 
-		spew.Dump(fileHeader)
-
 		// Each attachment is tracked separately, so make a new attachment for each file in the upload.
 		attachment := renderer.stream.NewAttachment()
 		attachment.Original = fileHeader.Filename
 		attachment.Filename = attachment.AttachmentID.Hex()
 
-		spew.Dump(attachment)
-
+		// Open the source (from the POST request)
 		source, err := fileHeader.Open()
 
 		if err != nil {
@@ -60,7 +57,8 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 
 		defer source.Close()
 
-		destination, err := filesystem.Open(attachment.Filename)
+		// Open the destination (in afero)
+		destination, err := filesystem.Create(attachment.Filename)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error creating file in filesystem", attachment)
@@ -68,6 +66,7 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 
 		defer destination.Close()
 
+		// Save the upload into the destination
 		if _, err = io.Copy(destination, source); err != nil {
 			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error writing attachment file", attachment, fileHeader)
 		}
@@ -75,8 +74,6 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 		if err := step.attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error saving attachment", attachment)
 		}
-
-		spew.Dump("SAVED???", attachment)
 	}
 
 	return nil

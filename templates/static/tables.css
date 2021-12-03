@@ -1,10 +1,12 @@
 table.table {
     width:100%;
-    border-bottom: solid 1px #dde1e6;
+    border-bottom: solid 1px var(--gray20);
+    border-spacing: 0px;
 }
 
 table.table th {
-    font-weight:500;
+    font-weight:600;
+    text-align:left;
 }
 
 table.table th,
@@ -14,10 +16,11 @@ table.table td {
 }
 
 table.table td {
-    border-top: solid 1px #dde1e6;
+    border-top: solid 1px var(--gray20);
+    font-weight:300;
 }
 
 table.table tr:hover td {
-    background-color:#f2f4f8;
+    background-color:var(--gray30);
     cursor:pointer;
 }

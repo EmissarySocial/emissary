@@ -41,5 +41,9 @@ func (attachment *Attachment) OriginalExtension() string {
 
 // MimeType returns the mime-type of the attached file
 func (attachment *Attachment) MimeType() string {
-	return mime.TypeByExtension(attachment.Extension())
+	return mime.TypeByExtension(attachment.OriginalExtension())
+}
+
+func (attachment *Attachment) MimeCategory() string {
+	return list.Head(attachment.MimeType(), "/")
 }

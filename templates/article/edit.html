@@ -4,14 +4,14 @@
 <script type="text/hyperscript" src="/static/editor/editor.hs"></script>
 
 <div id="menu-bar">
+	<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
+
 	<button hx-get="/{{.Token}}">Save Draft</button>
 
 	<button 
 		script="install AsModal"
 		hx-post="/{{.Token}}/delete-draft" 
 		hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
-
-	<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
 
 	&nbsp;
 	&nbsp;

@@ -30,10 +30,7 @@
 	},
 	"actions": {
 		"init": {
-			"steps": [
-				{"step": "save"},
-				{"step": "forward-to", "url": "/{{.Token}}"}
-			]
+			"steps": []
 		},
 		"view": {
 			"step": "view-html"
