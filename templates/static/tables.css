@@ -21,6 +21,6 @@ table.table td {
 }
 
 table.table tr:hover td {
-    background-color:var(--gray20);
+    background-color:var(--gray10);
     cursor:pointer;
 }

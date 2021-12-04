@@ -1,16 +1,12 @@
 .uploader {
-    border: 2px dashed #ccc;
-    border-radius: 20px;
+    border: 1px dashed var(--gray60);
     font-family: sans-serif;
-    margin: 100px auto;
-    padding: 20px;
+    padding: 40px;
     cursor: pointer;
+    background-color: var(--white);
+    text-align:center;
 }
 
 #drop-area.highlight {
     border-color: purple;
-}
-
-.uploader form {
-  display: none;
 }

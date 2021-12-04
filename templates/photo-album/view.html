@@ -1,27 +1,45 @@
-{{ if .UserCan "edit" }}
+<script type="text/hyperscript">
+	init 
+		log 'here'
+		log StreamServer
+		call StreamServer.connect(`/{{.Token}}/sse`)
+</script>
+
+<div hx-get="/{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
+
 	<div id="menu-bar">
-		<a href="/{{.Token}}/edit" class="button">Edit</a>
+		{{ if .UserCan "edit" }}
+			<a href="/{{.Token}}/edit" class="button"><i class="fa-regular fa-plus"></i> New Post</a>
+			{{- if .UserCan "properties" -}}
+				<button hx-get="/{{.Token}}/properties" script="install AsModal">Edit Album</button>
+			{{- end -}}
+			{{- if .UserCan "delete" -}}
+				&nbsp;
+				<button hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete Album</button>
+			{{- end -}}
+		{{ end }}
 	</div>
-{{ end }}
 
-<h1>{{.Label}}</h1>
+	<h1>{{.Label}}</h1>
 
-<article class="space-after">
-	<div>{{.Description}}</div>
-</article>
+	<article class="space-after">
+		<div>{{.Description}}</div>
+	</article>
 
-<div class="pure-g card-group">
-	{{- $token := .Token -}}
-	{{- range .Children "view" -}}
-		<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
-			<div hx-get="/{{.Token}}"  class="card" style="overflow:hidden; aspect-ratio:1;">
-				<picture>
-					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">
-					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=200" media="(min-width:786px)">
-					<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=150" media="(min-width:568px)">
-					<img src="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=7=1024" style="height:100%; position:absolute; left:0px; object-fit:cover;">
-				</picture>
+	<div class="pure-g card-group">
+		{{- $token := .Token -}}
+		{{- range .Children "view" -}}
+			<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
+				<div hx-get="/{{.Token}}"  class="card" style="overflow:hidden; aspect-ratio:1;">
+					<picture>
+						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">
+						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=200" media="(min-width:786px)">
+						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=150" media="(min-width:568px)">
+						<img src="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=7=1024" style="height:100%; position:absolute; left:0px; object-fit:cover;">
+					</picture>
+				</div>
 			</div>
-		</div>
-	{{- end -}}
+		{{- end -}}
+	</div>
+
 </div>

@@ -3,6 +3,7 @@
 <script src="//cdn.quilljs.com/1.3.6/quill.js"></script>
 <script type="text/hyperscript" src="/static/editor/editor.hs"></script>
 
+<div class="page">
 <div id="menu-bar">
 	<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
 
@@ -45,3 +46,5 @@
 <article class="content-editor">
 	<div>{{.ContentEditor}}</div>
 </article>
+
+</div>

@@ -2,29 +2,23 @@
 <script type="text/hyperscript" src="/static/editor/uploader.hs"></script>
 
 <div id="menu-bar">
-
-	<button hx-get="/{{.Token}}">View</button>
-
-	{{- if .UserCan "delete" -}}
-		<button hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete</button>
-	{{- end -}}
-
+	<button hx-get="/{{.Token}}">Cancel</button>
 </div>
 
-<h1 class="space-after">{{.Label}}</h1>
-
-<article class="space-after">
-	<div>{{.Description}}</div>
-</article>
+<h1><i class="fa-regular fa-plus"></i> New Post</h1>
 
 <article>
 
-	<div class="uploader" _="install Uploader(url:'/{{.StreamID}}/attachments')"></div>
+	<div class="uploader" _="install Uploader(url:'/{{.StreamID}}/attachments')">
+	
+		<div class="space-below gray40"><i class="fa-solid fa-arrow-up-from-bracket fa-8x"></i></div>
+		<h2 class="space-below">Drag Files Here to Upload</h2>
+		<form hx-post="${url}" hx-encoding="multipart/form-data">
+			<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
+			<input id="manual-upload" type="file" name="file" accept="${accept}" class="hidden"/>
+		</form>
 
-	{{- range .Children "view" -}}
-		<div class="clickable card" hx-get="/{{.Token}}/edit">
-			{{.}}
-		</div>
-	{{- end -}}
+	</div>
+
 </article>
 

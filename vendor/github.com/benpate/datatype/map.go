@@ -14,6 +14,24 @@ func NewMap() Map {
 	return Map(map[string]interface{}{})
 }
 
+// AsMapOfInterface returns the underlying map datastructure
+func (m Map) AsMapOfInterface() map[string]interface{} {
+	return map[string]interface{}(m)
+}
+
+// GetKeys returns all keys of the underlying map
+func (m Map) GetKeys() []string {
+	result := make([]string, len(m))
+
+	index := 0
+	for key := range m {
+		result[index] = key
+		index = index + 1
+	}
+
+	return result
+}
+
 // GetInterface returns a named option without any conversion.  You get what you get.
 func (m Map) GetInterface(name string) interface{} {
 	return m[name]

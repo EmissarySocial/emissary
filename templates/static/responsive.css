@@ -6,13 +6,13 @@
 	display:none;
 }
 
-.container {
+.framed {
 	position: relative;
 }
 
 @media screen and (max-width:35.5em) {
 
-	.container {
+	.framed {
 		width:100%;
 		margin:0px;		
 		padding:10px;
@@ -29,7 +29,7 @@
 
 @media screen and (min-width:35.5em) {
 
-	.container {
+	.framed {
 		width:100%;
 	}
 
@@ -44,7 +44,7 @@
 
 @media screen and (min-width:48em) {
 
-	.container {
+	.framed {
 		width:44em;
 	}
 
@@ -59,7 +59,7 @@
 
 @media screen and (min-width:64em) {
 
-	.container {
+	.framed {
 		width:60em;
 	}
 
@@ -74,7 +74,7 @@
 
 @media screen and (min-width:80em) {
 
-	.container {
+	.framed {
 		width:76em;
 	}
 

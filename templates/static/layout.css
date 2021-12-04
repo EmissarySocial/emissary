@@ -10,7 +10,7 @@ body {
 	position:absolute;
 	height:100%;
 	width:100%;
-	background-color: var(--gray10);
+	background-color: var(--gray05);
 	color: var(--black);
 
 	display: flex;
@@ -32,24 +32,26 @@ header {
 	flex-wrap:wrap;
 }
 
-header .container {
+header .framed {
 	display: flex;
 }
 
-header .container div {
+header .framed div {
 	display: flex;
 	flex-grow:1;
 	justify-content: flex-start;
 }
 
-header .container div:last-child {
+header .framed div:last-child {
 	justify-content: flex-end;
 }
 
 header a {
     color: var(--gray30);
     display:inline-block;
-	padding:15px 10px;
+	padding:10px 20px;
+	border-radius: 10px;
+	margin:10px 0px;
 }
 
 header a:hover {
@@ -63,6 +65,14 @@ main {
 	padding-top: 40px;
 }
 
+.page {
+    border: solid 1px var(--gray10);
+    background-color: var(--white);
+    padding: 20px;
+    position:relative;
+	line-height:175%;
+	margin-bottom: 50px;
+}
 
 #menu-bar {
 	position:absolute;
@@ -70,6 +80,11 @@ main {
 	right: 0px;
 	width: auto;
 	text-align:right;
+}
+
+.page #menu-bar {
+	top: 10px;
+	right: 10px;
 }
 
 #menu-bar button,

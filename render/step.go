@@ -89,6 +89,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "forward-to":
 		return NewStepForwardTo(stepInfo), nil
 
+	case "trigger-event":
+		return NewStepTriggerEvent(stepInfo), nil
+
 	}
 
 	// Fall through means we have an unrecognized action

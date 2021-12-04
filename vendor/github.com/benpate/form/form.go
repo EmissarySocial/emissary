@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/benpate/convert"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/schema"
@@ -28,6 +29,10 @@ func Parse(data interface{}) (Form, error) {
 	var result Form
 
 	switch data := data.(type) {
+
+	case datatype.Map:
+		err := result.UnmarshalMap(map[string]interface{}(data))
+		return result, err
 
 	case map[string]interface{}:
 		err := result.UnmarshalMap(data)

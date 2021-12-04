@@ -39,7 +39,7 @@ func (object Object) Path(p path.Path) (Element, error) {
 // Validate compares a generic data value using this Schema
 func (object Object) Validate(value interface{}) error {
 
-	mapValue, mapOk := value.(map[string]interface{})
+	mapValue, mapOk := convert.MapOfInterface(value)
 
 	if !mapOk {
 		return derp.New(500, "schema.Object.Validate", "value must be a map", value)

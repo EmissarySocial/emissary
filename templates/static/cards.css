@@ -1,22 +1,59 @@
 .card-group {
-    margin-right: -5px;
+    margin-right: -1px;
+}
+
+.card-group .card {
+    margin-right: 1px;
+    margin-bottom:1px;
+
 }
 
 .card {
-    box-sizing: border-box;
     border: solid 1px var(--gray20);
     background-color: var(--white);
-    margin-right: 5px;
-    margin-bottom:5px;
     position:relative;
 }
 
+@media screen and (min-width:35.5em) {
+
+    .card-group {
+        margin: 5px;
+    }
+
+    .card {
+        margin:5px;
+    }
+}
+
+@media screen and (min-width:48em) {
+
+    .card-group {
+        margin-right: -10px;
+    }
+
+    .card-group .card {
+        margin: 0px 10px 10px 0px;
+    }
+}
 
 @media screen and (min-width:64em) {
+
     .card-group {
         margin-right: -20px;
     }
-    .card {
+
+    .card-group .card {
         margin: 0px 20px 20px 0px;
+    }
+}
+
+@media screen and (min-width:80em) {
+
+    .card-group {
+        margin-right: -30px;
+    }
+
+    .card-group .card {
+        margin: 0px 30px 30px 0px;
     }
 }

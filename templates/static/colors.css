@@ -2,6 +2,7 @@
 
 :root {
 	--white: #ffffff;
+	--gray05: #fafafa;
 	--gray10: #f4f4f4;
 	--gray20: #e0e0e0;
 	--gray30: #c6c6c6;
@@ -26,6 +27,21 @@
 		--gray30: #525252;
 		--gray20: #393939;
 		--gray10: #262626;
+		--gray05: #131313;
 		--white: #000000;
 	}
 }
+
+
+.white {color:var(--white);}
+.gray05 {color:var(--gray05);}
+.gray10 {color:var(--gray10);}
+.gray20 {color:var(--gray20);}
+.gray30 {color:var(--gray30);}
+.gray40 {color:var(--gray40);}
+.gray50 {color:var(--gray50);}
+.gray60 {color:var(--gray60);}
+.gray70 {color:var(--gray70);}
+.gray80 {color:var(--gray80);}
+.gray90 {color:var(--gray90);}
+.black {color:var(--black);}

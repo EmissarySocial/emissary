@@ -1,4 +1,4 @@
-behavior AsModal(url)
+behavior AsModal
 
 	init
 		put "body" into [@hx-target]

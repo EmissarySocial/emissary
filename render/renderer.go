@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/benpate/data"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
@@ -15,12 +14,12 @@ import (
 
 // Renderer wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Renderer struct {
-	factory  Factory           // Factory interface is required for locating other services.
-	ctx      *steranko.Context // Contains request context and authentication data.
-	template *model.Template   // Template that the Stream uses
-	action   *model.Action     // Action being executed
-	stream   *model.Stream     // Stream to be displayed
-	inputs   datatype.Map      // Body parameters posted by client
+	factory  Factory                // Factory interface is required for locating other services.
+	ctx      *steranko.Context      // Contains request context and authentication data.
+	template *model.Template        // Template that the Stream uses
+	action   *model.Action          // Action being executed
+	stream   *model.Stream          // Stream to be displayed
+	inputs   map[string]interface{} // Body parameters posted by client
 }
 
 // NewRenderer creates a new object that can generate HTML for a specific stream/view
@@ -55,6 +54,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, stream *model.Stream, a
 		stream:   stream,
 		template: template,
 		action:   &action,
+		inputs:   make(map[string]interface{}),
 	}, nil
 }
 

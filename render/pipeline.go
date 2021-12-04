@@ -29,6 +29,7 @@ func DoPipeline(renderer *Renderer, buffer io.Writer, steps []datatype.Map, meth
 		if err != nil {
 			return derp.Wrap(err, "ghost.render.DoPipeline", "Error executing step", stepInfo)
 		}
+
 	}
 
 	return nil

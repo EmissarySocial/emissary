@@ -1,14 +1,5 @@
 behavior Uploader(url, accept)
 
-init
-	set result to ""
-	append `Drag Files Into This Box, or Click to Choose Files`
-	append `<form hx-post="${url}" hx-encoding="multipart/form-data">`
-	append `<input type="file" name="file" accept="${accept}"/>`
-	append `</form>`
-	put it at the end of me
-	call htmx.process(me)
-
 on click 
 	send click to the <input[type="file"]/> in me
 

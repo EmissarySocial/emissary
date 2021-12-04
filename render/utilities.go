@@ -34,7 +34,11 @@ func WrapModalForm(renderer *Renderer, content string) string {
 	b.Div().Class("modal-content")
 
 	// Form Wrapper
-	b.Form("post", "").Attr("hx-post", renderer.URL()).EndBracket()
+	b.Form("post", "").
+		Attr("hx-post", renderer.URL()).
+		Attr("hx-swap", "none").
+		Attr("hx-push-url", "false").
+		EndBracket()
 
 	// Contents
 	b.Grow(len(content))

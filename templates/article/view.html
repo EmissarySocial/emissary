@@ -1,4 +1,4 @@
-<div hx-get="{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
+<div class="page" hx-get="/{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
 
 	<div id="menu-bar">
 		{{- if .UserCan "edit" -}}
@@ -32,5 +32,3 @@
 	</div>
 
 </div>
-
-{{.Roles}}

@@ -6,11 +6,11 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"heading": {
+			"label": {
 				"type": "string",
 				"description": "The human-readable heading for this photo album"
 			},
-			"introduction": {
+			"description": {
 				"type": "string",
 				"description": "Text description at top of page"
 			}
@@ -51,6 +51,35 @@
 			"roles": ["owner", "editor", "author"],
 			"step": "view-html"
 		},
+		"properties": {
+			"roles": ["owner", "editor", "author"],
+			"steps": [{
+				"step": "form-html",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Edit Photo Album",
+					"description": "",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}, {
+				"step": "set-data",
+				"paths": ["label", "description"]
+			},{
+				"step": "save",
+				"comment": "Updated by {{.Author}}"
+			}, {
+				"step": "trigger-event",
+				"event": "closeModal"
+			}]
+		},
 		"attachments": {
 			"roles": ["owner", "editor", "author"],
 			"steps": [{
@@ -73,32 +102,6 @@
 					{"step": "forward-to", "url": "/{{.Token}}"}
 				]}
 			]
-		},
-		"properties": {
-			"roles": ["owner", "editor"],
-			"steps": [{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Update Form",
-					"description": "This will update the object in this state",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}]
-				}
-			}, {
-				"step": "edit-data",
-				"fields": ["label", "description"]
-			},{
-				"step": "save",
-				"comment": "Updated by {{.Author}}"
-			}]
 		}
 	}
 }

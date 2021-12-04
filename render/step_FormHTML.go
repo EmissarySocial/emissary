@@ -17,12 +17,12 @@ type StepForm struct {
 }
 
 // NewStepForm returns a fully initialized StepForm object
-func NewStepForm(templateService *service.Template, formLibrary form.Library, command datatype.Map) StepForm {
+func NewStepForm(templateService *service.Template, formLibrary form.Library, step datatype.Map) StepForm {
 
 	return StepForm{
 		templateService: templateService,
 		formLibrary:     formLibrary,
-		form:            form.MustParse(command.GetString("form")),
+		form:            form.MustParse(step.GetInterface("form")),
 	}
 }
 
@@ -58,14 +58,18 @@ func (step StepForm) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForm.Get", "Invalid Schema")
 	}
 
+	inputs := make(map[string]interface{})
+
 	// Collect form POST information
-	if err := renderer.ctx.Bind(&renderer.inputs); err != nil {
+	if err := renderer.ctx.Bind(&inputs); err != nil {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
-	if err := schema.Validate(renderer.inputs); err != nil {
+	if err := schema.Validate(inputs); err != nil {
 		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", renderer.inputs)
 	}
+
+	renderer.inputs = inputs
 
 	return nil
 }
