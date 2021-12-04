@@ -4,7 +4,7 @@
 	"icon": "fa-regular fa-folder",
 	"containedBy": ["top", "folder"],
 	"childSortType": "label",
-	"childSortOrder": "asc",
+	"childSortOrder": "ASC",
 	"schema": {
 		"type": "object",
 		"properties": {

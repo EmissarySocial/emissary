@@ -3,8 +3,8 @@
 	"description": "For regular use. Contains text, images, and more.",
 	"icon": "fa-regular fa-images",
 	"containedBy": ["top", "folder"],
-	"childSortType": "publishDate",
-	"childSortOrder": "desc",
+	"childSortType": "journal.createDate",
+	"childSortOrder": "DESC",
 	"schema": {
 		"type": "object",
 		"properties": {

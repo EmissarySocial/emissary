@@ -4,7 +4,7 @@
 	"icon": "fa-regular fa-message",
 	"containedBy": ["folder", "top"],
 	"childSortType": "publishDate",
-	"childSortOrder": "asc",
+	"childSortOrder": "ASC",
 	"schema": {
 		"type": "object",
 		"properties": {}

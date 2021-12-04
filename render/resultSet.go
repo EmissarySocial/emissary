@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type ResultSet struct {
@@ -66,12 +67,7 @@ func (rs *ResultSet) ByRank() *ResultSet {
 	return rs
 }
 
-func (rs *ResultSet) Ascending() *ResultSet {
-	rs.SortDirection = "ascending"
-	return rs
-}
-
-func (rs *ResultSet) Descending() *ResultSet {
+func (rs *ResultSet) Reverse() *ResultSet {
 	rs.SortDirection = "descending"
 	return rs
 }
@@ -98,10 +94,23 @@ func (rs *ResultSet) AsEdit() ([]Renderer, error) {
 	return rs.AsAction("edit")
 }
 
+func (rs *ResultSet) debug() {
+
+	spew.Dump(map[string]interface{}{
+		"Criteria":        rs.Criteria,
+		"SortField":       rs.SortField,
+		"SortDescription": rs.SortDirection,
+		"Sort":            rs.makeSortOption(),
+		"MaxRows":         rs.MaxRows,
+	})
+
+}
 func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 
 	var index uint
 	var result []Renderer
+
+	rs.debug()
 
 	iterator, err := rs.query()
 
@@ -150,7 +159,7 @@ func (rs *ResultSet) query() (data.Iterator, error) {
 // sortOption returns a finalized data.option for sorting the results
 func (rs *ResultSet) makeSortOption() option.Option {
 
-	if rs.SortDirection == "descending" {
+	if rs.SortDirection == option.SortDirectionDescending {
 		return option.SortDesc(rs.SortField)
 	}
 

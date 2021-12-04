@@ -23,9 +23,7 @@ func (c Collection) List(criteria exp.Expression, options ...option.Option) (dat
 
 	criteriaBSON := ExpressionToBSON(criteria)
 
-	// TODO: translate options into mongodb options...
-
-	cursor, err := c.collection.Find(c.context, criteriaBSON)
+	cursor, err := c.collection.Find(c.context, criteriaBSON, convertOptions(options...))
 
 	if err != nil {
 		return NewIterator(c.context, cursor), derp.New(derp.CodeInternalError, "mongodb.List", "Error Listing Objects", err.Error(), criteria, criteriaBSON, options)

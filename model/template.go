@@ -4,6 +4,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/compare"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
@@ -18,7 +19,7 @@ type Template struct {
 	Icon           string                        `json:"icon"           bson:"icon"`           // Icon image used in management UI.
 	ContainedBy    []string                      `json:"containedBy"    bson:"containedBy"`    // Slice of Templates that can contain Streams that use this Template.
 	ChildSortType  string                        `json:"childSortType"  bson:"childSortType"`  // SortType used to display children
-	ChildSortOrder string                        `json:"childSortOrder" bson:"childSortOrder"` // Sort directionL "asc" or "desc" (Default is ascending)
+	ChildSortOrder string                        `json:"childSortOrder" bson:"childSortOrder"` // Sort direction "asc" or "desc" (Default is ascending)
 	URL            string                        `json:"url"            bson:"url"`            // URL where this template is published
 	Schema         *schema.Schema                `json:"schema"         bson:"schema"`         // JSON Schema that describes the data required to populate this Template.
 	States         map[string]State              `json:"states"         bson:"states"`         // Map of States (by state.ID) that Streams of this Template can be in.
@@ -33,7 +34,7 @@ func NewTemplate(templateID string) Template {
 		TemplateID:     templateID,
 		ContainedBy:    make([]string, 0),
 		ChildSortType:  "rank",
-		ChildSortOrder: "asc",
+		ChildSortOrder: option.SortDirectionAscending,
 		States:         make(map[string]State),
 		Roles:          make(map[string]Role),
 		Actions:        make(map[string]Action),

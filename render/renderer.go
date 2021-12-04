@@ -293,8 +293,8 @@ func (w Renderer) makeResultSet(criteria exp.Expression) *ResultSet {
 		factory:       w.factory,
 		ctx:           w.ctx,
 		Criteria:      exp.And(criteria, exp.Equal("journal.deleteDate", 0)),
-		SortField:     "publishDate",
-		SortDirection: "ascending",
+		SortField:     w.template.ChildSortType,
+		SortDirection: w.template.ChildSortOrder,
 		MaxRows:       600,
 	}
 }
