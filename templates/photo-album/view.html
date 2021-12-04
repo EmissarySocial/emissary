@@ -1,11 +1,5 @@
-<script type="text/hyperscript">
-	init 
-		log 'here'
-		log StreamServer
-		call StreamServer.connect(`/{{.Token}}/sse`)
-</script>
-
-<div hx-get="/{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
+<div hx-ext="sse" sse-connect="/{{.Token}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}" hx-swap="settle:1s">
 
 	<div id="menu-bar">
 		{{ if .UserCan "edit" }}
@@ -30,7 +24,7 @@
 		{{- $token := .Token -}}
 		{{- range .Children "view" -}}
 			<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
-				<div hx-get="/{{.Token}}"  class="card" style="overflow:hidden; aspect-ratio:1;">
+				<div hx-get="/{{.Token}}"  class="clickable card" style="overflow:hidden; aspect-ratio:1;">
 					<picture>
 						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">
 						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=200" media="(min-width:786px)">
@@ -42,4 +36,5 @@
 		{{- end -}}
 	</div>
 
+</div>
 </div>

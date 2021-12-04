@@ -78,9 +78,7 @@ tr.link:hover > td {
 	color: #0f62fe;
 }
 
-.clickable,
-[hx-get],
-[hx-post] {
+.clickable {
 	cursor:pointer;
 }
 

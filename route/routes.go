@@ -25,8 +25,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factoryManager))
 
 	// Local links for static resources
-	e.Static("/htmx", "../htmx/dist")
-	e.Static("/htmx/ext", "../htmx/src/ext")
+	e.Static("/htmx", "../htmx/src")
 	e.Static("/hyperscript", "../_hyperscript/dist")
 	e.Static("/static", "templates/static")
 
@@ -51,12 +50,12 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/:stream/:action", handler.PostStream(factoryManager))
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
 
-	//	e.POST("/:stream/attachments", handler.CreateAttachment(factoryManager))
+	// e.POST("/:stream/attachments", handler.CreateAttachment(factoryManager))
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
 	//	e.DELETE("/:stream/attachments/:attachment", handler.DeleteAttachment(factoryManager))
 
 	// TODO: Can SSE support be moved into a custom render step?
-	// e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 
 	// CUSTOM ERROR HANDLER
 
