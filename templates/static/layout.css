@@ -24,9 +24,10 @@ header {
 	left: 0px;
 	right: 0px;
 
-    color: var(--gray30);
-	font-weight:300;
-	background-color: var(--gray90);
+    color: var(--gray80);
+	font-weight:400;
+	background-color: var(--white);
+	border-bottom: solid 1px var(--gray20);
 	display: flex;
 	justify-content: center;
 	flex-wrap:wrap;
@@ -47,7 +48,7 @@ header .framed div:last-child {
 }
 
 header a {
-    color: var(--gray30);
+    color: var(--gray80);
     display:inline-block;
 	padding:10px 20px;
 	border-radius: 10px;
@@ -55,8 +56,8 @@ header a {
 }
 
 header a:hover {
-    color: var(--white);
-    background-color:var(--gray80);
+    color: var(--black);
+    background-color:var(--gray10);
 }
 
 main {
@@ -66,7 +67,7 @@ main {
 }
 
 .page {
-    border: solid 1px var(--gray10);
+    border: solid 1px var(--gray20);
     background-color: var(--white);
     padding: 20px;
     position:relative;
@@ -75,23 +76,23 @@ main {
 }
 
 #menu-bar {
-	position:absolute;
-	top: 0px;
-	right: 0px;
-	width: auto;
-	text-align:right;
+	border-top: solid 1px var(--gray20);
+	border-bottom: solid 1px var(--gray20);
+	margin-bottom: 30px;
+	padding: 5px 0px;
+	line-height: 100%;
 }
 
-.page #menu-bar {
-	top: 10px;
-	right: 10px;
+#menu-bar a {
+	display: inline-block;
+	padding: 10px 20px;
+	border-radius: 5px;
+	color: var(--gray80);
 }
 
-#menu-bar button,
-#menu-bar .button {
-	font-size:10pt;
-	padding: 5px 10px;
-	margin-right:2px;
+#menu-bar a:hover {
+	background-color: var(--gray10);
+	color: var(--black);
 }
 
 #breadcrumbs {

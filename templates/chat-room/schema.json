@@ -3,6 +3,8 @@
 	"description": "Realtime chat room contains chat items",
 	"icon": "fa-regular fa-message",
 	"containedBy": ["folder", "top"],
+	"childSortType": "publishDate",
+	"childSortOrder": "asc",
 	"schema": {
 		"type": "object",
 		"properties": {}

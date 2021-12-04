@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepAttachmentUpload represents an action that can edit a top-level folder in the Domain
@@ -29,8 +28,6 @@ func (step StepAttachmentUpload) Get(buffer io.Writer, renderer *Renderer) error
 }
 
 func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) error {
-
-	spew.Dump("Attachment Upload")
 
 	form, err := renderer.ctx.MultipartForm()
 

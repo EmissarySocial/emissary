@@ -1,21 +1,13 @@
-<div class="page" hx-get="/{{.Token}}" hx-trigger="stream:update" hx-swap="settle:1s" stream="{{.StreamID}}">
-
-	<div id="menu-bar">
-		{{- if .UserCan "edit" -}}
-			<a href="/{{.Token}}/edit" class="button">Edit</a>
-		{{- end -}}
-	</div>
-
-	{{- if .HasParent -}}
-		{{- $parent := .Parent "view" -}}
-		<div id="breadcrumbs">
-			<a hx-get="/{{$parent.Token}}">&laquo; {{$parent.Label}}.</a>
-		</div>
-	{{- end -}}
+<div hx-ext="sse" sse-connect="/{{.Token}}/sse">
+<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}">
 
 	<h1 class="space-after">{{.Label}}</h1>
 
-	<!--div script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div-->
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<a href="/{{.Token}}/edit">Edit</a>
+		</div>
+	{{- end -}}
 
 	<article class="space-after">
 		<div>{{.Description}}</div>
@@ -25,10 +17,5 @@
 		<div>{{.Content}}</div>
 	</article>
 
-	<div class="space-after">
-		{{- range .Children "view" -}}
-			<a href="/{{.Token}}">{{.Label}}</a><br>
-		{{- end -}}
-	</div>
-
+</div>
 </div>

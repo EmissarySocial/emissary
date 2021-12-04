@@ -3,6 +3,8 @@
 	"description": "Folders can contain all other streams",
 	"icon": "fa-regular fa-folder",
 	"containedBy": ["top", "folder"],
+	"childSortType": "label",
+	"childSortOrder": "asc",
 	"schema": {
 		"type": "object",
 		"properties": {

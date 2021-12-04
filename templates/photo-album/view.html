@@ -1,18 +1,5 @@
 <div hx-ext="sse" sse-connect="/{{.Token}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}" hx-swap="settle:1s">
-
-	<div id="menu-bar">
-		{{ if .UserCan "edit" }}
-			<a href="/{{.Token}}/edit" class="button"><i class="fa-regular fa-plus"></i> New Post</a>
-			{{- if .UserCan "properties" -}}
-				<button hx-get="/{{.Token}}/properties" script="install AsModal">Edit Album</button>
-			{{- end -}}
-			{{- if .UserCan "delete" -}}
-				&nbsp;
-				<button hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete Album</button>
-			{{- end -}}
-		{{ end }}
-	</div>
+<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}">
 
 	<h1>{{.Label}}</h1>
 
@@ -20,10 +7,22 @@
 		<div>{{.Description}}</div>
 	</article>
 
+	{{ if .UserCan "edit" }}
+		<div id="menu-bar">
+			<a href="/{{.Token}}/edit"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo</a>
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Title</a>
+			{{- end -}}
+			{{- if .UserCan "delete" -}}
+				<a hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete</a>
+			{{- end -}}
+		</div>
+	{{ end }}
+
 	<div class="pure-g card-group">
 		{{- $token := .Token -}}
-		{{- range .Children "view" -}}
-			<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
+		{{- range .Children.All.AsView -}}
+			<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-xl-1-4">
 				<div hx-get="/{{.Token}}"  class="clickable card" style="overflow:hidden; aspect-ratio:1;">
 					<picture>
 						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">

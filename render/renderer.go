@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/steranko"
@@ -219,7 +220,7 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 	return renderer, nil
 }
 
-// Children returns an array of Streams containing all of the child elements of the current stream
+/* / Children returns an array of Streams containing all of the child elements of the current stream
 func (w Renderer) Children(action string) ([]Renderer, error) {
 
 	streamService := w.factory.Stream()
@@ -230,7 +231,7 @@ func (w Renderer) Children(action string) ([]Renderer, error) {
 	}
 
 	return w.iteratorToSlice(iterator, action), nil
-}
+}*/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Renderer) TopFolders(action string) ([]Renderer, error) {
@@ -280,6 +281,30 @@ func (w Renderer) Attachments() ([]model.Attachment, error) {
 	}
 
 	return result, nil
+}
+
+/***************************
+ * Result Sets
+ **************************/
+
+func (w Renderer) makeResultSet(criteria exp.Expression) *ResultSet {
+
+	return &ResultSet{
+		factory:       w.factory,
+		ctx:           w.ctx,
+		Criteria:      exp.And(criteria, exp.Equal("journal.deleteDate", 0)),
+		SortField:     "publishDate",
+		SortDirection: "ascending",
+		MaxRows:       600,
+	}
+}
+
+func (w Renderer) Children() *ResultSet {
+	return w.makeResultSet(exp.Equal("parentId", w.stream.StreamID))
+}
+
+func (w Renderer) Siblings() *ResultSet {
+	return w.makeResultSet(exp.Equal("parentId", w.stream.ParentID))
 }
 
 /////////////////////

@@ -3,6 +3,8 @@
 	"description": "For regular use. Contains text, images, and more.",
 	"icon": "fa-regular fa-images",
 	"containedBy": ["top", "folder"],
+	"childSortType": "publishDate",
+	"childSortOrder": "desc",
 	"schema": {
 		"type": "object",
 		"properties": {
