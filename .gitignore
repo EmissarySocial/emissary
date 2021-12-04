@@ -19,4 +19,4 @@
 
 # Application config info
 config.json
-templates/static/ckeditor5/*
+uploads

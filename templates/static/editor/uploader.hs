@@ -1,11 +1,5 @@
 behavior Uploader(url, accept)
 
-on click 
-	send click to the <input[type="file"]/> in me
-
-on change 
-	log "got it"
-
 on dragenter
 	halt the event
 	add .highlight

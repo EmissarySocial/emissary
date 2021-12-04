@@ -13,9 +13,9 @@
 	
 		<div class="space-below gray40"><i class="fa-solid fa-arrow-up-from-bracket fa-8x"></i></div>
 		<h2 class="space-below">Drag Files Here to Upload</h2>
-		<form hx-post="${url}" hx-encoding="multipart/form-data">
-			<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
-			<input id="manual-upload" type="file" name="file" accept="${accept}" class="hidden"/>
+		<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
+		<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" xstyle="opacity:0;">
+			<input type="file" id="manual-upload" name="file"/>
 		</form>
 
 	</div>
