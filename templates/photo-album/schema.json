@@ -49,6 +49,9 @@
 		"view": {
 			"step": "view-html"
 		},
+		"children": {
+			"step": "view-html"
+		},
 		"edit": {
 			"roles": ["owner", "editor", "author"],
 			"step": "view-html"

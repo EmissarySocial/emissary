@@ -14,7 +14,7 @@ import (
 type ResultSet struct {
 	factory       Factory
 	ctx           *steranko.Context
-	Criteria      exp.Expression
+	Criteria      exp.AndExpression
 	SortField     string
 	SortDirection string
 	MaxRows       uint
@@ -23,6 +23,11 @@ type ResultSet struct {
 /**********************
  * Query Builder
  *********************/
+
+func (rs *ResultSet) Top6() *ResultSet {
+	rs.MaxRows = 6
+	return rs
+}
 
 func (rs *ResultSet) Top12() *ResultSet {
 	rs.MaxRows = 12
@@ -52,6 +57,11 @@ func (rs *ResultSet) ByLabel() *ResultSet {
 	return rs
 }
 
+func (rs *ResultSet) ByCreateDate() *ResultSet {
+	rs.SortField = "journal.createDate"
+	return rs
+}
+
 func (rs *ResultSet) ByPublishDate() *ResultSet {
 	rs.SortField = "publishDate"
 	return rs
@@ -72,13 +82,18 @@ func (rs *ResultSet) Reverse() *ResultSet {
 	return rs
 }
 
-func (rs *ResultSet) After(value interface{}) *ResultSet {
-	rs.Criteria = exp.GreaterThan(rs.SortField, rs.makeCriteriaValue(value))
+func (rs *ResultSet) EqualTo(value interface{}) *ResultSet {
+	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorEqual, rs.makeCriteriaValue(value))
 	return rs
 }
 
-func (rs *ResultSet) Before(value interface{}) *ResultSet {
-	rs.Criteria = exp.LessThan(rs.SortField, rs.makeCriteriaValue(value))
+func (rs *ResultSet) GreaterThan(value interface{}) *ResultSet {
+	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorGreaterThan, rs.makeCriteriaValue(value))
+	return rs
+}
+
+func (rs *ResultSet) LessThan(value interface{}) *ResultSet {
+	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorLessThan, rs.makeCriteriaValue(value))
 	return rs
 }
 
@@ -94,23 +109,10 @@ func (rs *ResultSet) AsEdit() ([]Renderer, error) {
 	return rs.AsAction("edit")
 }
 
-func (rs *ResultSet) debug() {
-
-	spew.Dump(map[string]interface{}{
-		"Criteria":        rs.Criteria,
-		"SortField":       rs.SortField,
-		"SortDescription": rs.SortDirection,
-		"Sort":            rs.makeSortOption(),
-		"MaxRows":         rs.MaxRows,
-	})
-
-}
 func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 
 	var index uint
 	var result []Renderer
-
-	rs.debug()
 
 	iterator, err := rs.query()
 
@@ -134,7 +136,7 @@ func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 		index = index + 1
 
 		if rs.MaxRows > 0 {
-			if index > rs.MaxRows {
+			if index >= rs.MaxRows {
 				break
 			}
 		}
@@ -152,6 +154,7 @@ func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 
 // query executes the query request on the database.
 func (rs *ResultSet) query() (data.Iterator, error) {
+	rs.debug()
 	streamService := rs.factory.Stream()
 	return streamService.List(rs.Criteria, rs.makeSortOption())
 }
@@ -174,4 +177,15 @@ func (rs *ResultSet) makeCriteriaValue(value interface{}) interface{} {
 	}
 
 	return convert.Int(value)
+}
+
+func (rs *ResultSet) debug() {
+
+	spew.Dump(map[string]interface{}{
+		"Criteria":        rs.Criteria,
+		"SortField":       rs.SortField,
+		"SortDescription": rs.SortDirection,
+		"Sort":            rs.makeSortOption(),
+		"MaxRows":         rs.MaxRows,
+	})
 }

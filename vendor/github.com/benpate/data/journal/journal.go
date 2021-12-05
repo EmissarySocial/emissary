@@ -30,7 +30,7 @@ func (journal *Journal) IsDeleted() bool {
 // SetCreated must be called whenever a new object is added to the database
 func (journal *Journal) SetCreated(note string) {
 
-	timestamp := time.Now().Unix()
+	timestamp := time.Now().UnixNano()
 	journal.CreateDate = timestamp
 	journal.UpdateDate = timestamp
 
@@ -42,7 +42,7 @@ func (journal *Journal) SetCreated(note string) {
 // SetUpdated must be called whenever an existing object is updated in the database
 func (journal *Journal) SetUpdated(note string) {
 
-	journal.UpdateDate = time.Now().Unix()
+	journal.UpdateDate = time.Now().UnixNano()
 	journal.Revision = journal.Revision + 1
 
 	if note != "" {
@@ -53,7 +53,7 @@ func (journal *Journal) SetUpdated(note string) {
 // SetDeleted must be called to "virtual-delete" an object in the database
 func (journal *Journal) SetDeleted(note string) {
 
-	timestamp := time.Now().Unix()
+	timestamp := time.Now().UnixNano()
 	journal.UpdateDate = timestamp
 	journal.DeleteDate = timestamp
 	journal.Revision = journal.Revision + 1

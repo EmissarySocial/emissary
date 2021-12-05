@@ -19,20 +19,9 @@
 		</div>
 	{{ end }}
 
-	<div class="pure-g card-group">
-		{{- $token := .Token -}}
-		{{- range .Children.All.AsView -}}
-			<div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-xl-1-4">
-				<div hx-get="/{{.Token}}"  class="clickable card" style="overflow:hidden; aspect-ratio:1;">
-					<picture>
-						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=250" media="(min-width:1024px)">
-						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=200" media="(min-width:786px)">
-						<source srcset="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=150" media="(min-width:568px)">
-						<img src="/{{$token}}/attachments/{{.ThumbnailImage}}?resize=7=1024" style="height:100%; position:absolute; left:0px; object-fit:cover;">
-					</picture>
-				</div>
-			</div>
-		{{- end -}}
+	<div id="children" class="pure-g card-group">
+		{{- (.SetQueryParam "start" "") -}}
+		{{- .View "children" -}}
 	</div>
 
 </div>

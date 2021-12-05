@@ -75,7 +75,18 @@ func (w Renderer) Render() (template.HTML, error) {
 
 	// Success!
 	return template.HTML(buffer.String()), nil
+}
 
+// View executes a separate view for this Stream
+func (w Renderer) View(action string) (template.HTML, error) {
+
+	subRenderer, err := NewRenderer(w.factory, w.ctx, w.stream, action)
+
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, "ghost.render.Renderer.View", "Error creating sub-renderer", action)
+	}
+
+	return subRenderer.Render()
 }
 
 /*******************************************
@@ -138,6 +149,11 @@ func (w Renderer) PublishDate() int64 {
 	return w.stream.PublishDate
 }
 
+// CreateDate returns the CreateDate of the stream being rendered
+func (w Renderer) CreateDate() int64 {
+	return w.stream.CreateDate
+}
+
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
 func (w Renderer) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
@@ -184,6 +200,12 @@ func (w Renderer) Method() string {
 // Returns the designated request parameter
 func (w Renderer) QueryParam(param string) string {
 	return w.ctx.QueryParam(param)
+}
+
+// SetQueryParam sets/overwrites a value from the URL query parameters.
+func (w Renderer) SetQueryParam(param string, value string) string {
+	w.ctx.QueryParams().Set(param, value)
+	return "" // <- this is a mega-hack, but it works ;)
 }
 
 // Action returns the complete information for the action being performed.

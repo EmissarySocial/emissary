@@ -1,0 +1,30 @@
+{{- $createDate := .QueryParam "createDate" -}}
+{{- $query := .Children.Top6 -}}
+
+{{- if ne "" $createDate -}}
+	{{- $query := $query.LessThan $createDate -}}
+{{- end -}}
+
+{{- $results := $query.AsView -}}
+
+{{- if gt (len $results) 0 -}}
+
+	{{- $last := last $results -}}
+
+	<div 
+		hx-get="/{{.Token}}/children?createDate={{$last.CreateDate}}" 
+		hx-trigger="revealed" 
+		hx-target="#children" 
+		hx-swap="beforeend"
+		hx-push-url="false"></div>
+
+	{{- range $results -}}
+
+		<div streamId="{{.StreamID}}" class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-xl-1-4">
+			<div hx-get="/{{.Token}}"  class="clickable card" style="overflow:hidden; aspect-ratio:1;">
+				<img src="/{{.Token}}/attachments/{{.ThumbnailImage}}?resize=1024" style="height:100%; position:absolute; left:0px; object-fit:cover;">
+			</div>
+		</div>
+	{{- end -}}
+
+{{- end -}}	

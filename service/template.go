@@ -22,6 +22,7 @@ import (
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
 	templates map[string]model.Template // map of all templates available within this domain
+	funcMap   template.FuncMap          // Map of functions to use in golang templates
 	mutex     sync.RWMutex              // Mutext that locks access to the templates structure
 	path      string                    // Filesystem path to the template directory
 
@@ -31,10 +32,11 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(path string, layoutService *Layout, layoutUpdates chan bool, templateUpdateChannel chan model.Template) *Template {
+func NewTemplate(path string, layoutService *Layout, funcMap template.FuncMap, layoutUpdates chan bool, templateUpdateChannel chan model.Template) *Template {
 
 	service := &Template{
 		templates:         make(map[string]model.Template),
+		funcMap:           funcMap,
 		path:              path,
 		layoutService:     layoutService,
 		layoutUpdates:     layoutUpdates,
@@ -126,7 +128,7 @@ func (service *Template) loadFromFilesystem(t *model.Template) error {
 			}
 
 			// Try to compile the minified content into a Go Template
-			contentTemplate, err := template.New(actionID).Parse(contentString)
+			contentTemplate, err := template.New(actionID).Funcs(service.funcMap).Parse(contentString)
 
 			if err != nil {
 				return derp.Report(derp.Wrap(err, "ghost.service.Tmplate.loadFromFilesystem", "Unable to parse template HTML", contentString))

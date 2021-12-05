@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"time"
 
 	"github.com/benpate/compare"
 	"github.com/benpate/datatype"
@@ -99,6 +100,9 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 	if err := DoPipeline(&childRenderer, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute action steps on child")
 	}
+
+	// One milisecond delay prevents overlapping create dates.  Deal with it.
+	time.Sleep(1 * time.Millisecond)
 
 	return nil
 }

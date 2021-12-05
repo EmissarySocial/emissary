@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"html/template"
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -87,6 +88,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	factory.templateService = service.NewTemplate(
 		factory.domain.TemplatePath,
 		factory.Layout(),
+		factory.RenderFunctions(),
 		factory.LayoutUpdateChannel(),
 		factory.TemplateUpdateChannel(),
 	)
@@ -180,6 +182,10 @@ func (factory *Factory) Renderer(ctx *steranko.Context, stream *model.Stream, ac
 // RenderStep uses an Step object to create a new action
 func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	return render.NewStep(factory, stepInfo)
+}
+
+func (factory *Factory) RenderFunctions() template.FuncMap {
+	return render.FuncMap()
 }
 
 ///////////////////////////////////////

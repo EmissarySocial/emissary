@@ -35,6 +35,8 @@ func (step StepStreamHTML) Get(buffer io.Writer, renderer *Renderer) error {
 		return derp.New(derp.CodeBadRequestError, "ghost.renderer.StepStreamHTML.Get", "Cannot find template", step.filename)
 	}
 
+	template.Funcs(FuncMap())
+
 	if err := template.Execute(buffer, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamHTML.Get", "Error executing template")
 	}
