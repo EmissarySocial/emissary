@@ -2,11 +2,30 @@ module github.com/benpate/ghost
 
 go 1.17
 
+replace (
+	github.com/benpate/activitystream => ../activitystream
+	github.com/benpate/compare => ../compare
+	github.com/benpate/convert => ../convert
+	github.com/benpate/data => ../data
+	github.com/benpate/data-mock => ../data-mock
+	github.com/benpate/data-mongo => ../data-mongo
+	github.com/benpate/datatype => ../datatype
+	github.com/benpate/derp => ../derp
+	github.com/benpate/exp => ../exp
+	github.com/benpate/form => ../form
+	github.com/benpate/html => ../html
+	github.com/benpate/htmlconv => ../htmlconv
+	github.com/benpate/list => ../list
+	github.com/benpate/path => ../path
+	github.com/benpate/schema => ../schema
+	github.com/benpate/steranko => ../steranko
+)
+
 require (
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/compare v0.0.4
 	github.com/benpate/convert v0.9.2
-	github.com/benpate/data v0.11.0
+	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mock v0.0.1
 	github.com/benpate/data-mongo v0.0.2
 	github.com/benpate/datatype v0.0.3
