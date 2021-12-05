@@ -37,9 +37,5 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer *Renderer) error {
 
 	renderer.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+nextPage+`"}}`)
 
-	if _, err := buffer.Write([]byte(nextPage)); err != nil {
-		return derp.Wrap(err, "ghost.render.StepForwardTo.Post", "Error writing to response buffer", nextPage)
-	}
-
 	return nil
 }

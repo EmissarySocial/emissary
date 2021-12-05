@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"time"
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
@@ -29,19 +30,20 @@ func (step StepNewSibling) Get(buffer io.Writer, renderer *Renderer) error {
 
 func (step StepNewSibling) Post(buffer io.Writer, renderer *Renderer) error {
 
-	// Create new child stream
-	var child model.Stream
+	// Create new sibling stream
+	var sibling model.Stream
 
 	authorization := getAuthorization(renderer.ctx)
 
 	// Set Default Values
-	child.ParentID = renderer.stream.ParentID
-	child.StateID = "default"
-	child.AuthorID = authorization.UserID
+	sibling.ParentID = renderer.stream.ParentID
+	sibling.AuthorID = authorization.UserID
 
 	if err := DoPipeline(renderer, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewSibling", "Error running post-create steps")
 	}
+
+	time.Sleep(1 * time.Millisecond)
 
 	return nil
 }

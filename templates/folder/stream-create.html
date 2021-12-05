@@ -6,7 +6,7 @@
 			<table class="table space-below">
 				{{- $parent := . -}}
 				{{- range $index, $template := .CanCreate -}}
-					<tr hx-post="/{{$parent.Token}}/new?templateId={{$template.Value}}">
+					<tr hx-post="/{{$parent.Token}}/new?templateId={{$template.Value}}" hx-swap="false">
 						<td>
 							<i class="{{$template.Icon}} fa-3x gray"></i>
 						</td>

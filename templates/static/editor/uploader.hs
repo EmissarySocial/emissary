@@ -1,4 +1,4 @@
-behavior Uploader(url, accept)
+behavior Uploader(url, success)
 
 on dragenter
 	halt the event
@@ -22,7 +22,7 @@ on drop(dataTransfer)
 		fetch `${url}` {method:"POST", body:formData} as text
 	end
 
-	set the window's location to the result
+	set the window's location to success
 
 end
 

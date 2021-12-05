@@ -94,8 +94,7 @@
 					{"step": "save"},
 					{"step": "upload-attachments"},
 					{"step": "set-thumbnail"},
-					{"step": "save"},
-					{"step": "forward-to", "url": "/{{.Token}}"}
+					{"step": "save"}
 				]}
 			]
 		},
