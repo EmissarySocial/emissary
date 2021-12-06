@@ -15,7 +15,9 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
+	"github.com/spf13/afero"
 )
 
 // Factory knows how to create an populate all services
@@ -212,7 +214,25 @@ func (factory *Factory) LayoutUpdateChannel() chan bool {
 }
 
 ///////////////////////////////////////
-// NON MODEL SERVICES
+// MEDIA SERVER
+
+// MediaServer manages all file uploads
+func (factory *Factory) MediaServer() mediaserver.MediaServer {
+	return mediaserver.New(factory.AttachmentOriginals(), factory.AttachmentCache())
+}
+
+// AttachmentOriginals returns a reference to the Filesystem where original attachment files are stored
+func (factory *Factory) AttachmentOriginals() afero.Fs {
+	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads")
+}
+
+// AttachmentCache returns a reference to the Filesystem where cached/manipulated attachment files are stored.
+func (factory *Factory) AttachmentCache() afero.Fs {
+	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads-cache")
+}
+
+///////////////////////////////////////
+// OTHER NON-MODEL SERVICES
 
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package

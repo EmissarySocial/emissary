@@ -32,6 +32,8 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Cannot create renderer")
 		}
 
+		// Load the attachment in order to verify that it is valid for this stream
+		// TODO: This might be more efficient as a single query...
 		attachmentService := factory.Attachment()
 		attachment, err := attachmentService.LoadByToken(ctx.Param("attachment"))
 
@@ -39,12 +41,16 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error loading attachment")
 		}
 
-		file, err := attachmentService.File(&attachment)
+		// Retrieve the file from the mediaserver
+		ms := factory.MediaServer()
+		filespec := ms.FileSpec(ctx.Request().URL, attachment.OriginalExtension())
 
-		if err != nil {
+		ctx.Response().Header().Set("Mime-Type", filespec.MimeType)
+
+		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error accessing attachment file")
 		}
 
-		return ctx.Stream(200, attachment.MimeType(), file)
+		return nil
 	}
 }

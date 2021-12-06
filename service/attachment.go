@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -66,7 +65,7 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 }
 
 // DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service *Attachment) DeleteByStream(streamID primitive.ObjectID, note string) error {
+func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note string) error {
 
 	var attachment model.Attachment
 	it, err := service.ListByStream(streamID)
@@ -99,21 +98,4 @@ func (service Attachment) LoadByToken(token string) (model.Attachment, error) {
 	criteria := exp.Equal("filename", list.Head(token, ".")).AndEqual("journal.deleteDate", 0)
 	err := service.Load(criteria, &result)
 	return result, err
-}
-
-/*******************************************
- * FILE SYSTEM ACCESSORS
- *******************************************/
-
-func (service Attachment) Filesystem() afero.Fs {
-	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads")
-}
-
-func (service Attachment) File(attachment *model.Attachment) (afero.File, error) {
-	dir := service.Filesystem()
-	return dir.Open(attachment.Filename)
-}
-
-func (service Attachment) URL(attachment *model.Attachment) string {
-	return "/attachments/" + attachment.AttachmentID.Hex() + attachment.Extension()
 }

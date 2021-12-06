@@ -18,20 +18,17 @@ type Attachment struct {
 	journal.Journal `json:"journal" bson:"journal"` // Journal entry for fetch compatability
 }
 
-func NewAttachment() Attachment {
+func NewAttachment(streamID primitive.ObjectID) Attachment {
 	return Attachment{
 		AttachmentID: primitive.NewObjectID(),
+		StreamID:     streamID,
+		Filename:     primitive.NewObjectID().Hex(),
 	}
 }
 
 // ID returns the primary key of this object
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
-}
-
-// Extension returns the file extension of the attached file
-func (attachment *Attachment) Extension() string {
-	return list.LastDelim(attachment.Filename, ".")
 }
 
 // OriginalExtension returns the file extension of the original filename

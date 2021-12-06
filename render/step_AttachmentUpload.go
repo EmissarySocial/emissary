@@ -6,20 +6,23 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/mediaserver"
 )
 
 // StepAttachmentUpload represents an action that can edit a top-level folder in the Domain
 type StepAttachmentUpload struct {
 	streamService     *service.Stream
 	attachmentService *service.Attachment
+	mediaServer       mediaserver.MediaServer
 }
 
 // NewStepAttachmentUpload returns a fully parsed StepAttachmentUpload object
-func NewStepAttachmentUpload(streamService *service.Stream, attachmentService *service.Attachment, config datatype.Map) StepAttachmentUpload {
+func NewStepAttachmentUpload(streamService *service.Stream, attachmentService *service.Attachment, mediaServer mediaserver.MediaServer, config datatype.Map) StepAttachmentUpload {
 
 	return StepAttachmentUpload{
 		streamService:     streamService,
 		attachmentService: attachmentService,
+		mediaServer:       mediaServer,
 	}
 }
 
@@ -35,15 +38,12 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 		return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error reading multipart form.")
 	}
 
-	filesystem := step.attachmentService.Filesystem()
 	files := form.File["file"]
 
 	for _, fileHeader := range files {
 
 		// Each attachment is tracked separately, so make a new attachment for each file in the upload.
-		attachment := renderer.stream.NewAttachment()
-		attachment.Original = fileHeader.Filename
-		attachment.Filename = attachment.AttachmentID.Hex()
+		attachment := renderer.stream.NewAttachment(fileHeader.Filename)
 
 		// Open the source (from the POST request)
 		source, err := fileHeader.Open()
@@ -54,18 +54,8 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) erro
 
 		defer source.Close()
 
-		// Open the destination (in afero)
-		destination, err := filesystem.Create(attachment.Filename)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error creating file in filesystem", attachment)
-		}
-
-		defer destination.Close()
-
-		// Save the upload into the destination
-		if _, err = io.Copy(destination, source); err != nil {
-			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error writing attachment file", attachment, fileHeader)
+		if err := step.mediaServer.Put(attachment.Filename, source); err != nil {
+			return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error saving attachment to mediaserver", attachment)
 		}
 
 		if err := step.attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {

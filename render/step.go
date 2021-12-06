@@ -74,7 +74,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 
 	// ATTACHMENTS
 	case "upload-attachments":
-		return NewStepAttachmentUpload(factory.Stream(), factory.Attachment(), stepInfo), nil
+		return NewStepAttachmentUpload(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
 
 	// CONTROL LOGIC
 	case "with-children":
