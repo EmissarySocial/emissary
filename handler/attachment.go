@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/server"
+	"github.com/benpate/list"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -35,7 +36,7 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Load the attachment in order to verify that it is valid for this stream
 		// TODO: This might be more efficient as a single query...
 		attachmentService := factory.Attachment()
-		attachment, err := attachmentService.LoadByToken(ctx.Param("attachment"))
+		attachment, err := attachmentService.LoadByToken(list.Head(ctx.Param("attachment"), "."))
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error loading attachment")
@@ -43,9 +44,8 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
-		filespec := ms.FileSpec(ctx.Request().URL, attachment.OriginalExtension())
-
-		ctx.Response().Header().Set("Mime-Type", filespec.MimeType)
+		filespec := ms.FileSpec(ctx.Request().URL, attachment.DownloadExtension())
+		ctx.Response().Header().Set("Mime-Type", attachment.DownloadMimeType())
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error accessing attachment file")

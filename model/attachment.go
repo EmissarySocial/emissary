@@ -31,6 +31,22 @@ func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
 }
 
+func (attachment *Attachment) DownloadExtension() string {
+
+	ext := attachment.OriginalExtension()
+
+	switch ext {
+	case ".jpg", "jpeg", ".png":
+		return ".webp"
+	}
+
+	return ext
+}
+
+func (attachment *Attachment) DownloadMimeType() string {
+	return mime.TypeByExtension(attachment.DownloadExtension())
+}
+
 // OriginalExtension returns the file extension of the original filename
 func (attachment *Attachment) OriginalExtension() string {
 	return list.LastDelim(attachment.Original, ".")
