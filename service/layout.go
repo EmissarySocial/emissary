@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 
 	minify "github.com/tdewolff/minify/v2"
@@ -89,7 +88,7 @@ func (service *Layout) Load() error {
 		}
 	}
 
-	spew.Dump(layout.DefinedTemplates())
+	// spew.Dump(layout.DefinedTemplates())
 
 	// Success!!
 	service.Template = layout

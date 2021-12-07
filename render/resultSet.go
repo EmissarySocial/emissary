@@ -154,7 +154,6 @@ func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 
 // query executes the query request on the database.
 func (rs *ResultSet) query() (data.Iterator, error) {
-	rs.debug()
 	streamService := rs.factory.Stream()
 	return streamService.List(rs.Criteria, rs.makeSortOption())
 }

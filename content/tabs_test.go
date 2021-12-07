@@ -38,6 +38,5 @@ func TestTabs(t *testing.T) {
 
 		result := lib.Render(&item)
 
-		spew.Dump(result)
 	*/
 }
