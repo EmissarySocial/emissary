@@ -36,7 +36,7 @@ func (attachment *Attachment) DownloadExtension() string {
 	ext := attachment.OriginalExtension()
 
 	switch ext {
-	case ".jpg", "jpeg", ".png":
+	case ".jpg", ".jpeg", ".png":
 		return ".webp"
 	}
 
