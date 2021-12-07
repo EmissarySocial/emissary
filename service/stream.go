@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -85,6 +86,10 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		service.streamUpdateChannel <- *stream
 	}()
 
+	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
+	// TODO: There has to be a better way than this...
+	time.Sleep(1 * time.Millisecond)
+
 	return nil
 }
 
@@ -140,17 +145,19 @@ func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator,
 // ListTopFolders returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListTopFolders() (data.Iterator, error) {
 	return service.List(
-		exp.
-			Equal("parentId", ZeroObjectID()).
-			AndEqual("journal.deleteDate", 0))
+		exp.Equal("parentId", ZeroObjectID()).AndEqual("journal.deleteDate", 0),
+		option.SortAsc("rank"),
+	)
 }
 
 // ListByTemplate returns all Streams that use a particular Template
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
-	return service.List(
-		exp.
-			Equal("templateId", template).
-			AndEqual("journal.deleteDate", 0))
+
+	criteria := exp.
+		Equal("templateId", template).
+		AndEqual("journal.deleteDate", 0)
+
+	return service.List(criteria)
 }
 
 // LoadByToken returns a single Stream that matches a particular Token
@@ -206,48 +213,67 @@ func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
  * CUSTOM ACTIONS
  *******************************************/
 
-// NewWithTemplate creates a new Stream using the provided Template and Parent information.
-func (service *Stream) NewWithTemplate(parentToken string, templateID string, result *model.Stream) error {
+// NewTopLevel creates a new stream at the top level of the tree
+func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Template, error) {
 
-	// Exception for putting a folder on the top level...
-	if parentToken == "top" {
-
-		if templateID == "folder" {
-			// Create and populate the new Stream
-			result.ParentID = ZeroObjectID()
-			result.TemplateID = templateID
-
-			return nil
-		}
-
-		return derp.New(400, "ghost.service.Stream.NewWithTemplate", "Top Level Can Only Contain Folders")
-	}
-
-	// Load the requested Template
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading Template", templateID)
+		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
-	var parent model.Stream
-
-	// Load the parent Stream
-	if err := service.LoadByToken(parentToken, &parent); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Error loading parent stream", parentToken)
+	if !template.CanBeContainedBy("top") {
+		return model.Stream{}, template, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
-	// Confirm that this Template can be a child of the parent Template
+	result := model.NewStream()
+	result.ParentID = primitive.NilObjectID
+	result.ParentIDs = make([]primitive.ObjectID, 0)
+	result.TemplateID = templateID
+
+	// TODO: sort order?
+	// TODO: presets defined by templates?
+
+	return result, template, nil
+}
+
+// NewTopLevel creates a new stream at the top level of the tree
+func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.Stream, *model.Template, error) {
+
+	template, err := service.templateService.Load(templateID)
+
+	if err != nil {
+		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+	}
+
 	if !template.CanBeContainedBy(parent.TemplateID) {
-		return derp.Wrap(err, "ghost.service.Stream.NewWithTemplate", "Invalid template")
+		return model.Stream{}, template, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
-	// Create and populate the new Stream
+	result := model.NewStream()
 	result.ParentID = parent.StreamID
-	result.TemplateID = template.TemplateID
+	result.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	result.TemplateID = templateID
 
-	// Success.  We've made the new stream!
-	return nil
+	// TODO: sort order?
+	// TODO: presets defined by templates?
+
+	return result, template, nil
+}
+
+// NewTopLevel creates a new stream at the top level of the tree
+func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, *model.Template, error) {
+
+	if sibling.HasParent() {
+		var parent model.Stream
+		if err := service.LoadParent(sibling, &parent); err != nil {
+			return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
+		}
+
+		return service.NewChild(&parent, templateID)
+	}
+
+	return service.NewTopLevel(templateID)
 }
 
 // Template returns the Templateassociated with this Stream

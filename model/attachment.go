@@ -18,6 +18,7 @@ type Attachment struct {
 	journal.Journal `json:"journal" bson:"journal"` // Journal entry for fetch compatability
 }
 
+// NewAttachment returns a fully initialized Attachment object.
 func NewAttachment(streamID primitive.ObjectID) Attachment {
 	return Attachment{
 		AttachmentID: primitive.NewObjectID(),

@@ -2,12 +2,10 @@ package render
 
 import (
 	"io"
-	"time"
 
 	"github.com/benpate/compare"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 )
 
@@ -60,31 +58,18 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 	}
 
 	// Create new child stream
-
-	authorization := getAuthorization(renderer.ctx)
-
-	// Try to load the template that will be used
-
-	template, err := step.streamService.Template(templateID)
+	child, template, err := step.streamService.NewChild(renderer.stream, templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Undefined template", templateID)
-	}
-
-	// Confirm that this Template can be a child of the parent Template
-	if !template.CanBeContainedBy(renderer.stream.TemplateID) {
-		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Invalid template")
+		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating new child stream", templateID)
 	}
 
 	// Set Default Values
-	child := model.NewStream()
-	child.ParentID = renderer.stream.StreamID
-	child.StateID = step.childState
-	child.TemplateID = templateID
-	child.AuthorID = authorization.UserID
-	child.Token = child.StreamID.Hex()
+	authorization := getAuthorization(renderer.ctx)
 
-	childRenderer, err := renderer.newRenderer(&child, "view")
+	child.StateID = step.childState
+	child.AuthorID = authorization.UserID
+	childRenderer, err := renderer.newRenderer(&child, "edit")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
@@ -100,9 +85,6 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 	if err := DoPipeline(&childRenderer, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute action steps on child")
 	}
-
-	// One milisecond delay prevents overlapping create dates.  Deal with it.
-	time.Sleep(1 * time.Millisecond)
 
 	return nil
 }
