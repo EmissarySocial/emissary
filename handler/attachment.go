@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/server"
@@ -42,10 +44,22 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error loading attachment")
 		}
 
+		// Check ETags to see if the browser already has a copy of this
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader != "" {
+
+			if attachment.ETag() == matchHeader {
+				return ctx.NoContent(http.StatusNotModified)
+			}
+		}
+
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
 		filespec := ms.FileSpec(ctx.Request().URL, attachment.DownloadExtension())
-		ctx.Response().Header().Set("Mime-Type", attachment.DownloadMimeType())
+
+		header := ctx.Response().Header()
+
+		header.Set("Mime-Type", attachment.DownloadMimeType())
+		header.Set("ETag", attachment.ETag())
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error accessing attachment file")
