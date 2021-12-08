@@ -89,9 +89,8 @@
 			"roles": ["owner", "editor", "author"],
 			"steps": [{
 				"step": "new-child",
-				"template": "photo-post",
+				"template": "photograph",
 				"withChild": [
-					{"step": "save"},
 					{"step": "upload-attachments"},
 					{"step": "set-thumbnail"},
 					{"step": "save"}

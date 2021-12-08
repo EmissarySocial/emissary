@@ -100,6 +100,8 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting attachments", stream, note)
 	}
 
+	// TODO: Also delete drafts here
+
 	if err := service.DeleteChildren(stream, note); err != nil {
 		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note)
 	}
@@ -142,8 +144,8 @@ func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator,
 			AndEqual("journal.deleteDate", 0))
 }
 
-// ListTopFolders returns all Streams of type FOLDER at the top of the hierarchy
-func (service *Stream) ListTopFolders() (data.Iterator, error) {
+// ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
+func (service *Stream) ListTopLevel() (data.Iterator, error) {
 	return service.List(
 		exp.Equal("parentId", ZeroObjectID()).AndEqual("journal.deleteDate", 0),
 		option.SortAsc("rank"),

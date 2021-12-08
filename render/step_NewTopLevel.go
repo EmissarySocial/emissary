@@ -9,26 +9,26 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-// StepTopFolderCreate represents an action that can create top-level folders in the Domain
-type StepTopFolderCreate struct {
+// StepTopLevelCreate represents an action that can create top-level folders in the Domain
+type StepTopLevelCreate struct {
 	streamService *service.Stream
 	template      []string
 }
 
-// NewStepTopFolderCreate returns a fully parsed StepTopFolderCreate object
-func NewStepTopFolderCreate(streamService *service.Stream, config datatype.Map) StepTopFolderCreate {
+// NewStepTopLevelCreate returns a fully parsed StepTopLevelCreate object
+func NewStepTopLevelCreate(streamService *service.Stream, config datatype.Map) StepTopLevelCreate {
 
-	return StepTopFolderCreate{
+	return StepTopLevelCreate{
 		streamService: streamService,
 		template:      config.GetSliceOfString("template"),
 	}
 }
 
-func (step StepTopFolderCreate) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopLevelCreate) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step StepTopFolderCreate) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Renderer) error {
 
 	templateID := renderer.ctx.QueryParam("templateId")
 
@@ -45,7 +45,7 @@ func (step StepTopFolderCreate) Post(buffer io.Writer, renderer *Renderer) error
 	child, template, err := step.streamService.NewTopLevel(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepTopFolderCreate.Post", "Error creating TopLevel stream", templateID)
+		return derp.Wrap(err, "ghost.render.StepTopLevelCreate.Post", "Error creating TopLevel stream", templateID)
 	}
 
 	// Set stream defaults

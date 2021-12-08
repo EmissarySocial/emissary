@@ -35,7 +35,6 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForwardTo.Post", "Error executing template", step.url)
 	}
 
-	renderer.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+nextPage+`"}}`)
-
+	renderer.closeModal(nextPage)
 	return nil
 }

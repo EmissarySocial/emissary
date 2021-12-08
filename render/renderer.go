@@ -242,27 +242,14 @@ func (w Renderer) Parent(actionID string) (Renderer, error) {
 	return renderer, nil
 }
 
-/* / Children returns an array of Streams containing all of the child elements of the current stream
-func (w Renderer) Children(action string) ([]Renderer, error) {
-
-	streamService := w.factory.Stream()
-	iterator, err := streamService.ListByParent(w.stream.StreamID)
-
-	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Renderer.Children", "Error loading child streams", w.stream))
-	}
-
-	return w.iteratorToSlice(iterator, action), nil
-}*/
-
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Renderer) TopFolders(action string) ([]Renderer, error) {
+func (w Renderer) TopLevel(action string) ([]Renderer, error) {
 
 	streamService := w.factory.Stream()
-	iterator, err := streamService.ListTopFolders()
+	iterator, err := streamService.ListTopLevel()
 
 	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Renderer.Children", "Error loading child streams", w.stream))
+		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Renderer.TopLevel", "Error loading top level streams", w.stream))
 	}
 
 	return w.iteratorToSlice(iterator, action), nil
@@ -388,4 +375,13 @@ func (w Renderer) iteratorToSlice(iterator data.Iterator, actionID string) []Ren
 // newRenderer is a shortcut to the NewRenderer function that reuses the values present in this current Renderer
 func (w Renderer) newRenderer(stream *model.Stream, actionID string) (Renderer, error) {
 	return NewRenderer(w.factory, w.ctx, stream, actionID)
+}
+
+// closeModal sets Response header to close a modal on the client and optionally forward to a new location.
+func (w *Renderer) closeModal(url string) {
+	if url == "" {
+		w.ctx.Response().Header().Set("HX-Trigger", `"closeModal"`)
+	} else {
+		w.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
+	}
 }

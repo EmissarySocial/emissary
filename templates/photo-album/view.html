@@ -9,10 +9,10 @@
 
 	{{ if .UserCan "edit" }}
 		<div id="menu-bar">
-			<a href="/{{.Token}}/edit"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo</a>
 			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Title</a>
+				<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Album</a>
 			{{- end -}}
+			<a href="/{{.Token}}/edit">Upload Photo</a>
 			{{- if .UserCan "delete" -}}
 				<a hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete</a>
 			{{- end -}}

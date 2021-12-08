@@ -38,7 +38,7 @@
 	<header>
 		<div class="framed">
 			<div>
-				{{- range .TopFolders "view" -}}
+				{{- range .TopLevel "view" -}}
 					<a hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
 				{{- end -}}
 			</div>

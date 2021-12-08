@@ -31,9 +31,5 @@ func (step StepStreamDelete) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream")
 	}
 
-	if err := step.draftService.Delete(renderer.stream, "Deleted"); err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream draft")
-	}
-
 	return nil
 }

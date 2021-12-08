@@ -1,0 +1,33 @@
+<div hx-ext="sse" sse-connect="/{{.Token}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}">
+
+{{- if ne .Label "" -}}
+	<h1>{{.Label}}</h1>
+{{- end -}}
+
+{{- if ne .Description "" -}}
+	<div class="space-below">{{.Description}}</div>
+{{- end -}}
+
+<div id="menu-bar">
+	{{- if .HasParent -}}
+		{{- $parent := .Parent "view" -}}
+		<a hx-get="/{{$parent.Token}}" class="link">&laquo; {{$parent.Label}}</a>
+	{{- end -}}
+
+	{{- if .UserCan "edit" -}}
+		<a hx-get="/{{.Token}}/edit" script="install AsModal()">Edit</a>
+	{{- end -}}
+
+	{{- if .UserCan "delete" -}}
+		<a hx-post="/{{.Token}}/delete" hx-confirm="Are you sure you want to DELETE this photograph?  There is no UNDO.">Delete</a>
+	{{- end -}}
+</div>
+
+
+{{$attachment := .Attachment}}
+
+<img src="/{{.Token}}/attachments/{{$attachment.Filename}}?width=1024" style="width:100%;">
+
+</div>
+</div>

@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/path"
 )
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -58,7 +59,7 @@ func (step StepForm) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForm.Get", "Invalid Schema")
 	}
 
-	inputs := make(map[string]interface{})
+	inputs := make(datatype.Map)
 
 	// Collect form POST information
 	if err := renderer.ctx.Bind(&inputs); err != nil {
@@ -69,7 +70,14 @@ func (step StepForm) Post(buffer io.Writer, renderer *Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", renderer.inputs)
 	}
 
-	renderer.inputs = inputs
+	// Put approved form data into the stream
+	for key, value := range inputs {
+		if err := path.Set(renderer.stream, key, value); err != nil {
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", key, value)
+		}
+	}
+
+	renderer.closeModal("")
 
 	return nil
 }

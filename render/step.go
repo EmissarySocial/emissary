@@ -18,22 +18,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	// Populate the action with the data from
 	switch stepInfo["step"] {
 
-	// FOLDERS
-	case "new-folder":
-		return NewStepTopFolderCreate(factory.Stream(), stepInfo), nil
-
-	case "edit-folder":
-		return NewStepTopFolderEdit(factory.Stream(), stepInfo), nil
-
-	case "delete-folder":
-		return NewStepTopFolderDelete(factory.Stream(), stepInfo), nil
-
 	// STREAMS
-	case "new-child":
-		return NewStepNewChild(factory.Stream(), stepInfo), nil
-
-	case "new-sibling":
-		return NewStepNewSibling(factory.Stream(), stepInfo), nil
 
 	case "delete":
 		return NewStepStreamDelete(factory.Stream(), factory.StreamDraft(), stepInfo), nil
@@ -41,8 +26,11 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "form-html":
 		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
 
-	case "view-html":
-		return NewStepStreamHTML(stepInfo), nil
+	case "new-child":
+		return NewStepNewChild(factory.Stream(), stepInfo), nil
+
+	case "new-sibling":
+		return NewStepNewSibling(factory.Stream(), stepInfo), nil
 
 	case "save":
 		return NewStepStreamSave(factory.Stream(), stepInfo), nil
@@ -61,6 +49,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 
 	case "set-state":
 		return NewStepStreamState(stepInfo), nil
+
+	case "view-html":
+		return NewStepStreamHTML(stepInfo), nil
 
 	// DRAFTS
 	case "edit-draft":

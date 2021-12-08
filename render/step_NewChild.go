@@ -82,6 +82,12 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 		}
 	}
 
+	if child.IsNew() {
+		if err := step.streamService.Save(&child, "Created"); err != nil {
+			return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error saving child stream to database")
+		}
+	}
+
 	if err := DoPipeline(&childRenderer, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute action steps on child")
 	}

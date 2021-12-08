@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetStream handles GET requests
@@ -30,8 +31,16 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamService := factory.Stream()
 		streamToken := getStreamToken(ctx)
 
-		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream", streamToken)
+		// If the token is an ObjectID, then use it as the StreamID
+		if streamID, err := primitive.ObjectIDFromHex(streamToken); err == nil {
+			if err := streamService.LoadByID(streamID, &stream); err != nil {
+				return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by StreamID", streamID)
+			}
+		} else {
+			// Otherwise, use the input as a Token and try to find the Stream that way.
+			if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+				return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by Token", streamToken)
+			}
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
