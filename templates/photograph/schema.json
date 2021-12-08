@@ -72,8 +72,8 @@
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"delete"},
-				{"step": "forwardTo", "url":"/{{.ParentID}}"}
+				{"step":"delete", "confirm": "Are you sure you want to delete this Photograph?"},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
 			]
 		}
 	}

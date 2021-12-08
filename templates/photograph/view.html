@@ -20,7 +20,7 @@
 	{{- end -}}
 
 	{{- if .UserCan "delete" -}}
-		<a hx-post="/{{.Token}}/delete" hx-confirm="Are you sure you want to DELETE this photograph?  There is no UNDO.">Delete</a>
+		<a hx-get="/{{.Token}}/delete" _="install AsModal()">Delete</a>
 	{{- end -}}
 </div>
 

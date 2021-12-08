@@ -102,6 +102,18 @@ func (w Renderer) StreamID() string {
 	return w.stream.StreamID.Hex()
 }
 
+// StreamID returns the unique ID for the stream being rendered
+func (w Renderer) ParentID() string {
+	return w.stream.ParentID.Hex()
+}
+
+func (w Renderer) TopLevelID() string {
+	if len(w.stream.ParentIDs) == 0 {
+		return w.stream.StreamID.Hex()
+	}
+	return w.stream.ParentIDs[0].Hex()
+}
+
 // StateID returns the current state of the stream being rendered
 func (w Renderer) StateID() string {
 	return w.stream.StateID

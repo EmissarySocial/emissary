@@ -99,6 +99,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	factory.streamService = service.NewStream(
 		factory.collection(CollectionStream),
 		factory.Template(),
+		factory.StreamDraft(),
 		factory.Attachment(),
 		factory.FormLibrary(),
 		factory.TemplateUpdateChannel(),

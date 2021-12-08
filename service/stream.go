@@ -19,17 +19,19 @@ type Stream struct {
 	collection            data.Collection
 	attachmentService     *Attachment
 	templateService       *Template
+	draftService          *StreamDraft
 	formLibrary           form.Library
 	templateUpdateChannel chan model.Template
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
 
 	result := Stream{
 		collection:            collection,
 		templateService:       templateService,
+		draftService:          draftService,
 		attachmentService:     attachmentService,
 		formLibrary:           formLibrary,
 		templateUpdateChannel: templateUpdateChannel,
@@ -96,19 +98,28 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 // Delete removes an Stream from the database (virtual delete)
 func (service *Stream) Delete(stream *model.Stream, note string) error {
 
-	if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting attachments", stream, note)
+	// Delete this Stream
+	if err := service.collection.Delete(stream, note); err != nil {
+		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting Stream", stream, note)
 	}
 
-	// TODO: Also delete drafts here
-
+	// Delete all related Children
 	if err := service.DeleteChildren(stream, note); err != nil {
 		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note)
 	}
 
-	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting Stream", stream, note)
-	}
+	go func() {
+
+		// Delete all related Attachments
+		if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting attachments", stream, note))
+		}
+
+		// Delete all related Drafts
+		if err := service.draftService.Delete(stream, note); err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting drafts", stream, note))
+		}
+	}()
 
 	return nil
 }

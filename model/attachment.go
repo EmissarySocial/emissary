@@ -2,6 +2,7 @@ package model
 
 import (
 	"mime"
+	"strings"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/list"
@@ -34,7 +35,7 @@ func (attachment *Attachment) ID() string {
 
 func (attachment *Attachment) DownloadExtension() string {
 
-	ext := attachment.OriginalExtension()
+	ext := strings.ToLower(attachment.OriginalExtension())
 
 	switch ext {
 	case ".jpg", ".jpeg", ".png":
