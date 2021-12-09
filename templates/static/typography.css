@@ -67,7 +67,7 @@ b, strong, .bold {
 }
 
 a, .link {
-	color:#0043ce;
+	color:var(--blue70);
 	text-decoration:none;
 }
 
@@ -75,7 +75,7 @@ a:hover,
 .link:hover,
 tr.link:hover > td {
 	cursor:pointer;
-	color: #0f62fe;
+	color: var(--blue60);
 }
 
 .clickable {

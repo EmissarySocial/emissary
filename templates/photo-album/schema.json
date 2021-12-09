@@ -100,7 +100,7 @@
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step": "delete"},
+				{"step": "delete", "title": "Delete this Photo Album?", "message": "This will PERMANENTLY DELETE everyting in this album."},
 				{"step": "with-parent", "steps": [
 					{"step": "forward-to", "url": "/{{.Token}}"}
 				]}

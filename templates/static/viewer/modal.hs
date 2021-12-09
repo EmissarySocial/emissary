@@ -28,10 +28,17 @@ behavior AsModal
 	end
 end
 
-behavior Disableable
+behavior ModalCancelButton() 
+
+	on click 
+		send closeModal to #modal
+	end
+end
+
+behavior SubmitButton()
 
 	on click
-		put `<i class="fa-solid fa-spinner fa-spin"></i>&nbsp;` at the start of me
-		add @disabled to me
+		add [@disabled] to me
+		log "here?"
 	end
 end

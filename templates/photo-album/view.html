@@ -14,7 +14,7 @@
 			{{- end -}}
 			<a href="/{{.Token}}/edit">Upload Photos</a>
 			{{- if .UserCan "delete" -}}
-				<a hx-confirm="Are you sure you want to DELETE this Photo Album?" hx-post="/{{.Token}}/delete">Delete</a>
+				<a hx-get="/{{.Token}}/delete" script="install AsModal">Delete</a>
 			{{- end -}}
 		</div>
 	{{ end }}

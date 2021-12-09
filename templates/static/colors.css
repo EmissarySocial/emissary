@@ -13,6 +13,28 @@
 	--gray80: #393939;
 	--gray90: #262626;
 	--black: 000000;
+
+	--blue10: #edf5ff;
+	--blue20: #d0e2ff;
+	--blue30: #a6c8ff;
+	--blue40: #78a9ff;
+	--blue50: #4589ff;
+	--blue60: #0f62fe;
+	--blue70: #0043ce;
+	--blue80: #002d9c;
+	--blue90: #001d6c;
+	--blue100: #001141;
+
+	--red10: #fff1f1;
+	--red20: #ffd7d9;
+	--red30: #ffb3b8;
+	--red40: #ff8389;
+	--red50: #fa4d56;
+	--red60: #da1e28;
+	--red70: #a2191f;
+	--red80: #750e13;
+	--red90: #520408;
+	--red100: #2d0709;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,7 +53,6 @@
 		--white: #000000;
 	}
 }
-
 
 .white {color:var(--white);}
 .gray05 {color:var(--gray05);}

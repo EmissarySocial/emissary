@@ -13,18 +13,24 @@ import (
 type StepStreamDelete struct {
 	streamService *service.Stream
 	draftService  *service.StreamDraft
+	title         string
 	message       string
 }
 
-func NewStepStreamDelete(streamService *service.Stream, draftService *service.StreamDraft, config datatype.Map) StepStreamDelete {
+func NewStepStreamDelete(streamService *service.Stream, draftService *service.StreamDraft, stepInfo datatype.Map) StepStreamDelete {
 	return StepStreamDelete{
 		streamService: streamService,
 		draftService:  draftService,
-		message:       config.GetString("message"),
+		title:         stepInfo.GetString("title"),
+		message:       stepInfo.GetString("message"),
 	}
 }
 
 func (step StepStreamDelete) Get(buffer io.Writer, renderer *Renderer) error {
+
+	if step.title == "" {
+		step.title = "Confirm Delete"
+	}
 
 	if step.message == "" {
 		step.message = "Are you sure you want to delete this item?  There is NO UNDO."
@@ -35,16 +41,16 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Renderer) error {
 	b.Div().ID("modal")
 	b.Div().Class("modal-backdrop").Close()
 	b.Div().Class("modal-content")
-	b.H2().InnerHTML("Confirm Delete").Close()
+	b.H2().InnerHTML(step.title).Close()
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
 
-	b.Button().Class("primary").
+	b.Button().Class("warning").
 		Attr("hx-post", "/"+renderer.StreamID()+"/delete").
 		Attr("hx-swap", "none").
-		Script("init Disableable").
+		Script("install SubmitButton()").
 		InnerHTML("Delete").Close()
 
-	b.Button().Script("on click send closeModal to #modal").InnerHTML("Cancel").Close()
+	b.Button().Script("install ModalCancelButton()").InnerHTML("Cancel").Close()
 	b.CloseAll()
 
 	buffer.Write([]byte(b.String()))

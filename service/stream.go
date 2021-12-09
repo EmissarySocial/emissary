@@ -103,12 +103,12 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting Stream", stream, note)
 	}
 
-	// Delete all related Children
-	if err := service.DeleteChildren(stream, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note)
-	}
-
 	go func() {
+
+		// Delete all related Children
+		if err := service.DeleteChildren(stream, note); err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note))
+		}
 
 		// Delete all related Attachments
 		if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {

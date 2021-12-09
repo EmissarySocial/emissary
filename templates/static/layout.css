@@ -98,3 +98,13 @@ main {
 #breadcrumbs {
 	margin-bottom:20px;
 }
+
+/* Alternate colors for dark mode */
+@media (prefers-color-scheme: dark) {
+
+	body {
+		color:var(--gray80);
+		
+	}
+
+}

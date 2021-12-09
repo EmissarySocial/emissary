@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type ResultSet struct {
@@ -176,15 +175,4 @@ func (rs *ResultSet) makeCriteriaValue(value interface{}) interface{} {
 	}
 
 	return convert.Int(value)
-}
-
-func (rs *ResultSet) debug() {
-
-	spew.Dump(map[string]interface{}{
-		"Criteria":        rs.Criteria,
-		"SortField":       rs.SortField,
-		"SortDescription": rs.SortDirection,
-		"Sort":            rs.makeSortOption(),
-		"MaxRows":         rs.MaxRows,
-	})
 }

@@ -7,18 +7,21 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
+	"github.com/benpate/mediaserver"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	collection data.Collection
+	collection  data.Collection
+	mediaServer mediaserver.MediaServer
 }
 
 // NewAttachment returns a fully populated Attachment service
-func NewAttachment(collection data.Collection) Attachment {
+func NewAttachment(collection data.Collection, mediaServer mediaserver.MediaServer) Attachment {
 	return Attachment{
-		collection: collection,
+		collection:  collection,
+		mediaServer: mediaServer,
 	}
 }
 
@@ -57,6 +60,12 @@ func (service Attachment) Save(attachment *model.Attachment, note string) error 
 // Delete removes an Attachment from the database (virtual delete)
 func (service Attachment) Delete(attachment *model.Attachment, note string) error {
 
+	// Delete uploaded files from MediaServer
+	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
+		return derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachment)
+	}
+
+	// Delete Attachment record last.
 	if err := service.collection.Delete(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error deleting Attachment", attachment, note)
 	}

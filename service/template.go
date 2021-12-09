@@ -170,8 +170,13 @@ func (service *Template) watch() {
 
 	for _, file := range files {
 		if file.IsDir() {
-			if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
-				panic(err)
+			switch file.Name() {
+			case "layout":
+			case "static":
+			default:
+				if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}

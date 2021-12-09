@@ -2,7 +2,7 @@
  * INPUT WIDGETS                    */
 
 input:not([type=submit], [type=checkbox], [type=radio]), textarea {
-    border: solid 1px #878d96;
+    border: solid 1px var(--gray50);
     color: #21272a;
     padding: 10px 10px;
     line-height:100%;
@@ -13,7 +13,7 @@ input:not([type=submit], [type=checkbox], [type=radio]), textarea {
 }
 
 input:focus, textarea:focus {
-    border:solid 2px rgb(100,100,200);
+    border:solid 2px var(--blue70);
     padding:9px 9px;
 }
 
@@ -29,24 +29,52 @@ button,
     display:inline-block;
     cursor:pointer;
     padding:10px 20px;
-    background-color: #dde1e6;
+    background-color: var(--gray10);
     border-radius: 5px;
     border:none;
-    color: black;
+    color: var(--gray90);
 }
 
 input[type=submit]:hover,
 button:hover,
 .button:hover {
-    color:black;
-    background-color: #c1c7cd;
+    color:var(--black);
+    background-color: var(--gray30);
 }
 
 input[type=submit].primary,
 button.primary,
 .button.primary {
-    background:linear-gradient(rgb(73,143,247), rgb(51,120,246));
+    background:linear-gradient(var(--blue50), var(--blue60));
     color: white;
+}
+
+input[type=submit].primary:hover,
+button.primary:hover,
+.button.primary:hover {
+    background:linear-gradient(var(--blue40), var(--blue50));
+    color: white;
+}
+
+input[type=submit].warning,
+button.warning,
+.button.warning {
+    background:linear-gradient(var(--red60), var(--red70));
+    color: white;
+}
+
+input[type=submit].warning:hover,
+button.warning:hover,
+.button.warning:hover {
+    background:linear-gradient(var(--red50), var(--red60));
+    color: white;
+}
+
+input[disabled],
+button[disabled],
+.button[disabled] {
+    background:var(--gray10)!important;
+    color: var(--gray50)!important;
 }
 
 input:last-child {
@@ -77,7 +105,6 @@ div.popOpen.visible {
  * VERTICAL LAYOUT                   */
 
 .layout-vertical {
-
 }
 
 .layout-vertical > .layout-vertical-label {
@@ -87,7 +114,6 @@ div.popOpen.visible {
 }
 
 .layout-vertical > .layout-vertical-elements {
-
 }
 
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element {

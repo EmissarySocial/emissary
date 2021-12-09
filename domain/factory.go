@@ -127,7 +127,7 @@ func (factory *Factory) Hostname() string {
 
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
-	result := service.NewAttachment(factory.collection(CollectionAttachment))
+	result := service.NewAttachment(factory.collection(CollectionAttachment), factory.MediaServer())
 	return &result
 }
 
