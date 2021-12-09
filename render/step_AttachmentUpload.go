@@ -26,11 +26,11 @@ func NewStepAttachmentUpload(streamService *service.Stream, attachmentService *s
 	}
 }
 
-func (step StepAttachmentUpload) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepAttachmentUpload) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Stream) error {
 
 	form, err := renderer.ctx.MultipartForm()
 

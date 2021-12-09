@@ -24,11 +24,11 @@ func NewStepStreamDefaults(config datatype.Map) StepStreamDefaults {
 	return result
 }
 
-func (step StepStreamDefaults) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDefaults) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepStreamDefaults) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDefaults) Post(buffer io.Writer, renderer *Stream) error {
 
 	for key, value := range step {
 		if err := path.Set(renderer.stream, key, value); err != nil {

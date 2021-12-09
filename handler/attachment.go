@@ -31,7 +31,7 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
-		if _, err := factory.Renderer(sterankoContext, &stream, "view"); err != nil {
+		if _, err := factory.RenderStream(sterankoContext, &stream, "view"); err != nil {
 			return derp.Wrap(err, "ghost.handler.GetAttachment", "Cannot create renderer")
 		}
 

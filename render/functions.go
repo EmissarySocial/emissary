@@ -5,10 +5,10 @@ import "html/template"
 func FuncMap() template.FuncMap {
 
 	return template.FuncMap{
-		"first": func(slice []Renderer) Renderer {
+		"first": func(slice []Stream) Stream {
 			return slice[0]
 		},
-		"last": func(slice []Renderer) Renderer {
+		"last": func(slice []Stream) Stream {
 			return slice[len(slice)-1]
 		},
 	}

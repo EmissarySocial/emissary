@@ -24,7 +24,7 @@ func NewStepIfCondition(stepInfo datatype.Map) StepIfCondition {
 }
 
 // Get displays a form where users can update stream data
-func (step StepIfCondition) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepIfCondition) Get(buffer io.Writer, renderer *Stream) error {
 
 	if step.evaluateCondition(renderer) {
 		if len(step.then) > 0 {
@@ -42,7 +42,7 @@ func (step StepIfCondition) Get(buffer io.Writer, renderer *Renderer) error {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepIfCondition) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepIfCondition) Post(buffer io.Writer, renderer *Stream) error {
 
 	if step.evaluateCondition(renderer) {
 		if len(step.then) > 0 {
@@ -59,7 +59,7 @@ func (step StepIfCondition) Post(buffer io.Writer, renderer *Renderer) error {
 }
 
 // evaluateCondition executes the conditional template and
-func (step StepIfCondition) evaluateCondition(renderer *Renderer) bool {
+func (step StepIfCondition) evaluateCondition(renderer *Stream) bool {
 	result, _ := executeSingleTemplate(step.condition, renderer)
 	return (strings.TrimSpace(result) == "true")
 }

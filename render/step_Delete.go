@@ -26,7 +26,7 @@ func NewStepStreamDelete(streamService *service.Stream, draftService *service.St
 	}
 }
 
-func (step StepStreamDelete) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDelete) Get(buffer io.Writer, renderer *Stream) error {
 
 	if step.title == "" {
 		step.title = "Confirm Delete"
@@ -58,7 +58,7 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step StepStreamDelete) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDelete) Post(buffer io.Writer, renderer *Stream) error {
 
 	if err := step.streamService.Delete(renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream")

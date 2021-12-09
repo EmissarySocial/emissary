@@ -22,11 +22,11 @@ func NewStepStreamDraftPublish(streamService *service.Stream, draftService *serv
 	}
 }
 
-func (step StepStreamDraftPublish) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftPublish) Get(buffer io.Writer, renderer *Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamDraftPublish", "GET not implemented")
 }
 
-func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer *Stream) error {
 
 	var draft model.Stream
 

@@ -24,7 +24,7 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModalForm(renderer *Renderer, content string) string {
+func WrapModalForm(renderer *Stream, content string) string {
 
 	b := html.New()
 
@@ -56,7 +56,7 @@ func WrapModalForm(renderer *Renderer, content string) string {
 	return b.String()
 }
 
-func forwardOrTrigger(renderer *Renderer, forward string, trigger string) error {
+func forwardOrTrigger(renderer *Stream, forward string, trigger string) error {
 
 	if forward != "" {
 
@@ -85,7 +85,7 @@ func forwardOrTrigger(renderer *Renderer, forward string, trigger string) error 
 	return nil
 }
 
-func executeSingleTemplate(t string, renderer *Renderer) (string, error) {
+func executeSingleTemplate(t string, renderer *Stream) (string, error) {
 
 	executable, err := template.New("").Parse(t)
 

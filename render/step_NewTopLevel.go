@@ -24,11 +24,11 @@ func NewStepTopLevelCreate(streamService *service.Stream, config datatype.Map) S
 	}
 }
 
-func (step StepTopLevelCreate) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopLevelCreate) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Stream) error {
 
 	templateID := renderer.ctx.QueryParam("templateId")
 
@@ -51,7 +51,7 @@ func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Renderer) error 
 	// Set stream defaults
 	authorization := getAuthorization(renderer.ctx)
 	child.AuthorID = authorization.UserID
-	childRenderer, err := renderer.newRenderer(&child, "view")
+	childStream, err := renderer.newStream(&child, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
@@ -59,7 +59,7 @@ func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Renderer) error 
 
 	// If there is an "init" step for the child's template, then execute it now
 	if action, ok := template.Action("init"); ok {
-		if err := DoPipeline(&childRenderer, buffer, action.Steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute 'init' action on child")
 		}
 	}

@@ -100,23 +100,23 @@ func (rs *ResultSet) LessThan(value interface{}) *ResultSet {
  * Actions
  *********************/
 
-func (rs *ResultSet) AsView() ([]Renderer, error) {
+func (rs *ResultSet) AsView() ([]Stream, error) {
 	return rs.AsAction("view")
 }
 
-func (rs *ResultSet) AsEdit() ([]Renderer, error) {
+func (rs *ResultSet) AsEdit() ([]Stream, error) {
 	return rs.AsAction("edit")
 }
 
-func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
+func (rs *ResultSet) AsAction(action string) ([]Stream, error) {
 
 	var index uint
-	var result []Renderer
+	var result []Stream
 
 	iterator, err := rs.query()
 
 	if err != nil {
-		return []Renderer{}, derp.Wrap(err, "ghost.renderer.ResultSet.makeSlice", "Error loading streams from database")
+		return []Stream{}, derp.Wrap(err, "ghost.renderer.ResultSet.makeSlice", "Error loading streams from database")
 	}
 
 	stream := new(model.Stream)
@@ -124,7 +124,7 @@ func (rs *ResultSet) AsAction(action string) ([]Renderer, error) {
 	for iterator.Next(stream) {
 
 		// Create a new renderer
-		renderer, err := NewRenderer(rs.factory, rs.ctx, stream, action)
+		renderer, err := NewStream(rs.factory, rs.ctx, stream, action)
 
 		// If this renderer is allowed, then add it to the result set
 		if err == nil {

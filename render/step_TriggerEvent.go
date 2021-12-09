@@ -23,12 +23,12 @@ func NewStepTriggerEvent(stepInfo datatype.Map) StepTriggerEvent {
 }
 
 // Get displays a form where users can update stream data
-func (step StepTriggerEvent) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepTriggerEvent) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepTriggerEvent) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepTriggerEvent) Post(buffer io.Writer, renderer *Stream) error {
 	data, err := executeSingleTemplate(step.data, renderer)
 
 	if err != nil {

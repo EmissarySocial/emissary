@@ -27,7 +27,7 @@ func NewStepNewChild(streamService *service.Stream, stepInfo datatype.Map) StepN
 	}
 }
 
-func (step StepNewChild) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepNewChild) Get(buffer io.Writer, renderer *Stream) error {
 
 	templateID := renderer.ctx.QueryParam("templateId")
 
@@ -43,7 +43,7 @@ func (step StepNewChild) Get(buffer io.Writer, renderer *Renderer) error {
 	return nil
 }
 
-func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepNewChild) Post(buffer io.Writer, renderer *Stream) error {
 
 	templateID := renderer.ctx.QueryParam("templateId")
 
@@ -69,7 +69,7 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 
 	child.StateID = step.childState
 	child.AuthorID = authorization.UserID
-	childRenderer, err := renderer.newRenderer(&child, "edit")
+	childStream, err := renderer.newStream(&child, "edit")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
@@ -77,7 +77,7 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 
 	// If there is an "init" step for the child's template, then execute it now
 	if action, ok := template.Action("init"); ok {
-		if err := DoPipeline(&childRenderer, buffer, action.Steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute 'init' action on child")
 		}
 	}
@@ -88,7 +88,7 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Renderer) error {
 		}
 	}
 
-	if err := DoPipeline(&childRenderer, buffer, step.withChild, ActionMethodPost); err != nil {
+	if err := DoPipeline(&childStream, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute action steps on child")
 	}
 

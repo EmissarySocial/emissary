@@ -28,7 +28,7 @@ func NewStepForm(templateService *service.Template, formLibrary form.Library, st
 }
 
 // Get displays a form where users can update stream data
-func (step StepForm) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepForm) Get(buffer io.Writer, renderer *Stream) error {
 
 	// Try to find the schema for this Template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
@@ -50,7 +50,7 @@ func (step StepForm) Get(buffer io.Writer, renderer *Renderer) error {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepForm) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepForm) Post(buffer io.Writer, renderer *Stream) error {
 
 	// Try to find the schema for this Template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)

@@ -22,12 +22,12 @@ func NewStepStreamThumbnail(attachmentService *service.Attachment, command datat
 }
 
 // Get displays a form where users can update stream data
-func (step StepStreamThumbnail) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamThumbnail) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStreamThumbnail) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamThumbnail) Post(buffer io.Writer, renderer *Stream) error {
 
 	// Find best icon from attachments
 	attachments, err := step.attachmentService.ListByStream(renderer.stream.StreamID)

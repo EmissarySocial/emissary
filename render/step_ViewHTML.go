@@ -27,7 +27,7 @@ func NewStepStreamHTML(stepInfo datatype.Map) StepStreamHTML {
 }
 
 // Get renders the Stream HTML to the context
-func (step StepStreamHTML) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamHTML) Get(buffer io.Writer, renderer *Stream) error {
 
 	template, ok := renderer.template.HTMLTemplate(step.filename)
 
@@ -45,6 +45,6 @@ func (step StepStreamHTML) Get(buffer io.Writer, renderer *Renderer) error {
 }
 
 // Post is not supported for this step.
-func (step StepStreamHTML) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamHTML) Post(buffer io.Writer, renderer *Stream) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamHTML.Get", "Unsupported Method")
 }

@@ -19,11 +19,11 @@ func NewStepStreamDraftDelete(draftService *service.StreamDraft, config datatype
 	}
 }
 
-func (step StepStreamDraftDelete) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftDelete) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepStreamDraftDelete) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftDelete) Post(buffer io.Writer, renderer *Stream) error {
 
 	if err := step.draftService.Delete(renderer.stream, "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDraftDelete.Post", "Error deleting stream draft")

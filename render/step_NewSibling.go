@@ -25,11 +25,11 @@ func NewStepNewSibling(streamService *service.Stream, stepInfo datatype.Map) Ste
 	}
 }
 
-func (step StepNewSibling) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepNewSibling) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepNewSibling) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepNewSibling) Post(buffer io.Writer, renderer *Stream) error {
 
 	templateID := renderer.ctx.QueryParam("templateId")
 
@@ -53,13 +53,13 @@ func (step StepNewSibling) Post(buffer io.Writer, renderer *Renderer) error {
 	// Set Default Values
 	authorization := getAuthorization(renderer.ctx)
 	sibling.AuthorID = authorization.UserID
-	siblingRenderer, err := renderer.newRenderer(&sibling, "edit")
+	siblingStream, err := renderer.newStream(&sibling, "edit")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", sibling)
 	}
 
-	if err := DoPipeline(&siblingRenderer, buffer, step.withChild, ActionMethodPost); err != nil {
+	if err := DoPipeline(&siblingStream, buffer, step.withChild, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewSibling", "Error running post-create steps")
 	}
 

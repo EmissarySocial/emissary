@@ -32,7 +32,7 @@ func NewStepStreamDraftEdit(draftService *service.StreamDraft, stepInfo datatype
 	}
 }
 
-func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer *Stream) error {
 
 	template, ok := renderer.template.HTMLTemplate(step.filename)
 
@@ -52,7 +52,7 @@ func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer *Renderer) error 
 	return nil
 }
 
-func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer *Stream) error {
 
 	var draft model.Stream
 

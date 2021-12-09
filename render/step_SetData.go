@@ -27,12 +27,12 @@ func NewStepStreamData(templateService *service.Template, streamService *service
 }
 
 // Get displays a form where users can update stream data
-func (step StepStreamData) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamData) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStreamData) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepStreamData) Post(buffer io.Writer, renderer *Stream) error {
 
 	// Put approved form data into the stream
 	for _, p := range step.paths {

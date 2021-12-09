@@ -7,8 +7,8 @@ import (
 	"github.com/benpate/derp"
 )
 
-// DoPipeline executes a series of RenderSteps on a particular Renderer
-func DoPipeline(renderer *Renderer, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
+// DoPipeline executes a series of RenderSteps on a particular Stream
+func DoPipeline(renderer *Stream, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
 
 	// Execute all of the steps of the requested action
 	for _, stepInfo := range steps {

@@ -8,8 +8,8 @@ import (
 )
 
 type Step interface {
-	Get(io.Writer, *Renderer) error
-	Post(io.Writer, *Renderer) error
+	Get(io.Writer, *Stream) error
+	Post(io.Writer, *Stream) error
 }
 
 // NewStep uses an Step object to create a new action

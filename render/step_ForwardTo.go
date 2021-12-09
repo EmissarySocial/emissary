@@ -23,12 +23,12 @@ func NewStepForwardTo(stepInfo datatype.Map) StepForwardTo {
 }
 
 // Get displays a form where users can update stream data
-func (step StepForwardTo) Get(buffer io.Writer, renderer *Renderer) error {
+func (step StepForwardTo) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepForwardTo) Post(buffer io.Writer, renderer *Renderer) error {
+func (step StepForwardTo) Post(buffer io.Writer, renderer *Stream) error {
 	nextPage, err := executeSingleTemplate(step.url, renderer)
 
 	if err != nil {
