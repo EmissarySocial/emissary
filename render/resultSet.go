@@ -100,18 +100,15 @@ func (rs *ResultSet) LessThan(value interface{}) *ResultSet {
  * Actions
  *********************/
 
-func (rs *ResultSet) AsView() ([]Stream, error) {
-	return rs.AsAction("view")
+func (rs *ResultSet) View() ([]Stream, error) {
+	return rs.Action("view")
 }
 
-func (rs *ResultSet) AsEdit() ([]Stream, error) {
-	return rs.AsAction("edit")
+func (rs *ResultSet) Edit() ([]Stream, error) {
+	return rs.Action("edit")
 }
 
-func (rs *ResultSet) AsAction(action string) ([]Stream, error) {
-
-	var index uint
-	var result []Stream
+func (rs *ResultSet) Action(action string) ([]Stream, error) {
 
 	iterator, err := rs.query()
 
@@ -119,32 +116,7 @@ func (rs *ResultSet) AsAction(action string) ([]Stream, error) {
 		return []Stream{}, derp.Wrap(err, "ghost.renderer.ResultSet.makeSlice", "Error loading streams from database")
 	}
 
-	stream := new(model.Stream)
-
-	for iterator.Next(stream) {
-
-		// Create a new renderer
-		renderer, err := NewStream(rs.factory, rs.ctx, stream, action)
-
-		// If this renderer is allowed, then add it to the result set
-		if err == nil {
-			result = append(result, renderer)
-		}
-
-		// Calculate max rows
-		index = index + 1
-
-		if rs.MaxRows > 0 {
-			if index >= rs.MaxRows {
-				break
-			}
-		}
-
-		// Make a new stream for the next renderer
-		stream = new(model.Stream)
-	}
-
-	return result, nil
+	return streamIteratorToSlice(rs.factory, rs.ctx, iterator, rs.MaxRows, action), nil
 }
 
 /**********************
@@ -175,4 +147,40 @@ func (rs *ResultSet) makeCriteriaValue(value interface{}) interface{} {
 	}
 
 	return convert.Int(value)
+}
+
+/***********************************/
+
+// streamIteratorToSlice consumes a data.Iterator and generates a slice of render.Stream objects.
+func streamIteratorToSlice(factory Factory, ctx *steranko.Context, iterator data.Iterator, maxRows uint, action string) []Stream {
+
+	var index uint
+	var result []Stream
+
+	stream := new(model.Stream)
+
+	for iterator.Next(stream) {
+
+		// Create a new renderer
+		renderer, err := NewStream(factory, ctx, stream, action)
+
+		// If this renderer is allowed, then add it to the result set
+		if err == nil {
+			result = append(result, renderer)
+		}
+
+		// Calculate max rows
+		index = index + 1
+
+		if maxRows > 0 {
+			if index >= maxRows {
+				break
+			}
+		}
+
+		// Make a new stream for the next renderer
+		stream = new(model.Stream)
+	}
+
+	return result
 }
