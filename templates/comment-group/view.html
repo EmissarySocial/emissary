@@ -1,0 +1,9 @@
+<div class="comment-group">
+	Comments:
+	{{- range .Children.Top12.ByPublishDate.Reverse.View -}}
+		<div class="comment">
+			{{.Label}}<br>
+			{{.PublishDate}}
+		</div>
+	{{- end -}}
+</div>

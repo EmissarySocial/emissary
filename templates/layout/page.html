@@ -27,7 +27,7 @@
 
 </head>
 
-<body hx-target="#page" hx-swap="innerHTML" hx-push-url="true">
+<body hx-target="#page" hx-swap="innerHTML" hx-push-url="true" hx-ext="preload">
 
 	<main>
 		<div id="page" class="framed">
@@ -38,8 +38,9 @@
 	<header>
 		<div class="framed">
 			<div>
-				{{- range .TopLevel "view" -}}
-					<a hx-get="/{{.Token}}" {{ if true }} class="selected" {{ end }}>{{.Label}}</a>
+				{{- $topID := .TopLevelID -}}
+				{{- range .TopLevel -}}
+					<a href="/{{.Token}}" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
 				{{- end -}}
 			</div>
 			<div>
@@ -57,6 +58,7 @@
 
 	<script type="text/javascript" src="/htmx/htmx.js"></script>
 	<script type="text/javascript" src="/htmx/ext/sse.js"></script>
+	<script type="text/javascript" src="/static/preload.js"></script>
 	<script type="text/javascript" src="/hyperscript/_hyperscript_web.min.js"></script>
 	
 </body>

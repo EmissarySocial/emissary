@@ -39,7 +39,8 @@
 	},
 	"actions": {
 		"view": {
-			"step": "view-html"
+			"step": "view-html",
+			"cache": true
 		},
 		"edit": {
 			"roles": ["owner", "editor"],
@@ -59,18 +60,19 @@
 						"path": "description"
 					}]
 				}}, 
-				{"step": "save", "comment": "Updated by {{.Author}}"}
+				{"step": "save", "comment": "Updated by {{.Author}}"},
+				{"step": "trigger-event","event": "closeModal"}
 			]
 		},
-		"attachments": {
-			"roles": ["owner", "editor"],
+		"add-child": {
+			"roles": ["owner", "author"],
 			"steps": [
-				{"step": "upload-attachments"},
-				{"step": "forward-to", "url":"/{{.Token}}"}
+				{"step":"new-child"},
+				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},
 		"delete": {
-			"roles": ["owner"],
+			"roles": ["owner", "author"],
 			"steps": [
 				{"step":"delete", "confirm": "Are you sure you want to delete this Photograph?"},
 				{"step": "forward-to", "url":"/{{.ParentID}}"}

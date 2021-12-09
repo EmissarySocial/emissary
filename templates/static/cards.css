@@ -17,11 +17,11 @@
 @media screen and (min-width:35.5em) {
 
     .card-group {
-        margin: 5px;
+        margin-right: -5px;
     }
 
     .card {
-        margin:5px;
+        margin:0px 5px 5px 0px;
     }
 }
 

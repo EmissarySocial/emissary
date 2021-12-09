@@ -57,6 +57,14 @@ h3.space-below {
     margin-right: 20px;
 }
 
+.padding-5 {
+    padding: 5px;
+}
+
+.pading-10 {
+    padding: 10px;
+}
+
 
 /****************************
  * Element-Level classes

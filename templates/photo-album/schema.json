@@ -47,7 +47,7 @@
 			]
 		},
 		"view": {
-			"step": "view-html"
+			"step": "view-html"		
 		},
 		"children": {
 			"step": "view-html"
@@ -74,9 +74,6 @@
 						"path": "description"
 					}]
 				}
-			}, {
-				"step": "set-data",
-				"paths": ["label", "description"]
 			},{
 				"step": "save",
 				"comment": "Updated by {{.Author}}"

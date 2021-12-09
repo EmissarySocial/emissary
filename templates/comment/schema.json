@@ -1,11 +1,15 @@
 {
 	"label": "Comment",
-	"description": "Single comment on an article",
-	"containedBy": ["article"],
+	"description": "Single comment in the comments section of a page.",
+	"containedBy": ["comment-group"],
 	"schema": {
 		"type": "object",
-		"properties": {},
-		"required": []
+		"properties": {
+			"description": {
+				"type": "string",
+				"description": "The raw contents of the comment (before any post-processing is performed)"
+			}
+		}
 	},
 	"states": {
 		"awaiting-moderation": {
@@ -26,6 +30,10 @@
 			"label": "Domain Owner",
 			"decription": "Domain Owners have full control over this chatroom"
 		},
+		"author": {
+			"label": "Author",
+			"description": "The authenticated user who originally posted a comment."
+		},
 		"moderator": {
 			"label": "Moderator",
 			"description": "Moderators have full control over this chatroom."
@@ -40,15 +48,18 @@
 		}
 	},
 	"actions": {
+		"init": {
+			"steps": [
+				{"step": "activity-stream", "type": "comment"}
+			]
+		},
 		"view": {
-			"states": [],
-			"roles": ["participant", "moderated-paricipant"],
-			"method": "get"
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
 		},
 		"edit":{
-			"states": [],
-			"roles": ["owner", "moderator"],
-			"method": "edit",
+			"roles": ["owner", "moderator", "author"],
+			"step": "form-html",
 			"form": {
 				"kind": "layout-vertical",
 				"children": [{
@@ -60,20 +71,21 @@
 		},
 		"hide": {
 			"states": ["awaiting-moderation", "visible"],
-			"roles": ["moderator"],
-			"method": "new-state",
-			"new-state":"hidden"
+			"roles": ["owner", "moderator"],
+			"steps": [
+				{"step": "set-state", "new-state":"hidden"}
+			]
 		},
 		"show": {
 			"states": ["awaiting-moderation", "hidden"],
-			"roles": ["moderator"],
-			"method": "new-state",
-			"new-state":"hidden"
+			"roles": ["owner", "moderator"],
+			"steps": [
+				{"step": "new-state", "new-state":"hidden"}
+			]
 		},
 		"delete": {
-			"method": "delete",
-			"states": [],
-			"roles":["owner", "moderator"]
+			"roles":["owner", "moderator"],
+			"step": "delete"
 		}
 	}
 }

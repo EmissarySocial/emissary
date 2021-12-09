@@ -4,6 +4,8 @@
 // for more detauls
 htmx.defineExtension("preload", {
 
+	init: function() {},
+
 	onEvent: function(name, event) {
 
 		// Only take actions on "htmx:afterProcessNode"
@@ -27,10 +29,7 @@ htmx.defineExtension("preload", {
 			// content as loaded (and prevent additional AJAX calls.)
 			var done = function(html) {
 				node.preloadState = "DONE"
-
-				if (attr(node, "preload-images") == "true") {
-					document.createElement("div").innerHTML = html // create and populate a node to load linked resources, too.
-				}
+				document.createElement("div").innerHTML = html // create and populate a node to load linked resources, too.
 			}
 
 			return function() {
@@ -79,59 +78,30 @@ htmx.defineExtension("preload", {
 				return;
 			}
 			
-			// Get event name from config.
-			var on = attr(node, "preload") || "mousedown"
-						
 			// FALL THROUGH to here means we need to add an EventListener
 	
 			// Apply the listener to the node
-			node.addEventListener(on, function(evt) {
-				if (node.preloadState === "PAUSE") { // Only add one event listener
-					node.preloadState = "READY"; // Requred for the `load` function to trigger
-
-					// Special handling for "mouseover" events.  Wait 100ms before triggering load.
-					if (on === "mouseover") {
-						window.setTimeout(load(node), 100);
-					} else {
+			["mousedown", "touchstart"].forEach(function(eventName) {
+				node.addEventListener(eventName, function(_event) {
+					if (node.preloadState === "PAUSE") { // Only add one event listener
+						node.preloadState = "READY"; // Requred for the `load` function to trigger
+	
+						// Special handling for "mouseover" events.  Wait 100ms before triggering load.
 						load(node)() // all other events trigger immediately.
 					}
-				}
+				})
 			})
-
-			// Special handling for certain built-in event handlers
-			switch (on) {
-
-				case "mouseover":
-					// Mirror `touchstart` events (fires immediately)
-					node.addEventListener("touchstart", load(node));
-
-					// WHhen the mouse leaves, immediately disable the preload
-					node.addEventListener("mouseout", function(evt) {
-						if ((evt.target === node) && (node.preloadState === "READY")) {
-							node.preloadState = "PAUSE";
-						}
-					})
-					break;
-
-				case "mousedown":
-					 // Mirror `touchstart` events (fires immediately)
-					node.addEventListener("touchstart", load(node));
-					break;
-			}
 
 			// Mark the node as ready to run.
 			node.preloadState = "PAUSE";
 			htmx.trigger(node, "preload:init") // This event can be used to load content immediately.
+			console.log("preload init..")
+			console.log(node)
 		}
 
-		// Search for all child nodes that have a "preload" attribute
-		event.target.querySelectorAll("[preload]").forEach(function(node) {
-
-			// Initialize the node with the "preload" attribute
+		// Search for all child nodes that can be preloaded
+		event.target.querySelectorAll("a,[hx-get][data-hx-get]").forEach(function(node) {
 			init(node)
-
-			// Initialize all child elements that are anchors or have `hx-get` (use with care)
-			node.querySelectorAll("a,[hx-get],[data-hx-get]").forEach(init)
 		})
 	}
 })

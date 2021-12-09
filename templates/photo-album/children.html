@@ -5,7 +5,7 @@
 	{{- $query := $query.LessThan $createDate -}}
 {{- end -}}
 
-{{- $results := $query.AsView -}}
+{{- $results := $query.View -}}
 
 {{- if gt (len $results) 0 -}}
 

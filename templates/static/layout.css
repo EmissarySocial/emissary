@@ -56,8 +56,14 @@ header a {
 }
 
 header a:hover {
-    color: var(--black);
+    color: var(--gray90);
     background-color:var(--gray10);
+}
+
+header a.selected,
+header a.selected:hover {
+	background-color: var(--gray20);
+	color: var(--black);
 }
 
 main {
