@@ -27,7 +27,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
 
 	case "new-child":
-		return NewStepNewChild(factory.Stream(), stepInfo), nil
+		return NewStepNewChild(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "new-sibling":
 		return NewStepNewSibling(factory.Stream(), stepInfo), nil
@@ -43,6 +43,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 
 	case "set-thumbnail":
 		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
+
+	case "set-publishdate":
+		return NewStepSetPublishDate(stepInfo), nil
 
 	case "set-sharing":
 		return NewStepStreamShare(stepInfo), nil

@@ -250,6 +250,23 @@ func (service *Template) ListByContainer(containedBy string) []model.Option {
 	return service.List(exp.Contains("containedBy", containedBy))
 }
 
+// ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
+// are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
+// are returned.
+func (service *Template) ListByContainerLimited(containedBy string, limits []string) []model.Option {
+
+	if len(limits) == 0 {
+		return service.ListByContainer(containedBy)
+	}
+
+	return service.List(
+		exp.And(
+			exp.Contains("containedBy", containedBy),
+			exp.ContainedBy("templateId", limits),
+		),
+	)
+}
+
 // Load retrieves an Template from the database
 func (service *Template) Load(templateID string) (*model.Template, error) {
 
