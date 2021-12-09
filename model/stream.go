@@ -19,13 +19,12 @@ type Stream struct {
 	StateID         string               `json:"stateId"         bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	Criteria        Criteria             `json:"criteria"        bson:"criteria"`                // Criteria for which users can access this stream.
 	Token           string               `json:"token"           bson:"token"`                   // Unique value that identifies this element in the URL
-	URL             string               `json:"url"             bson:"url"`                     // Unique URL of this Stream.  This duplicates the "token" field a bit, but it (hopefully?) makes access easier.
-	Label           string               `json:"label"           bson:"label"`                   // Text to display in lists of streams, probably displayed at top of stream page, too.
-	Description     string               `json:"description"     bson:"description"`             // Brief summary of this stream, used in lists of streams
-	AuthorID        primitive.ObjectID   `json:"authorId"        bson:"authorId"`                // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
-	AuthorName      string               `json:"authorName"      bson:"authorName"`              // Full name of the person who created this stream
-	AuthorImage     string               `json:"authorImage"     bson:"authorImage"`             // URL of an image to use for the person who created this stream
-	AuthorURL       string               `json:"authorURL"       bson:"authorURL"`               // URL address of the person who created this stream
+	Label           string               `json:"label"           bson:"label,omitempty"`         // Text to display in lists of streams, probably displayed at top of stream page, too.
+	Description     string               `json:"description"     bson:"description,omitempty"`   // Brief summary of this stream, used in lists of streams
+	AuthorID        primitive.ObjectID   `json:"authorId"        bson:"authorId,omitempty"`      // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
+	AuthorName      string               `json:"authorName"      bson:"authorName,omitempty"`    // Full name of the person who created this stream
+	AuthorImage     string               `json:"authorImage"     bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
+	AuthorURL       string               `json:"authorURL"       bson:"authorURL,omitempty"`     // URL address of the person who created this stream
 	Content         content.Content      `json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
 	Data            datatype.Map         `json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Tags            []string             `json:"tags"            bson:"tags,omitempty"`          // Organizational Tags

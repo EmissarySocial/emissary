@@ -55,8 +55,8 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 	modifiedDate := time.Unix(stream.Journal.UpdateDate, 0)
 
 	return &feeds.JSONItem{
-		Id:            "",
-		Url:           stream.URL,
+		Id: "",
+		// Url:           stream.URL,
 		ExternalUrl:   stream.SourceURL,
 		Title:         stream.Label,
 		Summary:       stream.Description,
