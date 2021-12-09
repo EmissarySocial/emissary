@@ -255,7 +255,7 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 }
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Stream) TopLevel(action string) ([]Stream, error) {
+func (w Stream) TopLevel() ([]Stream, error) {
 
 	streamService := w.factory.Stream()
 	iterator, err := streamService.ListTopLevel()
@@ -264,7 +264,7 @@ func (w Stream) TopLevel(action string) ([]Stream, error) {
 		return nil, derp.Report(derp.Wrap(err, "ghost.renderer.Stream.TopLevel", "Error loading top level streams", w.stream))
 	}
 
-	return w.iteratorToSlice(iterator, action), nil
+	return w.iteratorToSlice(iterator, "view"), nil
 }
 
 func (w Stream) Attachment() (model.Attachment, error) {
