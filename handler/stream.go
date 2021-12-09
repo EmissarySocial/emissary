@@ -67,7 +67,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		var buffer bytes.Buffer
 
 		if err := layoutService.Template.ExecuteTemplate(&buffer, "page", &renderer); err != nil {
-			return derp.Wrap(err, "ghost.renderer.GetStream", "Error rendering full-page content")
+			return derp.Wrap(err, "ghost.handler.GetStream", "Error rendering full-page content")
 		}
 
 		return ctx.HTML(http.StatusOK, buffer.String())
