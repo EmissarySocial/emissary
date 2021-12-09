@@ -1,5 +1,6 @@
-/*************************************
- * INPUT WIDGETS                    */
+/***************************
+ * INPUT ELEMENTS
+ ***************************/
 
 input:not([type=submit], [type=checkbox], [type=radio]), textarea {
     border: solid 1px var(--gray50);
@@ -16,6 +17,25 @@ input:focus, textarea:focus {
     border:solid 2px var(--blue70);
     padding:9px 9px;
 }
+
+input:last-child {
+    margin-right:auto;
+}
+
+
+/* Alternate colors for dark mode */
+@media (prefers-color-scheme: dark) {
+
+    input:not([type=submit], [type=checkbox], [type=radio]), textarea {
+        border-color:var(--gray30);
+        background-color:var(--gray10);
+		color:var(--gray90);
+	}
+}
+
+/***************************
+ * SUBMIT BUTTONS
+ ***************************/
 
 input[type=submit],
 button,
@@ -77,32 +97,10 @@ button[disabled],
     color: var(--gray50)!important;
 }
 
-input:last-child {
-    margin-right:auto;
-}
+/***************************
+ * FORM LAYOUTS
+ ***************************/
 
-div.popOpen {
-    height:0px;
-    opacity:0px;
-	
-    /* Animate when opening */
-	animation-name: popOut,fadeOut;
-	animation-duration:150ms;
-	animation-timing-function: ease;
-}
-
-div.popOpen.visible {
-    height:auto;
-    opacity:1;
-
-   	/* Animate when opening */
-	animation-name: popIn,fadeIn;
-	animation-duration:150ms;
-	animation-timing-function: ease;
- }
-
-/*************************************
- * VERTICAL LAYOUT                   */
 
 .layout-vertical {
 }
@@ -128,3 +126,5 @@ div.popOpen.visible {
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element > input {
     display:block;
 }
+
+
