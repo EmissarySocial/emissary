@@ -15,12 +15,11 @@ import (
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	factory  Factory                // Factory interface is required for locating other services.
-	ctx      *steranko.Context      // Contains request context and authentication data.
-	template *model.Template        // Template that the Stream uses
-	action   *model.Action          // Action being executed
-	stream   *model.Stream          // Stream to be displayed
-	inputs   map[string]interface{} // Body parameters posted by client
+	factory  Factory           // Factory interface is required for locating other services.
+	ctx      *steranko.Context // Contains request context and authentication data.
+	template *model.Template   // Template that the Stream uses
+	action   *model.Action     // Action being executed
+	stream   *model.Stream     // Stream to be displayed
 }
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
@@ -55,7 +54,6 @@ func NewStream(factory Factory, ctx *steranko.Context, stream *model.Stream, act
 		stream:   stream,
 		template: template,
 		action:   &action,
-		inputs:   make(map[string]interface{}),
 	}, nil
 }
 
