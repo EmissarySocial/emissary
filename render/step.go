@@ -36,7 +36,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepStreamSave(factory.Stream(), stepInfo), nil
 
 	case "set-data":
-		return NewStepStreamData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
+		return NewStepSetData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
 
 	case "set-defaults":
 		return NewStepStreamDefaults(stepInfo), nil

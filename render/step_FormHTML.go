@@ -67,7 +67,7 @@ func (step StepForm) Post(buffer io.Writer, renderer *Stream) error {
 	}
 
 	if err := schema.Validate(inputs); err != nil {
-		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", renderer.inputs)
+		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
 	}
 
 	// Put approved form data into the stream
