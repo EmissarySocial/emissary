@@ -6,87 +6,53 @@ behavior PrettyDate(date)
 			exit
 		end
 
-		make a Date from (date) called original
-		set my innerHTML to original
-		exit
-
-		repeat forever
-
+		repeat forever 
 			make a Date from (date) called original
 			make a Date from (Date.now()) called now
-
-			set miliseconds to (now - original)
-			set seconds to Math.floor(miliseconds / 1000)
 			
-			if seconds < 30 then
-				set my innerHTML to "just now"
-				-- wait until 30-second mark
-				wait ((30 * 1000) - miliseconds) ms 
-				continue
-			end
+			set milisecondCount to (now - original)
+			set secondCount to Math.floor(milisecondCount / 1000)
 		
-			if seconds < 60 then 
-				set my innerHTML to "30 seconds ago"
-				-- wait until 30-second mark
-				wait ((60 * 1000) - miliseconds) ms 
+			if secondCount < 60 then
+				set my innerHTML to "just now"
+				wait ((60 * 1000) - milisecondCount) ms 
+				continue
+			end
+			set minuteCount to Math.floor(secondCount / 60)
+
+			if minuteCount < 60 then 
+				set my innerHTML to minuteCount + "min ago"
+				wait((60 * 60 * 1000) - milisecondCount) ms
 				continue
 			end
 
-			set minutes to Math.floor(seconds / 60)
+			set hourCount to Math.floor(minuteCount / 60)
 
-			if minutes < 60 then 
-				set my innerHTML to PluralizeTime(minutes, "minute")
-				-- wait until next minute turns
-				set timeout to (((minutes + 1) * 60 * 1000) - miliseconds)
-				log "minutes.."
-				log (minutes + 1) * 60 * 1000
-				log timeout
-				exit 
-				wait timeout ms 
-				continue
-			end
-
-			exit
-
-			log minutes
-			set my innerHTML to "at least a minute"
-			exit
-
-			set hours to Math.floor(minutes / 60)
-
-			if hours < 24 then
-				set my innerHTML to PluralizeTime(hours, "hour")
+			if hourCount < 24 then
+				set my innerHTML to hourCount + "h ago"
 				exit
 			end
 
-			set days to Math.floor(hours / 24)
+			set dayCount to Math.floor(hourCount / 24)
+			set monthCount to DateDiffMonths(original, now)
+			set yearCount to DateDiffYears(original, now)
 
-			if days < 7 then 
-				set my innerHTML to PluralizeTime(days, "day")
+			if yearCount > 0 then 
+				set my innerHTML to yearCount + "y ago"
 				exit
 			end
 
-			set weeks to Math.floor(days / 7)
-
-			if weeks < 8 then 
-				set my innerHTML to PluralizeTime(weeks, "week")
-				exit
+			if monthCount >= 2 then 
+				set my innerHTML to monthCount + "m ago"
 			end
 
-			set months to MonthDiff(date, now)
-			if months < 24 then 
-				set my innerHTML to PluralizeTime(months, "month")
-				exit
-			end
-
-			set years to YearDiff(date, now)
-			set my innerHTML to PluralizeTime(years, "year")
-			exit
+			set my innerHTML to dayCount + "d ago"
 
 		end
 	end
+end
 
-def MonthDiff(old, new)
+def DateDiffMonths(old, new)
 	set oldYear to old.getYear()
 	set oldMonth to old.getMonth()
 	set newYear to new.getYear()
@@ -100,7 +66,7 @@ def MonthDiff(old, new)
 	return result
 
 
-def YearDiff(old, new) 
+def DateDiffYears(old, new) 
 
 	set oldYear to old.getYear()
 	set oldMonth to old.getMonth()
@@ -114,17 +80,4 @@ def YearDiff(old, new)
 
 	return result
 
-
-def PluralizeTime(number, unit)
-	set result to number + " " + unit
-
-	if number > 1
-		append "s" to result
-	end
-
-	append (" ago") to result
-
-	log result
-	return result
-end
 
