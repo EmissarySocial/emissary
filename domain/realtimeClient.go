@@ -8,17 +8,17 @@ import (
 type RealtimeClient struct {
 	ClientID     primitive.ObjectID      // Unique Identifier of this RealtimeClient.
 	HTTPRequest  *HTTPRequest            // HTTP Request that initiated the client
-	Token        string                  // Stream.Token of current stream being watched.
+	StreamID     primitive.ObjectID      // Stream.Token of current stream being watched.
 	WriteChannel chan primitive.ObjectID // Channel for writing responses to this client.
 }
 
 // NewRealtimeClient initializes a new realtime client.
-func NewRealtimeClient(httpRequest *HTTPRequest, token string) *RealtimeClient {
+func NewRealtimeClient(httpRequest *HTTPRequest, streamID primitive.ObjectID) *RealtimeClient {
 
 	return &RealtimeClient{
 		ClientID:     primitive.NewObjectID(),
 		HTTPRequest:  httpRequest,
-		Token:        token,
+		StreamID:     streamID,
 		WriteChannel: make(chan primitive.ObjectID),
 	}
 }

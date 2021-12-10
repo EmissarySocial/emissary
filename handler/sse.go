@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
@@ -36,8 +37,14 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		token := ctx.Param("stream")
 
+		streamID, err := primitive.ObjectIDFromHex(token)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, "handler.ServerSentEvent", "Invalid StreamID", token))
+		}
+
 		httpRequest := domain.NewHTTPRequest(ctx)
-		client := domain.NewRealtimeClient(httpRequest, token)
+		client := domain.NewRealtimeClient(httpRequest, streamID)
 
 		// Add this client to the map of those that should
 		// receive updates
@@ -79,13 +86,11 @@ func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 				// Write to the ResponseWriter, `w`.
 				// eventName := "EventName1"
-				fmt.Fprintf(w, "event: %s\n", streamID.Hex())
+				// fmt.Fprintf(w, "event: %s\n", streamID.Hex())
 				fmt.Fprintf(w, "data: \n\n")
 
 				// Flush the response.  This is only possible if the response supports streaming.
 				f.Flush()
-
-				fmt.Println("handler.ServerSentEvents: stream sent to client: " + client.Token)
 			}
 		}
 	}

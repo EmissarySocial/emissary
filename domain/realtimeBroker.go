@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"fmt"
-
 	"github.com/benpate/ghost/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,7 +14,7 @@ type RealtimeBroker struct {
 	clients map[primitive.ObjectID]*RealtimeClient
 
 	// map of streams being watched.
-	streams map[string]map[primitive.ObjectID]*RealtimeClient
+	streams map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient
 
 	// Channel that streams are pushed into when they change.
 	streamUpdates chan model.Stream
@@ -33,7 +31,7 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 
 	result := &RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
-		streams:       make(map[string]map[primitive.ObjectID]*RealtimeClient),
+		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
 		streamUpdates: updates,
 		AddClient:     make(chan *RealtimeClient),
 		RemoveClient:  make(chan *RealtimeClient),
@@ -59,11 +57,11 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 
 		case client := <-b.AddClient:
 
-			if _, ok := b.streams[client.Token]; !ok {
-				b.streams[client.Token] = make(map[primitive.ObjectID]*RealtimeClient)
+			if _, ok := b.streams[client.StreamID]; !ok {
+				b.streams[client.StreamID] = make(map[primitive.ObjectID]*RealtimeClient)
 			}
 
-			b.streams[client.Token][client.ClientID] = client
+			b.streams[client.StreamID][client.ClientID] = client
 			b.clients[client.ClientID] = client
 
 			// log.Println("Added new client")
@@ -71,10 +69,10 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 		case client := <-b.RemoveClient:
 
 			delete(b.clients, client.ClientID)
-			delete(b.streams[client.Token], client.ClientID)
+			delete(b.streams[client.StreamID], client.ClientID)
 
-			if len(b.streams[client.Token]) == 0 {
-				delete(b.streams, client.Token)
+			if len(b.streams[client.StreamID]) == 0 {
+				delete(b.streams, client.StreamID)
 			}
 
 			close(client.WriteChannel)
@@ -84,39 +82,20 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 		case stream := <-b.streamUpdates:
 
 			// Send an update to every client that has subscribed to this stream
-			b.notify(stream)
-
-			/***********
-			Halt notification on parents for now, because of null pointer errors..
+			b.notify(stream.StreamID)
 
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
-
-				parent := model.NewStream()
-				parent.Label = "Populated..."
-
-				if err := streamService.LoadParent(&stream, &parent); err != nil {
-					derp.Report(derp.Wrap(err, "ghost.domain.Realtimebroker", "Error loading parent stream to update parent's subscribers."))
-					continue
-				}
-
-				b.notify(parent)
+				b.notify(stream.ParentID)
 			}
-			*/
 		}
 	}
 }
 
 // notify sends updates for every client that is watching a given stream
-func (b *RealtimeBroker) notify(stream model.Stream) {
+func (b *RealtimeBroker) notify(streamID primitive.ObjectID) {
 
-	fmt.Println(stream.Token)
-	for key := range b.streams {
-		fmt.Println(key)
-	}
-
-	for _, client := range b.streams[stream.Token] {
-		fmt.Println("notifying: " + client.ClientID.Hex())
-		client.WriteChannel <- stream.StreamID
+	for _, client := range b.streams[streamID] {
+		client.WriteChannel <- streamID
 	}
 }
