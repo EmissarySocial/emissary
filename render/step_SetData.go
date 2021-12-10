@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSetData represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -25,7 +24,7 @@ func NewStepSetData(templateService *service.Template, streamService *service.St
 		templateService: templateService,
 		streamService:   streamService,
 		paths:           stepInfo.GetSliceOfString("paths"),
-		// values:          stepInfo.GetMap("values"),
+		values:          stepInfo.GetMap("values"),
 	}
 }
 
@@ -36,8 +35,6 @@ func (step StepSetData) Get(buffer io.Writer, renderer *Stream) error {
 
 // Post updates the stream with approved data from the request body.
 func (step StepSetData) Post(buffer io.Writer, renderer *Stream) error {
-
-	spew.Dump("StepSetData")
 
 	// Try to find the schema for this Template
 	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
@@ -53,23 +50,23 @@ func (step StepSetData) Post(buffer io.Writer, renderer *Stream) error {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
-	spew.Dump(inputs)
-
 	if err := schema.Validate(inputs); err != nil {
 		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
 	}
 
-	spew.Dump(inputs)
-	spew.Dump(step.paths)
-
 	// Put approved form data into the stream
 	for _, p := range step.paths {
 		if err := path.Set(renderer.stream, p, inputs[p]); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepSetData.Post", "Error seting value", p)
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepSetData.Post", "Error seting value from user input", p)
 		}
 	}
 
-	spew.Dump("SUCCESS!")
+	// Put values from schema.json into the stream
+	for key, value := range step.values {
+		if err := path.Set(renderer.stream, key, value); err != nil {
+			return derp.Wrap(err, "ghose.render.StepSetData.Post", "Error setting value from schema.json", key, value)
+		}
+	}
 
 	return nil
 }
