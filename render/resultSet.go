@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -19,9 +20,25 @@ type ResultSet struct {
 	MaxRows       uint
 }
 
-/**********************
- * Query Builder
- *********************/
+func NewResultSet(factory Factory, ctx *steranko.Context, criteria exp.Expression) *ResultSet {
+	return &ResultSet{
+		factory:       factory,
+		ctx:           ctx,
+		Criteria:      exp.And(exp.Equal("journal.deleteDate", 0), criteria),
+		SortField:     "rank",
+		SortDirection: "asc",
+		MaxRows:       60,
+	}
+}
+
+/********************************
+ * QUERY BUILDER
+ ********************************/
+
+func (rs *ResultSet) Top1() *ResultSet {
+	rs.MaxRows = 1
+	return rs
+}
 
 func (rs *ResultSet) Top6() *ResultSet {
 	rs.MaxRows = 6
@@ -41,6 +58,7 @@ func (rs *ResultSet) Top120() *ResultSet {
 	rs.MaxRows = 120
 	return rs
 }
+
 func (rs *ResultSet) Top600() *ResultSet {
 	rs.MaxRows = 600
 	return rs
@@ -96,9 +114,9 @@ func (rs *ResultSet) LessThan(value interface{}) *ResultSet {
 	return rs
 }
 
-/**********************
- * Actions
- *********************/
+/********************************
+ * ACTIONS
+ ********************************/
 
 func (rs *ResultSet) View() ([]Stream, error) {
 	return rs.Action("view")
@@ -119,9 +137,9 @@ func (rs *ResultSet) Action(action string) ([]Stream, error) {
 	return streamIteratorToSlice(rs.factory, rs.ctx, iterator, rs.MaxRows, action), nil
 }
 
-/**********************
- * Database Query
- *********************/
+/********************************
+ * DATABASE QUERIES
+ ********************************/
 
 // query executes the query request on the database.
 func (rs *ResultSet) query() (data.Iterator, error) {
@@ -149,7 +167,18 @@ func (rs *ResultSet) makeCriteriaValue(value interface{}) interface{} {
 	return convert.Int(value)
 }
 
-/***********************************/
+/********************************
+ * MISC HELPERS
+ ********************************/
+
+// debug returns troubleshooting information, without dumping *enormous* sub-properties like .factory and .ctx
+func (rs *ResultSet) debug() datatype.Map {
+	return datatype.Map{
+		"sortField":     rs.SortField,
+		"sortDirection": rs.SortDirection,
+		"maxRows":       rs.MaxRows,
+	}
+}
 
 // streamIteratorToSlice consumes a data.Iterator and generates a slice of render.Stream objects.
 func streamIteratorToSlice(factory Factory, ctx *steranko.Context, iterator data.Iterator, maxRows uint, action string) []Stream {
