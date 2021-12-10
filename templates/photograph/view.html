@@ -1,5 +1,5 @@
 <div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:message">
+<div hx-get="/{{.Token}}" hx-push-url="false" hx-trigger="sse:message">
 
 	{{- if ne .Label "" -}}
 		<h1>{{.Label}}</h1>

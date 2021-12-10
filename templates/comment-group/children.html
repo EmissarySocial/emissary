@@ -1,6 +1,6 @@
-{{- range .Children.Top12.ByPublishDate.Reverse.View -}}
+{{- range .Children.Top6.ByPublishDate.Reverse.View -}}
     <div class="comment">
-        {{.Description}}<br>
-        <span script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</span>
+        <div class="description"><span class="author">{{.AuthorName}}</span> - {{.Description}}</div>
+        <div class="date" script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div>
     </div>
 {{- end -}}

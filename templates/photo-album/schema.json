@@ -4,7 +4,7 @@
 	"icon": "fa-regular fa-images",
 	"containedBy": ["top", "folder"],
 	"childSortType": "journal.createDate",
-	"childSortOrder": "DESC",
+	"childSortDirection": "DESC",
 	"schema": {
 		"type": "object",
 		"properties": {

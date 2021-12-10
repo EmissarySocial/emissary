@@ -1,7 +1,6 @@
 <div class="comment-group" hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
-	<div class="bold space-below">Comments</div>
 
-	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-swap="innerHTML">
+	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-push-url="false" hx-swap="innerHTML">
 		{{- .View "children" -}}
 	</div>
 
@@ -13,3 +12,24 @@
 		</div>
 	</form>
 </div>
+
+<style>
+	.comment {
+		padding: 20px 0px;
+	}
+
+	.comment .description {
+		padding-bottom:5px;
+		color:var(--gray80);
+	}
+
+	.comment .author {
+		color:var(--black);
+		font-weight:bold;
+	}
+
+	.comment .date {
+		font-size:10pt;
+		color: var(--gray50);
+	}
+</style>
