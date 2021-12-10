@@ -14,4 +14,5 @@ type Factory interface {
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
+	User() service.User
 }

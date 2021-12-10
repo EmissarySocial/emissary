@@ -1,25 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<script src="https://unpkg.com/hyperscript.org"></script>
-    <script type="text/hyperscript">
-        behavior fail
-            init
-                repeat forever
-                    set value to 1
-                    if value == 0
-                        set my innerHTML to "never"
-                        exit
-                    end
+<body>
 
-                    set my innerHTML to "Success!"
-                    exit
-                end
+    <script type="text/hyperscript">
+        behavior WeirdBehavior
+
+            on load
+                set my innerHTML to "Success!"
+                wait 1s
+                -- exit
             end
         end
+
     </script>
-</head>
-<body>
-    <div _="install fail()">failure :(</div>
+
+	<script src="https://unpkg.com/hyperscript.org"></script>
+
+    <div class=date _="install WeirdBehavior">Broken?</div>
+    <div class=date _="install WeirdBehavior">Broken?</div>
+    <div class=date _="install WeirdBehavior">Broken?</div>
+    <div class=date _="install WeirdBehavior">Broken?</div>
+    <div class=date _="install WeirdBehavior">Broken?</div>
+    <div class=date _="install WeirdBehavior">Broken?</div>
+
 </body>
 </html>

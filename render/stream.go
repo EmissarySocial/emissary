@@ -462,6 +462,26 @@ func (w Stream) CanCreate() []model.Option {
  * MISC HELPER FUNCTIONS
  **************************/
 
+func (w Stream) setAuthor() error {
+
+	userService := w.factory.User()
+
+	authorization := getAuthorization(w.ctx)
+	userID := authorization.UserID
+
+	var user model.User
+
+	if err := userService.LoadByID(userID, &user); err != nil {
+		return derp.Wrap(err, "ghost.render.Stream.setAuthor", "Error loading User", userID)
+	}
+
+	w.stream.AuthorID = user.UserID
+	w.stream.AuthorName = user.DisplayName
+	w.stream.AuthorImage = user.ImageURL
+
+	return nil
+}
+
 // newStream is a shortcut to the NewStream function that reuses the values present in this current Stream
 func (w Stream) newStream(stream *model.Stream, actionID string) (Stream, error) {
 	return NewStream(w.factory, w.ctx, stream, actionID)

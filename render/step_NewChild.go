@@ -57,14 +57,16 @@ func (step StepNewChild) Post(buffer io.Writer, renderer *Stream) error {
 	}
 
 	// Set Default Values
-	authorization := getAuthorization(renderer.ctx)
 
 	child.StateID = step.childState
-	child.AuthorID = authorization.UserID
 	childStream, err := renderer.newStream(&child, "edit")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
+	}
+
+	if err := childStream.setAuthor(); err != nil {
+		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error retrieving author inforation", child)
 	}
 
 	// If there is an "init" step for the child's template, then execute it now

@@ -66,6 +66,12 @@ func (service User) Delete(user *model.User, note string) error {
 ///////////////////////////
 // Queries
 
+// LoadByID loads a single model.User object that matches the provided userID
+func (service User) LoadByID(userID primitive.ObjectID, result *model.User) error {
+	criteria := exp.Equal("_id", userID)
+	return service.Load(criteria, result)
+}
+
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service User) LoadByUsername(username string, result *model.User) error {
 	criteria := exp.Equal("username", username)

@@ -5,7 +5,7 @@ behavior PrettyDate(date)
 		if date == 0 then 
 			exit
 		end
-
+			
 		repeat forever 
 			make a Date from (date) called original
 			make a Date from (Date.now()) called now
@@ -15,13 +15,16 @@ behavior PrettyDate(date)
 		
 			if secondCount < 60 then
 				set my innerHTML to "just now"
+				exit
 				wait ((60 * 1000) - milisecondCount) ms 
 				continue
 			end
+			
 			set minuteCount to Math.floor(secondCount / 60)
 
 			if minuteCount < 60 then 
 				set my innerHTML to minuteCount + "min ago"
+				exit
 				wait((60 * 60 * 1000) - milisecondCount) ms
 				continue
 			end
@@ -33,8 +36,6 @@ behavior PrettyDate(date)
 				exit
 			end
 
-			set dayCount to Math.floor(hourCount / 24)
-			set monthCount to DateDiffMonths(original, now)
 			set yearCount to DateDiffYears(original, now)
 
 			if yearCount > 0 then 
@@ -42,11 +43,16 @@ behavior PrettyDate(date)
 				exit
 			end
 
+			set monthCount to DateDiffMonths(original, now)
+
 			if monthCount >= 2 then 
 				set my innerHTML to monthCount + "m ago"
+				exit
 			end
 
+			set dayCount to Math.floor(hourCount / 24)
 			set my innerHTML to dayCount + "d ago"
+			exit
 
 		end
 	end

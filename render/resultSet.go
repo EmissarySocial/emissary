@@ -95,7 +95,7 @@ func (rs *ResultSet) ByRank() *ResultSet {
 }
 
 func (rs *ResultSet) Reverse() *ResultSet {
-	rs.SortDirection = "descending"
+	rs.SortDirection = option.SortDirectionDescending
 	return rs
 }
 
