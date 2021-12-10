@@ -95,8 +95,6 @@ htmx.defineExtension("preload", {
 			// Mark the node as ready to run.
 			node.preloadState = "PAUSE";
 			htmx.trigger(node, "preload:init") // This event can be used to load content immediately.
-			console.log("preload init..")
-			console.log(node)
 		}
 
 		// Search for all child nodes that can be preloaded

@@ -1,9 +1,15 @@
-<div class="comment-group">
-	Comments:
-	{{- range .Children.Top12.ByPublishDate.Reverse.View -}}
+<div class="comment-group" hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+	<div class="bold space-below">Comments</div>
+
+	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-swap="innerHTML">
+		{{- .View "children" -}}
+	</div>
+
+	<form hx-post="/{{.Token}}/new-child" hx-swap="none" hx-push-url="false" script="on submit call me.reset()">
 		<div class="comment">
-			{{.Label}}<br>
-			{{.PublishDate}}
+			<textarea name="description"></textarea>
+			<div class="padding-5"></div>
+			<input type="submit" class="button primary text-xs" value="Send">
 		</div>
-	{{- end -}}
+	</form>
 </div>

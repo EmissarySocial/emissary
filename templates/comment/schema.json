@@ -48,11 +48,6 @@
 		}
 	},
 	"actions": {
-		"init": {
-			"steps": [
-				{"step": "activity-stream", "type": "comment"}
-			]
-		},
 		"view": {
 			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
 			"step": "view-html"

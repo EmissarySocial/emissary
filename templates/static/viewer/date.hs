@@ -2,16 +2,24 @@ behavior PrettyDate(date)
 
 	on load
 
+		if date == 0 then 
+			exit
+		end
+
+		make a Date from (date) called original
+		set my innerHTML to original
+		exit
+
 		repeat forever
 
-			make a Date from (date * 1000) called original
+			make a Date from (date) called original
 			make a Date from (Date.now()) called now
 
 			set miliseconds to (now - original)
 			set seconds to Math.floor(miliseconds / 1000)
-
+			
 			if seconds < 30 then
-				set my innerHTML to "a few seconds ago"
+				set my innerHTML to "just now"
 				-- wait until 30-second mark
 				wait ((30 * 1000) - miliseconds) ms 
 				continue
@@ -29,9 +37,20 @@ behavior PrettyDate(date)
 			if minutes < 60 then 
 				set my innerHTML to PluralizeTime(minutes, "minute")
 				-- wait until next minute turns
-				wait (((minutes + 1) * 60 * 1000) - miliseconds) ms 
+				set timeout to (((minutes + 1) * 60 * 1000) - miliseconds)
+				log "minutes.."
+				log (minutes + 1) * 60 * 1000
+				log timeout
+				exit 
+				wait timeout ms 
 				continue
 			end
+
+			exit
+
+			log minutes
+			set my innerHTML to "at least a minute"
+			exit
 
 			set hours to Math.floor(minutes / 60)
 
@@ -104,6 +123,8 @@ def PluralizeTime(number, unit)
 	end
 
 	append (" ago") to result
+
+	log result
 	return result
 end
 

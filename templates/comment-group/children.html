@@ -1,0 +1,6 @@
+{{- range .Children.Top12.ByPublishDate.Reverse.View -}}
+    <div class="comment">
+        {{.Description}}<br>
+        <span script="install PrettyDate(date:{{.PublishDate}})">&nbsp;</span>
+    </div>
+{{- end -}}

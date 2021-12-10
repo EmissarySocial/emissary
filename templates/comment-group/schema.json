@@ -39,6 +39,7 @@
 			]
 		},
 		"view": {"step": "view-html"},
+		"children": {"step": "view-html"},
 		"edit": {
 			"roles": ["owner", "author"],
 			"steps": [
@@ -50,11 +51,16 @@
 			"roles": ["owner", "author"],
 			"step": "delete"
 		},
-		"add-child": {
-			"steps": [
-				{"step": "form-html"},
-				{"step": "save", "comment":"Added by {{.Author}}"}
-			]
+		"new-child": {
+			"steps": [{
+				"step": "new-child", 
+				"template": "comment",
+				"withChild": [
+					{"step": "set-data", "paths":["description"]},
+					{"step": "set-publishdate"},
+					{"step": "save", "comment": "New Comment By"}
+				]
+			}]
 		}
 	}
 }

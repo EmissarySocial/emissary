@@ -1,5 +1,5 @@
-<div hx-ext="sse" sse-connect="/{{.Token}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}">
+<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:message">
 
 	{{- if ne .Label "" -}}
 		<h1>{{.Label}}</h1>
@@ -42,6 +42,7 @@
 				{{- range $children -}}
 				<div class="card padding-5">
 					{{- .Render -}}
+					<hr>
 				</div>
 				{{- end -}}
 			</div>
