@@ -8,6 +8,7 @@ import (
 )
 
 func getTestContent() content.Content {
+
 	return content.Content{
 		{
 			Type:  "CONTAINER",
@@ -49,11 +50,6 @@ func getTestContent() content.Content {
 }
 
 func TestCompact(t *testing.T) {
-	/*
-		c := getTestContent()
-
-		c.DeleteReference(0, 3, "home")
-		content.Compact()
-
-	*/
+	c := getTestContent()
+	c.Compact()
 }
