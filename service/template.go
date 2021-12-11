@@ -2,6 +2,7 @@ package service
 
 import (
 	"html/template"
+	"sort"
 	"sync"
 
 	"github.com/benpate/derp"
@@ -243,29 +244,15 @@ func (service *Template) List(criteria exp.Expression) []model.Option {
 		}
 	}
 
+	// Sort templates by Group, then Label
+	sort.Slice(result, func(a int, b int) bool {
+		if result[a].Group == result[b].Group {
+			return result[a].Label < result[b].Label
+		}
+		return result[a].Group < result[b].Group
+	})
+
 	return result
-}
-
-// ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []model.Option {
-	return service.List(exp.Contains("containedBy", containedBy))
-}
-
-// ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
-// are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
-// are returned.
-func (service *Template) ListByContainerLimited(containedBy string, limits []string) []model.Option {
-
-	if len(limits) == 0 {
-		return service.ListByContainer(containedBy)
-	}
-
-	return service.List(
-		exp.And(
-			exp.Contains("containedBy", containedBy),
-			exp.ContainedBy("templateId", limits),
-		),
-	)
 }
 
 // Load retrieves an Template from the database
@@ -292,6 +279,32 @@ func (service *Template) Save(template *model.Template) error {
 	service.templates[template.TemplateID] = *template
 
 	return nil
+}
+
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
+
+// ListByContainer returns all model.Templates that match the provided "containedBy" value
+func (service *Template) ListByContainer(containedBy string) []model.Option {
+	return service.List(exp.Contains("containedBy", containedBy))
+}
+
+// ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
+// are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
+// are returned.
+func (service *Template) ListByContainerLimited(containedBy string, limits []string) []model.Option {
+
+	if len(limits) == 0 {
+		return service.ListByContainer(containedBy)
+	}
+
+	return service.List(
+		exp.And(
+			exp.Contains("containedBy", containedBy),
+			exp.ContainedBy("templateId", limits),
+		),
+	)
 }
 
 /*******************************************
