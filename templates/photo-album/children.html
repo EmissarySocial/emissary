@@ -1,18 +1,10 @@
-{{- $createDate := .QueryParam "createDate" -}}
-{{- $query := .Children.Top6 -}}
-
-{{- if ne "" $createDate -}}
-	{{- $query := $query.LessThan $createDate -}}
-{{- end -}}
-
-{{- $results := $query.View -}}
-
+{{- $results := .Children.Top6.View -}}
 {{- if gt (len $results) 0 -}}
 
 	{{- $last := last $results -}}
 
 	<div 
-		hx-get="/{{.Token}}/children?createDate={{$last.CreateDate}}" 
+		hx-get="/{{.Token}}/children?publishDate=lt:{{$last.PublishDate}}" 
 		hx-trigger="revealed" 
 		hx-target="#children" 
 		hx-swap="beforeend"

@@ -1,12 +1,12 @@
 package render
 
 import (
-	"github.com/benpate/convert"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/exp/builder"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
 )
@@ -14,17 +14,29 @@ import (
 type ResultSet struct {
 	factory       Factory
 	ctx           *steranko.Context
-	Criteria      exp.AndExpression
+	Criteria      exp.Expression
 	SortField     string
 	SortDirection string
 	MaxRows       uint
 }
 
 func NewResultSet(factory Factory, ctx *steranko.Context, criteria exp.Expression) *ResultSet {
+
+	queryBuilder := builder.NewBuilder().
+		Int("journal.createDate").
+		Int("publishDate").
+		Int("expirationDate").
+		Int("rank").
+		String("label")
+
+	criteria = criteria.
+		And(queryBuilder.Evaluate(ctx.Request().URL.Query())).
+		And(exp.Equal("journal.deleteDate", 0))
+
 	return &ResultSet{
 		factory:       factory,
 		ctx:           ctx,
-		Criteria:      exp.And(exp.Equal("journal.deleteDate", 0), criteria),
+		Criteria:      criteria,
 		SortField:     "rank",
 		SortDirection: "asc",
 		MaxRows:       60,
@@ -99,21 +111,6 @@ func (rs *ResultSet) Reverse() *ResultSet {
 	return rs
 }
 
-func (rs *ResultSet) EqualTo(value interface{}) *ResultSet {
-	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorEqual, rs.makeCriteriaValue(value))
-	return rs
-}
-
-func (rs *ResultSet) GreaterThan(value interface{}) *ResultSet {
-	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorGreaterThan, rs.makeCriteriaValue(value))
-	return rs
-}
-
-func (rs *ResultSet) LessThan(value interface{}) *ResultSet {
-	rs.Criteria = rs.Criteria.And(rs.SortField, exp.OperatorLessThan, rs.makeCriteriaValue(value))
-	return rs
-}
-
 /********************************
  * ACTIONS
  ********************************/
@@ -155,16 +152,6 @@ func (rs *ResultSet) makeSortOption() option.Option {
 	}
 
 	return option.SortAsc(rs.SortField)
-}
-
-// criteriaValue converts parameters into the correct type for querying the database.
-func (rs *ResultSet) makeCriteriaValue(value interface{}) interface{} {
-
-	if rs.SortField == "label" {
-		return convert.String(value)
-	}
-
-	return convert.Int(value)
 }
 
 /********************************

@@ -89,6 +89,7 @@
 				"template": "photograph",
 				"withChild": [
 					{"step": "upload-attachments"},
+					{"step": "set-publishdate"},
 					{"step": "set-thumbnail"},
 					{"step": "save"}
 				]}

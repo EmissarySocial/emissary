@@ -1,4 +1,15 @@
 {{- $children :=  .Children.Top6.ByPublishDate.Reverse.View | reverse -}}
+{{- if eq (len $children) 6 -}}
+    {{- $first := head $children -}}
+    <div
+        hx-get="/{{.Token}}/children?publishDate=le:{{$first.PublishDate}}" 
+        hx-push-url="false"
+        hx-target="this"
+        hx-swap="outerHTML"
+        class="button text-xs" 
+        style="display:block; text-align:center;">Show Previous</div>
+    {{- $children = tail $children}}
+{{- end -}}
 {{- range $children  -}}
     <div class="comment">
         <div class="description">

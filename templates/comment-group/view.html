@@ -1,6 +1,6 @@
-<div class="comment-group" hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div class="comment-group" hx-push-url="false" hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
 
-	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-push-url="false" hx-swap="innerHTML">
+	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-swap="innerHTML">
 		{{- .View "children" -}}
 	</div>
 
