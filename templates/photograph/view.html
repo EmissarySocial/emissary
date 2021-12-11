@@ -1,5 +1,5 @@
 <div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
-<div hx-get="/{{.Token}}" hx-push-url="false" hx-trigger="sse:message">
+<div hx-get="/{{.Token}}" hx-trigger="sse:message">
 
 	{{- if ne .Label "" -}}
 		<h1>{{.Label}}</h1>
@@ -12,7 +12,7 @@
 	<div id="menu-bar">
 		{{- if .HasParent -}}
 			{{- $parent := .Parent "view" -}}
-			<a hx-get="/{{$parent.Token}}" class="link">&laquo; {{$parent.Label}}</a>
+			<a hx-get="/{{$parent.Token}}" hx-push-url="true" class="link">&laquo; {{$parent.Label}}</a>
 		{{- end -}}
 
 		{{- if .UserCan "edit" -}}
@@ -40,9 +40,8 @@
 			</div>
 			<div class="pure-u-1 pure-u-lg-1-3 pure-u-xl-1-4">
 				{{- range $children -}}
-				<div class="card padding-5">
+				<div class="card padding-5 space-below">
 					{{- .Render -}}
-					<hr>
 				</div>
 				{{- end -}}
 			</div>

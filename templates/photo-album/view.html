@@ -19,7 +19,7 @@
 		</div>
 	{{ end }}
 
-	<div id="children" class="pure-g card-group" hx-push-url="true">
+	<div id="children" class="pure-g card-group">
 		{{- (.SetQueryParam "start" "") -}}
 		{{- .View "children" -}}
 	</div>
