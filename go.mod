@@ -27,7 +27,6 @@ require (
 	github.com/benpate/compare v0.0.4
 	github.com/benpate/convert v0.9.2
 	github.com/benpate/data v0.11.1
-	github.com/benpate/data-mock v0.0.1
 	github.com/benpate/data-mongo v0.0.2
 	github.com/benpate/datatype v0.0.3
 	github.com/benpate/derp v0.21.1
