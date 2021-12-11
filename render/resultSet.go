@@ -3,7 +3,6 @@ package render
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
@@ -158,14 +157,14 @@ func (rs *ResultSet) makeSortOption() option.Option {
  * MISC HELPERS
  ********************************/
 
-// debug returns troubleshooting information, without dumping *enormous* sub-properties like .factory and .ctx
+/* debug returns troubleshooting information, without dumping *enormous* sub-properties like .factory and .ctx
 func (rs *ResultSet) debug() datatype.Map {
 	return datatype.Map{
 		"sortField":     rs.SortField,
 		"sortDirection": rs.SortDirection,
 		"maxRows":       rs.MaxRows,
 	}
-}
+}*/
 
 // streamIteratorToSlice consumes a data.Iterator and generates a slice of render.Stream objects.
 func streamIteratorToSlice(factory Factory, ctx *steranko.Context, iterator data.Iterator, maxRows uint, action string) []Stream {
