@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/path"
 	"github.com/benpate/schema"
 
 	"encoding/json"
@@ -231,7 +232,7 @@ func (service *Template) List(criteria exp.Expression) []model.Option {
 	result := []model.Option{}
 
 	for _, template := range service.templates {
-		if criteria.Match(matcherFunc(&template)) {
+		if criteria.Match(path.MatcherFunc(&template)) {
 			result = append(result, model.Option{
 				Value:       template.TemplateID,
 				Label:       template.Label,
