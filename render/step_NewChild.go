@@ -107,7 +107,7 @@ func modalNewChild(templateService *service.Template, buffer io.Writer, renderer
 		b.TR().Data("hx-post", renderer.URL()+"?templateId="+template.Value)
 		{
 			b.TD()
-			b.I(template.Icon).Close()
+			b.I(template.Icon + " fa-3x gray").Close()
 			b.Close()
 
 			b.TD().Style("width:100%")
