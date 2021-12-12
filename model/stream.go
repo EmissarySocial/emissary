@@ -51,18 +51,7 @@ func NewStream() Stream {
 		Criteria:  NewCriteria(),
 		Tags:      make([]string, 0),
 		Data:      make(datatype.Map),
-		Content: content.Content{
-			0: {
-				Type: "CONTAINER",
-				Refs: []int{1},
-				Data: datatype.Map{
-					"style": "ROWS",
-				},
-			},
-			1: {
-				Type: "WYSIWYG",
-			},
-		},
+		Content:   make(content.Content, 0),
 	}
 }
 

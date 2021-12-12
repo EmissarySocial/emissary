@@ -71,7 +71,8 @@
 					},{
 						"kind": "textarea",
 						"label": "Description",
-						"path": "description"
+						"path": "description",
+						"cssClass": "height300"
 					}]
 				}
 			},{
@@ -91,7 +92,9 @@
 					{"step": "upload-attachments"},
 					{"step": "set-publishdate"},
 					{"step": "set-thumbnail"},
-					{"step": "save"}
+					{"step": "save"},
+					{"step": "new-child", "template": "comment-group"},
+					{"step": "forward-to", "url": "/{{.Token}}"}
 				]}
 			]
 		},
