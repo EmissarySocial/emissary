@@ -33,5 +33,8 @@ func FuncMap() template.FuncMap {
 			}
 			return result
 		},
+		"notEmpty": func(slice []Stream) bool { // Returns true if there are records in the resultset
+			return len(slice) > 0
+		},
 	}
 }

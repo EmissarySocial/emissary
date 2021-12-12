@@ -38,7 +38,7 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Stream) error {
 
 	b := html.New()
 
-	b.Div().ID("modal")
+	b.Div().ID("modal").Data("HX-Push-Url", "false")
 	b.Div().Class("modal-backdrop").Close()
 	b.Div().Class("modal-content")
 	b.H2().InnerHTML(step.title).Close()
