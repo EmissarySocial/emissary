@@ -22,6 +22,9 @@ type Stream struct {
 	template *model.Template   // Template that the Stream uses
 	action   *model.Action     // Action being executed
 	stream   *model.Stream     // Stream to be displayed
+
+	// Cached values, do not populate unless needed
+	user *model.User
 }
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
@@ -450,14 +453,24 @@ func (w Stream) UserCan(actionID string) bool {
 	return action.UserCan(w.stream, authorization)
 }
 
-func (w Stream) UserName() string {
-	authorization := getAuthorization(w.ctx)
-	return authorization.DisplayName
+func (w Stream) UserName() (string, error) {
+	user, err := w.getUser()
+
+	if err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserName", "Error loading User"))
+	}
+
+	return user.DisplayName, nil
 }
 
-func (w Stream) UserAvatar() string {
-	authorization := getAuthorization(w.ctx)
-	return authorization.AvatarURL
+func (w Stream) UserAvatar() (string, error) {
+	user, err := w.getUser()
+
+	if err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserAvatar", "Error loading User"))
+	}
+
+	return user.AvatarURL, nil
 }
 
 // CanCreate returns all of the templates that can be created underneath
@@ -473,10 +486,16 @@ func (w Stream) CanCreate() []model.Option {
 ****************************/
 
 func (w Stream) setAuthor() error {
-	authorization := getAuthorization(w.ctx)
-	w.stream.AuthorID = authorization.UserID
-	w.stream.AuthorName = authorization.DisplayName
-	w.stream.AuthorImage = authorization.AvatarURL
+
+	user, err := w.getUser()
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.render.Stream.setAuthor", "Error loading User")
+	}
+
+	w.stream.AuthorID = user.UserID
+	w.stream.AuthorName = user.DisplayName
+	w.stream.AuthorImage = user.AvatarURL
 
 	return nil
 }
@@ -493,4 +512,21 @@ func (w *Stream) closeModal(url string) {
 	} else {
 		w.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
 	}
+}
+
+func (w *Stream) getUser() (*model.User, error) {
+
+	// If we haven't already loaded the user, then do it now.
+	if w.user == nil {
+
+		userService := w.factory.User()
+		authorization := getAuthorization(w.ctx)
+		w.user = new(model.User)
+
+		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
+			return nil, derp.Wrap(err, "ghost.render.Stream.getUser", "Error loading user from database", authorization.UserID)
+		}
+	}
+
+	return w.user, nil
 }

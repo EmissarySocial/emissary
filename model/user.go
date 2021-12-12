@@ -54,8 +54,6 @@ func (user *User) SetPassword(password string) {
 func (user *User) Claims() jwt.Claims {
 
 	result := Authorization{
-		DisplayName: user.DisplayName,
-		AvatarURL:   user.AvatarURL,
 		UserID:      user.UserID,
 		GroupIDs:    user.GroupIDs,
 		DomainOwner: user.IsOwner,
