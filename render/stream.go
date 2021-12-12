@@ -450,6 +450,16 @@ func (w Stream) UserCan(actionID string) bool {
 	return action.UserCan(w.stream, authorization)
 }
 
+func (w Stream) UserName() string {
+	authorization := getAuthorization(w.ctx)
+	return authorization.DisplayName
+}
+
+func (w Stream) UserAvatar() string {
+	authorization := getAuthorization(w.ctx)
+	return authorization.AvatarURL
+}
+
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []model.Option {
@@ -459,25 +469,14 @@ func (w Stream) CanCreate() []model.Option {
 }
 
 /***************************
- * MISC HELPER FUNCTIONS
- **************************/
+ MISC HELPER FUNCTIONS
+****************************/
 
 func (w Stream) setAuthor() error {
-
-	userService := w.factory.User()
-
 	authorization := getAuthorization(w.ctx)
-	userID := authorization.UserID
-
-	var user model.User
-
-	if err := userService.LoadByID(userID, &user); err != nil {
-		return derp.Wrap(err, "ghost.render.Stream.setAuthor", "Error loading User", userID)
-	}
-
-	w.stream.AuthorID = user.UserID
-	w.stream.AuthorName = user.DisplayName
-	w.stream.AuthorImage = user.ImageURL
+	w.stream.AuthorID = authorization.UserID
+	w.stream.AuthorName = authorization.DisplayName
+	w.stream.AuthorImage = authorization.AvatarURL
 
 	return nil
 }
