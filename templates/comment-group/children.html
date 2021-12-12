@@ -10,10 +10,5 @@
     {{- $children = tail $children}}
 {{- end -}}
 {{- range $children  -}}
-    <div class="comment">
-        <div class="description">
-            <span class="author">{{.AuthorName}}</span> - <span>{{.Description}}</span>
-        </div>
-        <div class="date" _="install PrettyDate(date:{{.PublishDate}})">&nbsp;</div>
-    </div>
+    {{.Render}}
 {{- end -}}

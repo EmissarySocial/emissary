@@ -9,13 +9,7 @@
 
 	{{ if .UserCan "edit" }}
 		<div id="menu-bar">
-			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Album</a>
-			{{- end -}}
-			<a href="/{{.Token}}/edit">Upload Photos</a>
-			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.Token}}/delete" script="install AsModal">Delete</a>
-			{{- end -}}
+			<a href="/{{.Token}}/edit">Edit Album</a>
 		</div>
 	{{ end }}
 

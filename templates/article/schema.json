@@ -55,7 +55,12 @@
 		"init": {
 			"steps": [
 				{"step": "set-defaults", "label": "New Article"},
-				{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				{"step": "set-defaults", "content": 
+					[
+						{"type": "CONTAINER", "refs": [1], "data": {"style": "ROWS"}},
+						{"type": "WYSIWYG"}
+					]
+				}
 			]
 		},
 		"view": {

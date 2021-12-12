@@ -6,6 +6,7 @@
 
 	<form hx-post="/{{.Token}}/new-child" hx-swap="none" script="on submit call me.reset()">
 		<div class="comment">
+			<div class="author">{{.UserName}}</div>
 			<textarea name="description"></textarea>
 			<div class="padding-5"></div>
 			<input type="submit" class="button primary text-xs" value="Send">
