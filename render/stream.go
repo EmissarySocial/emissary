@@ -12,19 +12,15 @@ import (
 	"github.com/benpate/list"
 	"github.com/benpate/path"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	factory  Factory           // Factory interface is required for locating other services.
-	ctx      *steranko.Context // Contains request context and authentication data.
-	template *model.Template   // Template that the Stream uses
-	action   *model.Action     // Action being executed
-	stream   *model.Stream     // Stream to be displayed
+	template *model.Template // Template that the Stream uses
+	action   *model.Action   // Action being executed
+	stream   *model.Stream   // Stream to be displayed
 
-	// Cached values, do not populate unless needed
-	user *model.User
+	Common
 }
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
@@ -54,11 +50,10 @@ func NewStream(factory Factory, ctx *steranko.Context, stream *model.Stream, act
 
 	// Success.  Populate Stream
 	return Stream{
-		factory:  factory,
-		ctx:      ctx,
 		stream:   stream,
 		template: template,
 		action:   &action,
+		Common:   NewCommon(factory, ctx),
 	}, nil
 }
 
@@ -97,17 +92,12 @@ func (w Stream) View(action string) (template.HTML, error) {
 }
 
 /*******************************************
- * DATA ACCESSORS
+ * STREAM DATA
  *******************************************/
 
 // IsEmpty returns TRUE if this renderer is empty
 func (w Stream) IsEmpty() bool {
 	return w.stream == nil
-}
-
-// URL returns the originally requested URL
-func (w Stream) URL() string {
-	return w.ctx.Request().URL.RequestURI()
 }
 
 // StreamID returns the unique ID for the stream being rendered
@@ -224,24 +214,8 @@ func (w Stream) Roles() []string {
 }
 
 /*******************************************
- * REQUEST INFO
+ * TEMPLATE INFO
  *******************************************/
-
-// Returns the request method
-func (w Stream) Method() string {
-	return w.ctx.Request().Method
-}
-
-// Returns the designated request parameter
-func (w Stream) QueryParam(param string) string {
-	return w.ctx.QueryParam(param)
-}
-
-// SetQueryParam sets/overwrites a value from the URL query parameters.
-func (w Stream) SetQueryParam(param string, value string) string {
-	w.ctx.QueryParams().Set(param, value)
-	return "" // <- this is a mega-hack, but it works ;)
-}
 
 // Action returns the complete information for the action being performed.
 func (w Stream) Action() *model.Action {
@@ -254,7 +228,7 @@ func (w Stream) IsPartialRequest() bool {
 }
 
 /*******************************************
- * INDIVIDUAL RELATIONSHIPS
+ * RELATED STREAMS
  *******************************************/
 
 // Parent returns a Stream containing the parent of the current stream
@@ -355,18 +329,8 @@ func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Optio
 }
 
 /*******************************************
- * RESULTSET RELATIONSHIPS
+ * RELATED RESULTSETS
  *******************************************/
-
-// TopLevel returns an array of Streams that have a Zero ParentID
-func (w Stream) TopLevel() ([]Stream, error) {
-	criteria := exp.Equal("parentId", primitive.NilObjectID)
-	resultSet := w.makeResultSet(criteria)
-	resultSet.SortField = "rank"
-	resultSet.SortDirection = option.SortDirectionAscending
-	resultSet.MaxRows = 10
-	return resultSet.View()
-}
 
 // Siblings returns all Sibling Streams
 func (w Stream) Siblings() *ResultSet {
@@ -388,9 +352,9 @@ func (w Stream) makeResultSet(criteria exp.Expression) *ResultSet {
 	return resultSet
 }
 
-/***************************
+/*******************************************
  * ATTACHMENTS
- **************************/
+ *******************************************/
 
 // Reference to the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
@@ -430,16 +394,11 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 	return result, nil
 }
 
-/***************************
+/*******************************************
  * ACCESS PERMISSIONS
- **************************/
+ *******************************************/
 
-// IsSignedIn returns TRUE if the user is signed in
-func (w Stream) IsAuthenticated() bool {
-	return getAuthorization(w.ctx).IsAuthenticated()
-}
-
-// CanView returns TRUE if this Request is authorized to access this stream/view
+// UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {
 
 	action, ok := w.template.Action(actionID)
@@ -453,26 +412,6 @@ func (w Stream) UserCan(actionID string) bool {
 	return action.UserCan(w.stream, authorization)
 }
 
-func (w Stream) UserName() (string, error) {
-	user, err := w.getUser()
-
-	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserName", "Error loading User"))
-	}
-
-	return user.DisplayName, nil
-}
-
-func (w Stream) UserAvatar() (string, error) {
-	user, err := w.getUser()
-
-	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserAvatar", "Error loading User"))
-	}
-
-	return user.AvatarURL, nil
-}
-
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []model.Option {
@@ -481,9 +420,9 @@ func (w Stream) CanCreate() []model.Option {
 	return templateService.ListByContainer(w.template.TemplateID)
 }
 
-/***************************
- MISC HELPER FUNCTIONS
-****************************/
+/*******************************************
+ * MISC HELPER FUNCTIONS
+ *******************************************/
 
 func (w Stream) setAuthor() error {
 
@@ -498,35 +437,4 @@ func (w Stream) setAuthor() error {
 	w.stream.AuthorImage = user.AvatarURL
 
 	return nil
-}
-
-// newStream is a shortcut to the NewStream function that reuses the values present in this current Stream
-func (w Stream) newStream(stream *model.Stream, actionID string) (Stream, error) {
-	return NewStream(w.factory, w.ctx, stream, actionID)
-}
-
-// closeModal sets Response header to close a modal on the client and optionally forward to a new location.
-func (w *Stream) closeModal(url string) {
-	if url == "" {
-		w.ctx.Response().Header().Set("HX-Trigger", `"closeModal"`)
-	} else {
-		w.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
-	}
-}
-
-func (w *Stream) getUser() (*model.User, error) {
-
-	// If we haven't already loaded the user, then do it now.
-	if w.user == nil {
-
-		userService := w.factory.User()
-		authorization := getAuthorization(w.ctx)
-		w.user = new(model.User)
-
-		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
-			return nil, derp.Wrap(err, "ghost.render.Stream.getUser", "Error loading user from database", authorization.UserID)
-		}
-	}
-
-	return w.user, nil
 }
