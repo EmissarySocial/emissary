@@ -35,6 +35,10 @@
 	--red80: #750e13;
 	--red90: #520408;
 	--red100: #2d0709;
+
+	--input-border: var(--gray30);
+	--input-background: var(--gray05);
+	--input-color: var(--gray80);
 }
 
 @media (prefers-color-scheme: dark) {

@@ -6,7 +6,7 @@
         <span _="install PrettyDate(date:{{.PublishDate}})">&nbsp;</span>
         {{- if .UserCan "delete" -}}
         &nbsp;
-            <a hx-get="/{{.Token}}/delete" hx-push-url="false">delete</a>
+            <a hx-get="/{{.Token}}/delete" hx-push-url="false" script="install AsModal">delete</a>
         {{- end -}}    
     </div>
 </div>

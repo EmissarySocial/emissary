@@ -3,9 +3,9 @@
  ***************************/
 
 input:not([type=submit], [type=checkbox], [type=radio]), textarea {
-    border: solid 1px var(--gray50);
-    background-color: var(--gray05);
-    color: var(--black);
+    border: solid 1px var(--input-border);
+    background-color: var(--input-background);
+    color: var(--input-color);
     padding: 10px 10px;
     line-height:100%;
     width:100%;

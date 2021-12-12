@@ -80,7 +80,10 @@
 		},
 		"delete": {
 			"roles":["owner", "moderator"],
-			"step": "delete"
+			"steps": [
+				{"step":"delete"},
+				{"step": "trigger-event", "event": "closeModal"}
+			]
 		}
 	}
 }
