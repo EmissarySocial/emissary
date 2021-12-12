@@ -47,7 +47,7 @@
 			<div>
 				{{- if .IsAuthenticated -}}
 					<a href="/profile">Profile</a>
-					<a href="/settings">Settings</a>
+					{{- if .IsOwner -}}<a href="/settings">Settings</a>{{- end -}}
 					<a hx-post="/signout" hx-target="body">Sign Out</a>
 				{{- else -}}
 					<a href="/signin">Sign In</a>

@@ -8,7 +8,7 @@
 		<div class="author">{{.UserName}}</div>
 		<div class="comment-new">
 			<textarea name="description" oninput="this.style.height = 'inherit'; this.style.height = (this.scrollHeight + 20) + 'px';"></textarea>
-			<button type="submit" class="primary fa-regular fa-circle-arrow-up"></button>
+			<button type="submit" class="fa-regular fa-circle-arrow-up fa-2x"></button>
 		</div>
 	</form>
 </div>
@@ -49,6 +49,10 @@
 	    overflow: hidden;
     	min-height: 20px;
     	max-height: 500px;
+	}
+
+	.comment-new textarea:focus {
+		outline-style:none;
 	}
 
 	.comment-new button {
