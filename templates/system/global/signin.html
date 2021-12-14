@@ -1,4 +1,92 @@
 <!DOCTYPE html>
+<html>
+<head>
+	<title>Signin: GH0ST</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="/static/pure-min.css">
+	<link rel="stylesheet" href="/static/pure-grids-responsive-min.css">
+	<link rel="stylesheet" href="/static/colors.css">
+
+	<link rel="stylesheet" href="/static/accessibility.css">
+	<link rel="stylesheet" href="/static/animations.css">
+	<link rel="stylesheet" href="/static/cards.css">
+	<link rel="stylesheet" href="/static/content.css">
+	<link rel="stylesheet" href="/static/forms.css">	
+	<link rel="stylesheet" href="/static/layout.css">
+	<link rel="stylesheet" href="/static/modal.css">
+	<link rel="stylesheet" href="/static/responsive.css">	
+	<link rel="stylesheet" href="/static/tables.css">	
+	<link rel="stylesheet" href="/static/typography.css">	
+
+	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
+
+	<script type="text/hyperscript">	
+		init 
+			set lastPage to document.referrer
+			if lastPage is empty then return null end
+			if (lastPage.indexOf("/signin") >= 0) then return null end
+			call sessionStorage.setItem("signin-return", lastPage)
+		end
+
+		on SigninSuccess
+			set lastPage to sessionStorage.getItem("signin-return")
+			log lastPage
+			if lastPage then
+				set the window's location to lastPage
+			else
+				go to url "/home"
+			end
+		end
+	</script>
+
+</head>
+
+<body hx-target="#page" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
+
+	<main>
+		<div id="page" class="framed">
+
+			<div class="pure-g">
+				<div class="pure-u-0 pure-u-sm-1-12 pure-u-md-1-6 pure-u-lg-1-4"></div>
+				<div class="pure-u-1 pure-u-sm-5-6 pure-u-md-2-3 pure-u-lg-1-2">
+					<div class="card padded">
+
+						<form hx-post="/signin" hx-target="#message" class="pure-form pure-form-stacked">
+
+							<h1>Sign In</h1>
+
+							<div id="message"></div>
+
+							<fieldset>
+								<label for="username">Username</label>
+								<input type="text" name="username" id="username" required="true" maxlength="50">
+							</fieldset>
+
+							<fieldset style="position:relative;">
+								<label for="password">Password</label>
+								<input type="password" name="password" id="password" required="true" maxlength="100">
+							</fieldset>
+
+							<input type="submit" value="Sign In" class="primary">
+						</form>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<script type="text/javascript" src="/htmx/htmx.js"></script>
+	<script type="text/javascript" src="/htmx/ext/sse.js"></script>
+	<script type="text/javascript" src="/static/preload.js"></script>
+	<script type="text/javascript" src="/hyperscript/_hyperscript_web.min.js"></script>
+	
+</body>
+</html>
+
+<!--DOCTYPE html>
 <html class="uk-height-1-1">
 <head>
 	<title>Signin : GH0ST</title>
@@ -36,32 +124,5 @@
 		</div>
 	</div>
 
-	<!--script src="https://unpkg.com/htmx.org"></script-->
-	<!--script src="https://unpkg.com/hyperscript.org"></script-->
-
-	<script src="/htmx/htmx.js"></script>
-	<script src="/hyperscript/_hyperscript.min.js"></script>
-
-	<script type="text/hyperscript">
-
-		init 
-			set lastPage to document.referrer
-			if lastPage is empty then return null end
-			if (lastPage.indexOf("/signin") >= 0) then return null end
-			call sessionStorage.setItem("signin-return", lastPage)
-		end
-
-		on SigninSuccess
-			log "SigninSuccess"
-			set lastPage to sessionStorage.getItem("signin-return")
-			log lastPage
-			if lastPage then
-				set the window's location to lastPage
-			else
-				go to url "/home"
-			end
-		end
-	</script>
-	
 </body>
-</html>
+</html-->

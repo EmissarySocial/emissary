@@ -37,25 +37,6 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/signin", handler.PostSignIn(factoryManager))
 	e.POST("/signout", handler.PostSignOut(factoryManager))
 
-	// ActivityPub INBOX/OUTBOX
-	e.GET("/inbox", handler.GetInbox(factoryManager))
-	e.POST("/inbox", handler.PostInbox(factoryManager))
-	e.GET("/outbox", handler.GetOutbox(factoryManager))
-	e.POST("/outbox", handler.PostOutbox(factoryManager))
-
-	// ADMIN PAGES
-	e.GET("/_/:param1", handler.GetAdmin(factoryManager))
-	e.GET("/_/:param1/:param2", handler.GetAdmin(factoryManager))
-	e.POST("/_/:param1/:param2", handler.PostAdmin(factoryManager))
-	e.GET("/_/:param1/:param2/:action", handler.GetAdmin(factoryManager))
-	e.POST("/_/:param1/:param2/:action", handler.PostAdmin(factoryManager))
-
-	// PROFILE PAGES
-	// e.GET("/me/", handler.GetProfile(factoryManager))
-	// e.POST("/me", handler.PostProfile(factoryManager))
-	// e.GET("/me/:action", handler.PostProfile(factoryManager))
-	// e.POST("/me/:action", handler.PostProfile(factoryManager))
-
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factoryManager))
 	e.GET("/:stream", handler.GetStream(factoryManager))
@@ -64,6 +45,26 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
 
 	// TODO: Can Attachments and SSE be moved into a custom render step?
+
+	// ADMIN PAGES
+	e.GET("/admin/:param1", handler.GetAdmin(factoryManager))
+	e.GET("/admin/:param1/:param2", handler.GetAdmin(factoryManager))
+	e.POST("/admin/:param1/:param2", handler.PostAdmin(factoryManager))
+	e.GET("/admin/:param1/:param2/:action", handler.GetAdmin(factoryManager))
+	e.POST("/admin/:param1/:param2/:action", handler.PostAdmin(factoryManager))
+
+	// ActivityPub INBOX/OUTBOX
+	e.GET("/inbox", handler.GetInbox(factoryManager))
+	e.POST("/inbox", handler.PostInbox(factoryManager))
+	e.GET("/outbox", handler.GetOutbox(factoryManager))
+	e.POST("/outbox", handler.PostOutbox(factoryManager))
+
+	// PROFILE PAGES
+	// e.GET("/me/", handler.GetProfile(factoryManager))
+	// e.POST("/me", handler.PostProfile(factoryManager))
+	// e.GET("/me/:action", handler.PostProfile(factoryManager))
+	// e.POST("/me/:action", handler.PostProfile(factoryManager))
+
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 

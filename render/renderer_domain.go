@@ -96,5 +96,5 @@ func (domain Domain) executeTemplate(wr io.Writer, name string, data interface{}
 }
 
 func (domain Domain) TopLevelID() string {
-	return "_"
+	return "admin"
 }

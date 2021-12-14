@@ -259,33 +259,12 @@ func (service *Template) watch() {
 				continue
 			}
 
-			if event.Op != fsnotify.Write {
-				continue
-			}
-
 			templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
 
 			// Static files are not processed.  Skip and continue
 			if templateName == "system" {
 				continue
 			}
-
-			/*
-					// Otherwise, add this folder to the Layout Service
-
-					// Reload layout
-					if err := service.layoutService.getTemplateFromFilesystem(templateName); err != nil {
-						derp.Report(derp.Wrap(err, "ghost.service.Template", "Error reloading Layout template"))
-					}
-
-					// Update all Templates with new layout code
-					for templateID := range service.templates {
-						service.templateUpdateOut <- templateID
-					}
-
-					continue
-				}
-			*/
 
 			// Otherwise, add this folder to the Template service
 			template, err := service.loadFromFilesystem(templateName)
