@@ -25,28 +25,30 @@ func NewStepWithParent(streamService *service.Stream, stepInfo datatype.Map) Ste
 }
 
 // Get displays a form where users can update stream data
-func (step StepWithParent) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepWithParent) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithParent) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepWithParent) Post(buffer io.Writer, renderer Renderer) error {
 
 	var parent model.Stream
 
-	if err := step.streamService.LoadByID(renderer.stream.ParentID, &parent); err != nil {
+	streamRenderer := renderer.(Stream)
+
+	if err := step.streamService.LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
 		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error listing parent")
 	}
 
 	// Make a renderer with the new parent stream
-	parentStream, err := renderer.newStream(&parent, renderer.ActionID())
+	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory, streamRenderer.context(), parent, renderer.ActionID())
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error creating renderer for parent")
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := DoPipeline(&parentStream, buffer, step.steps, ActionMethodPost); err != nil {
+	if err := DoPipeline(streamRenderer.factory, &parentStream, buffer, step.steps, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error executing steps for parent")
 	}
 

@@ -34,7 +34,7 @@ type Factory struct {
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
 	layoutUpdateChannel   chan bool
-	templateUpdateChannel chan model.Template
+	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
@@ -58,7 +58,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	factory := Factory{
 		Session:               session,
 		domain:                domain,
-		templateUpdateChannel: make(chan model.Template),
+		templateUpdateChannel: make(chan string),
 		layoutUpdateChannel:   make(chan bool),
 	}
 
@@ -83,14 +83,15 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	// This loads the web page layout (real-time updates to wait until later)
 	factory.layoutService = service.NewLayout(
 		factory.domain.LayoutPath,
-		factory.LayoutUpdateChannel(),
+		factory.RenderFunctions(),
 	)
 
 	// Template Service
 	factory.templateService = service.NewTemplate(
-		factory.domain.TemplatePath,
+		factory.Domain(),
 		factory.Layout(),
 		factory.RenderFunctions(),
+		factory.domain.TemplatePath,
 		factory.LayoutUpdateChannel(),
 		factory.TemplateUpdateChannel(),
 	)
@@ -115,19 +116,27 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	return &factory, nil
 }
 
-///////////////////////////////////////
-// Domain Data Accessors
+/*******************************************
+ * DOMAIN DATA ACCESSORS
+ *******************************************/
 
 func (factory *Factory) Hostname() string {
 	return factory.domain.Hostname
 }
 
-///////////////////////////////////////
-// Domain Model Services
+/*******************************************
+ * DOMAIN MODEL SERVICES
+ *******************************************/
 
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	result := service.NewAttachment(factory.collection(CollectionAttachment), factory.MediaServer())
+	return &result
+}
+
+// Domain returns a fully populated Domain service
+func (factory *Factory) Domain() *service.Domain {
+	result := service.NewDomain(factory.collection(CollectionDomain), factory.RenderFunctions())
 	return &result
 }
 
@@ -136,6 +145,7 @@ func (factory *Factory) Stream() *service.Stream {
 	return factory.streamService
 }
 
+// StreamDraft returns a fully populated StreamDraft service.
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 
 	result := service.NewStreamDraft(
@@ -166,20 +176,18 @@ func (factory *Factory) User() service.User {
 	return service.NewUser(factory.collection(CollectionUser))
 }
 
-///////////////////////////////////////
-// Render Library
+/*******************************************
+ * RENDER OBJECTS
+ *******************************************/
 
 // Layout service manages global website layouts
 func (factory *Factory) Layout() *service.Layout {
 	return factory.layoutService
 }
 
-// StreamViewer generates a new stream renderer service, pegged to a specific view.
-func (factory *Factory) RenderStream(ctx *steranko.Context, stream *model.Stream, actionID string) (render.Stream, error) {
-
-	// Create and return the new Renderer
-	renderer, err := render.NewStream(factory, ctx, stream, actionID)
-	return renderer, err
+// Renderer generates a new render.Renderer object, pegged to a specific view.
+func (factory *Factory) Renderer(ctx *steranko.Context, object data.Object, actionID string) (render.Renderer, error) {
+	return render.NewRenderer(factory, ctx, object, actionID)
 }
 
 // RenderStep uses an Step object to create a new action
@@ -187,12 +195,14 @@ func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	return render.NewStep(factory, stepInfo)
 }
 
+// RenderFunctions provides a map of generic functions (template.FuncMap) that can be used in html.Templates
 func (factory *Factory) RenderFunctions() template.FuncMap {
 	return render.FuncMap()
 }
 
-///////////////////////////////////////
-// Real-Time UpdateChannels
+/*******************************************
+ * REAL-TIME UPDATE CHANNELS
+ *******************************************/
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
@@ -205,7 +215,7 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 }
 
 // TemplateUpdateChannel returns a channel for transmitting templates that have changed.
-func (factory *Factory) TemplateUpdateChannel() chan model.Template {
+func (factory *Factory) TemplateUpdateChannel() chan string {
 	return factory.templateUpdateChannel
 }
 
@@ -214,8 +224,9 @@ func (factory *Factory) LayoutUpdateChannel() chan bool {
 	return factory.layoutUpdateChannel
 }
 
-///////////////////////////////////////
-// MEDIA SERVER
+/*******************************************
+ * MEDIA SERVER
+ *******************************************/
 
 // MediaServer manages all file uploads
 func (factory *Factory) MediaServer() mediaserver.MediaServer {
@@ -232,8 +243,9 @@ func (factory *Factory) AttachmentCache() afero.Fs {
 	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads-cache")
 }
 
-///////////////////////////////////////
-// OTHER NON-MODEL SERVICES
+/*******************************************
+ * OTHER NON-MODEL SERVICES
+ *******************************************/
 
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package
@@ -264,8 +276,9 @@ func (factory *Factory) OptionProvider() form.OptionProvider {
 	return service.NewOptionProvider(factory.User())
 }
 
-///////////////////////////////////////
-// External APIs
+/*******************************************
+ * EXTERNAL APIs
+ *******************************************/
 
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *service.RSS {
@@ -276,8 +289,9 @@ func (factory *Factory) RSS() *service.RSS {
 // ActivityPub
 // Service APIs (like Twitter? Slack? Discord?, The FB?)
 
-///////////////////////////////////////
-// Helper functions
+/*******************************************
+ * HELPER UTILITIES
+ *******************************************/
 
 // collection returns a data.Collection that matches the requested name.
 func (factory *Factory) collection(name string) data.Collection {

@@ -24,7 +24,7 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModalForm(renderer *Stream, content string) string {
+func WrapModalForm(renderer Renderer, content string) string {
 
 	b := html.New()
 
@@ -35,7 +35,7 @@ func WrapModalForm(renderer *Stream, content string) string {
 
 	// Form Wrapper
 	b.Form("post", "").
-		Attr("hx-post", renderer.URL()).
+		Attr("hx-post", renderer.common().URL()).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		EndBracket()
@@ -54,6 +54,15 @@ func WrapModalForm(renderer *Stream, content string) string {
 	b.CloseAll()
 
 	return b.String()
+}
+
+// closeModal sets Response header to close a modal on the client and optionally forward to a new location.
+func closeModal(ctx *steranko.Context, url string) {
+	if url == "" {
+		ctx.Response().Header().Set("HX-Trigger", `"closeModal"`)
+	} else {
+		ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
+	}
 }
 
 func forwardOrTrigger(renderer *Stream, forward string, trigger string) error {
@@ -85,7 +94,7 @@ func forwardOrTrigger(renderer *Stream, forward string, trigger string) error {
 	return nil
 }
 
-func executeSingleTemplate(t string, renderer *Stream) (string, error) {
+func executeSingleTemplate(t string, renderer Renderer) (string, error) {
 
 	executable, err := template.New("").Parse(t)
 

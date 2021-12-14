@@ -24,13 +24,14 @@ func NewStepTopLevelCreate(streamService *service.Stream, config datatype.Map) S
 	}
 }
 
-func (step StepTopLevelCreate) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepTopLevelCreate) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepTopLevelCreate) Post(buffer io.Writer, renderer Renderer) error {
 
-	templateID := renderer.ctx.QueryParam("templateId")
+	domainRenderer := renderer.(Domain)
+	templateID := domainRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
 	if len(step.template) > 0 {
@@ -49,9 +50,9 @@ func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Stream) error {
 	}
 
 	// Set stream defaults
-	authorization := getAuthorization(renderer.ctx)
+	authorization := getAuthorization(domainRenderer.ctx)
 	child.AuthorID = authorization.UserID
-	childStream, err := renderer.newStream(&child, "view")
+	childStream, err := NewStream(domainRenderer.factory, domainRenderer.ctx, template, child, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
@@ -59,7 +60,7 @@ func (step StepTopLevelCreate) Post(buffer io.Writer, renderer *Stream) error {
 
 	// If there is an "init" step for the child's template, then execute it now
 	if action, ok := template.Action("init"); ok {
-		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(domainRenderer.factory, &childStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Unable to execute 'init' action on child")
 		}
 	}

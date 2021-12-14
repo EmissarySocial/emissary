@@ -24,10 +24,10 @@ func NewStepTopLevelDelete(streamService *service.Stream, config datatype.Map) S
 	}
 }
 
-func (step StepTopLevelDelete) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepTopLevelDelete) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-func (step StepTopLevelDelete) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepTopLevelDelete) Post(buffer io.Writer, renderer Renderer) error {
 	return nil
 }

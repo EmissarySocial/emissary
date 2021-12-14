@@ -2,6 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,7 +21,21 @@ func NewSubscription() *Subscription {
 	return &Subscription{}
 }
 
-// ID returns a string represenation of the unique ID for this record.
+/*******************************************
+ * DATA.OBJECT INTERFACE
+ *******************************************/
+
+// ID returns the primary key of this object
 func (sub *Subscription) ID() string {
 	return sub.SubscriptionID.Hex()
+}
+
+// GetPath implements the path.Getter interface, allowing named READ access to specific values
+func (sub *Subscription) GetPath(p path.Path) (interface{}, error) {
+	return nil, derp.New(derp.CodeInternalError, "ghost.model.Subscription.GetPath", "unimplemented")
+}
+
+// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
+func (sub *Subscription) SetPath(p path.Path, value interface{}) error {
+	return derp.New(derp.CodeInternalError, "ghost.model.Subscription.GetPath", "unimplemented")
 }

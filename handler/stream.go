@@ -43,10 +43,17 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			}
 		}
 
+		// Try to load the Template associated with this Stream
+		templateService := factory.Template()
+		template := model.NewTemplate(stream.TemplateID)
+		if err := templateService.Load(stream.TemplateID, &template); err != nil {
+			return derp.Wrap(err, "ghost.render.NewStream", "Cannot load Stream Template", stream.TemplateID)
+		}
+
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := factory.RenderStream(sterankoContext, &stream, actionID)
+		renderer, err := render.NewStream(factory, sterankoContext, template, stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")
@@ -63,10 +70,10 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Full Page requests require the layout service
-		layoutService := factory.Layout()
-		var buffer bytes.Buffer
+		htmlTemplate := factory.Layout().Global().HTMLTemplate
 
-		if err := layoutService.Template.ExecuteTemplate(&buffer, "page", &renderer); err != nil {
+		var buffer bytes.Buffer
+		if err := htmlTemplate.ExecuteTemplate(&buffer, "page", &renderer); err != nil {
 			return derp.Wrap(err, "ghost.handler.GetStream", "Error rendering full-page content")
 		}
 
@@ -99,16 +106,16 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := factory.RenderStream(sterankoContext, &stream, actionID)
+		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
 		}
 
-		action := renderer.Action()
-
-		if err := render.DoPipeline(&renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
-			return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
+		if action, ok := renderer.Action(); ok {
+			if err := render.DoPipeline(factory, &renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
+				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
+			}
 		}
 
 		return nil

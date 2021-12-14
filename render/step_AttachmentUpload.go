@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/mediaserver"
 )
 
-// StepAttachmentUpload represents an action that can edit a top-level folder in the Domain
+// StepAttachmentUpload represents an action that can upload attachments.  It can only be used on a StreamRenderer
 type StepAttachmentUpload struct {
 	streamService     *service.Stream
 	attachmentService *service.Attachment
@@ -26,13 +26,14 @@ func NewStepAttachmentUpload(streamService *service.Stream, attachmentService *s
 	}
 }
 
-func (step StepAttachmentUpload) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepAttachmentUpload) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepAttachmentUpload) Post(buffer io.Writer, renderer Renderer) error {
 
-	form, err := renderer.ctx.MultipartForm()
+	streamRenderer := renderer.(Stream)
+	form, err := streamRenderer.ctx.MultipartForm()
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.handler.StepAttachmentUpload.Post", "Error reading multipart form.")
@@ -43,7 +44,7 @@ func (step StepAttachmentUpload) Post(buffer io.Writer, renderer *Stream) error 
 	for _, fileHeader := range files {
 
 		// Each attachment is tracked separately, so make a new attachment for each file in the upload.
-		attachment := renderer.stream.NewAttachment(fileHeader.Filename)
+		attachment := streamRenderer.stream.NewAttachment(fileHeader.Filename)
 
 		// Open the source (from the POST request)
 		source, err := fileHeader.Open()

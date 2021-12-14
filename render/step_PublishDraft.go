@@ -22,16 +22,17 @@ func NewStepStreamDraftPublish(streamService *service.Stream, draftService *serv
 	}
 }
 
-func (step StepStreamDraftPublish) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDraftPublish) Get(buffer io.Writer, renderer Renderer) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamDraftPublish", "GET not implemented")
 }
 
-func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer Renderer) error {
 
+	streamRenderer := renderer.(Stream)
 	var draft model.Stream
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := step.draftService.LoadByID(renderer.stream.StreamID, &draft); err != nil {
+	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &draft); err != nil {
 		return derp.Wrap(err, "ghost.renderer.StepStreamDraftPublish.Post", "Error loading Draft")
 	}
 
@@ -45,7 +46,7 @@ func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer *Stream) erro
 		derp.Report(derp.Wrap(err, "ghost.handler.StepStreamDraftPublish.Post", "Error deleting published draft"))
 	}
 
-	renderer.ctx.Response().Header().Add("HX-Redirect", "/"+draft.Token)
+	streamRenderer.context().Response().Header().Add("HX-Redirect", "/"+draft.Token)
 
 	return nil
 }

@@ -11,22 +11,20 @@ import (
 
 // StepStreamDelete represents an action-step that can delete a Stream from the Domain
 type StepStreamDelete struct {
-	streamService *service.Stream
-	draftService  *service.StreamDraft
-	title         string
-	message       string
+	modelService ModelService
+	title        string
+	message      string
 }
 
-func NewStepStreamDelete(streamService *service.Stream, draftService *service.StreamDraft, stepInfo datatype.Map) StepStreamDelete {
+func NewStepStreamDelete(modelService ModelService, draftService *service.StreamDraft, stepInfo datatype.Map) StepStreamDelete {
 	return StepStreamDelete{
-		streamService: streamService,
-		draftService:  draftService,
-		title:         stepInfo.GetString("title"),
-		message:       stepInfo.GetString("message"),
+		modelService: modelService,
+		title:        stepInfo.GetString("title"),
+		message:      stepInfo.GetString("message"),
 	}
 }
 
-func (step StepStreamDelete) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDelete) Get(buffer io.Writer, renderer Renderer) error {
 
 	if step.title == "" {
 		step.title = "Confirm Delete"
@@ -45,7 +43,7 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Stream) error {
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
 
 	b.Button().Class("warning").
-		Attr("hx-post", "/"+renderer.StreamID()+"/delete").
+		Attr("hx-post", "/"+renderer.object().ID()+"/delete").
 		Attr("hx-swap", "none").
 		Script("install SubmitButton()").
 		InnerHTML("Delete").Close()
@@ -58,9 +56,9 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer *Stream) error {
 	return nil
 }
 
-func (step StepStreamDelete) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDelete) Post(buffer io.Writer, renderer Renderer) error {
 
-	if err := step.streamService.Delete(renderer.stream, "Deleted"); err != nil {
+	if err := step.modelService.ObjectDelete(renderer.object(), "Deleted"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDelete.Post", "Error deleting stream")
 	}
 

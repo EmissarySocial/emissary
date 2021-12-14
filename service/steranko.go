@@ -21,7 +21,7 @@ func NewSterankoUserService(userService User) SterankoUserService {
 
 // New creates a newly initialized User that is ready to use
 func (service SterankoUserService) New() steranko.User {
-	result := service.userService.New()
+	result := model.NewUser()
 	return &result
 }
 

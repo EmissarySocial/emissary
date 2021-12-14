@@ -23,18 +23,18 @@ func NewStepForwardTo(stepInfo datatype.Map) StepForwardTo {
 }
 
 // Get displays a form where users can update stream data
-func (step StepForwardTo) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepForwardTo) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepForwardTo) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepForwardTo) Post(buffer io.Writer, renderer Renderer) error {
 	nextPage, err := executeSingleTemplate(step.url, renderer)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepForwardTo.Post", "Error executing template", step.url)
 	}
 
-	renderer.closeModal(nextPage)
+	closeModal(renderer.context(), nextPage)
 	return nil
 }

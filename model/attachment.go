@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/list"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,10 +30,28 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 	}
 }
 
+/*******************************************
+ * DATA.OBJECT INTERFACE
+ *******************************************/
+
 // ID returns the primary key of this object
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
 }
+
+// GetPath implements the path.Getter interface, allowing named READ access to specific values
+func (attachment *Attachment) GetPath(p path.Path) (interface{}, error) {
+	return nil, derp.New(derp.CodeInternalError, "ghost.model.Attachment.GetPath", "unimplemented")
+}
+
+// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
+func (attachment *Attachment) SetPath(p path.Path, value interface{}) error {
+	return derp.New(derp.CodeInternalError, "ghost.model.Attachment.GetPath", "unimplemented")
+}
+
+/*******************************************
+ * OTHER FUNCTIONS
+ *******************************************/
 
 func (attachment *Attachment) DownloadExtension() string {
 

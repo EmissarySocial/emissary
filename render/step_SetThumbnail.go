@@ -22,15 +22,17 @@ func NewStepStreamThumbnail(attachmentService *service.Attachment, command datat
 }
 
 // Get displays a form where users can update stream data
-func (step StepStreamThumbnail) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamThumbnail) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStreamThumbnail) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error {
+
+	streamRenderer := renderer.(Stream)
 
 	// Find best icon from attachments
-	attachments, err := step.attachmentService.ListByStream(renderer.stream.StreamID)
+	attachments, err := step.attachmentService.ListByStream(streamRenderer.stream.StreamID)
 
 	if err != nil {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamThumbnail.Post", "Error listing attachments")
@@ -41,8 +43,7 @@ func (step StepStreamThumbnail) Post(buffer io.Writer, renderer *Stream) error {
 	for attachments.Next(attachment) {
 
 		if attachment.MimeCategory() == "image" {
-			renderer.stream.ThumbnailImage = attachment.Filename
-
+			streamRenderer.stream.ThumbnailImage = attachment.Filename
 			return nil
 		}
 		attachment = new(model.Attachment)

@@ -19,17 +19,14 @@ func NewStepStreamState(stepInfo datatype.Map) StepStreamState {
 }
 
 // Get displays a form for users to fill out in the browser
-func (step StepStreamState) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamState) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step StepStreamState) Post(buffer io.Writer, renderer *Stream) error {
-
-	// Move stream to a new state
-	renderer.stream.StateID = step.newState
-
+func (step StepStreamState) Post(buffer io.Writer, renderer Renderer) error {
+	streamRenderer := renderer.(Stream)
+	streamRenderer.stream.StateID = step.newState
 	// TODO: post-change hooks??
-
 	return nil
 }

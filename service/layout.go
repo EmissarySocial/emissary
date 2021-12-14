@@ -1,140 +1,70 @@
 package service
 
 import (
-	"fmt"
 	"html/template"
-	"io/ioutil"
+	"strings"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/list"
-	"github.com/fsnotify/fsnotify"
-
-	minify "github.com/tdewolff/minify/v2"
-	"github.com/tdewolff/minify/v2/html"
+	"github.com/benpate/ghost/model"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
-	path     string
-	Template *template.Template
+	path    string
+	funcMap template.FuncMap
+	domain  model.Layout
+	global  model.Layout
+	group   model.Layout
+	user    model.Layout
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(path string, updates chan bool) *Layout {
+func NewLayout(path string, funcMap template.FuncMap) *Layout {
 
-	layout := &Layout{
-		path: path,
+	service := &Layout{
+		path:    path,
+		funcMap: funcMap,
 	}
 
-	if err := layout.Load(); err != nil {
-		panic(err)
-	}
-
-	go layout.start(updates)
-
-	return layout
+	return service
 }
 
-// Load retrieves the template from the disk and parses it into
-func (service *Layout) Load() error {
+func (service *Layout) Global() model.Layout {
+	return service.global
+}
 
-	// Create the minifier
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
+func (service *Layout) Domain() model.Layout {
+	return service.domain
+}
 
-	// Create a new template.Template to return on success
-	layout := template.New("")
+func (service *Layout) User() model.Layout {
+	return service.user
+}
 
-	// Try to list all files in the configured path
-	files, err := ioutil.ReadDir(service.path)
+// getTemplateFromFilesystem retrieves the template from the disk and parses it into
+func (service *Layout) getTemplateFromFilesystem(folder string) error {
 
-	if err != nil {
-		return derp.Wrap(err, "ghost.service.NewLayout", "Unable to list files in filesystem")
+	layoutID := strings.TrimPrefix(folder, "_")
+	path := service.path + "/" + folder
+	layout := model.NewLayout(layoutID)
+
+	if err := loadTemplateFromFilesystem(path, service.funcMap, layout.HTMLTemplate); err != nil {
+		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", layoutID)
 	}
 
-	for _, file := range files {
-
-		// Do not parse directory trees
-		if file.IsDir() {
-			continue
-		}
-
-		// Read template file contents into memory
-		content, err := ioutil.ReadFile(service.path + "/" + file.Name())
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.service.NewLayout", "Error reading file from filesystem", file.Name())
-		}
-
-		contentString := string(content)
-
-		// Try to minify the incoming template... (this should be moved to a different place.)
-		if minified, err := m.String("text/html", contentString); err == nil {
-			contentString = minified
-		}
-
-		// Parse the current file into an HTML template
-		t, err := template.New("").Parse(contentString)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.service.NewLayout", "Error parsing template file", file.Name(), contentString)
-		}
-
-		// Try to append this layout to the ParseTree
-		templateName := list.Head(file.Name(), ".")
-		if _, err := layout.AddParseTree(templateName, t.Tree); err != nil {
-			return derp.Wrap(err, "ghost.service.NewLayout", "Error adding parseTree")
-		}
+	if err := loadSchemaFromFilesystem(path, &layout.Schema); err != nil {
+		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", layoutID)
 	}
 
-	// spew.Dump(layout.DefinedTemplates())
-
-	// Success!!
-	service.Template = layout
-	fmt.Println("updated layout service with new layout: ")
+	switch layoutID {
+	case "global":
+		service.global = layout
+	case "group":
+		service.group = layout
+	case "user":
+		service.user = layout
+	}
 
 	return nil
-}
-
-// watch is called by the "NewLayout" initializer.  This method creates its own watcher
-// on the path that contains the layout.  Any updates to the layout files will reload the
-// layout Template, and push it into the Updates channel, so that any waiting pages can be
-// refreshed dynamically.
-func (service *Layout) start(updates chan bool) error {
-
-	watcher, err := fsnotify.NewWatcher()
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.service.Layout.Watch", "Could not watch filesystem")
-	}
-
-	if err := watcher.Add(service.path); err != nil {
-		return derp.Wrap(err, "ghost.service.Layout.Watch", "Error adding watcher on path", service.path)
-	}
-
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-
-			if ok {
-				if event.Op != fsnotify.Write {
-					continue
-				}
-
-				if err := service.Load(); err != nil {
-					derp.Report(derp.Wrap(err, "ghost.service.Layout.Watch", "Error re-loading Layout"))
-					continue
-				}
-
-				updates <- true
-			}
-
-		case err, ok := <-watcher.Errors:
-
-			if ok {
-				derp.Report(derp.Wrap(err, "ghost.service.Layout.Watch", "Error watching filesystem"))
-			}
-		}
-	}
 }

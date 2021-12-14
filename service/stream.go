@@ -21,12 +21,12 @@ type Stream struct {
 	templateService       *Template
 	draftService          *StreamDraft
 	formLibrary           form.Library
-	templateUpdateChannel chan model.Template
+	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan model.Template, streamUpdateChannel chan model.Stream) *Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) *Stream {
 
 	result := Stream{
 		collection:            collection,
@@ -50,14 +50,13 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
 // start begins the background watchers used by the Stream Service
 func (service *Stream) watch() {
 	for {
-		template := <-service.templateUpdateChannel
-		service.templateService.Save(&template)
-		service.updateStreamsByTemplate(&template)
+		templateID := <-service.templateUpdateChannel
+		service.updateStreamsByTemplate(templateID)
 	}
 }
 
 /*******************************************
- * PERSISTENCE FUNCTIONS
+ * COMMON DATA FUNCTIONS
  *******************************************/
 
 // List returns an iterator containing all of the Streams who match the provided criteria
@@ -124,6 +123,36 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	return nil
 }
 
+/*******************************************
+ * GENERIC DATA FUNCTIONS
+ *******************************************/
+
+// New returns a fully initialized model.Stream as a data.Object.
+func (service *Stream) ObjectNew() data.Object {
+	result := model.NewStream()
+	return &result
+}
+
+func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Stream) ObjectLoad(criteria exp.Expression, object data.Object) error {
+	return service.Load(criteria, object.(*model.Stream))
+}
+
+func (service *Stream) ObjectSave(object data.Object, comment string) error {
+	return service.Save(object.(*model.Stream), comment)
+}
+
+func (service *Stream) ObjectDelete(object data.Object, comment string) error {
+	return service.Delete(object.(*model.Stream), comment)
+}
+
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
+
 // DeleteChildren removes all child streams from the provided stream (virtual delete)
 func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 
@@ -142,10 +171,6 @@ func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 
 	return nil
 }
-
-/*******************************************
- * QUERIES
- *******************************************/
 
 // ListByParent returns all Streams that match a particular parentID
 func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
@@ -227,12 +252,12 @@ func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
  *******************************************/
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) NewTopLevel(templateID string) (model.Stream, model.Template, error) {
 
-	template, err := service.templateService.Load(templateID)
+	template := model.NewTemplate(templateID)
 
-	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+	if err := service.templateService.Load(templateID, &template); err != nil {
+		return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy("top") {
@@ -251,16 +276,16 @@ func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Temp
 }
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.Stream, model.Template, error) {
 
-	template, err := service.templateService.Load(templateID)
+	template := model.NewTemplate(templateID)
 
-	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+	if err := service.templateService.Load(templateID, &template); err != nil {
+		return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy(parent.TemplateID) {
-		return model.Stream{}, template, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
+		return model.Stream{}, model.Template{}, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
 	result := model.NewStream()
@@ -275,12 +300,12 @@ func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.
 }
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, model.Template, error) {
 
 	if sibling.HasParent() {
 		var parent model.Stream
 		if err := service.LoadParent(sibling, &parent); err != nil {
-			return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
+			return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
 		}
 
 		return service.NewChild(&parent, templateID)
@@ -289,9 +314,13 @@ func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (mod
 	return service.NewTopLevel(templateID)
 }
 
-// Template returns the Templateassociated with this Stream
-func (service *Stream) Template(templateID string) (*model.Template, error) {
-	return service.templateService.Load(templateID)
+// Template returns the Template associated with this Stream
+func (service *Stream) Template(templateID string) (model.Template, error) {
+
+	template := model.NewTemplate(templateID)
+	err := service.templateService.Load(templateID, &template)
+
+	return template, err
 }
 
 // State returns the detailed State information associated with this Stream
@@ -300,7 +329,7 @@ func (service *Stream) State(stream *model.Stream) (model.State, error) {
 }
 
 // Schema returns the Schema associated with this Stream
-func (service *Stream) Schema(stream *model.Stream) (*schema.Schema, error) {
+func (service *Stream) Schema(stream *model.Stream) (schema.Schema, error) {
 	return service.templateService.Schema(stream.TemplateID)
 }
 
@@ -310,22 +339,19 @@ func (service *Stream) Action(stream *model.Stream, actionID string) (model.Acti
 }
 
 // updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
-func (service *Stream) updateStreamsByTemplate(template *model.Template) {
+func (service *Stream) updateStreamsByTemplate(templateID string) {
 
-	iterator, err := service.ListByTemplate(template.TemplateID)
+	iterator, err := service.ListByTemplate(templateID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", template))
+		derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", templateID))
 		return
 	}
 
-	var stream model.Stream
+	stream := new(model.Stream)
 
-	for iterator.Next(&stream) {
-		fmt.Println("streamService.updateStreamsByTemplate: Sending stream: " + stream.Label)
-		service.streamUpdateChannel <- stream
-		stream = model.Stream{}
+	for iterator.Next(stream) {
+		service.streamUpdateChannel <- *stream
+		stream = new(model.Stream)
 	}
-
-	fmt.Println("streamService.updateStreamsByTemplate: End of Iterator.")
 }

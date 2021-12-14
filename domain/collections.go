@@ -3,6 +3,9 @@ package domain
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
+// CollectionDomain is the database collection where the singleton Domain record is stored
+const CollectionDomain = "Domain"
+
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"
 

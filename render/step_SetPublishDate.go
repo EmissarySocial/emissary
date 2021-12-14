@@ -16,12 +16,13 @@ func NewStepSetPublishDate(stepInfo datatype.Map) StepSetPublishDate {
 }
 
 // Get does not display any data
-func (step StepSetPublishDate) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepSetPublishDate) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepSetPublishDate) Post(buffer io.Writer, renderer *Stream) error {
-	renderer.stream.PublishDate = time.Now().UnixMilli()
+func (step StepSetPublishDate) Post(buffer io.Writer, renderer Renderer) error {
+	streamRenderer := renderer.(Stream)
+	streamRenderer.stream.PublishDate = time.Now().UnixMilli()
 	return nil
 }

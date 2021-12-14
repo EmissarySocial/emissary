@@ -23,12 +23,12 @@ func NewStepTriggerEvent(stepInfo datatype.Map) StepTriggerEvent {
 }
 
 // Get displays a form where users can update stream data
-func (step StepTriggerEvent) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepTriggerEvent) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepTriggerEvent) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepTriggerEvent) Post(buffer io.Writer, renderer Renderer) error {
 	data, err := executeSingleTemplate(step.data, renderer)
 
 	if err != nil {
@@ -36,9 +36,9 @@ func (step StepTriggerEvent) Post(buffer io.Writer, renderer *Stream) error {
 	}
 
 	if data == "" {
-		renderer.ctx.Response().Header().Set("HX-Trigger", step.event)
+		renderer.context().Response().Header().Set("HX-Trigger", step.event)
 	} else {
-		renderer.ctx.Response().Header().Set("HX-Trigger", `{"`+step.event+`":`+data+`}`)
+		renderer.context().Response().Header().Set("HX-Trigger", `{"`+step.event+`":`+data+`}`)
 	}
 
 	return nil

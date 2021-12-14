@@ -2,6 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -58,7 +60,21 @@ type StreamSource struct {
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
-// ID returns the unique identifier of this object, and fulfills part of the data.Object interface
+/*******************************************
+ * DATA.OBJECT INTERFACE
+ *******************************************/
+
+// ID returns the primary key of this object
 func (source *StreamSource) ID() string {
 	return source.StreamSourceID.Hex()
+}
+
+// GetPath implements the path.Getter interface, allowing named READ access to specific values
+func (source *StreamSource) GetPath(p path.Path) (interface{}, error) {
+	return nil, derp.New(derp.CodeInternalError, "ghost.model.StreamSource.GetPath", "unimplemented")
+}
+
+// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
+func (source *StreamSource) SetPath(p path.Path, value interface{}) error {
+	return derp.New(derp.CodeInternalError, "ghost.model.StreamSource.GetPath", "unimplemented")
 }

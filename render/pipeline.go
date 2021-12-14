@@ -8,12 +8,12 @@ import (
 )
 
 // DoPipeline executes a series of RenderSteps on a particular Stream
-func DoPipeline(renderer *Stream, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
+func DoPipeline(factory Factory, renderer Renderer, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
 
 	// Execute all of the steps of the requested action
 	for _, stepInfo := range steps {
 
-		step, err := NewStep(renderer.factory, stepInfo)
+		step, err := NewStep(factory, stepInfo)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.render.DoPipeline", "Error initializing step", stepInfo)

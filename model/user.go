@@ -3,7 +3,11 @@ package model
 import (
 	"time"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
+	"github.com/benpate/path"
+	"github.com/benpate/schema"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,9 +25,65 @@ type User struct {
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
+func NewUser() User {
+	return User{
+		UserID:   primitive.NewObjectID(),
+		GroupIDs: make([]primitive.ObjectID, 0),
+	}
+}
+
 // ID returns the primary key for this record
 func (user *User) ID() string {
 	return user.UserID.Hex()
+}
+
+func (user *User) Schema() schema.Schema {
+	return schema.Schema{
+		ID: "ghost.model.user",
+		Element: schema.Object{
+			Properties: map[string]schema.Element{
+				"userId":      schema.String{},
+				"groupIds":    schema.Array{},
+				"displayName": schema.String{},
+				"username":    schema.String{},
+				"avatarUrl":   schema.String{},
+			},
+		},
+	}
+}
+
+// GetPath implements the path.Setter interface
+func (user *User) GetPath(p path.Path) (interface{}, error) {
+	switch p.Head() {
+	case "userId":
+		return user.UserID, nil
+	case "groupIds":
+		return user.GroupIDs, nil
+	case "displayName":
+		return user.DisplayName, nil
+	case "username":
+		return user.Username, nil
+	case "avatarUrl":
+		return user.AvatarURL, nil
+	}
+
+	return nil, derp.New(derp.CodeInternalError, "ghost.model.User.GetPath", "Unrecognized path", p)
+}
+
+// SetPath implements the path.Setter interface
+func (user *User) SetPath(p path.Path, value interface{}) error {
+
+	switch p.Head() {
+	case "displayName":
+		user.DisplayName = convert.String(value)
+		return nil
+
+	case "avatarUrl":
+		user.AvatarURL = convert.String(value)
+		return nil
+	}
+
+	return derp.New(derp.CodeInternalError, "ghost.model.User.SetPath", "Cannot set value", p, value)
 }
 
 /******************************

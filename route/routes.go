@@ -43,6 +43,11 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/outbox", handler.GetOutbox(factoryManager))
 	e.POST("/outbox", handler.PostOutbox(factoryManager))
 
+	// DOMAIN ADMIN
+	e.GET("/domain", handler.GetDomain(factoryManager))
+	e.GET("/domain/:action", handler.GetDomain(factoryManager))
+	e.POST("/domain/:action", handler.PostDomain(factoryManager))
+
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factoryManager))
 	e.GET("/:stream", handler.GetStream(factoryManager))
@@ -50,15 +55,11 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/:stream/:action", handler.PostStream(factoryManager))
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
 
-	// e.POST("/:stream/attachments", handler.CreateAttachment(factoryManager))
+	// TODO: Can Attachments and SSE be moved into a custom render step?
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
-	//	e.DELETE("/:stream/attachments/:attachment", handler.DeleteAttachment(factoryManager))
-
-	// TODO: Can SSE support be moved into a custom render step?
 	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 
-	// CUSTOM ERROR HANDLER
-
+	// SITE-WIDE ERROR HANDLER
 	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
 
 		// If Forbidden error, then redirect the user to the signin page.

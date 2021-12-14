@@ -16,10 +16,10 @@ func NewStepStreamShare(config datatype.Map) StepStreamShare {
 	return StepStreamShare{}
 }
 
-func (step StepStreamShare) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamShare) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-func (step StepStreamShare) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamShare) Post(buffer io.Writer, renderer Renderer) error {
 	return nil
 }

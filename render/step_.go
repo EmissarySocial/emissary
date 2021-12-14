@@ -8,8 +8,8 @@ import (
 )
 
 type Step interface {
-	Get(io.Writer, *Stream) error
-	Post(io.Writer, *Stream) error
+	Get(io.Writer, Renderer) error
+	Post(io.Writer, Renderer) error
 }
 
 // NewStep uses an Step object to create a new action
@@ -29,17 +29,11 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "new-child":
 		return NewStepNewChild(factory.Template(), factory.Stream(), stepInfo), nil
 
-	case "new-sibling":
-		return NewStepNewSibling(factory.Stream(), stepInfo), nil
-
 	case "save":
 		return NewStepStreamSave(factory.Stream(), stepInfo), nil
 
 	case "set-data":
 		return NewStepSetData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
-
-	case "set-defaults":
-		return NewStepStreamDefaults(stepInfo), nil
 
 	case "set-thumbnail":
 		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
@@ -78,7 +72,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepWithParent(factory.Stream(), stepInfo), nil
 
 	case "if":
-		return NewStepIfCondition(stepInfo), nil
+		return NewStepIfCondition(factory, stepInfo), nil
 
 	case "forward-to":
 		return NewStepForwardTo(stepInfo), nil

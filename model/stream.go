@@ -55,22 +55,13 @@ func NewStream() Stream {
 	}
 }
 
+/*******************************************
+ * DATA.OBJECT INTERFACE
+ *******************************************/
+
 // ID returns the primary key of this object
 func (stream Stream) ID() string {
 	return stream.StreamID.Hex()
-}
-
-// HasParent returns TRUE if this Stream has a valid parentID
-func (stream Stream) HasParent() bool {
-	return !stream.ParentID.IsZero()
-}
-
-// NewAttachment creates a new file Attachment linked to this Stream.
-func (stream Stream) NewAttachment(filename string) Attachment {
-	result := NewAttachment(stream.StreamID)
-	result.Original = filename
-
-	return result
 }
 
 // GetPath implements the path.Getter interface.  It looks up
@@ -135,6 +126,24 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 	return nil
 }
 
+/*******************************************
+ * OTHER METHODS
+ *******************************************/
+
+// HasParent returns TRUE if this Stream has a valid parentID
+func (stream Stream) HasParent() bool {
+	return !stream.ParentID.IsZero()
+}
+
+// NewAttachment creates a new file Attachment linked to this Stream.
+func (stream Stream) NewAttachment(filename string) Attachment {
+	result := NewAttachment(stream.StreamID)
+	result.Original = filename
+
+	return result
+}
+
+// Roles returns a list of all roles that match the provided authorization
 func (stream *Stream) Roles(authorization *Authorization) []string {
 
 	result := make([]string, 0)

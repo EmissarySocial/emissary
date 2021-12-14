@@ -27,17 +27,9 @@ func NewStepStreamHTML(stepInfo datatype.Map) StepStreamHTML {
 }
 
 // Get renders the Stream HTML to the context
-func (step StepStreamHTML) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamHTML) Get(buffer io.Writer, renderer Renderer) error {
 
-	template, ok := renderer.template.HTMLTemplate(step.filename)
-
-	if !ok {
-		return derp.New(derp.CodeBadRequestError, "ghost.renderer.StepStreamHTML.Get", "Cannot find template", step.filename)
-	}
-
-	template.Funcs(FuncMap())
-
-	if err := template.Execute(buffer, renderer); err != nil {
+	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamHTML.Get", "Error executing template")
 	}
 
@@ -45,6 +37,6 @@ func (step StepStreamHTML) Get(buffer io.Writer, renderer *Stream) error {
 }
 
 // Post is not supported for this step.
-func (step StepStreamHTML) Post(buffer io.Writer, renderer *Stream) error {
-	return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamHTML.Get", "Unsupported Method")
+func (step StepStreamHTML) Post(buffer io.Writer, renderer Renderer) error {
+	return nil
 }

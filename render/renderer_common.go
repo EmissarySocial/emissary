@@ -15,7 +15,8 @@ type Common struct {
 	ctx     *steranko.Context // Contains request context and authentication data.
 
 	// Cached values, do not populate unless needed
-	user *model.User
+	user   *model.User
+	domain *model.Domain
 }
 
 func NewCommon(factory Factory, ctx *steranko.Context) Common {
@@ -23,6 +24,29 @@ func NewCommon(factory Factory, ctx *steranko.Context) Common {
 		factory: factory,
 		ctx:     ctx,
 	}
+}
+
+/*******************************************
+ * RENDERER INTERFACE
+ *******************************************/
+
+// context returns request context embedded in this renderer.
+func (w Common) context() *steranko.Context {
+	return w.ctx
+}
+
+func (w Common) DomainLabel() string {
+	if domain, err := w.getDomain(); err == nil {
+		return domain.Label
+	}
+	return ""
+}
+
+func (w Common) BannerURL() string {
+	if domain, err := w.getDomain(); err == nil {
+		return domain.BannerURL
+	}
+	return ""
 }
 
 /*******************************************
@@ -43,12 +67,6 @@ func (w Common) Method() string {
 func (w Common) QueryParam(param string) string {
 	return w.ctx.QueryParam(param)
 }
-
-/*/ SetQueryParam sets/overwrites a value from the URL query parameters.
-func (w Common) SetQueryParam(param string, value string) string {
-	w.ctx.QueryParams().Set(param, value)
-	return "" // <- this is a mega-hack, but it works ;)
-}*/
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
@@ -96,20 +114,6 @@ func (w Common) UserAvatar() (string, error) {
  * MISC HELPER FUNCTIONS
  *******************************************/
 
-// newStream is a shortcut to the NewStream function that reuses the values present in this renderer
-func (w Common) newStream(stream *model.Stream, actionID string) (Stream, error) {
-	return NewStream(w.factory, w.ctx, stream, actionID)
-}
-
-// closeModal sets Response header to close a modal on the client and optionally forward to a new location.
-func (w Common) closeModal(url string) {
-	if url == "" {
-		w.ctx.Response().Header().Set("HX-Trigger", `"closeModal"`)
-	} else {
-		w.ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
-	}
-}
-
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
 func (w Common) getUser() (*model.User, error) {
 
@@ -128,16 +132,34 @@ func (w Common) getUser() (*model.User, error) {
 	return w.user, nil
 }
 
+// getDomain loads/caches the domain record to be used by other functions in this renderer
+func (w Common) getDomain() (*model.Domain, error) {
+
+	// If we haven't already loaded the domain, then do it now.
+	if w.domain == nil {
+
+		domainService := w.factory.Domain()
+		authorization := getAuthorization(w.ctx)
+		w.domain = new(model.Domain)
+
+		if err := domainService.Load(w.domain); err != nil {
+			return nil, derp.Wrap(err, "ghost.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
+		}
+	}
+
+	return w.domain, nil
+}
+
 /*******************************************
  * GLOBAL QUERIES
  *******************************************/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() ([]Stream, error) {
+func (w Common) TopLevel() ([]Renderer, error) {
 	criteria := exp.Equal("parentId", primitive.NilObjectID)
-	resultSet := NewResultSet(w.factory, w.ctx, criteria)
-	resultSet.SortField = "rank"
-	resultSet.SortDirection = option.SortDirectionAscending
-	resultSet.MaxRows = 10
-	return resultSet.View()
+	queryBuilder := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	queryBuilder.SortField = "rank"
+	queryBuilder.SortDirection = option.SortDirectionAscending
+	queryBuilder.MaxRows = 10
+	return queryBuilder.View()
 }

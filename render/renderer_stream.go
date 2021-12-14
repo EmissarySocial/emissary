@@ -3,36 +3,36 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"io"
 	"net/http"
 
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/exp/builder"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/path"
+	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	template *model.Template // Template that the Stream uses
-	action   *model.Action   // Action being executed
-	stream   *model.Stream   // Stream to be displayed
+	template model.Template // Template that the Stream uses
+	stream   model.Stream   // Stream to be displayed
+	action   model.Action   // Action being executed
 
 	Common
 }
 
+/*******************************************
+ * CONSTRUCTORS
+ *******************************************/
+
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Stream, error) {
-
-	// Try to load the Template associated with this Stream
-	templateService := factory.Template()
-	template, err := templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, "ghost.render.NewStream", "Cannot load Stream Template", stream)
-	}
+func NewStream(factory Factory, ctx *steranko.Context, template model.Template, stream model.Stream, actionID string) (Stream, error) {
 
 	// Try to find requested Action
 	action, ok := template.Action(actionID)
@@ -44,7 +44,7 @@ func NewStream(factory Factory, ctx *steranko.Context, stream *model.Stream, act
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
-	if !action.UserCan(stream, authorization) {
+	if !action.UserCan(&stream, authorization) {
 		return Stream{}, derp.New(http.StatusForbidden, "ghost.render.NewStream", "Forbidden")
 	}
 
@@ -52,26 +52,45 @@ func NewStream(factory Factory, ctx *steranko.Context, stream *model.Stream, act
 	return Stream{
 		stream:   stream,
 		template: template,
-		action:   &action,
+		action:   action,
 		Common:   NewCommon(factory, ctx),
 	}, nil
 }
 
+// NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
+func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream model.Stream, actionID string) (Stream, error) {
+
+	var template model.Template
+	templateService := factory.Template()
+
+	if err := templateService.Load(stream.TemplateID, &template); err != nil {
+		return Stream{}, derp.Wrap(err, "ghost.render.NewStreamWithoutTemplate", "Error loading Template", stream)
+	}
+
+	return NewStream(factory, ctx, template, stream, actionID)
+}
+
 /*******************************************
- * RENDER FUNCTION
+ * RENDERER INTERFACE
  *******************************************/
+
+// ActionID returns the name of the action being performed
+func (w Stream) ActionID() string {
+	return w.action.ActionID
+}
+
+// Action returns the model.Action configured into this renderer
+func (w Stream) Action() (model.Action, bool) {
+	return w.action, true
+}
 
 // Render generates the string value for this Stream
 func (w Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if w.IsEmpty() {
-		return template.HTML(""), nil
-	}
-
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+	if err := DoPipeline(w.factory, &w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
 		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -79,10 +98,32 @@ func (w Stream) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
+func (w Stream) executeTemplate(wr io.Writer, name string, data interface{}) error {
+	return w.template.HTMLTemplate.ExecuteTemplate(wr, name, data)
+}
+
+// object returns the model object associated with this renderer
+func (w Stream) object() data.Object {
+	return &w.stream
+}
+
+// schema returns the validation schema associated with this renderer
+func (w Stream) schema() schema.Schema {
+	return w.template.Schema
+}
+
+func (s Stream) common() Common {
+	return s.Common
+}
+
+/*******************************************
+ * ACTION SHORTCUTS
+ *******************************************/
+
 // View executes a separate view for this Stream
 func (w Stream) View(action string) (template.HTML, error) {
 
-	subStream, err := NewStream(w.factory, w.ctx, w.stream, action)
+	subStream, err := NewStream(w.factory, w.ctx, w.template, w.stream, action)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "ghost.render.Stream.View", "Error creating sub-renderer", action)
@@ -94,11 +135,6 @@ func (w Stream) View(action string) (template.HTML, error) {
 /*******************************************
  * STREAM DATA
  *******************************************/
-
-// IsEmpty returns TRUE if this renderer is empty
-func (w Stream) IsEmpty() bool {
-	return w.stream == nil
-}
 
 // StreamID returns the unique ID for the stream being rendered
 func (w Stream) StreamID() string {
@@ -125,11 +161,6 @@ func (w Stream) StateID() string {
 // TemplateID returns the name of the template being used
 func (w Stream) TemplateID() string {
 	return w.stream.TemplateID
-}
-
-// ActionID returns the name of the action being performed
-func (w Stream) ActionID() string {
-	return w.action.ActionID
 }
 
 // Token returns the unique URL token for the stream being rendered
@@ -214,34 +245,21 @@ func (w Stream) Roles() []string {
 }
 
 /*******************************************
- * TEMPLATE INFO
- *******************************************/
-
-// Action returns the complete information for the action being performed.
-func (w Stream) Action() *model.Action {
-	return w.action
-}
-
-// IsPartialRequest returns TRUE if this is a partial page request from htmx.
-func (w Stream) IsPartialRequest() bool {
-	return (w.ctx.Request().Header.Get("HX-Request") != "")
-}
-
-/*******************************************
  * RELATED STREAMS
  *******************************************/
 
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent(actionID string) (Stream, error) {
 
-	streamService := w.factory.Stream()
-	parent := model.NewStream()
+	var parent model.Stream
 
-	if err := streamService.LoadParent(w.stream, &parent); err != nil {
+	streamService := w.factory.Stream()
+
+	if err := streamService.LoadParent(&w.stream, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Error loading Parent")
 	}
 
-	renderer, err := w.newStream(&parent, actionID)
+	renderer, err := NewStreamWithoutTemplate(w.factory, w.ctx, parent, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Unable to create new Stream")
@@ -315,13 +333,12 @@ func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Optio
 		return Stream{}
 	}
 
-	stream := new(model.Stream)
+	var stream model.Stream
 
-	for iterator.Next(stream) {
-		if result, err := w.newStream(stream, actionID); err == nil {
+	for iterator.Next(&stream) {
+		if result, err := NewStreamWithoutTemplate(w.factory, w.ctx, stream, actionID); err == nil {
 			return result
 		}
-		stream = new(model.Stream)
 	}
 
 	// Fall through means no streams are valid.  Return an empty renderer instead.
@@ -333,23 +350,36 @@ func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Optio
  *******************************************/
 
 // Siblings returns all Sibling Streams
-func (w Stream) Siblings() *ResultSet {
-	return w.makeResultSet(exp.Equal("parentId", w.stream.ParentID))
+func (w Stream) Siblings() QueryBuilder {
+	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
 }
 
 // Children returns all child Streams
-func (w Stream) Children() *ResultSet {
-	return w.makeResultSet(exp.Equal("parentId", w.stream.StreamID))
+func (w Stream) Children() QueryBuilder {
+	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
 }
 
-// makeResultSet returns a fully initialized ResultSet
-func (w Stream) makeResultSet(criteria exp.Expression) *ResultSet {
+// makeQueryBuilder returns a fully initialized QueryBuilder
+func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
-	resultSet := NewResultSet(w.factory, w.ctx, criteria)
-	resultSet.SortField = w.template.ChildSortType
-	resultSet.SortDirection = w.template.ChildSortDirection
+	query := builder.NewBuilder().
+		Int("journal.createDate").
+		Int("publishDate").
+		Int("expirationDate").
+		Int("rank").
+		String("label")
 
-	return resultSet
+	criteria = exp.And(
+		criteria,
+		query.Evaluate(w.ctx.Request().URL.Query()),
+		exp.Equal("journal.deleteDate", 0),
+	)
+
+	result := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	result.SortField = w.template.ChildSortType
+	result.SortDirection = w.template.ChildSortDirection
+
+	return result
 }
 
 /*******************************************
@@ -409,7 +439,7 @@ func (w Stream) UserCan(actionID string) bool {
 
 	authorization := getAuthorization(w.ctx)
 
-	return action.UserCan(w.stream, authorization)
+	return action.UserCan(&w.stream, authorization)
 }
 
 // CanCreate returns all of the templates that can be created underneath

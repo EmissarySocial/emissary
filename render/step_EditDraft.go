@@ -32,39 +32,36 @@ func NewStepStreamDraftEdit(draftService *service.StreamDraft, stepInfo datatype
 	}
 }
 
-func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer Renderer) error {
 
-	template, ok := renderer.template.HTMLTemplate(step.filename)
-
-	if !ok {
-		return derp.New(derp.CodeBadRequestError, "ghost.renderer.StepStreamHTML.Get", "Cannot find template", step.filename)
-	}
+	streamRenderer := renderer.(Stream)
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := step.draftService.LoadByID(renderer.stream.StreamID, renderer.stream); err != nil {
+	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &streamRenderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.StepStreamDraftEdit.Get", "Error loading Draft")
 	}
 
-	if err := template.Execute(buffer, renderer); err != nil {
+	if err := streamRenderer.executeTemplate(buffer, step.filename, streamRenderer); err != nil {
 		return derp.Wrap(err, "ghost.render.StepStreamDraftEdit.Get", "Error executing template")
 	}
 
 	return nil
 }
 
-func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer Renderer) error {
 
 	var draft model.Stream
+	streamRenderer := renderer.(Stream)
 
 	// Try to load the stream draft from the database
-	if err := step.draftService.LoadByID(renderer.stream.StreamID, &draft); err != nil {
+	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &draft); err != nil {
 		return derp.Wrap(err, "ghost.renderer.StepStreamDraftEdit.Post", "Error loading Draft")
 	}
 
 	// Try to parse the body content into a transaction
 	body := make(map[string]interface{})
 
-	if err := renderer.ctx.Bind(&body); err != nil {
+	if err := streamRenderer.ctx.Bind(&body); err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.StepStreamDraftEdit.Post", "Error binding data"))
 	}
 

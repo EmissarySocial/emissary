@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 )
 
@@ -28,14 +29,14 @@ func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error
 			return nil, derp.Wrap(err, "ghost.service.OptionProvider.OptionCodes", "Error connecting to database")
 		}
 
-		record := service.User.New()
+		record := model.NewUser()
 		result := make([]form.OptionCode, it.Count())
 		for it.Next(&record) {
 			result = append(result, form.OptionCode{
 				Label: record.DisplayName,
 				Value: record.UserID.Hex(),
 			})
-			record = service.User.New()
+			record = model.NewUser()
 		}
 
 		return result, nil

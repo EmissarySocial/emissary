@@ -29,24 +29,19 @@ func NewStepSetData(templateService *service.Template, streamService *service.St
 }
 
 // Get does not display anything.
-func (step StepSetData) Get(buffer io.Writer, renderer *Stream) error {
+func (step StepSetData) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetData) Post(buffer io.Writer, renderer *Stream) error {
+func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to find the schema for this Template
-	schema, err := step.templateService.Schema(renderer.stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepForm.Get", "Invalid Schema")
-	}
-
+	schema := renderer.schema()
 	inputs := make(datatype.Map)
 
 	// Collect form POST information
-	if err := renderer.ctx.Bind(&inputs); err != nil {
+	if err := renderer.context().Bind(&inputs); err != nil {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
@@ -56,14 +51,14 @@ func (step StepSetData) Post(buffer io.Writer, renderer *Stream) error {
 
 	// Put approved form data into the stream
 	for _, p := range step.paths {
-		if err := path.Set(renderer.stream, p, inputs[p]); err != nil {
+		if err := path.Set(renderer.object(), p, inputs[p]); err != nil {
 			return derp.New(derp.CodeBadRequestError, "ghost.render.StepSetData.Post", "Error seting value from user input", p)
 		}
 	}
 
 	// Put values from schema.json into the stream
 	for key, value := range step.values {
-		if err := path.Set(renderer.stream, key, value); err != nil {
+		if err := path.Set(renderer.object(), key, value); err != nil {
 			return derp.Wrap(err, "ghose.render.StepSetData.Post", "Error setting value from schema.json", key, value)
 		}
 	}
