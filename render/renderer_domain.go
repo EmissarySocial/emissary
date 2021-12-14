@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 )
@@ -19,17 +20,29 @@ type Domain struct {
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, domain model.Domain, actionID string) Domain {
+func NewDomain(factory Factory, ctx *steranko.Context, actionID string) Domain {
 
 	layoutService := factory.Layout()
 	layout := layoutService.Domain()
 
 	return Domain{
-		domain:   domain,
 		layout:   layout,
 		actionID: actionID,
 		Common:   NewCommon(factory, ctx),
 	}
+}
+
+/*******************************************
+ * PATH INTERFACE
+ * (not available via templates)
+ *******************************************/
+
+func (domain *Domain) GetPath(p path.Path) (interface{}, error) {
+	return domain.domain.GetPath(p)
+}
+
+func (domain *Domain) SetPath(p path.Path, value interface{}) error {
+	return domain.domain.SetPath(p, value)
 }
 
 /*******************************************

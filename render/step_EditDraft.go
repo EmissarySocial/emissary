@@ -34,7 +34,7 @@ func NewStepStreamDraftEdit(draftService *service.StreamDraft, stepInfo datatype
 
 func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
 	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &streamRenderer.stream); err != nil {
@@ -51,7 +51,7 @@ func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer Renderer) error {
 
 	var draft model.Stream
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 
 	// Try to load the stream draft from the database
 	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &draft); err != nil {
@@ -59,7 +59,7 @@ func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer Renderer) error 
 	}
 
 	// Try to parse the body content into a transaction
-	body := make(map[string]interface{})
+	body := datatype.Map{}
 
 	if err := streamRenderer.ctx.Bind(&body); err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.StepStreamDraftEdit.Post", "Error binding data"))
@@ -72,7 +72,7 @@ func (step StepStreamDraftEdit) Post(buffer io.Writer, renderer Renderer) error 
 	}
 
 	// Try to execute the transaction
-	if err := txn.Execute(&(draft.Content)); err != nil {
+	if err := txn.Execute(&draft.Content); err != nil {
 		return derp.Report(derp.Wrap(err, "ghost.handler.StepStreamDraftEdit.Post", "Error executing transaction", txn))
 	}
 

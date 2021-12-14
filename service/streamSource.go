@@ -31,7 +31,7 @@ func (service StreamSource) New() *model.StreamSource {
 
 // List returns an iterator containing all of the StreamSources who match the provided criteria
 func (service StreamSource) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an StreamSource from the database
@@ -39,7 +39,7 @@ func (service StreamSource) Load(criteria exp.Expression) (*model.StreamSource, 
 
 	account := service.New()
 
-	if err := service.collection.Load(criteria, account); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), account); err != nil {
 		return nil, derp.Wrap(err, "service.StreamSource", "Error loading StreamSource", criteria)
 	}
 

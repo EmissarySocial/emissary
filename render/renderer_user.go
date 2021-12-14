@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 )
@@ -33,28 +34,41 @@ func NewUser(factory Factory, ctx *steranko.Context, user model.User, actionID s
 }
 
 /*******************************************
+ * PATH INTERFACE
+ * (not available via templates)
+ *******************************************/
+
+func (u *User) GetPath(p path.Path) (interface{}, error) {
+	return u.user.GetPath(p)
+}
+
+func (u *User) SetPath(p path.Path, value interface{}) error {
+	return u.user.SetPath(p, value)
+}
+
+/*******************************************
  * RENDERER INTERFACE
  *******************************************/
 
 // ActionID returns the unique ID of the Action configured into this renderer
-func (u User) ActionID() string {
-	return u.actionID
+func (user User) ActionID() string {
+	return user.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (u User) Action() (model.Action, bool) {
-	return u.layout.Action(u.ActionID())
+func (user User) Action() (model.Action, bool) {
+	return user.layout.Action(user.ActionID())
 }
 
 // Render generates the string value for this Stream
-func (u User) Render() (template.HTML, error) {
+func (user User) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := u.layout.Action(u.actionID); ok {
+	if action, ok := user.layout.Action(user.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(u.factory, u, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(user.factory, &user, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}
@@ -62,22 +76,22 @@ func (u User) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (u User) Token() string {
-	return u.user.ID()
+func (user User) Token() string {
+	return user.user.ID()
 }
 
-func (u User) object() data.Object {
-	return &u.user
+func (user User) object() data.Object {
+	return &user.user
 }
 
-func (u User) schema() schema.Schema {
-	return u.user.Schema()
+func (user User) schema() schema.Schema {
+	return user.user.Schema()
 }
 
-func (u User) common() Common {
-	return u.Common
+func (user User) common() Common {
+	return user.Common
 }
 
-func (u User) executeTemplate(wr io.Writer, name string, data interface{}) error {
-	return u.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
+func (user User) executeTemplate(writer io.Writer, name string, data interface{}) error {
+	return user.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }

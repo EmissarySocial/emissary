@@ -22,7 +22,7 @@ func (step StepSetPublishDate) Get(buffer io.Writer, renderer Renderer) error {
 
 // Post updates the stream with the current date as the "PublishDate"
 func (step StepSetPublishDate) Post(buffer io.Writer, renderer Renderer) error {
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 	streamRenderer.stream.PublishDate = time.Now().UnixMilli()
 	return nil
 }

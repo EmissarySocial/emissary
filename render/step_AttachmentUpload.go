@@ -32,7 +32,7 @@ func (step StepAttachmentUpload) Get(buffer io.Writer, renderer Renderer) error 
 
 func (step StepAttachmentUpload) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 	form, err := streamRenderer.ctx.MultipartForm()
 
 	if err != nil {

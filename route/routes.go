@@ -43,10 +43,18 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/outbox", handler.GetOutbox(factoryManager))
 	e.POST("/outbox", handler.PostOutbox(factoryManager))
 
-	// DOMAIN ADMIN
-	e.GET("/domain", handler.GetDomain(factoryManager))
-	e.GET("/domain/:action", handler.GetDomain(factoryManager))
-	e.POST("/domain/:action", handler.PostDomain(factoryManager))
+	// ADMIN PAGES
+	e.GET("/_/:param1", handler.GetAdmin(factoryManager))
+	e.GET("/_/:param1/:param2", handler.GetAdmin(factoryManager))
+	e.POST("/_/:param1/:param2", handler.PostAdmin(factoryManager))
+	e.GET("/_/:param1/:param2/:action", handler.GetAdmin(factoryManager))
+	e.POST("/_/:param1/:param2/:action", handler.PostAdmin(factoryManager))
+
+	// PROFILE PAGES
+	// e.GET("/me/", handler.GetProfile(factoryManager))
+	// e.POST("/me", handler.PostProfile(factoryManager))
+	// e.GET("/me/:action", handler.PostProfile(factoryManager))
+	// e.POST("/me/:action", handler.PostProfile(factoryManager))
 
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factoryManager))

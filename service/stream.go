@@ -61,13 +61,13 @@ func (service *Stream) watch() {
 
 // List returns an iterator containing all of the Streams who match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Stream from the database
 func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error {
 
-	if err := service.collection.Load(criteria, stream); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), stream); err != nil {
 		return derp.Wrap(err, "ghost.service.Stream", "Error loading Stream", criteria)
 	}
 
@@ -137,8 +137,10 @@ func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Opt
 	return service.List(criteria, options...)
 }
 
-func (service *Stream) ObjectLoad(criteria exp.Expression, object data.Object) error {
-	return service.Load(criteria, object.(*model.Stream))
+func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewStream()
+	err := service.Load(criteria, &result)
+	return &result, err
 }
 
 func (service *Stream) ObjectSave(object data.Object, comment string) error {
@@ -174,48 +176,39 @@ func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 
 // ListByParent returns all Streams that match a particular parentID
 func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(
-		exp.
-			Equal("parentId", parentID).
-			AndEqual("journal.deleteDate", 0))
+	return service.List(exp.Equal("parentId", parentID))
 }
 
 // ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListTopLevel() (data.Iterator, error) {
 	return service.List(
-		exp.Equal("parentId", ZeroObjectID()).AndEqual("journal.deleteDate", 0),
+		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
 	)
 }
 
 // ListByTemplate returns all Streams that use a particular Template
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
-
-	criteria := exp.
-		Equal("templateId", template).
-		AndEqual("journal.deleteDate", 0)
-
-	return service.List(criteria)
+	return service.List(exp.Equal("templateId", template))
 }
 
 // LoadByToken returns a single Stream that matches a particular Token
 func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 
-	criteria := exp.
-		Equal("token", token).
-		AndEqual("journal.deleteDate", 0)
+	// If the token looks like an ObjectID, then try Load by ID first.
+	if streamID, err := primitive.ObjectIDFromHex(token); err == nil {
+		if err := service.LoadByID(streamID, result); err == nil {
+			return nil
+		}
+	}
 
-	return service.Load(criteria, result)
+	// Default to Load by Token
+	return service.Load(exp.Equal("token", token), result)
 }
 
 // LoadByID returns a single Stream that matches a particular StreamID
 func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
-
-	criteria := exp.
-		Equal("_id", streamID).
-		AndEqual("journal.deleteDate", 0)
-
-	return service.Load(criteria, result)
+	return service.Load(exp.Equal("_id", streamID), result)
 }
 
 // LoadBySourceURL locates a single stream that matches the provided SourceURL

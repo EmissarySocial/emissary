@@ -120,7 +120,7 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 		return stream.Criteria.SetPath(p.Tail(), value)
 
 	default:
-		stream.Data[property] = value
+		return stream.Data.SetPath(p, value)
 	}
 
 	return nil

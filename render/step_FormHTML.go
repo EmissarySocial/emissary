@@ -48,7 +48,6 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 
-	// Try to find the schema for this Template
 	schema := renderer.schema()
 	inputs := make(datatype.Map)
 
@@ -63,7 +62,7 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Put approved form data into the stream
 	for key, value := range inputs {
-		if err := path.Set(renderer.object(), key, value); err != nil {
+		if err := renderer.SetPath(path.New(key), value); err != nil {
 			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", key, value)
 		}
 	}

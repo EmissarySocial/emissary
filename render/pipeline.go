@@ -29,7 +29,6 @@ func DoPipeline(factory Factory, renderer Renderer, buffer io.Writer, steps []da
 		if err != nil {
 			return derp.Wrap(err, "ghost.render.DoPipeline", "Error executing step", stepInfo)
 		}
-
 	}
 
 	return nil

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"net/http"
 
 	"github.com/benpate/derp"
@@ -10,7 +9,6 @@ import (
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetStream handles GET requests
@@ -31,16 +29,8 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamService := factory.Stream()
 		streamToken := getStreamToken(ctx)
 
-		// If the token is an ObjectID, then use it as the StreamID
-		if streamID, err := primitive.ObjectIDFromHex(streamToken); err == nil {
-			if err := streamService.LoadByID(streamID, &stream); err != nil {
-				return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by StreamID", streamID)
-			}
-		} else {
-			// Otherwise, use the input as a Token and try to find the Stream that way.
-			if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-				return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by Token", streamToken)
-			}
+		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+			return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by Token", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
@@ -52,25 +42,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")
 		}
 
-		// Partial Page requests are simpler.
-		if renderer.IsPartialRequest() {
-			result, err := renderer.Render()
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.handler.GetStream", "Error rendering stream")
-			}
-			return ctx.HTML(http.StatusOK, string(result))
-		}
-
-		// Full Page requests require the layout service
-		htmlTemplate := factory.Layout().Global().HTMLTemplate
-
-		var buffer bytes.Buffer
-		if err := htmlTemplate.ExecuteTemplate(&buffer, "page", &renderer); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetStream", "Error rendering full-page content")
-		}
-
-		return ctx.HTML(http.StatusOK, buffer.String())
+		return renderPage(factory, sterankoContext, &renderer)
 	}
 }
 
@@ -81,7 +53,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		var stream model.Stream
 
-		// Try to get the factory
+		// Try to get the Factory from the context
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
@@ -105,12 +77,14 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
 		}
 
+		// Execute the action pipeline
 		if action, ok := renderer.Action(); ok {
 			if err := render.DoPipeline(factory, &renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
 			}
 		}
 
+		// Woot!!
 		return nil
 	}
 }

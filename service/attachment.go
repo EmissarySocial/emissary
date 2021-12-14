@@ -34,13 +34,13 @@ func (service Attachment) New() model.Attachment {
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Attachment from the database
 func (service Attachment) Load(criteria exp.Expression, result *model.Attachment) error {
 
-	if err := service.collection.Load(criteria, result); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
 	}
 

@@ -30,7 +30,7 @@ func (step StepTopLevelCreate) Get(buffer io.Writer, renderer Renderer) error {
 
 func (step StepTopLevelCreate) Post(buffer io.Writer, renderer Renderer) error {
 
-	domainRenderer := renderer.(Domain)
+	domainRenderer := renderer.(*Domain)
 	templateID := domainRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.

@@ -6,10 +6,16 @@ import (
 	"io/ioutil"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/list"
 	minify "github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 )
+
+// notDeleted ensures that a criteria expression does not include soft-deleted items.
+func notDeleted(criteria exp.Expression) exp.Expression {
+	return criteria.And(exp.Equal("journal.deleteDate", 0))
+}
 
 // loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
 func loadHTMLTemplateFromFilesystem(directory string, t *template.Template, funcMap template.FuncMap) error {

@@ -182,11 +182,6 @@ func (factory *Factory) Layout() *service.Layout {
 	return factory.layoutService
 }
 
-// Renderer generates a new render.Renderer object, pegged to a specific view.
-func (factory *Factory) Renderer(ctx *steranko.Context, object data.Object, actionID string) (render.Renderer, error) {
-	return render.NewRenderer(factory, ctx, object, actionID)
-}
-
 // RenderStep uses an Step object to create a new action
 func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	return render.NewStep(factory, stepInfo)

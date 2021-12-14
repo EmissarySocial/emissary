@@ -31,14 +31,14 @@ func NewStepNewChild(templateService *service.Template, streamService *service.S
 }
 
 func (step StepNewChild) Get(buffer io.Writer, renderer Renderer) error {
-	streamRenderer := renderer.(Stream)
-	modalNewChild(step.templateService, buffer, &streamRenderer, step.templateIDs)
+	streamRenderer := renderer.(*Stream)
+	modalNewChild(step.templateService, buffer, streamRenderer, step.templateIDs)
 	return nil
 }
 
 func (step StepNewChild) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 	templateID := streamRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.

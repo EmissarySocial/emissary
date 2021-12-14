@@ -28,7 +28,7 @@ func (step StepStreamDraftPublish) Get(buffer io.Writer, renderer Renderer) erro
 
 func (step StepStreamDraftPublish) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 	var draft model.Stream
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer

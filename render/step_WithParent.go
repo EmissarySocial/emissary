@@ -34,7 +34,7 @@ func (step StepWithParent) Post(buffer io.Writer, renderer Renderer) error {
 
 	var parent model.Stream
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 
 	if err := step.streamService.LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
 		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error listing parent")

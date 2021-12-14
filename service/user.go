@@ -27,13 +27,12 @@ func NewUser(collection data.Collection) User {
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an User from the database
 func (service *User) Load(criteria exp.Expression, result *model.User) error {
-
-	if err := service.collection.Load(criteria, result); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.User", "Error loading User", criteria)
 	}
 
@@ -98,6 +97,12 @@ func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) err
 
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service *User) LoadByUsername(username string, result *model.User) error {
+	criteria := exp.Equal("username", username)
+	return service.Load(criteria, result)
+}
+
+// LoadByToken loads a single model.User object that matches the provided username
+func (service *User) LoadByToken(username string, result *model.User) error {
 	criteria := exp.Equal("username", username)
 	return service.Load(criteria, result)
 }

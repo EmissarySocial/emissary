@@ -59,7 +59,7 @@
 						"label": "Description",
 						"path": "description"
 					}]
-				}}, 
+				}},
 				{"step": "save", "comment": "Updated by {{.Author}}"},
 				{"step": "trigger-event","event": "closeModal"}
 			]

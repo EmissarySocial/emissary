@@ -29,7 +29,7 @@ func (step StepStreamThumbnail) Get(buffer io.Writer, renderer Renderer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 
 	// Find best icon from attachments
 	attachments, err := step.attachmentService.ListByStream(streamRenderer.stream.StreamID)

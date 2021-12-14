@@ -148,13 +148,13 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 // List returns an iterator containing all of the Subscriptions who match the provided criteria
 func (service *Subscription) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Subscription from the database
 func (service *Subscription) Load(criteria exp.Expression, result *model.Subscription) error {
 
-	if err := service.collection.Load(criteria, result); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "ghost.service.Subscription", "Error loading Subscription", criteria)
 	}
 
@@ -184,11 +184,8 @@ func (service *Subscription) Delete(subscription *model.Subscription, note strin
 // QUERIES //////////////////////////////////////
 
 func (service *Subscription) ListPollable() (data.Iterator, error) {
-
 	pollDuration := time.Now().Add(-1 * time.Hour).Unix()
-
-	criteria := exp.Equal("journal.deleteDate", 0).
-		AndLessThan("lastPolled", pollDuration)
+	criteria := exp.LessThan("lastPolled", pollDuration)
 
 	return service.List(criteria, option.SortAsc("lastPolled"))
 }

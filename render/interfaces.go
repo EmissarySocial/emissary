@@ -25,7 +25,7 @@ type Factory interface {
 type ModelService interface {
 	ObjectNew() data.Object
 	ObjectList(exp.Expression, ...option.Option) (data.Iterator, error)
-	ObjectLoad(exp.Expression, data.Object) error
+	ObjectLoad(exp.Expression) (data.Object, error)
 	ObjectSave(data.Object, string) error
 	ObjectDelete(data.Object, string) error
 }

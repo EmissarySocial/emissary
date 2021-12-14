@@ -32,7 +32,7 @@ func (step StepWithChildren) Get(buffer io.Writer, renderer Renderer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepWithChildren) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 
 	children, err := step.streamService.ListByParent(streamRenderer.stream.ParentID)
 
