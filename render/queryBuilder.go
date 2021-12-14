@@ -94,7 +94,7 @@ func (qb *QueryBuilder) ByRank() *QueryBuilder {
 	return qb
 }
 
-func (qb *QueryBuilder) Reveqbe() *QueryBuilder {
+func (qb *QueryBuilder) Reverse() *QueryBuilder {
 	qb.SortDirection = option.SortDirectionDescending
 	return qb
 }
