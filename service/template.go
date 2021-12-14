@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 
 	"io/ioutil"
 
@@ -233,8 +232,6 @@ func (service *Template) watch() {
 		panic(err)
 	}
 
-	spew.Dump("Template.watch", service.path)
-
 	// List all the files in the directory
 	files, err := ioutil.ReadDir(service.path)
 
@@ -244,7 +241,6 @@ func (service *Template) watch() {
 
 	// Add watchers to each file that is a Directory.
 	for _, file := range files {
-		spew.Dump(file.Name())
 		if file.IsDir() {
 			if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
 				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error adding file watcher to file", file.Name()))
@@ -320,13 +316,13 @@ func (service *Template) watch() {
 func (service *Template) loadFromFilesystem(templateID string) (model.Template, error) {
 
 	directory := service.path + "/" + templateID
-	result := model.NewTemplate(templateID)
+	result := model.NewTemplate(templateID, service.funcMap)
 
 	if err := loadModelFromFilesystem(directory, &result); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Error loading schema", directory)
 	}
 
-	if err := loadHTMLTemplateFromFilesystem(directory, service.funcMap, result.HTMLTemplate); err != nil {
+	if err := loadHTMLTemplateFromFilesystem(directory, result.HTMLTemplate, service.funcMap); err != nil {
 		return result, derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Error loading template", directory)
 	}
 

@@ -15,12 +15,13 @@ type Layout struct {
 }
 
 // NewLayout creates a new, fully initialized Layout object
-func NewLayout(templateID string) Layout {
+func NewLayout(templateID string, funcMap template.FuncMap) Layout {
+
 	return Layout{
 		LayoutID:     templateID,
 		Actions:      make(map[string]Action),
 		Schema:       schema.Schema{},
-		HTMLTemplate: template.New(""),
+		HTMLTemplate: template.New("").Funcs(funcMap),
 	}
 }
 

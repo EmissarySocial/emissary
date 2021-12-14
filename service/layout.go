@@ -74,7 +74,7 @@ func (service *Layout) User() model.Layout {
 func (service *Layout) loadFromFilesystem(folderName string) error {
 
 	path := service.path + "/" + folderName
-	layout := model.NewLayout(folderName)
+	layout := model.NewLayout(folderName, service.funcMap)
 
 	// System folders (except for "static" and "global") have a schema.json file
 	if (folderName != "static") && (folderName != "global") {
@@ -83,7 +83,7 @@ func (service *Layout) loadFromFilesystem(folderName string) error {
 		}
 	}
 
-	if err := loadHTMLTemplateFromFilesystem(path, service.funcMap, layout.HTMLTemplate); err != nil {
+	if err := loadHTMLTemplateFromFilesystem(path, layout.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", folderName)
 	}
 

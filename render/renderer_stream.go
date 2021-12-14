@@ -351,17 +351,17 @@ func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Optio
  *******************************************/
 
 // Siblings returns all Sibling Streams
-func (w Stream) Siblings() QueryBuilder {
+func (w Stream) Siblings() *QueryBuilder {
 	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
 }
 
 // Children returns all child Streams
-func (w Stream) Children() QueryBuilder {
+func (w Stream) Children() *QueryBuilder {
 	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
 }
 
 // makeQueryBuilder returns a fully initialized QueryBuilder
-func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
+func (w Stream) makeQueryBuilder(criteria exp.Expression) *QueryBuilder {
 
 	query := builder.NewBuilder().
 		Int("journal.createDate").
@@ -380,7 +380,7 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 	result.SortField = w.template.ChildSortType
 	result.SortDirection = w.template.ChildSortDirection
 
-	return result
+	return &result
 }
 
 /*******************************************

@@ -12,7 +12,7 @@ import (
 )
 
 // loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
-func loadHTMLTemplateFromFilesystem(directory string, funcMap template.FuncMap, t *template.Template) error {
+func loadHTMLTemplateFromFilesystem(directory string, t *template.Template, funcMap template.FuncMap) error {
 
 	// Create the minifier
 	m := minify.New()
@@ -22,7 +22,7 @@ func loadHTMLTemplateFromFilesystem(directory string, funcMap template.FuncMap, 
 	files, err := ioutil.ReadDir(directory)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.loadFromFilesystem", "Unable to list directory", directory)
+		return derp.Wrap(err, "ghost.service.loadHTMLTemplateFromFilesystem", "Unable to list directory", directory)
 	}
 
 	for _, file := range files {
@@ -37,7 +37,7 @@ func loadHTMLTemplateFromFilesystem(directory string, funcMap template.FuncMap, 
 			content, err := ioutil.ReadFile(directory + "/" + filename)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "ghost.service.loadFromFilesystem", "Cannot read file", filename))
+				return derp.Report(derp.Wrap(err, "ghost.service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
 			}
 
 			contentString := string(content)
@@ -51,7 +51,7 @@ func loadHTMLTemplateFromFilesystem(directory string, funcMap template.FuncMap, 
 			contentTemplate, err := template.New(actionID).Funcs(funcMap).Parse(contentString)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "ghost.service.loadFromFilesystem", "Unable to parse template HTML", contentString))
+				return derp.Report(derp.Wrap(err, "ghost.service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString))
 			}
 
 			// Add this minified template into the resulting parse-tree
@@ -70,12 +70,12 @@ func loadModelFromFilesystem(directory string, model interface{}) error {
 	content, err := ioutil.ReadFile(directory + "/schema.json")
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.loadFromFilesystem", "Cannot read file: schema.json", directory)
+		return derp.Wrap(err, "ghost.service.loadModelFromFilesystem", "Cannot read file: schema.json", directory)
 	}
 
 	// Unmarshal the file into the schema.
 	if err := json.Unmarshal(content, model); err != nil {
-		return derp.Wrap(err, "ghost.service.loadFromFilesystem", "Invalid JSON configuration file: schema.json", directory)
+		return derp.Wrap(err, "ghost.service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json", directory)
 	}
 
 	// Return to caller.

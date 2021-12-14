@@ -29,7 +29,8 @@ type Template struct {
 }
 
 // NewTemplate creates a new, fully initialized Template object
-func NewTemplate(templateID string) Template {
+func NewTemplate(templateID string, funcMap template.FuncMap) Template {
+
 	return Template{
 		TemplateID:         templateID,
 		ContainedBy:        make([]string, 0),
@@ -38,7 +39,7 @@ func NewTemplate(templateID string) Template {
 		States:             make(map[string]State),
 		Roles:              make(map[string]Role),
 		Actions:            make(map[string]Action),
-		HTMLTemplate:       template.New(""),
+		HTMLTemplate:       template.New("").Funcs(funcMap),
 	}
 }
 
