@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/domain"
+	"github.com/benpate/ghost/first"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
@@ -67,23 +68,20 @@ func PostAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
 // getAdminRenderer returns a fully initialized Renderer based on the request parameters
 func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Renderer, error) {
 
-	controller := ctx.Param("param1")
-
-	if controller == "" {
-		controller = "domain"
-	}
+	controller := first.String(ctx.Param("param1"), "domain")
 
 	switch controller {
 
 	case "domain":
-		result := render.NewDomain(factory, ctx, ctx.Param("param2"))
+		action := first.String(ctx.Param("param2"), "index")
+		result := render.NewDomain(factory, ctx, action)
 		return &result, nil
 
 	case "users":
 		userService := factory.User()
 		user := model.NewUser()
 		username := ctx.Param("param2")
-		actionID := ctx.Param("param3")
+		actionID := first.String(ctx.Param("param3"), "index")
 
 		if username != "" {
 			if err := userService.LoadByToken(username, &user); err != nil {

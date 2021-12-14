@@ -1,8 +1,6 @@
 {
-	"label": "Article",
-	"description": "For regular use. Contains text, images, and more.",
-	"icon": "fa-regular fa-file-lines",
-	"containedBy": ["folder", "article"],
+	"label": "Domain",
+	"description": "Domain Owners only.  Site Admin",
 	"schema": {
 		"type": "object",
 		"properties": {
@@ -41,31 +39,11 @@
 		"owner": {
 			"label": "Domain Owner",
 			"decription": "Full control"
-			}, 
-		"editor": {
-			"label": "Editor",
-			"description": "Can make changes to this article."
-		},
-		"readonly": {
-			"label": "Read Only Access",
-			"description": "Can read this article, but cannot make changes"
-		}
+			}
 	},
 	"actions": {
-		"init": {
-			"steps": [
-				{"step": "set-defaults", "label": "New Article"},
-				{"step": "set-defaults", "content": 
-					[
-						{"type": "CONTAINER", "refs": [1], "data": {"style": "ROWS"}},
-						{"type": "WYSIWYG"}
-					]
-				}
-			]
-		},
-		"view": {
-			"step": "view-html"
-		},
+		"index": {"step": "view-html"},
+		"view": {"step": "view-html"},
 		"edit": {
 			"roles": ["owner", "editor"],
 			"step": "edit-draft",

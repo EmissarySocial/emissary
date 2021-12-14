@@ -94,3 +94,7 @@ func (domain Domain) common() Common {
 func (domain Domain) executeTemplate(wr io.Writer, name string, data interface{}) error {
 	return domain.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
+
+func (domain Domain) TopLevelID() string {
+	return "_"
+}

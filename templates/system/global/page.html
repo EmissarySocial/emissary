@@ -46,8 +46,8 @@
 			</div>
 			<div>
 				{{- if .IsAuthenticated -}}
-					<a href="/profile">Profile</a>
-					{{- if .IsOwner -}}<a href="/settings">Settings</a>{{- end -}}
+					<a href="/me"  class='{{- if eq $topID "me" -}}selected{{- end -}}'>Profile</a>
+					{{- if .IsOwner -}}<a href="/_/domain"  class='{{- if eq $topID "_" -}}selected{{- end -}}'>Settings</a>{{- end -}}
 					<a hx-post="/signout" hx-target="body">Sign Out</a>
 				{{- else -}}
 					<a href="/signin">Sign In</a>
