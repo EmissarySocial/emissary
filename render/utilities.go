@@ -65,35 +65,6 @@ func closeModal(ctx *steranko.Context, url string) {
 	}
 }
 
-func forwardOrTrigger(renderer *Stream, forward string, trigger string) error {
-
-	if forward != "" {
-
-		forward, err := executeSingleTemplate(forward, renderer)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.render.forwardOrTrigger", "Error getting template")
-		}
-
-		renderer.ctx.Response().Header().Set("HX-Redirect", forward)
-		return nil
-	}
-
-	if trigger != "" {
-
-		trigger, err := executeSingleTemplate(trigger, renderer)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.render.forwardOrTrigger", "Error getting template")
-		}
-
-		renderer.ctx.Response().Header().Set("HX-Trigger", trigger)
-		return nil
-	}
-
-	return nil
-}
-
 func executeSingleTemplate(t string, renderer Renderer) (string, error) {
 
 	executable, err := template.New("").Parse(t)

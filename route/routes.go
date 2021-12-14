@@ -27,7 +27,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// Local links for static resources
 	e.Static("/htmx", "../htmx/src")
 	e.Static("/hyperscript", "../_hyperscript/dist")
-	e.Static("/static", "templates/static")
+	e.Static("/static", "templates/system/static")
 
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factoryManager))

@@ -43,17 +43,10 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			}
 		}
 
-		// Try to load the Template associated with this Stream
-		templateService := factory.Template()
-		template := model.NewTemplate(stream.TemplateID)
-		if err := templateService.Load(stream.TemplateID, &template); err != nil {
-			return derp.Wrap(err, "ghost.render.NewStream", "Cannot load Stream Template", stream.TemplateID)
-		}
-
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := render.NewStream(factory, sterankoContext, template, stream, actionID)
+		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")

@@ -2,7 +2,7 @@ package service
 
 import (
 	"html/template"
-	"strings"
+	"io/ioutil"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -27,11 +27,39 @@ func NewLayout(path string, funcMap template.FuncMap) *Layout {
 		funcMap: funcMap,
 	}
 
+	// Load all templates from the filesystem
+	list, err := ioutil.ReadDir(path)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "ghost.service.templateSource.File.List", "Error listing files in Filesystem", path))
+		panic("Error listing files in Filesystem")
+	}
+
+	// Use a separate counter because not all files will be included in the result
+	for _, fileInfo := range list {
+
+		if !fileInfo.IsDir() {
+			continue
+		}
+
+		folderName := fileInfo.Name()
+
+		// Add all other directories into the Template service as Templates
+		if err := service.loadFromFilesystem(folderName); err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.layout.NewLayout", "Error loading Layout from Filesystem"))
+			panic("Error loading Layout from Filesystem")
+		}
+	}
+
 	return service
 }
 
 func (service *Layout) Global() model.Layout {
 	return service.global
+}
+
+func (service *Layout) Group() model.Layout {
+	return service.group
 }
 
 func (service *Layout) Domain() model.Layout {
@@ -43,21 +71,24 @@ func (service *Layout) User() model.Layout {
 }
 
 // getTemplateFromFilesystem retrieves the template from the disk and parses it into
-func (service *Layout) getTemplateFromFilesystem(folder string) error {
+func (service *Layout) loadFromFilesystem(folderName string) error {
 
-	layoutID := strings.TrimPrefix(folder, "_")
-	path := service.path + "/" + folder
-	layout := model.NewLayout(layoutID)
+	path := service.path + "/" + folderName
+	layout := model.NewLayout(folderName)
 
-	if err := loadTemplateFromFilesystem(path, service.funcMap, layout.HTMLTemplate); err != nil {
-		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", layoutID)
+	// System folders (except for "static" and "global") have a schema.json file
+	if (folderName != "static") && (folderName != "global") {
+		if err := loadModelFromFilesystem(path, &layout); err != nil {
+			return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", folderName)
+		}
 	}
 
-	if err := loadSchemaFromFilesystem(path, &layout.Schema); err != nil {
-		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", layoutID)
+	if err := loadHTMLTemplateFromFilesystem(path, service.funcMap, layout.HTMLTemplate); err != nil {
+		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", folderName)
 	}
 
-	switch layoutID {
+	switch folderName {
+
 	case "global":
 		service.global = layout
 	case "group":

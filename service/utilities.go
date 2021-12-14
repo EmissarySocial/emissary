@@ -7,16 +7,12 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
-	"github.com/benpate/schema"
 	minify "github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 )
 
-// loadTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
-func loadTemplateFromFilesystem(directory string, funcMap template.FuncMap, t *template.Template) error {
-
-	// Create a temporary value to collect .html files in.
-	result := template.New("").Funcs(funcMap)
+// loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
+func loadHTMLTemplateFromFilesystem(directory string, funcMap template.FuncMap, t *template.Template) error {
 
 	// Create the minifier
 	m := minify.New()
@@ -59,19 +55,16 @@ func loadTemplateFromFilesystem(directory string, funcMap template.FuncMap, t *t
 			}
 
 			// Add this minified template into the resulting parse-tree
-			result.AddParseTree(actionID, contentTemplate.Tree)
+			t.AddParseTree(actionID, contentTemplate.Tree)
 		}
 	}
-
-	// Copy the finalized result to the output
-	t = result
 
 	// Return to caller.
 	return nil
 }
 
-// loadSchemaFromFilesystem locates and parses a schema from the filesystem path
-func loadSchemaFromFilesystem(directory string, s *schema.Schema) error {
+// loadModelFromFilesystem locates and parses a schema from the filesystem path
+func loadModelFromFilesystem(directory string, model interface{}) error {
 
 	// Load the file from the filesystem
 	content, err := ioutil.ReadFile(directory + "/schema.json")
@@ -81,7 +74,7 @@ func loadSchemaFromFilesystem(directory string, s *schema.Schema) error {
 	}
 
 	// Unmarshal the file into the schema.
-	if err := json.Unmarshal(content, s); err != nil {
+	if err := json.Unmarshal(content, model); err != nil {
 		return derp.Wrap(err, "ghost.service.loadFromFilesystem", "Invalid JSON configuration file: schema.json", directory)
 	}
 

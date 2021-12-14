@@ -33,7 +33,6 @@ type Factory struct {
 
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
-	layoutUpdateChannel   chan bool
 	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
@@ -59,7 +58,6 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		Session:               session,
 		domain:                domain,
 		templateUpdateChannel: make(chan string),
-		layoutUpdateChannel:   make(chan bool),
 	}
 
 	// Initialize Communication Channels
@@ -92,7 +90,6 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		factory.Layout(),
 		factory.RenderFunctions(),
 		factory.domain.TemplatePath,
-		factory.LayoutUpdateChannel(),
 		factory.TemplateUpdateChannel(),
 	)
 
@@ -217,11 +214,6 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 // TemplateUpdateChannel returns a channel for transmitting templates that have changed.
 func (factory *Factory) TemplateUpdateChannel() chan string {
 	return factory.templateUpdateChannel
-}
-
-// LayoutUpdateChannel returns a channel for transmitting the global layout when it has changed.
-func (factory *Factory) LayoutUpdateChannel() chan bool {
-	return factory.layoutUpdateChannel
 }
 
 /*******************************************

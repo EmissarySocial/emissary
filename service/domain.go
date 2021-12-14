@@ -13,7 +13,6 @@ import (
 type Domain struct {
 	collection data.Collection
 	funcMap    template.FuncMap
-	template   *template.Template
 }
 
 // NewDomain returns a fully initialized Domain service

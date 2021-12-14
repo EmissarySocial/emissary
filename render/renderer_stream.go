@@ -60,10 +60,11 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
 func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream model.Stream, actionID string) (Stream, error) {
 
-	var template model.Template
 	templateService := factory.Template()
 
-	if err := templateService.Load(stream.TemplateID, &template); err != nil {
+	template, err := templateService.Load(stream.TemplateID)
+
+	if err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.render.NewStreamWithoutTemplate", "Error loading Template", stream)
 	}
 
