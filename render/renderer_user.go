@@ -131,7 +131,8 @@ func (user User) AvatarURL() string {
 func (user User) Users() *QueryBuilder {
 
 	query := builder.NewBuilder().
-		String("displayName")
+		String("displayName").
+		ObjectID("groupId")
 
 	criteria := exp.And(
 		query.Evaluate(user.ctx.Request().URL.Query()),

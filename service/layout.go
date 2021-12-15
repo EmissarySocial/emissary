@@ -56,7 +56,7 @@ func (service *Layout) User() model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "domain", "user"}
+	return []string{"global", "domain", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -148,10 +148,10 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	case "domain":
 		service.domain = layout
 		spew.Dump("updated domain", layout.Debug())
-	case "group":
+	case "groups":
 		spew.Dump("updated group")
 		service.group = layout
-	case "user":
+	case "users":
 		spew.Dump("updated user")
 		service.user = layout
 	}

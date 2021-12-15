@@ -51,8 +51,8 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/admin/:param1", handler.PostAdmin(factoryManager))
 	e.GET("/admin/:param1/:param2", handler.GetAdmin(factoryManager))
 	e.POST("/admin/:param1/:param2", handler.PostAdmin(factoryManager))
-	e.GET("/admin/:param1/:param2/:action", handler.GetAdmin(factoryManager))
-	e.POST("/admin/:param1/:param2/:action", handler.PostAdmin(factoryManager))
+	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factoryManager))
+	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factoryManager))
 
 	// ActivityPub INBOX/OUTBOX
 	e.GET("/inbox", handler.GetInbox(factoryManager))

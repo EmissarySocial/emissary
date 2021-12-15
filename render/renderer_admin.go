@@ -10,6 +10,10 @@ import "github.com/benpate/ghost/model"
 func AdminSections() []model.Option {
 	return []model.Option{
 		{
+			Value: "domain",
+			Label: "Site",
+		},
+		{
 			Value: "users",
 			Label: "Users",
 		},

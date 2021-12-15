@@ -44,8 +44,8 @@
 	},
 	"actions": {
 		"index": {"step": "view-html"},
-		"view": {"step": "view-html"},
 		"list": {"step": "view-html"},
+		"view": {"step": "view-html"},
 		"delete": {"step": "delete"},
 
 		"edit": {

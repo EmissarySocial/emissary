@@ -103,9 +103,18 @@ func (service *User) LoadByUsername(username string, result *model.User) error {
 	return service.Load(criteria, result)
 }
 
-// LoadByToken loads a single model.User object that matches the provided username
-func (service *User) LoadByToken(username string, result *model.User) error {
-	criteria := exp.Equal("username", username)
+// LoadByUsername loads a single model.User object that matches the provided token
+func (service *User) LoadByToken(token string, result *model.User) error {
+
+	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
+	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
+		if err := service.LoadByID(userID, result); err == nil {
+			return nil
+		}
+	}
+
+	// Otherwise, use the token as a username
+	criteria := exp.Equal("username", token)
 	return service.Load(criteria, result)
 }
 

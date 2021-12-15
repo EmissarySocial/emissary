@@ -39,6 +39,8 @@
 	--input-border: var(--gray30);
 	--input-background: var(--gray05);
 	--input-color: var(--gray80);
+
+	--border-radius: 7px;
 }
 
 @media (prefers-color-scheme: dark) {
