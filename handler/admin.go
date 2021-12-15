@@ -72,20 +72,35 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 
 	switch controller {
 
-	case "domain":
+	case "content", "domain":
 		action := first.String(ctx.Param("param2"), "index")
 		result := render.NewDomain(factory, ctx, action)
+		return &result, nil
+
+	case "groups":
+		groupService := factory.Group()
+		group := model.NewGroup()
+		token := ctx.Param("param2")
+		actionID := first.String(ctx.Param("param3"), "index")
+
+		if token != "" {
+			if err := groupService.LoadByToken(token, &group); err != nil {
+				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", token)
+			}
+		}
+
+		result := render.NewGroup(factory, ctx, group, actionID)
 		return &result, nil
 
 	case "users":
 		userService := factory.User()
 		user := model.NewUser()
-		username := ctx.Param("param2")
+		token := ctx.Param("param2")
 		actionID := first.String(ctx.Param("param3"), "index")
 
-		if username != "" {
-			if err := userService.LoadByToken(username, &user); err != nil {
-				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", username)
+		if token != "" {
+			if err := userService.LoadByToken(token, &user); err != nil {
+				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", token)
 			}
 		}
 
@@ -95,5 +110,4 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 	default:
 		return nil, derp.New(derp.CodeNotFoundError, "ghost.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("controller"), ctx.Param("objectId"), ctx.Param("action"))
 	}
-
 }

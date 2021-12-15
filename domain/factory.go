@@ -184,6 +184,12 @@ func (factory *Factory) User() *service.User {
 	return &factory.userService
 }
 
+// Group returns a fully populated Group service
+func (factory *Factory) Group() *service.Group {
+	result := service.NewGroup(factory.collection(CollectionGroup))
+	return &result
+}
+
 /*******************************************
  * RENDER OBJECTS
  *******************************************/

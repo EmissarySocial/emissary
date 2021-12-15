@@ -16,6 +16,7 @@ type Layout struct {
 	path    string
 	funcMap template.FuncMap
 	domain  model.Layout
+	content model.Layout
 	global  model.Layout
 	group   model.Layout
 	user    model.Layout
@@ -56,7 +57,7 @@ func (service *Layout) User() model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "domain", "users"}
+	return []string{"global", "content", "domain", "groups", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -145,14 +146,14 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 
 	case "global":
 		service.global = layout
+	case "content":
+		service.content = layout
+		spew.Dump("updated content", layout.Debug())
 	case "domain":
 		service.domain = layout
-		spew.Dump("updated domain", layout.Debug())
 	case "groups":
-		spew.Dump("updated group")
 		service.group = layout
 	case "users":
-		spew.Dump("updated user")
 		service.user = layout
 	}
 

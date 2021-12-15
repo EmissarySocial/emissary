@@ -33,6 +33,11 @@ type Renderer interface {
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
 
 	switch obj := object.(type) {
+
+	case *model.Group:
+		result := NewGroup(factory, ctx, *obj, actionID)
+		return &result, nil
+
 	case *model.Stream:
 		result, err := NewStreamWithoutTemplate(factory, ctx, *obj, actionID)
 		return &result, err

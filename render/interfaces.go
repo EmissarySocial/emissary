@@ -14,6 +14,7 @@ type Factory interface {
 	Attachment() *service.Attachment
 	Domain() *service.Domain
 	FormLibrary() form.Library
+	Group() *service.Group
 	Layout() *service.Layout
 	MediaServer() mediaserver.MediaServer
 	Stream() *service.Stream

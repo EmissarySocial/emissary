@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Domain struct {
@@ -65,8 +64,6 @@ func (domain Domain) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	spew.Dump("domain.Render", domain.actionID, domain.layout.Actions)
-	spew.Dump(domain.layout.Action(domain.actionID))
 	if action, ok := domain.layout.Action(domain.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
