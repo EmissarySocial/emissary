@@ -48,6 +48,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	// ADMIN PAGES
 	e.GET("/admin/:param1", handler.GetAdmin(factoryManager))
+	e.POST("/admin/:param1", handler.PostAdmin(factoryManager))
 	e.GET("/admin/:param1/:param2", handler.GetAdmin(factoryManager))
 	e.POST("/admin/:param1/:param2", handler.PostAdmin(factoryManager))
 	e.GET("/admin/:param1/:param2/:action", handler.GetAdmin(factoryManager))

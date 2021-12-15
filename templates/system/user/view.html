@@ -1,27 +1,9 @@
-{{$users := .Users}}
-<div class="pure-g" hx-push-url="true">
-    {{- range $users -}}
-        <div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5">
-            <div class="card" hx-get="">
-                <div class="card-photo">
-                    <img src="{{.AvatarURL}}">
-                </div>
-                <div>{{.DisplayName}}</div>
-            </div>
-        </div>
-    {{- end -}}
-    <div hx-trigger="revealed" hx-get="/domain/users/list?name=gt:{{ (last $users) .DisplayName}}"></div>
+<div id="modal">
+<div class="modal-underlay" script="on click trigger closeModal"></div>
+<div class="modal-content">
+    <h1>{{.DisplayName}}</h1>
+    {{.AvatarURL}}
+
+    <button script="on click trigger closeModal">Close</button>
 </div>
-
-
-<style>
-    .card-photo {
-        width:100%;
-        aspect-ratio:1;
-        overflow-y:hidden;
-    }
-
-    .card-photo img {
-        width:100%;
-    }
-</style>
+</div>

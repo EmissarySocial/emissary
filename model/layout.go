@@ -3,6 +3,7 @@ package model
 import (
 	"html/template"
 
+	"github.com/benpate/datatype"
 	"github.com/benpate/schema"
 )
 
@@ -38,5 +39,14 @@ func (layout *Layout) Validate() {
 		action.ActionID = actionID
 		action.Validate()
 		layout.Actions[actionID] = action
+	}
+}
+
+func (layout *Layout) Debug() datatype.Map {
+	return datatype.Map{
+		"LayoutID":  layout.LayoutID,
+		"Schema":    layout.Schema,
+		"Actions":   layout.Actions,
+		"Templates": layout.HTMLTemplate.DefinedTemplates(),
 	}
 }

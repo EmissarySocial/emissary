@@ -8,12 +8,12 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/list"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 
 	"io/ioutil"
 
-	"github.com/benpate/list"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -29,53 +29,15 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(domainService *Domain, layoutService *Layout, funcMap template.FuncMap, path string, templateUpdateChannel chan string) *Template {
+func NewTemplate(domainService *Domain, layoutService *Layout, funcMap template.FuncMap, path string, templateUpdateChannel chan string) Template {
 
-	service := &Template{
+	return Template{
 		templates:         make(map[string]model.Template),
 		funcMap:           funcMap,
 		path:              path,
 		layoutService:     layoutService,
 		templateUpdateOut: templateUpdateChannel,
 	}
-
-	// Load all templates from the filesystem
-	list, err := ioutil.ReadDir(path)
-
-	if err != nil {
-		panic(derp.Wrap(err, "ghost.service.templateSource.File.List", "Unable to list files in filesystem", path))
-	}
-
-	// Use a separate counter because not all files will be included in the result
-	for _, fileInfo := range list {
-
-		if fileInfo.IsDir() {
-			templateID := fileInfo.Name()
-
-			// System directories are skipped.
-			if templateID == "system" {
-				continue
-			}
-
-			// Add all other directories into the Template service as Templates
-			template, err := service.loadFromFilesystem(templateID)
-
-			if err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error loading template from filesystem", templateID))
-				continue
-			}
-
-			// Success!
-			if err := service.Save(&template); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error saving Template to TemplateService", templateID))
-				continue
-			}
-		}
-	}
-
-	go service.watch()
-
-	return service
 }
 
 /*******************************************
@@ -223,7 +185,41 @@ func (service *Template) Action(templateID string, actionID string) (model.Actio
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
-func (service *Template) watch() {
+func (service *Template) Watch() {
+
+	// Load all templates from the filesystem
+	fileList, err := ioutil.ReadDir(service.path)
+
+	if err != nil {
+		panic(derp.Wrap(err, "ghost.service.templateSource.File.List", "Unable to list files in filesystem", service.path))
+	}
+
+	// Use a separate counter because not all files will be included in the result
+	for _, fileInfo := range fileList {
+
+		if fileInfo.IsDir() {
+			templateID := fileInfo.Name()
+
+			// System directories are skipped.
+			if templateID == "system" {
+				continue
+			}
+
+			// Add all other directories into the Template service as Templates
+			template, err := service.loadFromFilesystem(templateID)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error loading template from filesystem", templateID))
+				continue
+			}
+
+			// Success!
+			if err := service.Save(&template); err != nil {
+				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error saving Template to TemplateService", templateID))
+				continue
+			}
+		}
+	}
 
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()

@@ -73,8 +73,10 @@ func (service *User) ObjectList(criteria exp.Expression, options ...option.Optio
 	return service.List(criteria, options...)
 }
 
-func (service *User) ObjectLoad(criteria exp.Expression, object data.Object) error {
-	return service.Load(criteria, object.(*model.User))
+func (service *User) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewUser()
+	err := service.Load(criteria, &result)
+	return &result, err
 }
 
 func (service *User) ObjectSave(object data.Object, comment string) error {

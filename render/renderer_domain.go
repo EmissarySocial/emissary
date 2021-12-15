@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Domain struct {
@@ -64,6 +65,8 @@ func (domain Domain) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
+	spew.Dump("domain.Render", domain.actionID, domain.layout.Actions)
+	spew.Dump(domain.layout.Action(domain.actionID))
 	if action, ok := domain.layout.Action(domain.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
@@ -97,4 +100,13 @@ func (domain Domain) executeTemplate(wr io.Writer, name string, data interface{}
 
 func (domain Domain) TopLevelID() string {
 	return "admin"
+}
+
+/*******************************************
+ * ADDITIONAL DATA
+ *******************************************/
+
+// AdminSections returns labels and values for all hard-coded sections of the administrator area.
+func (domain Domain) AdminSections() []model.Option {
+	return AdminSections()
 }

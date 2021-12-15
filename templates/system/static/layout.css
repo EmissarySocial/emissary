@@ -50,9 +50,12 @@ header .framed div:last-child {
 header a {
     color: var(--gray80);
     display:inline-block;
-	padding:10px 20px;
+	padding:8px 20px;
 	border-radius: 10px;
-	margin:10px 0px;
+	margin:12px 0px;
+	overflow-y:hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 header a:hover {

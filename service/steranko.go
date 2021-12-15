@@ -9,11 +9,11 @@ import (
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
 type SterankoUserService struct {
-	userService User
+	userService *User
 }
 
 // NewSterankoUserService returns a fully populated SterankoUserService.
-func NewSterankoUserService(userService User) SterankoUserService {
+func NewSterankoUserService(userService *User) SterankoUserService {
 	return SterankoUserService{
 		userService: userService,
 	}

@@ -26,9 +26,10 @@ type Factory struct {
 	domain  config.Domain
 
 	// singletons (within this domain/factory)
-	templateService     *service.Template
-	streamService       *service.Stream
-	layoutService       *service.Layout
+	layoutService       service.Layout
+	templateService     service.Template
+	streamService       service.Stream
+	userService         service.User
 	subscriptionService *service.Subscription
 
 	// real-time watchers
@@ -84,6 +85,8 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		factory.RenderFunctions(),
 	)
 
+	go factory.layoutService.Watch()
+
 	// Template Service
 	factory.templateService = service.NewTemplate(
 		factory.Domain(),
@@ -92,6 +95,8 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		factory.domain.TemplatePath,
 		factory.TemplateUpdateChannel(),
 	)
+
+	go factory.templateService.Watch()
 
 	// Stream Service
 	factory.streamService = service.NewStream(
@@ -102,6 +107,12 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		factory.FormLibrary(),
 		factory.TemplateUpdateChannel(),
 		factory.StreamUpdateChannel(),
+	)
+
+	go factory.streamService.Watch()
+
+	factory.userService = service.NewUser(
+		factory.collection(CollectionUser),
 	)
 
 	// Subscription Service
@@ -139,7 +150,7 @@ func (factory *Factory) Domain() *service.Domain {
 
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
-	return factory.streamService
+	return &factory.streamService
 }
 
 // StreamDraft returns a fully populated StreamDraft service.
@@ -165,12 +176,12 @@ func (factory *Factory) Subscription() *service.Subscription {
 
 // Template returns a fully populated Template service
 func (factory *Factory) Template() *service.Template {
-	return factory.templateService
+	return &factory.templateService
 }
 
 // User returns a fully populated User service
-func (factory *Factory) User() service.User {
-	return service.NewUser(factory.collection(CollectionUser))
+func (factory *Factory) User() *service.User {
+	return &factory.userService
 }
 
 /*******************************************
@@ -179,7 +190,7 @@ func (factory *Factory) User() service.User {
 
 // Layout service manages global website layouts
 func (factory *Factory) Layout() *service.Layout {
-	return factory.layoutService
+	return &factory.layoutService
 }
 
 // RenderStep uses an Step object to create a new action

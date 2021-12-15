@@ -8,10 +8,10 @@ import (
 )
 
 type OptionProvider struct {
-	User User
+	User *User
 }
 
-func NewOptionProvider(user User) OptionProvider {
+func NewOptionProvider(user *User) OptionProvider {
 	return OptionProvider{
 		User: user,
 	}

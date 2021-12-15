@@ -7,6 +7,8 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/benpate/exp/builder"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
@@ -72,8 +74,18 @@ func (user User) Render() (template.HTML, error) {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}
+
 	// Success!
 	return template.HTML(buffer.String()), nil
+}
+
+// View executes a separate view for this User
+func (user User) View(actionID string) (template.HTML, error) {
+	return NewUser(user.factory, user.ctx, user.user, actionID).Render()
+}
+
+func (user User) TopLevelID() string {
+	return "admin"
 }
 
 func (user User) Token() string {
@@ -94,4 +106,48 @@ func (user User) common() Common {
 
 func (user User) executeTemplate(writer io.Writer, name string, data interface{}) error {
 	return user.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+}
+
+/*******************************************
+ * DATA ACCESSORS
+ *******************************************/
+
+func (user User) UserID() string {
+	return user.user.UserID.Hex()
+}
+
+func (user User) DisplayName() string {
+	return user.user.DisplayName
+}
+
+func (user User) AvatarURL() string {
+	return user.user.AvatarURL
+}
+
+/*******************************************
+ * QUERY BUILDERS
+ *******************************************/
+
+func (user User) Users() *QueryBuilder {
+
+	query := builder.NewBuilder().
+		String("displayName")
+
+	criteria := exp.And(
+		query.Evaluate(user.ctx.Request().URL.Query()),
+		exp.Equal("journal.deleteDate", 0),
+	)
+
+	result := NewQueryBuilder(user.factory, user.ctx, user.factory.User(), criteria)
+
+	return &result
+}
+
+/*******************************************
+ * ADDITIONAL DATA
+ *******************************************/
+
+// AdminSections returns labels and values for all hard-coded sections of the administrator area.
+func (user User) AdminSections() []model.Option {
+	return AdminSections()
 }

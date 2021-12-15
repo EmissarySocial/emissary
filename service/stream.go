@@ -26,9 +26,9 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) *Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
 
-	result := Stream{
+	return Stream{
 		collection:            collection,
 		templateService:       templateService,
 		draftService:          draftService,
@@ -37,10 +37,6 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
 		templateUpdateChannel: templateUpdateChannel,
 		streamUpdateChannel:   streamUpdateChannel,
 	}
-
-	go result.watch()
-
-	return &result
 }
 
 /*******************************************
@@ -48,7 +44,7 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
  *******************************************/
 
 // start begins the background watchers used by the Stream Service
-func (service *Stream) watch() {
+func (service *Stream) Watch() {
 	for {
 		templateID := <-service.templateUpdateChannel
 		service.updateStreamsByTemplate(templateID)

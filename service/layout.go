@@ -22,28 +22,12 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(path string, funcMap template.FuncMap) *Layout {
+func NewLayout(path string, funcMap template.FuncMap) Layout {
 
-	service := &Layout{
+	return Layout{
 		path:    path,
 		funcMap: funcMap,
 	}
-
-	files := service.fileNames()
-
-	// Use a separate counter because not all files will be included in the result
-	for _, filename := range files {
-
-		// Add all other directories into the Template service as Templates
-		if err := service.loadFromFilesystem(filename); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.layout.NewLayout", "Error loading Layout from Filesystem"))
-			panic("Error loading Layout from Filesystem")
-		}
-	}
-
-	go service.watch()
-
-	return service
 }
 
 /*******************************************
@@ -72,12 +56,12 @@ func (service *Layout) User() model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "user"}
+	return []string{"global", "domain", "user"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
-func (service *Layout) watch() {
+func (service *Layout) Watch() {
 
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -91,10 +75,24 @@ func (service *Layout) watch() {
 	// Use a separate counter because not all files will be included in the result
 	for _, filename := range files {
 
+		// Skip "system" folder.  It's owned by the Layout service.
+		if filename == "system" {
+			continue
+		}
+
+		// Add all other directories into the Template service as Templates
+		if err := service.loadFromFilesystem(filename); err != nil {
+			derp.Report(derp.Wrap(err, "ghost.service.layout.NewLayout", "Error loading Layout from Filesystem"))
+			panic("Error loading Layout from Filesystem")
+		}
+
+		// Add fsnotify watchers for all other directories
 		if err := watcher.Add(service.path + "/" + filename); err != nil {
 			derp.Report(derp.Wrap(err, "ghost.service.Layout.watch", "Error adding file watcher to file", filename))
 		}
 	}
+
+	// All Files Loaded.  Now Listen for Changes
 
 	// Repeat indefinitely, listen and process file updates
 	for {
@@ -129,8 +127,6 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	path := service.path + "/" + filename
 	layout := model.NewLayout(filename, service.funcMap)
 
-	spew.Dump("loadFromFilesystem ---", filename, path)
-
 	// System folders (except for "static" and "global") have a schema.json file
 	if (filename != "static") && (filename != "global") {
 		if err := loadModelFromFilesystem(path, &layout); err != nil {
@@ -142,11 +138,16 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
 	}
 
+	// Normalize steps
+	layout.Validate()
+
 	switch filename {
 
 	case "global":
-		spew.Dump("updated global")
 		service.global = layout
+	case "domain":
+		service.domain = layout
+		spew.Dump("updated domain", layout.Debug())
 	case "group":
 		spew.Dump("updated group")
 		service.group = layout
