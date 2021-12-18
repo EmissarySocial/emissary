@@ -89,7 +89,7 @@ func (group Group) TopLevelID() string {
 }
 
 func (group Group) Token() string {
-	return group.group.ID()
+	return "groups"
 }
 
 func (group Group) object() data.Object {

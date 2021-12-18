@@ -6,20 +6,19 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
-	path    string
-	funcMap template.FuncMap
-	domain  model.Layout
-	content model.Layout
-	global  model.Layout
-	group   model.Layout
-	user    model.Layout
+	path     string
+	funcMap  template.FuncMap
+	domain   model.Layout
+	global   model.Layout
+	group    model.Layout
+	topLevel model.Layout
+	user     model.Layout
 }
 
 // NewLayout returns a fully initialized Layout service.
@@ -35,6 +34,10 @@ func NewLayout(path string, funcMap template.FuncMap) Layout {
  * LAYOUT ACCESSORS
  *******************************************/
 
+func (service *Layout) Domain() model.Layout {
+	return service.domain
+}
+
 func (service *Layout) Global() model.Layout {
 	return service.global
 }
@@ -43,8 +46,8 @@ func (service *Layout) Group() model.Layout {
 	return service.group
 }
 
-func (service *Layout) Domain() model.Layout {
-	return service.domain
+func (service *Layout) TopLevel() model.Layout {
+	return service.topLevel
 }
 
 func (service *Layout) User() model.Layout {
@@ -57,7 +60,7 @@ func (service *Layout) User() model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "content", "domain", "groups", "users"}
+	return []string{"global", "toplevel", "domain", "groups", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -144,15 +147,14 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 
 	switch filename {
 
-	case "global":
-		service.global = layout
-	case "content":
-		service.content = layout
-		spew.Dump("updated content", layout.Debug())
 	case "domain":
 		service.domain = layout
+	case "global":
+		service.global = layout
 	case "groups":
 		service.group = layout
+	case "toplevel":
+		service.topLevel = layout
 	case "users":
 		service.user = layout
 	}

@@ -13,19 +13,18 @@ import (
 	"github.com/benpate/steranko"
 )
 
-type Domain struct {
-	domain   model.Domain
+type TopLevel struct {
 	layout   model.Layout
 	actionID string
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, actionID string) Domain {
+func NewTopLevel(factory Factory, ctx *steranko.Context, actionID string) TopLevel {
 
 	layoutService := factory.Layout()
-	layout := layoutService.Domain()
+	layout := layoutService.TopLevel()
 
-	return Domain{
+	return TopLevel{
 		layout:   layout,
 		actionID: actionID,
 		Common:   NewCommon(factory, ctx),
@@ -37,11 +36,11 @@ func NewDomain(factory Factory, ctx *steranko.Context, actionID string) Domain {
  * (not available via templates)
  *******************************************/
 
-func (domain *Domain) GetPath(p path.Path) (interface{}, error) {
+func (domain *TopLevel) GetPath(p path.Path) (interface{}, error) {
 	return domain.domain.GetPath(p)
 }
 
-func (domain *Domain) SetPath(p path.Path, value interface{}) error {
+func (domain *TopLevel) SetPath(p path.Path, value interface{}) error {
 	return domain.domain.SetPath(p, value)
 }
 
@@ -50,17 +49,17 @@ func (domain *Domain) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // ActionID returns the name of the action being performed
-func (domain Domain) ActionID() string {
+func (domain TopLevel) ActionID() string {
 	return domain.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (domain Domain) Action() (model.Action, bool) {
+func (domain TopLevel) Action() (model.Action, bool) {
 	return domain.layout.Action(domain.actionID)
 }
 
 // Render generates the string value for this Stream
-func (domain Domain) Render() (template.HTML, error) {
+func (domain TopLevel) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
@@ -75,28 +74,28 @@ func (domain Domain) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (domain Domain) Token() string {
+func (domain TopLevel) Token() string {
 	return domain.ctx.Param("param1")
 }
 
-func (domain Domain) object() data.Object {
-	return &domain.domain
+func (domain TopLevel) TopLevelID() string {
+	return "admin"
 }
 
-func (domain Domain) schema() schema.Schema {
+func (domain TopLevel) object() data.Object {
+	return nil
+}
+
+func (domain TopLevel) schema() schema.Schema {
 	return domain.domain.Schema()
 }
 
-func (domain Domain) common() Common {
+func (domain TopLevel) common() Common {
 	return domain.Common
 }
 
-func (domain Domain) executeTemplate(wr io.Writer, name string, data interface{}) error {
+func (domain TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {
 	return domain.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
-}
-
-func (domain Domain) TopLevelID() string {
-	return "admin"
 }
 
 /*******************************************
@@ -104,6 +103,6 @@ func (domain Domain) TopLevelID() string {
  *******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (domain Domain) AdminSections() []model.Option {
+func (domain TopLevel) AdminSections() []model.Option {
 	return AdminSections()
 }

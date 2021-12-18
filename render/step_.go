@@ -47,6 +47,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "set-state":
 		return NewStepStreamState(stepInfo), nil
 
+	case "sort":
+		return NewStepSort(factory.Stream(), stepInfo), nil
+
 	case "view-html":
 		return NewStepStreamHTML(stepInfo), nil
 

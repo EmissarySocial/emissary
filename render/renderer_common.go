@@ -155,7 +155,7 @@ func (w Common) getDomain() (*model.Domain, error) {
  *******************************************/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() ([]Renderer, error) {
+func (w Common) TopLevel() (List, error) {
 	criteria := exp.Equal("parentId", primitive.NilObjectID)
 	queryBuilder := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
 	queryBuilder.SortField = "rank"

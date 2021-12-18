@@ -20,9 +20,9 @@ import (
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	template model.Template // Template that the Stream uses
-	stream   model.Stream   // Stream to be displayed
-	action   model.Action   // Action being executed
+	template *model.Template // Template that the Stream uses
+	stream   *model.Stream   // Stream to be displayed
+	actionID string
 
 	Common
 }
@@ -32,7 +32,7 @@ type Stream struct {
  *******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, template model.Template, stream model.Stream, actionID string) (Stream, error) {
+func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Stream, error) {
 
 	// Try to find requested Action
 	action, ok := template.Action(actionID)
@@ -44,7 +44,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
-	if !action.UserCan(&stream, authorization) {
+	if !action.UserCan(stream, authorization) {
 		return Stream{}, derp.New(http.StatusForbidden, "ghost.render.NewStream", "Forbidden")
 	}
 
@@ -52,13 +52,13 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 	return Stream{
 		stream:   stream,
 		template: template,
-		action:   action,
+		actionID: actionID,
 		Common:   NewCommon(factory, ctx),
 	}, nil
 }
 
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
-func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream model.Stream, actionID string) (Stream, error) {
+func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Stream, error) {
 
 	templateService := factory.Template()
 
@@ -76,11 +76,11 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream mod
  * (not available via templates)
  *******************************************/
 
-func (st *Stream) GetPath(p path.Path) (interface{}, error) {
+func (st Stream) GetPath(p path.Path) (interface{}, error) {
 	return st.stream.GetPath(p)
 }
 
-func (st *Stream) SetPath(p path.Path, value interface{}) error {
+func (st Stream) SetPath(p path.Path, value interface{}) error {
 	return st.stream.SetPath(p, value)
 }
 
@@ -90,12 +90,12 @@ func (st *Stream) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the name of the action being performed
 func (st Stream) ActionID() string {
-	return st.action.ActionID
+	return st.actionID
 }
 
 // Action returns the model.Action configured into this renderer
 func (st Stream) Action() (model.Action, bool) {
-	return st.action, true
+	return st.template.Action(st.actionID)
 }
 
 // Render generates the string value for this Stream
@@ -103,8 +103,10 @@ func (st Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
+	action, _ := st.Action() // This is OK becuase we've already tested for the action's presence
+
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(st.factory, &st, &buffer, st.action.Steps, ActionMethodGet); err != nil {
+	if err := DoPipeline(st.factory, &st, &buffer, action.Steps, ActionMethodGet); err != nil {
 		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -118,7 +120,7 @@ func (st Stream) executeTemplate(wr io.Writer, name string, data interface{}) er
 
 // object returns the model object associated with this renderer
 func (st Stream) object() data.Object {
-	return &(st.stream)
+	return st.stream
 }
 
 // schema returns the validation schema associated with this renderer
@@ -269,11 +271,11 @@ func (st Stream) Parent(actionID string) (Stream, error) {
 
 	streamService := st.factory.Stream()
 
-	if err := streamService.LoadParent(&st.stream, &parent); err != nil {
+	if err := streamService.LoadParent(st.stream, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Error loading Parent")
 	}
 
-	renderer, err := NewStreamWithoutTemplate(st.factory, st.ctx, parent, actionID)
+	renderer, err := NewStreamWithoutTemplate(st.factory, st.ctx, &parent, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Unable to create new Stream")
@@ -350,7 +352,7 @@ func (st Stream) makeFirstStream(criteria exp.Expression, sortOption option.Opti
 	var first model.Stream
 
 	for iterator.Next(&first) {
-		if result, err := NewStreamWithoutTemplate(st.factory, st.ctx, first, actionID); err == nil {
+		if result, err := NewStreamWithoutTemplate(st.factory, st.ctx, &first, actionID); err == nil {
 			return result
 		}
 	}
@@ -364,17 +366,17 @@ func (st Stream) makeFirstStream(criteria exp.Expression, sortOption option.Opti
  *******************************************/
 
 // Siblings returns all Sibling Streams
-func (st Stream) Siblings() *QueryBuilder {
+func (st Stream) Siblings() QueryBuilder {
 	return st.makeQueryBuilder(exp.Equal("parentId", st.stream.ParentID))
 }
 
 // Children returns all child Streams
-func (st Stream) Children() *QueryBuilder {
+func (st Stream) Children() QueryBuilder {
 	return st.makeQueryBuilder(exp.Equal("parentId", st.stream.StreamID))
 }
 
 // makeQueryBuilder returns a fully initialized QueryBuilder
-func (st Stream) makeQueryBuilder(criteria exp.Expression) *QueryBuilder {
+func (st Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 	query := builder.NewBuilder().
 		Int("journal.createDate").
@@ -393,7 +395,7 @@ func (st Stream) makeQueryBuilder(criteria exp.Expression) *QueryBuilder {
 	result.SortField = st.template.ChildSortType
 	result.SortDirection = st.template.ChildSortDirection
 
-	return &result
+	return result
 }
 
 /*******************************************
@@ -453,7 +455,7 @@ func (st Stream) UserCan(actionID string) bool {
 
 	authorization := getAuthorization(st.ctx)
 
-	return action.UserCan(&st.stream, authorization)
+	return action.UserCan(st.stream, authorization)
 }
 
 // CanCreate returns all of the templates that can be created underneath

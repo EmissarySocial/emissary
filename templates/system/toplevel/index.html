@@ -1,0 +1,35 @@
+<h1>Settings</h1>
+
+<div id="menu-bar">
+    {{- $token := .Token -}}
+    {{- range .AdminSections -}}
+        <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+    {{- end -}}
+</div>
+
+<div class="page">
+    <form class="sortable" hx-post="/admin/toplevel/sort" hx-swap="false" hx-push-url="false" hx-trigger="end">
+        <div class="htmx-indicator">Updating...</div>
+        {{- range .TopLevel -}}
+            <div>
+                <input type="hidden" name="keys" value="{{.StreamID}}">
+                {{.Label}}
+            </div>
+        {{- end -}}
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    htmx.onLoad(function(content) {
+        var sortables = content.querySelectorAll(".sortable");
+        for (var i = 0; i < sortables.length; i++) {
+        var sortable = sortables[i];
+        new Sortable(sortable, {
+            animation: 150,
+            ghostClass: 'blue-background-class'
+        });
+        }
+    })
+</script>

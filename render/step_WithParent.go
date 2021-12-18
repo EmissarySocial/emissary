@@ -41,7 +41,7 @@ func (step StepWithParent) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Make a renderer with the new parent stream
-	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory, streamRenderer.context(), parent, renderer.ActionID())
+	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory, streamRenderer.context(), &parent, renderer.ActionID())
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error creating renderer for parent")

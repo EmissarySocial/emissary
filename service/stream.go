@@ -241,12 +241,12 @@ func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
  *******************************************/
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewTopLevel(templateID string) (model.Stream, model.Template, error) {
+func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Template, error) {
 
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy("top") {
@@ -265,16 +265,16 @@ func (service *Stream) NewTopLevel(templateID string) (model.Stream, model.Templ
 }
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.Stream, model.Template, error) {
+func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.Stream, *model.Template, error) {
 
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy(parent.TemplateID) {
-		return model.Stream{}, model.Template{}, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
+		return model.Stream{}, nil, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
 	result := model.NewStream()
@@ -289,12 +289,12 @@ func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.
 }
 
 // NewTopLevel creates a new stream at the top level of the tree
-func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, model.Template, error) {
+func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, *model.Template, error) {
 
 	if sibling.HasParent() {
 		var parent model.Stream
 		if err := service.LoadParent(sibling, &parent); err != nil {
-			return model.Stream{}, model.Template{}, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
+			return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
 		}
 
 		return service.NewChild(&parent, templateID)
@@ -304,7 +304,7 @@ func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (mod
 }
 
 // Template returns the Template associated with this Stream
-func (service *Stream) Template(templateID string) (model.Template, error) {
+func (service *Stream) Template(templateID string) (*model.Template, error) {
 	template, err := service.templateService.Load(templateID)
 	return template, err
 }

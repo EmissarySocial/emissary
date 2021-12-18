@@ -1,14 +1,14 @@
 {{- $children :=  .Children.Top6.ByPublishDate.Reverse.View | reverse -}}
-{{- if eq (len $children) 6 -}}
-    {{- $first := head $children -}}
+{{- if not $children.IsEmpty -}}
     <div
-        hx-get="/{{.Token}}/children?publishDate=le:{{$first.PublishDate}}" 
+        hx-get="/{{.Token}}/children?publishDate=lt:{{$children.First.PublishDate}}" 
         hx-target="this"
         hx-swap="outerHTML"
         class="button text-xs" 
         style="display:block; text-align:center;">Show Previous</div>
-    {{- $children = tail $children}}
-{{- end -}}
-{{- range $children  -}}
-    {{.Render}}
+
+    {{- range $children  -}}
+        {{.Render}}
+    {{- end -}}
+
 {{- end -}}

@@ -1,0 +1,25 @@
+{
+	"label": "Domain",
+	"description": "Domain Owners only.  Site Admin",
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}
+	},
+	"actions": {
+		"index": {"step": "view-html"},
+		"view": {"step": "view-html"},
+		"sort": {"steps": [
+			{"step": "sort", "keys": "streamId", "values": "rank"}
+		]},
+		"new": {"steps": [
+			{"step": "new-toplevel"},
+			{"step": "forward-to", "url": "/admin/toplevel"}
+		]},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		}
+	}
+}

@@ -89,7 +89,7 @@ func (user User) TopLevelID() string {
 }
 
 func (user User) Token() string {
-	return user.user.ID()
+	return "users"
 }
 
 func (user User) object() data.Object {

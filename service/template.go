@@ -73,17 +73,17 @@ func (service *Template) List(criteria exp.Expression) []model.Option {
 }
 
 // Load retrieves an Template from the database
-func (service *Template) Load(templateID string) (model.Template, error) {
+func (service *Template) Load(templateID string) (*model.Template, error) {
 
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
 
 	// Look in the local cache first
 	if template, ok := service.templates[templateID]; ok {
-		return template, nil
+		return &template, nil
 	}
 
-	return model.Template{}, derp.New(404, "ghost.sevice.Template.Load", "Template not found", templateID, service.templates)
+	return nil, derp.New(404, "ghost.sevice.Template.Load", "Template not found", templateID, service.templates)
 }
 
 // Save adds/updates an Template in the memory cache
@@ -198,7 +198,7 @@ func (service *Template) Watch() {
 	for _, fileInfo := range fileList {
 
 		if fileInfo.IsDir() {
-			templateID := fileInfo.Name()
+			templateID := list.Last(fileInfo.Name(), "/")
 
 			// System directories are skipped.
 			if templateID == "system" {

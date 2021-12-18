@@ -36,7 +36,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, stream, actionID)
+		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")
@@ -71,7 +71,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
-		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, stream, actionID)
+		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")

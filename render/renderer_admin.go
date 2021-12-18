@@ -14,7 +14,7 @@ func AdminSections() []model.Option {
 			Label: "Site",
 		},
 		{
-			Value: "content",
+			Value: "toplevel",
 			Label: "Navigation",
 		},
 		{

@@ -1,11 +1,11 @@
 <h1>Settings</h1>
 
 <div id="menu-bar">
+    {{- $token := .Token -}}
     {{- range .AdminSections -}}
-        <a href="/admin/{{.Value}}">{{.Label}}</a>
+        <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
     {{- end -}}
 </div>
-
 
 <div class="pure-g">
     {{- .View "list" -}}

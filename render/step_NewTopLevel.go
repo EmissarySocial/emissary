@@ -52,7 +52,7 @@ func (step StepTopLevelCreate) Post(buffer io.Writer, renderer Renderer) error {
 	// Set stream defaults
 	authorization := getAuthorization(domainRenderer.ctx)
 	child.AuthorID = authorization.UserID
-	childStream, err := NewStream(domainRenderer.factory, domainRenderer.ctx, template, child, "view")
+	childStream, err := NewStream(domainRenderer.factory, domainRenderer.ctx, template, &child, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)

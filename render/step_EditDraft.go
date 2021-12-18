@@ -37,7 +37,7 @@ func (step StepStreamDraftEdit) Get(buffer io.Writer, renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, &streamRenderer.stream); err != nil {
+	if err := step.draftService.LoadByID(streamRenderer.stream.StreamID, streamRenderer.stream); err != nil {
 		return derp.Wrap(err, "ghost.renderer.StepStreamDraftEdit.Get", "Error loading Draft")
 	}
 

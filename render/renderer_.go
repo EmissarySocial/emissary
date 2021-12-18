@@ -39,7 +39,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 		return &result, nil
 
 	case *model.Stream:
-		result, err := NewStreamWithoutTemplate(factory, ctx, *obj, actionID)
+		result, err := NewStreamWithoutTemplate(factory, ctx, obj, actionID)
 		return &result, err
 
 	case *model.User:

@@ -1,10 +1,10 @@
 {{- $results := .Children.Top6.View -}}
-{{- if gt (len $results) 0 -}}
+{{- if not $results.IsEmpty -}}
 
 	{{- $last := last $results -}}
 
 	<div 
-		hx-get="/{{.Token}}/children?publishDate=lt:{{$last.PublishDate}}" 
+		hx-get="/{{.Token}}/children?publishDate=lt:{{$results.Last.PublishDate}}" 
 		hx-push-url="false"
 		hx-trigger="revealed" 
 		hx-target="#children" 

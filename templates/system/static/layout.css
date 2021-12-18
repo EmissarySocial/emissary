@@ -101,6 +101,12 @@ main {
 
 #menu-bar a:hover {
 	background-color: var(--gray10);
+	color: var(--gray90);
+}
+
+#menu-bar a.selected,
+#menu-bar a.selected:hover {
+	background-color: var(--gray20);
 	color: var(--black);
 }
 

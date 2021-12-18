@@ -72,7 +72,12 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 
 	switch controller {
 
-	case "content", "domain":
+	case "toplevel":
+		action := first.String(ctx.Param("param2"), "index")
+		result := render.NewTopLevel(factory, ctx, action)
+		return &result, nil
+
+	case "domain":
 		action := first.String(ctx.Param("param2"), "index")
 		result := render.NewDomain(factory, ctx, action)
 		return &result, nil

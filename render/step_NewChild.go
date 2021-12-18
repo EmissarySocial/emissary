@@ -52,7 +52,7 @@ func (step StepNewChild) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Create new child stream
-	child, template, err := step.streamService.NewChild(&streamRenderer.stream, templateID)
+	child, template, err := step.streamService.NewChild(streamRenderer.stream, templateID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating new child stream", templateID)
@@ -61,7 +61,7 @@ func (step StepNewChild) Post(buffer io.Writer, renderer Renderer) error {
 	// Set Default Values
 
 	child.StateID = step.childState
-	childStream, err := NewStream(streamRenderer.factory, streamRenderer.context(), template, child, "view")
+	childStream, err := NewStream(streamRenderer.factory, streamRenderer.context(), template, &child, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepNewChild.Post", "Error creating renderer", child)
