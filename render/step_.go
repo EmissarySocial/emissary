@@ -67,7 +67,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "upload-attachments":
 		return NewStepAttachmentUpload(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
 
-	// CONTROL LOGIC
+	// SERVER-SIDE CONTROL LOGIC
 	case "with-children":
 		return NewStepWithChildren(factory.Stream(), stepInfo), nil
 
@@ -77,10 +77,14 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "if":
 		return NewStepIfCondition(factory, stepInfo), nil
 
+	// CLIENT-SIDE CONTROLS
 	case "forward-to":
 		return NewStepForwardTo(stepInfo), nil
 
 	case "trigger-event":
+		return NewStepTriggerEvent(stepInfo), nil
+
+	case "refresh-page":
 		return NewStepTriggerEvent(stepInfo), nil
 
 	}
