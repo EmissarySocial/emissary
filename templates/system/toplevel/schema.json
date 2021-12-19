@@ -10,10 +10,8 @@
 	"actions": {
 		"index": {"step": "view-html"},
 		"view": {"step": "view-html"},
-		"sort": {"steps": [
-			{"step": "sort", "keys": "streamId", "values": "rank"}
-		]},
-		"new": {"steps": [
+		"sort": {"step": "sort"},
+		"add": {"steps": [
 			{"step": "new-toplevel"},
 			{"step": "forward-to", "url": "/admin/toplevel"}
 		]},

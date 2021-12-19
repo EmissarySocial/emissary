@@ -3,6 +3,7 @@ package render
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/steranko"
@@ -177,4 +178,15 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 	}
 
 	return result
+}
+
+func (qb QueryBuilder) debug() datatype.Map {
+
+	return datatype.Map{
+		"Criteria":      qb.Criteria,
+		"SortField":     qb.SortField,
+		"SortDirection": qb.SortDirection,
+		"MaxRows":       qb.MaxRows,
+	}
+
 }

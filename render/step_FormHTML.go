@@ -62,7 +62,7 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Put approved form data into the stream
 	for key, value := range inputs {
-		if err := renderer.SetPath(path.New(key), value); err != nil {
+		if err := path.Set(renderer, key, value); err != nil {
 			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", key, value)
 		}
 	}

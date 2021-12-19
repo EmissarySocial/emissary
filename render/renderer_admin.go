@@ -18,12 +18,16 @@ func AdminSections() []model.Option {
 			Label: "Navigation",
 		},
 		{
+			Value: "users",
+			Label: "People",
+		},
+		{
 			Value: "groups",
 			Label: "Groups",
 		},
 		{
-			Value: "users",
-			Label: "People",
+			Value: "analytics",
+			Label: "Analytics",
 		},
 	}
 }

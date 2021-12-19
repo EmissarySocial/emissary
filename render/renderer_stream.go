@@ -226,6 +226,11 @@ func (st Stream) CreateDate() int64 {
 	return st.stream.CreateDate
 }
 
+// Rank returns the Rank of the stream being rendered
+func (st Stream) Rank() int {
+	return st.stream.Rank
+}
+
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
 func (st Stream) ThumbnailImage() string {
 	return st.stream.ThumbnailImage

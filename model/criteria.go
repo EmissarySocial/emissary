@@ -21,7 +21,7 @@ func NewCriteria() Criteria {
 	}
 }
 
-func (criteria Criteria) GetPath(p path.Path) (interface{}, error) {
+func (criteria *Criteria) GetPath(p path.Path) (interface{}, error) {
 
 	switch p.Head() {
 

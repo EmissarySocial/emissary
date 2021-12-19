@@ -8,12 +8,20 @@
 </div>
 
 <div class="page">
-    <form class="sortable" hx-post="/admin/toplevel/sort" hx-swap="false" hx-push-url="false" hx-trigger="end">
-        <div class="htmx-indicator">Updating...</div>
+    <div class="space-below">
+        <button hx-get="/admin/toplevel/add" script="install AsModal"><i class="fa-regular fa-plus"></i> Add a New Top-Level Stream</button>
+    </div>
+
+    <div class="space-below">
+        Drag and Drop Top-Level Pages to Change Their Sort Order.
+    </div>
+
+    <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
         {{- range .TopLevel -}}
-            <div>
-                <input type="hidden" name="keys" value="{{.StreamID}}">
+            <div class="draggable">
+                <i class="fa-regular fa-grip"></i>
                 {{.Label}}
+                <input type="hidden" name="keys" value="{{.StreamID}}">
             </div>
         {{- end -}}
     </form>
@@ -28,8 +36,25 @@
         var sortable = sortables[i];
         new Sortable(sortable, {
             animation: 150,
-            ghostClass: 'blue-background-class'
+            ghostClass: 'draggable-ghost'
         });
         }
     })
 </script>
+
+<style>
+    .draggable {
+        padding:10px 20px;
+        border: solid 1px var(--gray10);
+        background-color: var(--white);
+        color: var(--gray80);
+        margin-bottom: -1px;
+        cursor: grab;
+    }
+
+    .draggable-ghost {
+        background-color: var(--gray50);
+        color:var(--gray50);
+        cursor: grabbing;
+    }
+</style>

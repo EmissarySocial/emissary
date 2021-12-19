@@ -79,8 +79,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
-		fmt.Println("streamService.Save: sending update update to stream: " + stream.Label)
 		service.streamUpdateChannel <- *stream
+		fmt.Println("streamService.Save: sent update update to stream: " + stream.Label)
 	}()
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.

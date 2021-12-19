@@ -29,7 +29,7 @@ type Stream struct {
 	Data            datatype.Map         `json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Tags            []string             `json:"tags"            bson:"tags,omitempty"`          // Organizational Tags
 	ThumbnailImage  string               `json:"thumbnailImage"  bson:"thumbnailImage"`          // Image to display next to the stream in lists.
-	SortRank        int64                `json:"sortRank"        bson:"sortRank,omitempty"`      // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	Rank            int                  `json:"rank"            bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	SourceID        primitive.ObjectID   `json:"sourceId"        bson:"sourceId,omitempty"`      // Internal identifier of the source configuration that generated this stream
 	SourceURL       string               `json:"sourceUrl"       bson:"sourceUrl,omitempty"`     // URL of the original document published by the source server
 	SourceUpdated   int64                `json:"sourceUpdated"   bson:"sourceUpdated,omitempty"` // Date the the source updated the original content.
@@ -60,13 +60,13 @@ func NewStream() Stream {
  *******************************************/
 
 // ID returns the primary key of this object
-func (stream Stream) ID() string {
+func (stream *Stream) ID() string {
 	return stream.StreamID.Hex()
 }
 
 // GetPath implements the path.Getter interface.  It looks up
 // data within this Stream and returns it to the caller.
-func (stream Stream) GetPath(p path.Path) (interface{}, error) {
+func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 
 	if p.IsEmpty() {
 		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
@@ -74,7 +74,7 @@ func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
 	property := p.Head()
 
-	// Properties that can be set
+	// Properties that can be retrieved
 	switch property {
 
 	case "label":
@@ -88,6 +88,9 @@ func (stream Stream) GetPath(p path.Path) (interface{}, error) {
 
 	case "criteria":
 		return stream.Criteria.GetPath(p.Tail())
+
+	case "rank":
+		return stream.Rank, nil
 
 	default:
 		return stream.Data[property], nil
@@ -119,6 +122,9 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 	case "criteria":
 		return stream.Criteria.SetPath(p.Tail(), value)
 
+	case "rank":
+		stream.Rank = convert.Int(value)
+
 	default:
 		return stream.Data.SetPath(p, value)
 	}
@@ -131,12 +137,12 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // HasParent returns TRUE if this Stream has a valid parentID
-func (stream Stream) HasParent() bool {
+func (stream *Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
 // NewAttachment creates a new file Attachment linked to this Stream.
-func (stream Stream) NewAttachment(filename string) Attachment {
+func (stream *Stream) NewAttachment(filename string) Attachment {
 	result := NewAttachment(stream.StreamID)
 	result.Original = filename
 

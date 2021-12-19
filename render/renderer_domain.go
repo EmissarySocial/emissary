@@ -20,10 +20,7 @@ type Domain struct {
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, actionID string) Domain {
-
-	layoutService := factory.Layout()
-	layout := layoutService.Domain()
+func NewDomain(factory Factory, ctx *steranko.Context, layout model.Layout, actionID string) Domain {
 
 	return Domain{
 		layout:   layout,

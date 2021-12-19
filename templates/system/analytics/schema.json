@@ -1,0 +1,91 @@
+{
+	"label": "Domain",
+	"description": "Domain Owners only.  Site Admin",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			},
+			"description": {
+				"type": "string",
+				"description": "The HTML content for this article"
+			},
+			"choose": {
+				"type": "string",
+				"enum": ["Hello", "Darkness", "My", "Old", "Friend"]
+			},
+			"share": {
+				"type": "string",
+				"enum": ["ALL", "SOME", "NONE"]
+			},
+			"shareWith": {
+				"type": "array",
+				"items": {
+					"type": "string"
+				}
+			}
+		},
+		"required": ["class", "title", "body"]
+	},
+	"states": {
+		"default": {
+			"label": "Default State",
+			"description": "All articles only have one state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}
+	},
+	"actions": {
+		"index": {"step": "view-html"},
+		"view": {"step": "view-html"},
+		"edit": {
+			"roles": ["owner", "editor"],
+			"step": "edit-draft",
+			"file": "draft"
+		},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		},
+		"delete-draft": {
+			"roles": ["owner", "editor"],
+			"step": "delete-draft"
+		},
+		"publish-draft": {
+			"roles": ["owner", "editor"],
+			"step": "publish-draft"
+		},
+		"properties": {
+			"roles": ["owner", "editor"],
+			"steps": [{
+				"step": "form-html",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Update Form",
+					"description": "This will update the object in this state",
+					"children": [{
+						"kind": "text",
+						"label": "Label",
+						"path": "label"
+					},{
+						"kind": "textarea",
+						"label": "Description",
+						"path": "description"
+					}]
+				}
+			}, {
+				"step": "edit-data",
+				"fields": ["label", "description"]
+			},{
+				"step": "save",
+				"comment": "Updated by {{.Author}}"
+			}]
+		}
+	}
+}

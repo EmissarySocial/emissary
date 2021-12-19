@@ -1,7 +1,6 @@
 package render
 
 import (
-	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -157,9 +156,6 @@ func (w Common) getDomain() (*model.Domain, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
 	criteria := exp.Equal("parentId", primitive.NilObjectID)
-	queryBuilder := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
-	queryBuilder.SortField = "rank"
-	queryBuilder.SortDirection = option.SortDirectionAscending
-	queryBuilder.MaxRows = 10
-	return queryBuilder.View()
+	builder := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	return builder.Top60().ByRank().View()
 }

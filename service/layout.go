@@ -12,13 +12,14 @@ import (
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
-	path     string
-	funcMap  template.FuncMap
-	domain   model.Layout
-	global   model.Layout
-	group    model.Layout
-	topLevel model.Layout
-	user     model.Layout
+	path      string
+	funcMap   template.FuncMap
+	analytics model.Layout
+	domain    model.Layout
+	global    model.Layout
+	group     model.Layout
+	topLevel  model.Layout
+	user      model.Layout
 }
 
 // NewLayout returns a fully initialized Layout service.
@@ -33,6 +34,10 @@ func NewLayout(path string, funcMap template.FuncMap) Layout {
 /*******************************************
  * LAYOUT ACCESSORS
  *******************************************/
+
+func (service *Layout) Analytics() model.Layout {
+	return service.analytics
+}
 
 func (service *Layout) Domain() model.Layout {
 	return service.domain
@@ -60,7 +65,7 @@ func (service *Layout) User() model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "toplevel", "domain", "groups", "users"}
+	return []string{"global", "toplevel", "domain", "groups", "users", "analytics"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -147,6 +152,8 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 
 	switch filename {
 
+	case "analytics":
+		service.analytics = layout
 	case "domain":
 		service.domain = layout
 	case "global":

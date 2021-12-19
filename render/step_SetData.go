@@ -58,7 +58,7 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Put values from schema.json into the stream
 	for key, value := range step.values {
-		if err := renderer.SetPath(path.New(key), value); err != nil {
+		if err := path.Set(renderer, key, value); err != nil {
 			return derp.Wrap(err, "ghose.render.StepSetData.Post", "Error setting value from schema.json", key, value)
 		}
 	}
