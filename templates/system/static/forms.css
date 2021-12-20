@@ -51,6 +51,13 @@ button,
     color: var(--gray90);
 }
 
+.text-sm input[type=submit],
+.text-sm button,
+.text-sm .button {
+    font-size:10pt;
+    padding:5px 10px;
+}
+
 input[type=submit]:hover,
 button:hover,
 .button:hover {

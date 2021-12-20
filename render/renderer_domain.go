@@ -15,12 +15,12 @@ import (
 
 type Domain struct {
 	domain   model.Domain
-	layout   model.Layout
+	layout   *model.Layout
 	actionID string
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout model.Layout, actionID string) Domain {
+func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, actionID string) Domain {
 
 	return Domain{
 		layout:   layout,

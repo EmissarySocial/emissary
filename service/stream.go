@@ -207,7 +207,7 @@ func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Strea
 	return service.Load(exp.Equal("_id", streamID), result)
 }
 
-// LoadBySourceURL locates a single stream that matches the provided SourceURL
+// LoadBySource locates a single stream that matches the provided SourceURL
 func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL string, result *model.Stream) error {
 
 	criteria := exp.
@@ -229,6 +229,16 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 	}
 
 	return nil
+}
+
+// LoadTopLevelByID locates a single stream in the top level of the site hierarchy
+func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *model.Stream) error {
+
+	criteria := exp.
+		Equal("_id", streamID).
+		AndEqual("parentId", primitive.NilObjectID)
+
+	return service.Load(criteria, result)
 }
 
 // ChildTemplates returns an iterator of Templates that can be added as a sub-stream

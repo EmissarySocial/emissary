@@ -37,13 +37,13 @@ func (step StepStreamDelete) Get(buffer io.Writer, renderer Renderer) error {
 	b := html.New()
 
 	b.Div().ID("modal").Data("HX-Push-Url", "false")
-	b.Div().Class("modal-backdrop").Close()
+	b.Div().Class("modal-underlay").Close()
 	b.Div().Class("modal-content")
 	b.H2().InnerHTML(step.title).Close()
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
 
 	b.Button().Class("warning").
-		Attr("hx-post", "/"+renderer.object().ID()+"/delete").
+		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
 		Script("install SubmitButton()").
 		InnerHTML("Delete").Close()

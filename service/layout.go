@@ -35,28 +35,28 @@ func NewLayout(path string, funcMap template.FuncMap) Layout {
  * LAYOUT ACCESSORS
  *******************************************/
 
-func (service *Layout) Analytics() model.Layout {
-	return service.analytics
+func (service *Layout) Analytics() *model.Layout {
+	return &service.analytics
 }
 
-func (service *Layout) Domain() model.Layout {
-	return service.domain
+func (service *Layout) Domain() *model.Layout {
+	return &service.domain
 }
 
-func (service *Layout) Global() model.Layout {
-	return service.global
+func (service *Layout) Global() *model.Layout {
+	return &service.global
 }
 
-func (service *Layout) Group() model.Layout {
-	return service.group
+func (service *Layout) Group() *model.Layout {
+	return &service.group
 }
 
-func (service *Layout) TopLevel() model.Layout {
-	return service.topLevel
+func (service *Layout) TopLevel() *model.Layout {
+	return &service.topLevel
 }
 
-func (service *Layout) User() model.Layout {
-	return service.user
+func (service *Layout) User() *model.Layout {
+	return &service.user
 }
 
 /*******************************************

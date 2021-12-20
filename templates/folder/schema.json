@@ -28,15 +28,10 @@
 		}
 	},
 	"actions": {
-		"create": {
-			"steps":[{
-				"step": "set-defaults",
-				"label": "New Folder"
-			}, {
-				"step": "save",
-				"comment": "Created by {{.Author}}",
-				"forwardTo": "/{{.Token}}/edit"
-			}]
+		"init": {
+			"steps":[
+				{"step": "set-data", "values":{"label": "New Folder"}}
+			]
 		},
 		"edit": {
 			"steps":[{

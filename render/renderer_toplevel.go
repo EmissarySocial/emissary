@@ -11,37 +11,55 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TopLevel struct {
-	layout   model.Layout
+	layout   *model.Layout
+	stream   *model.Stream
 	actionID string
 	Common
 }
 
-func NewTopLevel(factory Factory, ctx *steranko.Context, actionID string) TopLevel {
+func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, objectID string, actionID string) (TopLevel, error) {
 
-	layoutService := factory.Layout()
-	layout := layoutService.TopLevel()
-
-	return TopLevel{
+	result := TopLevel{
 		layout:   layout,
 		actionID: actionID,
 		Common:   NewCommon(factory, ctx),
 	}
+
+	if streamID, err := primitive.ObjectIDFromHex(objectID); err == nil {
+
+		streamService := factory.Stream()
+		result.stream = new(model.Stream)
+		if err := streamService.LoadTopLevelByID(streamID, result.stream); err != nil {
+			return TopLevel{}, derp.Wrap(err, "ghost.render.NewTopLevel", "Error loading Top-Level record", streamID)
+		}
+
+		result.actionID = actionID
+
+	} else {
+		result.actionID = objectID
+	}
+
+	if result.actionID == "" {
+		result.actionID = "index"
+	}
+
+	return result, nil
 }
 
 /*******************************************
  * PATH INTERFACE
- * (not available via templates)
  *******************************************/
 
 func (domain *TopLevel) GetPath(p path.Path) (interface{}, error) {
-	return domain.domain.GetPath(p)
+	return domain.stream.GetPath(p)
 }
 
 func (domain *TopLevel) SetPath(p path.Path, value interface{}) error {
-	return domain.domain.SetPath(p, value)
+	return domain.stream.SetPath(p, value)
 }
 
 /*******************************************
@@ -83,7 +101,7 @@ func (domain TopLevel) TopLevelID() string {
 }
 
 func (domain TopLevel) object() data.Object {
-	return nil
+	return domain.stream
 }
 
 func (domain TopLevel) schema() schema.Schema {

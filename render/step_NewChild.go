@@ -32,7 +32,7 @@ func NewStepNewChild(templateService *service.Template, streamService *service.S
 
 func (step StepNewChild) Get(buffer io.Writer, renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
-	modalNewChild(step.templateService, buffer, streamRenderer, step.templateIDs)
+	modalNewChild(step.templateService, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
 	return nil
 }
 
@@ -93,20 +93,20 @@ func (step StepNewChild) Post(buffer io.Writer, renderer Renderer) error {
 
 // modalNewChild renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalNewChild(templateService *service.Template, buffer io.Writer, renderer *Stream, templateIDs []string) {
+func modalNewChild(templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
-	templates := templateService.ListByContainerLimited(renderer.TemplateID(), templateIDs)
+	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 
 	b := html.New()
 
-	b.Div().ID("modal")
+	b.Div().ID("modal").Data("hx-swap", "none").Data("hx-push-url", "false")
 	b.Div().Class("modal-underlay").Close()
 	b.Div().Class("modal-content")
 	b.H2().InnerHTML("+ Add a Stream").Close()
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {
-		b.TR().Data("hx-post", renderer.URL()+"?templateId="+template.Value)
+		b.TR().Data("hx-post", url+"?templateId="+template.Value)
 		{
 			b.TD()
 			b.I(template.Icon + " fa-3x gray").Close()

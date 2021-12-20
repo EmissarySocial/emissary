@@ -29,6 +29,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "new-child":
 		return NewStepNewChild(factory.Template(), factory.Stream(), stepInfo), nil
 
+	case "new-top-level":
+		return NewStepNewTopLevel(factory.Template(), factory.Stream(), stepInfo), nil
+
 	case "save":
 		return NewStepStreamSave(factory.Stream(), stepInfo), nil
 
@@ -85,7 +88,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepTriggerEvent(stepInfo), nil
 
 	case "refresh-page":
-		return NewStepTriggerEvent(stepInfo), nil
+		return NewStepRefreshPage(stepInfo), nil
 
 	}
 

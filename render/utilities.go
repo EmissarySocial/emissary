@@ -58,6 +58,7 @@ func WrapModalForm(renderer Renderer, content string) string {
 
 // closeModal sets Response header to close a modal on the client and optionally forward to a new location.
 func closeModal(ctx *steranko.Context, url string) {
+
 	if url == "" {
 		ctx.Response().Header().Set("HX-Trigger", `"closeModal"`)
 	} else {

@@ -83,9 +83,8 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 		return &result, nil
 
 	case "toplevel":
-		action := first.String(ctx.Param("param2"), "index")
-		result := render.NewDomain(factory, ctx, factory.Layout().TopLevel(), action)
-		return &result, nil
+		result, err := render.NewTopLevel(factory, ctx, factory.Layout().TopLevel(), ctx.Param("param2"), ctx.Param("param3"))
+		return &result, err
 
 	case "groups":
 		groupService := factory.Group()
@@ -99,7 +98,7 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 			}
 		}
 
-		result := render.NewGroup(factory, ctx, group, actionID)
+		result := render.NewGroup(factory, ctx, &group, actionID)
 		return &result, nil
 
 	case "users":
@@ -114,7 +113,7 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 			}
 		}
 
-		result := render.NewUser(factory, ctx, user, actionID)
+		result := render.NewUser(factory, ctx, &user, actionID)
 		return &result, nil
 
 	default:

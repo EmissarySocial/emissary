@@ -16,13 +16,13 @@ import (
 )
 
 type Group struct {
-	group    model.Group
-	layout   model.Layout
+	layout   *model.Layout
+	group    *model.Group
 	actionID string
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, group model.Group, actionID string) Group {
+func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, actionID string) Group {
 
 	layoutService := factory.Layout()
 	layout := layoutService.Group()
@@ -93,7 +93,7 @@ func (group Group) Token() string {
 }
 
 func (group Group) object() data.Object {
-	return &group.group
+	return group.group
 }
 
 func (group Group) schema() schema.Schema {

@@ -8,7 +8,6 @@
 	bottom: 0px;
 	left:0px;
 	right:0px;
-	background-color:rgba(0,0,0,0.5);
 	z-index:1000;
 
 	/* Flexbox centers the .modal-content vertically and horizontally */
@@ -31,6 +30,8 @@
 	bottom:0px;
 	left: 0px;
 	right: 0px;
+	background-color:black;
+	opacity: 0.6;
 }
 
 #modal > .modal-content {
@@ -71,13 +72,16 @@
 	animation-timing-function: ease;
 }
 
-
-
 /* Alternate colors for dark mode */
 @media (prefers-color-scheme: dark) {
-
-	body {
-		color:var(--gray80);
+	#modal > .modal-content {
+		background-color:var(--gray20);
+		border-color:var(--gray30);
+		color: white;
 	}
-
+	
+	#modal > .modal-underlay {
+		background-color:black;
+		opacity: 0.9;
+	}
 }

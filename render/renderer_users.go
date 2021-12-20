@@ -16,13 +16,13 @@ import (
 )
 
 type User struct {
-	user     model.User
-	layout   model.Layout
+	user     *model.User
+	layout   *model.Layout
 	actionID string
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, user model.User, actionID string) User {
+func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID string) User {
 
 	layoutService := factory.Layout()
 	layout := layoutService.User()
@@ -93,7 +93,7 @@ func (user User) Token() string {
 }
 
 func (user User) object() data.Object {
-	return &user.user
+	return user.user
 }
 
 func (user User) schema() schema.Schema {

@@ -38,13 +38,10 @@
 			}, {
 				"step": "new-child",
 				"template": "article",
-				"withChild": [{
-					"step": "set-defaults",
-					"label": "My First Blog Article"
-				},{
-					"step": "forward-to",
-					"url": "/{{.Token}}/edit"
-				}]
+				"withChild": [
+					{"step": "set-defaults","label": "My First Blog Article"},
+					{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				]
 			}]
 		},
 		"edit": {
