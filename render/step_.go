@@ -27,10 +27,10 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
 
 	case "add-child":
-		return NewStepNewChild(factory.Template(), factory.Stream(), stepInfo), nil
+		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "add-top-level":
-		return NewStepNewTopLevel(factory.Template(), factory.Stream(), stepInfo), nil
+		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "save":
 		return NewStepStreamSave(factory.Stream(), stepInfo), nil
