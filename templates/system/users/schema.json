@@ -1,47 +1,6 @@
 {
 	"label": "User",
 	"description": "Manage all users on this website",
-	"icon": "",
-	"schema": {
-		"type": "object",
-		"properties": {
-			"label": {
-				"type": "string",
-				"description": "The human-readable title for this article"
-			},
-			"description": {
-				"type": "string",
-				"description": "The HTML content for this article"
-			},
-			"choose": {
-				"type": "string",
-				"enum": ["Hello", "Darkness", "My", "Old", "Friend"]
-			},
-			"share": {
-				"type": "string",
-				"enum": ["ALL", "SOME", "NONE"]
-			},
-			"shareWith": {
-				"type": "array",
-				"items": {
-					"type": "string"
-				}
-			}
-		},
-		"required": ["class", "title", "body"]
-	},
-	"states": {
-		"default": {
-			"label": "Default State",
-			"description": "All articles only have one state"
-		}
-	},
-	"roles": {
-		"owner": {
-			"label": "Domain Owner",
-			"decription": "Full control"
-		}
-	},
 	"actions": {
 		"index": {"step": "view-html"},
 		"list": {"step": "view-html"},

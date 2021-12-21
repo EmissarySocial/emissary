@@ -54,13 +54,14 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-defaults", "label": "New Article"},
-				{"step": "set-defaults", "content": 
+				{"step": "set-data", "values": {
+					"label": "New Article",
+					"content": 
 					[
 						{"type": "CONTAINER", "refs": [1], "data": {"style": "ROWS"}},
 						{"type": "WYSIWYG"}
 					]
-				}
+				}}
 			]
 		},
 		"view": {

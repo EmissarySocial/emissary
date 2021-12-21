@@ -68,14 +68,14 @@
 			"states": ["awaiting-moderation", "visible"],
 			"roles": ["owner", "moderator"],
 			"steps": [
-				{"step": "set-state", "new-state":"hidden"}
+				{"step": "set-state", "state":"hidden"}
 			]
 		},
 		"show": {
 			"states": ["awaiting-moderation", "hidden"],
 			"roles": ["owner", "moderator"],
 			"steps": [
-				{"step": "new-state", "new-state":"hidden"}
+				{"step": "set-state", "state":"hidden"}
 			]
 		},
 		"delete": {

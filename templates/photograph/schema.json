@@ -64,10 +64,10 @@
 				{"step": "trigger-event","event": "closeModal"}
 			]
 		},
-		"add-child": {
+		"add": {
 			"roles": ["owner", "author"],
 			"steps": [
-				{"step":"new-child"},
+				{"step":"add-child"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},

@@ -29,20 +29,18 @@
 	},
 	"actions": {
 		"create": {
-			"steps":[{
-				"step": "set-defaults",
-				"label": "New Blog"
-			}, {
-				"step": "save",
-				"comment": "Created by {{.Author}}"
-			}, {
-				"step": "new-child",
-				"template": "article",
-				"withChild": [
-					{"step": "set-defaults","label": "My First Blog Article"},
-					{"step": "forward-to", "url": "/{{.Token}}/edit"}
-				]
-			}]
+			"steps":[
+				{"step": "set-data", "values": {"label": "New Blog"}},
+				{"step": "save","comment": "Created by {{.Author}}"}, 
+				{
+					"step": "add-child",
+					"template": "article",
+					"withChild": [
+						{"step": "set-data", "values": {"label": "My First Blog Article"}},
+						{"step": "forward-to", "url": "/{{.Token}}/edit"}
+					]
+				}
+		]
 		},
 		"edit": {
 			"steps":[{
@@ -80,28 +78,14 @@
 		"delete": {
 			"steps": [{"step":"delete"}]
 		},
-		"new": {
+		"add": {
 			"steps":[{
-				"step": "new-child",
+				"step": "add-child",
 				"comment": "Created by {{.Author}}",
 				"withChild": [
 					{"step": "save", "comment": "Created by {{.Author}}"},
 					{"step": "forward-to", "url": "/{{.Token}}/edit"}
 				]
-			}]
-		},
-		"top": {
-			"roles": ["owner"],
-			"steps": [{
-				"step": "new-sibling",
-				"withSibling": [{
-					"step": "set-defaults",
-					"label": "New Folder"
-				}, {
-					"step": "save",
-					"comment": "Created Folder",
-					"forwardTo": "/{{.Token}}"
-				}]
 			}]
 		}
 	}

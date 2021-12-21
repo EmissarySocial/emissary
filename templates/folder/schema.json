@@ -71,26 +71,12 @@
 		},
 		"new": {
 			"steps":[{
-				"step": "new-child",
+				"step": "add-child",
 				"comment": "Created by {{.Author}}",
 				"withChild": [
 					{"step": "save", "comment": "Created by {{.Author}}"},
 					{"step": "forward-to", "url": "/{{.Token}}/edit"}
 				]
-			}]
-		},
-		"top": {
-			"roles": ["owner"],
-			"steps": [{
-				"step": "new-sibling",
-				"withSibling": [{
-					"step": "set-defaults",
-					"label": "New Folder"
-				}, {
-					"step": "save",
-					"comment": "Created Folder",
-					"forwardTo": "/{{.Token}}"
-				}]
 			}]
 		}
 	}

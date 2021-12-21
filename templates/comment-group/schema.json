@@ -51,9 +51,9 @@
 			"roles": ["owner", "author"],
 			"step": "delete"
 		},
-		"new-child": {
+		"add": {
 			"steps": [{
-				"step": "new-child", 
+				"step": "add-child", 
 				"template": "comment",
 				"withChild": [
 					{"step": "set-data", "paths":["description"]},

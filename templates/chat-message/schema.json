@@ -61,7 +61,7 @@
 		"hide": {
 			"states": ["awaiting-moderation", "visible"],
 			"roles": ["moderator"],
-			"method": "new-state",
+			"method": "set-state",
 			"new-state":"hidden"
 		},
 		"show": {

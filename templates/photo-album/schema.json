@@ -42,23 +42,22 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-defaults", "label": "New Photo Album", "description": "Enter a brief description here. 🌈"},
-				{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				{"step": "set-data", "values": {
+					"label": "New Photo Album", 
+					"description": "Enter a brief description here. 🌈"
+				}}
 			]
 		},
-		"view": {
-			"step": "view-html"		
-		},
-		"children": {
-			"step": "view-html"
-		},
+		"view": {"step": "view-html"},
+		"children": {"step": "view-html"},
 		"edit": {
 			"roles": ["owner", "editor", "author"],
 			"step": "view-html"
 		},
 		"properties": {
 			"roles": ["owner", "editor", "author"],
-			"steps": [{
+			"steps": [
+				{
 				"step": "form-html",
 				"form": {
 					"kind": "layout-vertical",
@@ -74,26 +73,22 @@
 						"path": "description",
 						"cssClass": "height300"
 					}]
-				}
-			},{
-				"step": "save",
-				"comment": "Updated by {{.Author}}"
-			}, {
-				"step": "trigger-event",
-				"event": "closeModal"
-			}]
+				}},
+				{"step": "save", "comment": "Updated by {{.Author}}"},
+				{"step": "trigger-event", "event": "closeModal"}
+			]
 		},
 		"attachments": {
 			"roles": ["owner", "editor", "author"],
 			"steps": [{
-				"step": "new-child",
+				"step": "add-child",
 				"template": "photograph",
 				"withChild": [
 					{"step": "upload-attachments"},
 					{"step": "set-publishdate"},
 					{"step": "set-thumbnail"},
 					{"step": "save"},
-					{"step": "new-child", "template": "comment-group"},
+					{"step": "add-child", "template": "comment-group"},
 					{"step": "forward-to", "url": "/{{.Token}}"}
 				]}
 			]
@@ -102,9 +97,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step": "delete", "title": "Delete this Photo Album?", "message": "This will PERMANENTLY DELETE everyting in this album."},
-				{"step": "with-parent", "steps": [
-					{"step": "forward-to", "url": "/{{.Token}}"}
-				]}
+				{"step": "forward-to", "url": "/{{.ParentID}}"}
 			]
 		}
 	}

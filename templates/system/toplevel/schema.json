@@ -6,7 +6,7 @@
 		"view": {"step": "view-html"},
 		"sort": {"step": "sort"},
 		"add": {"steps": [
-			{"step": "new-top-level"},
+			{"step": "add-top-level"},
 			{"step": "forward-to", "url": "/admin/toplevel"}
 		]},
 		"delete": {
