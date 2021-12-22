@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetAdmin handles GET requests
@@ -87,33 +88,39 @@ func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Re
 		return &result, err
 
 	case "groups":
-		groupService := factory.Group()
 		group := model.NewGroup()
-		token := ctx.Param("param2")
-		actionID := first.String(ctx.Param("param3"), "index")
 
-		if token != "" {
-			if err := groupService.LoadByToken(token, &group); err != nil {
-				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", token)
+		if groupID, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
+			groupService := factory.Group()
+
+			if err := groupService.LoadByID(groupID, &group); err != nil {
+				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading Group", groupID)
 			}
+
+			result := render.NewGroup(factory, ctx, &group, first.String(ctx.Param("param3"), "view"))
+			return &result, nil
 		}
 
-		result := render.NewGroup(factory, ctx, &group, actionID)
+		// Fall through means we aren't looking at a specific user
+		result := render.NewGroup(factory, ctx, &group, first.String(ctx.Param("param2"), "index"))
 		return &result, nil
 
 	case "users":
-		userService := factory.User()
 		user := model.NewUser()
-		token := ctx.Param("param2")
-		actionID := first.String(ctx.Param("param3"), "index")
 
-		if token != "" {
-			if err := userService.LoadByToken(token, &user); err != nil {
-				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", token)
+		if userID, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
+			userService := factory.User()
+
+			if err := userService.LoadByID(userID, &user); err != nil {
+				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", userID)
 			}
+
+			result := render.NewUser(factory, ctx, &user, first.String(ctx.Param("param3"), "view"))
+			return &result, nil
 		}
 
-		result := render.NewUser(factory, ctx, &user, actionID)
+		// Fall through means we aren't looking at a specific user
+		result := render.NewUser(factory, ctx, &user, first.String(ctx.Param("param2"), "index"))
 		return &result, nil
 
 	default:
