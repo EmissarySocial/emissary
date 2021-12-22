@@ -43,7 +43,7 @@ func (user *User) Schema() schema.Schema {
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
 				"userId":      schema.String{},
-				"groupIds":    schema.Array{},
+				"groupIds":    schema.Array{Items: schema.String{}},
 				"displayName": schema.String{},
 				"username":    schema.String{},
 				"avatarUrl":   schema.String{},
@@ -74,6 +74,11 @@ func (user *User) GetPath(p path.Path) (interface{}, error) {
 func (user *User) SetPath(p path.Path, value interface{}) error {
 
 	switch p.Head() {
+
+	case "username":
+		user.Username = convert.String(value)
+		return nil
+
 	case "displayName":
 		user.DisplayName = convert.String(value)
 		return nil
