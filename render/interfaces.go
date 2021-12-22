@@ -1,9 +1,6 @@
 package render
 
 import (
-	"github.com/benpate/data"
-	"github.com/benpate/data/option"
-	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
@@ -21,12 +18,4 @@ type Factory interface {
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
 	User() *service.User
-}
-
-type ModelService interface {
-	ObjectNew() data.Object
-	ObjectList(exp.Expression, ...option.Option) (data.Iterator, error)
-	ObjectLoad(exp.Expression) (data.Object, error)
-	ObjectSave(data.Object, string) error
-	ObjectDelete(data.Object, string) error
 }
