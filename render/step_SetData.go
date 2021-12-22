@@ -42,11 +42,11 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Collect form POST information
 	if err := renderer.context().Bind(&inputs); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepSetData.Post", "Error binding body")
 	}
 
 	if err := schema.Validate(inputs); err != nil {
-		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
+		return derp.Wrap(err, "ghost.render.StepSetData.Post", "Error validating input", inputs)
 	}
 
 	// Put approved form data into the stream
@@ -57,10 +57,8 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Put values from schema.json into the stream
-	for key, value := range step.values {
-		if err := path.Set(renderer, key, value); err != nil {
-			return derp.Wrap(err, "ghose.render.StepSetData.Post", "Error setting value from schema.json", key, value)
-		}
+	if err := path.SetAll(renderer, step.values); err != nil {
+		return derp.Wrap(err, "ghost.render.StepSetData.Post", "Error setting value from schema.json", step.values)
 	}
 
 	return nil

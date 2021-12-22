@@ -18,22 +18,28 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	// Populate the action with the data from
 	switch stepInfo["step"] {
 
-	// STREAMS
+	// GENERIC MODEL OBJECT INTERFACT
+
+	case "add":
+		modelService := getModelService(factory, stepInfo.GetString("type"))
+		return NewStepAddModelObject(modelService, factory.FormLibrary(), stepInfo), nil
 
 	case "delete":
 		return NewStepStreamDelete(factory.Stream(), factory.StreamDraft(), stepInfo), nil
 
+	case "save":
+		return NewStepStreamSave(factory.Stream(), stepInfo), nil
+
 	case "form-html":
-		return NewStepForm(factory.Template(), factory.FormLibrary(), stepInfo), nil
+		return NewStepForm(factory.FormLibrary(), stepInfo), nil
+
+	// STREAMS
 
 	case "add-child":
 		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "add-top-level":
 		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
-
-	case "save":
-		return NewStepStreamSave(factory.Stream(), stepInfo), nil
 
 	case "set-data":
 		return NewStepSetData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil

@@ -6,24 +6,21 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
 )
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepForm struct {
-	templateService *service.Template
-	formLibrary     form.Library
-	form            form.Form
+	formLibrary form.Library
+	form        form.Form
 }
 
 // NewStepForm returns a fully initialized StepForm object
-func NewStepForm(templateService *service.Template, formLibrary form.Library, step datatype.Map) StepForm {
+func NewStepForm(formLibrary form.Library, step datatype.Map) StepForm {
 
 	return StepForm{
-		templateService: templateService,
-		formLibrary:     formLibrary,
-		form:            form.MustParse(step.GetInterface("form")),
+		formLibrary: formLibrary,
+		form:        form.MustParse(step.GetInterface("form")),
 	}
 }
 
@@ -56,15 +53,14 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
+	// Validate inputs
 	if err := schema.Validate(inputs); err != nil {
 		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
 	}
 
-	// Put approved form data into the stream
-	for key, value := range inputs {
-		if err := path.Set(renderer, key, value); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", key, value)
-		}
+	// Set values into object
+	if err := path.SetAll(renderer, inputs); err != nil {
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error seting value", inputs)
 	}
 
 	closeModal(renderer.context(), "")
