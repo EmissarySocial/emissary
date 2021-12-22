@@ -16,11 +16,11 @@ type StepForm struct {
 }
 
 // NewStepForm returns a fully initialized StepForm object
-func NewStepForm(formLibrary form.Library, step datatype.Map) StepForm {
+func NewStepForm(formLibrary form.Library, stepInfo datatype.Map) StepForm {
 
 	return StepForm{
 		formLibrary: formLibrary,
-		form:        form.MustParse(step.GetInterface("form")),
+		form:        form.MustParse(stepInfo.GetInterface("form")),
 	}
 }
 
@@ -37,8 +37,10 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForm.Get", "Error generating form")
 	}
 
+	result = WrapForm(renderer, result)
+
 	// Wrap result as a modal dialog
-	buffer.Write([]byte(WrapModalForm(renderer, result)))
+	buffer.Write([]byte(result))
 	return nil
 }
 
@@ -53,17 +55,14 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
 	}
 
-	// Validate inputs
 	if err := schema.Validate(inputs); err != nil {
 		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
 	}
 
-	// Set values into object
+	// Put approved form data into the stream
 	if err := path.SetAll(renderer, inputs); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error seting value", inputs)
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", inputs)
 	}
-
-	closeModal(renderer.context(), "")
 
 	return nil
 }

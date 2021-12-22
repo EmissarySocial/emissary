@@ -7,31 +7,32 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepStreamSave represents an action-step that can save changes to a Stream
-type StepStreamSave struct {
+// StepSave represents an action-step that can save changes to any object
+type StepSave struct {
 	modelService ModelService
 	comment      string
 }
 
-func NewStepStreamSave(modelService ModelService, stepInfo datatype.Map) StepStreamSave {
+// NewStepSave returns a fully initialized StepSave object
+func NewStepSave(modelService ModelService, stepInfo datatype.Map) StepSave {
 
-	return StepStreamSave{
+	return StepSave{
 		modelService: modelService,
 		comment:      stepInfo.GetString("comment"),
 	}
 }
 
-// Get displays a form for users to fill out in the browser
-func (step StepStreamSave) Get(buffer io.Writer, renderer Renderer) error {
+// Get does nothing.
+func (step StepSave) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-// Post updates the stream with configured data, and moves the stream to a new state
-func (step StepStreamSave) Post(buffer io.Writer, renderer Renderer) error {
+// Post saves the object to the database
+func (step StepSave) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to update the stream
 	if err := step.modelService.ObjectSave(renderer.object(), step.comment); err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamSave.Post", "Error saving Stream")
+		return derp.Wrap(err, "ghost.render.StepSave.Post", "Error saving Stream")
 	}
 
 	return nil

@@ -21,6 +21,6 @@ func (step StepRefreshPage) Get(buffer io.Writer, renderer Renderer) error {
 
 // Post updates the stream with approved data from the request body.
 func (step StepRefreshPage) Post(buffer io.Writer, renderer Renderer) error {
-	renderer.context().Response().Header().Set("HX-Refresh", "true")
+	renderer.context().Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage":""}`)
 	return nil
 }

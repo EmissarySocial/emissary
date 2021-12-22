@@ -75,6 +75,11 @@ func (qb QueryBuilder) ByLabel() QueryBuilder {
 	return qb
 }
 
+func (qb QueryBuilder) ByDisplayName() QueryBuilder {
+	qb.SortField = "displayName"
+	return qb
+}
+
 func (qb QueryBuilder) ByCreateDate() QueryBuilder {
 	qb.SortField = "journal.createDate"
 	return qb
