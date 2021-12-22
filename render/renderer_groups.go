@@ -40,12 +40,12 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
  * (not available via templates)
  *******************************************/
 
-func (u *Group) GetPath(p path.Path) (interface{}, error) {
-	return u.group.GetPath(p)
+func (w *Group) GetPath(p path.Path) (interface{}, error) {
+	return w.group.GetPath(p)
 }
 
-func (u *Group) SetPath(p path.Path, value interface{}) error {
-	return u.group.SetPath(p, value)
+func (w *Group) SetPath(p path.Path, value interface{}) error {
+	return w.group.SetPath(p, value)
 }
 
 /*******************************************
@@ -53,24 +53,24 @@ func (u *Group) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // ActionID returns the unique ID of the Action configured into this renderer
-func (group Group) ActionID() string {
-	return group.actionID
+func (w Group) ActionID() string {
+	return w.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (group Group) Action() (model.Action, bool) {
-	return group.layout.Action(group.ActionID())
+func (w Group) Action() (model.Action, bool) {
+	return w.layout.Action(w.ActionID())
 }
 
 // Render generates the string value for this Stream
-func (group Group) Render() (template.HTML, error) {
+func (w Group) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := group.layout.Action(group.actionID); ok {
+	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(group.factory, &group, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}
@@ -80,62 +80,62 @@ func (group Group) Render() (template.HTML, error) {
 }
 
 // View executes a separate view for this Group
-func (group Group) View(actionID string) (template.HTML, error) {
-	return NewGroup(group.factory, group.ctx, group.group, actionID).Render()
+func (w Group) View(actionID string) (template.HTML, error) {
+	return NewGroup(w.factory, w.ctx, w.group, actionID).Render()
 }
 
-func (group Group) TopLevelID() string {
+func (w Group) TopLevelID() string {
 	return "admin"
 }
 
-func (group Group) Token() string {
+func (w Group) Token() string {
 	return "groups"
 }
 
-func (group Group) object() data.Object {
-	return group.group
+func (w Group) object() data.Object {
+	return w.group
 }
 
-func (group Group) schema() schema.Schema {
-	return group.group.Schema()
+func (w Group) schema() schema.Schema {
+	return w.group.Schema()
 }
 
-func (group Group) common() Common {
-	return group.Common
+func (w Group) common() Common {
+	return w.Common
 }
 
-func (group Group) executeTemplate(writer io.Writer, name string, data interface{}) error {
-	return group.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+func (w Group) executeTemplate(writer io.Writer, name string, data interface{}) error {
+	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
 /*******************************************
  * DATA ACCESSORS
  *******************************************/
 
-func (group Group) GroupID() string {
-	return group.group.GroupID.Hex()
+func (w Group) GroupID() string {
+	return w.group.GroupID.Hex()
 }
 
-func (group Group) Label() string {
-	return group.group.Label
+func (w Group) Label() string {
+	return w.group.Label
 }
 
 /*******************************************
  * QUERY BUILDERS
  *******************************************/
 
-func (group Group) Groups() *QueryBuilder {
+func (w Group) Groups() *QueryBuilder {
 
 	query := builder.NewBuilder().
 		String("displayName").
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(group.ctx.Request().URL.Query()),
+		query.Evaluate(w.ctx.Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(group.factory, group.ctx, group.factory.Group(), criteria)
+	result := NewQueryBuilder(w.factory, w.ctx, w.factory.Group(), criteria)
 
 	return &result
 }
@@ -145,6 +145,6 @@ func (group Group) Groups() *QueryBuilder {
  *******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (group Group) AdminSections() []model.Option {
+func (w Group) AdminSections() []model.Option {
 	return AdminSections()
 }

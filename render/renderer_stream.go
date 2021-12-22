@@ -76,12 +76,12 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
  * (not available via templates)
  *******************************************/
 
-func (st Stream) GetPath(p path.Path) (interface{}, error) {
-	return st.stream.GetPath(p)
+func (w Stream) GetPath(p path.Path) (interface{}, error) {
+	return w.stream.GetPath(p)
 }
 
-func (st Stream) SetPath(p path.Path, value interface{}) error {
-	return st.stream.SetPath(p, value)
+func (w Stream) SetPath(p path.Path, value interface{}) error {
+	return w.stream.SetPath(p, value)
 }
 
 /*******************************************
@@ -89,24 +89,24 @@ func (st Stream) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // ActionID returns the name of the action being performed
-func (st Stream) ActionID() string {
-	return st.actionID
+func (w Stream) ActionID() string {
+	return w.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (st Stream) Action() (model.Action, bool) {
-	return st.template.Action(st.actionID)
+func (w Stream) Action() (model.Action, bool) {
+	return w.template.Action(w.actionID)
 }
 
 // Render generates the string value for this Stream
-func (st Stream) Render() (template.HTML, error) {
+func (w Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	action, _ := st.Action() // This is OK becuase we've already tested for the action's presence
+	action, _ := w.Action() // This is OK becuase we've already tested for the action's presence
 
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(st.factory, &st, &buffer, action.Steps, ActionMethodGet); err != nil {
+	if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
 		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -114,22 +114,22 @@ func (st Stream) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (st Stream) executeTemplate(wr io.Writer, name string, data interface{}) error {
-	return st.template.HTMLTemplate.ExecuteTemplate(wr, name, data)
+func (w Stream) executeTemplate(wr io.Writer, name string, data interface{}) error {
+	return w.template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 
 // object returns the model object associated with this renderer
-func (st Stream) object() data.Object {
-	return st.stream
+func (w Stream) object() data.Object {
+	return w.stream
 }
 
 // schema returns the validation schema associated with this renderer
-func (st Stream) schema() schema.Schema {
-	return st.template.Schema
+func (w Stream) schema() schema.Schema {
+	return w.template.Schema
 }
 
-func (st Stream) common() Common {
-	return st.Common
+func (w Stream) common() Common {
+	return w.Common
 }
 
 /*******************************************
@@ -137,9 +137,9 @@ func (st Stream) common() Common {
  *******************************************/
 
 // View executes a separate view for this Stream
-func (st Stream) View(action string) (template.HTML, error) {
+func (w Stream) View(action string) (template.HTML, error) {
 
-	subStream, err := NewStream(st.factory, st.ctx, st.template, st.stream, action)
+	subStream, err := NewStream(w.factory, w.ctx, w.template, w.stream, action)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "ghost.render.Stream.View", "Error creating sub-renderer", action)
@@ -153,116 +153,116 @@ func (st Stream) View(action string) (template.HTML, error) {
  *******************************************/
 
 // StreamID returns the unique ID for the stream being rendered
-func (st Stream) StreamID() string {
-	return st.stream.StreamID.Hex()
+func (w Stream) StreamID() string {
+	return w.stream.StreamID.Hex()
 }
 
 // StreamID returns the unique ID for the stream being rendered
-func (st Stream) ParentID() string {
-	return st.stream.ParentID.Hex()
+func (w Stream) ParentID() string {
+	return w.stream.ParentID.Hex()
 }
 
-func (st Stream) TopLevelID() string {
-	if len(st.stream.ParentIDs) == 0 {
-		return st.stream.StreamID.Hex()
+func (w Stream) TopLevelID() string {
+	if len(w.stream.ParentIDs) == 0 {
+		return w.stream.StreamID.Hex()
 	}
-	return st.stream.ParentIDs[0].Hex()
+	return w.stream.ParentIDs[0].Hex()
 }
 
 // StateID returns the current state of the stream being rendered
-func (st Stream) StateID() string {
-	return st.stream.StateID
+func (w Stream) StateID() string {
+	return w.stream.StateID
 }
 
 // TemplateID returns the name of the template being used
-func (st Stream) TemplateID() string {
-	return st.stream.TemplateID
+func (w Stream) TemplateID() string {
+	return w.stream.TemplateID
 }
 
 // Token returns the unique URL token for the stream being rendered
-func (st Stream) Token() string {
-	return st.stream.Token
+func (w Stream) Token() string {
+	return w.stream.Token
 }
 
 // Label returns the Label for the stream being rendered
-func (st Stream) Label() string {
-	return st.stream.Label
+func (w Stream) Label() string {
+	return w.stream.Label
 }
 
 // Description returns the description of the stream being rendered
-func (st Stream) Description() string {
-	return st.stream.Description
+func (w Stream) Description() string {
+	return w.stream.Description
 }
 
 // Name of the person who created this Stream
-func (st Stream) AuthorName() string {
-	return st.stream.AuthorName
+func (w Stream) AuthorName() string {
+	return w.stream.AuthorName
 }
 
 // PhotoURL of the person who created this Stream
-func (st Stream) AuthorImage() string {
-	return st.stream.AuthorImage
+func (w Stream) AuthorImage() string {
+	return w.stream.AuthorImage
 }
 
 // Returns the body content as an HTML template
-func (st Stream) Content() template.HTML {
-	result := st.stream.Content.View()
+func (w Stream) Content() template.HTML {
+	result := w.stream.Content.View()
 	return template.HTML(result)
 }
 
 // Returns editable HTML for the body content (requires `editable` flat)
-func (st Stream) ContentEditor() template.HTML {
-	result := st.stream.Content.Edit("/" + st.Token() + "/draft")
+func (w Stream) ContentEditor() template.HTML {
+	result := w.stream.Content.Edit("/" + w.Token() + "/draft")
 	return template.HTML(result)
 }
 
 // PublishDate returns the PublishDate of the stream being rendered
-func (st Stream) PublishDate() int64 {
-	return st.stream.PublishDate
+func (w Stream) PublishDate() int64 {
+	return w.stream.PublishDate
 }
 
 // CreateDate returns the CreateDate of the stream being rendered
-func (st Stream) CreateDate() int64 {
-	return st.stream.CreateDate
+func (w Stream) CreateDate() int64 {
+	return w.stream.CreateDate
 }
 
 // Rank returns the Rank of the stream being rendered
-func (st Stream) Rank() int {
-	return st.stream.Rank
+func (w Stream) Rank() int {
+	return w.stream.Rank
 }
 
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
-func (st Stream) ThumbnailImage() string {
-	return st.stream.ThumbnailImage
+func (w Stream) ThumbnailImage() string {
+	return w.stream.ThumbnailImage
 }
 
 // SourceURL returns the thumbnail image URL of the stream being rendered
-func (st Stream) SourceURL() string {
-	return st.stream.SourceURL
+func (w Stream) SourceURL() string {
+	return w.stream.SourceURL
 }
 
 // Data returns the custom data map of the stream being rendered
-func (st Stream) Data(value string) interface{} {
-	return st.stream.Data[value]
+func (w Stream) Data(value string) interface{} {
+	return w.stream.Data[value]
 }
 
 // Tags returns the tags of the stream being rendered
-func (st Stream) Tags() []string {
-	return st.stream.Tags
+func (w Stream) Tags() []string {
+	return w.stream.Tags
 }
 
 // HasParent returns TRUE if the stream being rendered has a parend objec
-func (st Stream) HasParent() bool {
-	return st.stream.HasParent()
+func (w Stream) HasParent() bool {
+	return w.stream.HasParent()
 }
 
-func (st Stream) IsCurrentStream() bool {
-	return st.stream.Token == list.Head(st.ctx.Path(), "/")
+func (w Stream) IsCurrentStream() bool {
+	return w.stream.Token == list.Head(w.ctx.Path(), "/")
 }
 
-func (st Stream) Roles() []string {
-	authorization := getAuthorization(st.ctx)
-	return st.stream.Roles(authorization)
+func (w Stream) Roles() []string {
+	authorization := getAuthorization(w.ctx)
+	return w.stream.Roles(authorization)
 }
 
 /*******************************************
@@ -270,17 +270,17 @@ func (st Stream) Roles() []string {
  *******************************************/
 
 // Parent returns a Stream containing the parent of the current stream
-func (st Stream) Parent(actionID string) (Stream, error) {
+func (w Stream) Parent(actionID string) (Stream, error) {
 
 	var parent model.Stream
 
-	streamService := st.factory.Stream()
+	streamService := w.factory.Stream()
 
-	if err := streamService.LoadParent(st.stream, &parent); err != nil {
+	if err := streamService.LoadParent(w.stream, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Error loading Parent")
 	}
 
-	renderer, err := NewStreamWithoutTemplate(st.factory, st.ctx, &parent, actionID)
+	renderer, err := NewStreamWithoutTemplate(w.factory, w.ctx, &parent, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Unable to create new Stream")
@@ -290,63 +290,63 @@ func (st Stream) Parent(actionID string) (Stream, error) {
 }
 
 // PrevSibling returns the sibling Stream that immediately preceeds this one, based on the provided sort field
-func (st Stream) PrevSibling(sort string, action string) (Stream, error) {
+func (w Stream) PrevSibling(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
-		exp.Equal("parentId", st.stream.ParentID),
-		exp.LessThan("sort", path.MustGet(st.stream, "sort")),
+		exp.Equal("parentId", w.stream.ParentID),
+		exp.LessThan("sort", path.MustGet(w.stream, "sort")),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
 	sortOption := option.SortDesc(sort)
 
-	return st.makeFirstStream(criteria, sortOption, action), nil
+	return w.makeFirstStream(criteria, sortOption, action), nil
 }
 
 // NextSibling returns the sibling Stream that immediately follows this one, based on the provided sort field
-func (st Stream) NextSibling(sort string, action string) (Stream, error) {
+func (w Stream) NextSibling(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
-		exp.Equal("parentId", st.stream.ParentID),
-		exp.GreaterThan("sort", path.MustGet(st.stream, "sort")),
+		exp.Equal("parentId", w.stream.ParentID),
+		exp.GreaterThan("sort", path.MustGet(w.stream, "sort")),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
 	sortOption := option.SortAsc(sort)
 
-	return st.makeFirstStream(criteria, sortOption, action), nil
+	return w.makeFirstStream(criteria, sortOption, action), nil
 }
 
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
-func (st Stream) FirstChild(sort string, action string) (Stream, error) {
+func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
-		exp.Equal("parentId", st.stream.StreamID),
+		exp.Equal("parentId", w.stream.StreamID),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
 	sortOption := option.SortAsc(sort)
 
-	return st.makeFirstStream(criteria, sortOption, action), nil
+	return w.makeFirstStream(criteria, sortOption, action), nil
 }
 
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
-func (st Stream) LastChild(sort string, action string) (Stream, error) {
+func (w Stream) LastChild(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
-		exp.Equal("parentId", st.stream.StreamID),
+		exp.Equal("parentId", w.stream.StreamID),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
 	sortOption := option.SortDesc(sort)
 
-	return st.makeFirstStream(criteria, sortOption, action), nil
+	return w.makeFirstStream(criteria, sortOption, action), nil
 }
 
 // makeFirstStream scans an iterator for the first stream allowed to this user
-func (st Stream) makeFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
+func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
-	streamService := st.factory.Stream()
+	streamService := w.factory.Stream()
 	iterator, err := streamService.List(criteria, sortOption)
 
 	if err != nil {
@@ -357,7 +357,7 @@ func (st Stream) makeFirstStream(criteria exp.Expression, sortOption option.Opti
 	var first model.Stream
 
 	for iterator.Next(&first) {
-		if result, err := NewStreamWithoutTemplate(st.factory, st.ctx, &first, actionID); err == nil {
+		if result, err := NewStreamWithoutTemplate(w.factory, w.ctx, &first, actionID); err == nil {
 			return result
 		}
 	}
@@ -371,17 +371,17 @@ func (st Stream) makeFirstStream(criteria exp.Expression, sortOption option.Opti
  *******************************************/
 
 // Siblings returns all Sibling Streams
-func (st Stream) Siblings() QueryBuilder {
-	return st.makeQueryBuilder(exp.Equal("parentId", st.stream.ParentID))
+func (w Stream) Siblings() QueryBuilder {
+	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
 }
 
 // Children returns all child Streams
-func (st Stream) Children() QueryBuilder {
-	return st.makeQueryBuilder(exp.Equal("parentId", st.stream.StreamID))
+func (w Stream) Children() QueryBuilder {
+	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
 }
 
 // makeQueryBuilder returns a fully initialized QueryBuilder
-func (st Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
+func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 	query := builder.NewBuilder().
 		Int("journal.createDate").
@@ -392,13 +392,13 @@ func (st Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 	criteria = exp.And(
 		criteria,
-		query.Evaluate(st.ctx.Request().URL.Query()),
+		query.Evaluate(w.ctx.Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(st.factory, st.ctx, st.factory.Stream(), criteria)
-	result.SortField = st.template.ChildSortType
-	result.SortDirection = st.template.ChildSortDirection
+	result := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	result.SortField = w.template.ChildSortType
+	result.SortDirection = w.template.ChildSortDirection
 
 	return result
 }
@@ -408,12 +408,12 @@ func (st Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
  *******************************************/
 
 // Reference to the first file attached to this stream
-func (st Stream) Attachment() (model.Attachment, error) {
+func (w Stream) Attachment() (model.Attachment, error) {
 
 	var attachment model.Attachment
 
-	attachmentService := st.factory.Attachment()
-	iterator, err := attachmentService.ListByStream(st.stream.StreamID)
+	attachmentService := w.factory.Attachment()
+	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
 
 	if err != nil {
 		return attachment, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
@@ -426,11 +426,11 @@ func (st Stream) Attachment() (model.Attachment, error) {
 }
 
 // Attachments lists all attachments for this stream.
-func (st Stream) Attachments() ([]model.Attachment, error) {
+func (w Stream) Attachments() ([]model.Attachment, error) {
 
 	result := []model.Attachment{}
-	attachmentService := st.factory.Attachment()
-	iterator, err := attachmentService.ListByStream(st.stream.StreamID)
+	attachmentService := w.factory.Attachment()
+	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
 
 	if err != nil {
 		return result, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
@@ -450,42 +450,42 @@ func (st Stream) Attachments() ([]model.Attachment, error) {
  *******************************************/
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
-func (st Stream) UserCan(actionID string) bool {
+func (w Stream) UserCan(actionID string) bool {
 
-	action, ok := st.template.Action(actionID)
+	action, ok := w.template.Action(actionID)
 
 	if !ok {
 		return false
 	}
 
-	authorization := getAuthorization(st.ctx)
+	authorization := getAuthorization(w.ctx)
 
-	return action.UserCan(st.stream, authorization)
+	return action.UserCan(w.stream, authorization)
 }
 
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
-func (st Stream) CanCreate() []model.Option {
+func (w Stream) CanCreate() []model.Option {
 
-	templateService := st.factory.Template()
-	return templateService.ListByContainer(st.template.TemplateID)
+	templateService := w.factory.Template()
+	return templateService.ListByContainer(w.template.TemplateID)
 }
 
 /*******************************************
  * MISC HELPER FUNCTIONS
  *******************************************/
 
-func (st Stream) setAuthor() error {
+func (w Stream) setAuthor() error {
 
-	user, err := st.getUser()
+	user, err := w.getUser()
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.Stream.setAuthor", "Error loading User")
 	}
 
-	st.stream.AuthorID = user.UserID
-	st.stream.AuthorName = user.DisplayName
-	st.stream.AuthorImage = user.AvatarURL
+	w.stream.AuthorID = user.UserID
+	w.stream.AuthorName = user.DisplayName
+	w.stream.AuthorImage = user.AvatarURL
 
 	return nil
 }

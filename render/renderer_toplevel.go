@@ -54,12 +54,12 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, o
  * PATH INTERFACE
  *******************************************/
 
-func (domain *TopLevel) GetPath(p path.Path) (interface{}, error) {
-	return domain.stream.GetPath(p)
+func (w *TopLevel) GetPath(p path.Path) (interface{}, error) {
+	return w.stream.GetPath(p)
 }
 
-func (domain *TopLevel) SetPath(p path.Path, value interface{}) error {
-	return domain.stream.SetPath(p, value)
+func (w *TopLevel) SetPath(p path.Path, value interface{}) error {
+	return w.stream.SetPath(p, value)
 }
 
 /*******************************************
@@ -67,24 +67,24 @@ func (domain *TopLevel) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // ActionID returns the name of the action being performed
-func (domain TopLevel) ActionID() string {
-	return domain.actionID
+func (w TopLevel) ActionID() string {
+	return w.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (domain TopLevel) Action() (model.Action, bool) {
-	return domain.layout.Action(domain.actionID)
+func (w TopLevel) Action() (model.Action, bool) {
+	return w.layout.Action(w.actionID)
 }
 
 // Render generates the string value for this Stream
-func (domain TopLevel) Render() (template.HTML, error) {
+func (w TopLevel) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := domain.layout.Action(domain.actionID); ok {
+	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(domain.factory, &domain, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}
@@ -92,28 +92,28 @@ func (domain TopLevel) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (domain TopLevel) Token() string {
-	return domain.ctx.Param("param1")
+func (w TopLevel) Token() string {
+	return w.ctx.Param("param1")
 }
 
-func (domain TopLevel) TopLevelID() string {
+func (w TopLevel) TopLevelID() string {
 	return "admin"
 }
 
-func (domain TopLevel) object() data.Object {
-	return domain.stream
+func (w TopLevel) object() data.Object {
+	return w.stream
 }
 
-func (domain TopLevel) schema() schema.Schema {
-	return domain.domain.Schema()
+func (w TopLevel) schema() schema.Schema {
+	return w.domain.Schema()
 }
 
-func (domain TopLevel) common() Common {
-	return domain.Common
+func (w TopLevel) common() Common {
+	return w.Common
 }
 
-func (domain TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {
-	return domain.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
+func (w TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {
+	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 
 /*******************************************
@@ -121,6 +121,6 @@ func (domain TopLevel) executeTemplate(wr io.Writer, name string, data interface
  *******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (domain TopLevel) AdminSections() []model.Option {
+func (w TopLevel) AdminSections() []model.Option {
 	return AdminSections()
 }

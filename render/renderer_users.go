@@ -40,12 +40,12 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
  * (not available via templates)
  *******************************************/
 
-func (u *User) GetPath(p path.Path) (interface{}, error) {
-	return u.user.GetPath(p)
+func (w *User) GetPath(p path.Path) (interface{}, error) {
+	return w.object().GetPath(p)
 }
 
-func (u *User) SetPath(p path.Path, value interface{}) error {
-	return u.user.SetPath(p, value)
+func (w *User) SetPath(p path.Path, value interface{}) error {
+	return w.object().SetPath(p, value)
 }
 
 /*******************************************
@@ -53,25 +53,25 @@ func (u *User) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // ActionID returns the unique ID of the Action configured into this renderer
-func (user User) ActionID() string {
-	return user.actionID
+func (w User) ActionID() string {
+	return w.actionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (user User) Action() (model.Action, bool) {
-	return user.layout.Action(user.ActionID())
+func (w User) Action() (model.Action, bool) {
+	return w.layout.Action(w.ActionID())
 }
 
-// Render generates the string value for this Stream
-func (user User) Render() (template.HTML, error) {
+// Render generates the string value for this User
+func (w User) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := user.layout.Action(user.actionID); ok {
+	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(user.factory, &user, &buffer, action.Steps, ActionMethodGet); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
+		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
+			return "", derp.Report(derp.Wrap(err, "ghost.render.User.Render", "Error generating HTML"))
 		}
 	}
 
@@ -80,66 +80,66 @@ func (user User) Render() (template.HTML, error) {
 }
 
 // View executes a separate view for this User
-func (user User) View(actionID string) (template.HTML, error) {
-	return NewUser(user.factory, user.ctx, user.user, actionID).Render()
+func (w User) View(actionID string) (template.HTML, error) {
+	return NewUser(w.factory, w.ctx, w.user, actionID).Render()
 }
 
-func (user User) TopLevelID() string {
+func (w User) TopLevelID() string {
 	return "admin"
 }
 
-func (user User) Token() string {
+func (w User) Token() string {
 	return "users"
 }
 
-func (user User) object() data.Object {
-	return user.user
+func (w User) object() data.Object {
+	return w.user
 }
 
-func (user User) schema() schema.Schema {
-	return user.user.Schema()
+func (w User) schema() schema.Schema {
+	return w.user.Schema()
 }
 
-func (user User) common() Common {
-	return user.Common
+func (w User) common() Common {
+	return w.Common
 }
 
-func (user User) executeTemplate(writer io.Writer, name string, data interface{}) error {
-	return user.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+func (w User) executeTemplate(writer io.Writer, name string, data interface{}) error {
+	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
 /*******************************************
  * DATA ACCESSORS
  *******************************************/
 
-func (user User) UserID() string {
-	return user.user.UserID.Hex()
+func (w User) UserID() string {
+	return w.user.UserID.Hex()
 }
 
-func (user User) DisplayName() string {
-	return user.user.DisplayName
+func (w User) DisplayName() string {
+	return w.user.DisplayName
 }
 
-func (user User) AvatarURL() string {
-	return user.user.AvatarURL
+func (w User) AvatarURL() string {
+	return w.user.AvatarURL
 }
 
 /*******************************************
  * QUERY BUILDERS
  *******************************************/
 
-func (user User) Users() *QueryBuilder {
+func (w User) Users() *QueryBuilder {
 
 	query := builder.NewBuilder().
 		String("displayName").
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(user.ctx.Request().URL.Query()),
+		query.Evaluate(w.ctx.Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(user.factory, user.ctx, user.factory.User(), criteria)
+	result := NewQueryBuilder(w.factory, w.ctx, w.factory.User(), criteria)
 
 	return &result
 }
@@ -149,6 +149,6 @@ func (user User) Users() *QueryBuilder {
  *******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (user User) AdminSections() []model.Option {
+func (w User) AdminSections() []model.Option {
 	return AdminSections()
 }
