@@ -1,4 +1,4 @@
-{{- $users := .Users.Top12.View -}}
+{{- $users := .Users.Top12.ByDisplayName.View -}}
 {{- if not $users.IsEmpty }}
 
     {{- range $index, $user := $users -}}
@@ -12,5 +12,5 @@
         </div>
     {{- end -}}
 
-    <div hx-trigger="revealed" hx-get="/domain/users/list?name=gt:{{ $users.Last.DisplayName }}"></div>
+    <div hx-trigger="revealed" hx-get="/admin/users/list?displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend"></div>
 {{- end -}}

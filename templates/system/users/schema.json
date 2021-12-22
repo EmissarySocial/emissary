@@ -6,6 +6,24 @@
 		"list": {"step": "view-html"},
 		"view": {"step": "view-html"},
 		"delete": {"step": "delete"},
+		"new": {
+			"steps": [{
+				"step": "add",
+				"type": "user",
+				"form": {
+					"kind": "layout-vertical",
+					"label": "Add a Person",
+					"children": [
+						{"kind": "text", "label": "Full Name", "path": "displayName"},
+						{"kind": "text", "label": "Email Address", "path": "username"}
+					]
+				}},
+				{
+					"step": "forward-to",
+					"url": "/admin/users/index"
+				}
+			]
+		},
 
 		"edit": {
 			"steps": [{
@@ -14,11 +32,10 @@
 					"kind": "layout-vertical",
 					"label": "Edit User",
 					"description": "",
-					"children": [{
-						"kind": "text",
-						"label": "Full Name",
-						"path": "displayName"
-					}]
+					"children": [
+						{"kind": "text", "label": "Full Name", "path": "displayName"},
+						{"kind": "text", "label": "Email Address", "path": "username"}
+					]
 				}
 			},{
 				"step": "save",
