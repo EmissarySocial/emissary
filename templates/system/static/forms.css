@@ -93,11 +93,12 @@ button.warning:hover,
     color: white;
 }
 
-input[disabled],
-button[disabled],
-.button[disabled] {
+input[disabled=true],
+button[disabled=true],
+.button[disabled=true] {
     background:var(--gray10)!important;
     color: var(--gray50)!important;
+    cursor: wait;
 }
 
 /***************************

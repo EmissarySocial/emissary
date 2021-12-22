@@ -28,14 +28,14 @@
 		}
 	},
 	"actions": {
-		"create": {
+		"init": {
 			"steps":[
 				{"step": "set-data", "values": {"label": "New Blog"}},
 				{"step": "save","comment": "Created by {{.Author}}"}, 
 				{
 					"step": "add-child",
 					"template": "article",
-					"withChild": [
+					"with-child": [
 						{"step": "set-data", "values": {"label": "My First Blog Article"}},
 						{"step": "forward-to", "url": "/{{.Token}}/edit"}
 					]
@@ -44,32 +44,23 @@
 		},
 		"edit": {
 			"steps":[{
-				"step": "form-html",
-				"label": "Edit Folder",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Update Form",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}, {
-						"kind": "select",
-						"label": "Layout",
-						"path": "layout"
-					}]
-				}
-			}, {
-				"step": "set-data",
-				"fields": ["label", "description"]
-			}, {
-				"step": "save",
-				"comment": "Updated Folder",
-				"trigger": "closeModal"
+				"step": "as-modal",
+				"steps": [
+					{
+						"step": "form-html",
+						"label": "Edit Folder",
+						"form": {
+							"kind": "layout-vertical",
+							"label": "Update Form",
+							"children": [
+								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"}
+							]
+						}
+					}, 
+					{"step": "set-data","fields": ["label", "description"]}, 
+					{"step": "save", "comment": "Updated Folder"}
+				]
 			}]
 		},
 		"view": {
@@ -82,7 +73,7 @@
 			"steps":[{
 				"step": "add-child",
 				"comment": "Created by {{.Author}}",
-				"withChild": [
+				"with-child": [
 					{"step": "save", "comment": "Created by {{.Author}}"},
 					{"step": "forward-to", "url": "/{{.Token}}/edit"}
 				]

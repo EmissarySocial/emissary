@@ -5,42 +5,50 @@
 		"index": {"step": "view-html"},
 		"list": {"step": "view-html"},
 		"view": {"step": "view-html"},
-		"delete": {"step": "delete"},
+		
 		"new": {
 			"steps": [{
-				"step": "add",
-				"type": "user",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Add a Person",
-					"children": [
-						{"kind": "text", "label": "Full Name", "path": "displayName"},
-						{"kind": "text", "label": "Email Address", "path": "username"}
-					]
-				}},
+				"step": "as-modal",
+				"steps": [
 				{
-					"step": "forward-to",
-					"url": "/admin/users/index"
-				}
-			]
+					"step": "add",
+					"type": "user",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Add a Person",
+						"children": [
+							{"kind": "text", "label": "Full Name", "path": "displayName"},
+							{"kind": "text", "label": "Email Address", "path": "username"}
+						]
+					}
+				}]
+			}]
 		},
 
 		"edit": {
 			"steps": [{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Edit User",
-					"description": "",
-					"children": [
-						{"kind": "text", "label": "Full Name", "path": "displayName"},
-						{"kind": "text", "label": "Email Address", "path": "username"}
-					]
-				}
-			},{
-				"step": "save",
-				"comment": "Updated by {{.Author}}"
+				"step": "as-modal",
+				"steps": [{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Edit User",
+						"description": "",
+						"children": [
+							{"kind": "text", "label": "Full Name", "path": "displayName"},
+							{"kind": "text", "label": "Email Address", "path": "username"}
+						]
+					}},
+					{"step": "save","comment": "Updated by {{.Author}}"}
+				]
 			}]
+		},
+
+		"delete": {
+			"steps":[
+				{"step": "delete", "type": "user"},
+				{"step": "refresh-page"}
+			]
 		}
 	}
 }

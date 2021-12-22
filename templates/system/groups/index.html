@@ -1,8 +1,15 @@
-<h1>Settings</h1>
+<div hx-get="/admin/groups/index" hx-trigger="refreshPage">
+    <h1>Settings</h1>
 
-<div id="menu-bar">
-    {{- $token := .Token -}}
-    {{- range .AdminSections -}}
-        <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-    {{- end -}}
+    <div id="menu-bar">
+        {{- $token := .Token -}}
+        {{- range .AdminSections -}}
+            <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+        {{- end -}}
+    </div>
+
+
+    <table class="table">
+        {{.View "list"}}
+    </table>
 </div>

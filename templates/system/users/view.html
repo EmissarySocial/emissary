@@ -4,6 +4,7 @@
     <h1>{{.DisplayName}}</h1>
     {{.AvatarURL}}
 
+    <button hx-get="/admin/users/{{.UserID}}/delete" class="warning" style="float:right" script="install AsModal">Delete</button>
     <button script="on click trigger closeModal">Close</button>
 </div>
 </div>

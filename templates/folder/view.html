@@ -1,8 +1,10 @@
+<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
 <div class="page">
 
 	<h1>{{.Label}}</h1>
 
-	<table class="table" hx-push-url="true">
+	<table class="table">
 		<thead>
 			<tr>
 				<th>Name</th>
@@ -10,7 +12,7 @@
 				<th>Date</th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody hx-push-url="true">
 			{{- if .UserCan "new" -}}
 				<tr script="install AsModal()"
 					hx-get="/{{.Token}}/new">
@@ -27,4 +29,6 @@
 		</tbody>
 	</table>
 	
+</div>
+</div>
 </div>

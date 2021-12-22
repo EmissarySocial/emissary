@@ -1,5 +1,5 @@
 <div hx-ext="sse" sse-connect="/{{.Token}}/sse">
-<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}">
+<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 	<h1 class="space-after">{{.Label}}</h1>
 

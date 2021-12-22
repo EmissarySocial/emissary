@@ -19,8 +19,8 @@ end
 behavior AsModal
 
 	init
-		put "body" into [@hx-target]
-		put "beforeend" into [@hx-swap]
+		put "aside" into [@hx-target]
+		put "innerhtml" into [@hx-swap]
 		put "false" into [@hx-push-url]
 		put "true" into [@data-preload]
 
@@ -32,13 +32,5 @@ behavior ModalCancelButton()
 
 	on click 
 		send closeModal to #modal
-	end
-end
-
-behavior SubmitButton()
-
-	on click
-		add [@disabled] to me
-		log "here?"
 	end
 end

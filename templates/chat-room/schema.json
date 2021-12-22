@@ -47,7 +47,7 @@
 				"step": "create-child",
 				"state": "awaiting-moderation",
 				"template": "chat-message",
-				"withChild": [{
+				"with-child": [{
 					"step": "save"
 				}]
 			}]
@@ -58,7 +58,7 @@
 			"steps": [{
 				"step": "create-child", 
 				"childState": "visible",
-				"withChild": [{"step": "save"}]
+				"with-child": [{"step": "save"}]
 			}]
 		}
 	}

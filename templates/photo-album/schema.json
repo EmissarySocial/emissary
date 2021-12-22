@@ -57,25 +57,26 @@
 		"properties": {
 			"roles": ["owner", "editor", "author"],
 			"steps": [
-				{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Edit Photo Album",
-					"description": "",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description",
-						"cssClass": "height300"
-					}]
-				}},
-				{"step": "save", "comment": "Updated by {{.Author}}"},
-				{"step": "trigger-event", "event": "closeModal"}
+				{"step": "as-modal", "steps": [
+					{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Edit Photo Album",
+						"description": "",
+						"children": [{
+							"kind": "text",
+							"label": "Label",
+							"path": "label"
+						},{
+							"kind": "textarea",
+							"label": "Description",
+							"path": "description",
+							"cssClass": "height300"
+						}]
+					}},
+					{"step": "save", "comment": "Updated by {{.Author}}"}
+				]}
 			]
 		},
 		"attachments": {
@@ -83,14 +84,14 @@
 			"steps": [{
 				"step": "add-child",
 				"template": "photograph",
-				"withChild": [
+				"with-child": [
 					{"step": "upload-attachments"},
 					{"step": "set-publishdate"},
 					{"step": "set-thumbnail"},
 					{"step": "save"},
-					{"step": "add-child", "template": "comment-group"},
-					{"step": "forward-to", "url": "/{{.Token}}"}
-				]}
+					{"step": "add-child", "template": "comment-group"}
+				]},
+				{"step": "refresh-page"}
 			]
 		},
 		"delete": {

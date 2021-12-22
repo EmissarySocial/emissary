@@ -1,0 +1,10 @@
+{{- $groups := .Groups.Top60.ByLabel.View -}}
+{{- if not $groups.IsEmpty -}}
+    <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-swap="afterend">
+    {{- range $groups -}}
+        <tr hx-get="/admin/groups/{{.GroupID}}" script="install AsModal">
+            <td>{{.Label}}</td>
+        </tr>
+    {{- end -}}
+    </tbody>
+{{- end -}}

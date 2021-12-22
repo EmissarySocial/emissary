@@ -55,7 +55,7 @@
 			"steps": [{
 				"step": "add-child", 
 				"template": "comment",
-				"withChild": [
+				"with-child": [
 					{"step": "set-data", "paths":["description"]},
 					{"step": "set-publishdate"},
 					{"step": "save", "comment": "New Comment By"}

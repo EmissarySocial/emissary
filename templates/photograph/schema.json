@@ -45,30 +45,32 @@
 		"edit": {
 			"roles": ["owner", "editor"],
 			"steps": [{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Edit Photograph",
-					"description": "This will update the object in this state",
-					"children": [{
-						"kind": "text",
-						"label": "Title",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}]
-				}},
-				{"step": "save", "comment": "Updated by {{.Author}}"},
-				{"step": "trigger-event","event": "closeModal"}
+				"step": "as-modal",
+				"steps": [{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Edit Photograph",
+						"description": "This will update the object in this state",
+						"children": [{
+							"kind": "text",
+							"label": "Title",
+							"path": "label"
+						},{
+							"kind": "textarea",
+							"label": "Description",
+							"path": "description"
+						}]
+					}},
+					{"step": "save", "comment": "Updated by {{.Author}}"}
+				]}
 			]
 		},
 		"add": {
 			"roles": ["owner", "author"],
 			"steps": [
 				{"step":"add-child"},
-				{"step": "forward-to", "url": "/{{.Token}}"}
+				{"step": "refresh-page"}
 			]
 		},
 		"delete": {
