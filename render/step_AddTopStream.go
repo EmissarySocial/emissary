@@ -57,7 +57,7 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 	// Set stream defaults
 	authorization := getAuthorization(topLevelRenderer.ctx)
 	new.AuthorID = authorization.UserID
-	newStream, err := NewStream(topLevelRenderer.factory, topLevelRenderer.ctx, template, &new, "view")
+	newStream, err := NewStream(topLevelRenderer.factory(), topLevelRenderer.ctx, template, &new, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error creating renderer", new)
@@ -65,13 +65,13 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 
 	// If there is an "init" step for the new stream's template, then execute it now
 	if action, ok := template.Action("init"); ok {
-		if err := DoPipeline(topLevelRenderer.factory, &newStream, buffer, action.Steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(&newStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Unable to execute 'init' action on new stream")
 		}
 	}
 
 	// Execute additional steps on new stream (from schema.json)
-	if err := DoPipeline(topLevelRenderer.factory, newStream, buffer, step.withNewStream, ActionMethodPost); err != nil {
+	if err := DoPipeline(newStream, buffer, step.withNewStream, ActionMethodPost); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error executing steps on new stream")
 	}
 

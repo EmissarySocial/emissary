@@ -106,7 +106,7 @@ func (w Stream) Render() (template.HTML, error) {
 	action, _ := w.Action() // This is OK becuase we've already tested for the action's presence
 
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
+	if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
 		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -139,7 +139,7 @@ func (w Stream) common() Common {
 // View executes a separate view for this Stream
 func (w Stream) View(action string) (template.HTML, error) {
 
-	subStream, err := NewStream(w.factory, w.ctx, w.template, w.stream, action)
+	subStream, err := NewStream(w.factory(), w.context(), w.template, w.stream, action)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "ghost.render.Stream.View", "Error creating sub-renderer", action)
@@ -257,11 +257,11 @@ func (w Stream) HasParent() bool {
 }
 
 func (w Stream) IsCurrentStream() bool {
-	return w.stream.Token == list.Head(w.ctx.Path(), "/")
+	return w.stream.Token == list.Head(w.context().Path(), "/")
 }
 
 func (w Stream) Roles() []string {
-	authorization := getAuthorization(w.ctx)
+	authorization := getAuthorization(w.context())
 	return w.stream.Roles(authorization)
 }
 
@@ -274,13 +274,13 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 
 	var parent model.Stream
 
-	streamService := w.factory.Stream()
+	streamService := w.factory().Stream()
 
 	if err := streamService.LoadParent(w.stream, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Error loading Parent")
 	}
 
-	renderer, err := NewStreamWithoutTemplate(w.factory, w.ctx, &parent, actionID)
+	renderer, err := NewStreamWithoutTemplate(w.factory(), w.context(), &parent, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Unable to create new Stream")
@@ -346,7 +346,7 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 // makeFirstStream scans an iterator for the first stream allowed to this user
 func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
-	streamService := w.factory.Stream()
+	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption)
 
 	if err != nil {
@@ -357,7 +357,7 @@ func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Optio
 	var first model.Stream
 
 	for iterator.Next(&first) {
-		if result, err := NewStreamWithoutTemplate(w.factory, w.ctx, &first, actionID); err == nil {
+		if result, err := NewStreamWithoutTemplate(w.factory(), w.context(), &first, actionID); err == nil {
 			return result
 		}
 	}
@@ -392,11 +392,11 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 	criteria = exp.And(
 		criteria,
-		query.Evaluate(w.ctx.Request().URL.Query()),
+		query.Evaluate(w.context().Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	result := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
 	result.SortField = w.template.ChildSortType
 	result.SortDirection = w.template.ChildSortDirection
 
@@ -412,7 +412,7 @@ func (w Stream) Attachment() (model.Attachment, error) {
 
 	var attachment model.Attachment
 
-	attachmentService := w.factory.Attachment()
+	attachmentService := w.factory().Attachment()
 	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
 
 	if err != nil {
@@ -429,7 +429,7 @@ func (w Stream) Attachment() (model.Attachment, error) {
 func (w Stream) Attachments() ([]model.Attachment, error) {
 
 	result := []model.Attachment{}
-	attachmentService := w.factory.Attachment()
+	attachmentService := w.factory().Attachment()
 	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
 
 	if err != nil {
@@ -458,7 +458,7 @@ func (w Stream) UserCan(actionID string) bool {
 		return false
 	}
 
-	authorization := getAuthorization(w.ctx)
+	authorization := getAuthorization(w.context())
 
 	return action.UserCan(w.stream, authorization)
 }
@@ -467,7 +467,7 @@ func (w Stream) UserCan(actionID string) bool {
 // the current stream.
 func (w Stream) CanCreate() []model.Option {
 
-	templateService := w.factory.Template()
+	templateService := w.factory().Template()
 	return templateService.ListByContainer(w.template.TemplateID)
 }
 

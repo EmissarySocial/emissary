@@ -30,12 +30,11 @@ func NewStepAddModelObject(modelService ModelService, formLibrary form.Library, 
 // Get displays a modal form that lets users enter data for their new model object.
 func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 
-	factory := renderer.common().factory
 	schema := renderer.schema()
 	object := renderer.object()
 
 	// First, try to execute any "default" steps so that the object is initialized
-	if err := DoPipeline(factory, renderer, buffer, step.defaults, ActionMethodGet); err != nil {
+	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Get", "Error executing default steps")
 	}
 
@@ -46,8 +45,10 @@ func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Get", "Error generating form")
 	}
 
+	result = WrapForm(renderer, result)
+
 	// Wrap result as a modal dialog
-	buffer.Write([]byte(WrapModalForm(renderer, result)))
+	buffer.Write([]byte(result))
 	return nil
 }
 
@@ -55,12 +56,11 @@ func (step StepAddModelObject) Post(buffer io.Writer, renderer Renderer) error {
 
 	// This finds/creates a new object in the renderer
 	object := renderer.object()
-	factory := renderer.common().factory
 	schema := renderer.schema()
 	inputs := make(datatype.Map)
 
 	// Execute any "default" steps so that the object is initialized
-	if err := DoPipeline(factory, renderer, buffer, step.defaults, ActionMethodGet); err != nil {
+	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Get", "Error executing default steps")
 	}
 

@@ -20,6 +20,7 @@ type Renderer interface {
 	ActionID() string             // The ID of the action to be taken by this renderer
 	Action() (model.Action, bool) // The pipeline action to be taken by this renderer
 	IsPartialRequest() bool       // Returns TRUE if this is an HTMX request for a page fragment
+	factory() Factory             // The service factory
 	context() *steranko.Context   // The request context embedded in the Renderer
 	object() data.Object          // Model Object being rendered
 	schema() schema.Schema        // Schema to use to validate this Object

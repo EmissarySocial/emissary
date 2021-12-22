@@ -8,7 +8,9 @@ import (
 )
 
 // DoPipeline executes a series of RenderSteps on a particular Stream
-func DoPipeline(factory Factory, renderer Renderer, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
+func DoPipeline(renderer Renderer, buffer io.Writer, steps []datatype.Map, method ActionMethod) error {
+
+	factory := renderer.factory()
 
 	// Execute all of the steps of the requested action
 	for _, stepInfo := range steps {

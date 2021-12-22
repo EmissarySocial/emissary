@@ -57,7 +57,7 @@ func PostAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		// Execute pipeline
 		if action, ok := renderer.Action(); ok {
-			if err := render.DoPipeline(factory, renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
+			if err := render.DoPipeline(renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
 				return derp.Wrap(err, "ghost.handler.PostAdmin", "Error executing action pipeline", action)
 			}
 		}

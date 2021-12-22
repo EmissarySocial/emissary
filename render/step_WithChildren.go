@@ -45,14 +45,14 @@ func (step StepWithChildren) Post(buffer io.Writer, renderer Renderer) error {
 	for children.Next(child) {
 
 		// Make a renderer with the new child stream
-		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory, streamRenderer.context(), child, renderer.ActionID())
+		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), child, renderer.ActionID())
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.render.StepWithChildren.Post", "Error creating renderer for child")
 		}
 
 		// Execute the POST render pipeline on the child
-		if err := DoPipeline(streamRenderer.factory, &childStream, buffer, step.steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(&childStream, buffer, step.steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepWithChildren.Post", "Error executing steps for child")
 		}
 

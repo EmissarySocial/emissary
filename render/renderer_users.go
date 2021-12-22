@@ -70,7 +70,7 @@ func (w User) Render() (template.HTML, error) {
 	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.User.Render", "Error generating HTML"))
 		}
 	}
@@ -81,7 +81,7 @@ func (w User) Render() (template.HTML, error) {
 
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
-	return NewUser(w.factory, w.ctx, w.user, actionID).Render()
+	return NewUser(w.factory(), w.ctx, w.user, actionID).Render()
 }
 
 func (w User) TopLevelID() string {
@@ -139,7 +139,7 @@ func (w User) Users() *QueryBuilder {
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w.factory, w.ctx, w.factory.User(), criteria)
+	result := NewQueryBuilder(w.factory(), w.ctx, w.factory().User(), criteria)
 
 	return &result
 }

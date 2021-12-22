@@ -15,7 +15,6 @@ type StepAddChildStream struct {
 	templateService *service.Template
 	streamService   *service.Stream
 	templateIDs     []string
-	childState      string
 	withChild       []datatype.Map
 }
 
@@ -25,8 +24,7 @@ func NewStepAddChildStream(templateService *service.Template, streamService *ser
 		templateService: templateService,
 		streamService:   streamService,
 		templateIDs:     stepInfo.GetSliceOfString("template"),
-		childState:      stepInfo.GetString("childState"),
-		withChild:       stepInfo.GetSliceOfMap("withChild"),
+		withChild:       stepInfo.GetSliceOfMap("with-child"),
 	}
 }
 
@@ -58,34 +56,37 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error creating new child stream", templateID)
 	}
 
-	// Set Default Values
-
-	child.StateID = step.childState
-	childStream, err := NewStream(streamRenderer.factory, streamRenderer.context(), template, &child, "view")
+	// Create child stream
+	childStream, err := NewStream(streamRenderer.factory(), streamRenderer.context(), template, &child, "view")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error creating renderer", child)
 	}
 
+	// Assign the current user as the author
 	if err := childStream.setAuthor(); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error retrieving author inforation", child)
 	}
 
 	// If there is an "init" step for the child's template, then execute it now
 	if action, ok := template.Action("init"); ok {
-		if err := DoPipeline(streamRenderer.factory, &childStream, buffer, action.Steps, ActionMethodPost); err != nil {
+		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute 'init' action on child")
 		}
 	}
 
+	// If the child was not saved by the "init" steps, then save it now
 	if child.IsNew() {
 		if err := step.streamService.Save(&child, "Created"); err != nil {
 			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error saving child stream to database")
 		}
 	}
 
-	if err := DoPipeline(streamRenderer.factory, &childStream, buffer, step.withChild, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute action steps on child")
+	// Execute additional "with-child" steps
+	if len(step.withChild) > 0 {
+		if err := DoPipeline(&childStream, buffer, step.withChild, ActionMethodPost); err != nil {
+			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute action steps on child")
+		}
 	}
 
 	return nil

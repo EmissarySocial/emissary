@@ -70,7 +70,7 @@ func (w Group) Render() (template.HTML, error) {
 	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}
@@ -81,7 +81,7 @@ func (w Group) Render() (template.HTML, error) {
 
 // View executes a separate view for this Group
 func (w Group) View(actionID string) (template.HTML, error) {
-	return NewGroup(w.factory, w.ctx, w.group, actionID).Render()
+	return NewGroup(w.factory(), w.context(), w.group, actionID).Render()
 }
 
 func (w Group) TopLevelID() string {
@@ -131,11 +131,11 @@ func (w Group) Groups() *QueryBuilder {
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(w.ctx.Request().URL.Query()),
+		query.Evaluate(w.context().Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w.factory, w.ctx, w.factory.Group(), criteria)
+	result := NewQueryBuilder(w.factory(), w.context(), w.factory().Group(), criteria)
 
 	return &result
 }

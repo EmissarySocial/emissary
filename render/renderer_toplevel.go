@@ -84,7 +84,7 @@ func (w TopLevel) Render() (template.HTML, error) {
 	if action, ok := w.layout.Action(w.actionID); ok {
 
 		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(w.factory, &w, &buffer, action.Steps, ActionMethodGet); err != nil {
+		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
 			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 		}
 	}

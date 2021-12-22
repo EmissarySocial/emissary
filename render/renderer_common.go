@@ -10,8 +10,8 @@ import (
 
 // Common provides common rendering functions that are needed by ALL renderers
 type Common struct {
-	factory Factory           // Factory interface is required for locating other services.
-	ctx     *steranko.Context // Contains request context and authentication data.
+	f   Factory           // Factory interface is required for locating other services.
+	ctx *steranko.Context // Contains request context and authentication data.
 
 	// Cached values, do not populate unless needed
 	user   *model.User
@@ -20,14 +20,19 @@ type Common struct {
 
 func NewCommon(factory Factory, ctx *steranko.Context) Common {
 	return Common{
-		factory: factory,
-		ctx:     ctx,
+		f:   factory,
+		ctx: ctx,
 	}
 }
 
 /*******************************************
  * RENDERER INTERFACE
  *******************************************/
+
+// context returns request context embedded in this renderer.
+func (w Common) factory() Factory {
+	return w.f
+}
 
 // context returns request context embedded in this renderer.
 func (w Common) context() *steranko.Context {
@@ -54,22 +59,22 @@ func (w Common) BannerURL() string {
 
 // URL returns the originally requested URL
 func (w Common) URL() string {
-	return w.ctx.Request().URL.RequestURI()
+	return w.context().Request().URL.RequestURI()
 }
 
 // Returns the request method
 func (w Common) Method() string {
-	return w.ctx.Request().Method
+	return w.context().Request().Method
 }
 
 // Returns the designated request parameter
 func (w Common) QueryParam(param string) string {
-	return w.ctx.QueryParam(param)
+	return w.context().QueryParam(param)
 }
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
-	return (w.ctx.Request().Header.Get("HX-Request") != "")
+	return (w.context().Request().Header.Get("HX-Request") != "")
 }
 
 /***************************
@@ -78,12 +83,12 @@ func (w Common) IsPartialRequest() bool {
 
 // IsAuthenticated returns TRUE if the user is signed in
 func (w Common) IsAuthenticated() bool {
-	return getAuthorization(w.ctx).IsAuthenticated()
+	return getAuthorization(w.context()).IsAuthenticated()
 }
 
 // IsOwner returns TRUE if the user is a Domain Owner
 func (w Common) IsOwner() bool {
-	authorization := getAuthorization(w.ctx)
+	authorization := getAuthorization(w.context())
 	return authorization.DomainOwner
 }
 
@@ -119,8 +124,8 @@ func (w Common) getUser() (*model.User, error) {
 	// If we haven't already loaded the user, then do it now.
 	if w.user == nil {
 
-		userService := w.factory.User()
-		authorization := getAuthorization(w.ctx)
+		userService := w.factory().User()
+		authorization := getAuthorization(w.context())
 		w.user = new(model.User)
 
 		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
@@ -137,8 +142,8 @@ func (w Common) getDomain() (*model.Domain, error) {
 	// If we haven't already loaded the domain, then do it now.
 	if w.domain == nil {
 
-		domainService := w.factory.Domain()
-		authorization := getAuthorization(w.ctx)
+		domainService := w.factory().Domain()
+		authorization := getAuthorization(w.context())
 		w.domain = new(model.Domain)
 
 		if err := domainService.Load(w.domain); err != nil {
@@ -156,6 +161,6 @@ func (w Common) getDomain() (*model.Domain, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
 	criteria := exp.Equal("parentId", primitive.NilObjectID)
-	builder := NewQueryBuilder(w.factory, w.ctx, w.factory.Stream(), criteria)
+	builder := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
 	return builder.Top60().ByRank().View()
 }

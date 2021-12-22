@@ -25,10 +25,12 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepAddModelObject(modelService, factory.FormLibrary(), stepInfo), nil
 
 	case "delete":
-		return NewStepStreamDelete(factory.Stream(), factory.StreamDraft(), stepInfo), nil
+		modelService := getModelService(factory, stepInfo.GetString("type"))
+		return NewStepDelete(modelService, stepInfo), nil
 
 	case "save":
-		return NewStepStreamSave(factory.Stream(), stepInfo), nil
+		modelService := getModelService(factory, stepInfo.GetString("type"))
+		return NewStepSave(modelService, stepInfo), nil
 
 	case "form-html":
 		return NewStepForm(factory.FormLibrary(), stepInfo), nil
@@ -74,7 +76,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 
 	// ATTACHMENTS
 	case "upload-attachments":
-		return NewStepAttachmentUpload(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
+		return NewStepUploadAttachment(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
 
 	// SERVER-SIDE CONTROL LOGIC
 	case "with-children":
@@ -87,6 +89,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepIfCondition(factory, stepInfo), nil
 
 	// CLIENT-SIDE CONTROLS
+	case "as-modal":
+		return NewStepAsModal(stepInfo), nil
+
 	case "forward-to":
 		return NewStepForwardTo(stepInfo), nil
 
