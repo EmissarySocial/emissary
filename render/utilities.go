@@ -24,31 +24,18 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModalForm(renderer Renderer, content string) string {
+func WrapModal(content string) string {
 
 	b := html.New()
 
 	// Modal Wrapper
 	b.Div().ID("modal")
-	b.Div().Class("modal-underlay").Script("on click send closeModal to #modal").Close()
+	b.Div().Class("modal-underlay").Close()
 	b.Div().Class("modal-content")
-
-	// Form Wrapper
-	b.Form("post", "").
-		Attr("hx-post", renderer.URL()).
-		Attr("hx-swap", "none").
-		Attr("hx-push-url", "false").
-		EndBracket()
 
 	// Contents
 	b.Grow(len(content))
 	b.WriteString(content)
-
-	// Controls
-	b.Div()
-	b.Input("submit", "").Class("primary").Value("Save Changes").Close()
-	b.WriteString("&nbsp;")
-	b.Span().Class("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 
 	// Done
 	b.CloseAll()
@@ -81,6 +68,10 @@ func WrapForm(renderer Renderer, content string) string {
 	b.CloseAll()
 
 	return b.String()
+}
+
+func WrapModalForm(renderer Renderer, content string) string {
+	return WrapModal(WrapForm(renderer, content))
 }
 
 // closeModal sets Response header to close a modal on the client and optionally forward to a new location.
