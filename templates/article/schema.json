@@ -13,20 +13,6 @@
 			"description": {
 				"type": "string",
 				"description": "The HTML content for this article"
-			},
-			"choose": {
-				"type": "string",
-				"enum": ["Hello", "Darkness", "My", "Old", "Friend"]
-			},
-			"share": {
-				"type": "string",
-				"enum": ["ALL", "SOME", "NONE"]
-			},
-			"shareWith": {
-				"type": "array",
-				"items": {
-					"type": "string"
-				}
 			}
 		},
 		"required": ["class", "title", "body"]
@@ -72,14 +58,6 @@
 			"step": "edit-draft",
 			"file": "draft"
 		},
-		"delete": {
-			"roles": ["owner"],
-			"step": "delete"
-		},
-		"delete-draft": {
-			"roles": ["owner", "editor"],
-			"step": "delete-draft"
-		},
 		"publish-draft": {
 			"roles": ["owner", "editor"],
 			"step": "publish-draft"
@@ -109,6 +87,23 @@
 				"step": "save",
 				"comment": "Updated by {{.Author}}"
 			}]
+		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Who Can See This Article?", "message": "Select who can view and comment on this article."},
+					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		},
+		"delete-draft": {
+			"roles": ["owner", "editor"],
+			"step": "delete-draft"
 		}
 	}
 }

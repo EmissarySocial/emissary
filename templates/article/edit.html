@@ -7,6 +7,8 @@
 <div id="menu-bar">
 	<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
 
+	<button hx-get="/{{.Token}}/sharing">Sharing</button>
+
 	<button hx-get="/{{.Token}}">Save Draft</button>
 
 	<button 
