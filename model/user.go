@@ -6,6 +6,8 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/id"
+	"github.com/benpate/null"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/golang-jwt/jwt/v4"
@@ -42,11 +44,11 @@ func (user *User) Schema() schema.Schema {
 		ID: "ghost.model.user",
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"userId":      schema.String{},
-				"groupIds":    schema.Array{Items: schema.String{}},
-				"displayName": schema.String{},
-				"username":    schema.String{},
-				"avatarUrl":   schema.String{},
+				"userId":      schema.String{Format: "objectId"},
+				"groupIds":    schema.Array{Items: schema.String{Format: "objectId"}},
+				"displayName": schema.String{MaxLength: null.NewInt(50)},
+				"username":    schema.String{MaxLength: null.NewInt(50)},
+				"avatarUrl":   schema.String{MaxLength: null.NewInt(100)},
 			},
 		},
 	}
@@ -55,14 +57,19 @@ func (user *User) Schema() schema.Schema {
 // GetPath implements the path.Setter interface
 func (user *User) GetPath(p path.Path) (interface{}, error) {
 	switch p.Head() {
+
 	case "userId":
 		return user.UserID, nil
+
 	case "groupIds":
-		return user.GroupIDs, nil
+		return id.SliceOfString(user.GroupIDs), nil
+
 	case "displayName":
 		return user.DisplayName, nil
+
 	case "username":
 		return user.Username, nil
+
 	case "avatarUrl":
 		return user.AvatarURL, nil
 	}
@@ -85,6 +92,10 @@ func (user *User) SetPath(p path.Path, value interface{}) error {
 
 	case "avatarUrl":
 		user.AvatarURL = convert.String(value)
+		return nil
+
+	case "groupIds":
+		user.GroupIDs = id.Slice(value)
 		return nil
 	}
 
