@@ -193,5 +193,4 @@ func (qb QueryBuilder) debug() datatype.Map {
 		"SortDirection": qb.SortDirection,
 		"MaxRows":       qb.MaxRows,
 	}
-
 }
