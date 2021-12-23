@@ -52,31 +52,29 @@ func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
+// Post initializes a new model object, populates it with data from the form, then saves it to the database.
 func (step StepAddModelObject) Post(buffer io.Writer, renderer Renderer) error {
 
 	// This finds/creates a new object in the renderer
+	request := renderer.context().Request()
 	object := renderer.object()
 	schema := renderer.schema()
-	inputs := make(datatype.Map)
 
 	// Execute any "default" steps so that the object is initialized
 	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Get", "Error executing default steps")
 	}
 
-	// Collect form POST information
-	if err := renderer.context().Bind(&inputs); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepAddModelObject.Post", "Error binding body")
+	// Parse form information
+	if err := request.ParseForm(); err != nil {
+		return derp.Wrap(err, "ghost.render.AddModelObject.Post", "Error parsing form data")
 	}
 
-	// Validate form inputs
-	if err := schema.Validate(inputs); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddModelObject.Post", "Error validating input", inputs)
-	}
-
-	// Set form values into object
-	if err := path.SetAll(renderer, inputs); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddModelObject.Post", "Error seting values", inputs)
+	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
+	for key, value := range request.Form {
+		if err := schema.Set(renderer, path.New(key), value); err != nil {
+			return derp.Wrap(err, "ghost.render.AddModelObject.Post", "Error setting path value", key, value)
+		}
 	}
 
 	// Save the object to the database

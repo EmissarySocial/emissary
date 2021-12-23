@@ -26,6 +26,10 @@ func NewStepAsModal(stepInfo datatype.Map) StepAsModal {
 // Get displays a form where users can update stream data
 func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 
+	header := renderer.context().Response().Header()
+	header.Set("HX-Retarget", "aside")
+	header.Set("HX-Push", "false")
+
 	b := html.New()
 
 	// Modal Wrapper

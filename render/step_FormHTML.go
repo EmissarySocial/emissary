@@ -44,24 +44,22 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// Post updates the object with approved data from the request body.
 func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 
+	request := renderer.context().Request()
 	schema := renderer.schema()
-	inputs := make(datatype.Map)
 
-	// Collect form POST information
-	if err := renderer.context().Bind(&inputs); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error binding body")
+	// Parse form information
+	if err := request.ParseForm(); err != nil {
+		return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error parsing form data")
 	}
 
-	if err := schema.Validate(inputs); err != nil {
-		return derp.Wrap(err, "ghost.render.StepForm.Post", "Error validating input", inputs)
-	}
-
-	// Put approved form data into the stream
-	if err := path.SetAll(renderer, inputs); err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamData.Post", "Error seting value", inputs)
+	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
+	for key, value := range request.Form {
+		if err := schema.Set(renderer, path.New(key), value); err != nil {
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error setting path value", key, value)
+		}
 	}
 
 	return nil
