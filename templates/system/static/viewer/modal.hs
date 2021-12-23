@@ -12,6 +12,13 @@ on closeModal(nextPage)
 	end
 end
 
+on keypress[key=="Escape"] from window
+	if #modal is not empty then 
+		trigger closeModal
+		halt
+	end
+end
+
 on click from .modal-underlay
 	send closeModal to #modal
 end

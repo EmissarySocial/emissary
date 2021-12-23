@@ -1,4 +1,4 @@
-<div hx-get="/admin/groups/index" hx-trigger="refreshPage">
+<div hx-get="/admin/groups/index" hx-trigger="refreshPage from:body">
     <h1>Settings</h1>
 
     <div id="menu-bar">
@@ -8,8 +8,12 @@
         {{- end -}}
     </div>
 
-
-    <table class="table">
+    <table id="groups" class="table">
+        <tbody>
+            <tr><td colspan="2" hx-get="/admin/groups/add" script="install AsModal" class="link">
+                <i class="fa-regular fa-plus-circle"></i> Add a Group
+            </td></tr>
+        </tbody>
         {{.View "list"}}
     </table>
 </div>

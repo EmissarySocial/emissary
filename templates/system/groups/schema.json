@@ -4,8 +4,48 @@
 	"actions": {
 		"index": {"step": "view-html"},
 		"list": {"step": "view-html"},
-		"add": {"step": "add-group"},
-		"delete": {"step": "delete"},
-		"edit": {"step": "form-html"}
+		
+		"add": {
+			"steps": [{
+				"step": "as-modal",
+				"steps": [
+				{
+					"step": "add",
+					"type": "group",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Add a Group",
+						"children": [
+							{"kind": "text", "label": "Label", "path": "label"}
+						]
+					}
+				}]
+			}]
+		},
+
+		"edit": {
+			"steps": [{
+				"step": "as-modal",
+				"steps": [{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Edit Group",
+						"description": "",
+						"children": [
+							{"kind": "text", "label": "Label", "path": "label"}
+						]
+					}},
+					{"step": "save","comment": "Updated by {{.Author}}"}
+				]
+			}]
+		},
+
+		"delete": {
+			"steps":[
+				{"step": "delete", "type": "group", "title":"Delete this Group?", "message": "People assigned to this group will not be removed."},
+				{"step": "refresh-page"}
+			]
+		}
 	}
 }

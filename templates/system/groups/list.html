@@ -1,9 +1,12 @@
 {{- $groups := .Groups.Top60.ByLabel.View -}}
 {{- if not $groups.IsEmpty -}}
-    <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-swap="afterend">
+    <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
-        <tr hx-get="/admin/groups/{{.GroupID}}" script="install AsModal">
-            <td>{{.Label}}</td>
+        <tr>
+            <td hx-get="/admin/groups/{{.GroupID}}/edit" script="install AsModal">{{.Label}}</td>
+            <td align="right">
+                <span hx-get="/admin/groups/{{.GroupID}}/delete" script="install AsModal"><i class="fa-regular fa-trash-can"></i></span>
+            </td>
         </tr>
     {{- end -}}
     </tbody>
