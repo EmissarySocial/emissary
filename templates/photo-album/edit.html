@@ -18,6 +18,10 @@
 		<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Info</a>
 	{{- end -}}
 
+	{{- if .UserCan "sharing" -}}
+		<a hx-get="/{{.Token}}/sharing" script="install AsModal">Sharing</a>
+	{{- end -}}
+
 	{{- if .UserCan "delete" -}}
 		<a hx-get="/{{.Token}}/delete" script="install AsModal">Delete Album</a>
 	{{- end -}}

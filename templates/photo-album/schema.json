@@ -94,6 +94,15 @@
 				{"step": "refresh-page"}
 			]
 		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Sharing", "message": "Who can view this photo album?"},
+					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
