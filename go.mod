@@ -15,6 +15,7 @@ replace (
 	github.com/benpate/form => ../form
 	github.com/benpate/html => ../html
 	github.com/benpate/htmlconv => ../htmlconv
+	github.com/benpate/id => ../id
 	github.com/benpate/list => ../list
 	github.com/benpate/mediaserver => ../mediaserver
 	github.com/benpate/path => ../path
@@ -25,7 +26,7 @@ replace (
 require (
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/compare v0.0.4
-	github.com/benpate/convert v0.9.2
+	github.com/benpate/convert v0.11.0
 	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mongo v0.0.2
 	github.com/benpate/datatype v0.0.3
@@ -34,8 +35,10 @@ require (
 	github.com/benpate/form v0.3.9
 	github.com/benpate/html v0.11.1
 	github.com/benpate/htmlconv v0.3.1
+	github.com/benpate/id v0.0.0-00010101000000-000000000000
 	github.com/benpate/list v0.4.1
 	github.com/benpate/mediaserver v0.0.0
+	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.4.1
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/steranko v0.4.3
@@ -55,7 +58,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
-	github.com/benpate/null v0.6.0 // indirect
 	github.com/chai2010/webp v1.1.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
