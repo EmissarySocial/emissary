@@ -49,7 +49,7 @@
 		"delete": {
 			"steps":[
 				{"step": "delete", "type": "user"},
-				{"step": "refresh-page"}
+				{"step": "forward-to", "url": "/admin/users"}
 			]
 		}
 	}

@@ -1,4 +1,4 @@
-<div hx-get="/admin/users/{{.UserID}}.view" hx-trigger="refreshPage" hx-push-url="false">
+<div hx-get="/admin/users/{{.UserID}}/view" hx-trigger="refreshPage from:body" hx-push-url="false">
     <div class="space-below">
         <a hx-get="/admin/users"><i class="fa-regular fa-arrow-left"></i> All People</a>
     </div>
