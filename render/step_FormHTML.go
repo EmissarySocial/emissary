@@ -56,9 +56,10 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
-	for key, value := range request.Form {
-		if err := schema.Set(renderer, path.New(key), value); err != nil {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error setting path value", key, value)
+	for _, element := range step.form.AllPaths() {
+		value := request.Form[element.Path]
+		if err := schema.Set(renderer, path.New(element.Path), value); err != nil {
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepForm.Post", "Error setting path value", element, value)
 		}
 	}
 
