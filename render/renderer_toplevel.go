@@ -108,8 +108,8 @@ func (w TopLevel) schema() schema.Schema {
 	return w.domain.Schema()
 }
 
-func (w TopLevel) common() Common {
-	return w.Common
+func (w TopLevel) service() ModelService {
+	return w.f.Stream()
 }
 
 func (w TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {

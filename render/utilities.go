@@ -35,7 +35,7 @@ func WrapModalForm(renderer Renderer, content string) string {
 
 	// Form Wrapper
 	b.Form("post", "").
-		Attr("hx-post", renderer.common().URL()).
+		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		EndBracket()
@@ -62,7 +62,7 @@ func WrapForm(renderer Renderer, content string) string {
 
 	// Form Wrapper
 	b.Form("post", "").
-		Attr("hx-post", renderer.common().URL()).
+		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		EndBracket()

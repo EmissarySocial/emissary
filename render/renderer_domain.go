@@ -84,8 +84,8 @@ func (w Domain) schema() schema.Schema {
 	return w.domain.Schema()
 }
 
-func (w Domain) common() Common {
-	return w.Common
+func (w Domain) service() ModelService {
+	return w.f.Domain()
 }
 
 func (w Domain) executeTemplate(wr io.Writer, name string, data interface{}) error {

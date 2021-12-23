@@ -100,8 +100,8 @@ func (w Group) schema() schema.Schema {
 	return w.group.Schema()
 }
 
-func (w Group) common() Common {
-	return w.Common
+func (w Group) service() ModelService {
+	return w.f.Group()
 }
 
 func (w Group) executeTemplate(writer io.Writer, name string, data interface{}) error {
@@ -127,7 +127,7 @@ func (w Group) Label() string {
 func (w Group) Groups() *QueryBuilder {
 
 	query := builder.NewBuilder().
-		String("displayName").
+		String("label").
 		ObjectID("groupId")
 
 	criteria := exp.And(

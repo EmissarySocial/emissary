@@ -100,8 +100,8 @@ func (w User) schema() schema.Schema {
 	return w.user.Schema()
 }
 
-func (w User) common() Common {
-	return w.Common
+func (w User) service() ModelService {
+	return w.f.User()
 }
 
 func (w User) executeTemplate(writer io.Writer, name string, data interface{}) error {
@@ -151,4 +151,12 @@ func (w User) Users() *QueryBuilder {
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
 func (w User) AdminSections() []model.Option {
 	return AdminSections()
+}
+
+// AssignedGroups lists all groups to which the current user is assigned.
+func (w User) AssignedGroups() ([]model.Group, error) {
+	groupService := w.factory().Group()
+	result, err := groupService.ListByIDs(w.user.GroupIDs...)
+
+	return result, derp.Wrap(err, "ghost.render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
 }

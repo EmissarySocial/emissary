@@ -128,8 +128,8 @@ func (w Stream) schema() schema.Schema {
 	return w.template.Schema
 }
 
-func (w Stream) common() Common {
-	return w.Common
+func (w Stream) service() ModelService {
+	return w.f.Stream()
 }
 
 /*******************************************

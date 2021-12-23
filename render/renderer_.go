@@ -24,7 +24,7 @@ type Renderer interface {
 	context() *steranko.Context   // The request context embedded in the Renderer
 	object() data.Object          // Model Object being rendered
 	schema() schema.Schema        // Schema to use to validate this Object
-	common() Common
+	service() ModelService
 
 	executeTemplate(io.Writer, string, interface{}) error // The HTML template used by this Renderer
 
