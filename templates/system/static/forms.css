@@ -18,6 +18,11 @@ input:last-child {
     margin-right:auto;
 }
 
+input[type=checkbox],
+input[type=radio] {
+    margin-right:5px;
+}
+
 
 /* Alternate colors for dark mode */
 @media (prefers-color-scheme: dark) {
@@ -110,20 +115,20 @@ button[disabled=true],
 }
 
 .layout-vertical > .layout-vertical-label {
-    font-size:15pt;
+    font-size:24px;
     font-weight:600;
-    margin:20px 0px;
+    margin-bottom:20px;
 }
 
 .layout-vertical > .layout-vertical-elements {
 }
 
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element {
-    margin-bottom:20px;
+    margin-bottom:24px;
 }
 
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element > label {
-    margin-bottom:5px;
+    margin-bottom:8px;
     display:block;
 }
 

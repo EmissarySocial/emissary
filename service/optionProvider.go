@@ -24,6 +24,12 @@ func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error
 
 	switch path {
 
+	case "sharing":
+		return []form.OptionCode{
+			{Value: "true", Label: "Everyone"},
+			{Value: "false", Label: "Only Selected Groups"},
+		}, nil
+
 	case "groups":
 		return service.Group.ListAsOptions()
 	}

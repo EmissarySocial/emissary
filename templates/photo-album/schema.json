@@ -98,7 +98,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Sharing", "message": "Who can view this photo album?"},
+					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Who Can See This Album?", "message": "Select who can view and comment on these photos."},
 					{"step":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]

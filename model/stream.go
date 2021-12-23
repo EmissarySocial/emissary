@@ -86,9 +86,6 @@ func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 	case "thumbnailImage":
 		return stream.ThumbnailImage, nil
 
-	case "criteria":
-		return stream.Criteria.GetPath(p.Tail())
-
 	case "rank":
 		return stream.Rank, nil
 
@@ -118,9 +115,6 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
 	case "thumbnailImage":
 		stream.ThumbnailImage = convert.String(value)
-
-	case "criteria":
-		return stream.Criteria.SetPath(p.Tail(), value)
 
 	case "rank":
 		stream.Rank = convert.Int(value)
@@ -152,26 +146,26 @@ func (stream *Stream) NewAttachment(filename string) Attachment {
 // Roles returns a list of all roles that match the provided authorization
 func (stream *Stream) Roles(authorization *Authorization) []string {
 
-	result := make([]string, 0)
-
-	if stream.Criteria.Public {
-		result = append(result, "public")
-	}
+	// Everyone has "public" access
+	result := []string{"public"}
 
 	if authorization == nil {
 		return result
 	}
 
+	// Owners are hard-coded to do everything, so no other roles need to be returned.
+	if authorization.DomainOwner {
+		return []string{"owner"}
+	}
+
+	// Authors sometimes have special permissions, too.
 	if !stream.AuthorID.IsZero() {
 		if authorization.UserID == stream.AuthorID {
 			result = append(result, "author")
 		}
 	}
 
-	if authorization.DomainOwner {
-		result = append(result, "owner")
-	}
-
+	// Otherwise, append all roles matched from the criteria
 	result = append(result, stream.Criteria.Roles(authorization.GroupIDs...)...)
 
 	return result

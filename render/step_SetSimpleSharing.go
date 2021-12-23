@@ -9,9 +9,9 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
-	"github.com/benpate/id"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -54,6 +54,7 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	// Heading
 	b.H1().InnerHTML(step.title).Close()
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
+	b.Container("HR").Close()
 
 	// Form
 	b.Form("", "").Data("hx-post", renderer.URL()).Data("hx-push-url", "false").Data("hx-swap", "none").EndBracket()
@@ -85,15 +86,19 @@ func (step StepSetSimpleSharing) Post(buffer io.Writer, renderer Renderer) error
 	stream := streamRenderer.stream
 	stream.Criteria = model.NewCriteria()
 
-	stream.Criteria.Inherit = false
-	stream.Criteria.Public = convert.Bool(request.Form["public"])
+	var groupIDs []string
 
-	if !stream.Criteria.Public {
-		groupIDs := id.Slice(request.Form["groupIds"])
+	// If PUBLIC is checked, then roles are given to the public group.
+	if convert.Bool(request.Form["public"]) {
+		stream.Criteria.Public = step.roles
+		return nil
+	}
 
-		for _, groupID := range groupIDs {
-			stream.Criteria.Groups[groupID.Hex()] = step.roles
-		}
+	// Fall through means that roles are given to the selected groupIDs
+	groupIDs = request.Form["groupIds"]
+
+	for _, groupID := range groupIDs {
+		stream.Criteria.Groups[groupID] = step.roles
 	}
 
 	return nil
@@ -114,10 +119,14 @@ func (step StepSetSimpleSharing) schema() schema.Schema {
 // form returns the form to be displayed
 func (step StepSetSimpleSharing) form() form.Form {
 
-	return form.Form{
+	result := form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{
-			{Kind: "select", Path: "groupIds", Options: map[string]string{"provider": "groups"}},
+			{Kind: "select", Path: "public", Options: form.Map{"format": "radio", "provider": "sharing"}},
+			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}},
 		},
 	}
+
+	spew.Dump(result)
+	return result
 }
