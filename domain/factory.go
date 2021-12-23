@@ -277,7 +277,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 }
 
 func (factory *Factory) OptionProvider() form.OptionProvider {
-	return service.NewOptionProvider(factory.User())
+	return service.NewOptionProvider(factory.Group(), factory.User())
 }
 
 /*******************************************
