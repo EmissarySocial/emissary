@@ -8,7 +8,8 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"layout": {"type": "string", "options": ["table", "grid"]}
+			"label": {"type": "string"},
+			"description": {"type": "string"}
 		}
 	},
 	"states": {
@@ -34,6 +35,7 @@
 			]
 		},
 		"edit": {
+			"roles": ["owner"],
 			"steps":[{
 				"step": "as-modal",
 				"steps": [
@@ -43,29 +45,23 @@
 						"form": {
 							"kind": "layout-vertical",
 							"label": "Update Form",
-							"children": [{
-								"kind": "text",
-								"label": "Label",
-								"path": "label"
-							},{
-								"kind": "textarea",
-								"label": "Description",
-								"path": "description"
-							}, {
-								"kind": "select",
-								"label": "Layout",
-								"path": "layout"
-							}]
+							"children": [
+								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"}
+							]
 						}
 					}, 
-					{"step": "set-data", "fields": ["label", "description"]}, 
 					{"step": "save", "comment": "Updated Folder"}
 				]
 			}]
 		},
 		"view": {"step": "view-html"},
-		"delete": {"step": "delete"},
+		"delete": {
+			"roles": ["owner"],
+			"step": "delete"
+		},
 		"new": {
+			"roles": ["owner"],
 			"steps":[{
 				"step": "add-child",
 				"comment": "Created by {{.Author}}",
@@ -74,6 +70,15 @@
 					{"step": "forward-to", "url": "/{{.Token}}/edit"}
 				]
 			}]
+		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
+					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
 		}
 	}
 }

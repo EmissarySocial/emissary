@@ -4,6 +4,20 @@
 
 	<h1>{{.Label}}</h1>
 
+	{{- if ne "" .Description -}}
+		<div class="space-below">{{.Description}}</div>
+	{{- end -}}
+
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<a hx-get="/{{.Token}}/edit">Edit</a>
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+		</div>
+	{{- end -}}
+
 	<table class="table">
 		<thead>
 			<tr>
