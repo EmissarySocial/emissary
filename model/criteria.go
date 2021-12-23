@@ -1,23 +1,59 @@
 package model
 
 import (
+	"github.com/benpate/compare"
 	"github.com/benpate/convert"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Criteria struct {
-	Inherit bool                            `json:"inherit"  bson:"inherit"` // If TRUE, then this criteria is inherited from a parent stream
-	Public  bool                            `json:"public"   bson:"public"`  // If TRUE, then no permissions are required to view this stream
-	Roles   map[primitive.ObjectID][]string `json:"roles"    bson:"roles"`   // A map of roles to the userIDs that can perform them.
+	Inherit bool                `json:"inherit"  bson:"inherit"` // If TRUE, then this criteria is inherited from a parent stream
+	Public  bool                `json:"public"   bson:"public"`  // If TRUE, then no permissions are required to view this stream
+	Groups  map[string][]string `json:"roles"    bson:"roles"`   // A map of groupIDs -> the roles that each group can access
 }
 
 func NewCriteria() Criteria {
 	return Criteria{
 		Inherit: true,
 		Public:  false,
-		Roles:   make(map[primitive.ObjectID][]string),
+		Groups:  make(map[string][]string),
+	}
+}
+
+// Roles returns a unique list of all roles that the provided groups can access.
+func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
+
+	result := make([]string, 0)
+
+	for _, groupID := range groupIDs {
+		if roles, ok := criteria.Groups[groupID.Hex()]; ok {
+			for _, role := range roles {
+				if !compare.Contains(result, role) {
+					result = append(result, role)
+				}
+			}
+		}
+	}
+
+	return result
+}
+
+func (criteria *Criteria) SimpleModel() datatype.Map {
+
+	groupIDs := make([]string, len(criteria.Groups))
+	index := 0
+
+	for groupID := range criteria.Groups {
+		groupIDs[index] = groupID
+		index++
+	}
+
+	return datatype.Map{
+		"public":   criteria.Public,
+		"groupIds": groupIDs,
 	}
 }
 

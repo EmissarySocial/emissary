@@ -52,8 +52,8 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "set-publishdate":
 		return NewStepSetPublishDate(stepInfo), nil
 
-	case "set-sharing":
-		return NewStepStreamShare(stepInfo), nil
+	case "set-simple-sharing":
+		return NewStepSetSimpleSharing(factory.FormLibrary(), stepInfo), nil
 
 	case "set-state":
 		return NewStepStreamState(stepInfo), nil

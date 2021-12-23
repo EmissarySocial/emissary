@@ -172,16 +172,7 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 		result = append(result, "owner")
 	}
 
-	if roles, ok := stream.Criteria.Roles[authorization.UserID]; ok {
-		result = append(result, roles...)
-	}
-
-	for _, groupID := range authorization.GroupIDs {
-
-		if roles, ok := stream.Criteria.Roles[groupID]; ok {
-			result = append(result, roles...)
-		}
-	}
+	result = append(result, stream.Criteria.Roles(authorization.GroupIDs...)...)
 
 	return result
 }
