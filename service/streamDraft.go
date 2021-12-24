@@ -45,8 +45,15 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	}
 
 	// Reset the journal so that this item can be saved in the new collection.
-	result.Content = content.Default()
 	result.Journal = journal.Journal{}
+
+	// Add default content if the content is empty.
+	if result.Content.IsEmpty() {
+		result.Content = content.Content{
+			content.NewItem("CONTAINER", 1),
+			content.NewItem("WYSIWYG"),
+		}
+	}
 
 	// Save a draft copy of the original stream
 	if err := service.Save(result, "create draft record"); err != nil {

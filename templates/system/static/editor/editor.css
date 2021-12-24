@@ -38,36 +38,40 @@ div.container-insert {
 	border-radius:5px;
 }
 
+.ql-bubble .ql-tooltip {
+	z-index:10;
+}
+
 div.container-insert:hover {
 	background-color:cornflowerblue;
 }
 
 div.container-insert[data-place=ABOVE] {
-	top:-10px;
-	height:15px;
+	top:-5px;
+	height:10px;
 	left:0px;
 	right:0px;
 }
 
 div.container-insert[data-place=BELOW] {
-	bottom:-10px;
-	height:15px;
+	bottom:-5px;
+	height:10px;
 	left:0px;
 	right:0px;
 }
 
 div.container-insert[data-place=LEFT] {
-	left:-10px;
+	left:-5px;
 	top:0px;
 	bottom:0px;
-	width:15px;
+	width:10px;
 }
 
 div.container-insert[data-place=RIGHT] {
-	right:-10px;
+	right:-5px;
 	top:0px;
 	bottom:0px;
-	width:15px;
+	width:10px;
 }
 
 div.container-item {

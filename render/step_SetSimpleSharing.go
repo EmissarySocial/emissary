@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -119,14 +118,11 @@ func (step StepSetSimpleSharing) schema() schema.Schema {
 // form returns the form to be displayed
 func (step StepSetSimpleSharing) form() form.Form {
 
-	result := form.Form{
+	return form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{
 			{Kind: "select", Path: "public", Options: form.Map{"format": "radio", "provider": "sharing"}},
 			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}},
 		},
 	}
-
-	spew.Dump(result)
-	return result
 }

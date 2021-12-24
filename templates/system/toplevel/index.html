@@ -13,7 +13,7 @@
     </div>
 
     <div class="space-below">
-        <a hx-get="/admin/toplevel/add" script="install AsModal"><i class="fa-regular fa-plus-circle"></i> Add a Top-Level Stream</a>
+        <a hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i> Add a Top-Level Stream</a>
     </div>
 
     <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
@@ -21,7 +21,7 @@
             <div class="draggable">
                 <div class="text-sm" style="float:right;">
                     <a href="/{{.Token}}" class="button">View</a>
-                    <button hx-get="/admin/toplevel/{{.StreamID}}/delete" script="install AsModal"><i class="fa-regular fa-trash-can"></i></button>
+                    <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="fa-regular fa-trash-can"></i></button>
                 </div>
                 <i class="fa-regular fa-grip"></i>
                 {{.Label}}

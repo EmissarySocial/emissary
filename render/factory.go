@@ -11,7 +11,7 @@ import (
 type Factory interface {
 	Attachment() *service.Attachment
 	ContentViewer() content.Widget
-	ContentEditor(string) content.Widget
+	ContentEditor(string) content.EditorWidget
 	Domain() *service.Domain
 	FormLibrary() form.Library
 	Group() *service.Group

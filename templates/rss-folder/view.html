@@ -1,7 +1,7 @@
 <div>
 	<div style="float:right;">
 		{{if .UserCan "info"}}
-			<span class="button" hx-get="/{{.Token}}/info" script="install AsModal()">Info</span>
+			<span class="button" hx-get="/{{.Token}}/info">Info</span>
 		{{end }}
 	</div>
 	<h1>{{.Label}}</h1>

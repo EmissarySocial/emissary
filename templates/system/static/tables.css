@@ -2,6 +2,7 @@ table.table {
     width:100%;
     border-bottom: solid 1px var(--gray20);
     border-spacing: 0px;
+    margin-bottom:30px;
 }
 
 table.table th {
@@ -21,6 +22,23 @@ table.table td {
 }
 
 table.table tr:hover td {
+    background-color:var(--gray10);
+    cursor:pointer;
+}
+
+div.table {
+    border-bottom: solid 1px var(--gray20);
+    margin-bottom: 30px;
+}
+
+div.table > div {
+    padding: 10px 20px;
+    vertical-align: top;
+    border-top: solid 1px var(--gray20);
+    font-weight:300;
+}
+
+div.table > div:hover {
     background-color:var(--gray10);
     cursor:pointer;
 }

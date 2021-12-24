@@ -19,10 +19,6 @@ on keypress[key=="Escape"] from window
 	end
 end
 
-on click from .modal-underlay
-	send closeModal to #modal
-end
-
 behavior AsModal
 
 	init

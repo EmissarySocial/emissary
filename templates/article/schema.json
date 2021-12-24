@@ -52,8 +52,7 @@
 		},
 		"edit": {
 			"roles": ["owner", "editor"],
-			"step": "edit-draft",
-			"file": "draft"
+			"step": "edit-draft"
 		},
 		"publish-draft": {
 			"roles": ["owner", "editor"],

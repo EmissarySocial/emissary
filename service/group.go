@@ -57,6 +57,9 @@ func (service *Group) Delete(user *model.Group, note string) error {
 		return derp.Wrap(err, "service.Group", "Error deleting Group", user, note)
 	}
 
+	// TODO: Also remove connections to Users that still use this Group
+	// TODO: Also remove connections to Streams that still use this Group
+
 	return nil
 }
 

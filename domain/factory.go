@@ -218,8 +218,9 @@ func (factory *Factory) ContentViewer() content.Widget {
 }
 
 // ContentEditor returns a content.Widget that can edit content
-func (factory *Factory) ContentEditor(endpoint string) content.Widget {
-	return editor.New(endpoint)
+func (factory *Factory) ContentEditor(endpoint string) content.EditorWidget {
+	result := editor.New(endpoint)
+	return result
 }
 
 /*******************************************

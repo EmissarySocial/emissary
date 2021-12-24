@@ -3,9 +3,9 @@
     <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
         <tr>
-            <td hx-get="/admin/groups/{{.GroupID}}/edit" script="install AsModal">{{.Label}}</td>
+            <td hx-get="/admin/groups/{{.GroupID}}/edit">{{.Label}}</td>
             <td align="right">
-                <span hx-get="/admin/groups/{{.GroupID}}/delete" script="install AsModal"><i class="fa-regular fa-trash-can"></i></span>
+                <span hx-get="/admin/groups/{{.GroupID}}/delete"><i class="fa-regular fa-trash-can"></i></span>
             </td>
         </tr>
     {{- end -}}

@@ -16,15 +16,15 @@
 		{{- end -}}
 
 		{{- if .UserCan "edit" -}}
-			<a hx-get="/{{.Token}}/edit" script="install AsModal()">Info</a>
+			<a hx-get="/{{.Token}}/edit">Info</a>
 		{{- end -}}
 
 		{{- if .UserCan "add-child" -}}
-			<a hx-get="/{{.Token}}/add-child" script="install AsModal()">Features</a>
+			<a hx-get="/{{.Token}}/add-child">Features</a>
 		{{- end -}}
 
 		{{- if .UserCan "delete" -}}
-			<a hx-get="/{{.Token}}/delete" _="install AsModal()">Delete</a>
+			<a hx-get="/{{.Token}}/delete">Delete</a>
 		{{- end -}}
 	</div>
 
