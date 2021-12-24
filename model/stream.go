@@ -19,15 +19,15 @@ type Stream struct {
 	StateID         string               `json:"stateId"         bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	Criteria        Criteria             `json:"criteria"        bson:"criteria"`                // Criteria for which users can access this stream.
 	Token           string               `json:"token"           bson:"token"`                   // Unique value that identifies this element in the URL
-	Label           string               `json:"label"           bson:"label,omitempty"`         // Text to display in lists of streams, probably displayed at top of stream page, too.
-	Description     string               `json:"description"     bson:"description,omitempty"`   // Brief summary of this stream, used in lists of streams
+	Label           string               `json:"label"           bson:"label"`                   // Text to display in lists of streams, probably displayed at top of stream page, too.
+	Description     string               `json:"description"     bson:"description"`             // Brief summary of this stream, used in lists of streams
 	AuthorID        primitive.ObjectID   `json:"authorId"        bson:"authorId,omitempty"`      // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
 	AuthorName      string               `json:"authorName"      bson:"authorName,omitempty"`    // Full name of the person who created this stream
 	AuthorImage     string               `json:"authorImage"     bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
 	AuthorURL       string               `json:"authorURL"       bson:"authorURL,omitempty"`     // URL address of the person who created this stream
 	Content         content.Content      `json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
 	Data            datatype.Map         `json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	Tags            []string             `json:"tags"            bson:"tags,omitempty"`          // Organizational Tags
+	Tags            []string             `json:"tags"            bson:"tags"`                    // Organizational Tags
 	ThumbnailImage  string               `json:"thumbnailImage"  bson:"thumbnailImage"`          // Image to display next to the stream in lists.
 	Rank            int                  `json:"rank"            bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	SourceID        primitive.ObjectID   `json:"sourceId"        bson:"sourceId,omitempty"`      // Internal identifier of the source configuration that generated this stream
