@@ -14,8 +14,7 @@
 				"type": "string",
 				"description": "The HTML content for this article"
 			}
-		},
-		"required": ["class", "title", "body"]
+		}
 	},
 	"states": {
 		"default": {
@@ -64,29 +63,26 @@
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
-			"steps": [{
-				"step": "form-html",
-				"form": {
-					"kind": "layout-vertical",
-					"label": "Update Form",
-					"description": "This will update the object in this state",
-					"children": [{
-						"kind": "text",
-						"label": "Label",
-						"path": "label"
-					},{
-						"kind": "textarea",
-						"label": "Description",
-						"path": "description"
-					}]
-				}
-			}, {
-				"step": "edit-data",
-				"fields": ["label", "description"]
-			},{
-				"step": "save",
-				"comment": "Updated by {{.Author}}"
-			}]
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Article Properties",
+						"description": "This will update the object in this state",
+						"children": [{
+							"kind": "text",
+							"label": "Label",
+							"path": "label"
+						},{
+							"kind": "textarea",
+							"label": "Description",
+							"path": "description"
+						}]
+					}
+				},
+				{"step": "save", "comment": "Updated by {{.Author}}"}
+			]}]
 		},
 		"sharing": {
 			"roles": ["owner"],
@@ -99,11 +95,17 @@
 		},
 		"delete": {
 			"roles": ["owner"],
-			"step": "delete"
+			"steps": [
+				{"step":"delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
+			]
 		},
 		"delete-draft": {
 			"roles": ["owner", "editor"],
-			"step": "delete-draft"
+			"steps": [
+				{"step": "delete-draft"},
+				{"step": "forward-to", "url": "/{{.Token}}"}
+			]
 		}
 	}
 }

@@ -76,7 +76,7 @@
 		"delete": {
 			"roles": ["owner", "author"],
 			"steps": [
-				{"step":"delete", "confirm": "Are you sure you want to delete this Photograph?"},
+				{"step":"delete", "title": "Delete this Photograph?", "message": "All content and comments will be lost.  There is NO UNDO."},
 				{"step": "forward-to", "url":"/{{.ParentID}}"}
 			]
 		}

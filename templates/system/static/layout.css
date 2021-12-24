@@ -90,6 +90,26 @@ main {
 	margin-bottom: 30px;
 	padding: 5px 0px;
 	line-height: 100%;
+	display:flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+#menu-bar div {
+	white-space: nowrap;
+	flex-grow: 1;
+}
+
+#menu-bar div.left {
+	text-align: left;
+}
+
+#menu-bar div.center {
+	text-align: center;
+}
+
+#menu-bar div.right {
+	text-align: right;
 }
 
 #menu-bar a {

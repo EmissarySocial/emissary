@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/ghost/first"
 	"github.com/benpate/html"
 )
 
@@ -19,21 +20,17 @@ type StepDelete struct {
 func NewStepDelete(modelService ModelService, stepInfo datatype.Map) StepDelete {
 	return StepDelete{
 		modelService: modelService,
-		title:        stepInfo.GetString("title"),
-		message:      stepInfo.GetString("message"),
+		title:        first.String(stepInfo.GetString("title"), "Confirm Delete"),
+		message:      first.String(stepInfo.GetString("message"), "Are you sure you want to delete this item?  There is NO UNDO."),
 	}
 }
 
 // Get displays a customizable confirmation form for the delete
 func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
 
-	if step.title == "" {
-		step.title = "Confirm Delete"
-	}
-
-	if step.message == "" {
-		step.message = "Are you sure you want to delete this item?  There is NO UNDO."
-	}
+	header := renderer.context().Response().Header()
+	header.Set("HX-Retarget", "aside")
+	header.Set("HX-Push", "false")
 
 	b := html.New()
 

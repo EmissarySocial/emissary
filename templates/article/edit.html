@@ -5,36 +5,28 @@
 
 <div class="page">
 <div id="menu-bar">
-	<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
-
-	<button hx-get="/{{.Token}}/sharing">Sharing</button>
-
-	<button hx-get="/{{.Token}}">Save Draft</button>
-
-	<button 
-		script="install AsModal"
-		hx-post="/{{.Token}}/delete-draft" 
-		hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
-
-	&nbsp;
-	&nbsp;
-
-	{{- if .UserCan "properties" -}}
-		<button script="install AsModal()" hx-get="/{{.Token}}/properties" class="button">Info</button>
-	{{- end -}}
-
-	{{- if .UserCan "delete" -}}
-		<button hx-confirm="Are you sure you want to DELETE this Article?" hx-post="/{{.Token}}/delete" class="button">Delete</button>
-	{{- end -}}
-
-	{{- if .UserCan "share" -}}
+	<div class="left">
+		<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
+		<button hx-get="/{{.Token}}">Save Draft</button>
 		<button 
-			preload
-			hx-get="/{{.Token}}/transition/share" 
-			hx-target="body" 
-			hx-swap="beforeend" 
-			class="button">Share</button>
-	{{- end -}}
+			script="install AsModal"
+			hx-post="/{{.Token}}/delete-draft" 
+			hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
+	</div>
+
+	<div class="right">
+		{{- if .UserCan "properties" -}}
+			<a hx-get="/{{.Token}}/sharing">Sharing</a>
+		{{- end -}}
+
+		{{- if .UserCan "properties" -}}
+			<a hx-get="/{{.Token}}/properties">Info</a>
+		{{- end -}}
+
+		{{- if .UserCan "delete" -}}
+			<a hx-get="/{{.Token}}/delete">Delete</a>
+		{{- end -}}
+	</div>
 
 </div>
 
