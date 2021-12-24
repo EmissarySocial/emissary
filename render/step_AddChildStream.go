@@ -57,7 +57,8 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Create child stream
-	childStream, err := NewStream(streamRenderer.factory(), streamRenderer.context(), template, &child, "view")
+	action := template.Action("view")
+	childStream, err := NewStream(streamRenderer.factory(), streamRenderer.context(), template, action, &child)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error creating renderer", child)
@@ -69,7 +70,7 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// If there is an "init" step for the child's template, then execute it now
-	if action, ok := template.Action("init"); ok {
+	if action := template.Action("init"); !action.IsEmpty() {
 		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute 'init' action on child")
 		}

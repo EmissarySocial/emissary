@@ -78,7 +78,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		}
 
 		// Execute the action pipeline
-		if action, ok := renderer.Action(); ok {
+		if action := renderer.Action(); !action.IsEmpty() {
 			if err := render.DoPipeline(&renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
 				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
 			}

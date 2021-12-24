@@ -58,9 +58,13 @@ func (template *Template) State(stateID string) (State, bool) {
 }
 
 // Action returns the action object for a specified name
-func (template *Template) Action(actionID string) (Action, bool) {
-	action, ok := template.Actions[actionID]
-	return action, ok
+func (template *Template) Action(actionID string) *Action {
+
+	if action, ok := template.Actions[actionID]; ok {
+		return &action
+	}
+
+	return nil
 }
 
 // GetPath implements the path.Getter interface.

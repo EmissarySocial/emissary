@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"html/template"
 	"io"
-	"net/http"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -21,8 +20,8 @@ import (
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
 	template *model.Template // Template that the Stream uses
-	stream   *model.Stream   // Stream to be displayed
-	actionID string
+	action   *model.Action   // The action to be used to render this Stream
+	stream   *model.Stream   // The Stream to be displayed
 
 	Common
 }
@@ -32,27 +31,20 @@ type Stream struct {
  *******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Stream, error) {
-
-	// Try to find requested Action
-	action, ok := template.Action(actionID)
-
-	if !ok {
-		return Stream{}, derp.New(http.StatusBadRequest, "ghost.render.NewStream", "Invalid action")
-	}
+func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, action *model.Action, stream *model.Stream) (Stream, error) {
 
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
 	if !action.UserCan(stream, authorization) {
-		return Stream{}, derp.New(http.StatusForbidden, "ghost.render.NewStream", "Forbidden")
+		return Stream{}, derp.NewForbiddenError("ghost.render.NewStream", "Forbidden")
 	}
 
 	// Success.  Populate Stream
 	return Stream{
 		stream:   stream,
 		template: template,
-		actionID: actionID,
+		action:   action,
 		Common:   NewCommon(factory, ctx),
 	}, nil
 }
@@ -68,7 +60,13 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 		return Stream{}, derp.Wrap(err, "ghost.render.NewStreamWithoutTemplate", "Error loading Template", stream)
 	}
 
-	return NewStream(factory, ctx, template, stream, actionID)
+	action := template.Action(actionID)
+
+	if action.IsEmpty() {
+		return Stream{}, derp.NewNotFoundError("ghost.render.NewStreamWithoutTemplate", "Unrecognized Action", actionID)
+	}
+
+	return NewStream(factory, ctx, template, action, stream)
 }
 
 /*******************************************
@@ -90,12 +88,12 @@ func (w Stream) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the name of the action being performed
 func (w Stream) ActionID() string {
-	return w.actionID
+	return w.action.ActionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (w Stream) Action() (model.Action, bool) {
-	return w.template.Action(w.actionID)
+func (w Stream) Action() *model.Action {
+	return w.action
 }
 
 // Render generates the string value for this Stream
@@ -103,10 +101,8 @@ func (w Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	action, _ := w.Action() // This is OK becuase we've already tested for the action's presence
-
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
 		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -137,14 +133,23 @@ func (w Stream) service() ModelService {
  *******************************************/
 
 // View executes a separate view for this Stream
-func (w Stream) View(action string) (template.HTML, error) {
+func (w Stream) View(actionID string) (template.HTML, error) {
 
-	subStream, err := NewStream(w.factory(), w.context(), w.template, w.stream, action)
+	// Find and validate the action
+	action := w.template.Action(actionID)
+
+	if action.IsEmpty() {
+		return template.HTML(""), derp.NewNotFoundError("ghost.render.Stream.View", "Invalid Action", actionID)
+	}
+
+	// Create a new renderer (this will also validate the user's permissions)
+	subStream, err := NewStream(w.factory(), w.context(), w.template, action, w.stream)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "ghost.render.Stream.View", "Error creating sub-renderer", action)
 	}
 
+	// Generate HTML template
 	return subStream.Render()
 }
 
@@ -454,9 +459,9 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {
 
-	action, ok := w.template.Action(actionID)
+	action := w.template.Action(actionID)
 
-	if !ok {
+	if action.IsEmpty() {
 		return false
 	}
 

@@ -27,9 +27,17 @@ func NewLayout(templateID string, funcMap template.FuncMap) Layout {
 }
 
 // Action returns the action object for a specified name
-func (layout *Layout) Action(actionID string) (Action, bool) {
-	action, ok := layout.Actions[actionID]
-	return action, ok
+func (layout *Layout) Action(actionID string) *Action {
+
+	if action, ok := layout.Actions[actionID]; ok {
+		return &action
+	}
+
+	result := Action{
+		ActionID: actionID,
+	}
+
+	return &result
 }
 
 // Validate runs any post-processing required after a Layout is parsed by the LayoutService

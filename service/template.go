@@ -161,22 +161,23 @@ func (service *Template) Schema(templateID string) (schema.Schema, error) {
 }
 
 // ActionConfig returns the action definition that matches the stream and type provided
-func (service *Template) Action(templateID string, actionID string) (model.Action, error) {
+func (service *Template) Action(templateID string, actionID string) (*model.Action, error) {
 
 	// Try to find the Template used by this Stream
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return model.Action{}, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+		return nil, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
 	}
 
 	// Try to find the action in the Template
-	if action, ok := template.Action(actionID); ok {
-		return action, nil
+	action := template.Action(actionID)
+
+	if action.IsEmpty() {
+		return action, derp.NewNotFoundError("ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
 	}
 
-	// Not Found :(
-	return model.Action{}, derp.New(derp.CodeBadRequestError, "ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
+	return action, nil
 }
 
 /*******************************************

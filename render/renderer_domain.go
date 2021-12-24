@@ -14,18 +14,18 @@ import (
 )
 
 type Domain struct {
-	domain   model.Domain
-	layout   *model.Layout
-	actionID string
+	layout *model.Layout
+	action *model.Action
+	domain *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, actionID string) Domain {
+func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action) Domain {
 
 	return Domain{
-		layout:   layout,
-		actionID: actionID,
-		Common:   NewCommon(factory, ctx),
+		layout: layout,
+		action: action,
+		Common: NewCommon(factory, ctx),
 	}
 }
 
@@ -34,11 +34,11 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, act
  * (not available via templates)
  *******************************************/
 
-func (w *Domain) GetPath(p path.Path) (interface{}, error) {
+func (w Domain) GetPath(p path.Path) (interface{}, error) {
 	return w.domain.GetPath(p)
 }
 
-func (w *Domain) SetPath(p path.Path, value interface{}) error {
+func (w Domain) SetPath(p path.Path, value interface{}) error {
 	return w.domain.SetPath(p, value)
 }
 
@@ -48,12 +48,12 @@ func (w *Domain) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the name of the action being performed
 func (w Domain) ActionID() string {
-	return w.actionID
+	return w.action.ActionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (w Domain) Action() (model.Action, bool) {
-	return w.layout.Action(w.actionID)
+func (w Domain) Action() *model.Action {
+	return w.action
 }
 
 // Render generates the string value for this Stream
@@ -61,13 +61,11 @@ func (w Domain) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := w.layout.Action(w.actionID); ok {
-
-		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
-		}
+	// Execute step (write HTML to buffer, update context)
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
+
 	// Success!
 	return template.HTML(buffer.String()), nil
 }
@@ -77,7 +75,7 @@ func (w Domain) Token() string {
 }
 
 func (w Domain) object() data.Object {
-	return &w.domain
+	return w.domain
 }
 
 func (w Domain) schema() schema.Schema {

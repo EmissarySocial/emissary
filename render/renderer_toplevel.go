@@ -11,54 +11,34 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TopLevel struct {
-	layout   *model.Layout
-	stream   *model.Stream
-	actionID string
+	layout *model.Layout
+	action *model.Action
+	stream *model.Stream
 	Common
 }
 
-func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, objectID string, actionID string) (TopLevel, error) {
+func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, stream *model.Stream) TopLevel {
 
-	result := TopLevel{
-		layout:   layout,
-		actionID: actionID,
-		Common:   NewCommon(factory, ctx),
+	return TopLevel{
+		layout: layout,
+		action: action,
+		stream: stream,
+		Common: NewCommon(factory, ctx),
 	}
-
-	if streamID, err := primitive.ObjectIDFromHex(objectID); err == nil {
-
-		streamService := factory.Stream()
-		result.stream = new(model.Stream)
-		if err := streamService.LoadTopLevelByID(streamID, result.stream); err != nil {
-			return TopLevel{}, derp.Wrap(err, "ghost.render.NewTopLevel", "Error loading Top-Level record", streamID)
-		}
-
-		result.actionID = actionID
-
-	} else {
-		result.actionID = objectID
-	}
-
-	if result.actionID == "" {
-		result.actionID = "index"
-	}
-
-	return result, nil
 }
 
 /*******************************************
  * PATH INTERFACE
  *******************************************/
 
-func (w *TopLevel) GetPath(p path.Path) (interface{}, error) {
+func (w TopLevel) GetPath(p path.Path) (interface{}, error) {
 	return w.stream.GetPath(p)
 }
 
-func (w *TopLevel) SetPath(p path.Path, value interface{}) error {
+func (w TopLevel) SetPath(p path.Path, value interface{}) error {
 	return w.stream.SetPath(p, value)
 }
 
@@ -68,12 +48,12 @@ func (w *TopLevel) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the name of the action being performed
 func (w TopLevel) ActionID() string {
-	return w.actionID
+	return w.action.ActionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (w TopLevel) Action() (model.Action, bool) {
-	return w.layout.Action(w.actionID)
+func (w TopLevel) Action() *model.Action {
+	return w.action
 }
 
 // Render generates the string value for this Stream
@@ -81,13 +61,11 @@ func (w TopLevel) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := w.layout.Action(w.actionID); ok {
-
-		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
-		}
+	// Execute step (write HTML to buffer, update context)
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
 	}
+
 	// Success!
 	return template.HTML(buffer.String()), nil
 }

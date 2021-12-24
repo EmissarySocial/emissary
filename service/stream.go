@@ -330,7 +330,7 @@ func (service *Stream) Schema(stream *model.Stream) (schema.Schema, error) {
 }
 
 // Action returns the action definition that matches the stream and type provided
-func (service *Stream) Action(stream *model.Stream, actionID string) (model.Action, error) {
+func (service *Stream) Action(stream *model.Stream, actionID string) (*model.Action, error) {
 	return service.templateService.Action(stream.TemplateID, actionID)
 }
 

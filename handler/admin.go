@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/ghost/first"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
@@ -14,31 +13,21 @@ import (
 
 // GetAdmin handles GET requests
 func GetAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-
-		// Try to get the factory from the Context
-		factory, err := factoryManager.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAdmin", "Unrecognized Domain")
-		}
-
-		sterankoContext := ctx.(*steranko.Context)
-		renderer, err := getAdminRenderer(factory, sterankoContext)
-
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAdmin", "Error generating Renderer")
-		}
-
-		return renderPage(factory, sterankoContext, renderer)
-	}
+	return adminRenderer(factoryManager, render.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
 func PostAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
+	return adminRenderer(factoryManager, render.ActionMethodPost)
+}
+
+func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
+
+		var renderer render.Renderer
+		var objectID primitive.ObjectID
+		var actionID string
 
 		// Try to get the factory from the Context
 		factory, err := factoryManager.ByContext(ctx)
@@ -47,83 +36,89 @@ func PostAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.GetAdmin", "Unrecognized Domain")
 		}
 
-		// Get Renderer
 		sterankoContext := ctx.(*steranko.Context)
-		renderer, err := getAdminRenderer(factory, sterankoContext)
+		layoutService := factory.Layout()
 
-		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAdmin", "Error generating Renderer")
+		// Parse request arguments
+		controller := first.String(ctx.Param("param1"), "domain")
+
+		if id, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
+			actionID = first.String(ctx.Param("param3"), "view")
+			objectID = id
+		} else {
+			actionID = first.String(ctx.Param("param2"), "index")
+			objectID = primitive.NilObjectID
 		}
 
-		// Execute pipeline
-		if action, ok := renderer.Action(); ok {
-			if err := render.DoPipeline(renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
-				return derp.Wrap(err, "ghost.handler.PostAdmin", "Error executing action pipeline", action)
-			}
-		}
+		// Create the correct renderer for this controller
+		switch controller {
 
-		return nil
-	}
-}
+		case "analytics":
+			layout := layoutService.Analytics()
+			action := layout.Action(actionID)
+			renderer = render.NewDomain(factory, sterankoContext, layout, action)
 
-// getAdminRenderer returns a fully initialized Renderer based on the request parameters
-func getAdminRenderer(factory *domain.Factory, ctx *steranko.Context) (render.Renderer, error) {
+		case "domain":
+			layout := layoutService.Domain()
+			action := layout.Action(actionID)
+			renderer = render.NewDomain(factory, sterankoContext, layout, action)
 
-	controller := first.String(ctx.Param("param1"), "domain")
+		case "toplevel":
+			layout := layoutService.TopLevel()
+			action := layout.Action(actionID)
+			service := factory.Stream()
+			stream := model.NewStream()
 
-	switch controller {
-
-	case "analytics":
-		action := first.String(ctx.Param("param2"), "index")
-		result := render.NewDomain(factory, ctx, factory.Layout().Analytics(), action)
-		return &result, nil
-
-	case "domain":
-		action := first.String(ctx.Param("param2"), "index")
-		result := render.NewDomain(factory, ctx, factory.Layout().Domain(), action)
-		return &result, nil
-
-	case "toplevel":
-		result, err := render.NewTopLevel(factory, ctx, factory.Layout().TopLevel(), ctx.Param("param2"), ctx.Param("param3"))
-		return &result, err
-
-	case "groups":
-		group := model.NewGroup()
-
-		if groupID, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
-			groupService := factory.Group()
-
-			if err := groupService.LoadByID(groupID, &group); err != nil {
-				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading Group", groupID)
+			if !objectID.IsZero() {
+				if err := service.LoadByID(objectID, &stream); err != nil {
+					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading TopLevel stream", objectID)
+				}
 			}
 
-			result := render.NewGroup(factory, ctx, &group, first.String(ctx.Param("param3"), "view"))
-			return &result, nil
-		}
+			renderer = render.NewTopLevel(factory, sterankoContext, layout, action, &stream)
 
-		// Fall through means we aren't looking at a specific user
-		result := render.NewGroup(factory, ctx, &group, first.String(ctx.Param("param2"), "index"))
-		return &result, nil
+		case "groups":
+			layout := layoutService.Group()
+			action := layout.Action(actionID)
+			service := factory.Group()
+			group := model.NewGroup()
 
-	case "users":
-		user := model.NewUser()
-
-		if userID, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
-			userService := factory.User()
-
-			if err := userService.LoadByID(userID, &user); err != nil {
-				return nil, derp.Wrap(err, "ghost.handler.getAdminRenderer", "Error loading User", userID)
+			if !objectID.IsZero() {
+				if err := service.LoadByID(objectID, &group); err != nil {
+					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading Group", objectID)
+				}
 			}
 
-			result := render.NewUser(factory, ctx, &user, first.String(ctx.Param("param3"), "view"))
-			return &result, nil
+			renderer = render.NewGroup(factory, sterankoContext, layout, action, &group)
+
+		case "users":
+			layout := layoutService.User()
+			action := layout.Action(actionID)
+			service := factory.User()
+			user := model.NewUser()
+
+			if !objectID.IsZero() {
+				if err := service.LoadByID(objectID, &user); err != nil {
+					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading User", objectID)
+				}
+			}
+
+			renderer = render.NewUser(factory, sterankoContext, layout, action, &user)
+
+		default:
+			return derp.NewNotFoundError("ghost.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
 		}
 
-		// Fall through means we aren't looking at a specific user
-		result := render.NewUser(factory, ctx, &user, first.String(ctx.Param("param2"), "index"))
-		return &result, nil
+		// If this is a POST, then execute the action pipeline
+		if actionMethod == render.ActionMethodPost {
 
-	default:
-		return nil, derp.New(derp.CodeNotFoundError, "ghost.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("controller"), ctx.Param("objectId"), ctx.Param("action"))
+			if err := render.DoPipeline(renderer, ctx.Response().Writer, renderer.Action().Steps, actionMethod); err != nil {
+				return derp.Wrap(err, "ghost.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
+			}
+			return nil
+		}
+
+		// Otherwise, use the standard "renderPage" function to return HTML
+		return renderPage(factory, sterankoContext, renderer)
 	}
 }

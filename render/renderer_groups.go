@@ -16,22 +16,19 @@ import (
 )
 
 type Group struct {
-	layout   *model.Layout
-	group    *model.Group
-	actionID string
+	layout *model.Layout
+	action *model.Action
+	group  *model.Group
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, actionID string) Group {
-
-	layoutService := factory.Layout()
-	layout := layoutService.Group()
+func NewGroup(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, group *model.Group) Group {
 
 	return Group{
-		group:    group,
-		layout:   layout,
-		actionID: actionID,
-		Common:   NewCommon(factory, ctx),
+		group:  group,
+		layout: layout,
+		action: action,
+		Common: NewCommon(factory, ctx),
 	}
 }
 
@@ -40,11 +37,11 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
  * (not available via templates)
  *******************************************/
 
-func (w *Group) GetPath(p path.Path) (interface{}, error) {
+func (w Group) GetPath(p path.Path) (interface{}, error) {
 	return w.group.GetPath(p)
 }
 
-func (w *Group) SetPath(p path.Path, value interface{}) error {
+func (w Group) SetPath(p path.Path, value interface{}) error {
 	return w.group.SetPath(p, value)
 }
 
@@ -54,12 +51,12 @@ func (w *Group) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the unique ID of the Action configured into this renderer
 func (w Group) ActionID() string {
-	return w.actionID
+	return w.action.ActionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (w Group) Action() (model.Action, bool) {
-	return w.layout.Action(w.ActionID())
+func (w Group) Action() *model.Action {
+	return w.action
 }
 
 // Render generates the string value for this Stream
@@ -67,12 +64,9 @@ func (w Group) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := w.layout.Action(w.actionID); ok {
-
-		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
-		}
+	// Execute step (write HTML to buffer, update context)
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.Group.Render", "Error generating HTML"))
 	}
 
 	// Success!
@@ -81,7 +75,14 @@ func (w Group) Render() (template.HTML, error) {
 
 // View executes a separate view for this Group
 func (w Group) View(actionID string) (template.HTML, error) {
-	return NewGroup(w.factory(), w.context(), w.group, actionID).Render()
+
+	action := w.layout.Action(actionID)
+
+	if action.IsEmpty() {
+		return template.HTML(""), derp.NewNotFoundError("ghost.render.Group.View", "Unrecognized Action", actionID)
+	}
+
+	return NewGroup(w.factory(), w.context(), w.layout, action, w.group).Render()
 }
 
 func (w Group) TopLevelID() string {

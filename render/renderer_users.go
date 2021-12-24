@@ -16,22 +16,19 @@ import (
 )
 
 type User struct {
-	user     *model.User
-	layout   *model.Layout
-	actionID string
+	layout *model.Layout
+	action *model.Action
+	user   *model.User
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID string) User {
-
-	layoutService := factory.Layout()
-	layout := layoutService.User()
+func NewUser(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, user *model.User) User {
 
 	return User{
-		user:     user,
-		layout:   layout,
-		actionID: actionID,
-		Common:   NewCommon(factory, ctx),
+		layout: layout,
+		action: action,
+		user:   user,
+		Common: NewCommon(factory, ctx),
 	}
 }
 
@@ -40,11 +37,11 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
  * (not available via templates)
  *******************************************/
 
-func (w *User) GetPath(p path.Path) (interface{}, error) {
+func (w User) GetPath(p path.Path) (interface{}, error) {
 	return w.object().GetPath(p)
 }
 
-func (w *User) SetPath(p path.Path, value interface{}) error {
+func (w User) SetPath(p path.Path, value interface{}) error {
 	return w.object().SetPath(p, value)
 }
 
@@ -54,12 +51,12 @@ func (w *User) SetPath(p path.Path, value interface{}) error {
 
 // ActionID returns the unique ID of the Action configured into this renderer
 func (w User) ActionID() string {
-	return w.actionID
+	return w.action.ActionID
 }
 
 // Action returns the model.Action configured into this renderer
-func (w User) Action() (model.Action, bool) {
-	return w.layout.Action(w.ActionID())
+func (w User) Action() *model.Action {
+	return w.action
 }
 
 // Render generates the string value for this User
@@ -67,12 +64,10 @@ func (w User) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
-	if action, ok := w.layout.Action(w.actionID); ok {
+	// Execute step (write HTML to buffer, update context)
+	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+		return "", derp.Report(derp.Wrap(err, "ghost.render.User.Render", "Error generating HTML"))
 
-		// Execute step (write HTML to buffer, update context)
-		if err := DoPipeline(&w, &buffer, action.Steps, ActionMethodGet); err != nil {
-			return "", derp.Report(derp.Wrap(err, "ghost.render.User.Render", "Error generating HTML"))
-		}
 	}
 
 	// Success!
@@ -81,7 +76,10 @@ func (w User) Render() (template.HTML, error) {
 
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
-	return NewUser(w.factory(), w.ctx, w.user, actionID).Render()
+
+	action := w.layout.Action(actionID)
+
+	return NewUser(w.factory(), w.ctx, w.layout, action, w.user).Render()
 }
 
 func (w User) TopLevelID() string {
