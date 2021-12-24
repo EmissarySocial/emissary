@@ -9,7 +9,19 @@
 
 	{{ if .UserCan "edit" }}
 		<div id="menu-bar">
-			<a href="/{{.Token}}/edit">Edit Album</a>
+			<a href="/{{.Token}}/edit">Upload Photos</a>
+
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties" script="install AsModal">Edit Info</a>
+			{{- end -}}
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing" script="install AsModal">Sharing</a>
+			{{- end -}}
+
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" script="install AsModal">Delete Album</a>
+			{{- end -}}
 		</div>
 	{{ end }}
 
