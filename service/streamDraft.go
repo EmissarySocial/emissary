@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/benpate/content"
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
@@ -44,6 +45,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	}
 
 	// Reset the journal so that this item can be saved in the new collection.
+	result.Content = content.Default()
 	result.Journal = journal.Journal{}
 
 	// Save a draft copy of the original stream

@@ -4,10 +4,10 @@ import (
 	"io"
 	"math/rand"
 
+	"github.com/benpate/content/transaction"
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/content/transaction"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
 )

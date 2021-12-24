@@ -206,13 +206,15 @@ func (w Stream) AuthorImage() string {
 
 // Returns the body content as an HTML template
 func (w Stream) Content() template.HTML {
-	result := w.stream.Content.View()
+	viewer := w.factory().ContentViewer()
+	result := viewer.Draw(w.stream.Content)
 	return template.HTML(result)
 }
 
-// Returns editable HTML for the body content (requires `editable` flat)
+// Returns the body content as an HTML template
 func (w Stream) ContentEditor() template.HTML {
-	result := w.stream.Content.Edit("/" + w.Token() + "/draft")
+	viewer := w.factory().ContentEditor(w.URL())
+	result := viewer.Draw(w.stream.Content)
 	return template.HTML(result)
 }
 

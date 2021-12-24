@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/benpate/content"
+	"github.com/benpate/content/editor"
+	"github.com/benpate/content/viewer"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/datatype"
@@ -207,6 +210,16 @@ func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 // RenderFunctions provides a map of generic functions (template.FuncMap) that can be used in html.Templates
 func (factory *Factory) RenderFunctions() template.FuncMap {
 	return render.FuncMap()
+}
+
+// ContentViewer returns a content.Widget that can view content
+func (factory *Factory) ContentViewer() content.Widget {
+	return viewer.New()
+}
+
+// ContentEditor returns a content.Widget that can edit content
+func (factory *Factory) ContentEditor(endpoint string) content.Widget {
+	return editor.New(endpoint)
 }
 
 /*******************************************

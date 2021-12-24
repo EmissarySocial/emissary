@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/benpate/content"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/content"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/mmcdole/gofeed"

@@ -1,11 +1,11 @@
 package model
 
 import (
+	"github.com/benpate/content"
 	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/content"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
