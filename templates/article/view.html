@@ -3,15 +3,15 @@
 
 	<h1 class="space-after">{{.Label}}</h1>
 
+	<div class="space-after">
+		<div>{{.Description}}</div>
+	</div>
+
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<a href="/{{.Token}}/edit">Edit</a>
 		</div>
 	{{- end -}}
-
-	<article class="space-after">
-		<div>{{.Description}}</div>
-	</article>
 
 	<article class="space-after">
 		<div>{{.Content}}</div>

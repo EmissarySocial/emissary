@@ -39,17 +39,15 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {
-					"label": "New Article",
-					"content": 
-					[
-						{"type": "CONTAINER", "refs": [1], "data": {"style": "ROWS"}},
-						{"type": "WYSIWYG"}
-					]
-				}}
+				{"step": "set-data", "values": {"label": "New Article"}}
 			]
 		},
 		"view": {
+			"roles": ["viewer", "editor", "owner"],
+			"step": "view-html"
+		},
+		"heading": {
+			"roles": ["viewer", "editor", "owner"],
 			"step": "view-html"
 		},
 		"edit": {
@@ -62,7 +60,7 @@
 			"step": "publish-draft"
 		},
 		"properties": {
-			"roles": ["owner", "editor"],
+			"roles": ["editor", "owner"],
 			"steps": [
 				{"step": "as-modal", "steps": [
 					{"step": "form-html",
@@ -105,6 +103,14 @@
 			"steps": [
 				{"step": "delete-draft"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
+			]
+		},
+		"edit-alt": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"with-draft", "steps": [
+					
+				]}
 			]
 		}
 	}

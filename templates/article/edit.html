@@ -4,40 +4,38 @@
 <script type="text/hyperscript" src="/static/editor/editor.hs"></script>
 
 <div class="page">
-<div id="menu-bar">
-	<div class="left">
-		<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
-		<button hx-get="/{{.Token}}">Save Draft</button>
-		<button 
-			script="install AsModal"
-			hx-post="/{{.Token}}/delete-draft" 
-			hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
+
+	<div hx-get="/{{.Token}}/heading" hx-trigger="refreshPage">
+		{{.View "heading"}}
 	</div>
 
-	<div class="right">
-		{{- if .UserCan "properties" -}}
-			<a hx-get="/{{.Token}}/sharing">Sharing</a>
-		{{- end -}}
+	<div id="menu-bar">
+		<div class="left">
+			<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
+			<button hx-get="/{{.Token}}">Save Draft</button>
+			<button 
+				hx-post="/{{.Token}}/delete-draft" 
+				hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
+		</div>
 
-		{{- if .UserCan "properties" -}}
-			<a hx-get="/{{.Token}}/properties">Info</a>
-		{{- end -}}
+		<div class="right">
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
 
-		{{- if .UserCan "delete" -}}
-			<a hx-get="/{{.Token}}/delete">Delete</a>
-		{{- end -}}
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties">Info</a>
+			{{- end -}}
+
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete">Delete</a>
+			{{- end -}}
+		</div>
+
 	</div>
 
-</div>
-
-<h1 class="space-after">{{.Label}}</h1>
-
-<article class="space-after">
-	<div>{{.Description}}</div>
-</article>
-
-<article class="content-editor">
-	<div>{{.ContentEditor}}</div>
-</article>
+	<article class="content-editor">
+		<div>{{.ContentEditor}}</div>
+	</article>
 
 </div>
