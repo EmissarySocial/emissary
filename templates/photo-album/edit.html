@@ -11,7 +11,7 @@
 
 <div id="menu-bar">
 	{{- if $hasChildren -}}
-	<a hx-get="/{{.Token}}"><i class="fa-regular fa-arrow-left"></i> View Photos</a>
+	<a href="/{{.Token}}"><i class="fa-regular fa-arrow-left"></i> View Photos</a>
 	{{- end -}}
 
 	{{- if .UserCan "properties" -}}
