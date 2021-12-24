@@ -5,6 +5,7 @@ go 1.17
 replace (
 	github.com/benpate/activitystream => ../activitystream
 	github.com/benpate/compare => ../compare
+	github.com/benpate/content => ../content
 	github.com/benpate/convert => ../convert
 	github.com/benpate/data => ../data
 	github.com/benpate/data-mock => ../data-mock
@@ -26,6 +27,7 @@ replace (
 require (
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/compare v0.0.4
+	github.com/benpate/content v0.0.0-00010101000000-000000000000
 	github.com/benpate/convert v0.11.0
 	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mongo v0.0.2
@@ -90,5 +92,5 @@ require (
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
