@@ -35,7 +35,7 @@
 			]
 		},
 		"edit": {
-			"roles": ["owner"],
+			"roles": ["owner", "editor"],
 			"steps":[{
 				"step": "as-modal",
 				"steps": [
@@ -55,13 +55,16 @@
 				]
 			}]
 		},
-		"view": {"step": "view-html"},
+		"view": {
+			"roles": ["owner", "editor", "viewer"],
+			"step": "view-html"
+		},
 		"delete": {
-			"roles": ["owner"],
+			"roles": ["owner", "editor"],
 			"step": "delete"
 		},
 		"new": {
-			"roles": ["owner"],
+			"roles": ["owner", "editor"],
 			"steps":[{
 				"step": "add-child",
 				"comment": "Created by {{.Author}}",
@@ -75,7 +78,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
 					{"step":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]
