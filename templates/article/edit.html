@@ -12,7 +12,7 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<button hx-post="/{{.Token}}/promote-draft" class="button primary">Publish</button>
+			<button hx-get="/{{.Token}}/promote-draft" class="button primary">Promote</button>
 			<button hx-get="/{{.Token}}">Save Draft</button>
 			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
 		</div>
