@@ -18,7 +18,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	// Populate the action with the data from
 	switch stepInfo["step"] {
 
-	// GENERIC MODEL OBJECT INTERFACT
+	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
 	case "add":
 		return NewStepAddModelObject(factory.FormLibrary(), stepInfo), nil
@@ -31,14 +31,6 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 
 	case "form-html":
 		return NewStepForm(factory.FormLibrary(), stepInfo), nil
-
-	// STREAMS
-
-	case "add-child":
-		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
-
-	case "add-top-level":
-		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "set-data":
 		return NewStepSetData(factory.FormLibrary(), stepInfo), nil
@@ -61,20 +53,31 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "view-html":
 		return NewStepViewHTML(stepInfo), nil
 
-	// DRAFTS
+	// STREAM-SPECIFIC STEPS
+
+	case "add-child":
+		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
+
+	case "add-top-level":
+		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
+
 	case "edit-content":
 		return NewStepEditContent(stepInfo), nil
 
-	case "publish-draft":
-		return NewStepStreamDraftPublish(factory.Stream(), factory.StreamDraft(), stepInfo), nil
+	// DRAFTS
+
+	case "promote-draft":
+		return NewStepStreamPromoteDraft(factory.StreamDraft(), stepInfo), nil
+
+	case "with-draft":
+		return NewStepWithDraft(factory.Stream(), stepInfo), nil
 
 	// ATTACHMENTS
+
 	case "upload-attachments":
 		return NewStepUploadAttachment(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
 
 	// SERVER-SIDE CONTROL LOGIC
-	case "with-draft":
-		return NewStepWithDraft(factory.Stream(), stepInfo), nil
 
 	case "with-children":
 		return NewStepWithChildren(factory.Stream(), stepInfo), nil
@@ -86,8 +89,12 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepIfCondition(factory, stepInfo), nil
 
 	// CLIENT-SIDE CONTROLS
+
 	case "as-modal":
 		return NewStepAsModal(stepInfo), nil
+
+	case "as-confirmation":
+		return NewStepAsConfirmation(stepInfo), nil
 
 	case "forward-to":
 		return NewStepForwardTo(stepInfo), nil
