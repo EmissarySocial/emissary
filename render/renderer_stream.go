@@ -494,6 +494,7 @@ func (w Stream) draftRenderer() (Stream, error) {
 	var draft model.Stream
 	draftService := w.factory().StreamDraft()
 
+	// Load the draft of the object
 	if err := draftService.LoadByID(w.stream.StreamID, &draft); err != nil {
 		return Stream{}, derp.Wrap(err, "ghost.service.Stream.draftRenderer", "Error loading draft")
 	}

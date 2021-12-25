@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -31,6 +30,5 @@ func TestService(t *testing.T) {
 	stream := model.Stream{}
 
 	for it.Next(&stream) {
-		spew.Dump(stream)
 	}
 }

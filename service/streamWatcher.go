@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -12,7 +11,7 @@ import (
 // NewStreamWatcher initiates a mongodb change stream to on every updates to Stream data objects
 func NewStreamWatcher(collection *mongo.Collection) chan model.Stream {
 
-	fmt.Println("templatesource.NewStreamWatcher: attempting to create a new watcher.")
+	// fmt.Println("templatesource.NewStreamWatcher: attempting to create a new watcher.")
 	result := make(chan model.Stream)
 
 	ctx := context.Background()

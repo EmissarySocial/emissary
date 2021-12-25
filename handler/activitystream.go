@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/benpate/activitystream/reader"
 	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/server"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,9 +41,7 @@ func PostInbox(fm *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.PostInbox", "Error reading ActivityPub record")
 		}
 
-		spew.Dump(r.Actor())
-		spew.Dump(r.IconObject())
-		spew.Dump(r)
+		fmt.Print(r)
 
 		return nil
 	}

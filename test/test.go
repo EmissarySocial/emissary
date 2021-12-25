@@ -1,6 +1,8 @@
 package main
 
-import "github.com/davecgh/go-spew/spew"
+import (
+	"fmt"
+)
 
 type T1 interface {
 	update(string)
@@ -24,6 +26,6 @@ func main() {
 
 	updateViaInterface(&data, "worked")
 
-	spew.Dump(data)
+	fmt.Println(data)
 
 }

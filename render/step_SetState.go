@@ -9,13 +9,13 @@ import (
 
 // StepStreamState represents an action-step that can change a Stream's state
 type StepStreamState struct {
-	newState string
+	stateID string
 }
 
 func NewStepStreamState(stepInfo datatype.Map) StepStreamState {
 
 	return StepStreamState{
-		newState: stepInfo.GetString("newState"),
+		stateID: stepInfo.GetString("state"),
 	}
 }
 
@@ -28,5 +28,5 @@ func (step StepStreamState) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepStreamState) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to set the state via the Path interface.
-	return path.Set(renderer, "stateId", step.newState)
+	return path.Set(renderer, "stateId", step.stateID)
 }

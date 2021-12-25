@@ -11,7 +11,6 @@ import (
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
 	subSteps []datatype.Map
-	submit   string
 }
 
 // NewStepAsModal returns a fully initialized StepAsModal object
@@ -19,7 +18,6 @@ func NewStepAsModal(stepInfo datatype.Map) StepAsModal {
 
 	return StepAsModal{
 		subSteps: stepInfo.GetSliceOfMap("steps"),
-		submit:   stepInfo.GetString("submit"),
 	}
 }
 
