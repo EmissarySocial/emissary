@@ -489,20 +489,23 @@ func (w Stream) CanCreate() []model.Option {
 	return templateService.ListByContainer(w.template.TemplateID)
 }
 
-func (w Stream) draftRenderer() Stream {
+func (w Stream) draftRenderer() (Stream, error) {
 
-	// Make a duplicate of this renderer.  Same object, template, action settings
-	result := Stream{
-		stream:   w.stream,
-		template: w.template,
-		action:   w.action,
-		Common:   NewCommon(w.factory(), w.ctx),
+	var draft model.Stream
+	draftService := w.factory().StreamDraft()
+
+	if err := draftService.LoadByID(w.stream.StreamID, &draft); err != nil {
+		return Stream{}, derp.Wrap(err, "ghost.service.Stream.draftRenderer", "Error loading draft")
 	}
 
-	// ONLY CHANGE: The draftRenderer exposes the StreamDraft service.
-	result.modelService = w.factory().StreamDraft()
-
-	return result
+	// Make a duplicate of this renderer.  Same object, template, action settings
+	return Stream{
+		stream:       &draft,
+		modelService: draftService,
+		template:     w.template,
+		action:       w.action,
+		Common:       NewCommon(w.factory(), w.ctx),
+	}, nil
 }
 
 /*******************************************

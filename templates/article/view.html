@@ -10,20 +10,22 @@
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<a href="/{{.Token}}/edit">Edit</a>
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+
+			<div class="right">
+			{{- if .UserCan "publish" -}}
+				<a hx-post="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+			{{- end -}}
+
+			{{- if .UserCan "unpublish" -}}
+				<a hx-post="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-publish</a>
+			{{- end -}}
+			</div>
+
 		</div>
-
-		{{- if .UserCan "sharing" -}}
-			<a hx-get="/{{.Token}}/sharing">Sharing</a>
-		{{- end -}}
-
-		{{- if .UserCan "publish" -}}
-			<a hx-post="/{{.Token}}/publish" class="button primary">Publish</a>
-		{{- end -}}
-
-		{{- if .UserCan "unpublish" -}}
-			<a hx-post="/{{.Token}}/unpublish" class="button primary">Un-publish</a>
-		{{- end -}}
-
 	{{- end -}}
 
 	<article class="space-after">

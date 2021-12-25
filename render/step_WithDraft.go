@@ -38,7 +38,11 @@ func (step StepWithDraft) Post(buffer io.Writer, renderer Renderer) error {
 func (step StepWithDraft) execute(buffer io.Writer, renderer Renderer, actionMethod ActionMethod) error {
 
 	streamRenderer := renderer.(*Stream)
-	draftRenderer := streamRenderer.draftRenderer()
+	draftRenderer, err := streamRenderer.draftRenderer()
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.render.StepWithDraft.Post", "Error getting draft renderer")
+	}
 
 	// Execute the POST render pipeline on the parent
 	if err := DoPipeline(&draftRenderer, buffer, step.steps, actionMethod); err != nil {

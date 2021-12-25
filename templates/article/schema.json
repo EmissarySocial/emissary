@@ -91,14 +91,16 @@
 			"states": ["unpublished"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "set-state", "state": "published"}
+				{"step": "set-state", "state": "published"},
+				{"step": "trigger-event", "event": "refreshPage"}
 			]
 		},
 		"unpublish": {
 			"states": ["published"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "set-state", "state": "unpublished"}
+				{"step": "set-state", "state": "unpublished"},
+				{"step": "trigger-event", "event": "refreshPage"}
 			]
 		},
 		"properties": {
