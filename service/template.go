@@ -173,7 +173,7 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 	// Try to find the action in the Template
 	action := template.Action(actionID)
 
-	if action.IsEmpty() {
+	if action == nil {
 		return action, derp.NewNotFoundError("ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
 	}
 

@@ -15,13 +15,15 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	template *model.Template // Template that the Stream uses
-	action   *model.Action   // The action to be used to render this Stream
-	stream   *model.Stream   // The Stream to be displayed
+	modelService ModelService    // Service to use to access streams (could be Stream or StreamDraft)
+	template     *model.Template // Template that the Stream uses
+	action       *model.Action   // The action to be used to render this Stream
+	stream       *model.Stream   // The Stream to be displayed
 
 	Common
 }
@@ -42,16 +44,18 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 
 	// Success.  Populate Stream
 	return Stream{
-		stream:   stream,
-		template: template,
-		action:   action,
-		Common:   NewCommon(factory, ctx),
+		modelService: factory.Stream(),
+		stream:       stream,
+		template:     template,
+		action:       action,
+		Common:       NewCommon(factory, ctx),
 	}, nil
 }
 
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
 func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Stream, error) {
 
+	// Use the template service to look up the correct template
 	templateService := factory.Template()
 
 	template, err := templateService.Load(stream.TemplateID)
@@ -60,12 +64,14 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 		return Stream{}, derp.Wrap(err, "ghost.render.NewStreamWithoutTemplate", "Error loading Template", stream)
 	}
 
+	// And look up a valid action (cannot be empty)
 	action := template.Action(actionID)
 
-	if action.IsEmpty() {
+	if action == nil {
 		return Stream{}, derp.NewNotFoundError("ghost.render.NewStreamWithoutTemplate", "Unrecognized Action", actionID)
 	}
 
+	// Return a fully populated service
 	return NewStream(factory, ctx, template, action, stream)
 }
 
@@ -119,13 +125,17 @@ func (w Stream) object() data.Object {
 	return w.stream
 }
 
+func (w Stream) objectID() primitive.ObjectID {
+	return w.stream.StreamID
+}
+
 // schema returns the validation schema associated with this renderer
 func (w Stream) schema() schema.Schema {
 	return w.template.Schema
 }
 
 func (w Stream) service() ModelService {
-	return w.f.Stream()
+	return w.modelService
 }
 
 /*******************************************
@@ -138,7 +148,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	// Find and validate the action
 	action := w.template.Action(actionID)
 
-	if action.IsEmpty() {
+	if action == nil {
 		return template.HTML(""), derp.NewNotFoundError("ghost.render.Stream.View", "Invalid Action", actionID)
 	}
 
@@ -307,7 +317,7 @@ func (w Stream) PrevSibling(sort string, action string) (Stream, error) {
 
 	sortOption := option.SortDesc(sort)
 
-	return w.makeFirstStream(criteria, sortOption, action), nil
+	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
 // NextSibling returns the sibling Stream that immediately follows this one, based on the provided sort field
@@ -321,7 +331,7 @@ func (w Stream) NextSibling(sort string, action string) (Stream, error) {
 
 	sortOption := option.SortAsc(sort)
 
-	return w.makeFirstStream(criteria, sortOption, action), nil
+	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
@@ -334,7 +344,7 @@ func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 
 	sortOption := option.SortAsc(sort)
 
-	return w.makeFirstStream(criteria, sortOption, action), nil
+	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
@@ -347,11 +357,12 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 
 	sortOption := option.SortDesc(sort)
 
-	return w.makeFirstStream(criteria, sortOption, action), nil
+	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
-// makeFirstStream scans an iterator for the first stream allowed to this user
-func (w Stream) makeFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
+// getFirstStream scans an iterator for the first stream allowed to this user.
+// It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
+func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption)
@@ -420,7 +431,7 @@ func (w Stream) Attachment() (model.Attachment, error) {
 	var attachment model.Attachment
 
 	attachmentService := w.factory().Attachment()
-	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
+	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
 
 	if err != nil {
 		return attachment, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
@@ -437,7 +448,7 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 
 	result := []model.Attachment{}
 	attachmentService := w.factory().Attachment()
-	iterator, err := attachmentService.ListByStream(w.stream.StreamID)
+	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
 
 	if err != nil {
 		return result, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
@@ -461,7 +472,7 @@ func (w Stream) UserCan(actionID string) bool {
 
 	action := w.template.Action(actionID)
 
-	if action.IsEmpty() {
+	if action == nil {
 		return false
 	}
 
@@ -476,6 +487,22 @@ func (w Stream) CanCreate() []model.Option {
 
 	templateService := w.factory().Template()
 	return templateService.ListByContainer(w.template.TemplateID)
+}
+
+func (w Stream) draftRenderer() Stream {
+
+	// Make a duplicate of this renderer.  Same object, template, action settings
+	result := Stream{
+		stream:   w.stream,
+		template: w.template,
+		action:   w.action,
+		Common:   NewCommon(w.factory(), w.ctx),
+	}
+
+	// ONLY CHANGE: The draftRenderer exposes the StreamDraft service.
+	result.modelService = w.factory().StreamDraft()
+
+	return result
 }
 
 /*******************************************

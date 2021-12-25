@@ -5,20 +5,19 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSave represents an action-step that can save changes to any object
 type StepSave struct {
-	modelService ModelService
-	comment      string
+	comment string
 }
 
 // NewStepSave returns a fully initialized StepSave object
-func NewStepSave(modelService ModelService, stepInfo datatype.Map) StepSave {
+func NewStepSave(stepInfo datatype.Map) StepSave {
 
 	return StepSave{
-		modelService: modelService,
-		comment:      stepInfo.GetString("comment"),
+		comment: stepInfo.GetString("comment"),
 	}
 }
 
@@ -31,9 +30,12 @@ func (step StepSave) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepSave) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to update the stream
-	if err := step.modelService.ObjectSave(renderer.object(), step.comment); err != nil {
+	if err := renderer.service().ObjectSave(renderer.object(), step.comment); err != nil {
 		return derp.Wrap(err, "ghost.render.StepSave.Post", "Error saving Stream")
 	}
+
+	spew.Dump("=========== OBJECT SAVED ============")
+	spew.Dump(renderer.service())
 
 	return nil
 }

@@ -7,13 +7,13 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepStreamHTML represents an action-step that can render a Stream into HTML
-type StepStreamHTML struct {
+// StepViewHTML represents an action-step that can render a Stream into HTML
+type StepViewHTML struct {
 	filename string
 }
 
-// NewStepStreamHTML generates a fully initialized StepStreamHTML step.
-func NewStepStreamHTML(stepInfo datatype.Map) StepStreamHTML {
+// NewStepViewHTML generates a fully initialized StepViewHTML step.
+func NewStepViewHTML(stepInfo datatype.Map) StepViewHTML {
 
 	filename := stepInfo.GetString("file")
 
@@ -21,22 +21,22 @@ func NewStepStreamHTML(stepInfo datatype.Map) StepStreamHTML {
 		filename = stepInfo.GetString("actionId")
 	}
 
-	return StepStreamHTML{
+	return StepViewHTML{
 		filename: filename,
 	}
 }
 
 // Get renders the Stream HTML to the context
-func (step StepStreamHTML) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepViewHTML) Get(buffer io.Writer, renderer Renderer) error {
 
 	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
-		return derp.Wrap(err, "ghost.render.StepStreamHTML.Get", "Error executing template")
+		return derp.Wrap(err, "ghost.render.StepViewHTML.Get", "Error executing template")
 	}
 
 	return nil
 }
 
 // Post is not supported for this step.
-func (step StepStreamHTML) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepViewHTML) Post(buffer io.Writer, renderer Renderer) error {
 	return nil
 }

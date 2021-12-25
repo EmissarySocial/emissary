@@ -29,9 +29,9 @@ func WrapModal(content string) string {
 	b := html.New()
 
 	// Modal Wrapper
-	b.Div().ID("modal")
+	b.Div().ID("modal").EndBracket()
 	b.Div().Class("modal-underlay").Close()
-	b.Div().Class("modal-content")
+	b.Div().Class("modal-content").EndBracket() // this is needed because we're embedding foreign content below.
 
 	// Contents
 	b.Grow(len(content))

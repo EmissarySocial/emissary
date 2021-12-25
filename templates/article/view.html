@@ -11,6 +11,19 @@
 		<div id="menu-bar">
 			<a href="/{{.Token}}/edit">Edit</a>
 		</div>
+
+		{{- if .UserCan "sharing" -}}
+			<a hx-get="/{{.Token}}/sharing">Sharing</a>
+		{{- end -}}
+
+		{{- if .UserCan "publish" -}}
+			<a hx-post="/{{.Token}}/publish" class="button primary">Publish</a>
+		{{- end -}}
+
+		{{- if .UserCan "unpublish" -}}
+			<a hx-post="/{{.Token}}/unpublish" class="button primary">Un-publish</a>
+		{{- end -}}
+
 	{{- end -}}
 
 	<article class="space-after">

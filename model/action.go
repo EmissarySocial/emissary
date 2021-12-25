@@ -22,10 +22,6 @@ func NewAction() Action {
 	}
 }
 
-func (action Action) IsEmpty() bool {
-	return len(action.Steps) == 0
-}
-
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (action Action) UserCan(stream *Stream, authorization *Authorization) bool {
 

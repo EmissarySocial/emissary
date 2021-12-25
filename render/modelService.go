@@ -14,20 +14,3 @@ type ModelService interface {
 	ObjectSave(data.Object, string) error
 	ObjectDelete(data.Object, string) error
 }
-
-// getModelService wraps that factory methods for various standard services.
-func getModelService(factory Factory, modelServiceType string) ModelService {
-	switch modelServiceType {
-	case "user":
-		return factory.User()
-
-	case "group":
-		return factory.Group()
-
-	case "stream":
-		return factory.Stream()
-
-	default:
-		return factory.Stream()
-	}
-}

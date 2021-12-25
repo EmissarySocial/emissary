@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/content"
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -23,6 +24,10 @@ func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDra
 		streamService: streamService,
 	}
 }
+
+/*******************************************
+ * COMMON DATA FUNCTIONS
+ *******************************************/
 
 // New creates a newly initialized StreamDraft that is ready to use
 func (service *StreamDraft) New() model.Stream {
@@ -85,7 +90,37 @@ func (service *StreamDraft) Delete(draft *model.Stream, _note string) error {
 	return nil
 }
 
-// QUERIES ////////////////////////////////////
+/*******************************************
+ * GENERIC DATA FUNCTIONS
+ *******************************************/
+
+// New returns a fully initialized model.Stream as a data.Object.
+func (service *StreamDraft) ObjectNew() data.Object {
+	result := model.NewStream()
+	return &result
+}
+
+func (service *StreamDraft) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return nil, derp.NewInternalError("ghost.service.StreamDraft.ObjectList", "Unsupported")
+}
+
+func (service *StreamDraft) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewStream()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *StreamDraft) ObjectSave(object data.Object, comment string) error {
+	return service.Save(object.(*model.Stream), comment)
+}
+
+func (service *StreamDraft) ObjectDelete(object data.Object, comment string) error {
+	return service.Delete(object.(*model.Stream), comment)
+}
+
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
 
 // LoadByID returns a single Stream that matches a particular StreamID
 func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
@@ -104,4 +139,47 @@ func (service *StreamDraft) LoadByToken(token string, result *model.Stream) erro
 		AndEqual("journal.deleteDate", 0)
 
 	return service.Load(criteria, result)
+}
+
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
+
+func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string) error {
+
+	var draft model.Stream
+	var stream model.Stream
+
+	// Try to load the draft
+	if err := service.LoadByID(streamID, &draft); err != nil {
+		return derp.Wrap(err, "ghost.service.StreamDraft.Publish", "Error loading draft")
+	}
+
+	// Try to load the production stream
+	if err := service.streamService.LoadByID(streamID, &stream); err != nil {
+		return derp.Wrap(err, "ghost.service.StreamDraft.Publish", "Error loading draft")
+	}
+
+	// Copy data from draft to production
+	stream.Label = draft.Label
+	stream.Description = draft.Description
+	stream.Content = draft.Content
+	stream.Data = draft.Data
+	stream.StateID = stateID
+	stream.Tags = draft.Tags
+	stream.ThumbnailImage = draft.ThumbnailImage
+	stream.Token = draft.Token
+	stream.Journal.DeleteDate = 0 // just in case...
+
+	// Try to save the updated stream back to the database
+	if err := service.streamService.Save(&stream, "published"); err != nil {
+		return derp.Wrap(err, "ghost.service.StreamDraft.Publish", "Error publishing stream")
+	}
+
+	// Try to save the updated stream back to the database
+	if err := service.Delete(&draft, "published"); err != nil {
+		return derp.Wrap(err, "ghost.service.StreamDraft.Publish", "Error deleting draft")
+	}
+
+	return nil
 }

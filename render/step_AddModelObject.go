@@ -11,19 +11,17 @@ import (
 
 // StepAddModelObject is an action that can add new sub-streams to the domain.
 type StepAddModelObject struct {
-	modelService ModelService
-	formLibrary  form.Library
-	form         form.Form
-	defaults     []datatype.Map
+	formLibrary form.Library
+	form        form.Form
+	defaults    []datatype.Map
 }
 
 // NewStepAddModelObject returns a fully initialized StepAddModelObject record
-func NewStepAddModelObject(modelService ModelService, formLibrary form.Library, stepInfo datatype.Map) StepAddModelObject {
+func NewStepAddModelObject(formLibrary form.Library, stepInfo datatype.Map) StepAddModelObject {
 	return StepAddModelObject{
-		modelService: modelService,
-		formLibrary:  formLibrary,
-		form:         form.MustParse(stepInfo.GetInterface("form")),
-		defaults:     stepInfo.GetSliceOfMap("defaults"),
+		formLibrary: formLibrary,
+		form:        form.MustParse(stepInfo.GetInterface("form")),
+		defaults:    stepInfo.GetSliceOfMap("defaults"),
 	}
 }
 
@@ -78,13 +76,10 @@ func (step StepAddModelObject) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Save the object to the database
-	if err := step.modelService.ObjectSave(object, "Created"); err != nil {
+	if err := renderer.service().ObjectSave(object, "Created"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Post", "Error saving model object to database")
 	}
 
-	// Close modal dialog
-	// TODO: this should move somewhere else later..
-	closeModal(renderer.context(), "")
-
+	// Success!
 	return nil
 }

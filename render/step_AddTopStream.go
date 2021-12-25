@@ -65,7 +65,7 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// If there is an "init" step for the new stream's template, then execute it now
-	if action := template.Action("init"); !action.IsEmpty() {
+	if action := template.Action("init"); action != nil {
 		if err := DoPipeline(&newStream, buffer, action.Steps, ActionMethodPost); err != nil {
 			return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Unable to execute 'init' action on new stream")
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Group struct {
@@ -78,7 +79,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 
 	action := w.layout.Action(actionID)
 
-	if action.IsEmpty() {
+	if action == nil {
 		return template.HTML(""), derp.NewNotFoundError("ghost.render.Group.View", "Unrecognized Action", actionID)
 	}
 
@@ -95,6 +96,10 @@ func (w Group) Token() string {
 
 func (w Group) object() data.Object {
 	return w.group
+}
+
+func (w Group) objectID() primitive.ObjectID {
+	return w.group.GroupID
 }
 
 func (w Group) schema() schema.Schema {

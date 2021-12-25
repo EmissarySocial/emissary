@@ -21,16 +21,13 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	// GENERIC MODEL OBJECT INTERFACT
 
 	case "add":
-		modelService := getModelService(factory, stepInfo.GetString("type"))
-		return NewStepAddModelObject(modelService, factory.FormLibrary(), stepInfo), nil
+		return NewStepAddModelObject(factory.FormLibrary(), stepInfo), nil
 
 	case "delete":
-		modelService := getModelService(factory, stepInfo.GetString("type"))
-		return NewStepDelete(modelService, stepInfo), nil
+		return NewStepDelete(stepInfo), nil
 
 	case "save":
-		modelService := getModelService(factory, stepInfo.GetString("type"))
-		return NewStepSave(modelService, stepInfo), nil
+		return NewStepSave(stepInfo), nil
 
 	case "form-html":
 		return NewStepForm(factory.FormLibrary(), stepInfo), nil
@@ -44,7 +41,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "set-data":
-		return NewStepSetData(factory.Template(), factory.Stream(), factory.FormLibrary(), stepInfo), nil
+		return NewStepSetData(factory.FormLibrary(), stepInfo), nil
 
 	case "set-thumbnail":
 		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
@@ -59,17 +56,14 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepStreamState(stepInfo), nil
 
 	case "sort":
-		return NewStepSort(factory.Stream(), stepInfo), nil
+		return NewStepSort(stepInfo), nil
 
 	case "view-html":
-		return NewStepStreamHTML(stepInfo), nil
+		return NewStepViewHTML(stepInfo), nil
 
 	// DRAFTS
-	case "edit-draft":
-		return NewStepStreamDraftEdit(factory.StreamDraft(), stepInfo), nil
-
-	case "delete-draft":
-		return NewStepStreamDraftDelete(factory.StreamDraft(), stepInfo), nil
+	case "edit-content":
+		return NewStepEditContent(stepInfo), nil
 
 	case "publish-draft":
 		return NewStepStreamDraftPublish(factory.Stream(), factory.StreamDraft(), stepInfo), nil
@@ -79,6 +73,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepUploadAttachment(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
 
 	// SERVER-SIDE CONTROL LOGIC
+	case "with-draft":
+		return NewStepWithDraft(factory.Stream(), stepInfo), nil
+
 	case "with-children":
 		return NewStepWithChildren(factory.Stream(), stepInfo), nil
 

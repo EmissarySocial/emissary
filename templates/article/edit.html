@@ -12,15 +12,13 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<button hx-post="/{{.Token}}/publish-draft" class="button primary">Publish</button>
+			<button hx-post="/{{.Token}}/promote-draft" class="button primary">Publish</button>
 			<button hx-get="/{{.Token}}">Save Draft</button>
-			<button 
-				hx-post="/{{.Token}}/delete-draft" 
-				hx-confirm="Are you sure you want to DELETE this draft?">Cancel</button>
+			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
 		</div>
 
 		<div class="right">
-			{{- if .UserCan "properties" -}}
+			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.Token}}/sharing">Sharing</a>
 			{{- end -}}
 

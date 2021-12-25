@@ -14,19 +14,17 @@ import (
 
 // StepSort represents an action-step that can update multiple records at once
 type StepSort struct {
-	modelService ModelService
-	keys         string
-	values       string
-	message      string
+	keys    string
+	values  string
+	message string
 }
 
-func NewStepSort(modelService ModelService, stepInfo datatype.Map) StepSort {
+func NewStepSort(stepInfo datatype.Map) StepSort {
 
 	return StepSort{
-		modelService: modelService,
-		keys:         first.String(stepInfo.GetString("keys"), "_id"),
-		values:       first.String(stepInfo.GetString("values"), "rank"),
-		message:      stepInfo.GetString("message"),
+		keys:    first.String(stepInfo.GetString("keys"), "_id"),
+		values:  first.String(stepInfo.GetString("values"), "rank"),
+		message: stepInfo.GetString("message"),
 	}
 }
 
@@ -59,7 +57,7 @@ func (step StepSort) Post(buffer io.Writer, renderer Renderer) error {
 		criteria := exp.Equal(step.keys, objectID)
 
 		// Try to load the object from the database
-		object, err := step.modelService.ObjectLoad(criteria)
+		object, err := renderer.service().ObjectLoad(criteria)
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.render.StepSort.Post", "Error loading object with criteria: ", criteria)
@@ -76,7 +74,7 @@ func (step StepSort) Post(buffer io.Writer, renderer Renderer) error {
 		}
 
 		// Try to save back to the database
-		if err := step.modelService.ObjectSave(object, step.message); err != nil {
+		if err := renderer.service().ObjectSave(object, step.message); err != nil {
 			return derp.Wrap(err, "ghost.render.StepSort.Post", "Error saving record tot he database", object)
 		}
 

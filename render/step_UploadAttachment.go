@@ -32,6 +32,7 @@ func (step StepUploadAttachment) Get(buffer io.Writer, renderer Renderer) error 
 
 func (step StepUploadAttachment) Post(buffer io.Writer, renderer Renderer) error {
 
+	// TODO: could this be generalized to work with more than just streams???
 	streamRenderer := renderer.(*Stream)
 	form, err := streamRenderer.ctx.MultipartForm()
 

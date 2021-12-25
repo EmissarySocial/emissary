@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/service"
+	"github.com/benpate/path"
 )
 
 // StepStreamThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -29,22 +30,19 @@ func (step StepStreamThumbnail) Get(buffer io.Writer, renderer Renderer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error {
 
-	streamRenderer := renderer.(*Stream)
-
 	// Find best icon from attachments
-	attachments, err := step.attachmentService.ListByStream(streamRenderer.stream.StreamID)
+	attachments, err := step.attachmentService.ListByObjectID(renderer.objectID())
 
 	if err != nil {
 		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamThumbnail.Post", "Error listing attachments")
 	}
 
+	// Scan all attachments and use the first one that is an image.
 	attachment := new(model.Attachment)
-
 	for attachments.Next(attachment) {
 
 		if attachment.MimeCategory() == "image" {
-			streamRenderer.stream.ThumbnailImage = attachment.Filename
-			return nil
+			return path.Set(renderer, "thumbnailImage", attachment.Filename)
 		}
 		attachment = new(model.Attachment)
 	}

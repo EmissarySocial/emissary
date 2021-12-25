@@ -17,9 +17,13 @@
 		}
 	},
 	"states": {
-		"default": {
+		"unpublished": {
 			"label": "Default State",
-			"description": "All articles only have one state"
+			"description": "Visible only to Authors and Owners"
+		},
+		"published": {
+			"label": "Published",
+			"description": "Visible to all people with permissions"
 		}
 	},
 	"roles": {
@@ -31,15 +35,16 @@
 			"label": "Editor",
 			"description": "Can make changes to this article."
 		},
-		"readonly": {
-			"label": "Read Only Access",
-			"description": "Can read this article, but cannot make changes"
+		"viewer": {
+			"label": "Viewer",
+			"description": "Can read and comment on this article"
 		}
 	},
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"label": "New Article"}}
+				{"step": "set-data", "values": {"label": "New Article"}},
+				{"step": "set-state", "state": "unpublished"}
 			]
 		},
 		"view": {
@@ -50,36 +55,21 @@
 			"roles": ["viewer", "editor", "owner"],
 			"step": "view-html"
 		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
+			]
+		},
 		"edit": {
 			"roles": ["owner", "editor"],
-			"step": "edit-draft"
-		},
-		"publish-draft": {
-			"roles": ["owner", "editor"],
-			"step": "publish-draft"
-		},
-		"properties": {
-			"roles": ["editor", "owner"],
 			"steps": [
-				{"step": "as-modal", "steps": [
-					{"step": "form-html",
-					"form": {
-						"kind": "layout-vertical",
-						"label": "Article Properties",
-						"description": "This will update the object in this state",
-						"children": [{
-							"kind": "text",
-							"label": "Label",
-							"path": "label"
-						},{
-							"kind": "textarea",
-							"label": "Description",
-							"path": "description"
-						}]
-					}
-				},
-				{"step": "save", "comment": "Updated by {{.Author}}"}
-			]}]
+				{"step": "with-draft", "steps": [
+					{"step": "edit-content", "file":"edit"},
+					{"step": "save"}
+				]}
+			]
 		},
 		"sharing": {
 			"roles": ["owner"],
@@ -90,26 +80,60 @@
 				]}
 			]
 		},
-		"delete": {
-			"roles": ["owner"],
-			"steps": [
-				{"step":"delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
-				{"step": "forward-to", "url":"/{{.ParentID}}"}
-			]
-		},
-		"delete-draft": {
+		"promote-draft": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "delete-draft"},
+				{"step":"publish-draft"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},
-		"edit-alt": {
+		"publish": {
+			"states": ["unpublished"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					
-				]}
+				{"step": "set-state", "state": "published"}
+			]
+		},
+		"unpublish": {
+			"states": ["published"],
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "set-state", "state": "unpublished"}
+			]
+		},
+		"properties": {
+			"roles": ["editor", "owner"],
+			"steps": [
+				{"step": "with-draft", "steps":[
+					{"step": "as-modal", "steps": [
+						{"step": "form-html",
+							"form": {
+								"kind": "layout-vertical",
+								"label": "Article Properties",
+								"description": "This will update the object in this state",
+								"children": [{
+									"kind": "text",
+									"label": "Label",
+									"path": "label"
+								},{
+									"kind": "textarea",
+									"label": "Description",
+									"path": "description"
+								}]
+							}
+						}]
+					},
+					{"step": "save", "comment": "Properties updated by {{.Author}}"}
+				]
+			}]
+		},
+		"discard-draft": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "with-draft", "steps":[
+					{"step": "delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged."}
+				]},
+				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		}
 	}

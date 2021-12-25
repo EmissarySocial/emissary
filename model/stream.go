@@ -127,6 +127,20 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 }
 
 /*******************************************
+ * OTHER DATA ACCESSORS
+ *******************************************/
+
+// GetContent satisfies the content.Getter interface
+func (stream *Stream) GetContent() content.Content {
+	return stream.Content
+}
+
+// SetContent satisfies the content.Setter interface
+func (stream *Stream) SetContent(value content.Content) {
+	stream.Content = value
+}
+
+/*******************************************
  * OTHER METHODS
  *******************************************/
 

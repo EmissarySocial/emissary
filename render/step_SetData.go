@@ -6,25 +6,20 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
 )
 
 // StepSetData represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepSetData struct {
-	templateService *service.Template
-	streamService   *service.Stream
-	paths           []string
-	values          datatype.Map
+	paths  []string
+	values datatype.Map
 }
 
-func NewStepSetData(templateService *service.Template, streamService *service.Stream, formLibrary form.Library, stepInfo datatype.Map) StepSetData {
+func NewStepSetData(formLibrary form.Library, stepInfo datatype.Map) StepSetData {
 
 	return StepSetData{
-		templateService: templateService,
-		streamService:   streamService,
-		paths:           stepInfo.GetSliceOfString("paths"),
-		values:          stepInfo.GetMap("values"),
+		paths:  stepInfo.GetSliceOfString("paths"),
+		values: stepInfo.GetMap("values"),
 	}
 }
 

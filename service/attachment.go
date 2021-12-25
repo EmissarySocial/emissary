@@ -77,7 +77,7 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note string) error {
 
 	var attachment model.Attachment
-	it, err := service.ListByStream(streamID)
+	it, err := service.ListByObjectID(streamID)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.service.Attachment.DeleteByStream", "Error listing attachments", streamID)
@@ -96,9 +96,9 @@ func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note strin
  * CUSTOM QUERIES
  *******************************************/
 
-func (service Attachment) ListByStream(streamID primitive.ObjectID) (data.Iterator, error) {
+func (service Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
-		exp.Equal("streamId", streamID).
+		exp.Equal("streamId", objectID).
 			AndEqual("journal.deleteDate", 0))
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
@@ -92,6 +93,10 @@ func (w User) Token() string {
 
 func (w User) object() data.Object {
 	return w.user
+}
+
+func (w User) objectID() primitive.ObjectID {
+	return w.user.UserID
 }
 
 func (w User) schema() schema.Schema {

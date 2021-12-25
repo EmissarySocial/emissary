@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Domain struct {
@@ -76,6 +77,10 @@ func (w Domain) Token() string {
 
 func (w Domain) object() data.Object {
 	return w.domain
+}
+
+func (w Domain) objectID() primitive.ObjectID {
+	return w.domain.DomainID
 }
 
 func (w Domain) schema() schema.Schema {

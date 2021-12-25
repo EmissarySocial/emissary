@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TopLevel struct {
@@ -80,6 +81,10 @@ func (w TopLevel) TopLevelID() string {
 
 func (w TopLevel) object() data.Object {
 	return w.stream
+}
+
+func (w TopLevel) objectID() primitive.ObjectID {
+	return w.stream.StreamID
 }
 
 func (w TopLevel) schema() schema.Schema {

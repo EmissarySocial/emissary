@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/datatype"
+	"github.com/benpate/path"
 )
 
 // StepStreamState represents an action-step that can change a Stream's state
@@ -25,8 +26,7 @@ func (step StepStreamState) Get(buffer io.Writer, renderer Renderer) error {
 
 // Post updates the stream with configured data, and moves the stream to a new state
 func (step StepStreamState) Post(buffer io.Writer, renderer Renderer) error {
-	streamRenderer := renderer.(*Stream)
-	streamRenderer.stream.StateID = step.newState
-	// TODO: post-change hooks??
-	return nil
+
+	// Try to set the state via the Path interface.
+	return path.Set(renderer, "stateId", step.newState)
 }
