@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -118,6 +119,12 @@ func (service *StreamDraft) ObjectDelete(object data.Object, comment string) err
 	return service.Delete(object.(*model.Stream), comment)
 }
 
+func (service *StreamDraft) Debug() datatype.Map {
+	return datatype.Map{
+		"service": "StreamDraft",
+	}
+}
+
 /*******************************************
  * CUSTOM QUERIES
  *******************************************/
@@ -142,7 +149,7 @@ func (service *StreamDraft) LoadByToken(token string, result *model.Stream) erro
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * CUSTOM ACTIONS
  *******************************************/
 
 func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string) error {

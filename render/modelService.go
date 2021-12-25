@@ -3,6 +3,7 @@ package render
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/exp"
 )
 
@@ -13,4 +14,5 @@ type ModelService interface {
 	ObjectLoad(exp.Expression) (data.Object, error)
 	ObjectSave(data.Object, string) error
 	ObjectDelete(data.Object, string) error
+	Debug() datatype.Map
 }

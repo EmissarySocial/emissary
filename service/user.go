@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -85,6 +86,12 @@ func (service *User) ObjectSave(object data.Object, comment string) error {
 
 func (service *User) ObjectDelete(object data.Object, comment string) error {
 	return service.Delete(object.(*model.User), comment)
+}
+
+func (service *User) Debug() datatype.Map {
+	return datatype.Map{
+		"service": "User",
+	}
 }
 
 /*******************************************

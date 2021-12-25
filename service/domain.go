@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -64,4 +65,10 @@ func (service *Domain) ObjectSave(object data.Object, comment string) error {
 
 func (service *Domain) ObjectDelete(object data.Object, comment string) error {
 	return derp.New(derp.CodeBadRequestError, "ghost.service.Domain.ObjectDelete", "Unsupported")
+}
+
+func (service *Domain) Debug() datatype.Map {
+	return datatype.Map{
+		"service": "Domain",
+	}
 }

@@ -1,11 +1,11 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -80,7 +80,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
 		service.streamUpdateChannel <- *stream
-		fmt.Println("streamService.Save: sent update update to stream: " + stream.Label)
+		// fmt.Println("streamService.Save: sent update update to stream: " + stream.Label)
 	}()
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
@@ -145,6 +145,12 @@ func (service *Stream) ObjectSave(object data.Object, comment string) error {
 
 func (service *Stream) ObjectDelete(object data.Object, comment string) error {
 	return service.Delete(object.(*model.Stream), comment)
+}
+
+func (service *Stream) Debug() datatype.Map {
+	return datatype.Map{
+		"service": "Stream",
+	}
 }
 
 /*******************************************

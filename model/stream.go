@@ -89,6 +89,9 @@ func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 	case "rank":
 		return stream.Rank, nil
 
+	case "stateId":
+		return stream.StateID, nil
+
 	default:
 		return stream.Data[property], nil
 	}
@@ -118,6 +121,9 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
 	case "rank":
 		stream.Rank = convert.Int(value)
+
+	case "stateId":
+		stream.StateID = convert.String(value)
 
 	default:
 		return stream.Data.SetPath(p, value)
