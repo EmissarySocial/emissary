@@ -1,0 +1,39 @@
+/***************************
+ * TAB STYLES
+ ***************************/
+
+ [role="tablist"] {
+    border-bottom: solid 1px var(--gray40);
+    margin-bottom:20px;
+    line-height:normal;
+}
+
+[role="tablist"] > [role="tab"] {
+    cursor: pointer;
+    display:inline-block;
+    padding: 8px 16px 4px 16px;
+    margin:0px 2px -1px 0px;
+    background-color:var(--gray05);
+    border:solid 1px var(--gray30);
+    border-bottom: solid 1px var(--gray40);
+    border-radius: 4px 4px 0px 0px; 
+    color: var(--gray50);
+    font-family: inherit;
+    font-size:1.1rem;
+    text-decoration: none;
+}
+
+[role="tablist"] > [role="tab"]:hover,
+[role="tablist"] > [role="tab"]:focus {
+    background-color: var(--gray20);
+    border-color:var(--gray10);
+    border-bottom: solid 1px var(--gray40);
+    color:#666;
+}
+
+[role="tablist"] > [role="tab"][aria-selected="true"] {
+    border-color: var(--gray40);
+    border-bottom: solid 1px white;
+    background-color: white;
+    color: var(--gray100);
+}

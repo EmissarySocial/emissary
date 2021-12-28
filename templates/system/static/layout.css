@@ -7,9 +7,6 @@
 }
 
 body {
-	position:absolute;
-	height:100%;
-	width:100%;
 	background-color: var(--gray05);
 	color: var(--black);
 

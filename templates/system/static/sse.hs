@@ -9,3 +9,4 @@ eventsource StreamServer
             send stream:update to it
         end
     end
+end

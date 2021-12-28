@@ -1,4 +1,3 @@
-
 on closeModal(nextPage)
 
 	if #modal is not empty then 
