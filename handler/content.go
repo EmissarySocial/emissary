@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/first"
+	"github.com/benpate/first"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/html"
 	"github.com/labstack/echo/v4"

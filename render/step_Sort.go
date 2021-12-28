@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/first"
+	"github.com/benpate/first"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

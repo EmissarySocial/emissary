@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/content/transaction"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/first"
+	"github.com/benpate/first"
 )
 
 // StepEditContent represents an action-step that can edit/update content.Content in a streamDraft.

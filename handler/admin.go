@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/first"
+	"github.com/benpate/first"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"

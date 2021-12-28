@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/first"
+	"github.com/benpate/first"
 	"github.com/benpate/ghost/service"
 )
 
