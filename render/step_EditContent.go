@@ -3,14 +3,14 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/content"
-	"github.com/benpate/content/transaction"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
+	"github.com/benpate/nebula"
+	"github.com/benpate/nebula/transaction"
 )
 
-// StepEditContent represents an action-step that can edit/update content.Content in a streamDraft.
+// StepEditContent represents an action-step that can edit/update nebula.Container in a streamDraft.
 type StepEditContent struct {
 	filename string
 }
@@ -26,6 +26,11 @@ func NewStepEditContent(stepInfo datatype.Map) StepEditContent {
 
 func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
 
+	// Handle transaction popups
+	if transaction := renderer.context().QueryParam("transaction"); transaction != "" {
+		return nil
+	}
+
 	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Get", "Error executing template")
 	}
@@ -36,7 +41,7 @@ func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	object := renderer.object()
-	getterSetter, ok := object.(content.GetterSetter)
+	getterSetter, ok := object.(nebula.GetterSetter)
 
 	if !ok {
 		return derp.NewInternalError("ghost.render.StepEditContent.Post", "Bad configuration - object does not have content to edit", renderer.object())
@@ -49,7 +54,7 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error binding data")
 	}
 
-	// Try to parse the request body as a content transaction
+	// Try to parse the request body as a transaction
 	txn, err := transaction.Parse(body)
 
 	if err != nil {
@@ -58,13 +63,13 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to execute the transaction
 
-	c := getterSetter.GetContent()
-	if err := txn.Execute(&c); err != nil {
+	c := getterSetter.GetContainer()
+	if _, err := txn.Execute(&c); err != nil {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing transaction", txn)
 	}
 
 	// Write the updated content back into the object
-	getterSetter.SetContent(c)
+	getterSetter.SetContainer(c)
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(object, "Content edited: "+txn.Description()); err != nil {

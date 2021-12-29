@@ -43,8 +43,8 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 	// Done
 	b.CloseAll()
 
-	// Copy the modal dialog into the response buffer
-	if _, err := buffer.Write([]byte(b.String())); err != nil {
+	// Write the modal dialog into the response buffer
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
 		return derp.Wrap(err, "ghost.render.StepAsModal.Get", "Error writing from builder to buffer")
 	}
 

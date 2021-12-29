@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
@@ -24,8 +25,13 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModal(content string) string {
+func WrapModal(header http.Header, content string) string {
 
+	// These two headers make it a modal
+	header.Set("HX-Retarget", "aside")
+	header.Set("HX-Push", "false")
+
+	// Build the HTML
 	b := html.New()
 
 	// Modal Wrapper
@@ -70,8 +76,8 @@ func WrapForm(renderer Renderer, content string) string {
 	return b.String()
 }
 
-func WrapModalForm(renderer Renderer, content string) string {
-	return WrapModal(WrapForm(renderer, content))
+func WrapModalForm(header http.Header, renderer Renderer, content string) string {
+	return WrapModal(header, WrapForm(renderer, content))
 }
 
 // closeModal sets Response header to close a modal on the client and optionally forward to a new location.

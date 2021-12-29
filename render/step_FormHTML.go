@@ -37,10 +37,8 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForm.Get", "Error generating form")
 	}
 
-	result = WrapForm(renderer, result)
-
-	// Wrap result as a modal dialog
-	buffer.Write([]byte(result))
+	// Wrap result as a modal dialog and return to caller
+	io.WriteString(buffer, WrapForm(renderer, result))
 	return nil
 }
 

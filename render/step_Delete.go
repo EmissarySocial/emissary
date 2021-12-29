@@ -26,10 +26,6 @@ func NewStepDelete(stepInfo datatype.Map) StepDelete {
 // Get displays a customizable confirmation form for the delete
 func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
 
-	header := renderer.context().Response().Header()
-	header.Set("HX-Retarget", "aside")
-	header.Set("HX-Push", "false")
-
 	b := html.New()
 
 	b.H2().InnerHTML(step.title).Close()
@@ -44,7 +40,8 @@ func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
 	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 	b.CloseAll()
 
-	buffer.Write([]byte(WrapModal(b.String())))
+	result := WrapModal(renderer.context().Response().Header(), b.String())
+	io.WriteString(buffer, result)
 
 	return nil
 }

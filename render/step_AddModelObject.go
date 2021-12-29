@@ -46,7 +46,7 @@ func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 	result = WrapForm(renderer, result)
 
 	// Wrap result as a modal dialog
-	buffer.Write([]byte(result))
+	io.WriteString(buffer, result)
 	return nil
 }
 

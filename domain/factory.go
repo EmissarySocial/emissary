@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/benpate/content"
-	"github.com/benpate/content/editor"
-	"github.com/benpate/content/viewer"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/datatype"
@@ -19,6 +16,8 @@ import (
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
+	content "github.com/benpate/nebula"
+	contentlib "github.com/benpate/nebula/vocabulary"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
 )
@@ -122,6 +121,7 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
 		factory.Stream(),
+		factory.ContentLibrary(),
 	)
 
 	return &factory, nil
@@ -162,6 +162,7 @@ func (factory *Factory) StreamDraft() *service.StreamDraft {
 	result := service.NewStreamDraft(
 		factory.collection(CollectionStreamDraft),
 		factory.Stream(),
+		factory.ContentLibrary(),
 	)
 
 	return &result
@@ -212,15 +213,11 @@ func (factory *Factory) RenderFunctions() template.FuncMap {
 	return render.FuncMap()
 }
 
-// ContentViewer returns a content.Widget that can view content
-func (factory *Factory) ContentViewer() content.Widget {
-	return viewer.New()
-}
-
-// ContentEditor returns a content.Widget that can edit content
-func (factory *Factory) ContentEditor(endpoint string) content.EditorWidget {
-	result := editor.New(endpoint)
-	return result
+// Content returns a content.Widget that can view content
+func (factory *Factory) ContentLibrary() content.Library {
+	library := content.NewLibrary()
+	contentlib.All(library)
+	return library
 }
 
 /*******************************************
@@ -268,7 +265,6 @@ func (factory *Factory) AttachmentCache() afero.Fs {
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package
 func (factory *Factory) FormLibrary() form.Library {
-
 	library := form.New(factory.OptionProvider())
 	vocabulary.All(library)
 

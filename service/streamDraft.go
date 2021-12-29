@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/benpate/content"
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/data/option"
@@ -9,20 +8,23 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
+	"github.com/benpate/nebula"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StreamDraft manages all interactions with the StreamDraft collection
 type StreamDraft struct {
-	collection    data.Collection
-	streamService *Stream
+	collection     data.Collection
+	streamService  *Stream
+	contentLibrary nebula.Library
 }
 
 // NewStreamDraft returns a fully populated StreamDraft service.
-func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDraft {
+func NewStreamDraft(collection data.Collection, streamService *Stream, contentLibrary nebula.Library) StreamDraft {
 	return StreamDraft{
-		collection:    collection,
-		streamService: streamService,
+		collection:     collection,
+		streamService:  streamService,
+		contentLibrary: contentLibrary,
 	}
 }
 
@@ -55,10 +57,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 
 	// Add default content if the content is empty.
 	if result.Content.IsEmpty() {
-		result.Content = content.Content{
-			content.NewItem("CONTAINER", 1),
-			content.NewItem("WYSIWYG"),
-		}
+		nebula.Init(service.contentLibrary, result.Content)
 	}
 
 	// Save a draft copy of the original stream

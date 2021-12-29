@@ -44,8 +44,6 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/:stream/:action", handler.PostStream(factoryManager))
 	e.DELETE("/:stream", handler.PostStream(factoryManager))
 
-	e.GET("/.editor/itemTypes", handler.GetContentItemTypes(factoryManager))
-
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
 	// ADMIN PAGES
@@ -56,6 +54,8 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.POST("/admin/:param1/:param2", handler.PostAdmin(factoryManager))
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factoryManager))
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factoryManager))
+
+	e.GET("/admin/:param1/:param2/panel", handler.GetAdminContentPanel(factoryManager))
 
 	// ActivityPub INBOX/OUTBOX
 	e.GET("/inbox", handler.GetInbox(factoryManager))

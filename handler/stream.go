@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -110,4 +111,18 @@ func getActionID(ctx echo.Context) string {
 	}
 
 	return "view"
+}
+
+// isOnwer returns TRUE if the JWT Claim is from a domain owner.
+func isOwner(claims jwt.Claims, err error) bool {
+
+	if err == nil {
+		if claims.Valid() == nil {
+			if authorization, ok := claims.(model.Authorization); ok {
+				return authorization.DomainOwner
+			}
+		}
+	}
+
+	return false
 }

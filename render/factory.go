@@ -1,17 +1,16 @@
 package render
 
 import (
-	"github.com/benpate/content"
 	"github.com/benpate/form"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
+	"github.com/benpate/nebula"
 )
 
 // Factory is used to locate all necessary services
 type Factory interface {
 	Attachment() *service.Attachment
-	ContentViewer() content.Widget
-	ContentEditor(string) content.EditorWidget
+	ContentLibrary() nebula.Library
 	Domain() *service.Domain
 	FormLibrary() form.Library
 	Group() *service.Group

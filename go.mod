@@ -5,7 +5,7 @@ go 1.17
 replace (
 	github.com/benpate/activitystream => ../activitystream
 	github.com/benpate/compare => ../compare
-	github.com/benpate/content => ../content
+	github.com/benpate/nebula => ../nebula
 	github.com/benpate/convert => ../convert
 	github.com/benpate/data => ../data
 	github.com/benpate/data-mock => ../data-mock
@@ -20,6 +20,7 @@ replace (
 	github.com/benpate/id => ../id
 	github.com/benpate/list => ../list
 	github.com/benpate/mediaserver => ../mediaserver
+	github.com/benpate/nebula => ../nebula
 	github.com/benpate/path => ../path
 	github.com/benpate/schema => ../schema
 	github.com/benpate/steranko => ../steranko
@@ -28,7 +29,7 @@ replace (
 require (
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/compare v0.0.4
-	github.com/benpate/content v0.0.1
+	github.com/benpate/nebula v0.0.1
 	github.com/benpate/convert v0.11.0
 	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mongo v0.0.2

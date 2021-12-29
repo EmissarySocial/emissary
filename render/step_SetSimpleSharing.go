@@ -63,12 +63,8 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	b.Button().InnerHTML("Cancel").Script("on click send closeModal to #modal").Close()
 	b.CloseAll()
 
-	// Write it to the output buffer
-	if _, err := io.Copy(buffer, b.Reader()); err != nil {
-		return derp.Wrap(err, "ghost.render.StepSetSimpleSharing", "Error writing to output buffer")
-	}
-
-	// Success!!
+	// Write it to the output buffer and quit
+	io.WriteString(buffer, b.String())
 	return nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/benpate/datatype"
-	"github.com/benpate/derp"
 	"github.com/benpate/first"
 	"github.com/benpate/html"
 )
@@ -50,11 +49,7 @@ func (step StepAsConfirmation) Get(buffer io.Writer, renderer Renderer) error {
 	// Done
 	b.CloseAll()
 
-	// Copy the modal dialog into the response buffer
-	if _, err := io.Copy(buffer, b.Reader()); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAsConfirmation.Get", "Error writing from builder to buffer")
-	}
-
+	io.WriteString(buffer, b.String())
 	return nil
 }
 

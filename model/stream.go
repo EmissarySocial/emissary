@@ -1,11 +1,11 @@
 package model
 
 import (
-	"github.com/benpate/content"
 	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/nebula"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,7 +25,7 @@ type Stream struct {
 	AuthorName      string               `json:"authorName"      bson:"authorName,omitempty"`    // Full name of the person who created this stream
 	AuthorImage     string               `json:"authorImage"     bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
 	AuthorURL       string               `json:"authorURL"       bson:"authorURL,omitempty"`     // URL address of the person who created this stream
-	Content         content.Content      `json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
+	Content         nebula.Container     `json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
 	Data            datatype.Map         `json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Tags            []string             `json:"tags"            bson:"tags"`                    // Organizational Tags
 	ThumbnailImage  string               `json:"thumbnailImage"  bson:"thumbnailImage"`          // Image to display next to the stream in lists.
@@ -51,7 +51,7 @@ func NewStream() Stream {
 		Criteria:  NewCriteria(),
 		Tags:      make([]string, 0),
 		Data:      make(datatype.Map),
-		Content:   make(content.Content, 0),
+		Content:   make(nebula.Container, 0),
 	}
 }
 
@@ -137,12 +137,12 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
  *******************************************/
 
 // GetContent satisfies the content.Getter interface
-func (stream *Stream) GetContent() content.Content {
+func (stream *Stream) GetContent() nebula.Container {
 	return stream.Content
 }
 
 // SetContent satisfies the content.Setter interface
-func (stream *Stream) SetContent(value content.Content) {
+func (stream *Stream) SetContent(value nebula.Container) {
 	stream.Content = value
 }
 

@@ -1,0 +1,60 @@
+<html>
+<head>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <script src="https://unpkg.com/hyperscript.org"></script>
+</head>
+
+<body>
+    <h2>HTMX Button</h2>
+    <span id="delete-01" class="delete-button">
+        <button 
+            class="btn btn-sm btn-outline-secondary"
+            hx-trigger="click"
+            hx-swap="outerHTML"
+            hx-target="#account-01"
+            hx-indicator="#delete-01"
+            hx-confirm="Are you sure you wish to delete your account?"
+            hx-delete="/slow">
+            Remove
+        </button>
+
+        <button disabled class="btn btn-sm btn-outline-secondary">
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+            Removing...
+        </button>
+    </span>
+
+    <style>
+        .delete-button button:not([disabled]) {
+            display:inline;
+        }
+        .delete-button button[disabled] {
+            display:none;
+        }
+
+        .delete-button.htmx-request button:not([disabled]) {
+            display:none;
+        }
+
+        .delete-button.htmx-request button[disabled] {
+            display:inline;
+        }
+    </style>
+
+    <h2>Hyperscript Button</h2>
+    <button class="hyperscript-button" script="on click add [@disabled] to me">
+        <span class="regular">Remove</span>
+        <span class="if-disabled">Removing...</span>
+    </button>
+
+
+    <style>
+        .hyperscript-button .if-disabled {display:none;}
+        .hyperscript-button[disabled] .regular{display:none;}
+        .hyperscript-button[disabled] .if-disabled{display:inline;}
+    </style>
+
+    <div id="account-01"></div>
+
+</body>
+</html>

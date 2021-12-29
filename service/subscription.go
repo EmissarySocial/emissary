@@ -4,28 +4,30 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/benpate/content"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
+	"github.com/benpate/nebula"
 	"github.com/mmcdole/gofeed"
 )
 
 // Subscription manages all interactions with the Subscription collection
 type Subscription struct {
-	collection    data.Collection
-	streamService *Stream
+	collection     data.Collection
+	streamService  *Stream
+	contentLibrary nebula.Library
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, streamService *Stream) *Subscription {
+func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary nebula.Library) *Subscription {
 
 	result := Subscription{
-		collection:    collection,
-		streamService: streamService,
+		collection:     collection,
+		streamService:  streamService,
+		contentLibrary: contentLibrary,
 	}
 
 	go result.start()
@@ -108,13 +110,17 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 	}
 
 	// If stream has been updated since previous save, then set new values
-	if true || stream.SourceUpdated != updateDate {
+	if stream.SourceUpdated > updateDate {
 
 		stream.Label = item.Title
 		stream.Description = item.Description
-		stream.Content = content.FromHTML(item.Content)
 		stream.PublishDate = item.PublishedParsed.Unix()
 		stream.SourceUpdated = updateDate
+		stream.Content = nebula.New(service.contentLibrary)
+
+		contentItem := nebula.NewItem("html")
+		contentItem.Set("html", item.Content)
+		stream.Content.AddItem(contentItem)
 
 		if item.Author == nil {
 			stream.AuthorName = ""

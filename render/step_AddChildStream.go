@@ -130,5 +130,5 @@ func modalAddStream(templateService *service.Template, buffer io.Writer, url str
 
 	b.CloseAll()
 
-	buffer.Write([]byte(b.String()))
+	io.WriteString(buffer, b.String())
 }
