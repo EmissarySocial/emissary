@@ -57,7 +57,8 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 
 	// Add default content if the content is empty.
 	if result.Content.IsEmpty() {
-		nebula.Init(service.contentLibrary, result.Content)
+		result.Content = nebula.NewContainer()
+		result.Content.NewItem(service.contentLibrary, nebula.ItemTypeLayout)
 	}
 
 	// Save a draft copy of the original stream

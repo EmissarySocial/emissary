@@ -33,7 +33,7 @@ func GetAdminContentPanel(factoryManager *server.FactoryManager) echo.HandlerFun
 			return derp.Wrap(err, "ghost.handler.GetContentPropertyPanel", "Error loading stream")
 		}
 
-		panel, err := nebula.Prop(factory.ContentLibrary(), stream.Content, ctx.Request().URL.Query(), ctx.Request().Referer())
+		panel, err := nebula.Prop(factory.ContentLibrary(), &stream.Content, ctx.Request().URL.Query(), ctx.Request().Referer())
 
 		if err != nil {
 			return derp.Wrap(err, "ghost.handler.GetContentPropertyPanel", "Error generating property panel")

@@ -6,32 +6,32 @@
 
 /** CONTAINERS ****/
 
-div.container {
+div.nebula-layout {
 	position:relative;
 	padding:10px;
 	align-items:stretch;
 	align-content: top;
 }
 
-div.container > div.container-item {
+div.nebula-layout > div.nebula-layout-item {
 	position:relative;
 	box-sizing: border-box;
 	padding: 5px;
 }
 
 /*
-div.container[data-style=COLS] > div.container-item > div.container[data-style=ROWS] > div.container-item:first-child {
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-child {
 	padding-top: 0px!important;
 }
 
-div.container[data-style=ROWS] > div.container-item > div.container[data-style=COLS] > div.container-item:first-child {
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-child {
 	padding-left: 0px!important;
 }
 */
 
 /* INSERTION POINTS */
 
-div.container-insert {
+div.nebula-layout-insert {
 	cursor: copy;
 	position:absolute;
 	z-index:2;
@@ -42,39 +42,39 @@ div.container-insert {
 	z-index:10;
 }
 
-div.container-insert:hover {
+div.nebula-layout-insert:hover {
 	background-color:cornflowerblue;
 }
 
-div.container-insert[data-place=ABOVE] {
+div.nebula-layout-insert[data-place=ABOVE] {
 	top:-5px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-div.container-insert[data-place=BELOW] {
+div.nebula-layout-insert[data-place=BELOW] {
 	bottom:-5px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-div.container-insert[data-place=LEFT] {
+div.nebula-layout-insert[data-place=LEFT] {
 	left:-5px;
 	top:0px;
 	bottom:0px;
 	width:10px;
 }
 
-div.container-insert[data-place=RIGHT] {
+div.nebula-layout-insert[data-place=RIGHT] {
 	right:-5px;
 	top:0px;
 	bottom:0px;
 	width:10px;
 }
 
-div.container-item {
+div.nebula-layout-item {
 	border: solid 1px #eee;
 	background-color:#fff;
 }

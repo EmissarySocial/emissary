@@ -112,12 +112,14 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 	// If stream has been updated since previous save, then set new values
 	if stream.SourceUpdated > updateDate {
 
+		// Populate header information into the stream
 		stream.Label = item.Title
 		stream.Description = item.Description
 		stream.PublishDate = item.PublishedParsed.Unix()
 		stream.SourceUpdated = updateDate
-		stream.Content = nebula.New(service.contentLibrary)
 
+		// Populate content into a nebula container
+		stream.Content = nebula.NewContainer()
 		contentItem := nebula.NewItem("html")
 		contentItem.Set("html", item.Content)
 		stream.Content.AddItem(contentItem)
