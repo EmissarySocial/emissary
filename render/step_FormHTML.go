@@ -11,12 +11,12 @@ import (
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepForm struct {
-	formLibrary form.Library
+	formLibrary *form.Library
 	form        form.Form
 }
 
 // NewStepForm returns a fully initialized StepForm object
-func NewStepForm(formLibrary form.Library, stepInfo datatype.Map) StepForm {
+func NewStepForm(formLibrary *form.Library, stepInfo datatype.Map) StepForm {
 
 	return StepForm{
 		formLibrary: formLibrary,

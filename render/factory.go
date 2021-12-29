@@ -10,9 +10,9 @@ import (
 // Factory is used to locate all necessary services
 type Factory interface {
 	Attachment() *service.Attachment
-	ContentLibrary() nebula.Library
+	ContentLibrary() *nebula.Library
 	Domain() *service.Domain
-	FormLibrary() form.Library
+	FormLibrary() *form.Library
 	Group() *service.Group
 	Layout() *service.Layout
 	MediaServer() mediaserver.MediaServer

@@ -18,11 +18,11 @@ import (
 type Subscription struct {
 	collection     data.Collection
 	streamService  *Stream
-	contentLibrary nebula.Library
+	contentLibrary *nebula.Library
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary nebula.Library) *Subscription {
+func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) *Subscription {
 
 	result := Subscription{
 		collection:     collection,

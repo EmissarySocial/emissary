@@ -136,13 +136,16 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
  * OTHER DATA ACCESSORS
  *******************************************/
 
-// GetContent satisfies the content.Getter interface
-func (stream *Stream) GetContent() nebula.Container {
+// GetContainer satisfies the content.Getter interface
+func (stream *Stream) GetContainer() nebula.Container {
+	if stream.Content == nil {
+		stream.Content = nebula.Container{}
+	}
 	return stream.Content
 }
 
-// SetContent satisfies the content.Setter interface
-func (stream *Stream) SetContent(value nebula.Container) {
+// SetContainer satisfies the content.Setter interface
+func (stream *Stream) SetContainer(value nebula.Container) {
 	stream.Content = value
 }
 

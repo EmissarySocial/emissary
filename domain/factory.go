@@ -10,13 +10,13 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/form/vocabulary"
+	formlib "github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/ghost/render"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
-	content "github.com/benpate/nebula"
+	"github.com/benpate/nebula"
 	contentlib "github.com/benpate/nebula/vocabulary"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
@@ -33,6 +33,10 @@ type Factory struct {
 	streamService       service.Stream
 	userService         service.User
 	subscriptionService *service.Subscription
+
+	// Widget Libraries
+	formLibrary    form.Library
+	contentLibrary nebula.Library
 
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
@@ -63,8 +67,9 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		templateUpdateChannel: make(chan string),
 	}
 
-	// Initialize Communication Channels
+	/** REAL TIME COMMUNICATION CHANNELS *********************/
 
+	// Create Stream Update Channel
 	if session, ok := factory.Session.(*mongodb.Session); ok {
 
 		if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
@@ -72,14 +77,25 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 		}
 	}
 
+	// Fall through means we're not running on MongoDB.  Just return an "empty" channel for now
 	if factory.streamUpdateChannel == nil {
-		// Fall through means failure.  Just return an "empty" channel for now
 		factory.streamUpdateChannel = make(chan model.Stream)
 	}
 
+	// Create Realtime Broker
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
-	// Initialize Background Services
+	/** WIDGET LIBRARIES *********************/
+
+	// Crate content library
+	factory.contentLibrary = nebula.NewLibrary()
+	contentlib.All(&factory.contentLibrary)
+
+	// Create form library
+	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
+	formlib.All(&factory.formLibrary)
+
+	/** SINGLETON SERVICES *********************/
 
 	// This loads the web page layout (real-time updates to wait until later)
 	factory.layoutService = service.NewLayout(
@@ -214,10 +230,8 @@ func (factory *Factory) RenderFunctions() template.FuncMap {
 }
 
 // Content returns a content.Widget that can view content
-func (factory *Factory) ContentLibrary() content.Library {
-	library := content.NewLibrary()
-	contentlib.All(library)
-	return library
+func (factory *Factory) ContentLibrary() *nebula.Library {
+	return &factory.contentLibrary
 }
 
 /*******************************************
@@ -264,11 +278,8 @@ func (factory *Factory) AttachmentCache() afero.Fs {
 
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package
-func (factory *Factory) FormLibrary() form.Library {
-	library := form.New(factory.OptionProvider())
-	vocabulary.All(library)
-
-	return library
+func (factory *Factory) FormLibrary() *form.Library {
+	return &factory.formLibrary
 }
 
 // Key returns an instance of the Key Manager Service (KMS)

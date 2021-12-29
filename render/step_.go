@@ -33,7 +33,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepForm(factory.FormLibrary(), stepInfo), nil
 
 	case "set-data":
-		return NewStepSetData(factory.FormLibrary(), stepInfo), nil
+		return NewStepSetData(stepInfo), nil
 
 	case "set-thumbnail":
 		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil

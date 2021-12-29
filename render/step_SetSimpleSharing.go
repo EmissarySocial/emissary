@@ -15,14 +15,14 @@ import (
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
 type StepSetSimpleSharing struct {
-	formLibrary form.Library
+	formLibrary *form.Library
 	title       string
 	message     string
 	roles       []string
 }
 
 // NewStepSetSimpleSharing returns a fully parsed StepSetSimpleSharing object
-func NewStepSetSimpleSharing(formLibrary form.Library, stepInfo datatype.Map) StepSetSimpleSharing {
+func NewStepSetSimpleSharing(formLibrary *form.Library, stepInfo datatype.Map) StepSetSimpleSharing {
 
 	return StepSetSimpleSharing{
 		formLibrary: formLibrary,

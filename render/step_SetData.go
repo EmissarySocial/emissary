@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/form"
 	"github.com/benpate/path"
 )
 
@@ -15,7 +14,7 @@ type StepSetData struct {
 	values datatype.Map
 }
 
-func NewStepSetData(formLibrary form.Library, stepInfo datatype.Map) StepSetData {
+func NewStepSetData(stepInfo datatype.Map) StepSetData {
 
 	return StepSetData{
 		paths:  stepInfo.GetSliceOfString("paths"),

@@ -20,13 +20,13 @@ type Stream struct {
 	attachmentService     *Attachment
 	templateService       *Template
 	draftService          *StreamDraft
-	formLibrary           form.Library
+	formLibrary           *form.Library
 	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
 
 	return Stream{
 		collection:            collection,

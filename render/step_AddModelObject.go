@@ -11,13 +11,13 @@ import (
 
 // StepAddModelObject is an action that can add new sub-streams to the domain.
 type StepAddModelObject struct {
-	formLibrary form.Library
+	formLibrary *form.Library
 	form        form.Form
 	defaults    []datatype.Map
 }
 
 // NewStepAddModelObject returns a fully initialized StepAddModelObject record
-func NewStepAddModelObject(formLibrary form.Library, stepInfo datatype.Map) StepAddModelObject {
+func NewStepAddModelObject(formLibrary *form.Library, stepInfo datatype.Map) StepAddModelObject {
 	return StepAddModelObject{
 		formLibrary: formLibrary,
 		form:        form.MustParse(stepInfo.GetInterface("form")),

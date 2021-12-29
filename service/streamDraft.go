@@ -16,11 +16,11 @@ import (
 type StreamDraft struct {
 	collection     data.Collection
 	streamService  *Stream
-	contentLibrary nebula.Library
+	contentLibrary *nebula.Library
 }
 
 // NewStreamDraft returns a fully populated StreamDraft service.
-func NewStreamDraft(collection data.Collection, streamService *Stream, contentLibrary nebula.Library) StreamDraft {
+func NewStreamDraft(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) StreamDraft {
 	return StreamDraft{
 		collection:     collection,
 		streamService:  streamService,
