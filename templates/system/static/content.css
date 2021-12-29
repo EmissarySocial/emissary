@@ -1,33 +1,55 @@
-div.container[data-style="COLS"] {
+div.nebula-layout[data-style="COLS"] {
     display:flex;
     flex-direction:row;
     flex-wrap: nowrap;
 }
 
-div.container[data-style="COLS"] > div.container-item {
+div.nebula-layout[data-style="COLS"] > div.nebula-layout-item {
     flex-grow:1;
     min-width:5em;
 }
 
-div.container[data-style="COLS"][data-size=1] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=1] > div.nebula-layout-item {
+
 }
 
-div.container[data-style="COLS"][data-size=2] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=2] > div.nebula-layout-item {
     
 }
 
-div.container[data-style="COLS"][data-size=3] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=3] > div.nebula-layout-item {
     
 }
 
-div.container[data-style="COLS"][data-size=4] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=4] > div.nebula-layout-item {
     
 }
 
-div.container[data-style="COLS"][data-size=5] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=5] > div.nebula-layout-item {
     
 }
 
-div.container[data-style="COLS"][data-size=6] > div.container-item {
+div.nebula-layout[data-style="COLS"][data-size=6] > div.nebula-layout-item {
     
+}
+
+/* XS */
+@media screen and (max-width:35.5em) {
+}
+
+/* SM */
+@media screen and (min-width:35.5em) {
+}
+
+/* MD */
+@media screen and (min-width:48em) {
+}
+
+/* LG */
+@media screen and (min-width:64em) {
+}
+
+/* XL */
+@media screen and (min-width:80em) {
+
 }

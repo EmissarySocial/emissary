@@ -1,14 +1,20 @@
+/***************************
+ * CONTENT EDITOR
+ ***************************/
+
 .content-editor {
-	background-color:rgb(250,250,250);
-	padding:10px;
+	xbackground-color:rgb(250,250,250);
+	xpadding:10px;
 	margin-bottom:40px;
 }
 
-/** CONTAINERS ****/
+/***************************
+ * LAYOUT
+ ***************************/
 
 div.nebula-layout {
 	position:relative;
-	padding:10px;
+	padding:20px;
 	align-items:stretch;
 	align-content: top;
 }
@@ -16,74 +22,64 @@ div.nebula-layout {
 div.nebula-layout > div.nebula-layout-item {
 	position:relative;
 	box-sizing: border-box;
-	padding: 5px;
+	xborder: solid 1px #eee;
+	background-color:#fff;
 }
 
-/*
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-child {
-	padding-top: 0px!important;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-child {
-	padding-left: 0px!important;
-}
-*/
-
-/* INSERTION POINTS */
+/***************************
+ * INSERTION POINTS 
+ ***************************/
 
 div.nebula-layout-insert {
 	cursor: copy;
 	position:absolute;
 	z-index:2;
-	border-radius:5px;
-}
-
-.ql-bubble .ql-tooltip {
-	z-index:10;
+	xborder-radius:5px;
+	background-color: var(--gray10);
+	color: var(--gray30);
 }
 
 div.nebula-layout-insert:hover {
 	background-color:cornflowerblue;
+	z-index:3;
 }
 
 div.nebula-layout-insert[data-place=ABOVE] {
-	top:-5px;
-	height:10px;
+	top:0px;
+	height:15px;
 	left:0px;
 	right:0px;
 }
 
 div.nebula-layout-insert[data-place=BELOW] {
-	bottom:-5px;
-	height:10px;
+	bottom:0px;
+	height:15px;
 	left:0px;
 	right:0px;
 }
 
 div.nebula-layout-insert[data-place=LEFT] {
-	left:-5px;
+	left:0px;
 	top:0px;
 	bottom:0px;
-	width:10px;
+	width:15px;
+	transform: rotateX(270);
 }
 
 div.nebula-layout-insert[data-place=RIGHT] {
-	right:-5px;
+	right:0px;
 	top:0px;
 	bottom:0px;
-	width:10px;
+	width:15px;
+	transform: rotateX(90);
 }
 
-div.nebula-layout-item {
-	border: solid 1px #eee;
-	background-color:#fff;
+
+/***************************
+ * WYSIWYG
+ ***************************/
+
+ div.nebula-wysiwyg {
+
 }
 
-/** WYSIWYG *******/
-.ck-content {
-	background-color:white;
-}
-
-.ck-content.ck-blurred {
-	border: 1px solid rgb(240,240,240)!important; /* hsla(0, 0%, 0%, 0.15)!important; */
-}
