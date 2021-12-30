@@ -2,10 +2,10 @@
  * CONTENT EDITOR
  ***************************/
 
-.content-editor {
-	xbackground-color:rgb(250,250,250);
-	xpadding:10px;
-	margin-bottom:40px;
+.content-editor {}
+
+.content-editor p {
+	margin:0px 0px 32px 0px;
 }
 
 /***************************
@@ -13,16 +13,15 @@
  ***************************/
 
 div.nebula-layout {
+	box-sizing: border-box;
 	position:relative;
-	padding:20px;
 	align-items:stretch;
 	align-content: top;
 }
 
 div.nebula-layout > div.nebula-layout-item {
 	position:relative;
-	box-sizing: border-box;
-	xborder: solid 1px #eee;
+	padding:15px;
 	background-color:#fff;
 }
 
@@ -34,7 +33,6 @@ div.nebula-layout-insert {
 	cursor: copy;
 	position:absolute;
 	z-index:2;
-	xborder-radius:5px;
 	background-color: var(--gray10);
 	color: var(--gray30);
 }
@@ -63,7 +61,6 @@ div.nebula-layout-insert[data-place=LEFT] {
 	top:0px;
 	bottom:0px;
 	width:15px;
-	transform: rotateX(270);
 }
 
 div.nebula-layout-insert[data-place=RIGHT] {
@@ -71,7 +68,6 @@ div.nebula-layout-insert[data-place=RIGHT] {
 	top:0px;
 	bottom:0px;
 	width:15px;
-	transform: rotateX(90);
 }
 
 
@@ -79,7 +75,39 @@ div.nebula-layout-insert[data-place=RIGHT] {
  * WYSIWYG
  ***************************/
 
- div.nebula-wysiwyg {
-
+.wysiwyg {
+	display:block;
+	padding:10px;
 }
 
+.wysiwyg-toolbar {
+	display:block;
+	padding:5px;
+}
+
+.wysiwyg-toolbar-group {
+	margin-right: 20px;
+}
+
+.wysiwyg-toolbar button {
+	margin:0px -1px 0px 0px;
+	padding:10px 15px;
+	border: solid 1px var(--gray20);
+	border-radius:0px;
+}
+
+.wysiwyg-toolbar button:hover {
+	background-color:cornflowerblue;
+	border-color:cornflowerblue;
+	color:white;
+}
+
+.wysiwyg-toolbar button:first-child {
+	border-top-left-radius: 6px;
+	border-bottom-left-radius: 6px;
+}
+
+.wysiwyg-toolbar button:last-child {
+	border-top-right-radius: 6px;
+	border-bottom-right-radius: 6px;
+}

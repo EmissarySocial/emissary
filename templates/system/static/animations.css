@@ -21,10 +21,10 @@
 
 @keyframes popIn {
 	0% {height:0px;}
-	100% {height:default;}
+	100% {height:auto;}
 }
 
 @keyframes popOut {
-	0% {height:default;}
+	0% {height:auto;}
 	100% {height:0%;}
 }
