@@ -2,7 +2,9 @@
  * CONTENT EDITOR
  ***************************/
 
+/* Omitted for now, until there's something to put in here...
 .content-editor {}
+*/
 
 /***************************
  * LAYOUT
@@ -101,9 +103,12 @@ div.nebula-layout-insert[data-place=RIGHT] {
 .wysiwyg-toolbar {
 	position: absolute;
 	top: -36px;
+	width:100%;
 	z-index:3;
 	display:block;
 	padding:5px 0px 10px 0px;
+	white-space: nowrap;
+	overflow-x: scroll;
 }
 
 .wysiwyg-toolbar-group {

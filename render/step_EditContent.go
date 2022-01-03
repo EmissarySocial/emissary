@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"net/http"
 
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
@@ -97,15 +98,22 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error saving stream")
 	}
 
+	// If this is an "edit-item" action, then DON'T return HTML
+	// to the browser because we might mess up the client-side state
+	if body.GetString("type") == "edit-item" {
+		return renderer.context().NoContent(http.StatusOK)
+	}
+
+	// Otherwise, let's try to update the browser with some new content...
+
 	// Close any modal dialogs that are open
 	header := renderer.context().Response().Header()
 	header.Set("HX-Trigger", "closeModal")
 
 	// Re-render JUST the updated item
+	header.Set("HX-Retarget", `[data-id="`+convert.String(updatedID)+`"]`)
 	b := html.New()
-	b.Div().Data("hx-swap-oob", "itemId-"+convert.String(updatedID)).EndBracket()
 	step.contentLibrary.Edit(b, &container, updatedID, renderer.URL())
-	b.CloseAll()
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, b.String()); err != nil {
