@@ -11,37 +11,43 @@
  ***************************/
 
 div.nebula-layout {
+	--display:flex;
 	box-sizing: border-box;
 	position:relative;
 	align-items:stretch;
 	align-content: top;
+	padding:10px;
 }
 
-div.nebula-layout[style=ROWS] {
-	padding: 10px 10px;
+div.nebula-layout[data-style=ROWS] {
+	flex-direction:column;
 }
 
-div.nebula-layout[style=COLS] {
-	padding: 10px 10px;
+div.nebula-layout[data-style=COLS] {
+	flex-direction:row;
 }
 
+div.nebula-layout div.nebula-layout {
+	padding:0px;
+} 
 
 /***************************
  * ITEMS
  ***************************/
 
- div.nebula-layout > div.nebula-layout-item {
+div.nebula-layout > div.nebula-layout-item {
 	position:relative;
-	background-color:#fff;
+	background-color:var(--gray05);
 	padding:10px;
+	display: flex;
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-child) {
-	--padding-left: 10px;
+	--padding-left: 0px;
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-child) {
-	--padding-top: 10px;
+	--padding-top: 0px;
 }
 
 /***************************
@@ -52,8 +58,7 @@ div.nebula-layout-insert {
 	cursor: copy;
 	position:absolute;
 	z-index:2;
-	background-color: var(--gray10);
-	color: var(--gray30);
+	background-color: var(--gray15);
 }
 
 div.nebula-layout-insert:hover {
@@ -98,6 +103,7 @@ div.nebula-layout-insert[data-place=RIGHT] {
 	position:relative;
 	display:block;
 	padding:10px;
+	background: var(--white);
 }
 
 .wysiwyg-toolbar {
@@ -140,4 +146,13 @@ div.nebula-layout-insert[data-place=RIGHT] {
 
 .wysiwyg-editor {
 	min-height:1em;
+}
+
+/***************************
+ * OEMBED
+ ***************************/
+
+.oEmbed {
+	min-height:100%;
+	flex-grow:1;
 }
