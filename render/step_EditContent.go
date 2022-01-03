@@ -100,7 +100,7 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	// If this is an "edit-item" action, then DON'T return HTML
 	// to the browser because we might mess up the client-side state
-	if body.GetString("type") == "edit-item" {
+	if body.GetString("type") == "update-item" {
 		return renderer.context().NoContent(http.StatusOK)
 	}
 
