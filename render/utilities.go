@@ -3,12 +3,12 @@ package render
 import (
 	"bytes"
 	"html/template"
-	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 )
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
@@ -25,9 +25,10 @@ func getAuthorization(ctx *steranko.Context) *model.Authorization {
 	return &result
 }
 
-func WrapModal(header http.Header, content string) string {
+func WrapModal(response *echo.Response, content string) string {
 
 	// These two headers make it a modal
+	header := response.Header()
 	header.Set("HX-Retarget", "aside")
 	header.Set("HX-Push", "false")
 
@@ -35,7 +36,7 @@ func WrapModal(header http.Header, content string) string {
 	b := html.New()
 
 	// Modal Wrapper
-	b.Div().ID("modal").EndBracket()
+	b.Div().ID("modal").Script("install Modal").EndBracket()
 	b.Div().Class("modal-underlay").Close()
 	b.Div().Class("modal-content").EndBracket() // this is needed because we're embedding foreign content below.
 
@@ -47,6 +48,15 @@ func WrapModal(header http.Header, content string) string {
 	b.CloseAll()
 
 	return b.String()
+}
+
+func WrapModalWithCloseButton(response *echo.Response, content string) string {
+	b := html.New()
+
+	b.Div()
+	b.Button().Script("on click trigger closeModal").InnerHTML("Close Window")
+
+	return WrapModal(response, content+b.String())
 }
 
 func WrapForm(renderer Renderer, content string) string {
@@ -76,8 +86,8 @@ func WrapForm(renderer Renderer, content string) string {
 	return b.String()
 }
 
-func WrapModalForm(header http.Header, renderer Renderer, content string) string {
-	return WrapModal(header, WrapForm(renderer, content))
+func WrapModalForm(response *echo.Response, renderer Renderer, content string) string {
+	return WrapModal(response, WrapForm(renderer, content))
 }
 
 // closeModal sets Response header to close a modal on the client and optionally forward to a new location.

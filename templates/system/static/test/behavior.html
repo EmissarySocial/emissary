@@ -1,27 +1,24 @@
-<!DOCTYPE html>
 <html>
+<head>
+    <script src=https://unpkg.com/htmx.org></script>
+    <script src=https://unpkg.com/hyperscript.org></script>
+</head>
+
 <body>
+    <form id="form" data-hx-post="/edit" data-hx-trigger="UUUniqueEventNameHere">
+        <input type="hidden" name="html" id="html" value="">
+        <input type="hidden" name="other" value="">
+        <div class="wysiwyg" style="border: solid 1px black" contentEditable data-script="
+                on keydown
+                    log 'keydown'
+                    set #html.value to the #editor's innerHTML
+                    send UUUniqueEventNameHere to the #form">
 
-    <script type="text/hyperscript">
-        behavior WeirdBehavior
-
-            on load
-                set my innerHTML to "Success!"
-                wait 1s
-                -- exit
-            end
-        end
-
-    </script>
-
-	<script src="https://unpkg.com/hyperscript.org"></script>
-
-    <div class=date _="install WeirdBehavior">Broken?</div>
-    <div class=date _="install WeirdBehavior">Broken?</div>
-    <div class=date _="install WeirdBehavior">Broken?</div>
-    <div class=date _="install WeirdBehavior">Broken?</div>
-    <div class=date _="install WeirdBehavior">Broken?</div>
-    <div class=date _="install WeirdBehavior">Broken?</div>
-
+            <div id="editor">
+                <p>Type in here.  Every keystroke should send one request to the server, but it sends two. Curious.</p>
+            </div>
+        </div>
+    </form>
 </body>
 </html>
+

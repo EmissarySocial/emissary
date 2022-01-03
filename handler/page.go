@@ -18,7 +18,7 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 		result, err := renderer.Render()
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.renderPage", "Error rendering domain")
+			return derp.Wrap(err, "ghost.handler.renderPage", "Error rendering partial page request")
 		}
 		return ctx.HTML(http.StatusOK, string(result))
 	}

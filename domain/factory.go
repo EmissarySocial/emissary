@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
-	contentlib "github.com/benpate/nebula/vocabulary"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
 )
@@ -87,9 +86,8 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 
 	/** WIDGET LIBRARIES *********************/
 
-	// Crate content library
+	// Crate content library (for now, only using defaults)
 	factory.contentLibrary = nebula.NewLibrary()
-	contentlib.All(&factory.contentLibrary)
 
 	// Create form library
 	factory.formLibrary = form.NewLibrary(factory.OptionProvider())

@@ -4,10 +4,6 @@
 
 .content-editor {}
 
-.content-editor p {
-	margin:0px 0px 32px 0px;
-}
-
 /***************************
  * LAYOUT
  ***************************/
@@ -19,10 +15,31 @@ div.nebula-layout {
 	align-content: top;
 }
 
-div.nebula-layout > div.nebula-layout-item {
+div.nebula-layout[style=ROWS] {
+	padding: 10px 10px;
+}
+
+div.nebula-layout[style=COLS] {
+	padding: 10px 10px;
+}
+
+
+/***************************
+ * ITEMS
+ ***************************/
+
+ div.nebula-layout > div.nebula-layout-item {
 	position:relative;
-	padding:15px;
 	background-color:#fff;
+	padding:10px;
+}
+
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-child) {
+	--padding-left: 10px;
+}
+
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-child) {
+	--padding-top: 10px;
 }
 
 /***************************
@@ -39,19 +56,19 @@ div.nebula-layout-insert {
 
 div.nebula-layout-insert:hover {
 	background-color:cornflowerblue;
-	z-index:3;
+	z-index:4;
 }
 
 div.nebula-layout-insert[data-place=ABOVE] {
 	top:0px;
-	height:15px;
+	height:10px;
 	left:0px;
 	right:0px;
 }
 
-div.nebula-layout-insert[data-place=BELOW] {
+div.nebula-layout-insert[data-place=BELOW]{
 	bottom:0px;
-	height:15px;
+	height:10px;
 	left:0px;
 	right:0px;
 }
@@ -60,14 +77,14 @@ div.nebula-layout-insert[data-place=LEFT] {
 	left:0px;
 	top:0px;
 	bottom:0px;
-	width:15px;
+	width:10px;
 }
 
 div.nebula-layout-insert[data-place=RIGHT] {
 	right:0px;
 	top:0px;
 	bottom:0px;
-	width:15px;
+	width:10px;
 }
 
 
@@ -76,22 +93,26 @@ div.nebula-layout-insert[data-place=RIGHT] {
  ***************************/
 
 .wysiwyg {
+	position:relative;
 	display:block;
 	padding:10px;
 }
 
 .wysiwyg-toolbar {
+	position: absolute;
+	top: -36px;
+	z-index:3;
 	display:block;
-	padding:5px;
+	padding:5px 0px 10px 0px;
 }
 
 .wysiwyg-toolbar-group {
-	margin-right: 20px;
+	margin-right: 10px;
 }
 
 .wysiwyg-toolbar button {
 	margin:0px -1px 0px 0px;
-	padding:10px 15px;
+	padding:8px 10px;
 	border: solid 1px var(--gray20);
 	border-radius:0px;
 }
@@ -110,4 +131,8 @@ div.nebula-layout-insert[data-place=RIGHT] {
 .wysiwyg-toolbar button:last-child {
 	border-top-right-radius: 6px;
 	border-bottom-right-radius: 6px;
+}
+
+.wysiwyg-editor {
+	min-height:1em;
 }

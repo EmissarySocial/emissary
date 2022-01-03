@@ -62,7 +62,7 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
 
 	case "edit-content":
-		return NewStepEditContent(stepInfo), nil
+		return NewStepEditContent(factory.ContentLibrary(), stepInfo), nil
 
 	// DRAFTS
 

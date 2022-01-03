@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/ghost/model"
@@ -120,9 +121,9 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 		// Populate content into a nebula container
 		stream.Content = nebula.NewContainer()
-		contentItem := nebula.NewItem("html")
-		contentItem.Set("html", item.Content)
-		stream.Content.AddItem(contentItem)
+		stream.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeHTML, datatype.Map{
+			"html": item.Content,
+		})
 
 		if item.Author == nil {
 			stream.AuthorName = ""

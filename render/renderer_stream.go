@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -231,7 +230,6 @@ func (w Stream) Content() template.HTML {
 // Returns the body content as an HTML template
 func (w Stream) ContentEditor() template.HTML {
 	library := w.factory().ContentLibrary()
-	spew.Dump("ContentEditor", &w.stream.Content)
 	result := nebula.Edit(library, &w.stream.Content, w.URL())
 	return template.HTML(result)
 }

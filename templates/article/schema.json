@@ -111,7 +111,7 @@
 			"roles": ["owner", "editor"],
 			"steps": [
 				{"step": "with-draft", "steps":[
-					{"step": "delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged."}
+					{"step": "delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
 				]},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]

@@ -1,38 +1,48 @@
-on closeModal(nextPage)
-
-	if #modal is not empty then 
-		add .closing to #modal
-		settle
-		remove #modal
-	end
-
-	if nextPage is not empty then 
-		set the window's location to nextPage
-	end
-end
-
-on keypress[key=="Escape"] from window
-	if #modal is not empty then 
-		trigger closeModal
-		halt
-	end
-end
-
-behavior AsModal
+behavior Modal
 
 	init
-		put "aside" into [@hx-target]
-		put "innerhtml" into [@hx-swap]
-		put "false" into [@hx-push-url]
-		put "true" into [@data-preload]
+		add [@role="dialog"]
+		set title to the first <h1,h2,h3/> in me
+		if (title is not empty) then
+			
+			if title.id is empty  then 
+				set title.id to "modal-title" 
+			end
 
-		call htmx.process(me)
-	end
-end
+			set the @aria-labelledby to the title's id
+		end
 
-behavior ModalCancelButton() 
+		focus() the first <[tabindex]/> in me
 
-	on click 
-		send closeModal to #modal
-	end
-end
+	on closeModal(nextPage) from window	
+		if #modal is not empty then 
+			add .closing to #modal
+			settle
+			remove #modal
+		end
+
+		if nextPage is not empty then 
+			set the window's location to nextPage
+		end
+	
+	on click(target)
+		if the target's className is "modal-underlay" then
+			trigger closeModal
+		end
+
+	on keydown[key=="Escape"] from window
+		if #modal is not empty then 
+			trigger closeModal
+			halt the event
+		end
+
+	on keydown[key=="Tab"]
+		set focusedElement to the first <:focus/>
+
+		if event.shiftKey
+			focus() the previous <[tabindex]/> from focusedElement with wrapping
+		else
+			focus() the next <[tabindex]/> from focusedElement with wrapping
+		end
+
+		halt the event

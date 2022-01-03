@@ -1,76 +1,40 @@
 behavior wysiwyg(name)
 
-	-- Assemble the wysiwyg editor
+	-- WYSIWYG setup
 	init 
-		append `<input type=hidden name="${name}">` to me 
-		
-		set editor to the first <.wysiwyg-editor /> in me
-		if editor is null
-			append `<div class="wysiwyg-editor"></div>` to me
-			set editor to the first <.wysiwyg-editor /> in me
-		end
+		-- save links to important DOM nodes
+		set element form to closest <form />
+		set element input to form.elements[name]
+		set element toolbar to first <.wysiwyg-toolbar /> in me
+		set element editor to first <.wysiwyg-editor /> in me
 
-		tell <button/> in me
-			add [@type="button"]
-		end
+		-- configure related DOM nodes
+		add [@type="button"] to <button/> in me
+		add [@tabIndex=0] to element editor
+		add [@contentEditable=true] to element editor
 
-		add [@tabIndex=0] to the editor
-		add [@contentEditable=true] to the editor
-	end
-
-
-	-- All toolbar options handled here
-	on click
-		set command to the target's [@data-command]
-
+	-- Clicking a toolbar button triggers a command on the content
+	on click from <button />
+		set command to target's [@data-command]
 		if command is not null then 
-			set value to the target's [@data-command-value]
+			set value to target's [@data-command-value]
 			call document.execCommand(command, false, value)
 		end
-	end
 
-	-- Save on blur, or every 10 seconds
-	on blur or keyup debounced at 10s
-		set node to document.getElementById(id)
-		if node == null then
-			log "error, node: " + id + " is undefined."
-			exit
-		end
+	-- Show the toolbar when focused
+	on focus from <.wysiwyg-editor />
+		remove [@hidden] from element toolbar
 
-		set the node's value to my innerHTML
-		trigger save
-	end
-end
+	-- Hide the toolbar when blured
+	on blur from <.wysiwyg-editor />
+		add [@hidden=true] to element toolbar
 
-
-behavior hotkey
-
-	init
-		set value to "b"
-		set range to <[data-hotkey]/> in me
-		log range
-
-		set node to <[data-hotkey="${value}"]/>
-		log node
-	end
-
-	on keydown(key, metaKey, ctrlKey)
-
-		if (metaKey and ctrlKey) == false then 
-			exit
-		end
-
-		if key.length > 1 then 
-			exit
-		end
-
-		set button to <[data-hotkey="${key}"] />
-
-		if button is null then
-			exit
-		end
-
-		trigger click on button
-		halt the event
-	end
-end
+	-- Autosave the WYSIWYG after 15s of inactivity
+	on input debounced at 15s
+		set element input's value to element editor's innerHTML
+		send updated to form
+	
+	-- Autosave the WYSIWYG whenever it loses focus
+	on blur from <.wysiwyg-editor />
+		set element input's value to element editor's innerHTML
+		send updated to form

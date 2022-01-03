@@ -13,6 +13,7 @@ import (
 type StepDelete struct {
 	title   string
 	message string
+	submit  string
 }
 
 // NewStepDelete returns a fully populated StepDelete object
@@ -20,6 +21,7 @@ func NewStepDelete(stepInfo datatype.Map) StepDelete {
 	return StepDelete{
 		title:   first.String(stepInfo.GetString("title"), "Confirm Delete"),
 		message: first.String(stepInfo.GetString("message"), "Are you sure you want to delete this item?  There is NO UNDO."),
+		submit:  first.String(stepInfo.GetString("submit"), "Delete"),
 	}
 }
 
@@ -34,13 +36,13 @@ func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
 	b.Button().Class("warning").
 		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
-		InnerHTML("Delete").
+		InnerHTML(step.submit).
 		Close()
 
 	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 	b.CloseAll()
 
-	result := WrapModal(renderer.context().Response().Header(), b.String())
+	result := WrapModal(renderer.context().Response(), b.String())
 	io.WriteString(buffer, result)
 
 	return nil

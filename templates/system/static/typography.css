@@ -113,3 +113,11 @@ tr.link:hover > td {
 	cursor:pointer;
 }
 
+
+p {
+    margin:0px 0px 32px 0px;
+}
+
+p:last-child {
+    margin:0px;
+}

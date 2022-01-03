@@ -56,9 +56,9 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	result.Journal = journal.Journal{}
 
 	// Add default content if the content is empty.
-	if result.Content.IsEmpty() {
+	if result.Content.Len() == 0 {
 		result.Content = nebula.NewContainer()
-		result.Content.NewItem(service.contentLibrary, nebula.ItemTypeLayout)
+		result.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeLayout, nil)
 	}
 
 	// Save a draft copy of the original stream

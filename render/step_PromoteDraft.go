@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/ghost/service"
 )
 
-// StepStreamPromoteDraft represents an action-step that can copy the nebula.Container from a StreamDraft into its corresponding Stream
+// StepStreamPromoteDraft represents an action-step that can copy the Container from a StreamDraft into its corresponding Stream
 type StepStreamPromoteDraft struct {
 	draftService *service.StreamDraft
 	stateID      string

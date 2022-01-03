@@ -3,32 +3,59 @@ package render
 import (
 	"io"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
+	"github.com/benpate/html"
 	"github.com/benpate/nebula"
-	"github.com/benpate/nebula/transaction"
 )
 
-// StepEditContent represents an action-step that can edit/update nebula.Container in a streamDraft.
+// StepEditContent represents an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
-	filename string
+	filename       string
+	contentLibrary *nebula.Library
 }
 
-func NewStepEditContent(stepInfo datatype.Map) StepEditContent {
+func NewStepEditContent(contentLibrary *nebula.Library, stepInfo datatype.Map) StepEditContent {
 
 	filename := first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId"))
 
 	return StepEditContent{
-		filename: filename,
+		contentLibrary: contentLibrary,
+		filename:       filename,
 	}
 }
 
 func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
 
+	context := renderer.context()
+	params := context.QueryParams()
+
 	// Handle transaction popups
-	if transaction := renderer.context().QueryParam("transaction"); transaction != "" {
-		return nil
+	if transaction := convert.String(params["prop"]); transaction != "" {
+
+		object := renderer.object()
+
+		if getter, ok := object.(nebula.GetterSetter); ok {
+			content := getter.GetContainer()
+			itemID := convert.Int(params["itemId"])
+
+			// Get the property panel from Nebula
+			result, err := nebula.Prop(step.contentLibrary, &content, itemID, context.Request().Referer(), params)
+
+			if err != nil {
+				return derp.Wrap(err, "ghost.render.StepEditContent.Get", "Error rendering property panel", params)
+			}
+
+			// Success!
+			result = WrapModalWithCloseButton(context.Response(), result)
+			io.WriteString(buffer, result)
+			return nil
+		}
+
+		// Generic error because someone done bad.
+		return derp.NewInternalError("ghost.render.StepEditContent.Get", "Unable to create property panel", params)
 	}
 
 	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
@@ -54,25 +81,19 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error binding data")
 	}
 
-	// Try to parse the request body as a transaction
-	txn, err := transaction.Parse(body)
+	// Try to execute the transaction
+	container := getterSetter.GetContainer()
+	updatedID, err := container.Execute(step.contentLibrary, body)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error parsing transaction", body)
-	}
-
-	// Try to execute the transaction
-
-	c := getterSetter.GetContainer()
-	if _, err := txn.Execute(&c); err != nil {
-		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing transaction", txn)
+		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing content action")
 	}
 
 	// Write the updated content back into the object
-	getterSetter.SetContainer(c)
+	getterSetter.SetContainer(container)
 
 	// Try to save the object back to the database
-	if err := renderer.service().ObjectSave(object, "Content edited: "+txn.Description()); err != nil {
+	if err := renderer.service().ObjectSave(object, "Content edited"); err != nil {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error saving stream")
 	}
 
@@ -80,12 +101,17 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	header := renderer.context().Response().Header()
 	header.Set("HX-Trigger", "closeModal")
 
-	// Rewrite the body to the client.
-	// TODO: Perhaps this can be more efficient in the future
-	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
-		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing template")
+	// Re-render JUST the updated item
+	b := html.New()
+	b.Div().Data("hx-swap-oob", "itemId-"+convert.String(updatedID)).EndBracket()
+	step.contentLibrary.Edit(b, &container, updatedID, renderer.URL())
+	b.CloseAll()
+
+	// Copy the result back to the client response
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
+		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error writing to output buffer", b.String())
 	}
 
-	// Return response to caller
+	// Success!
 	return nil
 }
