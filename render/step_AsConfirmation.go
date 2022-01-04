@@ -34,22 +34,20 @@ func (step StepAsConfirmation) Get(buffer io.Writer, renderer Renderer) error {
 
 	b := html.New()
 
-	// Modal Wrapper
-	b.Div().ID("modal")
-	b.Div().Class("modal-underlay").Script("on click send closeModal to #modal").Close()
-	b.Div().Class("modal-content").EndBracket()
-
+	// Modal Content
 	b.H1().InnerHTML(step.title).Close()
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
 
 	b.Div()
-	b.Button().Class("primary").Data("hx-post", renderer.URL()).InnerHTML(step.submit).Close()
+	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerHTML(step.submit).Close()
 	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 
 	// Done
 	b.CloseAll()
 
-	io.WriteString(buffer, b.String())
+	result := WrapModal(renderer.context().Response(), b.String())
+
+	io.WriteString(buffer, result)
 	return nil
 }
 
