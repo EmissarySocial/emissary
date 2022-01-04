@@ -59,6 +59,41 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) 
 	padding-top: 0px;
 }
 
+/** Special rules for Rows IN Columns **/
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type{
+	padding-top: 0px;
+}
+
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=ABOVE] {
+	display:none;
+}
+
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type{
+	padding-bottom: 0px;
+}
+
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=BELOW] {
+	display:none;
+}
+
+/** Special rules for Columns IN Rows **/
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type {
+	padding-left: 0px;
+}
+
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=LEFT] {
+	display:none;
+}
+
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type{
+	padding-right: 0px;
+}
+
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=RIGHT] {
+	display:none;
+}
+
+
 
 /***************************
  * INSERTION POINTS 
@@ -161,7 +196,7 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) 
 	min-height:2em;
 	padding:10px;
 	z-index:10;
-	border:solid 1px white;
+	border: solid 1px var(--gray30);
 }
 .wysiwyg-editor:focus{
 	border:solid 1px cornflowerblue;
@@ -173,8 +208,19 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) 
  ***************************/
 
 .oEmbed {
+	display:flex;
+	align-items: center;
+	justify-content: center;;
+	flex-direction: column;
 	min-height:100%;
 	flex-grow:1;
+	color: var(--gray40);
+	border: solid 1px var(--gray30);
+	text-align:center;
+}
+
+.oEmbed:focus {
+	border: solid 1px cornflowerblue;
 }
 
 /***************************
@@ -192,6 +238,7 @@ div.nebula-layout textarea {
 	height:100%;
 	resize: none;
 	background-color:var(--white);
+	border: solid 1px var(--gray30);
 }
 
 div.nebula-layout textarea:focus {
