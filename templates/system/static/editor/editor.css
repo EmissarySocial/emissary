@@ -11,7 +11,8 @@
  ***************************/
 
 div.nebula-layout {
-	--display:flex;
+	display:flex;
+	flex-grow:1;
 	box-sizing: border-box;
 	position:relative;
 	align-items:stretch;
@@ -38,56 +39,66 @@ div.nebula-layout div.nebula-layout {
 div.nebula-layout > div.nebula-layout-item {
 	position:relative;
 	background-color:var(--gray05);
-	padding:10px;
+	padding: 10px;
 	display: flex;
 }
 
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-child) {
-	--padding-left: 0px;
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item {
+	padding-left: 10px;
 }
 
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-child) {
-	--padding-top: 0px;
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item {
+	padding-top: 10px;
 }
+
+div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-of-type) {
+	padding-left: 0px;
+}
+
+div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) {
+	padding-top: 0px;
+}
+
 
 /***************************
  * INSERTION POINTS 
  ***************************/
 
-div.nebula-layout-insert {
-	cursor: copy;
+.nebula-layout-insert {
+	display:block;
 	position:absolute;
 	z-index:2;
 	background-color: var(--gray15);
+	cursor: copy;
 }
 
-div.nebula-layout-insert:hover {
+.nebula-layout-insert:hover {
 	background-color:cornflowerblue;
 	z-index:4;
 }
 
-div.nebula-layout-insert[data-place=ABOVE] {
+.nebula-layout-insert[data-place=ABOVE] {
 	top:0px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-div.nebula-layout-insert[data-place=BELOW]{
+.nebula-layout-insert[data-place=BELOW]{
 	bottom:0px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-div.nebula-layout-insert[data-place=LEFT] {
+.nebula-layout-insert[data-place=LEFT] {
 	left:0px;
 	top:0px;
 	bottom:0px;
 	width:10px;
 }
 
-div.nebula-layout-insert[data-place=RIGHT] {
+.nebula-layout-insert[data-place=RIGHT] {
 	right:0px;
 	top:0px;
 	bottom:0px;
@@ -100,15 +111,16 @@ div.nebula-layout-insert[data-place=RIGHT] {
  ***************************/
 
 .wysiwyg {
+	box-sizing: border-box;
 	position:relative;
 	display:block;
-	padding:10px;
+	width:100%;
 	background: var(--white);
 }
 
 .wysiwyg-toolbar {
 	position: absolute;
-	top: -36px;
+	top: -40px;
 	width:100%;
 	z-index:3;
 	display:block;
@@ -134,7 +146,7 @@ div.nebula-layout-insert[data-place=RIGHT] {
 	color:white;
 }
 
-.wysiwyg-toolbar button:first-child {
+.wysiwyg-toolbar button:first-of-type {
 	border-top-left-radius: 6px;
 	border-bottom-left-radius: 6px;
 }
@@ -145,7 +157,15 @@ div.nebula-layout-insert[data-place=RIGHT] {
 }
 
 .wysiwyg-editor {
-	min-height:1em;
+	width:100%;
+	min-height:2em;
+	padding:10px;
+	z-index:10;
+	border:solid 1px white;
+}
+.wysiwyg-editor:focus{
+	border:solid 1px cornflowerblue;
+	outline:none;
 }
 
 /***************************
@@ -155,4 +175,25 @@ div.nebula-layout-insert[data-place=RIGHT] {
 .oEmbed {
 	min-height:100%;
 	flex-grow:1;
+}
+
+/***************************
+ * FORM INPUTS
+ ***************************/
+
+form {
+	width:100%;
+	margin: 0px;
+	padding:0px;
+}
+
+div.nebula-layout textarea {
+	min-height:2em;
+	height:100%;
+	resize: none;
+	background-color:var(--white);
+}
+
+div.nebula-layout textarea:focus {
+	border: solid 1px cornflowerblue;
 }
