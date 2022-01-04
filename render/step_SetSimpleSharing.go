@@ -60,7 +60,7 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	b.WriteString(formHTML)
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerHTML("Save Changes").Close()
-	b.Button().InnerHTML("Cancel").Script("on click send closeModal to #modal").Close()
+	b.Button().Type("button").Script("on click send closeModal to #modal").InnerHTML("Cancel").Close()
 	b.CloseAll()
 
 	// Write it to the output buffer and quit

@@ -31,8 +31,8 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 	b := html.New()
 
 	// Modal Wrapper
-	b.Div().ID("modal")
-	b.Div().Class("modal-underlay").Script("on click send closeModal to #modal").Close()
+	b.Div().ID("modal").Script("install Modal")
+	b.Div().Class("modal-underlay").Close()
 	b.Div().Class("modal-content").EndBracket()
 
 	// Write inner items
