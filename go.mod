@@ -5,7 +5,6 @@ go 1.17
 replace (
 	github.com/benpate/activitystream => ../activitystream
 	github.com/benpate/compare => ../compare
-	github.com/benpate/nebula => ../nebula
 	github.com/benpate/convert => ../convert
 	github.com/benpate/data => ../data
 	github.com/benpate/data-mock => ../data-mock
@@ -29,7 +28,6 @@ replace (
 require (
 	github.com/benpate/activitystream v0.2.1
 	github.com/benpate/compare v0.0.4
-	github.com/benpate/nebula v0.0.1
 	github.com/benpate/convert v0.11.0
 	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mongo v0.0.2
@@ -38,16 +36,18 @@ require (
 	github.com/benpate/exp v0.0.2
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.3.9
-	github.com/benpate/html v0.11.3
+	github.com/benpate/html v0.11.4
 	github.com/benpate/id v0.0.0-20211223035835-658efd027b24
 	github.com/benpate/list v0.4.1
 	github.com/benpate/mediaserver v0.0.0
+	github.com/benpate/nebula v0.0.1
 	github.com/benpate/null v0.6.0
 	github.com/benpate/path v0.4.1
 	github.com/benpate/schema v0.10.2
 	github.com/benpate/steranko v0.4.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.1
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.6.1
@@ -74,7 +74,6 @@ require (
 	github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
