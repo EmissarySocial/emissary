@@ -115,9 +115,13 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	header := renderer.context().Response().Header()
 	header.Set("HX-Trigger", "closeModal")
 	header.Set("HX-Retarget", `[data-id="0"]`)
+	// header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
 
 	// Re-render JUST the updated item
 	result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
+	// b := html.New()
+	// step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
+	// result := b.String()
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, result); err != nil {

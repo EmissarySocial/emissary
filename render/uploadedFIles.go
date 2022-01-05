@@ -3,15 +3,12 @@ package render
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/model"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // uploadedFiles extracts
 func uploadedFiles(factory Factory, ctx echo.Context, objectID primitive.ObjectID) []model.Attachment {
-
-	spew.Dump("uploadedFiles ----------", objectID)
 
 	result := make([]model.Attachment, 0)
 	form, err := ctx.MultipartForm()
@@ -62,6 +59,5 @@ func uploadedFiles(factory Factory, ctx echo.Context, objectID primitive.ObjectI
 		result = append(result, attachment)
 	}
 
-	spew.Dump(result)
 	return result
 }
