@@ -81,6 +81,12 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error binding data")
 	}
 
+	// UPLOADS: If present, inject the uploaded filename into the form post. (One attachment per content item)
+	if attachments := uploadedFiles(renderer.factory(), renderer.context(), renderer.objectID()); len(attachments) > 0 {
+		body["file"] = "/" + renderer.Token() + "/attachments/" + attachments[0].Filename
+		body["mimeType"] = attachments[0].MimeType()
+	}
+
 	// Try to execute the transaction
 	container := getterSetter.GetContainer()
 	_, err := container.Execute(step.contentLibrary, body)

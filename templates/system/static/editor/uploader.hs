@@ -1,4 +1,10 @@
-behavior Uploader(url, success)
+behavior DropToUpload
+	
+on click(target)
+	set input to the first <input[type="file"]/> in me then 
+	if target is not input then
+		send click to input
+	end
 
 on dragenter
 	halt the event
@@ -16,13 +22,9 @@ on drop(dataTransfer)
 	halt the event
 	remove .highlight
 
-	for file in dataTransfer.files
-		make a FormData called formData
-		call formData.append("file", file)
-		fetch `${url}` {method:"POST", body:formData} as text
-	end
+	set input to the first <input[type="file"]/> in me
+	set the input's files to the dataTransfer's files
 
-	set the window's location to success
-
+on htmx:xhr:progress
+	log event
 end
-

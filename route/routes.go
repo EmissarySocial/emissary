@@ -55,6 +55,10 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factoryManager))
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factoryManager))
 
+	// Hard-coded routes for additional stream services
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
+
 	// ActivityPub INBOX/OUTBOX
 	e.GET("/inbox", handler.GetInbox(factoryManager))
 	e.POST("/inbox", handler.PostInbox(factoryManager))
@@ -66,9 +70,6 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// e.POST("/me", handler.PostProfile(factoryManager))
 	// e.GET("/me/:action", handler.PostProfile(factoryManager))
 	// e.POST("/me/:action", handler.PostProfile(factoryManager))
-
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factoryManager))
-	e.GET("/:stream/sse", handler.ServerSentEvent(factoryManager))
 
 	// SITE-WIDE ERROR HANDLER
 	e.HTTPErrorHandler = func(err error, ctx echo.Context) {

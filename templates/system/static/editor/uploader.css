@@ -1,12 +1,15 @@
 .uploader {
     border: 1px dashed var(--gray60);
     font-family: sans-serif;
-    padding: 40px;
     cursor: pointer;
     background-color: var(--white);
     text-align:center;
 }
 
-#drop-area.highlight {
+.uploader.highlight {
     border-color: purple;
+}
+
+.uploader input[type="file"] {
+    display:none;
 }

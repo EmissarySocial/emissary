@@ -53,3 +53,13 @@ div.nebula-layout[data-style=COLS][data-size=6] > div.nebula-layout-item {
 @media screen and (min-width:80em) {
 
 }
+
+div.nebula-layout .media {
+    position:absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-size:cover;
+    background-position:center;
+}

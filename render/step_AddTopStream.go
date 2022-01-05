@@ -29,7 +29,7 @@ func NewStepAddTopStream(templateService *service.Template, streamService *servi
 }
 
 func (step StepAddTopStream) Get(buffer io.Writer, renderer Renderer) error {
-	modalAddStream(step.templateService, buffer, renderer.URL(), "top", step.templateIDs)
+	modalAddStream(renderer.context().Response(), step.templateService, buffer, renderer.URL(), "top", step.templateIDs)
 	return nil
 }
 

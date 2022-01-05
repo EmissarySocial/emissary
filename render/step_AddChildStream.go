@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/service"
 	"github.com/benpate/html"
+	"github.com/labstack/echo/v4"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
@@ -30,7 +31,7 @@ func NewStepAddChildStream(templateService *service.Template, streamService *ser
 
 func (step StepAddChildStream) Get(buffer io.Writer, renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
-	modalAddStream(step.templateService, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
+	modalAddStream(renderer.context().Response(), step.templateService, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
 	return nil
 }
 
@@ -95,16 +96,13 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
 	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 
 	b := html.New()
 
-	b.Div().ID("modal").Data("hx-swap", "none").Data("hx-push-url", "false")
-	b.Div().Class("modal-underlay").Close()
-	b.Div().Class("modal-content")
-	b.H2().InnerHTML("+ Add a Stream").Close()
+	b.H1().InnerHTML("+ Add a Stream").Close()
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {
@@ -122,13 +120,9 @@ func modalAddStream(templateService *service.Template, buffer io.Writer, url str
 		b.Close()
 	}
 
-	b.Close()
-	b.Div()
-	b.Button().
-		Script("on click trigger closeModal").
-		InnerHTML("Cancel")
-
 	b.CloseAll()
 
-	io.WriteString(buffer, b.String())
+	result := WrapModalWithCloseButton(response, b.String())
+
+	io.WriteString(buffer, result)
 }
