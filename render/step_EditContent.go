@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
+	"github.com/benpate/html"
 	"github.com/benpate/nebula"
 )
 
@@ -89,7 +90,7 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to execute the transaction
 	container := getterSetter.GetContainer()
-	_, err := container.Execute(step.contentLibrary, body)
+	changedID, err := container.Execute(step.contentLibrary, body)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing content action")
@@ -114,14 +115,14 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	// Close any modal dialogs that are open
 	header := renderer.context().Response().Header()
 	header.Set("HX-Trigger", "closeModal")
-	header.Set("HX-Retarget", `[data-id="0"]`)
-	// header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
+	// header.Set("HX-Retarget", `[data-id="0"]`)
+	header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
 
 	// Re-render JUST the updated item
-	result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
-	// b := html.New()
-	// step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
-	// result := b.String()
+	// result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
+	b := html.New()
+	step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
+	result := b.String()
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, result); err != nil {

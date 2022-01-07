@@ -17,7 +17,8 @@ div.nebula-layout {
 	position:relative;
 	align-items:stretch;
 	align-content: top;
-	padding:10px;
+	margin:10px;
+	background-color:var(--gray15);
 }
 
 div.nebula-layout[data-style=ROWS] {
@@ -29,39 +30,85 @@ div.nebula-layout[data-style=COLS] {
 }
 
 div.nebula-layout div.nebula-layout {
-	padding:0px;
+	margin:0px;
 } 
+
+/***************************
+ * LAYOUT CONTROLS
+ ***************************/
+
+.nebula-layout-item > .nebula-layout-controls {
+	display:none;
+}
+
+.nebula-layout-item > .nebula-layout-controls {
+	display:block;
+	position: absolute;
+	top: 0px;
+	left: -29px;
+	width: 30px;
+	overflow-x:hidden;
+	z-index: 10;
+	border: solid 1px var(--gray40);
+	background-color: var(--gray10);
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	color: var(--gray50);
+}
+
+.nebula-layout-controls > div:hover {
+	color: cornflowerblue;
+}
+
+.nebula-layout-sortable-handle {
+	cursor: grab;
+	padding: 8px 4px;
+}
+
+.nebula-layout-delete {
+	cursor: pointer;
+	padding: 4px;
+}
+
+/***************************
+ * SORTABLE
+ ***************************/
+
+ .nebula-layout-sortable-ghost {
+	opacity:0.5;
+	background-color:black;
+}
 
 /***************************
  * ITEMS
  ***************************/
 
-div.nebula-layout > div.nebula-layout-item {
+div.nebula-layout-item {
 	position:relative;
 	background-color:var(--gray05);
-	padding: 10px;
+	margin: 10px;
 	display: flex;
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item {
-	padding-left: 10px;
+	margin-left: 10px;
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item {
-	padding-top: 10px;
+	margin-top: 10px;
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-of-type) {
-	padding-left: 0px;
+	margin-left: 0px;
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) {
-	padding-top: 0px;
+	margin-top: 0px;
 }
 
 /** Special rules for Rows IN Columns **/
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type{
-	padding-top: 0px;
+	margin-top: 0px;
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=ABOVE] {
@@ -69,7 +116,7 @@ div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type{
-	padding-bottom: 0px;
+	margin-bottom: 0px;
 }
 
 div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=BELOW] {
@@ -78,7 +125,7 @@ div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[
 
 /** Special rules for Columns IN Rows **/
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type {
-	padding-left: 0px;
+	margin-left: 0px;
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=LEFT] {
@@ -86,14 +133,12 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type{
-	padding-right: 0px;
+	margin-right: 0px;
 }
 
 div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=RIGHT] {
 	display:none;
 }
-
-
 
 /***************************
  * INSERTION POINTS 
@@ -113,28 +158,28 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 }
 
 .nebula-layout-insert[data-place=ABOVE] {
-	top:0px;
+	top:-10px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
 .nebula-layout-insert[data-place=BELOW]{
-	bottom:0px;
+	bottom:-10px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
 .nebula-layout-insert[data-place=LEFT] {
-	left:0px;
+	left:-10px;
 	top:0px;
 	bottom:0px;
 	width:10px;
 }
 
 .nebula-layout-insert[data-place=RIGHT] {
-	right:0px;
+	right:-10px;
 	top:0px;
 	bottom:0px;
 	width:10px;
@@ -193,7 +238,7 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 
 .wysiwyg-editor {
 	width:100%;
-	min-height:2em;
+	min-height:5em;
 	padding:10px;
 	z-index:10;
 	border: solid 1px var(--gray30);
@@ -234,7 +279,7 @@ form {
 }
 
 div.nebula-layout textarea {
-	min-height:2em;
+	min-height:5em;
 	height:100%;
 	resize: none;
 	background-color:var(--white);
