@@ -35,6 +35,6 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepForwardTo.Post", "Error executing template", step.url)
 	}
 
-	closeModal(renderer.context(), nextPage)
+	CloseModal(renderer.context(), nextPage)
 	return nil
 }

@@ -48,7 +48,10 @@
 			]
 		},
 		"view": {
-			"roles": ["viewer", "editor", "owner"],
+			"roles": ["editor", "owner"],
+			"roleStates": {
+				"viewer": ["published"]
+			},
 			"step": "view-html"
 		},
 		"heading": {
@@ -74,7 +77,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["readonly"], "title":"Who Can See This Article?", "message": "Select who can view and comment on this article."},
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message": "Select who can view and comment on this article."},
 					{"step": "save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]

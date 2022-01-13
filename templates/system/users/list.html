@@ -1,16 +1,16 @@
 {{- $users := .Users.Top12.ByDisplayName.View -}}
 {{- if not $users.IsEmpty }}
 
+    <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend">
     {{- range $index, $user := $users -}}
-        <div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5">
-            <div hx-get="/admin/users/{{$user.UserID}}/view" hx-push-url="true" class="padded card clickable">
-                <div class="card-photo">
-                    <img src="{{$user.AvatarURL}}">
-                </div>
-                <div>{{$user.DisplayName}}</div>
-            </div>
+            <tr hx-get="/admin/users/{{$user.UserID}}/view" hx-push-url="true" class="padded card clickable">
+                <td><i class="fa-solid fa-user"></i> {{$user.DisplayName}}</td>
+                <td align="right">
+                    <span hx-get="/admin/users/{{$user.UserID}}/delete"><i class="fa-regular fa-trash-can"></i></span>
+                </td>
+            </tr>
         </div>
     {{- end -}}
+    </tbody>
 
-    <div hx-trigger="revealed" hx-get="/admin/users/list?displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend"></div>
 {{- end -}}

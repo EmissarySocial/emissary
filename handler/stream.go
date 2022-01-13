@@ -118,7 +118,7 @@ func isOwner(claims jwt.Claims, err error) bool {
 
 	if err == nil {
 		if claims.Valid() == nil {
-			if authorization, ok := claims.(model.Authorization); ok {
+			if authorization, ok := claims.(*model.Authorization); ok {
 				return authorization.DomainOwner
 			}
 		}

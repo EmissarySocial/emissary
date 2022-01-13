@@ -17,7 +17,7 @@ div.nebula-layout {
 	position:relative;
 	align-items:stretch;
 	align-content: top;
-	margin:10px;
+	margin-top:10px;
 	background-color:var(--gray15);
 }
 
@@ -29,10 +29,6 @@ div.nebula-layout[data-style=COLS] {
 	flex-direction:row;
 }
 
-div.nebula-layout div.nebula-layout {
-	margin:0px;
-} 
-
 /***************************
  * LAYOUT CONTROLS
  ***************************/
@@ -41,19 +37,19 @@ div.nebula-layout div.nebula-layout {
 	display:none;
 }
 
-.nebula-layout-item > .nebula-layout-controls {
-	display:block;
+.nebula-layout-item:hover > .nebula-layout-controls {
+	display:flex;
+	flex-direction:row;
 	position: absolute;
-	top: 0px;
-	left: -29px;
-	width: 30px;
+	top: -33px;
+	left: 0px;
 	overflow-x:hidden;
-	z-index: 10;
+	z-index: 2;
 	border: solid 1px var(--gray40);
-	background-color: var(--gray10);
+	background-color: var(--gray05);
 	border-top-left-radius: 5px;
-	border-bottom-left-radius: 5px;
-	color: var(--gray50);
+	border-top-right-radius: 5px;
+	color: var(--gray40);
 }
 
 .nebula-layout-controls > div:hover {
@@ -62,12 +58,16 @@ div.nebula-layout div.nebula-layout {
 
 .nebula-layout-sortable-handle {
 	cursor: grab;
-	padding: 8px 4px;
+	padding: 2px 10px;
+}
+
+.nebula-layout-sortable-handle:active {
+	cursor: grabbing;
 }
 
 .nebula-layout-delete {
 	cursor: pointer;
-	padding: 4px;
+	padding: 2px 10px;
 }
 
 /***************************
@@ -75,8 +75,9 @@ div.nebula-layout div.nebula-layout {
  ***************************/
 
  .nebula-layout-sortable-ghost {
-	opacity:0.5;
+	opacity:0.3;
 	background-color:black;
+	border: solid 1x purple;
 }
 
 /***************************
@@ -86,58 +87,8 @@ div.nebula-layout div.nebula-layout {
 div.nebula-layout-item {
 	position:relative;
 	background-color:var(--gray05);
-	margin: 10px;
+	margin-bottom: 10px;
 	display: flex;
-}
-
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item {
-	margin-left: 10px;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item {
-	margin-top: 10px;
-}
-
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item:not(:first-of-type) {
-	margin-left: 0px;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:not(:first-of-type) {
-	margin-top: 0px;
-}
-
-/** Special rules for Rows IN Columns **/
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type{
-	margin-top: 0px;
-}
-
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=ABOVE] {
-	display:none;
-}
-
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type{
-	margin-bottom: 0px;
-}
-
-div.nebula-layout[data-style=COLS] > div.nebula-layout-item > div.nebula-layout[data-style=ROWS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=BELOW] {
-	display:none;
-}
-
-/** Special rules for Columns IN Rows **/
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type {
-	margin-left: 0px;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:first-of-type > span.nebula-layout-insert[data-place=LEFT] {
-	display:none;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type{
-	margin-right: 0px;
-}
-
-div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[data-style=COLS] > div.nebula-layout-item:last-of-type > span.nebula-layout-insert[data-place=RIGHT] {
-	display:none;
 }
 
 /***************************
@@ -157,32 +108,18 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 	z-index:4;
 }
 
-.nebula-layout-insert[data-place=ABOVE] {
+.nebula-layout-insert[data-place=BEFORE] {
 	top:-10px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-.nebula-layout-insert[data-place=BELOW]{
+.nebula-layout-insert[data-place=AFTER]{
 	bottom:-10px;
 	height:10px;
 	left:0px;
 	right:0px;
-}
-
-.nebula-layout-insert[data-place=LEFT] {
-	left:-10px;
-	top:0px;
-	bottom:0px;
-	width:10px;
-}
-
-.nebula-layout-insert[data-place=RIGHT] {
-	right:-10px;
-	top:0px;
-	bottom:0px;
-	width:10px;
 }
 
 
@@ -200,17 +137,19 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 
 .wysiwyg-toolbar {
 	position: absolute;
-	top: -40px;
+	top: -50px;
 	width:100%;
 	z-index:3;
 	display:block;
 	padding:5px 0px 10px 0px;
 	white-space: nowrap;
 	overflow-x: scroll;
+	border: solid 1px cornflowerblue;
+	background-color:var(--gray10);
 }
 
 .wysiwyg-toolbar-group {
-	margin-right: 10px;
+	margin-left: 10px;
 }
 
 .wysiwyg-toolbar button {
@@ -218,6 +157,7 @@ div.nebula-layout[data-style=ROWS] > div.nebula-layout-item > div.nebula-layout[
 	padding:8px 10px;
 	border: solid 1px var(--gray20);
 	border-radius:0px;
+	background-color:var(--white);
 }
 
 .wysiwyg-toolbar button:hover {

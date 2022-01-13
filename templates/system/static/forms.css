@@ -145,3 +145,16 @@ button[disabled=true],
 .height300 {height:300px;}
 .height400 {height:400px;}
 .height500 {height:500px;}
+
+
+.htmx-request .htmx-request-hide,
+.htmx-request-show {
+    opacity:0;
+    position:absolute;
+    z-index:-1;
+}
+
+.htmx-request .htmx-request-show {
+    opacity:1;
+    position:initial;
+}

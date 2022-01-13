@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
-	"github.com/benpate/html"
 	"github.com/benpate/nebula"
 )
 
@@ -33,30 +32,9 @@ func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
 	context := renderer.context()
 	params := context.QueryParams()
 
-	// Handle transaction popups
-	if transaction := convert.String(params["prop"]); transaction != "" {
-
-		object := renderer.object()
-
-		if getter, ok := object.(nebula.GetterSetter); ok {
-			content := getter.GetContainer()
-			itemID := convert.Int(params["itemId"])
-
-			// Get the property panel from Nebula
-			result, err := nebula.Prop(step.contentLibrary, &content, itemID, context.Request().Referer(), params)
-
-			if err != nil {
-				return derp.Wrap(err, "ghost.render.StepEditContent.Get", "Error rendering property panel", params)
-			}
-
-			// Success!
-			result = WrapModalWithCloseButton(context.Response(), result)
-			io.WriteString(buffer, result)
-			return nil
-		}
-
-		// Generic error because someone done bad.
-		return derp.NewInternalError("ghost.render.StepEditContent.Get", "Unable to create property panel", params)
+	// Handle action popups
+	if action := convert.String(params["action"]); action != "" {
+		return step.modalAction(buffer, renderer)
 	}
 
 	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
@@ -90,7 +68,7 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to execute the transaction
 	container := getterSetter.GetContainer()
-	changedID, err := container.Execute(step.contentLibrary, body)
+	changedID, err := container.Post(step.contentLibrary, body)
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.render.StepEditContent.Post", "Error executing content action")
@@ -115,14 +93,17 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	// Close any modal dialogs that are open
 	header := renderer.context().Response().Header()
 	header.Set("HX-Trigger", "closeModal")
+	header.Set("ChangedID", convert.String(changedID))
+	header.Set("HX-Retarget", `.content-editor`)
 	// header.Set("HX-Retarget", `[data-id="0"]`)
-	header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
+	// header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
 
+	// Re-render ALL items, including the Sortable behavior
+	result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
 	// Re-render JUST the updated item
-	// result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
-	b := html.New()
-	step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
-	result := b.String()
+	// b := html.New()
+	// step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
+	// result := b.String()
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, result); err != nil {
@@ -131,4 +112,33 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Success!
 	return nil
+}
+
+func (step StepEditContent) modalAction(buffer io.Writer, renderer Renderer) error {
+
+	object := renderer.object()
+
+	if getter, ok := object.(nebula.GetterSetter); ok {
+
+		context := renderer.context()
+		library := renderer.factory().ContentLibrary()
+		content := getter.GetContainer()
+
+		urlValues := context.Request().URL.Query()
+		params := convert.MapOfInterface(urlValues)
+		result := content.Get(library, params, renderer.URL())
+
+		if result == "" {
+			return derp.New(derp.CodeBadRequestError, "ghost.render.StepEditContent.Get", "No action modal available", params)
+		}
+
+		// Success!
+		result = WrapModal(context.Response(), result)
+		io.WriteString(buffer, result)
+		return nil
+	}
+
+	// Generic error because someone done bad.
+	return derp.NewInternalError("ghost.render.StepEditContent.Get", "Unable to create property panel.  Object is not a nebula.GetterSetter", object)
+
 }

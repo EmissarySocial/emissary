@@ -43,7 +43,7 @@ func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepAddModelObject.Get", "Error generating form")
 	}
 
-	result = WrapForm(renderer, result)
+	result = WrapForm(renderer.URL(), result)
 
 	// Wrap result as a modal dialog
 	io.WriteString(buffer, result)

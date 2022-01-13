@@ -59,13 +59,13 @@ func WrapModalWithCloseButton(response *echo.Response, content string) string {
 	return WrapModal(response, content+b.String())
 }
 
-func WrapForm(renderer Renderer, content string) string {
+func WrapForm(endpoint string, content string) string {
 
 	b := html.New()
 
 	// Form Wrapper
 	b.Form("post", "").
-		Attr("hx-post", renderer.URL()).
+		Attr("hx-post", endpoint).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		EndBracket()
@@ -86,12 +86,12 @@ func WrapForm(renderer Renderer, content string) string {
 	return b.String()
 }
 
-func WrapModalForm(response *echo.Response, renderer Renderer, content string) string {
-	return WrapModal(response, WrapForm(renderer, content))
+func WrapModalForm(response *echo.Response, endpoint string, content string) string {
+	return WrapModal(response, WrapForm(endpoint, content))
 }
 
-// closeModal sets Response header to close a modal on the client and optionally forward to a new location.
-func closeModal(ctx *steranko.Context, url string) {
+// CloseModal sets Response header to close a modal on the client and optionally forward to a new location.
+func CloseModal(ctx echo.Context, url string) {
 
 	if url == "" {
 		ctx.Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage": ""}`)

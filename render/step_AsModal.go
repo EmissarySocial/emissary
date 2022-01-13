@@ -59,6 +59,6 @@ func (step StepAsModal) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "ghost.render.StepAsModal.Get", "Error executing subSteps")
 	}
 
-	closeModal(renderer.context(), "")
+	CloseModal(renderer.context(), "")
 	return nil
 }

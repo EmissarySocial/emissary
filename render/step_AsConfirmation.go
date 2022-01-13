@@ -53,6 +53,6 @@ func (step StepAsConfirmation) Get(buffer io.Writer, renderer Renderer) error {
 
 // Post does nothing. (Other steps in the pipeline will make changes)
 func (step StepAsConfirmation) Post(buffer io.Writer, renderer Renderer) error {
-	closeModal(renderer.context(), "")
+	CloseModal(renderer.context(), "")
 	return nil
 }

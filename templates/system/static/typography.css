@@ -69,6 +69,11 @@ h3.space-below {
     padding: 10px;
 }
 
+.block {
+    display: block;
+    width: 100%;
+}
+
 /****************************
  * Text Sizing
  ****************************/

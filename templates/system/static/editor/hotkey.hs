@@ -1,13 +1,19 @@
 behavior hotkey
 
-	on keydown(key, metaKey, ctrlKey)
+	on keydown(key, metaKey, shiftKey, ctrlKey)
+
+		set shortcut to ""
 
 		if window.navigator.userAgent contains "Macintosh" then 
-			if metaKey is not true then 
+			if metaKey then 
+				append "Ctrl+" to shortcut
+			else
 				exit
 			end
 		else 
-			if ctrlKey is not true then
+			if ctrlKey then
+				append "Ctrl+" to shortcut
+			else
 				exit
 			end
 		end
@@ -16,13 +22,18 @@ behavior hotkey
 			exit
 		end
 
-		set button to <[data-hotkey="${key}"] />
+		if shiftKey then
+			append "Shift+" to shortcut
+		end
+
+		append key.toUpperCase() to shortcut
+		set button to first <[aria-keyshortcuts="${shortcut}"] />
 
 		if button is undefined then
 			exit
 		end
 
-		trigger click on button
-		halt event
+		halt the event
+		send click to button
 	end
 end

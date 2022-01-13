@@ -6,19 +6,21 @@ import (
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	ActionID string         `json:"actionID" bson:"actionID"` // Unique ID for this action.
-	Roles    []string       `json:"roles"    bson:"roles"`    // List of roles required to execute this Action.  If empty, then none are required.
-	States   []string       `json:"states"   bson:"states"`   // List of states required to execute this Action.  If empty, then one are required.
-	Step     string         `json:"step"     bson:"step"`     // Shortcut for a single step to execute for this Action (all parameters are defaults)
-	Steps    []datatype.Map `json:"steps"    bson:"steps"`    // List of steps to execute when GET-ing or POST-ing this Action.
+	ActionID   string              `json:"actionID"   bson:"actionID"`   // Unique ID for this action.
+	Roles      []string            `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     []string            `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	RoleStates map[string][]string `json:"roleStates" bson:"roleStates"` // Map of roles -> list of states that grant access to this Action.
+	Step       string              `json:"step"       bson:"step"`       // Shortcut for a single step to execute for this Action (all parameters are defaults)
+	Steps      []datatype.Map      `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
 // NewAction returns a fully initialized Action
 func NewAction() Action {
 	return Action{
-		Roles:  make([]string, 0),
-		States: make([]string, 0),
-		Steps:  make([]datatype.Map, 0),
+		Roles:      make([]string, 0),
+		States:     make([]string, 0),
+		RoleStates: make(map[string][]string),
+		Steps:      make([]datatype.Map, 0),
 	}
 }
 
@@ -34,16 +36,34 @@ func (action Action) UserCan(stream *Stream, authorization *Authorization) bool 
 		}
 	}
 
-	// If present, "Roles" limits the user roles that can take this action
-	if len(action.Roles) > 0 {
+	// If present, "Roles" and "RoleStates" limit the user roles that can take this action
+	if (len(action.Roles) > 0) || (len(action.RoleStates) > 0) {
 
 		// The user must have AT LEAST ONE of the named roles to take this action.
 		// If not, reject this action.
 		roles := stream.Roles(authorization)
 
-		if !matchAny(roles, action.Roles) {
-			return false
+		// If the user matches any of the designated roles, then they can take this action.
+		if matchAny(roles, action.Roles) {
+			return true
 		}
+
+		// Check Roles/States for any limited roles
+		for _, role := range roles {
+
+			// If this role is granted limited permissions
+			if stateList, ok := action.RoleStates[role]; ok {
+				// then check to see if the stream is in a valid state
+				// for this limited role to perform this action...
+				if matchOne(stateList, stream.StateID) {
+					return true
+				}
+			}
+		}
+
+		// Fall through means that there are role-based permissions,
+		// but the user does not meet any of them.
+		return false
 	}
 
 	// All filters have passed.  Allow this action.

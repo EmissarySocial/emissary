@@ -1,3 +1,7 @@
+div.nebula-layout-item {
+    margin-bottom:30px;
+}
+
 div.nebula-layout[data-style=COLS] {
     display:flex;
     flex-direction:row;

@@ -38,7 +38,7 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Wrap result as a modal dialog and return to caller
-	io.WriteString(buffer, WrapForm(renderer, result))
+	io.WriteString(buffer, WrapForm(renderer.URL(), result))
 	return nil
 }
 

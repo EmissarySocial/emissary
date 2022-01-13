@@ -4,7 +4,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
+	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/ghost/config"
 	"github.com/benpate/ghost/domain"
 	"github.com/benpate/steranko"
@@ -42,6 +45,10 @@ func NewFactoryManager(c config.Config) *FactoryManager {
 	return service
 }
 
+func (service *FactoryManager) Domains() []config.Domain {
+	return service.config
+}
+
 // Add appends a new domain into the domain service IF it does not already exist.  If the domain
 // is already in the FactoryManager, then no additional action is taken.
 func (service *FactoryManager) Add(d config.Domain) error {
@@ -65,6 +72,19 @@ func (service *FactoryManager) Add(d config.Domain) error {
 	return nil
 }
 
+func (service *FactoryManager) UpdateDomain(indexString string, domain config.Domain) error {
+
+	if indexString == "new" {
+		service.config = append(service.config, domain)
+		return nil
+	}
+
+	index := convert.Int(indexString)
+
+	service.config[index] = domain
+	return nil
+}
+
 // DomainCount returns the number of domains currently configured by this manager.
 func (service *FactoryManager) DomainCount() int {
 
@@ -79,6 +99,24 @@ func (service *FactoryManager) ByContext(ctx echo.Context) (*domain.Factory, err
 
 	host := service.NormalizeHostname(ctx.Request().Host)
 	return service.ByDomainName(host)
+}
+
+func (service *FactoryManager) DomainByIndex(domainID string) (config.Domain, error) {
+
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	if domainID == "new" {
+		return config.NewDomain(), nil
+	}
+
+	index := convert.Int(domainID)
+
+	if (index < 0) || (index >= len(service.config)) {
+		return config.Domain{}, derp.New(derp.CodeNotFoundError, "ghost.server.FactoryManager.DomainByIndex", "Index out of bounds", index)
+	}
+
+	return service.config[index], nil
 }
 
 // ByDomainName retrieves a domain using a Domain Name
@@ -120,4 +158,26 @@ func (service *FactoryManager) Steranko(ctx echo.Context) (*steranko.Steranko, e
 	}
 
 	return factory.Steranko(), nil
+}
+
+func (service *FactoryManager) Config() config.Config {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+	return service.config
+}
+
+func (service *FactoryManager) SetConfig(newConfig config.Config) error {
+
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	service.config = newConfig
+
+	return nil
+}
+
+func (service *FactoryManager) FormLibrary() form.Library {
+	result := form.NewLibrary(nil)
+	vocabulary.All(&result)
+	return result
 }

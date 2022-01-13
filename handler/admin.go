@@ -25,10 +25,6 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 
 	return func(ctx echo.Context) error {
 
-		var renderer render.Renderer
-		var objectID primitive.ObjectID
-		var actionID string
-
 		// Try to get the factory from the Context
 		factory, err := factoryManager.ByContext(ctx)
 
@@ -36,7 +32,18 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 			return derp.Wrap(err, "ghost.handler.GetAdmin", "Unrecognized Domain")
 		}
 
+		// Authenticate the page request
 		sterankoContext := ctx.(*steranko.Context)
+
+		// Only domain owners can access admin pages
+		if !isOwner(sterankoContext.Authorization()) {
+			return derp.NewForbiddenError("ghost.handler.adminRenderer", "Unauthorized")
+		}
+
+		var renderer render.Renderer
+		var objectID primitive.ObjectID
+		var actionID string
+
 		layoutService := factory.Layout()
 
 		// Parse request arguments

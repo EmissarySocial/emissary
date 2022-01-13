@@ -1,10 +1,7 @@
 behavior DropToUpload
 	
-on click(target)
-	set input to the first <input[type="file"]/> in me then 
-	if target is not input then
-		send click to input
-	end
+on change(target)
+	log target
 
 on change(target)
 	log target

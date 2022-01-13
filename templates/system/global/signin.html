@@ -7,6 +7,7 @@
 
 	<link rel="stylesheet" href="/static/pure-min.css">
 	<link rel="stylesheet" href="/static/pure-grids-responsive-min.css">
+	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
 	<link rel="stylesheet" href="/static/colors.css">
 
 	<link rel="stylesheet" href="/static/accessibility.css">
@@ -20,33 +21,44 @@
 	<link rel="stylesheet" href="/static/tables.css">	
 	<link rel="stylesheet" href="/static/typography.css">	
 
-	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
-
 	<script type="text/hyperscript">	
 		init 
 			set lastPage to document.referrer
-			if lastPage is empty then return null end
-			if (lastPage.indexOf("/signin") >= 0) then return null end
+			log lastPage
+			if (lastPage is empty) or (lastPage contains "/signin") then 
+				call sessionStorage.removeItem("signin-return")
+				exit
+			end
+
 			call sessionStorage.setItem("signin-return", lastPage)
 		end
 
+		on htmx:beforeRequest
+			log event
+			add [@hidden=true] to #message
+			add [@disabled=true] to #submitButton
+
 		on SigninSuccess
 			set lastPage to sessionStorage.getItem("signin-return")
-			log lastPage
-			if lastPage then
-				set the window's location to lastPage
-			else
-				go to url "/home"
+			call sessionStorage.removeItem("signin-return")
+			if lastPage is empty then
+				set lastPage to "/home"
 			end
+			set window.location to lastPage
 		end
+
+		on SigninError
+			set #message.innerHTML to "Invalid Login.  Please Try Again."
+			remove [@hidden] from #message
+			remove [@disabled] from #submitButton
 	</script>
 
 </head>
 
-<body hx-target="#page" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
+<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
 
 	<main>
-		<div id="page" class="framed">
+		<div id="main" class="framed">
 
 			<div class="pure-g">
 				<div class="pure-u-0 pure-u-sm-1-12 pure-u-md-1-6 pure-u-lg-1-4"></div>
@@ -56,8 +68,6 @@
 						<form hx-post="/signin" hx-target="#message" class="pure-form pure-form-stacked">
 
 							<h1>Sign In</h1>
-
-							<div id="message"></div>
 
 							<fieldset>
 								<label for="username">Username</label>
@@ -69,7 +79,15 @@
 								<input type="password" name="password" id="password" required="true" maxlength="100">
 							</fieldset>
 
-							<input type="submit" value="Sign In" class="primary">
+							<button id="submitButton" type="submit" class="primary">
+								<span class="htmx-request-show">
+									<i class="indicator fa-regular fa-spinner fa-spin"></i> Signing In
+								</span>
+								<span class="htmx-request-hide">Sign In</span>
+							</button>
+
+							<span id="message" style="color:red;" hidden></span>
+
 						</form>
 
 					</div>
@@ -85,44 +103,3 @@
 	
 </body>
 </html>
-
-<!--DOCTYPE html>
-<html class="uk-height-1-1">
-<head>
-	<title>Signin : GH0ST</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.5.6/css/uikit.min.css">
-</head>
-
-<body hx-ext="authorization" class="uk-flex uk-flex-middle uk-flex-center">
-
-	<div class="">
-
-		<div class="uk-card uk-card-default uk-card-body">
-
-			<form hx-post="/signin" hx-target="#message">
-
-				<h1 class="uk-card-title">Sign In</h1>
-
-				<div id="message"></div>
-
-				<fieldset class="uk-fieldset uk-margin">
-					<label for="username">Username</label>
-					<input type="text" name="username" id="username" class="uk-input" required="true" maxlength="50">
-				</fieldset>
-
-				<fieldset class="uk-fieldset uk-margin" style="position:relative;">
-					<label for="password">Password</label>
-					<input type="password" name="password" id="password" class="uk-input" required="true" maxlength="100" style="box-sizing:border-box; padding-right:4em;">
-					<div style="position:absolute; right:5px; bottom:8px;">
-						<span class="uk-text-meta uk-link" _="on click take .uk-hidden then put 'text' into password.type">SHOW</span>
-						<span class="uk-text-meta uk-link uk-hidden" _="on click take .uk-hidden then put 'password' into password.type">HIDE</span>
-					</div>
-				</fieldset>
-
-				<input type="submit" value="Sign In" class="uk-button uk-button-primary">
-			</form>
-		</div>
-	</div>
-
-</body>
-</html-->

@@ -2,7 +2,6 @@ package route
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/handler"
@@ -46,6 +45,11 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
+	// CONFIG PAGES
+	e.GET("/server", handler.GetServerIndex(factoryManager))
+	e.GET("/server/:server", handler.GetServerDomain(factoryManager))
+	e.POST("/server/:server", handler.PostServerDomain(factoryManager))
+
 	// ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factoryManager))
 	e.GET("/admin/:param1", handler.GetAdmin(factoryManager))
@@ -76,7 +80,7 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 		// If Forbidden error, then redirect the user to the signin page.
 		if derp.ErrorCode(err) == derp.CodeForbiddenError {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(ctx.Request().RequestURI))
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
 			return
 		}
 

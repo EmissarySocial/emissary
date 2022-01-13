@@ -32,7 +32,7 @@ require (
 	github.com/benpate/data v0.11.1
 	github.com/benpate/data-mongo v0.0.2
 	github.com/benpate/datatype v0.0.3
-	github.com/benpate/derp v0.22.0
+	github.com/benpate/derp v0.22.2
 	github.com/benpate/exp v0.0.2
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.3.9
