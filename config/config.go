@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 
 	"github.com/benpate/derp"
 )
@@ -26,6 +27,22 @@ func Load(filename string) (Config, error) {
 	}
 
 	return result, nil
+}
+
+// Write saves the current configuration to permanent storage (currently filesystem)
+func Write(config Config, filename string) error {
+
+	output, err := json.Marshal(config)
+
+	if err != nil {
+		return derp.Wrap(err, "ghost.config.Write", "Error marshalling configuration")
+	}
+
+	if err := os.WriteFile(filename, output, 0x777); err != nil {
+		return derp.Wrap(err, "ghost.config.Write", "Error writing configuration")
+	}
+
+	return nil
 }
 
 // Default returns the default configuration for this application.

@@ -180,6 +180,10 @@ func PostServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			return derp.Wrap(err, "ghost.handler.PostServer", "Error saving domain")
 		}
 
+		if err := factoryManager.WriteConfig(); err != nil {
+			return derp.Wrap(err, "ghost.handler.PostServer", "Error writing configuration file")
+		}
+
 		render.CloseModal(ctx, "")
 		return ctx.NoContent(http.StatusOK)
 	}

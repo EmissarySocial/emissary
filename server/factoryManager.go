@@ -85,6 +85,15 @@ func (service *FactoryManager) UpdateDomain(indexString string, domain config.Do
 	return nil
 }
 
+func (service *FactoryManager) WriteConfig() error {
+	// TODO: this hardcoded reference should be moved into the config file itself
+	if err := config.Write(service.config, "./config.json"); err != nil {
+		return derp.Wrap(err, "ghost.server.FactoryManager.WriteConfig", "Error writing configuration")
+	}
+
+	return nil
+}
+
 // DomainCount returns the number of domains currently configured by this manager.
 func (service *FactoryManager) DomainCount() int {
 
