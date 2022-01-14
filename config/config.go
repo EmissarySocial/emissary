@@ -9,7 +9,12 @@ import (
 )
 
 // Config defines all of the domains available on this server
-type Config []Domain // Slice of one or more domain configurations
+type Config struct {
+	StorageType     string   `json:"storageType"`    // How this file is stored (currently, only "FILE")
+	StorageLocation string   `json:"stoageLocation"` // Where the file is stored (currently, only the file path)
+	Password        string   `json:"password"`       // Password for access to admin
+	Domains         []Domain `json:"domains"`        // Slice of one or more domain configurations
+}
 
 // Load retrieves all of the configured domains from permanent storage (currently filesystem)
 func Load(filename string) (Config, error) {
@@ -32,7 +37,7 @@ func Load(filename string) (Config, error) {
 // Write saves the current configuration to permanent storage (currently filesystem)
 func Write(config Config, filename string) error {
 
-	output, err := json.Marshal(config)
+	output, err := json.MarshalIndent(config, "\n", "\t")
 
 	if err != nil {
 		return derp.Wrap(err, "ghost.config.Write", "Error marshalling configuration")
@@ -47,16 +52,20 @@ func Write(config Config, filename string) error {
 
 // Default returns the default configuration for this application.
 func Default() Config {
-	return Config([]Domain{})
+	return Config{
+		StorageType:     "FILE",
+		StorageLocation: "./config.json",
+		Domains:         make([]Domain, 0),
+	}
 }
 
 // DomainNames returns an array of domains names in this configuration.
 func (config Config) DomainNames() []string {
 
-	result := make([]string, len(config))
+	result := make([]string, len(config.Domains))
 
-	for index := range config {
-		result[index] = config[index].Hostname
+	for index := range config.Domains {
+		result[index] = config.Domains[index].Hostname
 	}
 
 	return result

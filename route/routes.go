@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/ghost/handler"
+	"github.com/benpate/ghost/middleware"
 	"github.com/benpate/ghost/server"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -45,12 +46,14 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
-	// CONFIG PAGES
-	e.GET("/server", handler.GetServerIndex(factoryManager))
-	e.GET("/server/:server", handler.GetServerDomain(factoryManager))
-	e.POST("/server/:server", handler.PostServerDomain(factoryManager))
+	// SERVER ADMIN PAGES
+	serverAdmin := e.Group("", middleware.ServerAdmin(factoryManager))
+	serverAdmin.GET("/server", handler.GetServerIndex(factoryManager))
+	serverAdmin.GET("/server/:domain", handler.GetServerDomain(factoryManager))
+	serverAdmin.POST("/server/:domain", handler.PostServerDomain(factoryManager))
+	serverAdmin.DELETE("/server/:domain", handler.DeleteServerDomain(factoryManager))
 
-	// ADMIN PAGES
+	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factoryManager))
 	e.GET("/admin/:param1", handler.GetAdmin(factoryManager))
 	e.POST("/admin/:param1", handler.PostAdmin(factoryManager))

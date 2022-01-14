@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/ghost/server"
 	"github.com/benpate/html"
 	"github.com/benpate/path"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -20,11 +19,11 @@ func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		domains := factoryManager.Domains()
+		domains := factoryManager.ListDomains()
 
 		b := html.New()
 
-		pageHeader(ctx, b, "Domain List")
+		pageHeader(ctx, b, "Domains")
 
 		b.H1().InnerHTML("Server Admin").Close()
 		b.Table().Class("table").EndBracket()
@@ -40,13 +39,19 @@ func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
 
 		// Display existing records
 		for index, d := range domains {
-			b.TR().Data("hx-get", "/server/"+convert.String(index))
-			b.TD()
+			indexString := convert.String(index)
+			b.TR()
+			b.TD().Attr("nowrap", "true").Data("hx-get", "/server/"+indexString)
 			b.I("fa-solid fa-server").Close()
 			b.Space()
 			b.Span().InnerHTML(d.Label).Close()
 			b.Close()
-			b.TD().InnerHTML(d.Hostname).Close()
+			b.TD().Data("hx-get", "/server/"+indexString).Style("width:100%;").InnerHTML(d.Hostname).Close()
+			b.TD()
+			b.I("fa-solid fa-trash").
+				Data("hx-delete", "/server/"+indexString).
+				Data("hx-confirm", "Delete this Domain?").
+				Close()
 			b.Close()
 		}
 
@@ -58,20 +63,19 @@ func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
 func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
-		domain, err := factoryManager.DomainByIndex(ctx.Param("server"))
+		domain, err := factoryManager.DomainByIndex(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetServer", "Error loading Domain config")
+			return derp.Wrap(err, "ghost.handler.GetServerDomain", "Error loading Domain config")
 		}
 
 		lib := factoryManager.FormLibrary()
 
 		f := form.Form{
-			Kind:    "layout-vertical",
-			Options: form.Map{"show-labels": "false"},
+			Kind:    "layout-tabs",
+			Options: form.Map{"labels": "Server,Email"},
 			Children: []form.Form{{
-				Kind:  "layout-vertical",
-				Label: "Server Details",
+				Kind: "layout-vertical",
 				Children: []form.Form{{
 					Kind:        "text",
 					Path:        "label",
@@ -91,8 +95,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 					Label: "MongoDB Database Name",
 				}},
 			}, {
-				Kind:  "layout-vertical",
-				Label: "Email Server",
+				Kind: "layout-vertical",
 				Children: []form.Form{{
 					Kind:  "text",
 					Path:  "smtp.hostname",
@@ -117,7 +120,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		formHTML, err := f.HTML(&lib, &s, &domain)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetServer", "Error generating form")
+			return derp.Wrap(err, "ghost.handler.GetServerDomain", "Error generating form")
 		}
 
 		b := html.New()
@@ -131,6 +134,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 			EndBracket()
 
 		// Contents
+		b.H1().InnerHTML("Domain Settings").Close()
 		b.WriteString(formHTML)
 
 		// Controls
@@ -150,38 +154,52 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 func PostServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
-		domainID := ctx.Param("server")
+		domainID := ctx.Param("domain")
 
 		domain, err := factoryManager.DomainByIndex(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error loading domain", ctx.Param("server"))
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
 		input := datatype.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error binding form input")
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error binding form input")
 		}
 
-		spew.Dump(input)
 		s := config.Schema()
 
 		if err := s.Validate(input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error validating input", domain)
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error validating input", domain)
 		}
-		spew.Dump(input)
 
 		if err := path.SetAll(&domain, input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error setting domain data", input)
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error setting domain data", input)
 		}
 
 		if err := factoryManager.UpdateDomain(domainID, domain); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error saving domain")
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error saving domain")
 		}
 
-		if err := factoryManager.WriteConfig(); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServer", "Error writing configuration file")
+		render.CloseModal(ctx, "")
+		return ctx.NoContent(http.StatusOK)
+	}
+}
+
+func DeleteServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+
+		domainID := ctx.Param("domain")
+
+		domain, err := factoryManager.DomainByIndex(domainID)
+
+		if err != nil {
+			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
+		}
+
+		if err := factoryManager.DeleteDomain(domain); err != nil {
+			return derp.Wrap(err, "ghost.handler.DeleteServerDomain", "Error deleting domain")
 		}
 
 		render.CloseModal(ctx, "")
@@ -215,6 +233,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 
 		b.Container("script").Attr("src", "/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/modal.hs").Attr("type", "text/hyperscript").Close()
+		b.Container("script").Attr("src", "/static/tabs.hs").Attr("type", "text/hyperscript").Close()
 		b.Container("script").Attr("src", "https://unpkg.com/hyperscript.org").Close()
 
 		b.Close()

@@ -23,6 +23,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "add":
 		return NewStepAddModelObject(factory.FormLibrary(), stepInfo), nil
 
+	case "edit":
+		return NewStepEditModelObject(factory.FormLibrary(), stepInfo), nil
+
 	case "delete":
 		return NewStepDelete(stepInfo), nil
 

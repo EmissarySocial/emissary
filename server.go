@@ -32,6 +32,7 @@ func main() {
 
 	fmt.Println("Initializing web server...")
 	e := route.New(factoryManager)
+
 	e.Use(middleware.Recover())
 	// TODO: implement echo.Security middleware
 	e.Use(steranko.Middleware(factoryManager))
