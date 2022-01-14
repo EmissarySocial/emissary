@@ -9,9 +9,6 @@
 body {
 	background-color: var(--gray05);
 	color: var(--black);
-
-	display: flex;
-	justify-content: flex-end;
 }
 
 header {
