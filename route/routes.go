@@ -47,11 +47,11 @@ func New(factoryManager *server.FactoryManager) *echo.Echo {
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
 	// SERVER ADMIN PAGES
-	serverAdmin := e.Group("", middleware.ServerAdmin(factoryManager))
-	serverAdmin.GET("/server", handler.GetServerIndex(factoryManager))
-	serverAdmin.GET("/server/:domain", handler.GetServerDomain(factoryManager))
-	serverAdmin.POST("/server/:domain", handler.PostServerDomain(factoryManager))
-	serverAdmin.DELETE("/server/:domain", handler.DeleteServerDomain(factoryManager))
+	serverAdmin := middleware.ServerAdmin(factoryManager)
+	e.GET("/server", handler.GetServerIndex(factoryManager), serverAdmin)
+	e.GET("/server/:domain", handler.GetServerDomain(factoryManager), serverAdmin)
+	e.POST("/server/:domain", handler.PostServerDomain(factoryManager), serverAdmin)
+	e.DELETE("/server/:domain", handler.DeleteServerDomain(factoryManager), serverAdmin)
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factoryManager))
