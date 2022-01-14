@@ -4,7 +4,6 @@
 	"actions": {
 		"index": {"step": "view-html"},
 		"list": {"step": "view-html"},
-		"view": {"step": "view-html"},
 		
 		"add": {
 			"steps": [{
@@ -30,10 +29,11 @@
 			"steps": [{
 				"step": "as-modal",
 				"steps": [{
-					"step": "form-html",
+					"step": "edit",
+					"type": "user",
 					"form": {
 						"kind": "layout-vertical",
-						"label": "Edit User",
+						"label": "Edit Person",
 						"description": "",
 						"children": [
 							{"kind": "text", "label": "Full Name", "path": "displayName"},
