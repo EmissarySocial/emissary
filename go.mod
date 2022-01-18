@@ -3,7 +3,7 @@ module github.com/whisperverse/whisperverse
 go 1.17
 
 require (
-	github.com/whisperverse/pub v0.4.0
+	github.com/whisperverse/pub v0.4.1
 	github.com/benpate/compare v0.1.0
 	github.com/benpate/convert v0.11.1
 	github.com/benpate/data v0.13.0
