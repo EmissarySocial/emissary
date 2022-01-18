@@ -3,10 +3,10 @@ package handler
 import (
 	"fmt"
 
-	"github.com/benpate/activitystream/reader"
-	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/pub/reader"
+	"github.com/whisperverse/pub/writer"
 	"github.com/whisperverse/whisperverse/server"
 )
 

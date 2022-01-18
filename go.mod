@@ -3,7 +3,7 @@ module github.com/whisperverse/whisperverse
 go 1.17
 
 require (
-	github.com/benpate/activitystream v0.2.1
+	github.com/whisperverse/pub v0.4.0
 	github.com/benpate/compare v0.1.0
 	github.com/benpate/convert v0.11.1
 	github.com/benpate/data v0.13.0
@@ -16,8 +16,7 @@ require (
 	github.com/benpate/html v0.11.5
 	github.com/benpate/id v0.1.0
 	github.com/benpate/list v0.4.2
-	github.com/benpate/mediaserver v0.0.0
-	github.com/benpate/nebula v0.0.1
+	github.com/benpate/nebula v0.2.0
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.5.1
 	github.com/benpate/schema v0.11.0
@@ -32,6 +31,7 @@ require (
 	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.28
+	github.com/whisperverse/mediaserver v0.1.2
 	go.mongodb.org/mongo-driver v1.8.2
 )
 
