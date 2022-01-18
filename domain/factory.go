@@ -11,14 +11,14 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	formlib "github.com/benpate/form/vocabulary"
-	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/render"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // Factory knows how to create an populate all services
@@ -51,13 +51,13 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
+		return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
 	}
 
 	session, err := server.Session(context.Background())
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.NewFactory", "Error connecting to MongoDB (Session)", domain)
+		return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Session)", domain)
 	}
 
 	factory := Factory{

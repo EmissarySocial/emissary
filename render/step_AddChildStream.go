@@ -6,9 +6,9 @@ import (
 	"github.com/benpate/compare"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/html"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
@@ -46,7 +46,7 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 		if templateID == "" {
 			templateID = step.templateIDs[0]
 		} else if !compare.Contains(step.templateIDs, templateID) {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepAddChildStream.Post", "Cannot create new template of this kind", templateID)
+			return derp.New(derp.CodeBadRequestError, "whisper.render.StepAddChildStream.Post", "Cannot create new template of this kind", templateID)
 		}
 	}
 
@@ -54,7 +54,7 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 	child, template, err := step.streamService.NewChild(streamRenderer.stream, templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error creating new child stream", templateID)
+		return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Error creating new child stream", templateID)
 	}
 
 	// Create child stream
@@ -62,32 +62,32 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 	childStream, err := NewStream(streamRenderer.factory(), streamRenderer.context(), template, action, &child)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error creating renderer", child)
+		return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Error creating renderer", child)
 	}
 
 	// Assign the current user as the author
 	if err := childStream.setAuthor(); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error retrieving author inforation", child)
+		return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Error retrieving author inforation", child)
 	}
 
 	// If there is an "init" step for the child's template, then execute it now
 	if action := template.Action("init"); action != nil {
 		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute 'init' action on child")
+			return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Unable to execute 'init' action on child")
 		}
 	}
 
 	// If the child was not saved by the "init" steps, then save it now
 	if child.IsNew() {
 		if err := step.streamService.Save(&child, "Created"); err != nil {
-			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Error saving child stream to database")
+			return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Error saving child stream to database")
 		}
 	}
 
 	// Execute additional "with-child" steps
 	if len(step.withChild) > 0 {
 		if err := DoPipeline(&childStream, buffer, step.withChild, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "ghost.render.StepAddChildStream.Post", "Unable to execute action steps on child")
+			return derp.Wrap(err, "whisper.render.StepAddChildStream.Post", "Unable to execute action steps on child")
 		}
 	}
 

@@ -71,10 +71,10 @@ func (source *StreamSource) ID() string {
 
 // GetPath implements the path.Getter interface, allowing named READ access to specific values
 func (source *StreamSource) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "ghost.model.StreamSource.GetPath", "unimplemented")
+	return nil, derp.New(derp.CodeInternalError, "whisper.model.StreamSource.GetPath", "unimplemented")
 }
 
 // GetPath implements the path.Getter interface, allowing named WRITE access to specific values
 func (source *StreamSource) SetPath(p path.Path, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "ghost.model.StreamSource.GetPath", "unimplemented")
+	return derp.New(derp.CodeInternalError, "whisper.model.StreamSource.GetPath", "unimplemented")
 }

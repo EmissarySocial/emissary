@@ -2,9 +2,9 @@ package render
 
 import (
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // Factory is used to locate all necessary services

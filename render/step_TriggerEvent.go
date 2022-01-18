@@ -32,7 +32,7 @@ func (step StepTriggerEvent) Post(buffer io.Writer, renderer Renderer) error {
 	data, err := executeSingleTemplate(step.data, renderer)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepTriggerEvent.Post", "Error executing template", step.event, step.data)
+		return derp.Wrap(err, "whisper.render.StepTriggerEvent.Post", "Error executing template", step.event, step.data)
 	}
 
 	if data == "" {

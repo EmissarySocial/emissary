@@ -36,7 +36,7 @@ func (group *Group) GetPath(p path.Path) (interface{}, error) {
 		return group.Label, nil
 	}
 
-	return nil, derp.New(derp.CodeBadRequestError, "ghost.model.Group.SetPath", "Unrecognized Path", p)
+	return nil, derp.New(derp.CodeBadRequestError, "whisper.model.Group.SetPath", "Unrecognized Path", p)
 }
 
 // SetPath implements the path.Setter interface, allowing generic access to a subset of this Group's data
@@ -48,7 +48,7 @@ func (group *Group) SetPath(p path.Path, value interface{}) error {
 		return nil
 	}
 
-	return derp.New(derp.CodeBadRequestError, "ghost.model.Group.SetPath", "Unrecognized Path", p)
+	return derp.New(derp.CodeBadRequestError, "whisper.model.Group.SetPath", "Unrecognized Path", p)
 }
 
 // Schema returns a validating schema for all data in this group

@@ -6,8 +6,8 @@ import (
 	"github.com/benpate/activitystream/reader"
 	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetInbox returns an inbox for a particular ACTOR
@@ -32,13 +32,13 @@ func PostInbox(fm *server.FactoryManager) echo.HandlerFunc {
 		var body []byte
 
 		if _, err := ctx.Request().Body.Read(body); err != nil {
-			return derp.Wrap(err, "ghost.PostInbox", "Error reading request body")
+			return derp.Wrap(err, "whisper.PostInbox", "Error reading request body")
 		}
 
 		r, err := reader.New(body)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.PostInbox", "Error reading ActivityPub record")
+			return derp.Wrap(err, "whisper.PostInbox", "Error reading ActivityPub record")
 		}
 
 		fmt.Print(r)

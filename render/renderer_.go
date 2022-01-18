@@ -6,10 +6,10 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -57,7 +57,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 		return &result, nil
 	}
 
-	return nil, derp.New(derp.CodeInternalError, "ghost.render.NewRenderer", "Unrecognized object", object)
+	return nil, derp.New(derp.CodeInternalError, "whisper.render.NewRenderer", "Unrecognized object", object)
 }
 
 /*******************************************

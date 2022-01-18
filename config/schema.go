@@ -8,7 +8,7 @@ import (
 func Schema() schema.Schema {
 
 	result := schema.Schema{
-		ID:      "ghost.Domain",
+		ID:      "whisper.Domain",
 		Comment: "Validating schema for a domain configuration",
 		Element: schema.Object{
 			Properties: map[string]schema.Element{

@@ -8,10 +8,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
-	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/domain"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/domain"
 )
 
 // FactoryManager manages all interactions with the FactoryManager collection
@@ -55,7 +55,7 @@ func (service *FactoryManager) start(d config.Domain) error {
 	factory, err := domain.NewFactory(d)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.FactoryManager.New", "Error creating factory", d)
+		return derp.Wrap(err, "whisper.service.FactoryManager.New", "Error creating factory", d)
 	}
 
 	// Assign the new factory to the registry
@@ -83,14 +83,14 @@ func (service *FactoryManager) DomainByName(hostname string) (config.Domain, err
 		}
 	}
 
-	return config.Domain{}, derp.NewNotFoundError("ghost.factoryManager.DomainByName", "Domain not fount", hostname)
+	return config.Domain{}, derp.NewNotFoundError("whisper.factoryManager.DomainByName", "Domain not fount", hostname)
 }
 
 func (service *FactoryManager) write() error {
 
 	// TODO: this hardcoded reference should be moved into the config file itself
 	if err := config.Write(service.config, "./config.json"); err != nil {
-		return derp.Wrap(err, "ghost.server.FactoryManager.write", "Error writing configuration")
+		return derp.Wrap(err, "whisper.server.FactoryManager.write", "Error writing configuration")
 	}
 
 	return nil
@@ -110,7 +110,7 @@ func (service *FactoryManager) UpdateDomain(indexString string, domain config.Do
 
 	// TODO: this hardcoded reference should be moved into the config file itself
 	if err := service.write(); err != nil {
-		return derp.Wrap(err, "ghost.server.FactoryManager.WriteConfig", "Error writing configuration")
+		return derp.Wrap(err, "whisper.server.FactoryManager.WriteConfig", "Error writing configuration")
 	}
 
 	service.start(domain)
@@ -139,7 +139,7 @@ func (service *FactoryManager) DomainByIndex(domainID string) (config.Domain, er
 	index := convert.Int(domainID)
 
 	if (index < 0) || (index >= len(service.config.Domains)) {
-		return config.Domain{}, derp.New(derp.CodeNotFoundError, "ghost.server.FactoryManager.DomainByIndex", "Index out of bounds", index)
+		return config.Domain{}, derp.New(derp.CodeNotFoundError, "whisper.server.FactoryManager.DomainByIndex", "Index out of bounds", index)
 	}
 
 	return service.config.Domains[index], nil
@@ -157,7 +157,7 @@ func (service *FactoryManager) DeleteDomain(domain config.Domain) error {
 	}
 
 	if err := service.write(); err != nil {
-		return derp.Wrap(err, "ghost.server.FactoryManager.DeleteDomain", "Error saving configuration")
+		return derp.Wrap(err, "whisper.server.FactoryManager.DeleteDomain", "Error saving configuration")
 	}
 
 	delete(service.factories, domain.Hostname)
@@ -186,7 +186,7 @@ func (service *FactoryManager) ByDomainName(name string) (*domain.Factory, error
 		return domain, nil
 	}
 
-	return nil, derp.New(404, "ghost.service.FactoryManager.Get", "Unrecognized FactoryManager Name", name)
+	return nil, derp.New(404, "whisper.service.FactoryManager.Get", "Unrecognized FactoryManager Name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present
@@ -215,7 +215,7 @@ func (service *FactoryManager) Steranko(ctx echo.Context) (*steranko.Steranko, e
 	factory, err := service.ByContext(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.server.FactoryManager.Steranko", "Unable to locate factory for this domain")
+		return nil, derp.Wrap(err, "whisper.server.FactoryManager.Steranko", "Unable to locate factory for this domain")
 	}
 
 	return factory.Steranko(), nil

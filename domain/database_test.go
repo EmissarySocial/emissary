@@ -3,17 +3,17 @@ package domain
 import (
 	"testing"
 
-	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/model"
 	"github.com/stretchr/testify/require"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestService(t *testing.T) {
 
 	factory, err := NewFactory(config.Domain{
-		ConnectString: "mongodb://127.0.0.1/ghost",
-		DatabaseName:  "ghost",
+		ConnectString: "mongodb://127.0.0.1/whisper",
+		DatabaseName:  "whisper",
 	})
 
 	require.Nil(t, err)

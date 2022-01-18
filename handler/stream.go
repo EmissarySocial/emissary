@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/render"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetStream handles GET requests
@@ -23,7 +23,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetStream", "Unrecognized Domain")
+			return derp.Wrap(err, "whisper.handler.GetStream", "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
@@ -31,7 +31,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetStream", "Error loading Stream by Token", streamToken)
+			return derp.Wrap(err, "whisper.handler.GetStream", "Error loading Stream by Token", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
@@ -40,7 +40,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetStream", "Error creating Renderer")
+			return derp.Wrap(err, "whisper.handler.GetStream", "Error creating Renderer")
 		}
 
 		return renderPage(factory, sterankoContext, &renderer)
@@ -58,7 +58,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Unrecognized Domain")
+			return derp.Wrap(err, "whisper.handler.PostStream", "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
@@ -66,7 +66,7 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Error loading Stream", streamToken)
+			return derp.Wrap(err, "whisper.handler.PostStream", "Error loading Stream", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
@@ -75,13 +75,13 @@ func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostStream", "Error creating Renderer")
+			return derp.Wrap(err, "whisper.handler.PostStream", "Error creating Renderer")
 		}
 
 		// Execute the action pipeline
 		if action := renderer.Action(); action != nil {
 			if err := render.DoPipeline(&renderer, ctx.Response().Writer, action.Steps, render.ActionMethodPost); err != nil {
-				return derp.Wrap(err, "ghost.renderer.PostStream", "Error executing action")
+				return derp.Wrap(err, "whisper.renderer.PostStream", "Error executing action")
 			}
 		}
 

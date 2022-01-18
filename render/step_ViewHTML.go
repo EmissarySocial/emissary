@@ -30,7 +30,7 @@ func NewStepViewHTML(stepInfo datatype.Map) StepViewHTML {
 func (step StepViewHTML) Get(buffer io.Writer, renderer Renderer) error {
 
 	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
-		return derp.Wrap(err, "ghost.render.StepViewHTML.Get", "Error executing template")
+		return derp.Wrap(err, "whisper.render.StepViewHTML.Get", "Error executing template")
 	}
 
 	return nil

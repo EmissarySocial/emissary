@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepWithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -41,12 +41,12 @@ func (step StepWithDraft) execute(buffer io.Writer, renderer Renderer, actionMet
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepWithDraft.Post", "Error getting draft renderer")
+		return derp.Wrap(err, "whisper.render.StepWithDraft.Post", "Error getting draft renderer")
 	}
 
 	// Execute the POST render pipeline on the parent
 	if err := DoPipeline(&draftRenderer, buffer, step.steps, actionMethod); err != nil {
-		return derp.Wrap(err, "ghost.render.StepWithDraft.Post", "Error executing steps for parent")
+		return derp.Wrap(err, "whisper.render.StepWithDraft.Post", "Error executing steps for parent")
 	}
 
 	return nil

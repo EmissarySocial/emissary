@@ -32,10 +32,10 @@ func (sub *Subscription) ID() string {
 
 // GetPath implements the path.Getter interface, allowing named READ access to specific values
 func (sub *Subscription) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "ghost.model.Subscription.GetPath", "unimplemented")
+	return nil, derp.New(derp.CodeInternalError, "whisper.model.Subscription.GetPath", "unimplemented")
 }
 
 // GetPath implements the path.Getter interface, allowing named WRITE access to specific values
 func (sub *Subscription) SetPath(p path.Path, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "ghost.model.Subscription.GetPath", "unimplemented")
+	return derp.New(derp.CodeInternalError, "whisper.model.Subscription.GetPath", "unimplemented")
 }

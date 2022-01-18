@@ -66,7 +66,7 @@ func (d *Domain) GetPath(p path.Path) (interface{}, error) {
 		return d.SMTPConnection.GetPath(p.Tail())
 
 	default:
-		return nil, derp.New(derp.CodeInternalError, "ghost.config.Domain.GetPath", "Unrecognized config setting", p)
+		return nil, derp.New(derp.CodeInternalError, "whisper.config.Domain.GetPath", "Unrecognized config setting", p)
 	}
 }
 
@@ -94,13 +94,13 @@ func (d *Domain) SetPath(p path.Path, value interface{}) error {
 		d.ShowAdmin = convert.Bool(value)
 	case "smtp":
 		if p.IsTailEmpty() {
-			return derp.New(derp.CodeBadRequestError, "ghost.config.Domain.SetPath", "Cannot set SMTP object directly")
+			return derp.New(derp.CodeBadRequestError, "whisper.config.Domain.SetPath", "Cannot set SMTP object directly")
 		}
 
 		return d.SMTPConnection.SetPath(p.Tail(), value)
 
 	default:
-		return derp.New(derp.CodeInternalError, "ghost.config.Domain.SetPath", "Unrecognized config setting", p)
+		return derp.New(derp.CodeInternalError, "whisper.config.Domain.SetPath", "Unrecognized config setting", p)
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (d *Domain) SetPath(p path.Path, value interface{}) error {
 func (smtp *SMTPConnection) GetPath(p path.Path) (interface{}, error) {
 
 	if !p.IsTailEmpty() {
-		return nil, derp.NewBadRequestError("ghost.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
+		return nil, derp.NewBadRequestError("whisper.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
 	}
 
 	switch p.Head() {
@@ -122,7 +122,7 @@ func (smtp *SMTPConnection) GetPath(p path.Path) (interface{}, error) {
 	case "tls":
 		return smtp.TLS, nil
 	default:
-		return nil, derp.NewBadRequestError("ghost.config.SMTP.GetPath", "Unrecognized path", p)
+		return nil, derp.NewBadRequestError("whisper.config.SMTP.GetPath", "Unrecognized path", p)
 	}
 }
 
@@ -131,7 +131,7 @@ func (smtp *SMTPConnection) SetPath(p path.Path, value interface{}) error {
 	spew.Dump("smtp.SetPath", p, value)
 
 	if !p.IsTailEmpty() {
-		return derp.NewBadRequestError("ghost.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
+		return derp.NewBadRequestError("whisper.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
 	}
 
 	switch p.Head() {
@@ -144,7 +144,7 @@ func (smtp *SMTPConnection) SetPath(p path.Path, value interface{}) error {
 	case "tls":
 		smtp.TLS = convert.Bool(value)
 	default:
-		return derp.NewBadRequestError("ghost.config.SMTP.GetPath", "Unrecognized path", p)
+		return derp.NewBadRequestError("whisper.config.SMTP.GetPath", "Unrecognized path", p)
 	}
 
 	return nil

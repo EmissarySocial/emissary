@@ -3,8 +3,8 @@ package handler
 import (
 	"os"
 
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetFavicon returns the default favicon for this server

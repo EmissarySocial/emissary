@@ -37,7 +37,7 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 
 	// Write inner items
 	if err := DoPipeline(renderer, b, step.subSteps, ActionMethodGet); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAsModal.Get", "Error executing subSteps")
+		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error executing subSteps")
 	}
 
 	// Done
@@ -45,7 +45,7 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 
 	// Write the modal dialog into the response buffer
 	if _, err := io.WriteString(buffer, b.String()); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAsModal.Get", "Error writing from builder to buffer")
+		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error writing from builder to buffer")
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (step StepAsModal) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Write inner items
 	if err := DoPipeline(renderer, buffer, step.subSteps, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAsModal.Get", "Error executing subSteps")
+		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error executing subSteps")
 	}
 
 	CloseModal(renderer.context(), "")

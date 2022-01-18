@@ -30,7 +30,7 @@ func (step StepSave) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to update the stream
 	if err := renderer.service().ObjectSave(renderer.object(), step.comment); err != nil {
-		return derp.Wrap(err, "ghost.render.StepSave.Post", "Error saving Stream")
+		return derp.Wrap(err, "whisper.render.StepSave.Post", "Error saving Stream")
 	}
 
 	return nil

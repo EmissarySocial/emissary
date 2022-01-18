@@ -3,8 +3,8 @@ package render
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -97,7 +97,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserName", "Error loading User"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.UserName", "Error loading User"))
 	}
 
 	return user.DisplayName, nil
@@ -108,7 +108,7 @@ func (w Common) UserAvatar() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.UserAvatar", "Error loading User"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.UserAvatar", "Error loading User"))
 	}
 
 	return user.AvatarURL, nil
@@ -129,7 +129,7 @@ func (w Common) getUser() (*model.User, error) {
 		w.user = new(model.User)
 
 		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
-			return nil, derp.Wrap(err, "ghost.render.Stream.getUser", "Error loading user from database", authorization.UserID)
+			return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading user from database", authorization.UserID)
 		}
 	}
 
@@ -147,7 +147,7 @@ func (w Common) getDomain() (*model.Domain, error) {
 		w.domain = new(model.Domain)
 
 		if err := domainService.Load(w.domain); err != nil {
-			return nil, derp.Wrap(err, "ghost.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
+			return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
 		}
 	}
 

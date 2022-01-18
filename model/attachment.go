@@ -41,12 +41,12 @@ func (attachment *Attachment) ID() string {
 
 // GetPath implements the path.Getter interface, allowing named READ access to specific values
 func (attachment *Attachment) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "ghost.model.Attachment.GetPath", "unimplemented")
+	return nil, derp.New(derp.CodeInternalError, "whisper.model.Attachment.GetPath", "unimplemented")
 }
 
 // GetPath implements the path.Getter interface, allowing named WRITE access to specific values
 func (attachment *Attachment) SetPath(p path.Path, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "ghost.model.Attachment.GetPath", "unimplemented")
+	return derp.New(derp.CodeInternalError, "whisper.model.Attachment.GetPath", "unimplemented")
 }
 
 /*******************************************

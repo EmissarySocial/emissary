@@ -32,7 +32,7 @@ func (step StepIfCondition) Get(buffer io.Writer, renderer Renderer) error {
 	if step.evaluateCondition(renderer) {
 		if len(step.then) > 0 {
 			if err := DoPipeline(renderer, buffer, step.then, ActionMethodGet); err != nil {
-				return derp.Wrap(err, "ghost.renderer.StepIfCondition.Get", "Error executing 'then' sub-steps", step.then)
+				return derp.Wrap(err, "whisper.renderer.StepIfCondition.Get", "Error executing 'then' sub-steps", step.then)
 			}
 		}
 
@@ -41,7 +41,7 @@ func (step StepIfCondition) Get(buffer io.Writer, renderer Renderer) error {
 
 	if len(step.otherwise) > 0 {
 		if err := DoPipeline(renderer, buffer, step.otherwise, ActionMethodGet); err != nil {
-			return derp.Wrap(err, "ghost.renderer.StepIfCondition.Get", "Error executing 'otherwise' sub-steps", step.then)
+			return derp.Wrap(err, "whisper.renderer.StepIfCondition.Get", "Error executing 'otherwise' sub-steps", step.then)
 		}
 	}
 
@@ -54,7 +54,7 @@ func (step StepIfCondition) Post(buffer io.Writer, renderer Renderer) error {
 	if step.evaluateCondition(renderer) {
 		if len(step.then) > 0 {
 			if err := DoPipeline(renderer, buffer, step.then, ActionMethodPost); err != nil {
-				return derp.Wrap(err, "ghost.renderer.StepIfCondition.Get", "Error executing 'then' sub-steps", step.then)
+				return derp.Wrap(err, "whisper.renderer.StepIfCondition.Get", "Error executing 'then' sub-steps", step.then)
 			}
 		}
 		return nil
@@ -62,7 +62,7 @@ func (step StepIfCondition) Post(buffer io.Writer, renderer Renderer) error {
 
 	if len(step.otherwise) > 0 {
 		if err := DoPipeline(renderer, buffer, step.otherwise, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "ghost.renderer.StepIfCondition.Get", "Error executing 'otherwise' sub-steps", step.then)
+			return derp.Wrap(err, "whisper.renderer.StepIfCondition.Get", "Error executing 'otherwise' sub-steps", step.then)
 		}
 	}
 

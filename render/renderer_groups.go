@@ -9,10 +9,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -67,7 +67,7 @@ func (w Group) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Group.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.Group.Render", "Error generating HTML"))
 	}
 
 	// Success!
@@ -80,7 +80,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 	action := w.layout.Action(actionID)
 
 	if action == nil {
-		return template.HTML(""), derp.NewNotFoundError("ghost.render.Group.View", "Unrecognized Action", actionID)
+		return template.HTML(""), derp.NewNotFoundError("whisper.render.Group.View", "Unrecognized Action", actionID)
 	}
 
 	return NewGroup(w.factory(), w.context(), w.layout, action, w.group).Render()

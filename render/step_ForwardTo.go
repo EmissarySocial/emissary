@@ -32,7 +32,7 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer Renderer) error {
 	nextPage, err := executeSingleTemplate(step.url, renderer)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepForwardTo.Post", "Error executing template", step.url)
+		return derp.Wrap(err, "whisper.render.StepForwardTo.Post", "Error executing template", step.url)
 	}
 
 	CloseModal(renderer.context(), nextPage)

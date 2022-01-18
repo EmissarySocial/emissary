@@ -5,9 +5,9 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/path"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepStreamThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -34,7 +34,7 @@ func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error 
 	attachments, err := step.attachmentService.ListByObjectID(renderer.objectID())
 
 	if err != nil {
-		return derp.New(derp.CodeBadRequestError, "ghost.render.StepStreamThumbnail.Post", "Error listing attachments")
+		return derp.New(derp.CodeBadRequestError, "whisper.render.StepStreamThumbnail.Post", "Error listing attachments")
 	}
 
 	// Scan all attachments and use the first one that is an image.

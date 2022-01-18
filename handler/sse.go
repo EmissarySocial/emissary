@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/domain"
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/domain"
+	"github.com/whisperverse/whisperverse/server"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

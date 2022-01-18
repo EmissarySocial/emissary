@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetNodeInfo returns public webfinger information for a designated user

@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
-	"github.com/benpate/ghost/service"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepStreamPromoteDraft represents an action-step that can copy the Container from a StreamDraft into its corresponding Stream
@@ -32,7 +32,7 @@ func (step StepStreamPromoteDraft) Post(buffer io.Writer, renderer Renderer) err
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
 	if err := step.draftService.Publish(renderer.objectID(), step.stateID); err != nil {
-		return derp.Wrap(err, "ghost.renderer.StepStreamPromoteDraft.Post", "Error publishing Draft")
+		return derp.Wrap(err, "whisper.renderer.StepStreamPromoteDraft.Post", "Error publishing Draft")
 	}
 
 	return nil

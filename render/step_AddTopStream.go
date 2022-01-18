@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/compare"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepAddTopStream represents an action that can create top-level folders in the Domain
@@ -44,14 +44,14 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 		if templateID == "" {
 			templateID = step.templateIDs[0]
 		} else if !compare.Contains(step.templateIDs, templateID) {
-			return derp.New(derp.CodeBadRequestError, "ghost.render.StepAddTopStream.Post", "Cannot create new template of this kind", templateID)
+			return derp.New(derp.CodeBadRequestError, "whisper.render.StepAddTopStream.Post", "Cannot create new template of this kind", templateID)
 		}
 	}
 
 	new, template, err := step.streamService.NewTopLevel(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error creating TopLevel stream", templateID)
+		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error creating TopLevel stream", templateID)
 	}
 
 	// Set stream defaults
@@ -61,25 +61,25 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 	newStream, err := NewStream(topLevelRenderer.factory(), topLevelRenderer.ctx, template, action, &new)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error creating renderer", new)
+		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error creating renderer", new)
 	}
 
 	// If there is an "init" step for the new stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
 		if err := DoPipeline(&newStream, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Unable to execute 'init' action on new stream")
+			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Unable to execute 'init' action on new stream")
 		}
 	}
 
 	// Execute additional steps on new stream (from schema.json)
 	if err := DoPipeline(newStream, buffer, step.withNewStream, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error executing steps on new stream")
+		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error executing steps on new stream")
 	}
 
 	// If the pipeline above did not already save the new stream, then save it to the database.
 	if newStream.stream.IsNew() {
 		if err := step.streamService.Save(newStream.stream, ""); err != nil {
-			return derp.Wrap(err, "ghost.render.StepAddTopStream.Post", "Error saving new steram", newStream.stream)
+			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error saving new steram", newStream.stream)
 		}
 	}
 

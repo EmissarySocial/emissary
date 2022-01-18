@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/model"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -128,7 +128,7 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 	it, err := service.List(criteria, option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Group.ListbyIDs", "Error executing query", criteria)
+		return nil, derp.Wrap(err, "whisper.service.Group.ListbyIDs", "Error executing query", criteria)
 	}
 
 	// Read the iterator into a result array
@@ -169,7 +169,7 @@ func (service *Group) ListAsOptions() ([]form.OptionCode, error) {
 	it, err := service.List(exp.All(), option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Group.ListAsOptions", "Error listing Groups")
+		return nil, derp.Wrap(err, "whisper.service.Group.ListAsOptions", "Error listing Groups")
 	}
 
 	result := make([]form.OptionCode, 0)

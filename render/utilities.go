@@ -5,10 +5,10 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
@@ -105,13 +105,13 @@ func executeSingleTemplate(t string, renderer Renderer) (string, error) {
 	executable, err := template.New("").Parse(t)
 
 	if err != nil {
-		return "", derp.Wrap(err, "ghost.render.executeSingleTemplate", "Error parsing template", t)
+		return "", derp.Wrap(err, "whisper.render.executeSingleTemplate", "Error parsing template", t)
 	}
 
 	var buffer bytes.Buffer
 
 	if err := executable.Execute(&buffer, renderer); err != nil {
-		return "", derp.Wrap(err, "ghost.render.executeSingleTemplate", "Error executing template", t)
+		return "", derp.Wrap(err, "whisper.render.executeSingleTemplate", "Error executing template", t)
 	}
 
 	return buffer.String(), nil

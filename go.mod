@@ -1,28 +1,6 @@
-module github.com/benpate/ghost
+module github.com/whisperverse/whisperverse
 
 go 1.17
-
-replace (
-	github.com/benpate/activitystream => ../activitystream
-	github.com/benpate/compare => ../compare
-	github.com/benpate/convert => ../convert
-	github.com/benpate/data => ../data
-	github.com/benpate/data-mongo => ../data-mongo
-	github.com/benpate/datatype => ../datatype
-	github.com/benpate/derp => ../derp
-	github.com/benpate/exp => ../exp
-	github.com/benpate/first => ../first
-	github.com/benpate/form => ../form
-	github.com/benpate/html => ../html
-	github.com/benpate/htmlconv => ../htmlconv
-	github.com/benpate/id => ../id
-	github.com/benpate/list => ../list
-	github.com/benpate/mediaserver => ../mediaserver
-	github.com/benpate/nebula => ../nebula
-	github.com/benpate/path => ../path
-	github.com/benpate/schema => ../schema
-	github.com/benpate/steranko => ../steranko
-)
 
 require (
 	github.com/benpate/activitystream v0.2.1

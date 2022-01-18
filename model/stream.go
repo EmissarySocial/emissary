@@ -69,7 +69,7 @@ func (stream *Stream) ID() string {
 func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 
 	if p.IsEmpty() {
-		return nil, derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+		return nil, derp.New(500, "whisper.model.Stream", "Unrecognized path", p)
 	}
 
 	property := p.Head()
@@ -102,7 +102,7 @@ func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
 func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 
 	if p.IsEmpty() {
-		return derp.New(500, "ghost.model.Stream", "Unrecognized path", p)
+		return derp.New(500, "whisper.model.Stream", "Unrecognized path", p)
 	}
 
 	property := p.Head()

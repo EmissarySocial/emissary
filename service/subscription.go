@@ -9,10 +9,10 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/nebula"
 	"github.com/mmcdole/gofeed"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // Subscription manages all interactions with the Subscription collection
@@ -52,7 +52,7 @@ func (service *Subscription) start() {
 		it, err := service.ListPollable()
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Subscription.Run", "Error listing pollable subscriptions"))
+			derp.Report(derp.Wrap(err, "whisper.service.Subscription.Run", "Error listing pollable subscriptions"))
 			continue
 		}
 
@@ -72,13 +72,13 @@ func (service *Subscription) pollSubscription(sub *model.Subscription) {
 	feed, err := fp.ParseURL(sub.URL)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.Subscription.Poll", "Error Parsing Feed URL"))
+		derp.Report(derp.Wrap(err, "whisper.service.Subscription.Poll", "Error Parsing Feed URL"))
 		return
 	}
 
 	for _, item := range feed.Items {
 		if err := service.updateStream(sub, item); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Subscription.Poll", "Error updating local stream"))
+			derp.Report(derp.Wrap(err, "whisper.service.Subscription.Poll", "Error updating local stream"))
 		}
 	}
 }
@@ -93,7 +93,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 		// Anything but a "not found" error is a real error
 		if !derp.NotFound(err) {
-			return derp.Wrap(err, "ghost.service.Subscription.Poll", "Error loading local stream")
+			return derp.Wrap(err, "whisper.service.Subscription.Poll", "Error loading local stream")
 		}
 
 		// Fall through means "not found" which means "make a new stream"
@@ -148,7 +148,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 		}
 
 		if err := service.streamService.Save(&stream, "Imported from RSS feed"); err != nil {
-			return derp.Wrap(err, "ghost.service.Subscription.Poll", "Error saving stream")
+			return derp.Wrap(err, "whisper.service.Subscription.Poll", "Error saving stream")
 		}
 	}
 
@@ -164,7 +164,7 @@ func (service *Subscription) List(criteria exp.Expression, options ...option.Opt
 func (service *Subscription) Load(criteria exp.Expression, result *model.Subscription) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "ghost.service.Subscription", "Error loading Subscription", criteria)
+		return derp.Wrap(err, "whisper.service.Subscription", "Error loading Subscription", criteria)
 	}
 
 	return nil
@@ -174,7 +174,7 @@ func (service *Subscription) Load(criteria exp.Expression, result *model.Subscri
 func (service *Subscription) Save(subscription *model.Subscription, note string) error {
 
 	if err := service.collection.Save(subscription, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Subscription", "Error saving Subscription", subscription, note)
+		return derp.Wrap(err, "whisper.service.Subscription", "Error saving Subscription", subscription, note)
 	}
 
 	return nil
@@ -184,7 +184,7 @@ func (service *Subscription) Save(subscription *model.Subscription, note string)
 func (service *Subscription) Delete(subscription *model.Subscription, note string) error {
 
 	if err := service.collection.Delete(subscription, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Subscription", "Error deleting Subscription", subscription, note)
+		return derp.Wrap(err, "whisper.service.Subscription", "Error deleting Subscription", subscription, note)
 	}
 
 	return nil

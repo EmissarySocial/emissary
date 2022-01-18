@@ -41,7 +41,7 @@ func (user *User) ID() string {
 
 func (user *User) Schema() schema.Schema {
 	return schema.Schema{
-		ID: "ghost.model.user",
+		ID: "whisper.model.user",
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
 				"userId":      schema.String{Format: "objectId"},
@@ -74,7 +74,7 @@ func (user *User) GetPath(p path.Path) (interface{}, error) {
 		return user.AvatarURL, nil
 	}
 
-	return nil, derp.New(derp.CodeInternalError, "ghost.model.User.GetPath", "Unrecognized path", p)
+	return nil, derp.New(derp.CodeInternalError, "whisper.model.User.GetPath", "Unrecognized path", p)
 }
 
 // SetPath implements the path.Setter interface
@@ -99,7 +99,7 @@ func (user *User) SetPath(p path.Path, value interface{}) error {
 		return nil
 	}
 
-	return derp.New(derp.CodeInternalError, "ghost.model.User.SetPath", "Cannot set value", p, value)
+	return derp.New(derp.CodeInternalError, "whisper.model.User.SetPath", "Cannot set value", p, value)
 }
 
 /******************************

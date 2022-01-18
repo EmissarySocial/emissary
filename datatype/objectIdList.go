@@ -33,17 +33,17 @@ func ParseObjectIDList(value interface{}) (ObjectIDList, error) {
 			case string:
 				objectID, err := primitive.ObjectIDFromHex(item)
 				if err != nil {
-					return nil, derp.Wrap(err, "ghost.datatype.ParseObjectIDList", "Invalid item in array", item)
+					return nil, derp.Wrap(err, "whisper.datatype.ParseObjectIDList", "Invalid item in array", item)
 				}
 				result[index] = objectID
 
 			default:
-				return nil, derp.New(500, "ghost.datatype.ParseObjectIDList", "Invalid item in array", index, item)
+				return nil, derp.New(500, "whisper.datatype.ParseObjectIDList", "Invalid item in array", index, item)
 			}
 		}
 		return result, nil
 	}
-	return nil, derp.New(500, "ghost.datatype.ParseObjectIDList", "Invalid data type", value)
+	return nil, derp.New(500, "whisper.datatype.ParseObjectIDList", "Invalid data type", value)
 }
 
 func (objectIDList ObjectIDList) GetPath(p path.Path) (interface{}, error) {
@@ -53,10 +53,10 @@ func (objectIDList ObjectIDList) GetPath(p path.Path) (interface{}, error) {
 			return objectIDList[index], nil
 		}
 
-		return nil, derp.New(500, "ghost.datatype.ObjectIDList.GetPath", "Index out of bounds", index)
+		return nil, derp.New(500, "whisper.datatype.ObjectIDList.GetPath", "Index out of bounds", index)
 	}
 
-	return nil, derp.New(500, "ghost.datatype.ObjectIDList.GetPath", "Invalid Index", p.Head())
+	return nil, derp.New(500, "whisper.datatype.ObjectIDList.GetPath", "Invalid Index", p.Head())
 }
 
 func (objectIDList *ObjectIDList) SetPath(p path.Path, value interface{}) error {
@@ -66,7 +66,7 @@ func (objectIDList *ObjectIDList) SetPath(p path.Path, value interface{}) error 
 		objectID, err := primitive.ObjectIDFromHex(convert.String(value))
 
 		if err != nil {
-			return derp.New(500, "ghost.datatype.ObjectIDList.SetPath", "Invalid Value", value)
+			return derp.New(500, "whisper.datatype.ObjectIDList.SetPath", "Invalid Value", value)
 		}
 
 		for index < len(*objectIDList) {
@@ -77,7 +77,7 @@ func (objectIDList *ObjectIDList) SetPath(p path.Path, value interface{}) error 
 		return nil
 	}
 
-	return derp.New(500, "ghost.datatype.ObjectIDList.SetPath", "Invalid Index", p.Head())
+	return derp.New(500, "whisper.datatype.ObjectIDList.SetPath", "Invalid Index", p.Head())
 }
 
 func (objectIDList *ObjectIDList) DeletePath(p path.Path) error {
@@ -89,8 +89,8 @@ func (objectIDList *ObjectIDList) DeletePath(p path.Path) error {
 			return nil
 		}
 
-		return derp.New(500, "ghost.datatype.ObjectIDList.DeletePath", "Index Out of Bounds", p.Head())
+		return derp.New(500, "whisper.datatype.ObjectIDList.DeletePath", "Index Out of Bounds", p.Head())
 	}
 
-	return derp.New(500, "ghost.datatype.ObjectIDList.DeletePath", "Invalid Index", p.Head())
+	return derp.New(500, "whisper.datatype.ObjectIDList.DeletePath", "Invalid Index", p.Head())
 }

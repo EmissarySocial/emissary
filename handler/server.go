@@ -7,12 +7,12 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/server"
 	"github.com/benpate/html"
 	"github.com/benpate/path"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/render"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
@@ -66,7 +66,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		domain, err := factoryManager.DomainByIndex(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetServerDomain", "Error loading Domain config")
+			return derp.Wrap(err, "whisper.handler.GetServerDomain", "Error loading Domain config")
 		}
 
 		lib := factoryManager.FormLibrary()
@@ -120,7 +120,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		formHTML, err := f.HTML(&lib, &s, &domain)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetServerDomain", "Error generating form")
+			return derp.Wrap(err, "whisper.handler.GetServerDomain", "Error generating form")
 		}
 
 		b := html.New()
@@ -159,27 +159,27 @@ func PostServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		domain, err := factoryManager.DomainByIndex(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
 		input := datatype.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error binding form input")
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error binding form input")
 		}
 
 		s := config.Schema()
 
 		if err := s.Validate(input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error validating input", domain)
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error validating input", domain)
 		}
 
 		if err := path.SetAll(&domain, input); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error setting domain data", input)
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error setting domain data", input)
 		}
 
 		if err := factoryManager.UpdateDomain(domainID, domain); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error saving domain")
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error saving domain")
 		}
 
 		render.CloseModal(ctx, "")
@@ -195,11 +195,11 @@ func DeleteServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc 
 		domain, err := factoryManager.DomainByIndex(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
+			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
 		if err := factoryManager.DeleteDomain(domain); err != nil {
-			return derp.Wrap(err, "ghost.handler.DeleteServerDomain", "Error deleting domain")
+			return derp.Wrap(err, "whisper.handler.DeleteServerDomain", "Error deleting domain")
 		}
 
 		render.CloseModal(ctx, "")

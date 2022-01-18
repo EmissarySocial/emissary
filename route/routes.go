@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/handler"
-	"github.com/benpate/ghost/middleware"
-	"github.com/benpate/ghost/server"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/handler"
+	"github.com/whisperverse/whisperverse/middleware"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // New returns all of the routes required for this application

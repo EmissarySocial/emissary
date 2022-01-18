@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/config"
-	"github.com/benpate/ghost/route"
-	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/route"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 func main() {

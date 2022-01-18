@@ -7,10 +7,10 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/html"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -44,7 +44,7 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	formHTML, err := form.HTML(step.formLibrary, &schema, model)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepSetSimpleSharing.Get", "Error rendering form")
+		return derp.Wrap(err, "whisper.render.StepSetSimpleSharing.Get", "Error rendering form")
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -75,7 +75,7 @@ func (step StepSetSimpleSharing) Post(buffer io.Writer, renderer Renderer) error
 
 	// Try to parse the form input
 	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, "ghost.render.StepSetSimpleSharing", "Error parsing form input")
+		return derp.Wrap(err, "whisper.render.StepSetSimpleSharing", "Error parsing form input")
 	}
 
 	stream := streamRenderer.stream

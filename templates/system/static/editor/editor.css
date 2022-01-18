@@ -74,7 +74,7 @@ div.nebula-layout[data-style=COLS] {
  * SORTABLE
  ***************************/
 
- .nebula-layout-sortable-ghost {
+ .nebula-layout-sortable-whisper {
 	opacity:0.3;
 	background-color:black;
 	border: solid 1x purple;

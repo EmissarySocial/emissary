@@ -1,10 +1,10 @@
 # Ghost 👻
 
-[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/benpate/ghost)
-[![Go Report Card](https://goreportcard.com/badge/github.com/benpate/ghost?style=flat-square)](https://goreportcard.com/report/github.com/benpate/ghost)
-[![Build Status](http://img.shields.io/travis/benpate/ghost.svg?style=flat-square)](https://travis-ci.com/benpate/ghost)
-[![Codecov](https://img.shields.io/codecov/c/github/benpate/ghost.svg?style=flat-square)](https://codecov.io/gh/benpate/ghost)
-![Version](https://img.shields.io/github/v/release/benpate/ghost?include_prereleases&style=flat-square&color=brightgreen)
+[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/whisperverse/whisperverse)
+[![Go Report Card](https://goreportcard.com/badge/github.com/whisperverse/whisperverse?style=flat-square)](https://goreportcard.com/report/github.com/whisperverse/whisperverse)
+[![Build Status](http://img.shields.io/travis/benpate/whisper.svg?style=flat-square)](https://travis-ci.com/benpate/whisper)
+[![Codecov](https://img.shields.io/codecov/c/github/benpate/whisper.svg?style=flat-square)](https://codecov.io/gh/benpate/whisper)
+![Version](https://img.shields.io/github/v/release/benpate/whisper?include_prereleases&style=flat-square&color=brightgreen)
 
 
 #### This is a work-in-progress that is *guaranteed to NOT work* for anyone, in any capacity, at any time.  Do not use this code in production, in development, or even in theory, because it's all wrong and may never be corrected, maintained, or supported.
@@ -23,7 +23,7 @@ Ghost is a new kind of decentralized, private media server that will connect peo
 When completed, this will be a new kind of personal media server, meant to be an open, [federated](https://en.wikipedia.org/wiki/Fediverse) replacement for many of the closed, centralized services that we all use today.  
 
 ## Private
-Ghost belongs to the users, not the service providers.  There is no tracking built in to ghost, and we will work to keep it that way.  Strong access controls make your content easy to share, and easy to manage.
+Ghost belongs to the users, not the service providers.  There is no tracking built in to whisper, and we will work to keep it that way.  Strong access controls make your content easy to share, and easy to manage.
 
 ## Social
 It will work with customizable templates that will replicate many of the social media services out there: posts, comments, images, videos, real time communications and more.

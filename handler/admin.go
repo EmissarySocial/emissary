@@ -3,11 +3,11 @@ package handler
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/server"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/render"
+	"github.com/whisperverse/whisperverse/server"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,7 +29,7 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAdmin", "Unrecognized Domain")
+			return derp.Wrap(err, "whisper.handler.GetAdmin", "Unrecognized Domain")
 		}
 
 		// Authenticate the page request
@@ -37,7 +37,7 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 
 		// Only domain owners can access admin pages
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError("ghost.handler.adminRenderer", "Unauthorized")
+			return derp.NewForbiddenError("whisper.handler.adminRenderer", "Unauthorized")
 		}
 
 		var renderer render.Renderer
@@ -78,7 +78,7 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 
 			if !objectID.IsZero() {
 				if err := service.LoadByID(objectID, &stream); err != nil {
-					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading TopLevel stream", objectID)
+					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading TopLevel stream", objectID)
 				}
 			}
 
@@ -92,7 +92,7 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 
 			if !objectID.IsZero() {
 				if err := service.LoadByID(objectID, &group); err != nil {
-					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading Group", objectID)
+					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading Group", objectID)
 				}
 			}
 
@@ -106,21 +106,21 @@ func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.Ac
 
 			if !objectID.IsZero() {
 				if err := service.LoadByID(objectID, &user); err != nil {
-					return derp.Wrap(err, "ghost.handler.adminRenderer", "Error loading User", objectID)
+					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading User", objectID)
 				}
 			}
 
 			renderer = render.NewUser(factory, sterankoContext, layout, action, &user)
 
 		default:
-			return derp.NewNotFoundError("ghost.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
+			return derp.NewNotFoundError("whisper.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
 		}
 
 		// If this is a POST, then execute the action pipeline
 		if actionMethod == render.ActionMethodPost {
 
 			if err := render.DoPipeline(renderer, ctx.Response().Writer, renderer.Action().Steps, actionMethod); err != nil {
-				return derp.Wrap(err, "ghost.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
+				return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
 			}
 			return nil
 		}

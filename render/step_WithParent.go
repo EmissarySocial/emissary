@@ -5,8 +5,8 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepWithParent represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -37,19 +37,19 @@ func (step StepWithParent) Post(buffer io.Writer, renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
 
 	if err := step.streamService.LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
-		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error listing parent")
+		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error listing parent")
 	}
 
 	// Make a renderer with the new parent stream
 	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &parent, renderer.ActionID())
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error creating renderer for parent")
+		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error creating renderer for parent")
 	}
 
 	// Execute the POST render pipeline on the parent
 	if err := DoPipeline(&parentStream, buffer, step.steps, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "ghost.render.StepWithParent.Post", "Error executing steps for parent")
+		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error executing steps for parent")
 	}
 
 	return nil

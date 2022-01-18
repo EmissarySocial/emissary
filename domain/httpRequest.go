@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/benpate/ghost/model"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

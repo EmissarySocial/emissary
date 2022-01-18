@@ -4,9 +4,9 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/fsnotify/fsnotify"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
@@ -91,13 +91,13 @@ func (service *Layout) Watch() {
 
 		// Add all other directories into the Template service as Templates
 		if err := service.loadFromFilesystem(filename); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.layout.NewLayout", "Error loading Layout from Filesystem"))
+			derp.Report(derp.Wrap(err, "whisper.service.layout.NewLayout", "Error loading Layout from Filesystem"))
 			panic("Error loading Layout from Filesystem")
 		}
 
 		// Add fsnotify watchers for all other directories
 		if err := watcher.Add(service.path + "/" + filename); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Layout.watch", "Error adding file watcher to file", filename))
+			derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error adding file watcher to file", filename))
 		}
 	}
 
@@ -117,14 +117,14 @@ func (service *Layout) Watch() {
 			filename := list.Last(list.RemoveLast(event.Name, "/"), "/")
 
 			if err := service.loadFromFilesystem(filename); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Layout.watch", "Error loading changes to layout", event, filename))
+				derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error loading changes to layout", event, filename))
 				continue
 			}
 
 		case err, ok := <-watcher.Errors:
 
 			if ok {
-				derp.Report(derp.Wrap(err, "ghost.service.Layout.watch", "Error watching filesystem"))
+				derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error watching filesystem"))
 			}
 		}
 	}
@@ -139,12 +139,12 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	// System folders (except for "static" and "global") have a schema.json file
 	if (filename != "static") && (filename != "global") {
 		if err := loadModelFromFilesystem(path, &layout); err != nil {
-			return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
+			return derp.Wrap(err, "whisper.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
 		}
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(path, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "ghost.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
+		return derp.Wrap(err, "whisper.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
 	}
 
 	// Normalize steps

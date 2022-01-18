@@ -5,8 +5,8 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/service"
 	"github.com/benpate/mediaserver"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
@@ -37,7 +37,7 @@ func (step StepUploadAttachment) Post(buffer io.Writer, renderer Renderer) error
 	form, err := streamRenderer.ctx.MultipartForm()
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.handler.StepUploadAttachment.Post", "Error reading multipart form.")
+		return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error reading multipart form.")
 	}
 
 	files := form.File["file"]
@@ -51,17 +51,17 @@ func (step StepUploadAttachment) Post(buffer io.Writer, renderer Renderer) error
 		source, err := fileHeader.Open()
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader)
+			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader)
 		}
 
 		defer source.Close()
 
 		if err := step.mediaServer.Put(attachment.Filename, source); err != nil {
-			return derp.Wrap(err, "ghost.handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
+			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
 		}
 
 		if err := step.attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			return derp.Wrap(err, "ghost.handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
+			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
 		}
 	}
 

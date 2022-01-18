@@ -42,7 +42,7 @@
         var sortable = sortables[i];
         new Sortable(sortable, {
             animation: 150,
-            ghostClass: 'draggable-ghost'
+            whisperClass: 'draggable-whisper'
         });
         }
     })
@@ -58,7 +58,7 @@
         cursor: grab;
     }
 
-    .draggable-ghost {
+    .draggable-whisper {
         background-color: var(--gray50);
         color:var(--gray50);
         cursor: grabbing;

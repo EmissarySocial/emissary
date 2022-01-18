@@ -9,8 +9,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/schema"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -64,7 +64,7 @@ func (service *Stream) List(criteria exp.Expression, options ...option.Option) (
 func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error {
 
 	if err := service.collection.Load(notDeleted(criteria), stream); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream", "Error loading Stream", criteria)
+		return derp.Wrap(err, "whisper.service.Stream", "Error loading Stream", criteria)
 	}
 
 	return nil
@@ -74,7 +74,7 @@ func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error
 func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	if err := service.collection.Save(stream, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream", "Error saving Stream", stream, note)
+		return derp.Wrap(err, "whisper.service.Stream", "Error saving Stream", stream, note)
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -95,24 +95,24 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 	// Delete this Stream
 	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting Stream", stream, note)
+		return derp.Wrap(err, "whisper.service.Stream.Delete", "Error deleting Stream", stream, note)
 	}
 
 	go func() {
 
 		// Delete all related Children
 		if err := service.DeleteChildren(stream, note); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child streams", stream, note))
+			derp.Report(derp.Wrap(err, "whisper.service.Stream.Delete", "Error deleting child streams", stream, note))
 		}
 
 		// Delete all related Attachments
 		if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting attachments", stream, note))
+			derp.Report(derp.Wrap(err, "whisper.service.Stream.Delete", "Error deleting attachments", stream, note))
 		}
 
 		// Delete all related Drafts
 		if err := service.draftService.Delete(stream, note); err != nil {
-			derp.Report(derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting drafts", stream, note))
+			derp.Report(derp.Wrap(err, "whisper.service.Stream.Delete", "Error deleting drafts", stream, note))
 		}
 	}()
 
@@ -164,12 +164,12 @@ func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 	it, err := service.ListByParent(stream.StreamID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.Stream.Delete", "Error listing child streams", stream)
+		return derp.Wrap(err, "whisper.service.Stream.Delete", "Error listing child streams", stream)
 	}
 
 	for it.Next(&child) {
 		if err := service.Delete(&child, note); err != nil {
-			return derp.Wrap(err, "ghost.service.Stream.Delete", "Error deleting child stream", child)
+			return derp.Wrap(err, "whisper.service.Stream.Delete", "Error deleting child stream", child)
 		}
 	}
 
@@ -227,11 +227,11 @@ func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL
 func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) error {
 
 	if !stream.HasParent() {
-		return derp.New(404, "ghost.service.Stream.LoadParent", "Stream does not have a parent")
+		return derp.New(404, "whisper.service.Stream.LoadParent", "Stream does not have a parent")
 	}
 
 	if err := service.LoadByID(stream.ParentID, parent); err != nil {
-		return derp.Wrap(err, "ghost.service.stream.LoadParent", "Error loading parent", stream)
+		return derp.Wrap(err, "whisper.service.stream.LoadParent", "Error loading parent", stream)
 	}
 
 	return nil
@@ -262,11 +262,11 @@ func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Temp
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+		return model.Stream{}, nil, derp.Wrap(err, "whisper.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy("top") {
-		return model.Stream{}, template, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
+		return model.Stream{}, template, derp.New(derp.CodeInternalError, "whisper.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
 	result := model.NewStream()
@@ -286,11 +286,11 @@ func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewTopLevel", "Cannot find template")
+		return model.Stream{}, nil, derp.Wrap(err, "whisper.service.Stream.NewTopLevel", "Cannot find template")
 	}
 
 	if !template.CanBeContainedBy(parent.TemplateID) {
-		return model.Stream{}, nil, derp.New(derp.CodeInternalError, "ghost.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
+		return model.Stream{}, nil, derp.New(derp.CodeInternalError, "whisper.service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
 	result := model.NewStream()
@@ -310,7 +310,7 @@ func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (mod
 	if sibling.HasParent() {
 		var parent model.Stream
 		if err := service.LoadParent(sibling, &parent); err != nil {
-			return model.Stream{}, nil, derp.Wrap(err, "ghost.service.Stream.NewSiblling", "Error loading parent Stream")
+			return model.Stream{}, nil, derp.Wrap(err, "whisper.service.Stream.NewSiblling", "Error loading parent Stream")
 		}
 
 		return service.NewChild(&parent, templateID)
@@ -346,7 +346,7 @@ func (service *Stream) updateStreamsByTemplate(templateID string) {
 	iterator, err := service.ListByTemplate(templateID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.service.Realtime", "Error Listing Streams for Template", templateID))
+		derp.Report(derp.Wrap(err, "whisper.service.Realtime", "Error Listing Streams for Template", templateID))
 		return
 	}
 

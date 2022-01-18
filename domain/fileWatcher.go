@@ -2,8 +2,8 @@ package domain
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/service"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // WatchTemplates may get removed.  I dunno.
@@ -16,7 +16,7 @@ func WatchTemplates(streamService *service.Stream, streamUpdates chan model.Stre
 		streams, err := streamService.ListByTemplate(template.TemplateID)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "ghost.domain.WatchTemplates", "Error retrieving streams that match templateID", template.TemplateID))
+			derp.Report(derp.Wrap(err, "whisper.domain.WatchTemplates", "Error retrieving streams that match templateID", template.TemplateID))
 		}
 
 		var stream model.Stream

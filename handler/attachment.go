@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
-	"github.com/benpate/ghost/render"
-	"github.com/benpate/ghost/server"
 	"github.com/benpate/list"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/render"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
@@ -19,7 +19,7 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAttachment", "Cannot load Domain")
+			return derp.Wrap(err, "whisper.handler.GetAttachment", "Cannot load Domain")
 		}
 
 		var stream model.Stream
@@ -27,13 +27,13 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error loading Stream", streamToken)
+			return derp.Wrap(err, "whisper.handler.GetAttachment", "Error loading Stream", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		if _, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, "view"); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAttachment", "Cannot create renderer")
+			return derp.Wrap(err, "whisper.handler.GetAttachment", "Cannot create renderer")
 		}
 
 		// Load the attachment in order to verify that it is valid for this stream
@@ -42,7 +42,7 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		attachment, err := attachmentService.LoadByToken(list.Head(ctx.Param("attachment"), "."))
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error loading attachment")
+			return derp.Wrap(err, "whisper.handler.GetAttachment", "Error loading attachment")
 		}
 
 		// Check ETags to see if the browser already has a copy of this
@@ -63,7 +63,7 @@ func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		header.Set("ETag", attachment.ETag())
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
-			return derp.Wrap(err, "ghost.handler.GetAttachment", "Error accessing attachment file")
+			return derp.Wrap(err, "whisper.handler.GetAttachment", "Error accessing attachment file")
 		}
 
 		return nil

@@ -111,5 +111,5 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "ghost.factory.RenderStep", "Unrecognized action configuration", stepInfo)
+	return nil, derp.New(derp.CodeInternalError, "whisper.factory.RenderStep", "Unrecognized action configuration", stepInfo)
 }

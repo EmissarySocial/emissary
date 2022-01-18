@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetRSS returns an RSS data feed for the requested URL

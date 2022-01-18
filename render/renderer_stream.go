@@ -10,12 +10,12 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/nebula"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -40,7 +40,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 	authorization := getAuthorization(ctx)
 
 	if !action.UserCan(stream, authorization) {
-		return Stream{}, derp.NewForbiddenError("ghost.render.NewStream", "Forbidden")
+		return Stream{}, derp.NewForbiddenError("whisper.render.NewStream", "Forbidden")
 	}
 
 	// Success.  Populate Stream
@@ -62,14 +62,14 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 	template, err := templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, "ghost.render.NewStreamWithoutTemplate", "Error loading Template", stream)
+		return Stream{}, derp.Wrap(err, "whisper.render.NewStreamWithoutTemplate", "Error loading Template", stream)
 	}
 
 	// And look up a valid action (cannot be empty)
 	action := template.Action(actionID)
 
 	if action == nil {
-		return Stream{}, derp.NewNotFoundError("ghost.render.NewStreamWithoutTemplate", "Unrecognized Action", actionID)
+		return Stream{}, derp.NewNotFoundError("whisper.render.NewStreamWithoutTemplate", "Unrecognized Action", actionID)
 	}
 
 	// Return a fully populated service
@@ -110,7 +110,7 @@ func (w Stream) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.Render", "Error generating HTML"))
 	}
 
 	// Success!
@@ -150,14 +150,14 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	action := w.template.Action(actionID)
 
 	if action == nil {
-		return template.HTML(""), derp.NewNotFoundError("ghost.render.Stream.View", "Invalid Action", actionID)
+		return template.HTML(""), derp.NewNotFoundError("whisper.render.Stream.View", "Invalid Action", actionID)
 	}
 
 	// Create a new renderer (this will also validate the user's permissions)
 	subStream, err := NewStream(w.factory(), w.context(), w.template, action, w.stream)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "ghost.render.Stream.View", "Error creating sub-renderer", action)
+		return template.HTML(""), derp.Wrap(err, "whisper.render.Stream.View", "Error creating sub-renderer", action)
 	}
 
 	// Generate HTML template
@@ -295,13 +295,13 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 	streamService := w.factory().Stream()
 
 	if err := streamService.LoadParent(w.stream, &parent); err != nil {
-		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Error loading Parent")
+		return Stream{}, derp.Wrap(err, "whisper.renderer.Stream.Parent", "Error loading Parent")
 	}
 
 	renderer, err := NewStreamWithoutTemplate(w.factory(), w.context(), &parent, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, "ghost.renderer.Stream.Parent", "Unable to create new Stream")
+		return Stream{}, derp.Wrap(err, "whisper.renderer.Stream.Parent", "Unable to create new Stream")
 	}
 
 	return renderer, nil
@@ -369,7 +369,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	iterator, err := streamService.List(criteria, sortOption)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "ghost.renderer.Stream.NextSibling", "Database error"))
+		derp.Report(derp.Wrap(err, "whisper.renderer.Stream.NextSibling", "Database error"))
 		return Stream{}
 	}
 
@@ -435,7 +435,7 @@ func (w Stream) Attachment() (model.Attachment, error) {
 	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
 
 	if err != nil {
-		return attachment, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
+		return attachment, derp.Wrap(err, "whisper.renderer.Stream.Attachments", "Error listing attachments")
 	}
 
 	// Just get a single attachment from the Iterator
@@ -452,7 +452,7 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
 
 	if err != nil {
-		return result, derp.Wrap(err, "ghost.renderer.Stream.Attachments", "Error listing attachments")
+		return result, derp.Wrap(err, "whisper.renderer.Stream.Attachments", "Error listing attachments")
 	}
 
 	attachment := new(model.Attachment)
@@ -497,7 +497,7 @@ func (w Stream) draftRenderer() (Stream, error) {
 
 	// Load the draft of the object
 	if err := draftService.LoadByID(w.stream.StreamID, &draft); err != nil {
-		return Stream{}, derp.Wrap(err, "ghost.service.Stream.draftRenderer", "Error loading draft")
+		return Stream{}, derp.Wrap(err, "whisper.service.Stream.draftRenderer", "Error loading draft")
 	}
 
 	// Make a duplicate of this renderer.  Same object, template, action settings
@@ -519,7 +519,7 @@ func (w Stream) setAuthor() error {
 	user, err := w.getUser()
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.render.Stream.setAuthor", "Error loading User")
+		return derp.Wrap(err, "whisper.render.Stream.setAuthor", "Error loading User")
 	}
 
 	w.stream.AuthorID = user.UserID

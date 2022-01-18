@@ -7,10 +7,10 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -64,7 +64,7 @@ func (w Domain) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.Stream.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.Render", "Error generating HTML"))
 	}
 
 	// Success!

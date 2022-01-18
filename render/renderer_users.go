@@ -9,10 +9,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -67,7 +67,7 @@ func (w User) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
-		return "", derp.Report(derp.Wrap(err, "ghost.render.User.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "whisper.render.User.Render", "Error generating HTML"))
 
 	}
 
@@ -161,5 +161,5 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w.factory().Group()
 	result, err := groupService.ListByIDs(w.user.GroupIDs...)
 
-	return result, derp.Wrap(err, "ghost.render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
+	return result, derp.Wrap(err, "whisper.render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
 }

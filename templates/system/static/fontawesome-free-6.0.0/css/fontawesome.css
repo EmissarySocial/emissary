@@ -2545,7 +2545,7 @@ readers do not read off random characters that represent icons */
 .fa-genderless::before {
   content: "\f22d"; }
 
-.fa-ghost::before {
+.fa-whisper::before {
   content: "\f6e2"; }
 
 .fa-gift::before {

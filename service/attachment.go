@@ -5,9 +5,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/mediaserver"
+	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -80,12 +80,12 @@ func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note strin
 	it, err := service.ListByObjectID(streamID)
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.service.Attachment.DeleteByStream", "Error listing attachments", streamID)
+		return derp.Wrap(err, "whisper.service.Attachment.DeleteByStream", "Error listing attachments", streamID)
 	}
 
 	for it.Next(&attachment) {
 		if err := service.Delete(&attachment, note); err != nil {
-			return derp.Wrap(err, "ghost.service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
+			return derp.Wrap(err, "whisper.service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
 		}
 	}
 

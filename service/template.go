@@ -7,10 +7,10 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/model"
 	"github.com/benpate/list"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
+	"github.com/whisperverse/whisperverse/model"
 
 	"io/ioutil"
 
@@ -83,7 +83,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 		return &template, nil
 	}
 
-	return nil, derp.New(404, "ghost.sevice.Template.Load", "Template not found", templateID, service.templates)
+	return nil, derp.New(404, "whisper.sevice.Template.Load", "Template not found", templateID, service.templates)
 }
 
 // Save adds/updates an Template in the memory cache
@@ -132,14 +132,14 @@ func (service *Template) State(templateID string, stateID string) (model.State, 
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return model.State{}, derp.Wrap(err, "ghost.service.Template.State", "Invalid Template", templateID)
+		return model.State{}, derp.Wrap(err, "whisper.service.Template.State", "Invalid Template", templateID)
 	}
 
 	// Try to find the state data for the state that the stream is in
 	state, ok := template.State(stateID)
 
 	if !ok {
-		return state, derp.New(500, "ghost.service.Template.State", "Invalid state", templateID, stateID)
+		return state, derp.New(500, "whisper.service.Template.State", "Invalid state", templateID, stateID)
 	}
 
 	// Success!
@@ -153,7 +153,7 @@ func (service *Template) Schema(templateID string) (schema.Schema, error) {
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return schema.Schema{}, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+		return schema.Schema{}, derp.Wrap(err, "whisper.service.Template.Action", "Invalid Template", templateID)
 	}
 
 	// Return the Schema defined in this template.
@@ -167,14 +167,14 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "ghost.service.Template.Action", "Invalid Template", templateID)
+		return nil, derp.Wrap(err, "whisper.service.Template.Action", "Invalid Template", templateID)
 	}
 
 	// Try to find the action in the Template
 	action := template.Action(actionID)
 
 	if action == nil {
-		return action, derp.NewNotFoundError("ghost.service.Template.Action", "Unrecognized action", templateID, actionID)
+		return action, derp.NewNotFoundError("whisper.service.Template.Action", "Unrecognized action", templateID, actionID)
 	}
 
 	return action, nil
@@ -192,7 +192,7 @@ func (service *Template) Watch() {
 	fileList, err := ioutil.ReadDir(service.path)
 
 	if err != nil {
-		panic(derp.Wrap(err, "ghost.service.templateSource.File.List", "Unable to list files in filesystem", service.path))
+		panic(derp.Wrap(err, "whisper.service.templateSource.File.List", "Unable to list files in filesystem", service.path))
 	}
 
 	// Use a separate counter because not all files will be included in the result
@@ -210,13 +210,13 @@ func (service *Template) Watch() {
 			template, err := service.loadFromFilesystem(templateID)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error loading template from filesystem", templateID))
+				derp.Report(derp.Wrap(err, "whisper.service.Template", "Error loading template from filesystem", templateID))
 				continue
 			}
 
 			// Success!
 			if err := service.Save(&template); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template", "Error saving Template to TemplateService", templateID))
+				derp.Report(derp.Wrap(err, "whisper.service.Template", "Error saving Template to TemplateService", templateID))
 				continue
 			}
 		}
@@ -240,7 +240,7 @@ func (service *Template) Watch() {
 	for _, file := range files {
 		if file.IsDir() {
 			if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error adding file watcher to file", file.Name()))
+				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error adding file watcher to file", file.Name()))
 			}
 		}
 	}
@@ -267,7 +267,7 @@ func (service *Template) Watch() {
 			template, err := service.loadFromFilesystem(templateName)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error loading changes to template", event, templateName))
+				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error loading changes to template", event, templateName))
 				continue
 			}
 
@@ -278,7 +278,7 @@ func (service *Template) Watch() {
 		case err, ok := <-watcher.Errors:
 
 			if ok {
-				derp.Report(derp.Wrap(err, "ghost.service.Template.watch", "Error watching filesystem"))
+				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error watching filesystem"))
 			}
 		}
 	}
@@ -295,11 +295,11 @@ func (service *Template) loadFromFilesystem(templateID string) (model.Template, 
 	result := model.NewTemplate(templateID, service.funcMap)
 
 	if err := loadModelFromFilesystem(directory, &result); err != nil {
-		return result, derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Error loading schema", directory)
+		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading schema", directory)
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(directory, result.HTMLTemplate, service.funcMap); err != nil {
-		return result, derp.Wrap(err, "ghost.service.Template.loadFromFilesystem", "Error loading template", directory)
+		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading template", directory)
 	}
 
 	result.Validate()

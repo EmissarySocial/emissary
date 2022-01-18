@@ -82,7 +82,7 @@ func (template *Template) GetPath(p path.Path) (interface{}, error) {
 		return template.Label, nil
 	}
 
-	return nil, derp.New(500, "ghost.model.Template.GetPath", "Unrecognized Path", p)
+	return nil, derp.New(500, "whisper.model.Template.GetPath", "Unrecognized Path", p)
 }
 
 // Validate runs any post-processing required after a Template is parsed by the TemplateService

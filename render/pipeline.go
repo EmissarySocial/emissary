@@ -18,7 +18,7 @@ func DoPipeline(renderer Renderer, buffer io.Writer, steps []datatype.Map, metho
 		step, err := NewStep(factory, stepInfo)
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.render.DoPipeline", "Error initializing step", stepInfo)
+			return derp.Wrap(err, "whisper.render.DoPipeline", "Error initializing step", stepInfo)
 		}
 
 		if method == ActionMethodPost {
@@ -29,7 +29,7 @@ func DoPipeline(renderer Renderer, buffer io.Writer, steps []datatype.Map, metho
 		}
 
 		if err != nil {
-			return derp.Wrap(err, "ghost.render.DoPipeline", "Error executing step", stepInfo)
+			return derp.Wrap(err, "whisper.render.DoPipeline", "Error executing step", stepInfo)
 		}
 	}
 

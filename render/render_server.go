@@ -1,6 +1,6 @@
 package render
 
-import "github.com/benpate/ghost/config"
+import "github.com/whisperverse/whisperverse/config"
 
 type Server struct {
 	domains config.Config

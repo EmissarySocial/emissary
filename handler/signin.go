@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
@@ -19,13 +19,13 @@ func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error getting factory"))
+			return derp.Report(derp.Wrap(err, "whisper.handler.GetSignin", "Error getting factory"))
 		}
 
 		template := factory.Layout().Global().HTMLTemplate
 
 		if err := template.ExecuteTemplate(&buffer, "signin", "error message goes here."); err != nil {
-			return derp.Report(derp.Wrap(err, "ghost.handler.GetSignin", "Error executing template"))
+			return derp.Report(derp.Wrap(err, "whisper.handler.GetSignin", "Error executing template"))
 		}
 
 		return ctx.HTML(200, buffer.String())
@@ -40,7 +40,7 @@ func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "ghost.handler.PostSignIn", "Invalid Request.  Please try again later.")
+			return derp.New(500, "whisper.handler.PostSignIn", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
@@ -64,13 +64,13 @@ func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "ghost.handler.PostSignOut", "Invalid Request.  Please try again later.")
+			return derp.New(500, "whisper.handler.PostSignOut", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
 
 		if err := s.SignOut(ctx); err != nil {
-			return derp.Wrap(err, "ghost.handler.PostSignOut", "Error Signing Out")
+			return derp.Wrap(err, "whisper.handler.PostSignOut", "Error Signing Out")
 		}
 
 		// Forward the user back to the home page of the website.

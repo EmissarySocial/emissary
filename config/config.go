@@ -24,11 +24,11 @@ func Load(filename string) (Config, error) {
 	data, err := ioutil.ReadFile(filename)
 
 	if err != nil {
-		return result, derp.Wrap(err, "ghost.config.Load", "Error loading config file", filename)
+		return result, derp.Wrap(err, "whisper.config.Load", "Error loading config file", filename)
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
-		return result, derp.Wrap(err, "ghost.config.Load", "Error unmarshalling JSON", string(data))
+		return result, derp.Wrap(err, "whisper.config.Load", "Error unmarshalling JSON", string(data))
 	}
 
 	return result, nil
@@ -40,11 +40,11 @@ func Write(config Config, filename string) error {
 	output, err := json.MarshalIndent(config, "\n", "\t")
 
 	if err != nil {
-		return derp.Wrap(err, "ghost.config.Write", "Error marshalling configuration")
+		return derp.Wrap(err, "whisper.config.Write", "Error marshalling configuration")
 	}
 
 	if err := os.WriteFile(filename, output, 0x777); err != nil {
-		return derp.Wrap(err, "ghost.config.Write", "Error writing configuration")
+		return derp.Wrap(err, "whisper.config.Write", "Error writing configuration")
 	}
 
 	return nil

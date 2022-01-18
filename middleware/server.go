@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/ghost/server"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/server"
 )
 
 // ServerAdmin generates a middleware that enforces security permissions
@@ -19,11 +19,11 @@ func ServerAdmin(factoryManager *server.FactoryManager) echo.MiddlewareFunc {
 
 			if err != nil {
 				derp.Report(err)
-				return derp.NewNotFoundError("ghost", "Not Found")
+				return derp.NewNotFoundError("whisper", "Not Found")
 			}
 
 			if !domain.ShowAdmin {
-				return derp.NewNotFoundError("ghost", "Not Found")
+				return derp.NewNotFoundError("whisper", "Not Found")
 			}
 
 			return next(ctx)

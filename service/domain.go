@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/ghost/model"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // Domain service manages all access to the singleton model.Domain in the database
@@ -29,7 +29,7 @@ func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 func (service *Domain) Load(domain *model.Domain) error {
 
 	if err := service.collection.Load(exp.All(), domain); err != nil {
-		return derp.Wrap(err, "ghost.service.Domain", "Error loading Domain")
+		return derp.Wrap(err, "whisper.service.Domain", "Error loading Domain")
 	}
 
 	return nil
@@ -50,7 +50,7 @@ func (service *Domain) ObjectNew() data.Object {
 }
 
 func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return nil, derp.New(derp.CodeBadRequestError, "ghost.service.Domain.ObjectDelete", "Unsupported")
+	return nil, derp.New(derp.CodeBadRequestError, "whisper.service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
@@ -64,7 +64,7 @@ func (service *Domain) ObjectSave(object data.Object, comment string) error {
 }
 
 func (service *Domain) ObjectDelete(object data.Object, comment string) error {
-	return derp.New(derp.CodeBadRequestError, "ghost.service.Domain.ObjectDelete", "Unsupported")
+	return derp.New(derp.CodeBadRequestError, "whisper.service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) Debug() datatype.Map {

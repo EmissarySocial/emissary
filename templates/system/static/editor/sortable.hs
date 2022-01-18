@@ -6,7 +6,7 @@ behavior NebulaLayout
             sort: true,
             draggable: ".nebula-layout-item",
             handle: ".nebula-layout-sortable-handle",
-            ghostClass: "nebula-layout-sortable-ghost",
+            whisperClass: "nebula-layout-sortable-whisper",
             direction: "vertical"
         }
 
