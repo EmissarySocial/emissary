@@ -3,7 +3,6 @@ module github.com/whisperverse/whisperverse
 go 1.17
 
 require (
-	github.com/whisperverse/pub v0.4.1
 	github.com/benpate/compare v0.1.0
 	github.com/benpate/convert v0.11.1
 	github.com/benpate/data v0.13.0
@@ -30,8 +29,9 @@ require (
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
-	github.com/tdewolff/minify/v2 v2.9.28
+	github.com/tdewolff/minify/v2 v2.9.29
 	github.com/whisperverse/mediaserver v0.1.2
+	github.com/whisperverse/pub v0.4.1
 	go.mongodb.org/mongo-driver v1.8.2
 )
 
@@ -40,7 +40,9 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/benpate/htmlconv v0.3.1 // indirect
+	github.com/benpate/pub v0.4.0 // indirect
 	github.com/chai2010/webp v1.1.0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
