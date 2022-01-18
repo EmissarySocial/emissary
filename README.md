@@ -1,12 +1,12 @@
 # Whisperverse 👻
 
-[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/whisperverse/whisperverse)
-[![Build Status](http://img.shields.io/travis/whisperverse/whisperverse.svg?style=flat-square)](https://travis-ci.org/whisperverse/whisperverse)
+[![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://pkg.go.dev/github.com/whisperverse/whisperverse)
+[![Build Status](https://img.shields.io/github/workflow/status/whisperverse/whisperverse/Go/master)](https://github.com/whisperverse/whisperverse/actions/workflows/go.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/whisperverse/whisperverse.svg?style=flat-square)](https://codecov.io/gh/whisperverse/whisperverse)
 [![Go Report Card](https://goreportcard.com/badge/github.com/whisperverse/whisperverse?style=flat-square)](https://goreportcard.com/report/github.com/whisperverse/whisperverse)
-![Version](https://img.shields.io/github/v/release/whisperverse/whisperverse?include_prereleases&style=flat-square&color=brightgreen)
+[![Version](https://img.shields.io/github/v/release/whisperverse/whisperverse?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/whisperverse/whisperverse/releases)
 
-## This is a work-in-progress that is *guaranteed to NOT work* for anyone, in any capacity, at any time.  Do not use this code in production, in development, or even in theory, because it's all wrong and may never be corrected, maintained, or supported.
+## This is a work-in-progress that is *guaranteed to NOT work* for anyone, in any capacity, at any time.  Do not use this code in production, in development, or even in theory, because it's all wrong and may never be corrected, maintained, or supported
 
 ## Why Whisperverse?
 
@@ -56,6 +56,6 @@ Ghost must be extremely service-provider-friendly: easy to virtualize, provision
 | [ckEditor](https://ckeditor.com/ckeditor-5/) | Rich content editing
 | ??? | Various local and online file storage systems
 
-## Pitch In!
+## Pitch In
 
 There's a lot to do, and I'd love to have your help.  If you're interested in building the federated web, please get in touch or submit a pull request. 👻
