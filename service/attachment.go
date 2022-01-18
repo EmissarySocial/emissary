@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/list"
-	"github.com/benpate/mediaserver"
+	"github.com/whisperverse/mediaserver"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

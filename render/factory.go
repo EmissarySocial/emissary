@@ -2,8 +2,8 @@ package render
 
 import (
 	"github.com/benpate/form"
-	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
+	"github.com/whisperverse/mediaserver"
 	"github.com/whisperverse/whisperverse/service"
 )
 

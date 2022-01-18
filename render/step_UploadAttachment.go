@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/mediaserver"
+	"github.com/whisperverse/mediaserver"
 	"github.com/whisperverse/whisperverse/service"
 )
 
