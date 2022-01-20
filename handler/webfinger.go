@@ -6,7 +6,7 @@ import (
 )
 
 // GetWebfinger returns public webfinger information for a designated user
-func GetWebfinger(maker *server.FactoryManager) echo.HandlerFunc {
+func GetWebfinger(maker *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		/*

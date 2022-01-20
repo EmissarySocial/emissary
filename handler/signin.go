@@ -10,7 +10,7 @@ import (
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
-func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetSignIn(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -33,7 +33,7 @@ func GetSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 }
 
 // PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
-func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func PostSignIn(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -57,7 +57,7 @@ func PostSignIn(factoryManager *server.FactoryManager) echo.HandlerFunc {
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
-func PostSignOut(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func PostSignOut(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

@@ -13,7 +13,7 @@ import (
 
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE subscriptions.
-func ServerSentEvent(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

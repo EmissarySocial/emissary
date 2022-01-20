@@ -12,16 +12,16 @@ import (
 )
 
 // GetAdmin handles GET requests
-func GetAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetAdmin(factoryManager *server.Factory) echo.HandlerFunc {
 	return adminRenderer(factoryManager, render.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
-func PostAdmin(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
 	return adminRenderer(factoryManager, render.ActionMethodPost)
 }
 
-func adminRenderer(factoryManager *server.FactoryManager, actionMethod render.ActionMethod) echo.HandlerFunc {
+func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

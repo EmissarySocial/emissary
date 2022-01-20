@@ -12,6 +12,7 @@ import (
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
+	adapter   string
 	path      string
 	funcMap   template.FuncMap
 	analytics model.Layout
@@ -23,9 +24,10 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(path string, funcMap template.FuncMap) Layout {
+func NewLayout(adapter string, path string, funcMap template.FuncMap) Layout {
 
 	return Layout{
+		adapter: adapter,
 		path:    path,
 		funcMap: funcMap,
 	}

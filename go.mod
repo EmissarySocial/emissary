@@ -17,7 +17,7 @@ require (
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
-	github.com/benpate/path v0.8.0
+	github.com/benpate/path v0.8.1
 	github.com/benpate/schema v0.12.0
 	github.com/benpate/steranko v0.6.0
 	github.com/davecgh/go-spew v1.1.1

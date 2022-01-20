@@ -15,7 +15,7 @@ import (
 	"github.com/whisperverse/whisperverse/server"
 )
 
-func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetServerIndex(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -60,7 +60,7 @@ func GetServerIndex(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domain, err := factoryManager.DomainByIndex(ctx.Param("domain"))
@@ -151,7 +151,7 @@ func GetServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func PostServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func PostServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
@@ -187,7 +187,7 @@ func PostServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
 	}
 }
 
-func DeleteServerDomain(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func DeleteServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")

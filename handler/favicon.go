@@ -8,7 +8,7 @@ import (
 )
 
 // GetFavicon returns the default favicon for this server
-func GetFavicon(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetFavicon(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		d := os.DirFS("./templates/static/favicon")

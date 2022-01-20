@@ -22,6 +22,7 @@ type Template struct {
 	templates map[string]model.Template // map of all templates available within this domain
 	funcMap   template.FuncMap          // Map of functions to use in golang templates
 	mutex     sync.RWMutex              // Mutext that locks access to the templates structure
+	adapter   string                    // kind of filesystem adapter to use
 	path      string                    // Filesystem path to the template directory
 
 	layoutService     *Layout
@@ -29,11 +30,12 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(domainService *Domain, layoutService *Layout, funcMap template.FuncMap, path string, templateUpdateChannel chan string) Template {
+func NewTemplate(layoutService *Layout, funcMap template.FuncMap, adapter string, path string, templateUpdateChannel chan string) Template {
 
 	return Template{
 		templates:         make(map[string]model.Template),
 		funcMap:           funcMap,
+		adapter:           adapter,
 		path:              path,
 		layoutService:     layoutService,
 		templateUpdateOut: templateUpdateChannel,
@@ -186,102 +188,106 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
-func (service *Template) Watch() {
+func (service *Template) Watch() error {
 
 	// Load all templates from the filesystem
 	fileList, err := ioutil.ReadDir(service.path)
 
 	if err != nil {
-		panic(derp.Wrap(err, "whisper.service.templateSource.File.List", "Unable to list files in filesystem", service.path))
+		return derp.Wrap(err, "whisper.service.templateSource.File.List", "Unable to list files in filesystem", service.path)
 	}
 
-	// Use a separate counter because not all files will be included in the result
-	for _, fileInfo := range fileList {
+	go func() {
+		// Use a separate counter because not all files will be included in the result
+		for _, fileInfo := range fileList {
 
-		if fileInfo.IsDir() {
-			templateID := list.Last(fileInfo.Name(), "/")
+			if fileInfo.IsDir() {
+				templateID := list.Last(fileInfo.Name(), "/")
 
-			// System directories are skipped.
-			if templateID == "system" {
-				continue
-			}
+				// System directories are skipped.
+				if templateID == "system" {
+					continue
+				}
 
-			// Add all other directories into the Template service as Templates
-			template, err := service.loadFromFilesystem(templateID)
+				// Add all other directories into the Template service as Templates
+				template, err := service.loadFromFilesystem(templateID)
 
-			if err != nil {
-				derp.Report(derp.Wrap(err, "whisper.service.Template", "Error loading template from filesystem", templateID))
-				continue
-			}
+				if err != nil {
+					derp.Report(derp.Wrap(err, "whisper.service.Template", "Error loading template from filesystem", templateID))
+					continue
+				}
 
-			// Success!
-			if err := service.Save(&template); err != nil {
-				derp.Report(derp.Wrap(err, "whisper.service.Template", "Error saving Template to TemplateService", templateID))
-				continue
+				// Success!
+				if err := service.Save(&template); err != nil {
+					derp.Report(derp.Wrap(err, "whisper.service.Template", "Error saving Template to TemplateService", templateID))
+					continue
+				}
 			}
 		}
-	}
 
-	// Create a new directory watcher
-	watcher, err := fsnotify.NewWatcher()
+		// Create a new directory watcher
+		watcher, err := fsnotify.NewWatcher()
 
-	if err != nil {
-		panic(err)
-	}
+		if err != nil {
+			panic(err)
+		}
 
-	// List all the files in the directory
-	files, err := ioutil.ReadDir(service.path)
+		// List all the files in the directory
+		files, err := ioutil.ReadDir(service.path)
 
-	if err != nil {
-		panic(err)
-	}
+		if err != nil {
+			panic(err)
+		}
 
-	// Add watchers to each file that is a Directory.
-	for _, file := range files {
-		if file.IsDir() {
-			if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
-				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error adding file watcher to file", file.Name()))
+		// Add watchers to each file that is a Directory.
+		for _, file := range files {
+			if file.IsDir() {
+				if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
+					derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error adding file watcher to file", file.Name()))
+				}
 			}
 		}
-	}
 
-	// Repeat indefinitely, listen and process file updates
-	for {
+		// Repeat indefinitely, listen and process file updates
+		for {
 
-		select {
+			select {
 
-		case event, ok := <-watcher.Events:
+			case event, ok := <-watcher.Events:
 
-			if !ok {
-				continue
-			}
+				if !ok {
+					continue
+				}
 
-			templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
+				templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
 
-			// Static files are not processed.  Skip and continue
-			if templateName == "system" {
-				continue
-			}
+				// Static files are not processed.  Skip and continue
+				if templateName == "system" {
+					continue
+				}
 
-			// Otherwise, add this folder to the Template service
-			template, err := service.loadFromFilesystem(templateName)
+				// Otherwise, add this folder to the Template service
+				template, err := service.loadFromFilesystem(templateName)
 
-			if err != nil {
-				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error loading changes to template", event, templateName))
-				continue
-			}
+				if err != nil {
+					derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error loading changes to template", event, templateName))
+					continue
+				}
 
-			// Save the Template and notify Streams to update.
-			service.Save(&template)
-			service.templateUpdateOut <- template.TemplateID
+				// Save the Template and notify Streams to update.
+				service.Save(&template)
+				service.templateUpdateOut <- template.TemplateID
 
-		case err, ok := <-watcher.Errors:
+			case err, ok := <-watcher.Errors:
 
-			if ok {
-				derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error watching filesystem"))
+				if ok {
+					derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error watching filesystem"))
+				}
 			}
 		}
-	}
+	}()
+
+	return nil
 }
 
 /*******************************************

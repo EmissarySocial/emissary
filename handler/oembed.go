@@ -7,7 +7,7 @@ import (
 )
 
 // GetOEmbed will provide an OEmbed service to be used exclusively by websites on this domain.
-func GetOEmbed(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetOEmbed(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

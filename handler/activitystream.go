@@ -11,7 +11,7 @@ import (
 )
 
 // GetInbox returns an inbox for a particular ACTOR
-func GetInbox(fm *server.FactoryManager) echo.HandlerFunc {
+func GetInbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -25,7 +25,7 @@ func GetInbox(fm *server.FactoryManager) echo.HandlerFunc {
 }
 
 // PostInbox accepts messages to a particular ACTOR
-func PostInbox(fm *server.FactoryManager) echo.HandlerFunc {
+func PostInbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -48,7 +48,7 @@ func PostInbox(fm *server.FactoryManager) echo.HandlerFunc {
 }
 
 // GetOutbox returns an inbox for a particular ACTOR
-func GetOutbox(fm *server.FactoryManager) echo.HandlerFunc {
+func GetOutbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -57,7 +57,7 @@ func GetOutbox(fm *server.FactoryManager) echo.HandlerFunc {
 }
 
 // PostOutbox accepts messages to a particular ACTOR
-func PostOutbox(fm *server.FactoryManager) echo.HandlerFunc {
+func PostOutbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

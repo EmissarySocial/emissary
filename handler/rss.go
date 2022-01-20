@@ -7,7 +7,7 @@ import (
 )
 
 // GetRSS returns an RSS data feed for the requested URL
-func GetRSS(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetRSS(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

@@ -12,7 +12,7 @@ import (
 	"github.com/whisperverse/whisperverse/server"
 )
 
-func GetAttachment(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

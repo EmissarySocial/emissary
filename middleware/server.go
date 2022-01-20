@@ -9,7 +9,7 @@ import (
 // ServerAdmin generates a middleware that enforces security permissions
 // on the /server directory.  It confirms that uses the server's config file
 // allows access to this directory and validates the client's JWT cookie
-func ServerAdmin(factoryManager *server.FactoryManager) echo.MiddlewareFunc {
+func ServerAdmin(factoryManager *server.Factory) echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 

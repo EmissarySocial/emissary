@@ -81,8 +81,9 @@ github.com/benpate/nebula v0.2.1/go.mod h1:r20vYElJL1nrW4LCDTGRtqV1GJjyZrW2CRfp0
 github.com/benpate/null v0.6.1 h1:MInsq7/M9E9IzF6EWeB1po5p9zQpvimw3brrU1UeRzA=
 github.com/benpate/null v0.6.1/go.mod h1:gxun/MktUPdKfYWvkzCI2fCy3OX/3+sZWh01hjYdXwE=
 github.com/benpate/path v0.5.1/go.mod h1:uIiKDHeOa2YIIahSJ6eP/0vqx8cpThV5nuplQETSZ44=
-github.com/benpate/path v0.8.0 h1:SOXW+HQFvDLzHF8GuuYjzEbclOfD2yCfE55L34JEt/I=
 github.com/benpate/path v0.8.0/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yMzBdk=
+github.com/benpate/path v0.8.1 h1:ZDL3frNPlkalX+TPeCJ0N7Sb2T1GRm3Tpo/hHPd7/Ic=
+github.com/benpate/path v0.8.1/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yMzBdk=
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.12.0 h1:wUzD0fuDvdmUnHgjFuqrSLyhsQrsr0ZtFYPeHzmmb64=
 github.com/benpate/schema v0.12.0/go.mod h1:dlmr+tSRgmVpFdP+IRJaXuCM9g3vIA8A0p0gsE5NHwI=

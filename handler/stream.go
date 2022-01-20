@@ -13,7 +13,7 @@ import (
 )
 
 // GetStream handles GET requests
-func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -48,7 +48,7 @@ func GetStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
 }
 
 // PostStream handles POST/DELETE requests
-func PostStream(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func PostStream(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

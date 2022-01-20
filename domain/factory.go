@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"fmt"
-	"html/template"
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -26,9 +25,11 @@ type Factory struct {
 	Session data.Session
 	domain  config.Domain
 
+	// singletons (from server)
+	layoutService   *service.Layout
+	templateService *service.Template
+
 	// singletons (within this domain/factory)
-	layoutService       service.Layout
-	templateService     service.Template
 	streamService       service.Stream
 	userService         service.User
 	subscriptionService *service.Subscription
@@ -44,9 +45,9 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template) (*Factory, error) {
 
-	fmt.Println("Starting Hostname: " + domain.Hostname)
+	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
 
 	server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
@@ -63,6 +64,8 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	factory := Factory{
 		Session:               session,
 		domain:                domain,
+		layoutService:         layoutService,
+		templateService:       templateService,
 		templateUpdateChannel: make(chan string),
 	}
 
@@ -94,25 +97,6 @@ func NewFactory(domain config.Domain) (*Factory, error) {
 	formlib.All(&factory.formLibrary)
 
 	/** SINGLETON SERVICES *********************/
-
-	// This loads the web page layout (real-time updates to wait until later)
-	factory.layoutService = service.NewLayout(
-		factory.domain.LayoutPath,
-		factory.RenderFunctions(),
-	)
-
-	go factory.layoutService.Watch()
-
-	// Template Service
-	factory.templateService = service.NewTemplate(
-		factory.Domain(),
-		factory.Layout(),
-		factory.RenderFunctions(),
-		factory.domain.TemplatePath,
-		factory.TemplateUpdateChannel(),
-	)
-
-	go factory.templateService.Watch()
 
 	// Stream Service
 	factory.streamService = service.NewStream(
@@ -161,7 +145,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
-	result := service.NewDomain(factory.collection(CollectionDomain), factory.RenderFunctions())
+	result := service.NewDomain(factory.collection(CollectionDomain), render.FuncMap())
 	return &result
 }
 
@@ -192,11 +176,6 @@ func (factory *Factory) Subscription() *service.Subscription {
 	return factory.subscriptionService
 }
 
-// Template returns a fully populated Template service
-func (factory *Factory) Template() *service.Template {
-	return &factory.templateService
-}
-
 // User returns a fully populated User service
 func (factory *Factory) User() *service.User {
 	return &factory.userService
@@ -212,19 +191,19 @@ func (factory *Factory) Group() *service.Group {
  * RENDER OBJECTS
  *******************************************/
 
-// Layout service manages global website layouts
+// Layout service manages global website layouts (managed globally by the server.Factory)
 func (factory *Factory) Layout() *service.Layout {
-	return &factory.layoutService
+	return factory.layoutService
+}
+
+// Template returns a fully populated Template service (managed globally by the server.Factory)
+func (factory *Factory) Template() *service.Template {
+	return factory.templateService
 }
 
 // RenderStep uses an Step object to create a new action
 func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
 	return render.NewStep(factory, stepInfo)
-}
-
-// RenderFunctions provides a map of generic functions (template.FuncMap) that can be used in html.Templates
-func (factory *Factory) RenderFunctions() template.FuncMap {
-	return render.FuncMap()
 }
 
 // Content returns a content.Widget that can view content

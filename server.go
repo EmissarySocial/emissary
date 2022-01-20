@@ -28,14 +28,14 @@ func main() {
 
 	fmt.Println("Initializing hosts...")
 
-	factoryManager := server.NewFactoryManager(c)
+	factory := server.NewFactory(c)
 
 	fmt.Println("Initializing web server...")
-	e := route.New(factoryManager)
+	e := route.New(factory)
 
 	e.Use(middleware.Recover())
 	// TODO: implement echo.Security middleware
-	e.Use(steranko.Middleware(factoryManager))
+	e.Use(steranko.Middleware(factory))
 
 	/*
 		e.AutoTLSManager = autocert.Manager{

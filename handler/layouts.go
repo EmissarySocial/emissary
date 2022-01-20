@@ -2,7 +2,7 @@ package handler
 
 /*
 // GetLayout returns an echo.HandlerFunc that renders a specific site-wide layout with the given stream
-func GetLayout(factoryManager *server.FactoryManager) echo.HandlerFunc {
+func GetLayout(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
