@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/path"
 )
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -56,7 +55,7 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
 	for _, element := range step.form.AllPaths() {
 		value := request.Form[element.Path]
-		if err := schema.Set(renderer, path.New(element.Path), value); err != nil {
+		if err := schema.Set(renderer, element.Path, value); err != nil {
 			return derp.Wrap(err, "whisper.render.StepForm.Post", "Error setting path value", element, value)
 		}
 	}

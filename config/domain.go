@@ -3,9 +3,8 @@ package config
 import (
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
+	"github.com/benpate/list"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Domain contains all of the configuration data required to operate a single domain.
@@ -37,114 +36,142 @@ func NewDomain() Domain {
 	}
 }
 
-func (d *Domain) GetPath(p path.Path) (interface{}, error) {
+func (d *Domain) GetPath(path string) (interface{}, bool) {
 
-	switch p.Head() {
+	switch path {
 	case "label":
-		return d.Label, nil
+		return d.Label, true
 	case "hostname":
-		return d.Hostname, nil
+		return d.Hostname, true
 	case "connectString":
-		return d.ConnectString, nil
+		return d.ConnectString, true
 	case "databaseName":
-		return d.DatabaseName, nil
+		return d.DatabaseName, true
 	case "attachmentPath":
-		return d.AttachmentPath, nil
+		return d.AttachmentPath, true
 	case "layoutPath":
-		return d.LayoutPath, nil
+		return d.LayoutPath, true
 	case "templatePath":
-		return d.TemplatePath, nil
+		return d.TemplatePath, true
 	case "forwardTo":
-		return d.ForwardTo, nil
+		return d.ForwardTo, true
 	case "showAdmin":
-		return d.ShowAdmin, nil
+		return d.ShowAdmin, true
 
-	case "smtp":
-		if p.IsTailEmpty() {
-			return d.SMTPConnection, nil
-		}
-		return d.SMTPConnection.GetPath(p.Tail())
-
-	default:
-		return nil, derp.New(derp.CodeInternalError, "whisper.config.Domain.GetPath", "Unrecognized config setting", p)
 	}
+
+	head, tail := list.Split(path, ".")
+
+	if head == "smtp" {
+
+		if tail == "" {
+			return d.SMTPConnection, true
+		}
+
+		return d.SMTPConnection.GetPath(tail)
+	}
+
+	return nil, false
 }
 
-func (d *Domain) SetPath(p path.Path, value interface{}) error {
+func (d *Domain) SetPath(path string, value interface{}) error {
 
-	spew.Dump("domain.SetPath", p, value)
-	switch p.Head() {
+	switch path {
+
 	case "label":
 		d.Label = convert.String(value)
+		return nil
+
 	case "hostname":
 		d.Hostname = convert.String(value)
+		return nil
+
 	case "connectString":
 		d.ConnectString = convert.String(value)
+		return nil
+
 	case "databaseName":
 		d.DatabaseName = convert.String(value)
+		return nil
+
 	case "attachmentPath":
 		d.AttachmentPath = convert.String(value)
+		return nil
+
 	case "layoutPath":
 		d.LayoutPath = convert.String(value)
+		return nil
+
 	case "templatePath":
 		d.TemplatePath = convert.String(value)
+		return nil
+
 	case "forwardTo":
 		d.ForwardTo = convert.String(value)
+		return nil
+
 	case "showAdmin":
 		d.ShowAdmin = convert.Bool(value)
-	case "smtp":
-		if p.IsTailEmpty() {
+		return nil
+	}
+
+	head, tail := list.Split(path, ".")
+
+	if head == "smtp" {
+
+		if tail == "" {
 			return derp.New(derp.CodeBadRequestError, "whisper.config.Domain.SetPath", "Cannot set SMTP object directly")
 		}
 
-		return d.SMTPConnection.SetPath(p.Tail(), value)
-
-	default:
-		return derp.New(derp.CodeInternalError, "whisper.config.Domain.SetPath", "Unrecognized config setting", p)
+		return d.SMTPConnection.SetPath(tail, value)
 	}
 
-	return nil
+	return derp.New(derp.CodeInternalError, "whisper.config.Domain.SetPath", "Unrecognized config setting", path)
 }
 
-func (smtp *SMTPConnection) GetPath(p path.Path) (interface{}, error) {
+func (smtp *SMTPConnection) GetPath(path string) (interface{}, bool) {
 
-	if !p.IsTailEmpty() {
-		return nil, derp.NewBadRequestError("whisper.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
+	if path == "" {
+		return smtp, true
 	}
 
-	switch p.Head() {
+	switch path {
+
 	case "hostname":
-		return smtp.Hostname, nil
+		return smtp.Hostname, true
+
 	case "username":
-		return smtp.Username, nil
+		return smtp.Username, true
+
 	case "password":
-		return smtp.Password, nil
+		return smtp.Password, true
+
 	case "tls":
-		return smtp.TLS, nil
+		return smtp.TLS, true
+
 	default:
-		return nil, derp.NewBadRequestError("whisper.config.SMTP.GetPath", "Unrecognized path", p)
+		return nil, false
 	}
 }
 
-func (smtp *SMTPConnection) SetPath(p path.Path, value interface{}) error {
+func (smtp *SMTPConnection) SetPath(path string, value interface{}) error {
 
-	spew.Dump("smtp.SetPath", p, value)
+	switch path {
 
-	if !p.IsTailEmpty() {
-		return derp.NewBadRequestError("whisper.config.SMTP.GetPath", "No sub-properties of SMTP connection", p)
-	}
-
-	switch p.Head() {
 	case "hostname":
 		smtp.Hostname = convert.String(value)
+
 	case "username":
 		smtp.Username = convert.String(value)
+
 	case "password":
 		smtp.Password = convert.String(value)
+
 	case "tls":
 		smtp.TLS = convert.Bool(value)
+
 	default:
-		return derp.NewBadRequestError("whisper.config.SMTP.GetPath", "Unrecognized path", p)
+		return derp.NewBadRequestError("whisper.config.SMTP.GetPath", "Unrecognized path", path)
 	}
 
 	return nil

@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/null"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,28 +26,28 @@ func (group *Group) ID() string {
 	return group.GroupID.Hex()
 }
 
-// GetPath implements the path.Getter interface, allowing generic access to a subset of this Group's data
-func (group *Group) GetPath(p path.Path) (interface{}, error) {
-	switch p.Head() {
+// Get implements the path.Getter interface, allowing generic access to a subset of this Group's data
+func (group *Group) GetPath(path string) (interface{}, bool) {
+	switch path {
 	case "groupId":
-		return group.GroupID, nil
+		return group.GroupID, true
 	case "label":
-		return group.Label, nil
+		return group.Label, true
 	}
 
-	return nil, derp.New(derp.CodeBadRequestError, "whisper.model.Group.SetPath", "Unrecognized Path", p)
+	return nil, false
 }
 
 // SetPath implements the path.Setter interface, allowing generic access to a subset of this Group's data
-func (group *Group) SetPath(p path.Path, value interface{}) error {
+func (group *Group) SetPath(path string, value interface{}) error {
 
-	switch p.Head() {
+	switch path {
 	case "label":
 		group.Label = convert.String(value)
 		return nil
 	}
 
-	return derp.New(derp.CodeBadRequestError, "whisper.model.Group.SetPath", "Unrecognized Path", p)
+	return derp.NewBadRequestError("whisper.model.Group.SetPath", "Unrecognized Path", path)
 }
 
 // Schema returns a validating schema for all data in this group

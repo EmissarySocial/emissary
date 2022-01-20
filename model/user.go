@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/id"
 	"github.com/benpate/null"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -55,32 +54,33 @@ func (user *User) Schema() schema.Schema {
 }
 
 // GetPath implements the path.Setter interface
-func (user *User) GetPath(p path.Path) (interface{}, error) {
-	switch p.Head() {
+func (user *User) GetPath(path string) (interface{}, bool) {
+
+	switch path {
 
 	case "userId":
-		return user.UserID, nil
+		return user.UserID, true
 
 	case "groupIds":
-		return id.SliceOfString(user.GroupIDs), nil
+		return id.SliceOfString(user.GroupIDs), true
 
 	case "displayName":
-		return user.DisplayName, nil
+		return user.DisplayName, true
 
 	case "username":
-		return user.Username, nil
+		return user.Username, true
 
 	case "avatarUrl":
-		return user.AvatarURL, nil
+		return user.AvatarURL, true
 	}
 
-	return nil, derp.New(derp.CodeInternalError, "whisper.model.User.GetPath", "Unrecognized path", p)
+	return nil, false
 }
 
 // SetPath implements the path.Setter interface
-func (user *User) SetPath(p path.Path, value interface{}) error {
+func (user *User) SetPath(path string, value interface{}) error {
 
-	switch p.Head() {
+	switch path {
 
 	case "username":
 		user.Username = convert.String(value)
@@ -99,7 +99,7 @@ func (user *User) SetPath(p path.Path, value interface{}) error {
 		return nil
 	}
 
-	return derp.New(derp.CodeInternalError, "whisper.model.User.SetPath", "Cannot set value", p, value)
+	return derp.New(derp.CodeInternalError, "whisper.model.User.SetPath", "Cannot set value", path, value)
 }
 
 /******************************

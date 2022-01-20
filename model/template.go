@@ -5,8 +5,6 @@ import (
 
 	"github.com/benpate/compare"
 	"github.com/benpate/data/option"
-	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 )
 
@@ -68,21 +66,24 @@ func (template *Template) Action(actionID string) *Action {
 }
 
 // GetPath implements the path.Getter interface.
-func (template *Template) GetPath(p path.Path) (interface{}, error) {
+func (template *Template) GetPath(path string) (interface{}, bool) {
 
-	switch p.Head() {
+	switch path {
 
 	case "templateId":
-		return template.TemplateID, nil
+		return template.TemplateID, true
+
 	case "category":
-		return template.Label, nil
+		return template.Label, true
+
 	case "containedBy":
-		return template.ContainedBy, nil
+		return template.ContainedBy, true
+
 	case "label":
-		return template.Label, nil
+		return template.Label, true
 	}
 
-	return nil, derp.New(500, "whisper.model.Template.GetPath", "Unrecognized Path", p)
+	return nil, false
 }
 
 // Validate runs any post-processing required after a Template is parsed by the TemplateService

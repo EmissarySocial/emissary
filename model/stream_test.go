@@ -17,26 +17,26 @@ func TestStream_GetPath(t *testing.T) {
 	}
 
 	{
-		value, err := path.Get(stream, "label")
-		assert.Nil(t, err)
+		value, ok := path.GetOK(stream, "label")
+		assert.True(t, ok)
 		assert.Equal(t, "Example Stream", value)
 	}
 
 	{
-		value, err := path.Get(stream, "description")
-		assert.Nil(t, err)
+		value, ok := path.GetOK(stream, "description")
+		assert.True(t, ok)
 		assert.Equal(t, "This is my example.", value)
 	}
 
 	{
-		value, err := path.Get(stream, "thumbnailImage")
-		assert.Nil(t, err)
+		value, ok := path.GetOK(stream, "thumbnailImage")
+		assert.True(t, ok)
 		assert.Equal(t, "https://example.com/image.png", value)
 	}
 
 	{
-		value, err := path.Get(stream, "token")
-		assert.NotNil(t, err)
+		value, ok := path.GetOK(stream, "token")
+		assert.False(t, ok)
 		assert.Nil(t, value)
 	}
 }
@@ -67,5 +67,4 @@ func TestStream_SetPath(t *testing.T) {
 		err := path.Set(stream, "unrecognized", "Bad Value")
 		assert.NotNil(t, err)
 	}
-
 }

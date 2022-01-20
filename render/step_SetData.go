@@ -45,7 +45,7 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Put approved form data into the stream
 	for _, p := range step.paths {
-		if err := renderer.SetPath(path.New(p), inputs[p]); err != nil {
+		if err := renderer.SetPath(p, inputs[p]); err != nil {
 			return derp.New(derp.CodeBadRequestError, "whisper.render.StepSetData.Post", "Error seting value from user input", p)
 		}
 	}

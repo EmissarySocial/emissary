@@ -64,7 +64,7 @@ func (step StepSort) Post(buffer io.Writer, renderer Renderer) error {
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
-		if convert.Int(path.MustGet(object, step.values)) == rank {
+		if convert.Int(path.Get(object, step.values)) == rank {
 			continue
 		}
 

@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -33,13 +32,13 @@ func (domain *Domain) ID() string {
 }
 
 // GetPath implements the path.Getter interface, allowing named READ access to specific values
-func (domain *Domain) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "whisper.model.Domain.GetPath", "unimplemented")
+func (domain *Domain) GetPath(name string) (interface{}, bool) {
+	return nil, false
 }
 
-// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
-func (domain *Domain) SetPath(p path.Path, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "whisper.model.Domain.GetPath", "unimplemented")
+// SetPath implements the path.Setter interface, allowing named WRITE access to specific values
+func (domain *Domain) SetPath(name string, value interface{}) error {
+	return derp.New(derp.CodeInternalError, "whisper.model.Domain.SetPath", "unimplemented")
 }
 
 /*******************************************

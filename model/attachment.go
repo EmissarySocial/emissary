@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
-	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -39,14 +38,14 @@ func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
 }
 
-// GetPath implements the path.Getter interface, allowing named READ access to specific values
-func (attachment *Attachment) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "whisper.model.Attachment.GetPath", "unimplemented")
+// GetPath implements the path.Getter interface, returning a named value from this object
+func (attachment *Attachment) GetPath(name string) (interface{}, bool) {
+	return nil, false
 }
 
-// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
-func (attachment *Attachment) SetPath(p path.Path, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "whisper.model.Attachment.GetPath", "unimplemented")
+// SetPath implements the path.Getter interface, allowing named WRITE access to specific values
+func (attachment *Attachment) SetPath(name string, value interface{}) error {
+	return derp.NewInternalError("whisper.model.Attachment.SetPath", "unimplemented")
 }
 
 /*******************************************

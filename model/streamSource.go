@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -70,11 +69,11 @@ func (source *StreamSource) ID() string {
 }
 
 // GetPath implements the path.Getter interface, allowing named READ access to specific values
-func (source *StreamSource) GetPath(p path.Path) (interface{}, error) {
-	return nil, derp.New(derp.CodeInternalError, "whisper.model.StreamSource.GetPath", "unimplemented")
+func (source *StreamSource) GetPath(path string) (interface{}, bool) {
+	return nil, false
 }
 
 // GetPath implements the path.Getter interface, allowing named WRITE access to specific values
-func (source *StreamSource) SetPath(p path.Path, value interface{}) error {
+func (source *StreamSource) SetPath(path string, value interface{}) error {
 	return derp.New(derp.CodeInternalError, "whisper.model.StreamSource.GetPath", "unimplemented")
 }

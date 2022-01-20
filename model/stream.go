@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/nebula"
-	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -66,49 +65,42 @@ func (stream *Stream) ID() string {
 
 // GetPath implements the path.Getter interface.  It looks up
 // data within this Stream and returns it to the caller.
-func (stream *Stream) GetPath(p path.Path) (interface{}, error) {
-
-	if p.IsEmpty() {
-		return nil, derp.New(500, "whisper.model.Stream", "Unrecognized path", p)
-	}
-
-	property := p.Head()
+func (stream *Stream) GetPath(name string) (interface{}, bool) {
 
 	// Properties that can be retrieved
-	switch property {
+	switch name {
+
+	case "":
+		return stream, true
 
 	case "label":
-		return stream.Label, nil
+		return stream.Label, true
 
 	case "description":
-		return stream.Description, nil
+		return stream.Description, true
 
 	case "thumbnailImage":
-		return stream.ThumbnailImage, nil
+		return stream.ThumbnailImage, true
 
 	case "rank":
-		return stream.Rank, nil
+		return stream.Rank, true
 
 	case "stateId":
-		return stream.StateID, nil
+		return stream.StateID, true
 
 	default:
-		return stream.Data[property], nil
+		return stream.Data.GetPath(name)
 	}
 }
 
 // SetPath implements the path.Setter interface.  It takes any data value
 // and tries to set it to the correct path within this Stream.
-func (stream *Stream) SetPath(p path.Path, value interface{}) error {
+func (stream *Stream) SetPath(name string, value interface{}) error {
 
-	if p.IsEmpty() {
-		return derp.New(500, "whisper.model.Stream", "Unrecognized path", p)
-	}
+	switch name {
 
-	property := p.Head()
-
-	// Properties that can be set
-	switch property {
+	case "":
+		return derp.NewInternalError("whisper.model.Stream", "Unrecognized path", name)
 
 	case "label":
 		stream.Label = convert.String(value)
@@ -126,7 +118,7 @@ func (stream *Stream) SetPath(p path.Path, value interface{}) error {
 		stream.StateID = convert.String(value)
 
 	default:
-		return stream.Data.SetPath(p, value)
+		return stream.Data.SetPath(name, value)
 	}
 
 	return nil

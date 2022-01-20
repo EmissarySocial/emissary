@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/path"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -70,7 +69,7 @@ func (step StepEditModelObject) Post(buffer io.Writer, renderer Renderer) error 
 
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
 	for key, value := range request.Form {
-		if err := schema.Set(renderer, path.New(key), value); err != nil {
+		if err := schema.Set(renderer, key, value); err != nil {
 			return derp.Wrap(err, "whisper.render.AddModelObject.Post", "Error setting path value", key, value)
 		}
 	}

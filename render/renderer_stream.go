@@ -81,12 +81,12 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
  * (not available via templates)
  *******************************************/
 
-func (w Stream) GetPath(p path.Path) (interface{}, error) {
-	return w.stream.GetPath(p)
+func (w Stream) GetPath(path string) (interface{}, bool) {
+	return w.stream.GetPath(path)
 }
 
-func (w Stream) SetPath(p path.Path, value interface{}) error {
-	return w.stream.SetPath(p, value)
+func (w Stream) SetPath(path string, value interface{}) error {
+	return w.stream.SetPath(path, value)
 }
 
 /*******************************************
@@ -312,7 +312,7 @@ func (w Stream) PrevSibling(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
 		exp.Equal("parentId", w.stream.ParentID),
-		exp.LessThan("sort", path.MustGet(w.stream, "sort")),
+		exp.LessThan("sort", path.Get(w.stream, "sort")),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
@@ -326,7 +326,7 @@ func (w Stream) NextSibling(sort string, action string) (Stream, error) {
 
 	criteria := exp.And(
 		exp.Equal("parentId", w.stream.ParentID),
-		exp.GreaterThan("sort", path.MustGet(w.stream, "sort")),
+		exp.GreaterThan("sort", path.Get(w.stream, "sort")),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
