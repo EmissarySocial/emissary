@@ -209,6 +209,27 @@ div.nebula-layout-item {
 }
 
 /***************************
+ * UPLOADER
+ ***************************/
+
+ .uploader {
+    border: 1px solid var(--gray40);
+    font-family: sans-serif;
+    cursor: pointer;
+    background-color: var(--gray05);
+    text-align:center;
+}
+
+.uploader.highlight {
+    border: green 1px outset;
+}
+
+.uploader input[type="file"] {
+    opacity:0;
+    position:absolute;
+}
+
+/***************************
  * FORM INPUTS
  ***************************/
 
@@ -229,3 +250,4 @@ div.nebula-layout textarea {
 div.nebula-layout textarea:focus {
 	border: solid 1px cornflowerblue;
 }
+
