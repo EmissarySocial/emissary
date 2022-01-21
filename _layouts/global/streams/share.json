@@ -1,0 +1,29 @@
+{
+    "form": {
+        "kind": "layout-vertical",
+        "children": [{
+            "path": "share",
+            "kind": "radio",
+            "label": "Share with everyone",
+            "value": "ALL"
+        }, {
+            "path": "share",
+            "kind": "radio",
+            "label": "Share with specific people",
+            "value": "ONLY"
+        }, {
+            "path": "share_users",
+            "kind": "select-many",
+            "format": "selectbox",
+            "options":{
+                "dataprovider": "Users",
+                "max-height": 20
+            },
+            "label": "",
+            "rules": {
+                "hide": "form.share is 'ALL",
+                "disable": "form.share IS 'ONLY'"
+            }
+        }]
+    }
+}

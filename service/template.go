@@ -2,6 +2,7 @@ package service
 
 import (
 	"html/template"
+	"io/ioutil"
 	"sort"
 	"sync"
 
@@ -10,33 +11,32 @@ import (
 	"github.com/benpate/list"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/whisperverse/whisperverse/model"
-
-	"io/ioutil"
-
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/afero"
+	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/model"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates map[string]model.Template // map of all templates available within this domain
-	funcMap   template.FuncMap          // Map of functions to use in golang templates
-	mutex     sync.RWMutex              // Mutext that locks access to the templates structure
-	adapter   string                    // kind of filesystem adapter to use
-	path      string                    // Filesystem path to the template directory
-
-	layoutService     *Layout
-	templateUpdateOut chan string
+	templates         map[string]model.Template // map of all templates available within this domain
+	folder            config.Folder             // Configuration for template directory
+	funcMap           template.FuncMap          // Map of functions to use in golang templates
+	mutex             sync.RWMutex              // Mutext that locks access to the templates structure
+	filesystem        afero.Fs                  // Filesystem where templates are stored.
+	layoutService     *Layout                   // Pointer to the Layout service
+	templateUpdateOut chan string               // Channel to notify other processes that a template has changed.
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(layoutService *Layout, funcMap template.FuncMap, adapter string, path string, templateUpdateChannel chan string) Template {
+func NewTemplate(layoutService *Layout, funcMap template.FuncMap, folder config.Folder, templateUpdateChannel chan string) Template {
 
 	return Template{
 		templates:         make(map[string]model.Template),
+		folder:            folder,
 		funcMap:           funcMap,
-		adapter:           adapter,
-		path:              path,
+		filesystem:        GetFS(folder),
 		layoutService:     layoutService,
 		templateUpdateOut: templateUpdateChannel,
 	}
@@ -190,11 +190,24 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 // "Updates" channel for news that a template has been updated.
 func (service *Template) Watch() error {
 
+	spew.Dump("template.Watch ------>", service.folder)
+
+	// Only synchronize on folders that are configured to do so.
+	if !service.folder.Sync {
+		return nil
+	}
+
+	// Only synchronize on FILESYSTEM folders (for now)
+	if service.folder.Adapter != "FILE" {
+		return nil
+	}
+
+	spew.Dump(service.folder)
 	// Load all templates from the filesystem
-	fileList, err := ioutil.ReadDir(service.path)
+	fileList, err := ioutil.ReadDir(service.folder.Location)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.templateSource.File.List", "Unable to list files in filesystem", service.path)
+		return derp.Wrap(err, "whisper.service.templateSource.File.List", "Unable to list files in filesystem", service.folder)
 	}
 
 	go func() {
@@ -204,11 +217,7 @@ func (service *Template) Watch() error {
 			if fileInfo.IsDir() {
 				templateID := list.Last(fileInfo.Name(), "/")
 
-				// System directories are skipped.
-				if templateID == "system" {
-					continue
-				}
-
+				spew.Dump(templateID)
 				// Add all other directories into the Template service as Templates
 				template, err := service.loadFromFilesystem(templateID)
 
@@ -233,7 +242,7 @@ func (service *Template) Watch() error {
 		}
 
 		// List all the files in the directory
-		files, err := ioutil.ReadDir(service.path)
+		files, err := ioutil.ReadDir(service.folder.Location)
 
 		if err != nil {
 			panic(err)
@@ -242,7 +251,7 @@ func (service *Template) Watch() error {
 		// Add watchers to each file that is a Directory.
 		for _, file := range files {
 			if file.IsDir() {
-				if err := watcher.Add(service.path + "/" + file.Name()); err != nil {
+				if err := watcher.Add(service.folder.Location + "/" + file.Name()); err != nil {
 					derp.Report(derp.Wrap(err, "whisper.service.Template.watch", "Error adding file watcher to file", file.Name()))
 				}
 			}
@@ -297,15 +306,16 @@ func (service *Template) Watch() error {
 // loadFromFilesystem locates and parses a Template sub-directory within the filesystem path
 func (service *Template) loadFromFilesystem(templateID string) (model.Template, error) {
 
-	directory := service.path + "/" + templateID
+	filesystem := GetFS(service.folder, templateID)
+
 	result := model.NewTemplate(templateID, service.funcMap)
 
-	if err := loadModelFromFilesystem(directory, &result); err != nil {
-		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading schema", directory)
+	if err := loadModelFromFilesystem(filesystem, &result); err != nil {
+		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading schema")
 	}
 
-	if err := loadHTMLTemplateFromFilesystem(directory, result.HTMLTemplate, service.funcMap); err != nil {
-		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading template", directory)
+	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
+		return result, derp.Wrap(err, "whisper.service.Template.loadFromFilesystem", "Error loading template")
 	}
 
 	result.Validate()

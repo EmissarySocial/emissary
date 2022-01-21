@@ -26,6 +26,10 @@ func NewDomain() Domain {
 	}
 }
 
+/**************************
+ * Path Interface
+ **************************/
+
 func (d *Domain) GetPath(name string) (interface{}, bool) {
 
 	switch name {

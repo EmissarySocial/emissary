@@ -47,8 +47,7 @@ func NewFactory(cfg config.Config) *Factory {
 
 	// Global Layout Service
 	factory.layoutService = service.NewLayout(
-		cfg.TemplateAdapter,
-		cfg.TemplatePath,
+		cfg.Layouts,
 		render.FuncMap(),
 	)
 
@@ -58,8 +57,7 @@ func NewFactory(cfg config.Config) *Factory {
 	factory.templateService = service.NewTemplate(
 		factory.Layout(),
 		render.FuncMap(),
-		cfg.TemplateAdapter,
-		cfg.TemplatePath,
+		cfg.Templates,
 		factory.templateChannel,
 	)
 
@@ -267,4 +265,10 @@ func (factory *Factory) FormLibrary() form.Library {
 	result := form.NewLibrary(nil)
 	vocabulary.All(&result)
 	return result
+}
+
+// StaticPath returns the configured path to the "static"
+// files for this website.
+func (factory *Factory) StaticPath() string {
+	return factory.config.Static.Location
 }

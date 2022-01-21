@@ -1,0 +1,33 @@
+<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
+
+	<h1>{{.Label}}</h1>
+
+	<article class="space-after">
+		<div>{{.Description}}</div>
+	</article>
+
+	{{ if .UserCan "edit" }}
+		<div id="menu-bar">
+			<a href="/{{.Token}}/edit">Upload Photos</a>
+
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties">Edit Info</a>
+			{{- end -}}
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete">Delete Album</a>
+			{{- end -}}
+		</div>
+	{{ end }}
+
+	<div id="children" class="pure-g card-group">
+		{{- .View "children" -}}
+	</div>
+
+</div>
+</div>

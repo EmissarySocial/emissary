@@ -1,0 +1,25 @@
+<div class="page">
+<table class="table">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Description</th>
+			<th>Date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{- if .UserCan "new" -}}
+			<tr hx-get="/{{.Token}}/new">
+				<td colspan="3" class="link"><i class="fa-solid fa-circle-plus"></i> Add Stream</td>
+			</tr>
+		{{- end -}}
+		{{- range .Children.ByLabel.View -}}
+			<tr hx-get="/{{.Token}}" hx-trigger="click">
+				<td><i class="fa-regular fa-file-lines"></i> {{.Label}}</td>
+				<td>{{.Description}}</td>
+				<td></td>
+			</tr>
+		{{- end -}}
+	</tbody>
+</table>
+</div>

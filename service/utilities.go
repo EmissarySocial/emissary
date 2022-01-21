@@ -3,11 +3,12 @@ package service
 import (
 	"encoding/json"
 	"html/template"
-	"io/ioutil"
+	"io"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/list"
+	"github.com/spf13/afero"
 	minify "github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 )
@@ -18,17 +19,17 @@ func notDeleted(criteria exp.Expression) exp.Expression {
 }
 
 // loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
-func loadHTMLTemplateFromFilesystem(directory string, t *template.Template, funcMap template.FuncMap) error {
+func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, funcMap template.FuncMap) error {
 
 	// Create the minifier
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
 
 	// List all files in the target directory
-	files, err := ioutil.ReadDir(directory)
+	files, err := afero.ReadDir(filesystem, ".")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to list directory", directory)
+		return derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to list directory")
 	}
 
 	for _, file := range files {
@@ -40,7 +41,7 @@ func loadHTMLTemplateFromFilesystem(directory string, t *template.Template, func
 		if extension == "html" {
 
 			// Try to read the file from the filesystem
-			content, err := ioutil.ReadFile(directory + "/" + filename)
+			content, err := afero.ReadFile(filesystem, filename)
 
 			if err != nil {
 				return derp.Report(derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
@@ -70,18 +71,24 @@ func loadHTMLTemplateFromFilesystem(directory string, t *template.Template, func
 }
 
 // loadModelFromFilesystem locates and parses a schema from the filesystem path
-func loadModelFromFilesystem(directory string, model interface{}) error {
+func loadModelFromFilesystem(filesystem afero.Fs, model interface{}) error {
 
-	// Load the file from the filesystem
-	content, err := ioutil.ReadFile(directory + "/schema.json")
+	file, err := filesystem.Open("schema.json")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Cannot read file: schema.json", directory)
+		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Cannot read file: schema.json")
+	}
+
+	// Load the file from the filesystem
+	content, err := io.ReadAll(file)
+
+	if err != nil {
+		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Cannot read file: schema.json")
 	}
 
 	// Unmarshal the file into the schema.
 	if err := json.Unmarshal(content, model); err != nil {
-		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json", directory)
+		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json")
 	}
 
 	// Return to caller.

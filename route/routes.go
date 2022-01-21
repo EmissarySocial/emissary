@@ -25,9 +25,7 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 
 	// Local links for static resources
-	e.Static("/htmx", "../htmx/src")
-	e.Static("/hyperscript", "../_hyperscript/dist")
-	e.Static("/static", "templates/system/static")
+	e.Static("/static", factory.StaticPath())
 
 	// RSS Feed
 	e.GET("/feed.json", handler.GetRSS(factory))

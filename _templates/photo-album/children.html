@@ -1,0 +1,27 @@
+{{- $results := .Children.Top6.View -}}
+{{- if not $results.IsEmpty -}}
+
+	{{- $last := last $results -}}
+
+	<div 
+		hx-get="/{{.Token}}/children?publishDate=lt:{{$results.Last.PublishDate}}" 
+		hx-push-url="false"
+		hx-trigger="revealed" 
+		hx-target="#children" 
+		hx-swap="beforeend"></div>
+
+	{{- range $results -}}
+
+		<div streamId="{{.StreamID}}" class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3">
+			<div 
+				hx-get="/{{.Token}}" 
+				hx-push-url="true"
+				class="clickable card" 
+				style="overflow:hidden; aspect-ratio:1;">
+				<img src="/{{.Token}}/attachments/{{.ThumbnailImage}}?height=300&amp;width=300" style="width:100%;">
+			</div>
+		</div>
+
+	{{- end -}}
+
+{{- end -}}	

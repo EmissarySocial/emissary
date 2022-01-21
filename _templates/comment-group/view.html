@@ -1,0 +1,61 @@
+<div class="comment-group" hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+
+	<div hx-get="/{{.Token}}/children" hx-trigger="sse:message" hx-swap="innerHTML">
+		{{- .View "children" -}}
+	</div>
+
+	<form hx-post="/{{.Token}}/add" hx-swap="none" script="on submit call me.reset()">
+		<div class="author">{{.UserName}}</div>
+		<div class="comment-new">
+			<textarea name="description" oninput="this.style.height = 'inherit'; this.style.height = (this.scrollHeight + 20) + 'px';"></textarea>
+			<button type="submit" class="fa-regular fa-circle-arrow-up fa-2x"></button>
+		</div>
+	</form>
+</div>
+
+<style>
+	.comment {
+		padding: 20px 0px;
+	}
+
+	.comment .author,
+	.comment-new .author {
+		color:var(--black);
+		font-weight:bold;
+	}
+
+	.comment .date,
+	.comment-new .date {
+		font-size:10pt;
+		color: var(--gray50);
+	}
+
+	// NEW COMMENT SECTION
+	.comment-new {
+		border:solid 1px var(--input-border);
+		background-color: var(--input-background);
+		display:flex;
+		flex-direction:rows;
+		margin-bottom:50px;
+	}
+
+	.comment-new textarea {
+		display:inline-block;
+		border: none;
+		background-color: var(--input-background);
+		flex-grow:1;
+		resize: none;
+		box-sizing:border-box;
+	    overflow: hidden;
+    	min-height: 20px;
+    	max-height: 500px;
+	}
+
+	.comment-new textarea:focus {
+		outline-style:none;
+	}
+
+	.comment-new button {
+		flex-shrink:1;
+	}
+</style>

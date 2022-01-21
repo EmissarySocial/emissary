@@ -6,14 +6,14 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
 	"github.com/fsnotify/fsnotify"
+	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/model"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
-	adapter   string
-	path      string
+	folder    config.Folder
 	funcMap   template.FuncMap
 	analytics model.Layout
 	domain    model.Layout
@@ -24,11 +24,10 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(adapter string, path string, funcMap template.FuncMap) Layout {
+func NewLayout(folder config.Folder, funcMap template.FuncMap) Layout {
 
 	return Layout{
-		adapter: adapter,
-		path:    path,
+		folder:  folder,
 		funcMap: funcMap,
 	}
 }
@@ -74,6 +73,16 @@ func (service *Layout) fileNames() []string {
 // "Updates" channel for news that a template has been updated.
 func (service *Layout) Watch() {
 
+	// Only synchronize on folders that are configured to do so.
+	if !service.folder.Sync {
+		return
+	}
+
+	// Only synchronize on FILESYSTEM folders (for now)
+	if service.folder.Adapter != "FILE" {
+		return
+	}
+
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
 
@@ -86,11 +95,6 @@ func (service *Layout) Watch() {
 	// Use a separate counter because not all files will be included in the result
 	for _, filename := range files {
 
-		// Skip "system" folder.  It's owned by the Layout service.
-		if filename == "system" {
-			continue
-		}
-
 		// Add all other directories into the Template service as Templates
 		if err := service.loadFromFilesystem(filename); err != nil {
 			derp.Report(derp.Wrap(err, "whisper.service.layout.NewLayout", "Error loading Layout from Filesystem"))
@@ -98,7 +102,7 @@ func (service *Layout) Watch() {
 		}
 
 		// Add fsnotify watchers for all other directories
-		if err := watcher.Add(service.path + "/" + filename); err != nil {
+		if err := watcher.Add(service.folder.Location + "/" + filename); err != nil {
 			derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error adding file watcher to file", filename))
 		}
 	}
@@ -135,18 +139,19 @@ func (service *Layout) Watch() {
 // loadFromFilesystem retrieves the template from the disk and parses it into
 func (service *Layout) loadFromFilesystem(filename string) error {
 
-	path := service.path + "/" + filename
+	fs := GetFS(service.folder, filename)
+
 	layout := model.NewLayout(filename, service.funcMap)
 
 	// System folders (except for "static" and "global") have a schema.json file
-	if (filename != "static") && (filename != "global") {
-		if err := loadModelFromFilesystem(path, &layout); err != nil {
-			return derp.Wrap(err, "whisper.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
+	if filename != "global" {
+		if err := loadModelFromFilesystem(fs, &layout); err != nil {
+			return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Schema", filename)
 		}
 	}
 
-	if err := loadHTMLTemplateFromFilesystem(path, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "whisper.service.layout.getTemplateFromFilesystem", "Error loading Schema", filename)
+	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
+		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", filename)
 	}
 
 	// Normalize steps

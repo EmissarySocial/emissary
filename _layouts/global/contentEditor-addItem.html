@@ -1,0 +1,54 @@
+<div id="modal">
+	<div class="modal-underlay"></div>
+	<div class="modal-content">
+        <h1>Add a Section</h1>
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="WYSIWYG">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            WYSIWYG
+        </form>
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="HTML">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            HTML
+        </form>
+
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="TEXT">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            TEXT
+        </form>
+
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="OEMBED">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            Image
+        </form>
+        
+        <form hx-post="/{{.Token}}/draft" hx-trigger="click" class="link">
+            <input type="hidden" name="type" value="new-item">
+            <input type="hidden" name="itemType" value="OEMBED">
+            <input type="hidden" name="itemId" value="{{.QueryParam `itemId`}}">
+            <input type="hidden" name="place" value="{{.QueryParam `place`}}">
+            <input type="hidden" name="check" value="{{.QueryParam `check`}}">
+            Video
+        </form>
+        
+        <button data-script="on click trigger closeModal">Cancel</button>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-get="/{{.Token}}" hx-trigger="sse:message">
+
+	{{- if ne .Label "" -}}
+		<h1>{{.Label}}</h1>
+	{{- end -}}
+
+	{{- if ne .Description "" -}}
+		<div class="space-below">{{.Description}}</div>
+	{{- end -}}
+
+	<div id="menu-bar">
+		{{- if .HasParent -}}
+			{{- $parent := .Parent "view" -}}
+			<a hx-get="/{{$parent.Token}}" hx-push-url="true" class="link">&laquo; {{$parent.Label}}</a>
+		{{- end -}}
+
+		{{- if .UserCan "edit" -}}
+			<a hx-get="/{{.Token}}/edit">Info</a>
+		{{- end -}}
+
+		{{- if .UserCan "add-child" -}}
+			<a hx-get="/{{.Token}}/add-child">Features</a>
+		{{- end -}}
+
+		{{- if .UserCan "delete" -}}
+			<a hx-get="/{{.Token}}/delete">Delete</a>
+		{{- end -}}
+	</div>
+
+	{{- $children := .Children.All.View -}}
+	{{- if eq (len $children) 0 -}}
+		<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.Filename}}?width=1024" style="width:100%;"></div>
+	{{- end -}}
+	{{- if gt (len $children) 0 -}}
+
+	<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.Filename}}?width=1024" style="width:100%;"></div>
+	{{- range $children -}}
+	<div class="card padding-5 space-below">
+		{{- .Render -}}
+	</div>
+	{{- end -}}
+
+	{{- end -}}
+
+</div>
+</div>

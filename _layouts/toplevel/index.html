@@ -1,0 +1,66 @@
+<h1>Settings</h1>
+
+<div id="menu-bar">
+    {{- $token := .Token -}}
+    {{- range .AdminSections -}}
+        <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+    {{- end -}}
+</div>
+
+<div class="page">
+    <div class="space-below">
+        <i>Drag and Drop Items to Sort.</i>
+    </div>
+
+    <div class="space-below">
+        <a hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i> Add a Top-Level Stream</a>
+    </div>
+
+    <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+        {{- range .TopLevel -}}
+            <div class="draggable">
+                <div class="text-sm" style="float:right;">
+                    <a href="/{{.Token}}" class="button">View</a>
+                    <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="fa-regular fa-trash-can"></i></button>
+                </div>
+                <i class="fa-regular fa-grip"></i>
+                {{.Label}}
+                <input type="hidden" name="keys" value="{{.StreamID}}">
+            </div>
+        {{- end -}}
+    </form>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    htmx.onLoad(function(content) {
+        var sortables = content.querySelectorAll(".sortable");
+        for (var i = 0; i < sortables.length; i++) {
+        var sortable = sortables[i];
+        new Sortable(sortable, {
+            animation: 150,
+            whisperClass: 'draggable-whisper'
+        });
+        }
+    })
+</script>
+
+<style>
+    .draggable {
+        padding:10px 20px;
+        border: solid 1px var(--gray10);
+        background-color: var(--white);
+        color: var(--gray80);
+        margin-bottom: -1px;
+        cursor: grab;
+    }
+
+    .draggable-whisper {
+        background-color: var(--gray50);
+        color:var(--gray50);
+        cursor: grabbing;
+    }
+</style>

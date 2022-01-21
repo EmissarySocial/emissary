@@ -1,0 +1,7 @@
+{
+	"label": "Domain",
+	"description": "Domain Owners only.  Site Admin",
+	"actions": {
+		"index": {"step": "view-html"}
+	}
+}

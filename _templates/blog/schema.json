@@ -1,0 +1,83 @@
+{
+	"label": "Blog",
+	"description": "Post articles",
+	"icon": "fa-solid fa-book",
+	"containedBy": ["top", "folder"],
+	"childSortType": "label",
+	"childSortOrder": "ASC",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"layout": {"type": "string", "options": ["table", "grid"]}
+		}
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"description": "Blogs only have one state"
+		}
+	},
+	"roles": {
+		"editor": {
+			"label": "Editor",
+			"description": "Editors can manage all content in this folder"
+		},
+		"viewer": {
+			"label": "Viewer",
+			"description": "Viewers can access folder contents, but can not add new items"
+		}
+	},
+	"actions": {
+		"init": {
+			"steps":[
+				{"step": "set-data", "values": {"label": "New Blog"}},
+				{"step": "save","comment": "Created by {{.Author}}"}, 
+				{
+					"step": "add-child",
+					"template": "article",
+					"with-child": [
+						{"step": "set-data", "values": {"label": "My First Blog Article"}},
+						{"step": "forward-to", "url": "/{{.Token}}/edit"}
+					]
+				}
+		]
+		},
+		"edit": {
+			"steps":[{
+				"step": "as-modal",
+				"steps": [
+					{
+						"step": "form-html",
+						"label": "Edit Folder",
+						"form": {
+							"kind": "layout-vertical",
+							"label": "Update Form",
+							"children": [
+								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"}
+							]
+						}
+					}, 
+					{"step": "set-data","fields": ["label", "description"]}, 
+					{"step": "save", "comment": "Updated Folder"}
+				]
+			}]
+		},
+		"view": {
+			"steps": [{"step":"view-html"}]
+		},
+		"delete": {
+			"steps": [{"step":"delete"}]
+		},
+		"add": {
+			"steps":[{
+				"step": "add-child",
+				"comment": "Created by {{.Author}}",
+				"with-child": [
+					{"step": "save", "comment": "Created by {{.Author}}"},
+					{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				]
+			}]
+		}
+	}
+}
