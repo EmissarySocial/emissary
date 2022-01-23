@@ -247,6 +247,31 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
  * Other Global Services
  ****************************/
 
+// AdminURL returns the URL path to the admin console for this server.
+// If the admin console is not configured, then an empty string is returned instead
+func (factory *Factory) AdminURL() string {
+	result := factory.config.AdminURL
+
+	if result == "" {
+		return ""
+	}
+
+	return "/" + result
+}
+
+// IsAdminPassword returns TRUE if the provided password matches
+// the admin password for this server.
+func (factory *Factory) IsAdminPassword(password string) bool {
+
+	// Password is required, so empty passwords CANNOT MATCH.
+	if password == "" {
+		return false
+	}
+
+	// Return TRUE if the passwords matches.
+	return password == factory.config.AdminPassword
+}
+
 // Steranko implements the steranko.Factory method, used for locating the specific
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {

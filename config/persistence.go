@@ -36,6 +36,12 @@ func Load() Config {
 	{
 		fmt.Println("Generating new file...")
 
+		defaultAdminURL, err := password.Generate(20, 0, 0, true, true)
+
+		if err != nil {
+			panic("Error generating default admin location: " + err.Error())
+		}
+
 		// Create a default password
 		defaultPassword, err := password.Generate(36, 10, 0, false, false)
 
@@ -44,7 +50,7 @@ func Load() Config {
 		}
 
 		// Generate a new configuration file using the default password
-		result := DefaultConfig(defaultPassword)
+		result := DefaultConfig(defaultAdminURL, defaultPassword)
 		data, err := json.MarshalIndent(result, "", "\t")
 
 		if err != nil {
@@ -58,11 +64,14 @@ func Load() Config {
 
 		// Output helpful hints for system admins
 		fmt.Println("Default config file created at: " + CONFIG_FILENAME)
-		fmt.Println("Server Password Is:")
-		fmt.Println("------------------------------------")
-		fmt.Println(result.Password)
-		fmt.Println("------------------------------------")
-		fmt.Println("SAVE THIS SOMEWHERE SAFE")
+		fmt.Println("")
+		fmt.Println("SAVE THIS INFORMATION SOMEWHERE SAFE")
+		fmt.Println("-----------------------------------------")
+		fmt.Println("To access the server admin, and configure")
+		fmt.Println("websites on this server open this URL:")
+		fmt.Println("http://localhost/" + result.AdminURL)
+		fmt.Println("The admin password is:" + result.AdminPassword)
+		fmt.Println("-----------------------------------------")
 
 		// Success!
 		return result

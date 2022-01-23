@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 
+	"github.com/benpate/compare"
 	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -15,61 +16,59 @@ import (
 func New(factory *server.Factory) *echo.Echo {
 
 	e := echo.New()
+
+	// echo Configuration
 	e.HideBanner = true
+
+	// Middleware
+	domain := middleware.Domain(factory)
 
 	// Well-Known API calls
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.GET("/favicon.ico", handler.GetFavicon(factory))
-	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
-	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
+	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory), domain)
+	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory), domain)
+	e.GET("/.well-known/oembed", handler.GetOEmbed(factory), domain)
 
 	// Local links for static resources
 	e.Static("/static", factory.StaticPath())
 
 	// RSS Feed
-	e.GET("/feed.json", handler.GetRSS(factory))
+	e.GET("/feed.json", handler.GetRSS(factory), domain)
 
 	// Authentication Pages
-	e.GET("/signin", handler.GetSignIn(factory))
-	e.POST("/signin", handler.PostSignIn(factory))
-	e.POST("/signout", handler.PostSignOut(factory))
+	e.GET("/signin", handler.GetSignIn(factory), domain)
+	e.POST("/signin", handler.PostSignIn(factory), domain)
+	e.POST("/signout", handler.PostSignOut(factory), domain)
 
 	// STREAM PAGES
-	e.GET("/", handler.GetStream(factory))
-	e.GET("/:stream", handler.GetStream(factory))
-	e.GET("/:stream/:action", handler.GetStream(factory))
-	e.POST("/:stream/:action", handler.PostStream(factory))
-	e.DELETE("/:stream", handler.PostStream(factory))
+	e.GET("/", handler.GetStream(factory), domain)
+	e.GET("/:stream", handler.GetStream(factory), domain)
+	e.GET("/:stream/:action", handler.GetStream(factory), domain)
+	e.POST("/:stream/:action", handler.PostStream(factory), domain)
+	e.DELETE("/:stream", handler.PostStream(factory), domain)
 
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
-	// SERVER ADMIN PAGES
-	serverAdmin := middleware.ServerAdmin(factory)
-	e.GET("/server", handler.GetServerIndex(factory), serverAdmin)
-	e.GET("/server/:domain", handler.GetServerDomain(factory), serverAdmin)
-	e.POST("/server/:domain", handler.PostServerDomain(factory), serverAdmin)
-	e.DELETE("/server/:domain", handler.DeleteServerDomain(factory), serverAdmin)
-
 	// DOMAIN ADMIN PAGES
-	e.GET("/admin", handler.GetAdmin(factory))
-	e.GET("/admin/:param1", handler.GetAdmin(factory))
-	e.POST("/admin/:param1", handler.PostAdmin(factory))
-	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory))
-	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory))
-	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory))
-	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory))
+	e.GET("/admin", handler.GetAdmin(factory), domain)
+	e.GET("/admin/:param1", handler.GetAdmin(factory), domain)
+	e.POST("/admin/:param1", handler.PostAdmin(factory), domain)
+	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory), domain)
+	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory), domain)
+	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), domain)
+	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), domain)
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory))
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory), domain)
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 
 	// ActivityPub INBOX/OUTBOX
-	e.GET("/inbox", handler.GetInbox(factory))
-	e.POST("/inbox", handler.PostInbox(factory))
-	e.GET("/outbox", handler.GetOutbox(factory))
-	e.POST("/outbox", handler.PostOutbox(factory))
+	e.GET("/inbox", handler.GetInbox(factory), domain)
+	e.POST("/inbox", handler.PostInbox(factory), domain)
+	e.GET("/outbox", handler.GetOutbox(factory), domain)
+	e.POST("/outbox", handler.PostOutbox(factory), domain)
 
 	// PROFILE PAGES
 	// e.GET("/me/", handler.GetProfile(factory))
@@ -77,19 +76,47 @@ func New(factory *server.Factory) *echo.Echo {
 	// e.GET("/me/:action", handler.PostProfile(factory))
 	// e.POST("/me/:action", handler.PostProfile(factory))
 
+	// SERVER ADMIN PAGES (dynamic URLs help discourage 4337 H4XX0RZ)
+	if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {
+		server := e.Group(serverAdminURL, middleware.ServerAdminExists(factory))
+		server.GET("", handler.GetServerIndex(factory), middleware.ServerAdminLogin(factory), middleware.ServerAdminAllowed(factory))
+		server.GET("/:domain", handler.GetServerDomain(factory), middleware.ServerAdminAllowed(factory))
+		server.POST("/:domain", handler.PostServerDomain(factory), middleware.ServerAdminAllowed(factory))
+		server.DELETE("/:domain", handler.DeleteServerDomain(factory), middleware.ServerAdminAllowed(factory))
+	}
+
 	// SITE-WIDE ERROR HANDLER
 	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
 
-		// If Forbidden error, then redirect the user to the signin page.
-		if derp.ErrorCode(err) == derp.CodeForbiddenError {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
+		// Special handling of permisssion errors
+		code := derp.ErrorCode(err)
+		switch code {
+		case http.StatusUnauthorized, http.StatusForbidden:
+
+			// If the server admin console is active for this server
+			if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {
+				// ... and the requested page is in the admin section ...
+				if compare.BeginsWith(ctx.Request().URL.Path, serverAdminURL) {
+					// ... then redirect to the root of the admin section.
+					ctx.Redirect(http.StatusTemporaryRedirect, serverAdminURL)
+					return
+				}
+			}
+
+			if ctx.Request().URL.Path != "/signin" {
+				ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
+				return
+			}
+			ctx.String(code, derp.Message(err))
 			return
 		}
 
-		// Fall through to general error handler
+		// On localhost, allow developers to see full error dump.
 		if ctx.Request().Host == "localhost" {
 			ctx.String(derp.ErrorCode(err), spew.Sdump(err))
 		}
+
+		// Fall through to general error handler
 		ctx.String(derp.ErrorCode(err), derp.Message(err))
 	}
 

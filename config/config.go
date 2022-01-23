@@ -8,12 +8,13 @@ import (
 
 // Config defines all of the domains available on this server
 type Config struct {
-	Password    string     `json:"password"`    // Password for access to domain admin console
-	Domains     DomainList `json:"domains"`     // Slice of one or more domain configurations
-	Templates   Folder     `json:"templates"`   // Folder containing all stream templates
-	Layouts     Folder     `json:"layouts"`     // Folder containing all system layouts
-	Attachments Folder     `json:"attachments"` // Folder containing all attachments
-	Static      Folder     `json:"static"`      // Folder containing all attachments
+	AdminURL      string     `json:"adminUrl"`      // path to use for the server admin console (if blank, then console is not available)
+	AdminPassword string     `json:"adminPassword"` // Password for access to domain admin console
+	Domains       DomainList `json:"domains"`       // Slice of one or more domain configurations
+	Templates     Folder     `json:"templates"`     // Folder containing all stream templates
+	Layouts       Folder     `json:"layouts"`       // Folder containing all system layouts
+	Attachments   Folder     `json:"attachments"`   // Folder containing all attachments
+	Static        Folder     `json:"static"`        // Folder containing all attachments
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -25,10 +26,19 @@ func NewConfig() Config {
 }
 
 // DefaultConfig return sthe default configuration for this application.
-func DefaultConfig(password string) Config {
+func DefaultConfig(adminURL string, adminPassword string) Config {
+
+	// If Admin URL is empty, then blank out the password, too
+	if adminURL == "" {
+		adminPassword = ""
+	} else {
+		// Otherwise, add a prefix to be clear that there's no overlap with Stream URLs
+		adminURL = "server_admin_" + adminURL
+	}
 
 	return Config{
-		Password: password,
+		AdminURL:      adminURL,
+		AdminPassword: adminPassword,
 		Domains: DomainList{{
 			Label:     "Administration Console",
 			Hostname:  "localhost",
@@ -62,8 +72,12 @@ func DefaultConfig(password string) Config {
 // GetPath implements the path.Getter interface
 func (config Config) GetPath(name string) (interface{}, bool) {
 
-	if name == "password" {
-		return config.Password, true
+	switch name {
+	case "adminUrl":
+		return config.AdminURL, true
+
+	case "adminPassword":
+		return config.AdminPassword, true
 	}
 
 	head, tail := path.Split(name)
@@ -89,8 +103,13 @@ func (config Config) GetPath(name string) (interface{}, bool) {
 // SetPath implements the path.Setter interface
 func (config *Config) SetPath(name string, value interface{}) error {
 
-	if name == "password" {
-		config.Password = convert.String(value)
+	switch name {
+	case "adminUrl":
+		config.AdminURL = convert.String(value)
+		return nil
+
+	case "adminPassword":
+		config.AdminPassword = convert.String(value)
 		return nil
 	}
 
