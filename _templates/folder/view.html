@@ -33,7 +33,7 @@
 				</tr>
 			{{- end -}}
 			{{- range .Children.ByLabel.View -}}
-				<tr hx-get="/{{.Token}}" hx-trigger="click">
+				<tr hx-get="/{{.Token}}">
 					<td><i class="fa-regular fa-file-lines"></i> {{.Label}}</td>
 					<td>{{.Description}}</td>
 					<td></td>

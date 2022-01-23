@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/null"
 	"github.com/benpate/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -50,8 +51,8 @@ func (domain *Domain) Schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"label":     schema.String{},
-				"bannerUrl": schema.String{},
+				"label":     schema.String{MaxLength: null.NewInt(100)},
+				"bannerUrl": schema.String{MaxLength: null.NewInt(255)},
 			},
 		},
 	}

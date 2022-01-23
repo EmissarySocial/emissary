@@ -29,7 +29,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 	files, err := afero.ReadDir(filesystem, ".")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to list directory")
+		return derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to list directory", filesystem)
 	}
 
 	for _, file := range files {

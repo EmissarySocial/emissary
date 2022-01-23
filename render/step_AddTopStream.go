@@ -35,7 +35,7 @@ func (step StepAddTopStream) Get(buffer io.Writer, renderer Renderer) error {
 
 func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 
-	topLevelRenderer := renderer.(*TopLevel)
+	topLevelRenderer := renderer.(TopLevel)
 	templateID := topLevelRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
@@ -67,7 +67,7 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 	// If there is an "init" step for the new stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
 		if err := DoPipeline(&newStream, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Unable to execute 'init' action on new stream")
+			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Unable to execute 'init' action on new record")
 		}
 	}
 

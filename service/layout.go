@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/model"
@@ -97,7 +98,7 @@ func (service *Layout) Watch() {
 
 		// Add all other directories into the Template service as Templates
 		if err := service.loadFromFilesystem(filename); err != nil {
-			derp.Report(derp.Wrap(err, "whisper.service.layout.NewLayout", "Error loading Layout from Filesystem"))
+			derp.Report(derp.Wrap(err, "whisper.service.layout.watch", "Error loading Layout from filesystem", filename))
 			panic("Error loading Layout from Filesystem")
 		}
 
@@ -146,12 +147,13 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	// System folders (except for "static" and "global") have a schema.json file
 	if filename != "global" {
 		if err := loadModelFromFilesystem(fs, &layout); err != nil {
-			return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Schema", filename)
+			return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Schema", fs, filename)
 		}
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", filename)
+		spew.Dump(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>", filename, service.folder, fs)
+		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
 	}
 
 	// Normalize steps

@@ -4,25 +4,24 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
-	"github.com/benpate/steranko"
 )
 
 // Domain contains all of the configuration data required to operate a single domain.
 type Domain struct {
-	Label          string          `json:"label"`               // Human-friendly label for administrators
-	Hostname       string          `json:"hostname"`            // Domain name of a virtual server
-	ConnectString  string          `json:"connectString"`       // MongoDB connect string
-	DatabaseName   string          `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
-	SMTPConnection SMTPConnection  `json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
-	ForwardTo      string          `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
-	ShowAdmin      bool            `json:"showAdmin"`           // If TRUE, then show domain settings in admin
-	Steranko       steranko.Config `json:"steranko,omitempty"`  // Configuration to pass through to Steranko
+	Label          string         `json:"label"`               // Human-friendly label for administrators
+	Hostname       string         `json:"hostname"`            // Domain name of a virtual server
+	ConnectString  string         `json:"connectString"`       // MongoDB connect string
+	DatabaseName   string         `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
+	SMTPConnection SMTPConnection `json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
+	ForwardTo      string         `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
+	ShowAdmin      bool           `json:"showAdmin"`           // If TRUE, then show domain settings in admin
+	// Steranko       steranko.Config `json:"steranko"`            // Configuration to pass through to Steranko
 }
 
 func NewDomain() Domain {
 	return Domain{
 		SMTPConnection: SMTPConnection{},
-		Steranko:       steranko.Config{},
+		// Steranko:       steranko.Config{},
 	}
 }
 

@@ -16,27 +16,41 @@ type Config struct {
 	Static      Folder     `json:"static"`      // Folder containing all attachments
 }
 
-// NewConfig returns the default configuration for this application.
+// NewConfig returns a fully initialized (but empty) Config data structure.
 func NewConfig() Config {
+
 	return Config{
-		Domains: make([]Domain, 0),
+		Domains: make(DomainList, 0),
+	}
+}
+
+// DefaultConfig return sthe default configuration for this application.
+func DefaultConfig(password string) Config {
+
+	return Config{
+		Password: password,
+		Domains: DomainList{{
+			Label:     "Administration Console",
+			Hostname:  "localhost",
+			ShowAdmin: true,
+		}},
+		Attachments: Folder{
+			Adapter:  "FILE",
+			Location: "./_attachments/",
+		},
 		Layouts: Folder{
 			Adapter:  "FILE",
-			Location: "./layouts",
-			Sync:     true,
-		},
-		Templates: Folder{
-			Adapter:  "FILE",
-			Location: "./_templates",
+			Location: "./_layouts/",
 			Sync:     true,
 		},
 		Static: Folder{
 			Adapter:  "FILE",
-			Location: "./_static",
+			Location: "./_static/",
 		},
-		Attachments: Folder{
+		Templates: Folder{
 			Adapter:  "FILE",
-			Location: "./attachments",
+			Location: "./_templates/",
+			Sync:     true,
 		},
 	}
 }

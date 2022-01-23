@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"sort"
@@ -11,7 +12,6 @@ import (
 	"github.com/benpate/list"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 	"github.com/whisperverse/whisperverse/config"
@@ -190,8 +190,6 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 // "Updates" channel for news that a template has been updated.
 func (service *Template) Watch() error {
 
-	spew.Dump("template.Watch ------>", service.folder)
-
 	// Only synchronize on folders that are configured to do so.
 	if !service.folder.Sync {
 		return nil
@@ -202,7 +200,6 @@ func (service *Template) Watch() error {
 		return nil
 	}
 
-	spew.Dump(service.folder)
 	// Load all templates from the filesystem
 	fileList, err := ioutil.ReadDir(service.folder.Location)
 
@@ -217,7 +214,7 @@ func (service *Template) Watch() error {
 			if fileInfo.IsDir() {
 				templateID := list.Last(fileInfo.Name(), "/")
 
-				spew.Dump(templateID)
+				fmt.Println(". loading template: " + templateID)
 				// Add all other directories into the Template service as Templates
 				template, err := service.loadFromFilesystem(templateID)
 

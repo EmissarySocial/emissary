@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/form"
 	formlib "github.com/benpate/form/vocabulary"
 	"github.com/benpate/nebula"
+	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
 	"github.com/whisperverse/mediaserver"
@@ -49,43 +50,75 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
 
-	server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
-	}
-
-	session, err := server.Session(context.Background())
-
-	if err != nil {
-		return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Session)", domain)
-	}
-
+	// Base Factory object
 	factory := Factory{
-		Session:               session,
 		domain:                domain,
 		layoutService:         layoutService,
 		templateService:       templateService,
 		templateUpdateChannel: make(chan string),
 	}
 
-	/** REAL TIME COMMUNICATION CHANNELS *********************/
+	// If there is a database then set it up now.
+	if domain.ConnectString != "" {
 
-	// Create Stream Update Channel
-	if session, ok := factory.Session.(*mongodb.Session); ok {
+		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
-		if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-			factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
+		if err != nil {
+			return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
 		}
-	}
 
-	// Fall through means we're not running on MongoDB.  Just return an "empty" channel for now
-	if factory.streamUpdateChannel == nil {
-		factory.streamUpdateChannel = make(chan model.Stream)
-	}
+		session, err := server.Session(context.Background())
 
-	// Create Realtime Broker
-	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
+		if err != nil {
+			return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Session)", domain)
+		}
+
+		factory.Session = session
+
+		/** REAL TIME COMMUNICATION CHANNELS *********************/
+
+		// Create Stream Update Channel
+		if session, ok := factory.Session.(*mongodb.Session); ok {
+
+			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
+				factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
+			}
+		}
+
+		// Fall through means we're not running on MongoDB.  Just return an "empty" channel for now
+		if factory.streamUpdateChannel == nil {
+			factory.streamUpdateChannel = make(chan model.Stream)
+		}
+
+		// Create Realtime Broker
+		factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
+
+		/** SINGLETON SERVICES *********************/
+
+		// Stream Service
+		factory.streamService = service.NewStream(
+			factory.collection(CollectionStream),
+			factory.Template(),
+			factory.StreamDraft(),
+			factory.Attachment(),
+			factory.FormLibrary(),
+			factory.TemplateUpdateChannel(),
+			factory.StreamUpdateChannel(),
+		)
+
+		go factory.streamService.Watch()
+
+		factory.userService = service.NewUser(
+			factory.collection(CollectionUser),
+		)
+
+		// Subscription Service
+		factory.subscriptionService = service.NewSubscription(
+			factory.collection(CollectionSubscription),
+			factory.Stream(),
+			factory.ContentLibrary(),
+		)
+	}
 
 	/** WIDGET LIBRARIES *********************/
 
@@ -95,32 +128,6 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	// Create form library
 	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
 	formlib.All(&factory.formLibrary)
-
-	/** SINGLETON SERVICES *********************/
-
-	// Stream Service
-	factory.streamService = service.NewStream(
-		factory.collection(CollectionStream),
-		factory.Template(),
-		factory.StreamDraft(),
-		factory.Attachment(),
-		factory.FormLibrary(),
-		factory.TemplateUpdateChannel(),
-		factory.StreamUpdateChannel(),
-	)
-
-	go factory.streamService.Watch()
-
-	factory.userService = service.NewUser(
-		factory.collection(CollectionUser),
-	)
-
-	// Subscription Service
-	factory.subscriptionService = service.NewSubscription(
-		factory.collection(CollectionSubscription),
-		factory.Stream(),
-		factory.ContentLibrary(),
-	)
 
 	return &factory, nil
 }
@@ -270,7 +277,9 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	return steranko.New(
 		service.NewSterankoUserService(factory.User()),
 		factory.Key(),
-		factory.domain.Steranko,
+		steranko.Config{
+			PasswordSchema: schema.Schema{Element: schema.String{}},
+		},
 	)
 }
 
@@ -297,5 +306,8 @@ func (factory *Factory) RSS() *service.RSS {
 
 // collection returns a data.Collection that matches the requested name.
 func (factory *Factory) collection(name string) data.Collection {
+	if factory.Session == nil {
+		return nil
+	}
 	return factory.Session.Collection(name)
 }

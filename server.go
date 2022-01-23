@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4/middleware"
@@ -16,15 +15,10 @@ func main() {
 
 	spew.Config.DisableMethods = true
 
-	fmt.Println("Starting GHOST")
+	fmt.Println("Starting Whisperverse.")
 	fmt.Println("Loading configuration file...")
 
-	c, err := config.Load("./config.json")
-
-	if err != nil {
-		derp.Report(err)
-		return
-	}
+	c := config.Load()
 
 	fmt.Println("Initializing hosts...")
 

@@ -17,6 +17,10 @@ type Folder struct {
 
 func (folder Folder) GetPath(name string) (interface{}, bool) {
 
+	if name == "" {
+		return folder, true
+	}
+
 	switch name {
 	case "adapter":
 		return folder.Adapter, true

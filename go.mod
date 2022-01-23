@@ -2,6 +2,10 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
+replace (
+	github.com/benpate/schema => ../../benpate/schema
+)
+
 require (
 	github.com/benpate/compare v0.1.0
 	github.com/benpate/convert v0.11.1
@@ -26,6 +30,7 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/mmcdole/gofeed v1.1.3
+	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.29

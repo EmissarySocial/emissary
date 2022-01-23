@@ -15,6 +15,7 @@ import (
 func New(factory *server.Factory) *echo.Echo {
 
 	e := echo.New()
+	e.HideBanner = true
 
 	// Well-Known API calls
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
