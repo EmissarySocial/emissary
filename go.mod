@@ -2,19 +2,14 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
-replace ( 
-	github.com/whisperverse/activitystream => ../activitystream
-	github.com/benpate/digit => ../../benpate/digit
-)
-
 require (
 	github.com/benpate/compare v0.1.0
 	github.com/benpate/convert v0.11.1
 	github.com/benpate/data v0.14.0
 	github.com/benpate/data-mongo v0.1.1
 	github.com/benpate/datatype v0.2.0
-	github.com/benpate/digit v0.0.0
 	github.com/benpate/derp v0.22.2
+	github.com/benpate/digit v0.2.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.4.0
@@ -36,7 +31,7 @@ require (
 	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.29
-	github.com/whisperverse/activitystream v0.4.3
+	github.com/whisperverse/activitystream v0.4.4
 	github.com/whisperverse/mediaserver v0.1.2
 	go.mongodb.org/mongo-driver v1.8.2
 )

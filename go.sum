@@ -60,6 +60,8 @@ github.com/benpate/datatype v0.2.0/go.mod h1:yv4SNYtwHWiDk3ZsNG8ej+NKq0s/7dK9fMh
 github.com/benpate/derp v0.20.1/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
 github.com/benpate/derp v0.22.2 h1:qPcnT32VG8gqhDR4y+dhK2n/0TMvZ3RUP+HbENNogAc=
 github.com/benpate/derp v0.22.2/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
+github.com/benpate/digit v0.2.0 h1:TW3mxg+9f5OAzGNb+tdJuPOrDzOFMJsrBqlaReua/MQ=
+github.com/benpate/digit v0.2.0/go.mod h1:SkjJhdwFB3cKEdgh9Y7KrJkNKt4PTk0svi8BQAGyeV8=
 github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk=
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.1.0/go.mod h1:HIA7i+4hg0vn85dwAawpXJw8adDBRE+bU7/1jgMav5o=
@@ -272,8 +274,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.1 h1:TVEnxayobAdVkhQfrfes2IzOB6o+z4roRkPF52WA1u4=
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/whisperverse/activitystream v0.4.3 h1:z2GfY7lFiR7pZ8tr7/xJiU/QMHRj/PDH2JbhNI6N+PI=
-github.com/whisperverse/activitystream v0.4.3/go.mod h1:L+qf5E31YxQR0siEl8u0XX214U34zI0NtlGJkeumHAQ=
+github.com/whisperverse/activitystream v0.4.4 h1:8KhQ59zAg5Y7VwivFs13DvWZN2s3VGsj1i6OcwziFe8=
+github.com/whisperverse/activitystream v0.4.4/go.mod h1:L+qf5E31YxQR0siEl8u0XX214U34zI0NtlGJkeumHAQ=
 github.com/whisperverse/json-ld v0.2.0 h1:s0YMK2+zaDTanjrqle+2cSSMnNACGpBxm+qFSQdLcVY=
 github.com/whisperverse/json-ld v0.2.0/go.mod h1:xlS6IgKvp4Gw0eb8yjpfN34k0ozFiTQW5+ZRRbnP8FA=
 github.com/whisperverse/mediaserver v0.1.2 h1:GWqvOhbllEo5bXQt0pXM2Wd4DpUbmsesU3ycNqt7aiI=
