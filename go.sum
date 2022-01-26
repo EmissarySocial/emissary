@@ -60,8 +60,8 @@ github.com/benpate/datatype v0.2.0/go.mod h1:yv4SNYtwHWiDk3ZsNG8ej+NKq0s/7dK9fMh
 github.com/benpate/derp v0.20.1/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
 github.com/benpate/derp v0.22.2 h1:qPcnT32VG8gqhDR4y+dhK2n/0TMvZ3RUP+HbENNogAc=
 github.com/benpate/derp v0.22.2/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
-github.com/benpate/digit v0.2.0 h1:TW3mxg+9f5OAzGNb+tdJuPOrDzOFMJsrBqlaReua/MQ=
-github.com/benpate/digit v0.2.0/go.mod h1:SkjJhdwFB3cKEdgh9Y7KrJkNKt4PTk0svi8BQAGyeV8=
+github.com/benpate/digit v0.3.0 h1:zRGlz1fJyG2uxtihwvOCGcdvuniU/pVYp5IjMnVZW84=
+github.com/benpate/digit v0.3.0/go.mod h1:SkjJhdwFB3cKEdgh9Y7KrJkNKt4PTk0svi8BQAGyeV8=
 github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk=
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.1.0/go.mod h1:HIA7i+4hg0vn85dwAawpXJw8adDBRE+bU7/1jgMav5o=
@@ -274,8 +274,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.1 h1:TVEnxayobAdVkhQfrfes2IzOB6o+z4roRkPF52WA1u4=
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/whisperverse/activitystream v0.4.4 h1:8KhQ59zAg5Y7VwivFs13DvWZN2s3VGsj1i6OcwziFe8=
-github.com/whisperverse/activitystream v0.4.4/go.mod h1:L+qf5E31YxQR0siEl8u0XX214U34zI0NtlGJkeumHAQ=
+github.com/whisperverse/activitystream v0.4.5 h1:t2ihXQEBZkmCkECoypP2aPGRIWJIJu3eIoyKnlCUfmk=
+github.com/whisperverse/activitystream v0.4.5/go.mod h1:L+qf5E31YxQR0siEl8u0XX214U34zI0NtlGJkeumHAQ=
 github.com/whisperverse/json-ld v0.2.0 h1:s0YMK2+zaDTanjrqle+2cSSMnNACGpBxm+qFSQdLcVY=
 github.com/whisperverse/json-ld v0.2.0/go.mod h1:xlS6IgKvp4Gw0eb8yjpfN34k0ozFiTQW5+ZRRbnP8FA=
 github.com/whisperverse/mediaserver v0.1.2 h1:GWqvOhbllEo5bXQt0pXM2Wd4DpUbmsesU3ycNqt7aiI=
@@ -313,8 +313,9 @@ golang.org/x/crypto v0.0.0-20201216223049-8b5274cf687f/go.mod h1:jdWPYTVW3xRLrWP
 golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b/go.mod h1:T9bdIzuCu7OtxOm1hfPfRQxPLYneinmdGuTeoZ9dtd4=
 golang.org/x/crypto v0.0.0-20210817164053-32db794688a5/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
-golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce h1:Roh6XWxHFKrPgC/EQhVubSAGQ6Ozk6IdxHSzt1mR0EI=
 golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
+golang.org/x/crypto v0.0.0-20220126173729-e04a8579fee6 h1:8ZK1PPFZfmuQq6F/bjLKoKOODiEqGvMCh63FG6V8IbY=
+golang.org/x/crypto v0.0.0-20220126173729-e04a8579fee6/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522/go.mod h1:ZjyILWgesfNpC6sMxTJOJm9Kp84zZh5NQWvqDGG3Qr8=

@@ -9,7 +9,7 @@ require (
 	github.com/benpate/data-mongo v0.1.1
 	github.com/benpate/datatype v0.2.0
 	github.com/benpate/derp v0.22.2
-	github.com/benpate/digit v0.2.0
+	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.4.0
@@ -31,7 +31,7 @@ require (
 	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.9.29
-	github.com/whisperverse/activitystream v0.4.4
+	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
 	go.mongodb.org/mongo-driver v1.8.2
 )
@@ -68,7 +68,7 @@ require (
 	github.com/xdg-go/scram v1.1.0 // indirect
 	github.com/xdg-go/stringprep v1.0.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
+	golang.org/x/crypto v0.0.0-20220126173729-e04a8579fee6 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/net v0.0.0-20220121210141-e204ce36a2ba // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
