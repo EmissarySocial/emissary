@@ -2,7 +2,10 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
-replace github.com/whisperverse/activitystream => ../activitystream
+replace ( 
+	github.com/whisperverse/activitystream => ../activitystream
+	github.com/benpate/digit => ../../benpate/digit
+)
 
 require (
 	github.com/benpate/compare v0.1.0
@@ -10,6 +13,7 @@ require (
 	github.com/benpate/data v0.14.0
 	github.com/benpate/data-mongo v0.1.1
 	github.com/benpate/datatype v0.2.0
+	github.com/benpate/digit v0.0.0
 	github.com/benpate/derp v0.22.2
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2

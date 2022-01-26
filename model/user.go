@@ -17,13 +17,14 @@ import (
 type User struct {
 	UserID      primitive.ObjectID   `json:"userId"      bson:"_id"`         // Unique identifier for this user.
 	GroupIDs    []primitive.ObjectID `json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
-	InboxID     primitive.ObjectID   `json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
-	Identities  []string             `json:"identities"  bson:"identities"`  // Slice of publicly verified identities for this User. (email, url, etc)
 	DisplayName string               `json:"displayName" bson:"displayName"` // Name to be displayed for this user
+	Description string               `json:"description" bson:"description"` // Status summary for this user (used by ActivityPub)
 	Username    string               `json:"username"    bson:"username"`    // This is the primary public identifier for the user.
 	Password    string               `json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
 	IsOwner     bool                 `json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
-	AvatarURL   string               `json:"avatarUrl"    bson:"avatarUrl"`  // Avatar image of this user.
+	AvatarURL   string               `json:"avatarUrl"   bson:"avatarUrl"`   // Avatar image of this user.
+	InboxID     primitive.ObjectID   `json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
+	OutboxID    primitive.ObjectID   `json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

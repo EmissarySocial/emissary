@@ -64,11 +64,15 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory), domain)
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 
-	// ActivityPub INBOX/OUTBOX
-	e.GET("/inbox", handler.GetInbox(factory), domain)
-	e.POST("/inbox", handler.PostInbox(factory), domain)
-	e.GET("/outbox", handler.GetOutbox(factory), domain)
-	e.POST("/outbox", handler.PostOutbox(factory), domain)
+	// Profile Pages / ActivityPub
+	e.GET("/people/:userId", handler.GetProfile(factory), domain)
+	e.GET("/people/:userId/inbox", handler.GetInbox(factory), domain)
+	e.POST("/people/:userId/inbox", handler.PostInbox(factory), domain)
+	e.GET("/people/:userId/outbox", handler.GetOutbox(factory), domain)
+	e.POST("/people/:userId/outbox", handler.PostOutbox(factory), domain)
+	e.GET("/people/:userId/followers", handler.GetFollowers(factory), domain)
+	e.GET("/people/:userId/following", handler.GetFollowing(factory), domain)
+	e.GET("/people/:userId/liked", handler.GetLiked(factory), domain)
 
 	// PROFILE PAGES
 	// e.GET("/me/", handler.GetProfile(factory))
