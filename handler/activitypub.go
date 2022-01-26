@@ -36,7 +36,7 @@ func GetProfile(fm *server.Factory) echo.HandlerFunc {
 		// Generate a profile page
 		profile := "https://" + factory.Hostname() + "/people/" + user.UserID.Hex()
 
-		result := writer.Person(user.Description, "en").
+		result := writer.Person(user.DisplayName, "en").
 			ID(profile).
 			Summary(user.Description, "en").
 			Icon(user.AvatarURL).
