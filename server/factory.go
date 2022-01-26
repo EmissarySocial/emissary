@@ -104,6 +104,19 @@ func (factory *Factory) Layout() *service.Layout {
 }
 
 /****************************
+ * Server Methods
+ ****************************/
+
+func (factory *Factory) Config() config.Config {
+	return factory.config
+}
+
+func (factory *Factory) UpdateConfig(newConfig config.Config) error {
+	factory.config = newConfig
+	return factory.write()
+}
+
+/****************************
  * Domain Methods
  ****************************/
 
@@ -270,6 +283,11 @@ func (factory *Factory) IsAdminPassword(password string) bool {
 
 	// Return TRUE if the passwords matches.
 	return password == factory.config.AdminPassword
+}
+
+// HashedPassword returns the hashed value of the admin password.
+func (factory *Factory) HashedPassword() string {
+	return factory.config.AdminPassword
 }
 
 // Steranko implements the steranko.Factory method, used for locating the specific

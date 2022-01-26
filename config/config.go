@@ -33,7 +33,7 @@ func DefaultConfig(adminURL string, adminPassword string) Config {
 		adminPassword = ""
 	} else {
 		// Otherwise, add a prefix to be clear that there's no overlap with Stream URLs
-		adminURL = "server_admin_" + adminURL
+		adminURL = "." + adminURL
 	}
 
 	return Config{

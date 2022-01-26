@@ -98,6 +98,16 @@ func (service *User) Debug() datatype.Map {
  * CUSTOM QUERIES
  *******************************************/
 
+// ListByIdentities returns all users that appear in the list of identities
+func (service *User) ListByIdentities(identities []string) (data.Iterator, error) {
+	return service.List(exp.In("identities", identities))
+}
+
+// ListByGroup returns all users that match a provided group name
+func (service *User) ListByGroup(group string) (data.Iterator, error) {
+	return service.List(exp.Equal("groupId", group))
+}
+
 // LoadByID loads a single model.User object that matches the provided userID
 func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) error {
 	criteria := exp.Equal("_id", userID)
@@ -123,9 +133,4 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 	// Otherwise, use the token as a username
 	criteria := exp.Equal("username", token)
 	return service.Load(criteria, result)
-}
-
-// ListByGroup returns all users that match a provided group name
-func (service *User) ListByGroup(group string) (data.Iterator, error) {
-	return service.List(exp.Equal("groupId", group))
 }

@@ -15,41 +15,55 @@ import (
 	"github.com/whisperverse/whisperverse/server"
 )
 
-func GetServerIndex(factoryManager *server.Factory) echo.HandlerFunc {
+func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		domains := factoryManager.ListDomains()
+		domains := factory.ListDomains()
 
 		b := html.New()
 
 		pageHeader(ctx, b, "Domains")
 
-		b.H1().InnerHTML("Server Admin").Close()
-		b.Table().Class("table").EndBracket()
+		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {console.log(document.cookie); document.cookie='admin=DELETE; max-age=1'; console.log(document.cookie); document.location.reload();}").Close()
+
+		b.Div().ID("menu-bar").Data("hx-push-url", "false").EndBracket()
 
 		// Add a new record
-		b.TR().Data("hx-get", "/server/new")
-		b.TD().Class("link").Attr("colspan", "2")
+		b.A("").Data("hx-get", factory.AdminURL()+"/new").EndBracket()
 		b.I("fa-solid fa-plus-circle").Close()
 		b.Space()
 		b.Span().InnerHTML("Add a Domain").Close()
 		b.Close()
+
+		// Sign-Out
+		b.Div().Class("right").EndBracket()
+		b.A("").Script("on click call signOut()").EndBracket()
+		b.Span().InnerHTML("Sign Out").Close()
+		b.Space()
+		b.I("fa-solid fa-arrow-right-from-bracket").Close()
+		b.Close()
 		b.Close()
 
-		// Display existing records
+		b.Close()
+
+		b.H2().InnerHTML("Domains on this Server").Close()
+
+		// List existing domains
+		b.Table().Class("table").Data("hx-push-url", "false").EndBracket()
+
 		for index, d := range domains {
 			indexString := convert.String(index)
 			b.TR()
-			b.TD().Attr("nowrap", "true").Data("hx-get", "/server/"+indexString)
+			b.TD().Attr("nowrap", "true").Data("hx-get", factory.AdminURL()+"/"+indexString)
 			b.I("fa-solid fa-server").Close()
 			b.Space()
 			b.Span().InnerHTML(d.Label).Close()
 			b.Close()
-			b.TD().Data("hx-get", "/server/"+indexString).Style("width:100%;").InnerHTML(d.Hostname).Close()
+			b.TD().Data("hx-get", factory.AdminURL()+"/"+indexString).Style("width:100%;").InnerHTML(d.Hostname).Close()
 			b.TD()
 			b.I("fa-solid fa-trash").
-				Data("hx-delete", "/server/"+indexString).
+				Data("hx-delete", factory.AdminURL()+"/"+indexString).
 				Data("hx-confirm", "Delete this Domain?").
 				Close()
 			b.Close()
@@ -60,16 +74,30 @@ func GetServerIndex(factoryManager *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func GetServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
+func GetServerEdit(factory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+		return nil
+	}
+}
+
+func PostServerEdit(factory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+		return nil
+	}
+}
+
+func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
-		domain, err := factoryManager.DomainByIndex(ctx.Param("domain"))
+		domain, err := factory.DomainByIndex(ctx.Param("domain"))
 
 		if err != nil {
 			return derp.Wrap(err, "whisper.handler.GetServerDomain", "Error loading Domain config")
 		}
 
-		lib := factoryManager.FormLibrary()
+		lib := factory.FormLibrary()
 
 		f := form.Form{
 			Kind:    "layout-tabs",
@@ -151,12 +179,12 @@ func GetServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func PostServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
+func PostServerDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
 
-		domain, err := factoryManager.DomainByIndex(domainID)
+		domain, err := factory.DomainByIndex(domainID)
 
 		if err != nil {
 			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
@@ -178,7 +206,7 @@ func PostServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error setting domain data", input)
 		}
 
-		if err := factoryManager.UpdateDomain(domainID, domain); err != nil {
+		if err := factory.UpdateDomain(domainID, domain); err != nil {
 			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error saving domain")
 		}
 
@@ -187,18 +215,18 @@ func PostServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func DeleteServerDomain(factoryManager *server.Factory) echo.HandlerFunc {
+func DeleteServerDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
 
-		domain, err := factoryManager.DomainByIndex(domainID)
+		domain, err := factory.DomainByIndex(domainID)
 
 		if err != nil {
 			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
-		if err := factoryManager.DeleteDomain(domain); err != nil {
+		if err := factory.DeleteDomain(domain); err != nil {
 			return derp.Wrap(err, "whisper.handler.DeleteServerDomain", "Error deleting domain")
 		}
 
@@ -214,8 +242,8 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("head")
 		b.Container("title").InnerHTML(title).Close()
 
-		b.Link("stylesheet", "/static/pure-min.css")
-		b.Link("stylesheet", "/static/pure-grids-responsive-min.css")
+		b.Link("stylesheet", "/static/purecss/pure-min.css")
+		b.Link("stylesheet", "/static/purecss/pure-grids-responsive-min.css")
 		b.Link("stylesheet", "/static/colors.css")
 
 		b.Link("stylesheet", "/static/accessibility.css")
@@ -231,7 +259,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Link("stylesheet", "/static/typography.css")
 		b.Link("stylesheet", "/static/fontawesome-free-6.0.0/css/all.css")
 
-		b.Container("script").Attr("src", "/htmx/htmx.js").Close()
+		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/modal.hs").Attr("type", "text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/tabs.hs").Attr("type", "text/hyperscript").Close()
 		b.Container("script").Attr("src", "https://unpkg.com/hyperscript.org").Close()

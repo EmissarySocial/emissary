@@ -260,6 +260,14 @@ func (factory *Factory) AttachmentCache() afero.Fs {
  * OTHER NON-MODEL SERVICES
  *******************************************/
 
+func (factory *Factory) Inbox() service.Inbox {
+	return service.NewInbox(factory.collection(CollectionInbox), factory.Stream(), factory.User())
+}
+
+func (factory *Factory) Outbox() service.Outbox {
+	return service.NewOutbox(factory.collection(CollectionOutbox))
+}
+
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package
 func (factory *Factory) FormLibrary() *form.Library {

@@ -6,8 +6,9 @@ import (
 )
 
 type Criteria struct {
-	Public []string            `json:"public" bson:"public"`  // An array of roles that PUBLIC users can use
-	Groups map[string][]string `json:"roles"    bson:"roles"` // A map of groupIDs -> the roles that each group can use
+	Public  []string            `json:"public"  bson:"public"`  // An array of roles that PUBLIC users can use
+	Groups  map[string][]string `json:"roles"   bson:"roles"`   // A map of groupIDs to the roles that each group can use
+	OwnerID primitive.ObjectID  `json:"ownerId" bson:"ownerId"` // UserID of the person who owns this content.
 }
 
 func NewCriteria() Criteria {

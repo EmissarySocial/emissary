@@ -9,6 +9,12 @@ const CollectionDomain = "Domain"
 // CollectionGroup is the database collection where Group records are stored
 const CollectionGroup = "Group"
 
+// CollectionInbox is the database collection where Inbox records are stored
+const CollectionInbox = "Inbox"
+
+// CollectionOutbox is the database collection where Outbox records are stored
+const CollectionOutbox = "Outbox"
+
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"
 

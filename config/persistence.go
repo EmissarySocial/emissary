@@ -36,7 +36,7 @@ func Load() Config {
 	{
 		fmt.Println("Generating new file...")
 
-		defaultAdminURL, err := password.Generate(20, 0, 0, true, true)
+		defaultAdminURL, err := password.Generate(36, 0, 0, true, true)
 
 		if err != nil {
 			panic("Error generating default admin location: " + err.Error())

@@ -78,11 +78,12 @@ func New(factory *server.Factory) *echo.Echo {
 
 	// SERVER ADMIN PAGES (dynamic URLs help discourage 4337 H4XX0RZ)
 	if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {
-		server := e.Group(serverAdminURL, middleware.ServerAdminExists(factory))
-		server.GET("", handler.GetServerIndex(factory), middleware.ServerAdminLogin(factory), middleware.ServerAdminAllowed(factory))
-		server.GET("/:domain", handler.GetServerDomain(factory), middleware.ServerAdminAllowed(factory))
-		server.POST("/:domain", handler.PostServerDomain(factory), middleware.ServerAdminAllowed(factory))
-		server.DELETE("/:domain", handler.DeleteServerDomain(factory), middleware.ServerAdminAllowed(factory))
+		server := e.Group(serverAdminURL, middleware.ServerAdmin(factory))
+		server.GET("", handler.GetServerIndex(factory))
+		server.POST("", handler.GetServerIndex(factory))
+		server.GET("/:domain", handler.GetServerDomain(factory))
+		server.POST("/:domain", handler.PostServerDomain(factory))
+		server.DELETE("/:domain", handler.DeleteServerDomain(factory))
 	}
 
 	// SITE-WIDE ERROR HANDLER

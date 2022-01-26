@@ -17,6 +17,8 @@ import (
 type User struct {
 	UserID      primitive.ObjectID   `json:"userId"      bson:"_id"`         // Unique identifier for this user.
 	GroupIDs    []primitive.ObjectID `json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
+	InboxID     primitive.ObjectID   `json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
+	Identities  []string             `json:"identities"  bson:"identities"`  // Slice of publicly verified identities for this User. (email, url, etc)
 	DisplayName string               `json:"displayName" bson:"displayName"` // Name to be displayed for this user
 	Username    string               `json:"username"    bson:"username"`    // This is the primary public identifier for the user.
 	Password    string               `json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
@@ -36,6 +38,13 @@ func NewUser() User {
 // ID returns the primary key for this record
 func (user *User) ID() string {
 	return user.UserID.Hex()
+}
+
+// Copy returns a duplicate copy of this User
+// NOTE: This must NOT be a pointer receiver, so that a true COPY
+// of this record is returned.
+func (user User) Copy() User {
+	return user
 }
 
 func (user *User) Schema() schema.Schema {
