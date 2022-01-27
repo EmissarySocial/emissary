@@ -65,14 +65,16 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 
 	// Profile Pages / ActivityPub
+	e.GET("/inbox", handler.GetProfileInbox(factory), domain)
+	e.GET("/outbox", handler.GetProfileOutbox(factory), domain)
 	e.GET("/people/:userId", handler.GetProfile(factory), domain)
-	e.GET("/people/:userId/inbox", handler.GetInbox(factory), domain)
-	e.POST("/people/:userId/inbox", handler.PostInbox(factory), domain)
-	e.GET("/people/:userId/outbox", handler.GetOutbox(factory), domain)
-	e.POST("/people/:userId/outbox", handler.PostOutbox(factory), domain)
-	e.GET("/people/:userId/followers", handler.GetFollowers(factory), domain)
-	e.GET("/people/:userId/following", handler.GetFollowing(factory), domain)
-	e.GET("/people/:userId/liked", handler.GetLiked(factory), domain)
+	e.GET("/people/:userId/inbox", handler.GetSocialInbox(factory), domain)
+	e.POST("/people/:userId/inbox", handler.PostSocialInbox(factory), domain)
+	e.GET("/people/:userId/outbox", handler.GetSocialOutbox(factory), domain)
+	e.POST("/people/:userId/outbox", handler.PostSocialOutbox(factory), domain)
+	e.GET("/people/:userId/followers", handler.GetSocialFollowers(factory), domain)
+	e.GET("/people/:userId/following", handler.GetSocialFollowing(factory), domain)
+	e.GET("/people/:userId/liked", handler.GetSocialLiked(factory), domain)
 
 	// PROFILE PAGES
 	// e.GET("/me/", handler.GetProfile(factory))

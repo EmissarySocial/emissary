@@ -10,10 +10,10 @@ import (
 	"github.com/whisperverse/whisperverse/server"
 )
 
-// GetProfile returns a person's ActivityPub Actor profile
-func GetProfile(fm *server.Factory) echo.HandlerFunc {
+// GetSocialProfile returns a person's ActivityPub Actor profile
+func GetSocialProfile(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "whisperverse.handler.GetProfile"
+	const location = "whisperverse.handler.GetSocialProfile"
 
 	return func(ctx echo.Context) error {
 
@@ -51,18 +51,18 @@ func GetProfile(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// GetInbox returns an inbox for a particular ACTOR
-func GetInbox(fm *server.Factory) echo.HandlerFunc {
+// GetSocialInbox returns an inbox for a particular ACTOR
+func GetSocialInbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		return nil
 	}
 }
 
-// PostInbox accepts messages to a particular ACTOR
-func PostInbox(fm *server.Factory) echo.HandlerFunc {
+// PostSocialInbox accepts messages to a particular ACTOR
+func PostSocialInbox(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "whisperverse.handler.PostInbox"
+	const location = "whisperverse.handler.PostSocialInbox"
 
 	return func(ctx echo.Context) error {
 
@@ -90,8 +90,8 @@ func PostInbox(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// GetOutbox returns an inbox for a particular ACTOR
-func GetOutbox(fm *server.Factory) echo.HandlerFunc {
+// GetSocialOutbox returns an inbox for a particular ACTOR
+func GetSocialOutbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -99,8 +99,8 @@ func GetOutbox(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// PostOutbox accepts messages to a particular ACTOR
-func PostOutbox(fm *server.Factory) echo.HandlerFunc {
+// PostSocialOutbox accepts messages to a particular ACTOR
+func PostSocialOutbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -108,8 +108,8 @@ func PostOutbox(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// GetFollowers accepts messages to a particular ACTOR
-func GetFollowers(fm *server.Factory) echo.HandlerFunc {
+// GetSocialFollowers accepts messages to a particular ACTOR
+func GetSocialFollowers(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -117,8 +117,8 @@ func GetFollowers(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// PostFollowers accepts messages to a particular ACTOR
-func PostFollowers(fm *server.Factory) echo.HandlerFunc {
+// PostSocialFollowers accepts messages to a particular ACTOR
+func PostSocialFollowers(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -126,8 +126,8 @@ func PostFollowers(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// GetFollowing accepts messages to a particular ACTOR
-func GetFollowing(fm *server.Factory) echo.HandlerFunc {
+// GetSocialFollowing accepts messages to a particular ACTOR
+func GetSocialFollowing(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -135,8 +135,8 @@ func GetFollowing(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// GetLiked accepts messages to a particular ACTOR
-func GetLiked(fm *server.Factory) echo.HandlerFunc {
+// GetSocialLiked accepts messages to a particular ACTOR
+func GetSocialLiked(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

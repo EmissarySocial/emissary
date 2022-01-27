@@ -110,6 +110,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 		factory.userService = service.NewUser(
 			factory.collection(CollectionUser),
+			factory.Stream(),
 		)
 
 		// Subscription Service

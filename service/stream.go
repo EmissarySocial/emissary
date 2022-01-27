@@ -357,3 +357,18 @@ func (service *Stream) updateStreamsByTemplate(templateID string) {
 		stream = new(model.Stream)
 	}
 }
+
+// CreatePersonalStream generates a hidden stream that is tightly linked to a specific user
+func (service *Stream) CreatePersonalStream(user *model.User, templateID string) (primitive.ObjectID, error) {
+
+	stream := model.NewStream()
+	stream.TemplateID = templateID
+	stream.ParentID = user.UserID
+	stream.AuthorID = user.UserID
+	stream.Criteria = model.NewCriteria()
+	stream.Criteria.OwnerID = user.UserID
+
+	err := service.Save(&stream, "auto: create inbox")
+
+	return stream.StreamID, err
+}

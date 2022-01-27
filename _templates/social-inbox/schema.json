@@ -1,0 +1,28 @@
+{
+	"label": "Inbox",
+	"description": "Inbox Collects federated/syndicated content from external websites",
+	"icon": "fa-solid fa-inbox",
+	"containedBy": [],
+	"schema": {},
+	"states": {
+		"default": {
+			"label": "Inbox only has a default state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Inbox Owner",
+			"decription": "Full control"
+		}
+	},
+	"actions": {
+		"view": {
+			"roles":["owner"],
+			"step": "view-html"
+		},
+		"list": {
+			"roles": ["owner"],
+			"step": "view-html"
+		}
+	}
+}	

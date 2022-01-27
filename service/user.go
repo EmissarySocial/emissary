@@ -12,13 +12,15 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	collection data.Collection
+	collection    data.Collection
+	streamService *Stream
 }
 
 // NewUser returns a fully populated User service
-func NewUser(collection data.Collection) User {
+func NewUser(collection data.Collection, streamService *Stream) User {
 	return User{
-		collection: collection,
+		collection:    collection,
+		streamService: streamService,
 	}
 }
 
@@ -43,10 +45,26 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
 
+	// Guarantee Inbox location
+	if user.InboxID == primitive.NilObjectID {
+		if err := service.CreateInbox(user); err != nil {
+			return derp.Wrap(err, "service.User", "Error creating inbox")
+		}
+	}
+
+	// Guarantee Outbox location
+	if user.OutboxID == primitive.NilObjectID {
+		if err := service.CreateOutbox(user); err != nil {
+			return derp.Wrap(err, "service.User", "Error creating inbox")
+		}
+	}
+
+	// Save User
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User", "Error saving User", user, note)
 	}
 
+	// Success!
 	return nil
 }
 
@@ -133,4 +151,26 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 	// Otherwise, use the token as a username
 	criteria := exp.Equal("username", token)
 	return service.Load(criteria, result)
+}
+
+func (service *User) CreateInbox(user *model.User) error {
+
+	streamID, err := service.streamService.CreatePersonalStream(user, "social-inbox")
+
+	if err == nil {
+		user.InboxID = streamID
+	}
+
+	return err
+}
+
+func (service *User) CreateOutbox(user *model.User) error {
+
+	streamID, err := service.streamService.CreatePersonalStream(user, "social-outbox")
+
+	if err == nil {
+		user.OutboxID = streamID
+	}
+
+	return err
 }

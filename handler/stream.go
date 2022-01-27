@@ -10,6 +10,7 @@ import (
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/server"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetStream handles GET requests
@@ -111,6 +112,36 @@ func getActionID(ctx echo.Context) string {
 	}
 
 	return "view"
+}
+
+// getSignedInUserID returns the UserID for the current request.
+// If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
+func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
+
+	const location = "whisperverse.handler.getSignedInUserID"
+
+	sterankoContext, ok := ctx.(*steranko.Context)
+
+	if !ok {
+		return primitive.NilObjectID, derp.New(http.StatusUnauthorized, location, "Invalid Authorization")
+	}
+
+	authorization, err := sterankoContext.Authorization()
+
+	if err != nil {
+		err = derp.Wrap(err, location, "Invalid Authorization")
+		derp.SetErrorCode(err, http.StatusUnauthorized)
+		return primitive.NilObjectID, err
+	}
+
+	auth, ok := authorization.(*model.Authorization)
+
+	if !ok {
+		return primitive.NilObjectID, derp.New(http.StatusUnauthorized, location, "Invalid Authorization", authorization)
+	}
+
+	return auth.UserID, nil
+
 }
 
 // isOnwer returns TRUE if the JWT Claim is from a domain owner.
