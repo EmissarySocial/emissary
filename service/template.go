@@ -85,7 +85,12 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 		return &template, nil
 	}
 
-	return nil, derp.New(404, "whisper.sevice.Template.Load", "Template not found", templateID, service.templates)
+	// Collect keys for error report:
+	keys := make([]string, 0)
+	for key := range service.templates {
+		keys = append(keys, key)
+	}
+	return nil, derp.New(404, "whisper.sevice.Template.Load", "Template not found", templateID, keys)
 }
 
 // Save adds/updates an Template in the memory cache
@@ -267,11 +272,6 @@ func (service *Template) Watch() error {
 
 				templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
 
-				// Static files are not processed.  Skip and continue
-				if templateName == "system" {
-					continue
-				}
-
 				// Otherwise, add this folder to the Template service
 				template, err := service.loadFromFilesystem(templateName)
 
@@ -283,6 +283,8 @@ func (service *Template) Watch() error {
 				// Save the Template and notify Streams to update.
 				service.Save(&template)
 				service.templateUpdateOut <- template.TemplateID
+
+				fmt.Println("Updated template: " + template.Label)
 
 			case err, ok := <-watcher.Errors:
 

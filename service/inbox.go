@@ -102,36 +102,44 @@ func (service *Inbox) Debug() datatype.Map {
  * INBOX METHODS
  *******************************************/
 
-func (service *Inbox) Receive(message map[string]interface{}) error {
+func (service *Inbox) Receive(user *model.User, message map[string]interface{}) error {
 
-	const location = "whisperverse.service.Inbox.Parse"
+	const location = "service.Inbox.Receive"
 
 	// Parse the message into an ActivityPub object
 	object := reader.New(message)
+	stream := model.NewStream()
 
-	// Locate all recipients of this message on this server
-	users, err := service.FindUsers(object)
+	// stream info
+	stream.TemplateID = "social-inbox-item"
+	stream.Label = object.Name()
+	stream.Description = object.Summary()
+	stream.ThumbnailImage = object.Icon()
 
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading users")
+	if publishDate := object.Published().UnixMilli(); publishDate > 0 {
+		stream.PublishDate = publishDate
+	} else {
+		stream.PublishDate = time.Now().UnixMilli()
 	}
 
-	var result error
+	// actor info
+	actor := object.ActorObject()
+	stream.AuthorURL = actor.ID()
+	stream.AuthorName = actor.Name()
+	stream.AuthorImage = actor.Icon()
 
-	for _, user := range users {
+	// other activityPub info
+	stream.Data["original"] = object
 
-		stream := service.MapStream(object)
+	// recipient info
+	stream.ParentID = user.InboxID
+	stream.Criteria.OwnerID = user.UserID
 
-		// recipient info
-		stream.ParentID = user.InboxID
-		stream.Criteria.OwnerID = user.UserID
-
-		if err := service.streamService.Save(&stream, "Imported from ActivityPub"); err != nil {
-			result = derp.Append(result, derp.Wrap(err, location, "error saving message", message))
-		}
+	if err := service.streamService.Save(&stream, "Imported from ActivityPub"); err != nil {
+		return derp.Wrap(err, location, "error saving message", message)
 	}
 
-	return result
+	return nil
 }
 
 // FindUsers locates all local users who are listed as recipients of the message.
@@ -153,31 +161,4 @@ func (service *Inbox) FindUsers(object reader.Object) ([]model.User, error) {
 	}
 
 	return result, nil
-}
-
-func (service *Inbox) MapStream(object reader.Object) model.Stream {
-
-	stream := model.NewStream()
-
-	// stream info
-	stream.Label = object.Name()
-	stream.Description = object.Summary()
-	stream.ThumbnailImage = object.Icon()
-
-	if publishDate := object.Published().UnixMilli(); publishDate > 0 {
-		stream.PublishDate = publishDate
-	} else {
-		stream.PublishDate = time.Now().UnixMilli()
-	}
-
-	// actor info
-	actor := object.ActorObject()
-	stream.AuthorURL = actor.ID()
-	stream.AuthorName = actor.Name()
-	stream.AuthorImage = actor.Icon()
-
-	// other activityPub info
-	stream.Data["original"] = object
-
-	return stream
 }

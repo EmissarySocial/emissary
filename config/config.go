@@ -13,7 +13,6 @@ type Config struct {
 	Domains       DomainList `json:"domains"`       // Slice of one or more domain configurations
 	Templates     Folder     `json:"templates"`     // Folder containing all stream templates
 	Layouts       Folder     `json:"layouts"`       // Folder containing all system layouts
-	Attachments   Folder     `json:"attachments"`   // Folder containing all attachments
 	Static        Folder     `json:"static"`        // Folder containing all attachments
 }
 
@@ -44,10 +43,6 @@ func DefaultConfig(adminURL string, adminPassword string) Config {
 			Hostname:  "localhost",
 			ShowAdmin: true,
 		}},
-		Attachments: Folder{
-			Adapter:  "FILE",
-			Location: "./_attachments/",
-		},
 		Layouts: Folder{
 			Adapter:  "FILE",
 			Location: "./_layouts/",
@@ -90,9 +85,6 @@ func (config Config) GetPath(name string) (interface{}, bool) {
 	case "templates":
 		return config.Templates.GetPath(tail)
 
-	case "attachments":
-		return config.Attachments.GetPath(tail)
-
 	case "domains":
 		return config.Domains.GetPath(tail)
 	}
@@ -122,9 +114,6 @@ func (config *Config) SetPath(name string, value interface{}) error {
 
 	case "templates":
 		return config.Templates.SetPath(tail, value)
-
-	case "attachments":
-		return config.Attachments.SetPath(tail, value)
 
 	case "domains":
 		return config.Domains.SetPath(tail, value)

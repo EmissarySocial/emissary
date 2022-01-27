@@ -17,6 +17,7 @@ import (
 type User struct {
 	UserID      primitive.ObjectID   `json:"userId"      bson:"_id"`         // Unique identifier for this user.
 	GroupIDs    []primitive.ObjectID `json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
+	Identities  []string             `json:"identities"  bson:"identities"`  // Slice of globally unique identities for contacting this user.
 	DisplayName string               `json:"displayName" bson:"displayName"` // Name to be displayed for this user
 	Description string               `json:"description" bson:"description"` // Status summary for this user (used by ActivityPub)
 	Username    string               `json:"username"    bson:"username"`    // This is the primary public identifier for the user.
@@ -31,8 +32,9 @@ type User struct {
 
 func NewUser() User {
 	return User{
-		UserID:   primitive.NewObjectID(),
-		GroupIDs: make([]primitive.ObjectID, 0),
+		UserID:     primitive.NewObjectID(),
+		GroupIDs:   make([]primitive.ObjectID, 0),
+		Identities: make([]string, 0),
 	}
 }
 

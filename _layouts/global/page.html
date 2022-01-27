@@ -37,6 +37,7 @@
 			</div>
 			<div>
 				{{- if .IsAuthenticated -}}
+					<a href="/inbox"  class='{{- if eq .StreamID "inbox" -}}selected{{- end -}}'>Inbox</a>
 					<a href="/me"  class='{{- if eq $topID "me" -}}selected{{- end -}}'>Profile</a>
 					{{- if .IsOwner -}}<a href="/admin/domain"  class='{{- if eq $topID "admin" -}}selected{{- end -}}'>Settings</a>{{- end -}}
 					<a hx-post="/signout" hx-target="body">Sign Out</a>

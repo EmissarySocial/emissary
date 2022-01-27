@@ -1,7 +1,7 @@
 <div>
-	<h1>{{.Label}}</h1>
+	<h1>Inbox</h1>
 
-	{{range .Children "view"}}
+	{{range .Children.View}}
 		<div hx-get="/{{.Token}}" hx-push-url="true">
 			{{if ne .ThumbnailImage ""}}
 				<img src="{{.ThumbnailImage}}" style="width:200px;"/>

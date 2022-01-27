@@ -66,23 +66,32 @@ func PostSocialInbox(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Try to get the domain factory
 		factory, err := fm.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unrecognized domain")
 		}
 
-		inboxService := factory.Inbox()
+		// Try to load the user who owns the inbox
+		userService := factory.User()
+		user := model.NewUser()
+		userID := ctx.Param("userId")
 
-		body := make(map[string]interface{})
-
-		if err := ctx.Bind(&body); err != nil {
-			return derp.Wrap(err, location, "Error binding request body")
+		if err := userService.LoadByToken(userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading User", userID)
 		}
 
 		// TODO: Validate signatures here
 
-		if err := inboxService.Receive(body); err != nil {
+		// Try to import the ActivityPub record
+		body := make(map[string]interface{})
+		if err := ctx.Bind(&body); err != nil {
+			return derp.Wrap(err, location, "Error binding request body")
+		}
+
+		inboxService := factory.Inbox()
+		if err := inboxService.Receive(&user, body); err != nil {
 			return derp.Wrap(err, location, "Error processing ActivityPub message")
 		}
 

@@ -8,19 +8,29 @@ import (
 
 // Domain contains all of the configuration data required to operate a single domain.
 type Domain struct {
-	Label          string         `json:"label"`               // Human-friendly label for administrators
-	Hostname       string         `json:"hostname"`            // Domain name of a virtual server
-	ConnectString  string         `json:"connectString"`       // MongoDB connect string
-	DatabaseName   string         `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
-	SMTPConnection SMTPConnection `json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
-	ForwardTo      string         `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
-	ShowAdmin      bool           `json:"showAdmin"`           // If TRUE, then show domain settings in admin
-	// Steranko       steranko.Config `json:"steranko"`            // Configuration to pass through to Steranko
+	Label           string         `json:"label"`               // Human-friendly label for administrators
+	Hostname        string         `json:"hostname"`            // Domain name of a virtual server
+	ConnectString   string         `json:"connectString"`       // MongoDB connect string
+	DatabaseName    string         `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
+	Attachments     Folder         `json:"attachments"`         // Folder containing all attachments
+	AttachmentCache Folder         `json:"attachmentCache"`     // Folder containing all attachments
+	SMTPConnection  SMTPConnection `json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
+	ForwardTo       string         `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
+	ShowAdmin       bool           `json:"showAdmin"`           // If TRUE, then show domain settings in admin
+	// Steranko       steranko.Config `json:"steranko"`         // Configuration to pass through to Steranko
 }
 
 func NewDomain() Domain {
 	return Domain{
 		SMTPConnection: SMTPConnection{},
+		Attachments: Folder{
+			Adapter:  "FILE",
+			Location: "./_attachments/",
+		},
+		AttachmentCache: Folder{
+			Adapter:  "FILE",
+			Location: "./_attachments/",
+		},
 		// Steranko:       steranko.Config{},
 	}
 }

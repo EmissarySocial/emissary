@@ -1,11 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"html/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/model"
@@ -128,6 +128,8 @@ func (service *Layout) Watch() {
 				continue
 			}
 
+			fmt.Println("Updated layout: " + filename)
+
 		case err, ok := <-watcher.Errors:
 
 			if ok {
@@ -152,7 +154,6 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
-		spew.Dump(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>", filename, service.folder, fs)
 		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
 	}
 
