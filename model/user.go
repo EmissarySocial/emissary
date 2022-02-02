@@ -3,10 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
-	"github.com/benpate/id"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
 	"github.com/golang-jwt/jwt/v4"
@@ -15,17 +12,17 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID      primitive.ObjectID   `json:"userId"      bson:"_id"`         // Unique identifier for this user.
-	GroupIDs    []primitive.ObjectID `json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
-	Identities  []string             `json:"identities"  bson:"identities"`  // Slice of globally unique identities for contacting this user.
-	DisplayName string               `json:"displayName" bson:"displayName"` // Name to be displayed for this user
-	Description string               `json:"description" bson:"description"` // Status summary for this user (used by ActivityPub)
-	Username    string               `json:"username"    bson:"username"`    // This is the primary public identifier for the user.
-	Password    string               `json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
-	IsOwner     bool                 `json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
-	AvatarURL   string               `json:"avatarUrl"   bson:"avatarUrl"`   // Avatar image of this user.
-	InboxID     primitive.ObjectID   `json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
-	OutboxID    primitive.ObjectID   `json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
+	UserID      primitive.ObjectID   `path:"userId"      json:"userId"      bson:"_id"`         // Unique identifier for this user.
+	GroupIDs    []primitive.ObjectID `path:"groupIds"    json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
+	Identities  []string             `path:"identities"  json:"identities"  bson:"identities"`  // Slice of globally unique identities for contacting this user.
+	DisplayName string               `path:"displayName" json:"displayName" bson:"displayName"` // Name to be displayed for this user
+	Description string               `path:"description" json:"description" bson:"description"` // Status summary for this user (used by ActivityPub)
+	Username    string               `path:"username"    json:"username"    bson:"username"`    // This is the primary public identifier for the user.
+	Password    string               `path:"password"    json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
+	IsOwner     bool                 `path:"isOwner"     json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
+	AvatarURL   string               `path:"avatarUrl"   json:"avatarUrl"   bson:"avatarUrl"`   // Avatar image of this user.
+	InboxID     primitive.ObjectID   `path:"inboxId"     json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
+	OutboxID    primitive.ObjectID   `path:"outboxId"    json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
 
 	journal.Journal `json:"journal" bson:"journal"`
 }
@@ -63,55 +60,6 @@ func (user *User) Schema() schema.Schema {
 			},
 		},
 	}
-}
-
-// GetPath implements the path.Setter interface
-func (user *User) GetPath(path string) (interface{}, bool) {
-
-	switch path {
-
-	case "userId":
-		return user.UserID, true
-
-	case "groupIds":
-		return id.SliceOfString(user.GroupIDs), true
-
-	case "displayName":
-		return user.DisplayName, true
-
-	case "username":
-		return user.Username, true
-
-	case "avatarUrl":
-		return user.AvatarURL, true
-	}
-
-	return nil, false
-}
-
-// SetPath implements the path.Setter interface
-func (user *User) SetPath(path string, value interface{}) error {
-
-	switch path {
-
-	case "username":
-		user.Username = convert.String(value)
-		return nil
-
-	case "displayName":
-		user.DisplayName = convert.String(value)
-		return nil
-
-	case "avatarUrl":
-		user.AvatarURL = convert.String(value)
-		return nil
-
-	case "groupIds":
-		user.GroupIDs = id.Slice(value)
-		return nil
-	}
-
-	return derp.New(derp.CodeInternalError, "whisper.model.User.SetPath", "Cannot set value", path, value)
 }
 
 /******************************

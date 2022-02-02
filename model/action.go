@@ -6,12 +6,12 @@ import (
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	ActionID   string              `json:"actionID"   bson:"actionID"`   // Unique ID for this action.
-	Roles      []string            `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     []string            `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	RoleStates map[string][]string `json:"roleStates" bson:"roleStates"` // Map of roles -> list of states that grant access to this Action.
-	Step       string              `json:"step"       bson:"step"`       // Shortcut for a single step to execute for this Action (all parameters are defaults)
-	Steps      []datatype.Map      `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	ActionID   string              `path:"actionId"   json:"actionId"   bson:"actionId"`   // Unique ID for this action.
+	Roles      []string            `path:"roles"      json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     []string            `path:"states"     json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	RoleStates map[string][]string `path:"roleStates" json:"roleStates" bson:"roleStates"` // Map of roles -> list of states that grant access to this Action.
+	Step       string              `path:"step"       json:"step"       bson:"step"`       // Shortcut for a single step to execute for this Action (all parameters are defaults)
+	Steps      []datatype.Map      `path:"steps"      json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
 // NewAction returns a fully initialized Action

@@ -5,17 +5,16 @@ import (
 	"strings"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `json:"attachmentId" bson:"_id"`      // ID of this Attachment
-	StreamID     primitive.ObjectID `json:"streamId"     bson:"streamId"` // ID of the Stream that owns this Attachment
-	Filename     string             `json:"filename"     bson:"filename"` // Name of the file that is currently stored on the filesystem
-	Original     string             `json:"original"     bson:"original"` // Original filename uploaded by user
+	AttachmentID primitive.ObjectID `                    json:"attachmentId" bson:"_id"`      // ID of this Attachment
+	StreamID     primitive.ObjectID `                    json:"streamId"     bson:"streamId"` // ID of the Stream that owns this Attachment
+	Filename     string             `path:"filename"     json:"filename"     bson:"filename"` // Name of the file that is currently stored on the filesystem
+	Original     string             `path:"original"     json:"original"     bson:"original"` // Original filename uploaded by user
 
 	journal.Journal `json:"journal" bson:"journal"` // Journal entry for fetch compatability
 }
@@ -36,16 +35,6 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 // ID returns the primary key of this object
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
-}
-
-// GetPath implements the path.Getter interface, returning a named value from this object
-func (attachment *Attachment) GetPath(name string) (interface{}, bool) {
-	return nil, false
-}
-
-// SetPath implements the path.Getter interface, allowing named WRITE access to specific values
-func (attachment *Attachment) SetPath(name string, value interface{}) error {
-	return derp.NewInternalError("whisper.model.Attachment.SetPath", "unimplemented")
 }
 
 /*******************************************

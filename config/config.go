@@ -1,19 +1,15 @@
 package config
 
-import (
-	"github.com/benpate/convert"
-	"github.com/benpate/derp"
-	"github.com/benpate/path"
-)
-
 // Config defines all of the domains available on this server
 type Config struct {
-	AdminURL      string     `json:"adminUrl"`      // path to use for the server admin console (if blank, then console is not available)
-	AdminPassword string     `json:"adminPassword"` // Password for access to domain admin console
-	Domains       DomainList `json:"domains"`       // Slice of one or more domain configurations
-	Templates     Folder     `json:"templates"`     // Folder containing all stream templates
-	Layouts       Folder     `json:"layouts"`       // Folder containing all system layouts
-	Static        Folder     `json:"static"`        // Folder containing all attachments
+	AdminURL            string     `path:"adminUrl"            json:"adminUrl"`            // path to use for the server admin console (if blank, then console is not available)
+	AdminPassword       string     `path:"adminPassword"       json:"adminPassword"`       // Password for access to domain admin console
+	Domains             DomainList `path:"domains"             json:"domains"`             // Slice of one or more domain configurations
+	Templates           Folder     `path:"templates"           json:"templates"`           // Folder containing all stream templates
+	Layouts             Folder     `path:"layouts"             json:"layouts"`             // Folder containing all system layouts
+	Static              Folder     `path:"static"              json:"static"`              // Folder containing all attachments
+	AttachmentOriginals Folder     `path:"attachmentOriginals" json:"attachmentOriginals"` // Folder where original attachments will be stored
+	AttachmentCache     Folder     `path:"attachmentCache"     json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -57,73 +53,21 @@ func DefaultConfig(adminURL string, adminPassword string) Config {
 			Location: "./_templates/",
 			Sync:     true,
 		},
+		AttachmentOriginals: Folder{
+			Adapter:  "FILE",
+			Location: "./_attachments/originals",
+			Sync:     false,
+		},
+		AttachmentCache: Folder{
+			Adapter:  "FILE",
+			Location: "./_attachments/cache",
+			Sync:     false,
+		},
 	}
 }
 
 /************************
- * Path functions
- ************************/
-
-// GetPath implements the path.Getter interface
-func (config Config) GetPath(name string) (interface{}, bool) {
-
-	switch name {
-	case "adminUrl":
-		return config.AdminURL, true
-
-	case "adminPassword":
-		return config.AdminPassword, true
-	}
-
-	head, tail := path.Split(name)
-
-	switch head {
-
-	case "layouts":
-		return config.Layouts.GetPath(tail)
-
-	case "templates":
-		return config.Templates.GetPath(tail)
-
-	case "domains":
-		return config.Domains.GetPath(tail)
-	}
-
-	return nil, false
-}
-
-// SetPath implements the path.Setter interface
-func (config *Config) SetPath(name string, value interface{}) error {
-
-	switch name {
-	case "adminUrl":
-		config.AdminURL = convert.String(value)
-		return nil
-
-	case "adminPassword":
-		config.AdminPassword = convert.String(value)
-		return nil
-	}
-
-	head, tail := path.Split(name)
-
-	switch head {
-
-	case "layouts":
-		return config.Layouts.SetPath(tail, value)
-
-	case "templates":
-		return config.Templates.SetPath(tail, value)
-
-	case "domains":
-		return config.Domains.SetPath(tail, value)
-	}
-
-	return derp.NewInternalError("whisper.config.SetPath", "Unrecognized path", name, value)
-}
-
-/************************
- * Other Data Accessors
+ * Data Accessors
  ************************/
 
 // DomainNames returns an array of domains names in this configuration.

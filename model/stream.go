@@ -1,39 +1,37 @@
 package model
 
 import (
-	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/datatype"
-	"github.com/benpate/derp"
 	"github.com/benpate/nebula"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID        primitive.ObjectID   `json:"streamId"        bson:"_id"`                     // Unique identifier of this Stream.  (NOT USED PUBLICLY)
-	ParentID        primitive.ObjectID   `json:"parentId"        bson:"parentId"`                // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	ParentIDs       []primitive.ObjectID `json:"parentIds"       bson:"parentIds"`               // Slice of all parent IDs of this Stream
-	TemplateID      string               `json:"templateId"      bson:"templateId"`              // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
-	StateID         string               `json:"stateId"         bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	Criteria        Criteria             `json:"criteria"        bson:"criteria"`                // Criteria for which users can access this stream.
-	Token           string               `json:"token"           bson:"token"`                   // Unique value that identifies this element in the URL
-	Label           string               `json:"label"           bson:"label"`                   // Text to display in lists of streams, probably displayed at top of stream page, too.
-	Description     string               `json:"description"     bson:"description"`             // Brief summary of this stream, used in lists of streams
-	AuthorID        primitive.ObjectID   `json:"authorId"        bson:"authorId,omitempty"`      // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
-	AuthorName      string               `json:"authorName"      bson:"authorName,omitempty"`    // Full name of the person who created this stream
-	AuthorImage     string               `json:"authorImage"     bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
-	AuthorURL       string               `json:"authorURL"       bson:"authorURL,omitempty"`     // URL address of the person who created this stream
-	Content         nebula.Container     `json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
-	Data            datatype.Map         `json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	Tags            []string             `json:"tags"            bson:"tags"`                    // Organizational Tags
-	ThumbnailImage  string               `json:"thumbnailImage"  bson:"thumbnailImage"`          // Image to display next to the stream in lists.
-	Rank            int                  `json:"rank"            bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	SourceID        primitive.ObjectID   `json:"sourceId"        bson:"sourceId,omitempty"`      // Internal identifier of the source configuration that generated this stream
-	SourceURL       string               `json:"sourceUrl"       bson:"sourceUrl,omitempty"`     // URL of the original document published by the source server
-	SourceUpdated   int64                `json:"sourceUpdated"   bson:"sourceUpdated,omitempty"` // Date the the source updated the original content.
-	PublishDate     int64                `json:"publishDate"     bson:"publishDate"`             // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate   int64                `json:"unpublishDate"   bson:"unpublishDate"`           // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	StreamID        primitive.ObjectID   `path:"streamId"       json:"streamId"        bson:"_id"`                     // Unique identifier of this Stream.  (NOT USED PUBLICLY)
+	ParentID        primitive.ObjectID   `path:"parentId"       json:"parentId"        bson:"parentId"`                // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	ParentIDs       []primitive.ObjectID `path:"parentIds"      json:"parentIds"       bson:"parentIds"`               // Slice of all parent IDs of this Stream
+	TemplateID      string               `path:"templateId"     json:"templateId"      bson:"templateId"`              // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	StateID         string               `path:"stateId"        json:"stateId"         bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	Criteria        Criteria             `path:"criteria"       json:"criteria"        bson:"criteria"`                // Criteria for which users can access this stream.
+	Token           string               `path:"token"          json:"token"           bson:"token"`                   // Unique value that identifies this element in the URL
+	Label           string               `path:"label"          json:"label"           bson:"label"`                   // Text to display in lists of streams, probably displayed at top of stream page, too.
+	Description     string               `path:"description"    json:"description"     bson:"description"`             // Brief summary of this stream, used in lists of streams
+	AuthorID        primitive.ObjectID   `path:"authorId"       json:"authorId"        bson:"authorId,omitempty"`      // Unique identifier of the person who created this stream (NOT USED PUBLICLY)
+	AuthorName      string               `path:"authorName"     json:"authorName"      bson:"authorName,omitempty"`    // Full name of the person who created this stream
+	AuthorImage     string               `path:"authorImage"    json:"authorImage"     bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
+	AuthorURL       string               `path:"authorUrl"      json:"authorUrl"       bson:"authorUrl,omitempty"`     // URL address of the person who created this stream
+	Content         nebula.Container     `path:"content"        json:"content"         bson:"content,omitempty"`       // Content objects for this stream.
+	Data            datatype.Map         `path:"data"           json:"data"            bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Tags            []string             `path:"tags"           json:"tags"            bson:"tags"`                    // Organizational Tags
+	ThumbnailImage  string               `path:"thumbnailImage" json:"thumbnailImage"  bson:"thumbnailImage"`          // Image to display next to the stream in lists.
+	Rank            int                  `path:"rank"           json:"rank"            bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	SourceID        primitive.ObjectID   `path:"sourceId"       json:"sourceId"        bson:"sourceId,omitempty"`      // Internal identifier of the source configuration that generated this stream
+	SourceURL       string               `path:"sourceUrl"      json:"sourceUrl"       bson:"sourceUrl,omitempty"`     // URL of the original document published by the source server
+	SourceUpdated   int64                `path:"sourceUpdated"  json:"sourceUpdated"   bson:"sourceUpdated,omitempty"` // Date the the source updated the original content.
+	PublishDate     int64                `path:"publishDate"    json:"publishDate"     bson:"publishDate"`             // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
+	UnPublishDate   int64                `path:"unpublishDate " json:"unpublishDate"   bson:"unpublishDate"`           // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
@@ -61,67 +59,6 @@ func NewStream() Stream {
 // ID returns the primary key of this object
 func (stream *Stream) ID() string {
 	return stream.StreamID.Hex()
-}
-
-// GetPath implements the path.Getter interface.  It looks up
-// data within this Stream and returns it to the caller.
-func (stream *Stream) GetPath(name string) (interface{}, bool) {
-
-	// Properties that can be retrieved
-	switch name {
-
-	case "":
-		return stream, true
-
-	case "label":
-		return stream.Label, true
-
-	case "description":
-		return stream.Description, true
-
-	case "thumbnailImage":
-		return stream.ThumbnailImage, true
-
-	case "rank":
-		return stream.Rank, true
-
-	case "stateId":
-		return stream.StateID, true
-
-	default:
-		return stream.Data.GetPath(name)
-	}
-}
-
-// SetPath implements the path.Setter interface.  It takes any data value
-// and tries to set it to the correct path within this Stream.
-func (stream *Stream) SetPath(name string, value interface{}) error {
-
-	switch name {
-
-	case "":
-		return derp.NewInternalError("whisper.model.Stream", "Unrecognized path", name)
-
-	case "label":
-		stream.Label = convert.String(value)
-
-	case "description":
-		stream.Description = convert.String(value)
-
-	case "thumbnailImage":
-		stream.ThumbnailImage = convert.String(value)
-
-	case "rank":
-		stream.Rank = convert.Int(value)
-
-	case "stateId":
-		stream.StateID = convert.String(value)
-
-	default:
-		return stream.Data.SetPath(name, value)
-	}
-
-	return nil
 }
 
 /*******************************************

@@ -83,10 +83,25 @@ func NewFactory(cfg config.Config) *Factory {
 // is already in the Factory, then no additional action is taken.
 func (factory *Factory) start(d config.Domain) error {
 
-	result, err := domain.NewFactory(d, &factory.layoutService, &factory.templateService)
+	// Try to open attachment original folder
+	originals, err := factory.config.AttachmentOriginals.GetFilesystem()
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.factory.Factory.New", "Error creating factory", d)
+		return derp.Wrap(err, "whisper.server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
+	}
+
+	// Try to open attachment cache folder
+	cache, err := factory.config.AttachmentOriginals.GetFilesystem()
+
+	if err != nil {
+		return derp.Wrap(err, "whisper.server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
+	}
+
+	// Try to create a new Factory object
+	result, err := domain.NewFactory(d, &factory.layoutService, &factory.templateService, originals, cache)
+
+	if err != nil {
+		return derp.Wrap(err, "whisper.server.Factory.start", "Error creating factory", d)
 	}
 
 	// Assign the new factory to the registry

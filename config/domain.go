@@ -1,120 +1,20 @@
 package config
 
-import (
-	"github.com/benpate/convert"
-	"github.com/benpate/derp"
-	"github.com/benpate/path"
-)
-
 // Domain contains all of the configuration data required to operate a single domain.
 type Domain struct {
-	Label           string         `json:"label"`               // Human-friendly label for administrators
-	Hostname        string         `json:"hostname"`            // Domain name of a virtual server
-	ConnectString   string         `json:"connectString"`       // MongoDB connect string
-	DatabaseName    string         `json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
-	Attachments     Folder         `json:"attachments"`         // Folder containing all attachments
-	AttachmentCache Folder         `json:"attachmentCache"`     // Folder containing all attachments
-	SMTPConnection  SMTPConnection `json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
-	ForwardTo       string         `json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
-	ShowAdmin       bool           `json:"showAdmin"`           // If TRUE, then show domain settings in admin
-	// Steranko       steranko.Config `json:"steranko"`         // Configuration to pass through to Steranko
+	Label          string         `path:"label"         json:"label"`               // Human-friendly label for administrators
+	Hostname       string         `path:"hostname"      json:"hostname"`            // Domain name of a virtual server
+	ConnectString  string         `path:"connectString" json:"connectString"`       // MongoDB connect string
+	DatabaseName   string         `path:"databaseName"  json:"databaseName"`        // Name of the MongoDB Database (can be empty string to use default db for the connect string)
+	SMTPConnection SMTPConnection `path:"smtp"          json:"smtp"`                // Information for connecting to an SMTP server to send email on behalf of the domain.
+	ForwardTo      string         `path:"forwardTo"     json:"forwardTo,omitempty"` // Forwarding information for a domain that has moved servers
+	ShowAdmin      bool           `path:"showAdmin"     json:"showAdmin"`           // If TRUE, then show domain settings in admin
+	// Steranko       steranko.Config `path:"steranko" json:"steranko"`         // Configuration to pass through to Steranko
 }
 
 func NewDomain() Domain {
 	return Domain{
 		SMTPConnection: SMTPConnection{},
-		Attachments: Folder{
-			Adapter:  "FILE",
-			Location: "./_attachments/",
-		},
-		AttachmentCache: Folder{
-			Adapter:  "FILE",
-			Location: "./_attachments/",
-		},
 		// Steranko:       steranko.Config{},
 	}
-}
-
-/**************************
- * Path Interface
- **************************/
-
-func (d *Domain) GetPath(name string) (interface{}, bool) {
-
-	switch name {
-	case "label":
-		return d.Label, true
-
-	case "hostname":
-		return d.Hostname, true
-
-	case "connectString":
-		return d.ConnectString, true
-
-	case "databaseName":
-		return d.DatabaseName, true
-
-	case "forwardTo":
-		return d.ForwardTo, true
-
-	case "showAdmin":
-		return d.ShowAdmin, true
-
-	}
-
-	head, tail := path.Split(name)
-
-	if head == "smtp" {
-
-		if tail == "" {
-			return d.SMTPConnection, true
-		}
-
-		return d.SMTPConnection.GetPath(tail)
-	}
-
-	return nil, false
-}
-
-func (d *Domain) SetPath(name string, value interface{}) error {
-
-	switch name {
-
-	case "label":
-		d.Label = convert.String(value)
-		return nil
-
-	case "hostname":
-		d.Hostname = convert.String(value)
-		return nil
-
-	case "connectString":
-		d.ConnectString = convert.String(value)
-		return nil
-
-	case "databaseName":
-		d.DatabaseName = convert.String(value)
-		return nil
-
-	case "forwardTo":
-		d.ForwardTo = convert.String(value)
-		return nil
-
-	case "showAdmin":
-		d.ShowAdmin = convert.Bool(value)
-		return nil
-	}
-
-	head, tail := path.Split(name)
-
-	if head == "smtp" {
-
-		if tail == "" {
-			return derp.New(derp.CodeBadRequestError, "whisper.config.Domain.SetPath", "Cannot set SMTP object directly")
-		}
-
-		return d.SMTPConnection.SetPath(tail, value)
-	}
-
-	return derp.New(derp.CodeInternalError, "whisper.config.Domain.SetPath", "Unrecognized config setting", name)
 }

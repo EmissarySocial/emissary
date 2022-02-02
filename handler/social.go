@@ -90,10 +90,12 @@ func PostSocialInbox(fm *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error binding request body")
 		}
 
-		inboxService := factory.Inbox()
-		if err := inboxService.Receive(&user, body); err != nil {
-			return derp.Wrap(err, location, "Error processing ActivityPub message")
-		}
+		/*
+			inboxService := factory.Inbox()
+			if err := inboxService.Receive(&user, body); err != nil {
+				return derp.Wrap(err, location, "Error processing ActivityPub message")
+			}
+		*/
 
 		return ctx.NoContent(http.StatusNoContent)
 	}

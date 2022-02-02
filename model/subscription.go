@@ -7,12 +7,12 @@ import (
 )
 
 type Subscription struct {
-	SubscriptionID  primitive.ObjectID `json:"subscriptionId" bson:"_id"`            // Unique Identifier of this record
-	ParentStreamID  primitive.ObjectID `json:"parentStreamId" bson:"parentStreamId"` // ID of the stream that owns this subscription
-	Method          string             `json:"method"         bson:"method"`         // Method used to subscribe to remote streams (RSS, etc)
-	URL             string             `json:"url"            bson:"url"`            // Connection URL for obtaining new sub-streams.
-	LastPolled      int64              `json:"lastPolled"     bson:"lastPolled"`     // Unix Timestamp of the last date that this resource was retrieved.
-	PollDuration    int                `json:"pollDuration"   bson:"pollDuration"`   // Time (in minutes) to wait between polling this resource.
+	SubscriptionID  primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`            // Unique Identifier of this record
+	ParentStreamID  primitive.ObjectID `path:"parentStreamId" json:"parentStreamId" bson:"parentStreamId"` // ID of the stream that owns this subscription
+	Method          string             `path:"method"         json:"method"         bson:"method"`         // Method used to subscribe to remote streams (RSS, etc)
+	URL             string             `path:"url"            json:"url"            bson:"url"`            // Connection URL for obtaining new sub-streams.
+	LastPolled      int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`     // Unix Timestamp of the last date that this resource was retrieved.
+	PollDuration    int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`   // Time (in minutes) to wait between polling this resource.
 	journal.Journal `json:"-" bson:"journal"`
 }
 

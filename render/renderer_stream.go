@@ -81,12 +81,12 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
  * (not available via templates)
  *******************************************/
 
-func (w Stream) GetPath(path string) (interface{}, bool) {
-	return w.stream.GetPath(path)
+func (w Stream) GetPath(name string) (interface{}, bool) {
+	return path.GetOK(w.stream, name)
 }
 
-func (w Stream) SetPath(path string, value interface{}) error {
-	return w.stream.SetPath(path, value)
+func (w Stream) SetPath(name string, value interface{}) error {
+	return path.Set(w.stream, name, value)
 }
 
 /*******************************************

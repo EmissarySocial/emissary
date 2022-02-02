@@ -39,6 +39,10 @@ type Factory struct {
 	formLibrary    form.Library
 	contentLibrary nebula.Library
 
+	// Upload Directories
+	attachmentOriginals afero.Fs
+	attachmentCache     afero.Fs
+
 	// real-time watchers
 	realtimeBroker        *RealtimeBroker
 	templateUpdateChannel chan string
@@ -46,7 +50,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
 
@@ -56,6 +60,8 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		layoutService:         layoutService,
 		templateService:       templateService,
 		templateUpdateChannel: make(chan string),
+		attachmentOriginals:   attachmentOriginals,
+		attachmentCache:       attachmentCache,
 	}
 
 	// If there is a database then set it up now.
@@ -249,12 +255,25 @@ func (factory *Factory) MediaServer() mediaserver.MediaServer {
 
 // AttachmentOriginals returns a reference to the Filesystem where original attachment files are stored
 func (factory *Factory) AttachmentOriginals() afero.Fs {
-	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads")
+	return factory.getSubFolder(factory.attachmentOriginals, factory.Hostname())
 }
 
 // AttachmentCache returns a reference to the Filesystem where cached/manipulated attachment files are stored.
 func (factory *Factory) AttachmentCache() afero.Fs {
-	return afero.NewBasePathFs(afero.NewOsFs(), "./uploads-cache")
+	return factory.getSubFolder(factory.attachmentCache, factory.Hostname())
+}
+
+// getSubFolder guarantees that a subfolder exists within the provided afero.Fs, or panics
+func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
+
+	// Try to make a new subfolder at the chosen path (returns nil if already exists)
+	if err := base.MkdirAll(path, 0777); err != nil {
+		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Error creating subfolder", path))
+		panic(err)
+	}
+
+	// Return a filesystem pointing to the new subfolder.
+	return afero.NewBasePathFs(base, path)
 }
 
 /*******************************************
@@ -262,11 +281,11 @@ func (factory *Factory) AttachmentCache() afero.Fs {
  *******************************************/
 
 func (factory *Factory) Inbox() service.Inbox {
-	return service.NewInbox(factory.collection(CollectionInbox), factory.Stream(), factory.User())
+	return service.NewInbox()
 }
 
 func (factory *Factory) Outbox() service.Outbox {
-	return service.NewOutbox(factory.collection(CollectionOutbox))
+	return service.NewOutbox()
 }
 
 // FormLibrary returns our custom form widget library for

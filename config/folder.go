@@ -1,56 +1,43 @@
 package config
 
 import (
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
+	"github.com/spf13/afero"
 )
 
+// FolderAdapterOS represents files that are stored directly in the os filesystem.
+const FolderAdapterOS = "FILE"
+
+// Other adapter types to come
+
 type Folder struct {
-	Adapter  string `json:"adapter"`
-	Location string `json:"location"`
-	Sync     bool   `json:"sync"`
+	Adapter  string `path:"adapter"  json:"adapter"`
+	Location string `path:"location" json:"location"`
+	Sync     bool   `path:"sync"     json:"sync"`
 }
 
-/**************************
- * Path Interface
- **************************/
+// GetFilesystem uses the folder's configuration to create an afero.Fs
+// object that can read/write files.
+func (folder Folder) GetFilesystem() (afero.Fs, error) {
 
-func (folder Folder) GetPath(name string) (interface{}, bool) {
+	var base afero.Fs
 
-	if name == "" {
-		return folder, true
-	}
+	// Find the right base filesystem adapter
+	switch folder.Adapter {
 
-	switch name {
-	case "adapter":
-		return folder.Adapter, true
+	case FolderAdapterOS:
+		base = afero.NewOsFs()
 
-	case "location":
-		return folder.Location, true
-
-	case "sync":
-		return folder.Sync, true
-	}
-
-	return nil, false
-}
-
-func (folder *Folder) SetPath(name string, value interface{}) error {
-
-	switch name {
-	case "adapter":
-		folder.Adapter = convert.String(value)
-		return nil
-
-	case "location":
-		folder.Location = convert.String(value)
-		return nil
-
-	case "sync":
-		folder.Sync = convert.Bool(value)
-		return nil
+	default:
+		return nil, derp.NewInternalError("config.Folder.GetFilesystem", "Unrecognized Adapter", folder)
 
 	}
 
-	return derp.NewInternalError("whisper.config.Folder.SetPath", "Bad path name", name, value)
+	// Try to make a new subfolder at the chosen path (returns nil if already exists)
+	if err := base.MkdirAll(folder.Location, 0777); err != nil {
+		return nil, derp.Wrap(err, "config.Folder.GetFilesystem", "Error creating subdirectory", folder)
+	}
+
+	// Return a filesystem pointing to the new subfolder.
+	return afero.NewBasePathFs(base, folder.Location), nil
 }

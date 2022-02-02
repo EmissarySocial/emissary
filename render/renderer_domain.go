@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -34,12 +35,12 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, act
  * (not available via templates)
  *******************************************/
 
-func (w Domain) GetPath(path string) (interface{}, bool) {
-	return w.domain.GetPath(path)
+func (w Domain) GetPath(name string) (interface{}, bool) {
+	return path.GetOK(w.domain, name)
 }
 
-func (w Domain) SetPath(path string, value interface{}) error {
-	return w.domain.SetPath(path, value)
+func (w Domain) SetPath(name string, value interface{}) error {
+	return path.Set(w.domain, name, value)
 }
 
 /*******************************************
