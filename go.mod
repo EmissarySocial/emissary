@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/benpate/compare v0.1.0
-	github.com/benpate/convert v0.11.1
+	github.com/benpate/convert v0.12.0
 	github.com/benpate/data v0.15.0
 	github.com/benpate/data-mongo v0.1.1
 	github.com/benpate/datatype v0.2.0
