@@ -33,7 +33,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.10.0
 	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
-	go.mongodb.org/mongo-driver v1.8.2
+	go.mongodb.org/mongo-driver v1.8.3
 )
 
 require (
