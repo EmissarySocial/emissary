@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -15,10 +14,9 @@ import (
 
 // Renderer safely wraps model objects for consumption by an html Template
 type Renderer interface {
-	Render() (template.HTML, error) // Render function outputs an HTML template
 
-	path.Setter
-	path.Getter
+	// Render is the main entry-point for templates to use a Renderer
+	Render() (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
 	Token() string                // URL Token of the record being rendered

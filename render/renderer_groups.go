@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -31,18 +30,6 @@ func NewGroup(factory Factory, ctx *steranko.Context, layout *model.Layout, acti
 		action: action,
 		Common: NewCommon(factory, ctx),
 	}
-}
-
-/*******************************************
- * PATH INTERFACE
- *******************************************/
-
-func (w Group) GetPath(name string) (interface{}, bool) {
-	return path.GetOK(w.group, name)
-}
-
-func (w Group) SetPath(name string, value interface{}) error {
-	return path.Set(w.group, name, value)
 }
 
 /*******************************************

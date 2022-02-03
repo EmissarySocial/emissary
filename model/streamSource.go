@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -66,14 +65,4 @@ type StreamSource struct {
 // ID returns the primary key of this object
 func (source *StreamSource) ID() string {
 	return source.StreamSourceID.Hex()
-}
-
-// GetPath implements the path.Getter interface, allowing named READ access to specific values
-func (source *StreamSource) GetPath(path string) (interface{}, bool) {
-	return nil, false
-}
-
-// GetPath implements the path.Getter interface, allowing named WRITE access to specific values
-func (source *StreamSource) SetPath(path string, value interface{}) error {
-	return derp.New(derp.CodeInternalError, "whisper.model.StreamSource.GetPath", "unimplemented")
 }

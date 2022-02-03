@@ -77,19 +77,6 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 }
 
 /*******************************************
- * PATH INTERFACE
- * (not available via templates)
- *******************************************/
-
-func (w Stream) GetPath(name string) (interface{}, bool) {
-	return path.GetOK(w.stream, name)
-}
-
-func (w Stream) SetPath(name string, value interface{}) error {
-	return path.Set(w.stream, name, value)
-}
-
-/*******************************************
  * RENDERER INTERFACE
  *******************************************/
 
