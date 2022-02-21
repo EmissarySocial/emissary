@@ -18,7 +18,7 @@ func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var stream model.Stream
+		stream := model.NewStream()
 
 		// Try to get the factory
 		factory, err := factoryManager.ByContext(ctx)
@@ -53,7 +53,7 @@ func PostStream(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var stream model.Stream
+		stream := model.NewStream()
 
 		// Try to get the Factory from the context
 		factory, err := factoryManager.ByContext(ctx)

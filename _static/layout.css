@@ -11,7 +11,7 @@ body {
 	color: var(--black);
 }
 
-header {
+nav {
 	position:fixed;
 	top:0px;
 	left: 0px;
@@ -27,22 +27,24 @@ header {
 	flex-wrap:wrap;
 }
 
-header .framed {
+nav .framed {
 	display: flex;
 }
 
-header .framed div {
+nav .framed div {
 	display: flex;
 	flex-grow:1;
 	justify-content: flex-start;
 }
 
-header .framed div:last-child {
+nav .framed div:last-child {
 	justify-content: flex-end;
 }
 
-header a {
+nav a,
+nav button {
     color: var(--gray80);
+	background-color: var(--white);
     display:inline-block;
 	padding:10px 20px;
 	border-radius: var(--border-radius);
@@ -52,13 +54,16 @@ header a {
 	text-overflow: ellipsis;
 }
 
-header a:hover {
+nav a:hover,
+nav button:hover {
     color: var(--gray90);
     background-color:var(--gray10);
 }
 
-header a.selected,
-header a.selected:hover {
+nav a.selected,
+nav a.selected:hover,
+nav button.selected,
+nav button.selected:hover {
 	background-color: var(--gray20);
 	color: var(--black);
 }
@@ -107,20 +112,25 @@ main {
 	text-align: right;
 }
 
-#menu-bar a {
+#menu-bar a,
+#menu-bar button {
 	display: inline-block;
 	padding: 10px 20px;
 	border-radius: var(--border-radius);
 	color: var(--gray80);
+	background-color:var(--white);
 }
 
-#menu-bar a:hover {
+#menu-bar a:hover,
+#menu-bar button:hover {
 	background-color: var(--gray10);
 	color: var(--gray90);
 }
 
 #menu-bar a.selected,
-#menu-bar a.selected:hover {
+#menu-bar a.selected:hover,
+#menu-bar button.selected,
+#menu-bar button.selected:hover {
 	background-color: var(--gray20);
 	color: var(--black);
 }

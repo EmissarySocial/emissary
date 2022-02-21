@@ -9,7 +9,10 @@
 		"type": "object",
 		"properties": {
 			"label": {"type": "string"},
-			"description": {"type": "string"}
+			"description": {"type": "string"},
+			"data": {"type": "object", "properties": {
+				"format": {"type": "string", "enum": ["TABLE", "CARDS", "CARDSx2", "CARDSx3"], "default": "CARDS", "required":true}
+			}}
 		}
 	},
 	"states": {
@@ -47,6 +50,7 @@
 							"label": "Update Form",
 							"children": [
 								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "select", "label": "Format", "path": "data.format"},
 								{"kind": "textarea", "label": "Description", "path": "description"}
 							]
 						}

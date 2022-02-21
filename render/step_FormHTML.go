@@ -52,10 +52,12 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "whisper.render.StepForm.Post", "Error parsing form data")
 	}
 
+	object := renderer.object()
+
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
 	for _, element := range step.form.AllPaths() {
 		value := request.Form[element.Path]
-		if err := schema.Set(renderer, element.Path, value); err != nil {
+		if err := schema.Set(object, element.Path, value); err != nil {
 			return derp.Wrap(err, "whisper.render.StepForm.Post", "Error setting path value", element, value)
 		}
 	}

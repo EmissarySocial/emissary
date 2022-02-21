@@ -88,8 +88,8 @@ github.com/benpate/null v0.6.1/go.mod h1:gxun/MktUPdKfYWvkzCI2fCy3OX/3+sZWh01hjY
 github.com/benpate/path v0.5.1/go.mod h1:uIiKDHeOa2YIIahSJ6eP/0vqx8cpThV5nuplQETSZ44=
 github.com/benpate/path v0.8.0/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yMzBdk=
 github.com/benpate/path v0.8.1/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yMzBdk=
-github.com/benpate/path v0.8.2 h1:sKq38k8mEZzTIxKT7DNSZlzf1FjxaKlMPwsoykVM11U=
-github.com/benpate/path v0.8.2/go.mod h1:0lFgiaccvOPAkMR/0LjjqURUcMn1NJ8SLOhylWV7wI4=
+github.com/benpate/path v0.8.3 h1:/8mxDgN8vycijcuMWWHnXiVg1ytKkCaU2XzOJbvov7k=
+github.com/benpate/path v0.8.3/go.mod h1:142Jbmmb6dtRf6Icao23WfJcEhNE7zd1kUXNMkHmFDI=
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.12.0/go.mod h1:dlmr+tSRgmVpFdP+IRJaXuCM9g3vIA8A0p0gsE5NHwI=
 github.com/benpate/schema v0.13.0 h1:p1iiDWRCg8K3KYw0w6v1pynUOOfpMbRyUQZs5aAtUxo=
