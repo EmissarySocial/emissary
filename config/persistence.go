@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/benpate/derp"
+	"github.com/pkg/browser"
 	"github.com/sethvargo/go-password/password"
 )
 
@@ -36,7 +37,7 @@ func Load() Config {
 	{
 		fmt.Println("Generating new file...")
 
-		defaultAdminURL, err := password.Generate(36, 0, 0, true, true)
+		defaultAdminURL, err := password.Generate(36, 10, 0, false, false)
 
 		if err != nil {
 			panic("Error generating default admin location: " + err.Error())
@@ -70,8 +71,11 @@ func Load() Config {
 		fmt.Println("To access the server admin, and configure")
 		fmt.Println("websites on this server open this URL:")
 		fmt.Println("http://localhost/" + result.AdminURL)
-		fmt.Println("The admin password is:" + result.AdminPassword)
+		fmt.Println("The admin password is: " + result.AdminPassword)
 		fmt.Println("-----------------------------------------")
+
+		// On first run, open web browser in admin mode
+		browser.OpenURL("http://localhost/" + result.AdminURL + "?first=true")
 
 		// Success!
 		return result

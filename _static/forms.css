@@ -14,6 +14,15 @@ input:not([type=submit], [type=checkbox], [type=radio]), textarea {
     font-size:13pt;
 }
 
+input:invalid {
+    border: solid 1px var(--input-border-invalid);
+    background-color: var(--input-background-invalid);
+}
+
+input:invalid:focus {
+    outline-color: var(--red70) ;
+}
+
 input:last-child {
     margin-right:auto;
 }

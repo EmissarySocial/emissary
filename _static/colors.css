@@ -41,6 +41,10 @@
 	--input-background: var(--gray05);
 	--input-color: var(--gray80);
 
+	--input-border-invalid: var(--red40);
+	--input-background-invalid: var(--red20);
+	--input-color-invalid: var(--red50);
+
 	--border-radius: 7px;
 }
 
@@ -59,7 +63,11 @@
 		--gray10: #262626;
 		--gray05: #131313;
 		--white: #000000;
-	}
+
+		--input-border-invalid: var(--red60);
+		--input-background-invalid: var(--red80);
+		--input-color-invalid: var(--red50);
+		}
 }
 
 .white {color:var(--white);}

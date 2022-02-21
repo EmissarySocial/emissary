@@ -1,4 +1,4 @@
-<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 	{{- if eq .StateID "published" -}}

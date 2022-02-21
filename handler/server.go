@@ -25,16 +25,9 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 		pageHeader(ctx, b, "Domains")
 
-		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {console.log(document.cookie); document.cookie='admin=DELETE; max-age=1'; console.log(document.cookie); document.location.reload();}").Close()
+		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {document.cookie='admin=; Max-Age=-999999999;'; console.log(document.cookie); document.location.reload();}").Close()
 
-		b.Div().ID("menu-bar").Data("hx-push-url", "false").EndBracket()
-
-		// Add a new record
-		b.A("").Data("hx-get", factory.AdminURL()+"/new").EndBracket()
-		b.I("fa-solid fa-plus-circle").Close()
-		b.Space()
-		b.Span().InnerHTML("Add a Domain").Close()
-		b.Close()
+		b.Div().ID("menu-bar").EndBracket()
 
 		// Sign-Out
 		b.Div().Class("right").EndBracket()
@@ -52,6 +45,15 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 		// List existing domains
 		b.Table().Class("table").Data("hx-push-url", "false").EndBracket()
 
+		// First row is "Add" link
+		b.TR().Class("link")
+		b.TD().Attr("colspan", "3").Attr("nowrap", "true").Data("hx-get", factory.AdminURL()+"/new")
+		b.I("fa-solid fa-plus-circle").Close()
+		b.Space()
+		b.Span().InnerHTML("Add a Domain").Close()
+		b.Close()
+		b.Close()
+
 		for index, d := range domains {
 			indexString := convert.String(index)
 			b.TR()
@@ -67,6 +69,14 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 				Data("hx-confirm", "Delete this Domain?").
 				Close()
 			b.Close()
+		}
+
+		if ctx.QueryParam("first") != "" {
+			for index := range domains {
+				indexString := convert.String(index)
+				b.Div().Data("hx-get", factory.AdminURL()+"/"+indexString).Data("hx-trigger", "load").Close()
+				break
+			}
 		}
 
 		b.CloseAll()
@@ -269,6 +279,6 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("aside").Close()
 		b.Container("main")
 		b.Div().ID("main").Class("framed")
-		b.Div().ID("page").Data("hx-get", ctx.Request().URL.Path).Data("hx-trigger", "refreshPage from:window").Data("hx-target", "this").EndBracket()
+		b.Div().ID("page").Data("hx-get", ctx.Request().URL.Path).Data("hx-trigger", "refreshPage from:window").Data("hx-target", "this").Data("hx-push-url", "false").EndBracket()
 	}
 }

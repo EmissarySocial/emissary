@@ -42,8 +42,7 @@ func ServerAdmin(factory *server.Factory) echo.MiddlewareFunc {
 			/** Fall through means we're handling the signin form **/
 
 			// default error messages
-			statusCode := http.StatusOK
-			errorMessage := ""
+			var errorMessage string
 
 			// If this is a POST, then try to validate the password from the request Body
 			if ctx.Request().Method == http.MethodPost {
@@ -72,7 +71,6 @@ func ServerAdmin(factory *server.Factory) echo.MiddlewareFunc {
 
 				// Save error statuses
 				errorMessage = "Invalid Signin"
-				statusCode = http.StatusForbidden
 			}
 
 			// Otherwise, generate a signin form
@@ -88,7 +86,7 @@ func ServerAdmin(factory *server.Factory) echo.MiddlewareFunc {
 			b.Input("password", "password").Style("width:400px", "font-size:14pt").Close()
 			b.Button().Style("font-size:14pt").InnerHTML("Sign In").Close()
 
-			return ctx.HTML(statusCode, b.String())
+			return ctx.HTML(http.StatusOK, b.String())
 		}
 	}
 }

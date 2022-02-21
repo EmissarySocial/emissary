@@ -1,4 +1,4 @@
-<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-sse="connect:/{{.StreamID}}/sse">
 <div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
 <div class="page">
 

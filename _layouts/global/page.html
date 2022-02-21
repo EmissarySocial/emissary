@@ -25,7 +25,7 @@
 
 </head>
 
-<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false">
+<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
 
 	<header hx-push-url="true">
 		<div class="framed">
@@ -59,14 +59,12 @@
 
 	<script type="text/hyperscript" src="/static/date.hs"></script>
 	<script type="text/hyperscript" src="/static/modal.hs"></script>
-	<script type="text/hyperscript" src="/static/sse.hs"></script>
 	<script type="text/hyperscript" src="/static/tabs.hs"></script>
 
-	<script type="text/javascript" src="/static/htmx/htmx.min.js" defer></script>
-	<script type="text/javascript" src="/static/htmx/ext/sse.js" defer></script>
-	<script type="text/javascript" src="/static/hyperscript/_hyperscript_web.min.js" defer></script>
+	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
+	<script type="text/javascript" src="/static/hyperscript/_hyperscript_web.min.js"></script>
 	<script type="text/javascript" src="/static/preload.js"></script>
-	<script type="text/javascript" src="/static/extensions.js" defer></script>
+	<script type="text/javascript" src="/static/extensions.js"></script>
 	
 </body>
 </html>

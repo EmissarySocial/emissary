@@ -312,7 +312,7 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	result, err := factory.ByContext(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "whisper.server.Factory.Steranko", "Unable to locate factory for this domain")
+		return nil, derp.Wrap(err, "whisper.server.Factory.Steranko", "Unable to locate factory for domain", ctx.Request().Host)
 	}
 
 	return result.Steranko(), nil
