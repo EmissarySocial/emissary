@@ -1,3 +1,8 @@
+article {
+    padding:10px;
+    margin-bottom:25px;
+}
+
 .card-group {
     margin-right: -1px;
 }
@@ -5,18 +10,39 @@
 .card-group .card {
     margin-right: 1px;
     margin-bottom:1px;
-
 }
 
 .card {
     border: solid 1px var(--gray20);
     background-color: var(--white);
     position:relative;
+    text-overflow: ellipsis;
 }
 
-.card.padded {
-    padding:5px;
+.card .picture {
+    background-color: var(--gray20);
+    margin:-10px -10px 10px -10px;
 }
+
+.picture img {
+    width:100%;
+}
+
+.aspect-2-3 {
+    aspect-ratio:2/3;
+    overflow-y:hidden;
+}
+
+.aspect-1-1 {
+    aspect-ratio:1;
+    overflow-y:hidden;
+}
+
+.aspect-16-9 {
+    aspect-ratio:16/9;
+    overflow-y:hidden;
+}
+
 
 @media screen and (min-width:35.5em) {
 

@@ -55,27 +55,25 @@
 
 	{{- end -}}
 
+	{{- if eq (.Data "format") "COLUMNS" -}}
 
-	{{- if eq (.Data "format") "CARDSx2" -}}
-		<div class="pure-g">
-			{{- range .Children.ByLabel.View -}}
-				<div class="clickable pure-u-1 pure-u-sm-1-2" hx-get="/{{.Token}}">
-					<article>
-					<h2 role="link">{{.Label}}</h2>
-					<p>{{.Description}}</p>
-					</article>
-				</div>
-			{{- end -}}
-		</div>
-	{{- end -}}
+		{{- $showImages := eq "SHOW" (.Data "showImages") -}}
 
-	{{- if eq (.Data "format") "CARDSx3" -}}
-		<div class="pure-g">
+		<div class="pure-g card-group" hx-push-url="true">
 			{{- range .Children.ByLabel.View -}}
-				<div class="clickable pure-u-1 pure-u-sm-1-2 pure-u-md-1-3" hx-get="/{{.Token}}">
-					<article>
-					<h2 role="link">{{.Label}}</h2>
-					<p>{{.Description}}</p>
+				<div class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4" hx-get="/{{.Token}}">
+					<article class="card" role="link">
+						{{- if $showImages -}}
+						<div class="picture aspect-16-9">
+							{{- if ne .ThumbnailImage "" -}}
+								<img src="{{.ThumbnailImage}}">
+							{{- end -}}
+						</div>
+						{{- end -}}
+						<div class="aspect-1-1">
+							<h2>{{.Label}}</h2>
+							<p>{{.Description}}</p>
+						</div>
 					</article>
 				</div>
 			{{- end -}}

@@ -1,13 +1,14 @@
-<h1>Settings</h1>
-
-<div id="menu-bar">
-    {{- $token := .Token -}}
-    {{- range .AdminSections -}}
-        <a href="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-    {{- end -}}
-</div>
-
 <div class="page">
+
+    <h1>Settings</h1>
+
+    <div id="menu-bar">
+        {{- $token := .Token -}}
+        {{- range .AdminSections -}}
+            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+        {{- end -}}
+    </div>
+
     <div class="space-below">
         <i>Drag and Drop Items to Sort.</i>
     </div>

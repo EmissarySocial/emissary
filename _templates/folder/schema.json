@@ -11,7 +11,8 @@
 			"label": {"type": "string"},
 			"description": {"type": "string"},
 			"data": {"type": "object", "properties": {
-				"format": {"type": "string", "enum": ["TABLE", "CARDS", "CARDSx2", "CARDSx3"], "default": "CARDS", "required":true}
+				"format": {"type": "string", "enum": ["TABLE", "CARDS", "COLUMNS"], "default": "CARDS", "required":true},
+				"showImages": {"type": "string", "enum": ["SHOW", "HIDE"], "default": "SHOW"}
 			}}
 		}
 	},
@@ -50,8 +51,9 @@
 							"label": "Update Form",
 							"children": [
 								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"},
 								{"kind": "select", "label": "Format", "path": "data.format"},
-								{"kind": "textarea", "label": "Description", "path": "description"}
+								{"kind": "select", "label": "Show Images", "path": "data.showImages"}
 							]
 						}
 					}, 

@@ -48,7 +48,7 @@ nav button {
     display:inline-block;
 	padding:10px 20px;
 	border-radius: var(--border-radius);
-	margin:10px 0px;
+	margin:10px 4px;
 	overflow-y:hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -119,6 +119,7 @@ main {
 	border-radius: var(--border-radius);
 	color: var(--gray80);
 	background-color:var(--white);
+	margin:0px 4px;
 }
 
 #menu-bar a:hover,
