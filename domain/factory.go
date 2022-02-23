@@ -163,6 +163,11 @@ func (factory *Factory) Domain() *service.Domain {
 	return &result
 }
 
+// Mention returns a fully populated Mention service
+func (factory *Factory) Mention() service.Mention {
+	return service.NewMention(factory.collection(CollectionMention))
+}
+
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
 	return &factory.streamService

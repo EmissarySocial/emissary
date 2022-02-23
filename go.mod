@@ -18,6 +18,7 @@ require (
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
+	github.com/benpate/remote v0.6.1
 	github.com/benpate/schema v0.13.0
 	github.com/benpate/steranko v0.7.0
 	github.com/davecgh/go-spew v1.1.1
@@ -31,6 +32,7 @@ require (
 	github.com/spf13/afero v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tdewolff/minify/v2 v2.10.0
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
 	go.mongodb.org/mongo-driver v1.8.3

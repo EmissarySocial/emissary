@@ -90,6 +90,7 @@ github.com/benpate/path v0.8.0/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yM
 github.com/benpate/path v0.8.1/go.mod h1:icrNZIRDEZBzJSmMaYBiJa/NZT469ag+jkNF4yMzBdk=
 github.com/benpate/path v0.8.3 h1:/8mxDgN8vycijcuMWWHnXiVg1ytKkCaU2XzOJbvov7k=
 github.com/benpate/path v0.8.3/go.mod h1:142Jbmmb6dtRf6Icao23WfJcEhNE7zd1kUXNMkHmFDI=
+github.com/benpate/remote v0.6.1 h1:NtvvbZi7+NOI4J+J/oaXc6EuPKFNMw4Fy45ekYn+gG4=
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.12.0/go.mod h1:dlmr+tSRgmVpFdP+IRJaXuCM9g3vIA8A0p0gsE5NHwI=
 github.com/benpate/schema v0.13.0 h1:p1iiDWRCg8K3KYw0w6v1pynUOOfpMbRyUQZs5aAtUxo=
@@ -277,6 +278,8 @@ github.com/tdewolff/test v1.0.6 h1:76mzYJQ83Op284kMT+63iCNCI7NEERsIN8dLM+RiKr4=
 github.com/tdewolff/test v1.0.6/go.mod h1:6DAvZliBAAnD7rhVgwaM7DE5/d9NMOAJ09SqYqeK4QE=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
+github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 h1:nrZ3ySNYwJbSpD6ce9duiP+QkD3JuLCcWkdaehUS/3Y=
+github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80/go.mod h1:iFyPdL66DjUD96XmzVL3ZntbzcflLnznH0fr99w5VqE=
 github.com/urfave/cli v1.22.3/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=

@@ -27,9 +27,10 @@ func New(factory *server.Factory) *echo.Echo {
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.GET("/favicon.ico", handler.GetFavicon(factory))
-	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory), domain)
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory), domain)
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory), domain)
+	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory), domain)
+	e.GET("/.well-known/webmention", handler.PostWebMention(factory), domain)
 
 	// Local links for static resources
 	e.Static("/static", factory.StaticPath())

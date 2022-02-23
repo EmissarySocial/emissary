@@ -12,6 +12,9 @@ const CollectionGroup = "Group"
 // CollectionInbox is the database collection where Inbox records are stored
 const CollectionInbox = "Inbox"
 
+// CollectionMention is the database collection where Mention records are stored
+const CollectionMention = "Mention"
+
 // CollectionOutbox is the database collection where Outbox records are stored
 const CollectionOutbox = "Outbox"
 
