@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/nebula"
 	"github.com/mmcdole/gofeed"
 	"github.com/whisperverse/whisperverse/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Subscription manages all interactions with the Subscription collection
@@ -37,7 +38,7 @@ func NewSubscription(collection data.Collection, streamService *Stream, contentL
 }
 
 // New creates a newly initialized Subscription that is ready to use
-func (service *Subscription) New() *model.Subscription {
+func (service *Subscription) New() model.Subscription {
 	return model.NewSubscription()
 }
 
@@ -155,6 +156,10 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 	return nil
 }
 
+/*******************************************
+ * COMMON DATA FUNCTIONS
+ *******************************************/
+
 // List returns an iterator containing all of the Subscriptions who match the provided criteria
 func (service *Subscription) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
@@ -190,11 +195,29 @@ func (service *Subscription) Delete(subscription *model.Subscription, note strin
 	return nil
 }
 
-// QUERIES //////////////////////////////////////
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
 
 func (service *Subscription) ListPollable() (data.Iterator, error) {
 	pollDuration := time.Now().Add(-1 * time.Hour).Unix()
 	criteria := exp.LessThan("lastPolled", pollDuration)
 
 	return service.List(criteria, option.SortAsc("lastPolled"))
+}
+
+func (service *Subscription) ListByUserID(userID primitive.ObjectID) (data.Iterator, error) {
+	criteria := exp.Equal("userId", userID)
+	return service.List(criteria, option.SortAsc("lastPolled"))
+}
+
+func (service *Subscription) LoadByID(subscriptionID primitive.ObjectID, result *model.Subscription) error {
+
+	criteria := exp.Equal("_id", subscriptionID)
+
+	if err := service.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "service.Subscription.LoadByID", "Error loading Subscription", criteria)
+	}
+
+	return nil
 }

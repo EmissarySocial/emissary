@@ -50,6 +50,11 @@ func New(factory *server.Factory) *echo.Echo {
 	e.POST("/:stream/:action", handler.PostStream(factory), domain)
 	e.DELETE("/:stream", handler.PostStream(factory), domain)
 
+	e.GET("/subscriptions", handler.ListSubscriptions(factory))
+	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
+	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
+	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
+
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 
 	// DOMAIN ADMIN PAGES
@@ -67,21 +72,24 @@ func New(factory *server.Factory) *echo.Echo {
 
 	// Profile Pages / ActivityPub
 	e.GET("/inbox", handler.GetProfileInbox(factory), domain)
-	e.GET("/outbox", handler.GetProfileOutbox(factory), domain)
-	e.GET("/people/:userId", handler.GetProfile(factory), domain)
-	e.GET("/people/:userId/inbox", handler.GetSocialInbox(factory), domain)
-	e.POST("/people/:userId/inbox", handler.PostSocialInbox(factory), domain)
-	e.GET("/people/:userId/outbox", handler.GetSocialOutbox(factory), domain)
-	e.POST("/people/:userId/outbox", handler.PostSocialOutbox(factory), domain)
-	e.GET("/people/:userId/followers", handler.GetSocialFollowers(factory), domain)
-	e.GET("/people/:userId/following", handler.GetSocialFollowing(factory), domain)
-	e.GET("/people/:userId/liked", handler.GetSocialLiked(factory), domain)
 
-	// PROFILE PAGES
-	// e.GET("/me/", handler.GetProfile(factory))
-	// e.POST("/me", handler.PostProfile(factory))
-	// e.GET("/me/:action", handler.PostProfile(factory))
-	// e.POST("/me/:action", handler.PostProfile(factory))
+	/*
+		e.GET("/outbox", handler.GetProfileOutbox(factory), domain)
+		e.GET("/people/:userId", handler.GetProfile(factory), domain)
+		e.GET("/people/:userId/inbox", handler.GetSocialInbox(factory), domain)
+		e.POST("/people/:userId/inbox", handler.PostSocialInbox(factory), domain)
+		e.GET("/people/:userId/outbox", handler.GetSocialOutbox(factory), domain)
+		e.POST("/people/:userId/outbox", handler.PostSocialOutbox(factory), domain)
+		e.GET("/people/:userId/followers", handler.GetSocialFollowers(factory), domain)
+		e.GET("/people/:userId/following", handler.GetSocialFollowing(factory), domain)
+		e.GET("/people/:userId/liked", handler.GetSocialLiked(factory), domain)
+
+		// PROFILE PAGES
+		// e.GET("/me/", handler.GetProfile(factory))
+		// e.POST("/me", handler.PostProfile(factory))
+		// e.GET("/me/:action", handler.PostProfile(factory))
+		// e.POST("/me/:action", handler.PostProfile(factory))
+	*/
 
 	// SERVER ADMIN PAGES (dynamic URLs help discourage 4337 H4XX0RZ)
 	if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {

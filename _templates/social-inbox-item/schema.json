@@ -1,8 +1,8 @@
 {
-	"label": "RSS Article",
-	"description": "Link to an external article from an RSS Feed.",
+	"label": "Inbox Item",
+	"description": "Message in a social inbox, possibly a link to an external URL",
 	"containedBy": [
-		"rss-folder"
+		"social-inbox"
 	],
 	"schema": {
 		"type": "object",

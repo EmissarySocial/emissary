@@ -92,6 +92,12 @@ func (w Common) IsOwner() bool {
 	return authorization.DomainOwner
 }
 
+// UserID returns the unique ID of the currently logged in user (may be nil).
+func (w Common) UserID() primitive.ObjectID {
+	authorization := getAuthorization((w.context()))
+	return authorization.UserID
+}
+
 // UserName returns the DisplayName of the user
 func (w Common) UserName() (string, error) {
 	user, err := w.getUser()

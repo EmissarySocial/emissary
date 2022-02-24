@@ -5,6 +5,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SubscriptionMethodRSS represents an RSS subscription
+const SubscriptionMethodRSS = "RSS"
+
+// SubscriptionMethodWebSub represents a WebSub subscription
+const SubscriptionMethodWebSub = "WEBSUB"
+
 type Subscription struct {
 	SubscriptionID  primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`            // Unique Identifier of this record
 	ParentStreamID  primitive.ObjectID `path:"parentStreamId" json:"parentStreamId" bson:"parentStreamId"` // ID of the stream that owns this subscription
@@ -15,8 +21,8 @@ type Subscription struct {
 	journal.Journal `json:"-" bson:"journal"`
 }
 
-func NewSubscription() *Subscription {
-	return &Subscription{}
+func NewSubscription() Subscription {
+	return Subscription{}
 }
 
 /*******************************************

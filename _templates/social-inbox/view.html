@@ -1,26 +1,48 @@
-<div>
+<div class="page">
 	<h1>Inbox</h1>
 
-	{{range .Children.View}}
-		<div hx-get="/{{.Token}}" hx-push-url="true">
-			{{if ne .ThumbnailImage ""}}
-				<img src="{{.ThumbnailImage}}" style="width:200px;"/>
+	<div class="pure-g">
+
+		<div class="pure-u-1 pure-u-sm-1-4 pure-u-lg-1-6 pure-u-xl-1-6">
+
+			<div style="border-right:solid 1px black; margin-right:20px; height:100%;">
+
+				<div>
+					<a href="">Add Subscription</a>
+				</div>
+
+				{{range .Subscriptions}}
+					<div>{{.}}</div>
+				{{end}}
+
+			</div>
+
+		</div>
+
+		<div class="pure-u-1 pure-u-sm-3-4 pure-u-lg-3-6 pure-u-xl-2-6">
+
+			{{range .Children.View}}
+				<div hx-get="/{{.Token}}" hx-push-url="true">
+					{{if ne .ThumbnailImage ""}}
+						<img src="{{.ThumbnailImage}}" style="width:200px;"/>
+					{{end}}
+
+					<div class="bold">{{.Label}}
+						{{ if eq .StateID "unread" }}
+						<span hx-post="/{{.Token}}/mark-read"
+						hx-trigger="revealed"
+						hx-swap="outerHTML"
+						hx-target="this"
+						hx-push-url="false"></span>
+						{{ end }}
+					</div>
+					<div class="light">{{.Description}}</div>
+					<div class="small light space-below" script="install PrettyDate(date:{{.PublishDate}})">[{{.PublishDate}}]</div>
+			
+				</div>
+				<hr>
 			{{end}}
 
-			<div class="bold">{{.Label}}
-				{{ if eq .StateID "unread" }}
-				<span hx-post="/{{.Token}}/mark-read"
-				hx-trigger="revealed"
-				hx-swap="outerHTML"
-				hx-target="this"
-				hx-push-url="false"></span>
-				{{ end }}
-			</div>
-			<div class="light">{{.Description}}</div>
-			<div class="small light space-below" script="install PrettyDate(date:{{.PublishDate}})">[{{.PublishDate}}]</div>
-	
 		</div>
-		<hr>
-	{{end}}
-
+	</div>
 </div>

@@ -18,6 +18,7 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
+	Subscription() *service.Subscription
 	Template() *service.Template
 	User() *service.User
 }
