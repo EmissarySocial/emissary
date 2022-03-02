@@ -5,13 +5,15 @@ behavior wysiwyg(name)
 		-- save links to important DOM nodes
 		set element form to closest <form />
 		set element input to form.elements[name]
-		set element toolbar to first <.wysiwyg-toolbar /> in me
 		set element editor to first <.wysiwyg-editor /> in me
 
 		-- configure related DOM nodes
-		add [@type="button"] to <button/> in me
 		add [@tabIndex=0] to element editor
 		add [@contentEditable=true] to element editor
+
+		tell <button/> in me
+			add [@type="button"]
+		end
 
 	-- Clicking a toolbar button triggers a command on the content
 	on click(target)
@@ -38,13 +40,19 @@ behavior wysiwyg(name)
 
 	-- Show the toolbar when focused
 	on focus(target) from <.wysiwyg-editor /> in me
-		remove [@hidden] from element toolbar
+
+		tell <.wysiwyg-toolbar /> in me
+			remove [@hidden]
+		end
 
 	-- Hide the toolbar when blured
 	on blur from <.wysiwyg-editor /> in me
+
 		wait 200ms
 		if (<:focus/> in me) is empty then
-			add [@hidden=true] to element toolbar
+			tell <.wysiwyg-toolbar /> in me
+				add [@hidden=true]
+			end
 		end
 
 	-- Autosave the WYSIWYG after 15s of inactivity

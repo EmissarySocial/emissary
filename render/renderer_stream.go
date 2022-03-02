@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -197,6 +196,11 @@ func (w Stream) Label() string {
 // Description returns the description of the stream being rendered
 func (w Stream) Description() string {
 	return w.stream.Description
+}
+
+// DescriptionHTML returns the description of the stream being rendered
+func (w Stream) DescriptionHTML() template.HTML {
+	return template.HTML(w.stream.Description)
 }
 
 // Name of the person who created this Stream
@@ -389,8 +393,6 @@ func (w Stream) Ancestors() template.HTML {
 	streamService := w.factory().Stream()
 	ancestors, err := streamService.ListAncestors(w.stream)
 
-	spew.Dump(ancestors, err)
-
 	if err != nil {
 		derp.Report(derp.Wrap(err, "render.Stream.Ancestors", "Error retrieving ancestors"))
 		return template.HTML("")
@@ -409,7 +411,6 @@ func (w Stream) Ancestors() template.HTML {
 	b.Close()
 
 	result := b.String()
-	spew.Dump(result)
 
 	return template.HTML(result)
 }

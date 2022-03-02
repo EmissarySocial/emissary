@@ -1,8 +1,12 @@
 package render
 
 import (
+	"html/template"
+
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -109,8 +113,14 @@ func (w Common) UserName() (string, error) {
 	return user.DisplayName, nil
 }
 
+func (w Common) Avatar(url string, size int) template.HTML {
+	b := html.New()
+	b.Empty("img").Attr("src", url).Style("width:"+convert.String(size)+"px", "border-radius:"+convert.String(size)+"px").Close()
+	return template.HTML(b.String())
+}
+
 // UserAvatar returns the avatar image of the user
-func (w Common) UserAvatar() (string, error) {
+func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {

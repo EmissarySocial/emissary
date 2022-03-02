@@ -97,6 +97,15 @@
 				]}
 			]
 		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Forum?", "message": "Select who can view and comment in this forum."},
+					{"step": "save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
 		"delete": {
 			"roles":["owner", "moderator"],
 			"step": "delete"

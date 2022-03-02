@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -203,7 +202,6 @@ func (service *Stream) ListAncestors(stream *model.Stream) ([]model.Stream, erro
 	temp := model.NewStream()
 
 	for it.Next(&temp) {
-		spew.Dump(temp)
 		result[len(temp.ParentIDs)] = temp
 		temp = model.NewStream()
 	}

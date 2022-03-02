@@ -1,38 +1,50 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-    {{.Ancestors}}
-
-	<h1 class="space-after">{{.Label}}</h1>
-
-	{{- if .UserCan "edit" -}}
-		<div id="menu-bar">
-			<a hx-get="/{{.Token}}/edit">Edit</a>
-
-			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.Token}}/sharing">Sharing</a>
-			{{- end -}}
-
-			<div class="right">
-                {{- if .UserCan "delete" -}}
-                    <a hx-get="/{{.Token}}/delete" class="button">Delete</a>
-                {{- end -}}
-			</div>
-
-		</div>
-	{{- end -}}
-
 	<div class="flex-row space-after">
-        <div class="space-right" style="max-width:200px;">
-            [ICON]
-        </div>
-		<div>{{.Description}}</div>
+		
+		<div>
+			{{.Ancestors}}
+			<h1>{{.Label}}</h1>
+		</div>
+
+		{{- if .UserCan "edit" -}}
+			<div class="text-sm align-right">
+				<button hx-get="/{{.Token}}/edit">Edit</button>
+
+				{{- if .UserCan "delete" -}}
+					<button hx-get="/{{.Token}}/delete" class="button">Delete</button>
+				{{- end -}}
+			</div>
+		{{- end -}}
 	</div>
 
-    <div class="comments table">
-        {{.View "children"}}
-    </div>
+	<div class="flex-row space-after">
+		<div class="width-100 align-center">
+			<div>{{.Avatar .AuthorImage 60}}</div>
+			<div class="text-sm">{{.AuthorName}}</div>
+		</div>
+		<div>{{.DescriptionHTML}}</div>
+	</div>
+
+	<div class="comments table">
+		{{.View "children"}}
+	</div>
+
+	<div class="flex-row">
+		<div class="width-100 align-center">{{.Avatar .UserImage 60}}</div>
+		<form hx-post="/{{.Token}}/add-item">
+			<input type="hidden" name="description">
+			<div class="wysiwyg space-below" script="install wysiwyg(field:'description')">
+				<div class="wysiwyg-editor"></div>
+			</div>
+			<button type="submit" class="text-sm primary">Post My Reply</button>
+		</form>
+	</div>
 
 </div>
 </div>
 
+<link rel="stylesheet" href="/static/nebula/nebula.css">
+<script type="text/hyperscript" src="/static/nebula/hotkey.hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg.hs"></script>

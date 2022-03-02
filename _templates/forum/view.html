@@ -1,7 +1,3 @@
-<link rel="stylesheet" href="/static/nebula/nebula.css">
-<script type="text/hyperscript" src="/static/nebula/hotkey.hs"></script>
-<script type="text/hyperscript" src="/static/nebula/wysiwyg.hs"></script>
-
 <div hx-get="/{{.Token}}" hx-trigger="refreshPage from:window">
 	<div class="page">
 
@@ -12,12 +8,17 @@
 		</div>
 
 		<div id="menu-bar">
+
 			{{- if .UserCan "add-topic" -}}
 				<a href="/{{.Token}}/add-topic" hx-push-url="true">Add a Topic</a>
 			{{- end -}}
 
 			{{- if .UserCan "edit" -}}
-				<a hx-get="/{{.Token}}/edit" role="link">Edit</a>
+				<button hx-get="/{{.Token}}/edit" role="link">Edit</button>
+			{{- end -}}
+
+			{{- if .UserCan "sharing" -}}
+				<button hx-get="/{{.Token}}/sharing">Sharing</button>
 			{{- end -}}
 
 		</div>
@@ -29,3 +30,7 @@
 	</div>
 
 </div>
+
+<link rel="stylesheet" href="/static/nebula/nebula.css">
+<script type="text/hyperscript" src="/static/nebula/hotkey.hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg.hs"></script>
