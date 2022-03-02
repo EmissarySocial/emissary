@@ -1,4 +1,4 @@
-{{- $results := .Children.ByUpdateDate.Top30.View -}}
+{{- $results := .Children.ByUpdateDate.Reverse.Top30.View -}}
 {{- if not $results.IsEmpty -}}
 
 	{{- $last := last $results -}}
@@ -13,6 +13,7 @@
 		{{- range $results -}}
 			<tr hx-get="/{{.Token}}" hx-target="#main" hx-swap="innerHTML" hx-push-url="true" role="link">
 				<td>{{.Label}} &nbsp;</td>
+				<td align="right"><span script="install PrettyDate(date:{{.UpdateDate}})"></span></td>
 			</tr>
 		{{- end -}}
 

@@ -36,6 +36,32 @@ h3.space-below {
 
 
 /****************************
+ * Block - Flexbox
+ ****************************/
+
+ .flex-row {
+    display:flex;
+    flex-direction:row;
+}
+
+.flex-column {
+    display:flex;
+    flex-direction:column;
+}
+
+.flex-row > *,
+.flex-column > * {
+    flex-grow:1;
+}
+
+.flex-nowrap {
+    display:flex;
+    flex-wrap: nowrap;
+    overflow:scroll;
+}
+
+
+/****************************
  * Block Spacing
  ****************************/
 

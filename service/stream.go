@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -187,6 +188,27 @@ func (service *Stream) ListTopLevel() (data.Iterator, error) {
 		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
 	)
+}
+
+// ListAncestors returns all Streams that are ancestors of the provided stream.
+func (service *Stream) ListAncestors(stream *model.Stream) ([]model.Stream, error) {
+
+	result := make([]model.Stream, len(stream.ParentIDs))
+	it, err := service.List(exp.In("_id", stream.ParentIDs))
+
+	if err != nil {
+		return result, derp.Wrap(err, "service.Stream.ListAncestors", "Error accessing database", stream)
+	}
+
+	temp := model.NewStream()
+
+	for it.Next(&temp) {
+		spew.Dump(temp)
+		result[len(temp.ParentIDs)] = temp
+		temp = model.NewStream()
+	}
+
+	return result, nil
 }
 
 // ListByTemplate returns all Streams that use a particular Template

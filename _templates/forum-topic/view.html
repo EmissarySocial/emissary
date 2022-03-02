@@ -1,16 +1,9 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-    <div>
-        {{ $parent := .Parent "view"}}
-        <a href="/{{$parent.Token}}">&laquo; {{$parent.Label}}</a>
-    </div>
+    {{.Ancestors}}
 
 	<h1 class="space-after">{{.Label}}</h1>
-
-	<div class="space-after">
-		<div>{{.Description}}</div>
-	</div>
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
@@ -29,9 +22,16 @@
 		</div>
 	{{- end -}}
 
-	<article class="space-after">
-		<div>{{.Content}}</div>
-	</article>
+	<div class="flex-row space-after">
+        <div class="space-right" style="max-width:200px;">
+            [ICON]
+        </div>
+		<div>{{.Description}}</div>
+	</div>
+
+    <div class="comments table">
+        {{.View "children"}}
+    </div>
 
 </div>
 </div>

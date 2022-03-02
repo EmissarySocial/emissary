@@ -21,7 +21,7 @@ table.table td {
     font-weight:300;
 }
 
-table.table tr:hover td {
+table.table tr[role="link"]:hover td {
     background-color:var(--gray10);
     cursor:pointer;
 }
@@ -38,7 +38,7 @@ div.table > div {
     font-weight:300;
 }
 
-div.table > div:hover {
+div.table > [role=link]:hover {
     background-color:var(--gray10);
     cursor:pointer;
 }

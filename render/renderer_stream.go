@@ -10,11 +10,13 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
+	"github.com/benpate/html"
 	"github.com/benpate/list"
 	"github.com/benpate/nebula"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -380,6 +382,37 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 /*******************************************
  * RELATED RESULTSETS
  *******************************************/
+
+func (w Stream) Ancestors() template.HTML {
+
+	// Try to load all ancestors of this stream
+	streamService := w.factory().Stream()
+	ancestors, err := streamService.ListAncestors(w.stream)
+
+	spew.Dump(ancestors, err)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "render.Stream.Ancestors", "Error retrieving ancestors"))
+		return template.HTML("")
+	}
+
+	// Build the HTML structure
+	b := html.New()
+
+	b.Div().Class("ancestors")
+	for index, stream := range ancestors {
+		if index > 0 {
+			b.WriteString(" &middot; ")
+		}
+		b.A("").Data("hx-get", "/"+stream.Token).InnerHTML(stream.Label).Close()
+	}
+	b.Close()
+
+	result := b.String()
+	spew.Dump(result)
+
+	return template.HTML(result)
+}
 
 // Siblings returns all Sibling Streams
 func (w Stream) Siblings() QueryBuilder {
