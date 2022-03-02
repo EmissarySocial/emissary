@@ -2,6 +2,7 @@ package render
 
 import (
 	"html/template"
+	"time"
 
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
@@ -79,6 +80,11 @@ func (w Common) QueryParam(param string) string {
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
 	return (w.context().Request().Header.Get("HX-Request") != "")
+}
+
+// Now returns the current time in milliseconds since the Unix epoch
+func (w Common) Now() int64 {
+	return time.Now().UnixMilli()
 }
 
 /***************************

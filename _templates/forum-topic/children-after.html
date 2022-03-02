@@ -1,0 +1,19 @@
+{{- $results := .Children.ByCreateDate.Top60.Action "list-item" -}}
+{{- if not $results.IsEmpty -}}
+
+	{{- $last := last $results -}}
+
+	{{- range $results -}}
+		{{.Render}}
+	{{- end -}}
+	
+	{{- if $results.IsLength 60 -}}
+		<div
+			hx-get="/{{.Token}}/children?journal.createDate=gt:{{$last.CreateDate}}" 
+			hx-push-url="false"
+			hx-trigger="revealed" 
+			hx-target="this" 
+			hx-swap="outerHTML"></div>
+	{{- end -}}
+
+{{- end -}}	

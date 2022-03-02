@@ -7,6 +7,10 @@ behavior wysiwyg(name)
 		set element input to form.elements[name]
 		set element editor to first <.wysiwyg-editor /> in me
 
+		log element form
+		log element input
+		log element editor
+
 		-- configure related DOM nodes
 		add [@tabIndex=0] to element editor
 		add [@contentEditable=true] to element editor
@@ -37,6 +41,7 @@ behavior wysiwyg(name)
 		-- fall through to all other commands
 		set value to target's [@data-command-value]
 		call document.execCommand(command, false, value)
+	end
 
 	-- Show the toolbar when focused
 	on focus(target) from <.wysiwyg-editor /> in me
@@ -44,6 +49,7 @@ behavior wysiwyg(name)
 		tell <.wysiwyg-toolbar /> in me
 			remove [@hidden]
 		end
+	end
 
 	-- Hide the toolbar when blured
 	on blur from <.wysiwyg-editor /> in me
@@ -54,13 +60,21 @@ behavior wysiwyg(name)
 				add [@hidden=true]
 			end
 		end
+	end
 
 	-- Autosave the WYSIWYG after 15s of inactivity
 	on input debounced at 15s
 		set element input's value to element editor's innerHTML
 		send updated to form
+	end
 	
 	-- Autosave the WYSIWYG whenever it loses focus
 	on blur from <.wysiwyg-editor />
 		set element input's value to element editor's innerHTML
 		send updated to form
+	end
+
+	on htmx:beforeRequest from closest <form/>
+		set element input's value to element editor's innerHTML
+		log "works?"
+	end

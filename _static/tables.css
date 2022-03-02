@@ -12,7 +12,7 @@ table.table th {
 
 table.table th,
 table.table td {
-    padding: 10px 20px;
+    padding: 10px 10px;
     vertical-align: top;
 }
 
@@ -27,14 +27,17 @@ table.table tr[role="link"]:hover td {
 }
 
 div.table {
-    border-bottom: solid 1px var(--gray20);
-    margin-bottom: 30px;
+    border-top: solid 1px var(--gray20);
+}
+
+div.table + div.table {
+    border-top:none;
 }
 
 div.table > div {
-    padding: 10px 20px;
+    padding: 10px 0px;
     vertical-align: top;
-    border-top: solid 1px var(--gray20);
+    border-bottom: solid 1px var(--gray20);
     font-weight:300;
 }
 

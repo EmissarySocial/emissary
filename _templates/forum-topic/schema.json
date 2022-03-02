@@ -54,7 +54,11 @@
 			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
 			"step": "view-html"
 		},
-		"children": {
+		"children-before": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
+		},
+		"children-after": {
 			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
 			"step": "view-html"
 		},
@@ -80,6 +84,16 @@
 					}]
 				},
 				{"step": "save", "comment": "Properties updated by {{.Author}}"}
+			]
+		},
+		"comment": {
+			"roles": ["owner", "moderator", "participant", "moderated-participant"],
+			"steps": [
+				{"step":"add-child", "template":"forum-item", "with-child":[
+					{"step":"set-data", "paths":["description"]},
+					{"step":"save", "comment":"Comment by {{.Author}}"},
+					{"step":"trigger-event", "event":"new-comments"}
+				]}
 			]
 		},
 		"hide": {

@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -272,6 +273,11 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+// IsEmpty returns TRUE if the stream is an empty placeholder.
+func (w Stream) IsEmpty() bool {
+	return (w.stream == nil) || (w.stream.StreamID == primitive.NilObjectID)
+}
+
 func (w Stream) IsCurrentStream() bool {
 	return w.stream.Token == list.Head(w.context().Path(), "/")
 }
@@ -306,29 +312,33 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 }
 
 // PrevSibling returns the sibling Stream that immediately preceeds this one, based on the provided sort field
-func (w Stream) PrevSibling(sort string, action string) (Stream, error) {
+func (w Stream) PrevSibling(sortField string, action string) (Stream, error) {
 
 	criteria := exp.And(
 		exp.Equal("parentId", w.stream.ParentID),
-		exp.LessThan("sort", path.Get(w.stream, "sort")),
+		exp.LessThan(sortField, path.Get(w.stream, sortField)),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	sortOption := option.SortDesc(sort)
+	sortOption := option.SortDesc(sortField)
 
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
 // NextSibling returns the sibling Stream that immediately follows this one, based on the provided sort field
-func (w Stream) NextSibling(sort string, action string) (Stream, error) {
+func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 
 	criteria := exp.And(
 		exp.Equal("parentId", w.stream.ParentID),
-		exp.GreaterThan("sort", path.Get(w.stream, "sort")),
+		exp.GreaterThan(sortField, path.Get(w.stream, sortField)),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	sortOption := option.SortAsc(sort)
+	sortOption := option.SortAsc(sortField)
+
+	spew.Dump("NextSibling", criteria, sortOption)
+	spew.Dump(path.GetOK(w.stream, "journal"))
+	spew.Dump(path.GetOK(w.stream, sortField))
 
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
@@ -364,7 +374,7 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
 	streamService := w.factory().Stream()
-	iterator, err := streamService.List(criteria, sortOption)
+	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "renderer.Stream.NextSibling", "Database error"))
@@ -373,7 +383,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 
 	var first model.Stream
 
-	for iterator.Next(&first) {
+	if iterator.Next(&first) {
 		if result, err := NewStreamWithoutTemplate(w.factory(), w.context(), &first, actionID); err == nil {
 			return result
 		}

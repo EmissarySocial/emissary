@@ -142,11 +142,41 @@ h3.space-below {
     text-align:right;
 }
 
+.float-right {
+    float:right;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-clear {
+    float:unset;
+}
+
+
+
+/****************************
+ * Hover Show/Hide
+ ****************************/
+
+.hover-reveal {
+    opacity:0;
+}
+
+.hover-reveal:focus {
+    opacity:1;
+}
+
+.hover-trigger:hover .hover-reveal {
+    opacity:1;
+}
+
 /****************************
  * Text Sizing
  ****************************/
 
-.text-xl {
+ .text-xl {
 	font-size: 18pt;
 }
 

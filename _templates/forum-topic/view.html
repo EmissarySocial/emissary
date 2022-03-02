@@ -1,10 +1,29 @@
+{{ $prev := .NextSibling "journal.updateDate" "view"}}
+{{ $next := .PrevSibling "journal.updateDate" "view"}}
+
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 	<div class="flex-row space-after">
 		
 		<div>
-			{{.Ancestors}}
+			<div class="text-sm space-after" hx-push-url="true">
+				{{- if $prev.IsEmpty -}}
+					<button disabled="true">&lsaquo; Prev</button>
+				{{- else -}}
+					<button hx-get="/{{$prev.Token}}">&lsaquo; Prev</button>
+				{{- end -}}
+
+				<button hx-get="/{{.ParentID}}">All Topics</button>
+
+				{{- if $next.IsEmpty -}}
+					<button disabled="true">Next &rsaquo;</button>
+				{{- else -}}
+					<button hx-get="/{{$next.Token}}">Next &rsaquo;</button>
+				{{- end -}}
+
+			</div>
+
 			<h1>{{.Label}}</h1>
 		</div>
 
@@ -20,28 +39,40 @@
 	</div>
 
 	<div class="flex-row space-after">
-		<div class="width-150 align-center">
-			<div>{{.Avatar .AuthorImage 80}}</div>
-			<div class="text-sm">{{.AuthorName}}</div>
-			<div class="text-sm gray50" script="install PrettyDate(date:{{.CreateDate}})"></div>
+		<div class="width-100 align-center">
+			{{.Avatar .AuthorImage 60}}
 		</div>
-		<div>{{.DescriptionHTML}}</div>
-	</div>
-
-	<div class="comments table">
-		{{.View "children"}}
-	</div>
-
-	<div class="flex-row">
-		<div class="width-150 align-center">{{.Avatar .UserImage 80}}</div>
-		<form hx-post="/{{.Token}}/add-item">
-			<input type="hidden" name="description">
-			<div class="wysiwyg space-below" script="install wysiwyg(field:'description')">
-				<div class="wysiwyg-editor"></div>
+		<div>
+			<div class="space-below">
+				<span class="bold">{{.AuthorName}}</span> &middot; 
+				<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
 			</div>
-			<button type="submit" class="text-sm primary">Post My Reply</button>
-		</form>
+			<div>{{.DescriptionHTML}}</div>
+		</div>
 	</div>
+
+	<div id="comments" class="table">
+		{{.View "children-before"}}
+	</div>
+
+	<div class="table" hx-get="/{{.Token}}/children-after?journal.createDate=gt:{{.Now}}" hx-trigger="new-comments from:window" hx-push-url="false" hx-target="this" hx-swap="innerHTML"></div>
+
+	<div style="height:40px;"></div>
+
+	{{- if .UserCan "comment" -}}
+		<div class="flex-row space-above" style="position:-webkit-skicky; position:sticky; bottom:0px; padding:20px; margin:-20px; background-color:var(--gray10);">
+			<div class="width-100 align-center">
+				{{.Avatar .UserImage 60}}
+			</div>
+			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false">
+				<input type="hidden" name="description">
+				<div class="wysiwyg space-below" script="install wysiwyg(name:'description')">
+					<div class="wysiwyg-editor"></div>
+				</div>
+				<button type="submit" class="text-sm primary">Post My Reply</button>
+			</form>
+		</div>
+	{{- end -}}
 
 </div>
 </div>

@@ -54,6 +54,10 @@
 				{"step":"forward-to", "url":"/{{.ParentID}}?highlight={{.StreamID}}"}
 			]
 		},
+		"list-item": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
+		},
 		"edit":{
 			"roles": ["owner", "moderator", "author"],
 			"steps": [
@@ -78,7 +82,10 @@
 		},
 		"delete": {
 			"roles":["owner", "moderator"],
-			"step": "delete"
+			"steps": [
+				{"step":"delete", "title":"Delete this Comment?"},
+				{"step":"refresh-page"}
+			]
 		}
 	}
 }

@@ -47,7 +47,6 @@ input[type=radio] {
  * SUBMIT BUTTONS
  ***************************/
 
-input[type=submit],
 button,
 .button {
     font-size:12pt;
@@ -65,14 +64,23 @@ button,
     color: var(--gray90);
 }
 
-.text-sm input[type=submit],
 .text-sm button,
-.text-sm .button {
+.text-sm .button,
+button.text-sm,
+.button.text-sm {
     font-size:10pt;
-    padding:5px 10px;
+    padding:8px 16px;
 }
 
-input[type=submit]:hover,
+
+.text-xs button,
+.text-xs .button,
+button.text-xs,
+.button.text-xs {
+    font-size:8pt;
+    padding:6px 12px;
+}
+
 button:hover,
 .button:hover {
     color:var(--black);
@@ -107,12 +115,15 @@ button.warning:hover,
     color: white;
 }
 
-input[disabled=true],
-button[disabled=true],
-.button[disabled=true] {
+input[disabled],
+button[disabled],
+.button[disabled],
+input[disabled]:hover,
+button[disabled]:hover,
+.button[disabled]:hover {
     background:var(--gray10)!important;
     color: var(--gray50)!important;
-    cursor: wait;
+    cursor: not-allowed;
 }
 
 /***************************

@@ -32,7 +32,7 @@ type Stream struct {
 	SourceUpdated   int64                `path:"sourceUpdated"  json:"sourceUpdated"   bson:"sourceUpdated,omitempty"` // Date the the source updated the original content.
 	PublishDate     int64                `path:"publishDate"    json:"publishDate"     bson:"publishDate"`             // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                `path:"unpublishDate " json:"unpublishDate"   bson:"unpublishDate"`           // Unix timestemp of the date/time when this document will no longer be available on the domain.
-	journal.Journal `json:"journal" bson:"journal"`
+	journal.Journal `path:"journal" json:"journal" bson:"journal"`
 }
 
 // NewStream returns a fully initialized Stream object.

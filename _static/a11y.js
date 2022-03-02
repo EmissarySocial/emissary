@@ -24,14 +24,14 @@ htmx.defineExtension("a11y", {
 				node.tabIndex = 0
 			}
 
-			// If this node is focusable, then add keyboard event handlers...
+			/*/ If this node is focusable, then add keyboard event handlers...
 			if (node.tabIndex != -1) {
 				node.addEventListener("keyup", function(event) {
 					if ((event.key == "Enter") || (event.key == " ")) {
 						htmx.trigger(node, "click")
 					}
 				})
-			}
+			}*/
 		})
 	}
 })

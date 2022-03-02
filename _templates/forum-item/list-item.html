@@ -1,0 +1,21 @@
+<div class="flex-row hover-trigger">
+	<div class="width-100 align-center">
+		{{.Avatar .AuthorImage 60}}
+	</div>
+	<div>
+		<div class="float-right text-xs">
+			{{- if .UserCan "delete" -}}
+				<button hx-get="/{{.Token}}/delete" class="hover-reveal">Delete</button>
+			{{- end -}}    
+			{{- if .UserCan "edit" -}}
+				<button hx-get="/{{.Token}}/edit" class="hover-reveal">Edit</button>
+			{{- end -}}
+		</div>
+		<div>
+			<span class="bold">{{.AuthorName}}</span> &middot;
+			<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
+		</div>
+		<div>{{.DescriptionHTML}}</div>
+
+	</div>
+</div>
