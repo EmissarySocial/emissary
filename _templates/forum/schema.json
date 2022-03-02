@@ -10,6 +10,14 @@
 			},
 			"description": {
 				"type": "string"
+			},
+			"data": {
+				"type": "object",
+				"properties": {
+					"answerId": {
+						"type":"string"
+					}
+				}
 			}
 		}
 	},

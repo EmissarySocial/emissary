@@ -401,14 +401,16 @@ func (w Stream) Ancestors() template.HTML {
 	// Build the HTML structure
 	b := html.New()
 
-	b.Div().Class("ancestors")
-	for index, stream := range ancestors {
-		if index > 0 {
-			b.WriteString(" &middot; ")
+	if len(ancestors) > 0 {
+		b.Div().Class("ancestors")
+		for index, stream := range ancestors {
+			if index > 0 {
+				b.WriteString(" &middot; ")
+			}
+			b.A("").Data("hx-get", "/"+stream.Token).InnerHTML(stream.Label).Close()
 		}
-		b.A("").Data("hx-get", "/"+stream.Token).InnerHTML(stream.Label).Close()
+		b.Close()
 	}
-	b.Close()
 
 	result := b.String()
 

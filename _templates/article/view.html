@@ -1,15 +1,21 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-	{{- if eq .StateID "published" -}}
-		<span style="color: green; float:right;"><i class="fa-regular fa-check"></i> PUBLISHED</span>
-	{{- end -}}
+	<div class="flex-row">
+		<div>
+			{{.Ancestors}}
+			<h1 class="space-after">{{.Label}}</h1>
+		</div>
+		<div class="text-sm align-right">
+			{{- if eq .StateID "published" -}}
+				<span style="color: green;"><i class="fa-regular fa-check"></i> PUBLISHED</span>
+			{{- end -}}
 
-	{{- if eq .StateID "unpublished" -}}
-		<span style="color: red; float:right;"><i class="fa-regular fa-eye-slash"></i> NOT PUBLISHED</span>
-	{{- end -}}
-
-	<h1 class="space-after">{{.Label}}</h1>
+			{{- if eq .StateID "unpublished" -}}
+				<span style="color: red;"><i class="fa-regular fa-eye-slash"></i> NOT PUBLISHED</span>
+			{{- end -}}
+		</div>
+	</div>
 
 	<div class="space-after">
 		<div>{{.Description}}</div>

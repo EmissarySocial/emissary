@@ -20,9 +20,10 @@
 	</div>
 
 	<div class="flex-row space-after">
-		<div class="width-100 align-center">
-			<div>{{.Avatar .AuthorImage 60}}</div>
+		<div class="width-150 align-center">
+			<div>{{.Avatar .AuthorImage 80}}</div>
 			<div class="text-sm">{{.AuthorName}}</div>
+			<div class="text-sm gray50" script="install PrettyDate(date:{{.CreateDate}})"></div>
 		</div>
 		<div>{{.DescriptionHTML}}</div>
 	</div>
@@ -32,7 +33,7 @@
 	</div>
 
 	<div class="flex-row">
-		<div class="width-100 align-center">{{.Avatar .UserImage 60}}</div>
+		<div class="width-150 align-center">{{.Avatar .UserImage 80}}</div>
 		<form hx-post="/{{.Token}}/add-item">
 			<input type="hidden" name="description">
 			<div class="wysiwyg space-below" script="install wysiwyg(field:'description')">
