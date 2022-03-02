@@ -9,9 +9,7 @@
 		<div class="text-sm align-right">
 			{{- if eq .StateID "published" -}}
 				<span style="color: green;"><i class="fa-regular fa-check"></i> PUBLISHED</span>
-			{{- end -}}
-
-			{{- if eq .StateID "unpublished" -}}
+			{{- else -}}
 				<span style="color: red;"><i class="fa-regular fa-eye-slash"></i> NOT PUBLISHED</span>
 			{{- end -}}
 		</div>

@@ -61,9 +61,22 @@
 		"edit":{
 			"roles": ["owner", "moderator", "author"],
 			"steps": [
-				{"step": "view-html"},
-				{"step": "set-data"},
-				{"step": "save"}
+				{
+					"step": "as-modal",
+					"steps": [{
+						"step": "form-html",
+						"form": {
+							"kind": "layout-vertical",
+							"label": "Edit Forum",
+							"children": [{
+								"kind": "wysiwyg",
+								"label": "Description",
+								"path": "description"
+							}]
+						}},
+						{"step": "save"}
+					]
+				} 
 			]
 		},
 		"hide": {

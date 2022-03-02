@@ -1,9 +1,9 @@
-{{- $results := reverse (.Children.ByCreateDate.Reverse.Top12.Action "list-item") -}}
+{{- $results := reverse (.Children.ByCreateDate.Reverse.Top6.Action "list-item") -}}
 {{- if not $results.IsEmpty -}}
 
 	{{- $first := head $results -}}
 
-	{{- if $results.IsLength 12 -}}
+	{{- if $results.IsLength 6 -}}
 		<div class="align-center">
 			<button class="text-sm"
 			hx-get="/{{.Token}}/children-before?journal.createDate=lt:{{$first.CreateDate}}" 

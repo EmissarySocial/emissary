@@ -28,6 +28,13 @@ h3 {
     font-weight:500;
 }
 
+h1.space-above,
+h2.space-above,
+h3.space-above {
+    margin-top:30px;
+}
+
+
 h1.space-below,
 h2.space-below,
 h3.space-below {
