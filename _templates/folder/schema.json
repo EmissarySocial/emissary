@@ -52,7 +52,7 @@
 							"children": [
 								{"kind": "text", "label": "Label", "path": "label"},
 								{"kind": "textarea", "label": "Description", "path": "description"},
-								{"kind": "select", "label": "Format", "path": "data.format"},
+								{"kind": "select", "label": "Format", "path": "data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
 								{"kind": "select", "label": "Show Images", "path": "data.showImages"}
 							]
 						}

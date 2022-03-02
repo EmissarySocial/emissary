@@ -9,16 +9,14 @@ import (
 
 // StepForwardTo represents an action-step that forwards the user to a new page.
 type StepForwardTo struct {
-	url   string
-	style string
+	url string
 }
 
 // NewStepForwardTo returns a fully initialized StepForwardTo object
 func NewStepForwardTo(stepInfo datatype.Map) StepForwardTo {
 
 	return StepForwardTo{
-		url:   stepInfo.GetString("url"),
-		style: stepInfo.GetString("style"),
+		url: stepInfo.GetString("url"),
 	}
 }
 
@@ -32,7 +30,7 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer Renderer) error {
 	nextPage, err := executeSingleTemplate(step.url, renderer)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepForwardTo.Post", "Error executing template", step.url)
+		return derp.Wrap(err, "render.StepForwardTo.Post", "Error executing template", step.url)
 	}
 
 	CloseModal(renderer.context(), nextPage)

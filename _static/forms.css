@@ -83,7 +83,7 @@ input[type=submit].primary,
 button.primary,
 .button.primary {
     background:linear-gradient(var(--blue50), var(--blue60));
-    color: white;
+    color: white!important;
 }
 
 input[type=submit].primary:hover,

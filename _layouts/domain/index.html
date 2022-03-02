@@ -1,12 +1,12 @@
 <div class="page">
 
-    <h1>Settings</h1>
+	<h1>Settings</h1>
 
-    <div id="menu-bar">
-        {{- $token := .Token -}}
-        {{- range .AdminSections -}}
-            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-        {{- end -}}
-    </div>
+	<div id="menu-bar" hx-push-url="true">
+		{{- $token := .Token -}}
+		{{- range .AdminSections -}}
+			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+		{{- end -}}
+	</div>
 
 </div>

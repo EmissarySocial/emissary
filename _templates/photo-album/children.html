@@ -3,12 +3,16 @@
 
 	{{- $last := last $results -}}
 
-	<div 
-		hx-get="/{{.Token}}/children?publishDate=lt:{{$results.Last.PublishDate}}" 
-		hx-push-url="false"
-		hx-trigger="revealed" 
-		hx-target="#children" 
-		hx-swap="beforeend"></div>
+	{{- if $results.IsLength 6 -}}
+
+		<div 
+			hx-get="/{{.Token}}/children?publishDate=lt:{{$results.Last.PublishDate}}" 
+			hx-push-url="false"
+			hx-trigger="revealed" 
+			hx-target="#children" 
+			hx-swap="beforeend"></div>
+
+	{{- end -}}
 
 	{{- range $results -}}
 

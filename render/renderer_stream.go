@@ -221,14 +221,19 @@ func (w Stream) ContentEditor() template.HTML {
 	return template.HTML(result)
 }
 
+// CreateDate returns the CreateDate of the stream being rendered
+func (w Stream) CreateDate() int64 {
+	return w.stream.CreateDate
+}
+
 // PublishDate returns the PublishDate of the stream being rendered
 func (w Stream) PublishDate() int64 {
 	return w.stream.PublishDate
 }
 
-// CreateDate returns the CreateDate of the stream being rendered
-func (w Stream) CreateDate() int64 {
-	return w.stream.CreateDate
+// UpdateDate returns the UpdateDate of the stream being rendered
+func (w Stream) UpdateDate() int64 {
+	return w.stream.UpdateDate
 }
 
 // Rank returns the Rank of the stream being rendered
@@ -391,6 +396,7 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 	query := builder.NewBuilder().
 		Int("journal.createDate").
+		Int("journal.updateDate").
 		Int("publishDate").
 		Int("expirationDate").
 		Int("rank").

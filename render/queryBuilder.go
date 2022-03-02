@@ -50,6 +50,11 @@ func (qb QueryBuilder) Top12() QueryBuilder {
 	return qb
 }
 
+func (qb QueryBuilder) Top30() QueryBuilder {
+	qb.MaxRows = 30
+	return qb
+}
+
 func (qb QueryBuilder) Top60() QueryBuilder {
 	qb.MaxRows = 60
 	return qb
@@ -69,8 +74,8 @@ func (qb QueryBuilder) All() QueryBuilder {
 	return qb
 }
 
-func (qb QueryBuilder) ByLabel() QueryBuilder {
-	qb.SortField = "label"
+func (qb QueryBuilder) ByCreateDate() QueryBuilder {
+	qb.SortField = "journal.createDate"
 	return qb
 }
 
@@ -79,8 +84,13 @@ func (qb QueryBuilder) ByDisplayName() QueryBuilder {
 	return qb
 }
 
-func (qb QueryBuilder) ByCreateDate() QueryBuilder {
-	qb.SortField = "journal.createDate"
+func (qb QueryBuilder) ByExpirationDate() QueryBuilder {
+	qb.SortField = "expirationDate"
+	return qb
+}
+
+func (qb QueryBuilder) ByLabel() QueryBuilder {
+	qb.SortField = "label"
 	return qb
 }
 
@@ -89,13 +99,13 @@ func (qb QueryBuilder) ByPublishDate() QueryBuilder {
 	return qb
 }
 
-func (qb QueryBuilder) ByExpirationDate() QueryBuilder {
-	qb.SortField = "expirationDate"
+func (qb QueryBuilder) ByRank() QueryBuilder {
+	qb.SortField = "rank"
 	return qb
 }
 
-func (qb QueryBuilder) ByRank() QueryBuilder {
-	qb.SortField = "rank"
+func (qb QueryBuilder) ByUpdateDate() QueryBuilder {
+	qb.SortField = "journal.updateDate"
 	return qb
 }
 

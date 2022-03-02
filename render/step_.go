@@ -38,6 +38,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "set-data":
 		return NewStepSetData(stepInfo), nil
 
+	case "set-mentions":
+		return NewStepSetMentions(stepInfo), nil
+
 	case "set-thumbnail":
 		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
 

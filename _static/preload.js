@@ -34,7 +34,6 @@ htmx.defineExtension("preload", {
 
 			return function() {
 
-				console.log("loading...")
 				// If this value has already been loaded, then do not try again.
 				if (node.preloadState !== "READY") {
 					return;
@@ -46,7 +45,6 @@ htmx.defineExtension("preload", {
 				// in the future
 				var hxGet = node.getAttribute("hx-get") || node.getAttribute("data-hx-get")
 				if (hxGet) {
-					console.log("hx-get")
 					htmx.ajax("GET", hxGet, {handler:function(elt, info) {
 						done(info.xhr.responseText);
 					}});
@@ -57,7 +55,6 @@ htmx.defineExtension("preload", {
 				// node.preloadState = TRUE so that requests are not duplicated 
 				// in the future.
 				if (node.getAttribute("href")) {
-					console.log("href")
 					var r = new XMLHttpRequest();
 					r.open("GET", node.getAttribute("href"));
 					r.onload = function() {done(r.responseText);};
@@ -86,7 +83,7 @@ htmx.defineExtension("preload", {
 			// Apply the listener to the node
 			["mousedown", "touchstart"].forEach(function(eventName) {
 				node.addEventListener(eventName, function(_event) {
-					console.log(node.preloadState)
+
 					if (node.preloadState === "PAUSE") { // Only add one event listener
 						node.preloadState = "READY"; // Requred for the `load` function to trigger
 	

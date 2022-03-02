@@ -1,0 +1,64 @@
+<link rel="stylesheet" href="/static/nebula/nebula.css">
+<script type="text/hyperscript" src="/static/nebula/hotkey.hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg.hs"></script>
+
+<div class="page">
+
+    <h1>Add a Topic</h1>
+
+    <form hx-post="/{{.Token}}/add-topic" hx-push-url="false">
+
+        <div class="layout-vertical">
+            <div class="layout-vertical-elements">
+                <div class="layout-vertical-element">
+                    <label>Topic Label</label>
+                    <input name="label" value="">
+                </div>
+
+                <div class="layout-vertical-element">
+                    <label>Message</label>
+
+                    <input type="hidden" name="description">
+
+                    <div class="wysiwyg" script="install wysiwyg(name:'description') install hotkey">
+                        <div class="wysiwyg-toolbar" hidden="true">
+
+                            <span class="wysiwyg-toolbar-group">
+                                <button data-command="bold" aria-keyshortcuts="Ctrl+B">B</button
+                                ><button data-command="italic" aria-keyshortcuts="Ctrl+I">I</button
+                                ><button data-command="underline" aria-keyshortcuts="Ctrl+U">U</button>
+                            </span>
+
+                            <span class="wysiwyg-toolbar-group">
+                                <button data-command="createLink" aria-keyshortcuts="Ctrl+K">
+                                    <i class="fa-solid fa-link"></i>
+                                </button
+                                ><button data-command="unlink" aria-keyshortcuts="Ctrl+Shift+K">
+                                    <i class="fa-solid fa-unlink"></i>
+                                </button>
+                            </span>
+
+                            <span class="wysiwyg-toolbar-group" hidden="true">
+                                <button data-command="cut" aria-keyshortcuts="Ctrl+X">Cut</button>
+                                <button data-command="copy" aria-keyshortcuts="Ctrl+C">Copy</button>
+                                <button data-command="paste" aria-keyshortcuts="Ctrl+V">Paste</button>
+                                <button data-command="undo" aria-keyshortcuts="Ctrl+Z">Undo</button>
+                                <button data-command="redo" aria-keyshortcuts="Ctrl+Shift+Z">Redo</button>
+                            </span>
+
+                        </div>
+                        <div class="wysiwyg-editor" style="min-height:200px"></div>
+                    </div>
+
+                </div>
+            
+            </div>
+
+        </div>
+
+        <button type="submit" class="primary">Post Now</button>
+        <button hx-get="/{{.Token}}">Cancel</button>
+
+    </form>
+
+</div>

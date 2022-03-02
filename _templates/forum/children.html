@@ -1,0 +1,21 @@
+{{- $results := .Children.ByUpdateDate.Top30.View -}}
+{{- if not $results.IsEmpty -}}
+
+	{{- $last := last $results -}}
+
+	<tbody
+		hx-get="/{{.Token}}/children?journal.updateDate=lt:{{$results.Last.UpdateDate}}" 
+		hx-push-url="false"
+		hx-trigger="revealed" 
+		hx-target="#children" 
+		hx-swap="beforeend">
+
+		{{- range $results -}}
+			<tr hx-get="/{{.Token}}" hx-target="#main" hx-swap="innerHTML" hx-push-url="true" role="link">
+				<td>{{.Label}} &nbsp;</td>
+			</tr>
+		{{- end -}}
+
+	</tbody>
+
+{{- end -}}	

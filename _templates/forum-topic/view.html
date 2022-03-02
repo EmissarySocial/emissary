@@ -1,0 +1,38 @@
+<div hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+
+    <div>
+        {{ $parent := .Parent "view"}}
+        <a href="/{{$parent.Token}}">&laquo; {{$parent.Label}}</a>
+    </div>
+
+	<h1 class="space-after">{{.Label}}</h1>
+
+	<div class="space-after">
+		<div>{{.Description}}</div>
+	</div>
+
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<a hx-get="/{{.Token}}/edit">Edit</a>
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+
+			<div class="right">
+                {{- if .UserCan "delete" -}}
+                    <a hx-get="/{{.Token}}/delete" class="button">Delete</a>
+                {{- end -}}
+			</div>
+
+		</div>
+	{{- end -}}
+
+	<article class="space-after">
+		<div>{{.Content}}</div>
+	</article>
+
+</div>
+</div>
+
