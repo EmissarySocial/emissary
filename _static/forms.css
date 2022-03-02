@@ -36,7 +36,7 @@ input[type=radio] {
 /* Alternate colors for dark mode */
 @media (prefers-color-scheme: dark) {
 
-    input:not([type=submit], [type=checkbox], [type=radio]), textarea {
+    input:not([type=checkbox], [type=radio]), textarea {
         border-color:var(--gray30);
         background-color:var(--gray10);
 		color:var(--gray90);
@@ -82,35 +82,37 @@ button.text-xs,
 }
 
 button:hover,
-.button:hover {
+button:focus,
+.button:hover,
+.button:focus {
     color:var(--black);
     background-color: var(--gray30);
 }
 
-input[type=submit].primary,
 button.primary,
 .button.primary {
     background:linear-gradient(var(--blue50), var(--blue60));
     color: white!important;
 }
 
-input[type=submit].primary:hover,
 button.primary:hover,
-.button.primary:hover {
+button.primary:focus,
+.button.primary:hover,
+.button.primary:focus {
     background:linear-gradient(var(--blue40), var(--blue50));
     color: white;
 }
 
-input[type=submit].warning,
 button.warning,
 .button.warning {
     background:linear-gradient(var(--red60), var(--red70));
     color: white;
 }
 
-input[type=submit].warning:hover,
 button.warning:hover,
-.button.warning:hover {
+button.warning:focus,
+.button.warning:hover,
+.button.warning:focus {
     background:linear-gradient(var(--red50), var(--red60));
     color: white;
 }

@@ -56,15 +56,19 @@ nav button {
 }
 
 nav a:hover,
-nav button:hover {
+nav a:focus,
+nav button:hover,
+nav button:focus {
     color: var(--gray90);
     background-color:var(--gray10);
 }
 
 nav a.selected,
 nav a.selected:hover,
+nav a.selected:focus,
 nav button.selected,
-nav button.selected:hover {
+nav button.selected:hover
+nav button.selected:focus {
 	background-color: var(--gray20);
 	color: var(--black);
 }
@@ -124,14 +128,18 @@ main {
 }
 
 #menu-bar a:hover,
-#menu-bar button:hover {
+#menu-bar a:focus,
+#menu-bar button:hover,
+#menu-bar button:focus {
 	background-color: var(--gray10);
 	color: var(--gray90);
 }
 
 #menu-bar a.selected,
 #menu-bar a.selected:hover,
+#menu-bar a.selected:focus,
 #menu-bar button.selected,
+#menu-bar button.selected:hover,
 #menu-bar button.selected:hover {
 	background-color: var(--gray20);
 	color: var(--black);

@@ -76,7 +76,7 @@
 								"label": "Label",
 								"path": "label"
 							},{
-								"kind": "textarea",
+								"kind": "wysiwyg",
 								"label": "Description",
 								"path": "description"
 							}]

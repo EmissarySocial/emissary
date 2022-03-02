@@ -24,14 +24,17 @@ htmx.defineExtension("a11y", {
 				node.tabIndex = 0
 			}
 
-			/*/ If this node is focusable, then add keyboard event handlers...
+			// If node is focusable (and not already a link or button) then add keyboard handlers
 			if (node.tabIndex != -1) {
-				node.addEventListener("keyup", function(event) {
-					if ((event.key == "Enter") || (event.key == " ")) {
-						htmx.trigger(node, "click")
-					}
-				})
-			}*/
+				if (["a", "button"].indexOf(node.tagName) == -1) {
+					node.addEventListener("keyup", function(event) {
+						if ((event.key == "Enter") || (event.key == " ")) {
+							htmx.trigger(node, "click")
+						}
+					})
+				}
+			}
+			
 		})
 	}
 })

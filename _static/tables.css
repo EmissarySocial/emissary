@@ -21,7 +21,8 @@ table.table td {
     font-weight:300;
 }
 
-table.table tr[role="link"]:hover td {
+table.table tr[role="link"]:hover td,
+table.table tr[role="link"]:focus td {
     background-color:var(--gray10);
     cursor:pointer;
 }
@@ -41,7 +42,8 @@ div.table > div {
     font-weight:300;
 }
 
-div.table > [role=link]:hover {
+div.table > [role=link]:hover,
+div.table > [role=link]:focus {
     background-color:var(--gray10);
     cursor:pointer;
 }
