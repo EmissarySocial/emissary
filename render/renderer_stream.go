@@ -273,6 +273,21 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+// IsReply returns TRUE if this stream is marked as a reply to another stream or resource
+func (w Stream) IsReply() bool {
+	return (w.stream.InReplyTo != "")
+}
+
+// ThreadID returns the unique ID of the parent thread for this stream.
+// If this stream is a reply to a previous stream, then that "in-reply-to"
+// ID is returned.  Otherwise, the StreamID of this Stream is returned.
+func (w Stream) ThreadID() string {
+	if replyID := w.stream.InReplyTo; replyID != "" {
+		return replyID
+	}
+	return w.stream.StreamID.Hex()
+}
+
 // IsEmpty returns TRUE if the stream is an empty placeholder.
 func (w Stream) IsEmpty() bool {
 	return (w.stream == nil) || (w.stream.StreamID == primitive.NilObjectID)
@@ -427,14 +442,19 @@ func (w Stream) Ancestors() template.HTML {
 	return template.HTML(result)
 }
 
-// Siblings returns all Sibling Streams
+// Siblings returns all Streams that have the same "parent" as the current Stream
 func (w Stream) Siblings() QueryBuilder {
 	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
 }
 
-// Children returns all child Streams
+// Children returns all Streams with a "parent" is the current Stream
 func (w Stream) Children() QueryBuilder {
 	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
+}
+
+// Replies returns all Streams that are "in reply to" the current Stream
+func (w Stream) Replies() QueryBuilder {
+	return w.makeQueryBuilder(exp.Equal("inReplyTo", w.stream.StreamID.Hex()))
 }
 
 // makeQueryBuilder returns a fully initialized QueryBuilder

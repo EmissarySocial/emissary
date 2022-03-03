@@ -1,0 +1,46 @@
+<h1>Replies</h1>
+
+<div class="flex-row space-below">
+	<div class="width-40 align-center">
+		{{.Avatar .AuthorImage 40}}
+	</div>
+	<div>
+		<div>{{.DescriptionHTML}}</div>
+		<div class="text-sm gray40">
+			<span>{{.AuthorName}}</span> &middot;
+			<span script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
+		</div>
+	</div>
+</div>
+
+{{- $replies := .Replies.All.ByCreateDate.View -}}
+
+{{- range $replies -}}
+	<div class="flex-row space-below">
+		<div class="width-40 align-center">
+			{{.Avatar .AuthorImage 40}}
+		</div>
+		<div>
+			<div>{{.DescriptionHTML}}</div>
+			<div class="gray40 text-sm">
+				<span>{{.AuthorName}}</span> &middot;
+				<span script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
+			</div>
+		</div>
+	</div>
+{{- end -}}
+
+<div class="flex-row space-above">
+	<div class="width-40 align-center">
+		{{.Avatar .UserImage 40}}
+	</div>
+	<form hx-post="/{{.Token}}/reply" hx-push-url="false">
+		<input type="hidden" name="description" required="true">
+		<input type="hidden" name="inReplyTo" value="{{.StreamID}}">
+		<div class="wysiwyg space-below" script="install wysiwyg(name:'description')" tabIndex="0">
+			<div class="wysiwyg-editor"></div>
+		</div>
+		<button type="submit" class="primary">Reply</button>
+		<button type="button" data-script="on click trigger closeModal">Cancel</button>
+	</form>
+</div>

@@ -48,40 +48,11 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 		}
 	}
 
-	new, template, err := step.streamService.NewTopLevel(templateID)
+	topLevelStream, template, err := step.streamService.NewTopLevel(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error creating TopLevel stream", templateID)
 	}
 
-	// Set stream defaults
-	authorization := getAuthorization(topLevelRenderer.ctx)
-	action := template.Action("view")
-	new.AuthorID = authorization.UserID
-	newStream, err := NewStream(topLevelRenderer.factory(), topLevelRenderer.ctx, template, action, &new)
-
-	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error creating renderer", new)
-	}
-
-	// If there is an "init" step for the new stream's template, then execute it now
-	if action := template.Action("init"); action != nil {
-		if err := DoPipeline(&newStream, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Unable to execute 'init' action on new record")
-		}
-	}
-
-	// Execute additional steps on new stream (from schema.json)
-	if err := DoPipeline(newStream, buffer, step.withNewStream, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error executing steps on new stream")
-	}
-
-	// If the pipeline above did not already save the new stream, then save it to the database.
-	if newStream.stream.IsNew() {
-		if err := step.streamService.Save(newStream.stream, ""); err != nil {
-			return derp.Wrap(err, "whisper.render.StepAddTopStream.Post", "Error saving new steram", newStream.stream)
-		}
-	}
-
-	return nil
+	return finalizeAddStream(buffer, renderer.factory(), renderer.context(), &topLevelStream, template, step.withNewStream)
 }

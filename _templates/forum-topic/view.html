@@ -55,7 +55,12 @@
 		{{.View "children-before"}}
 	</div>
 
-	<div class="table" hx-get="/{{.Token}}/children-after?journal.createDate=gt:{{.Now}}" hx-trigger="new-comments from:window" hx-push-url="false" hx-target="this" hx-swap="innerHTML"></div>
+	<div class="table" 
+		hx-get="/{{.Token}}/children-after?journal.createDate=gt:{{.Now}}" 
+		hx-trigger="new-comments from:window" 
+		hx-push-url="false" 
+		hx-target="this" 
+		hx-swap="innerHTML"></div>
 
 	<div style="height:40px;"></div>
 
@@ -70,7 +75,7 @@
 				<div class="wysiwyg space-below" script="install wysiwyg(name:'description')">
 					<div class="wysiwyg-editor"></div>
 				</div>
-				<button type="submit" class="text-sm primary">Post My Reply</button>
+				<button type="submit" class="text-sm primary">Comment</button>
 			</form>
 		</div>
 	{{- end -}}

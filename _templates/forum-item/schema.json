@@ -8,6 +8,10 @@
 			"description": {
 				"type": "string",
 				"description": "The raw contents of the comment (before any post-processing is performed)"
+			},
+			"inReplyTo": {
+				"type": "string",
+				"description": "The raw contents of the comment (before any post-processing is performed)"
 			}
 		}
 	},
@@ -54,30 +58,38 @@
 				{"step":"forward-to", "url":"/{{.ParentID}}?highlight={{.StreamID}}"}
 			]
 		},
+		"reply": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"steps": [
+				{"step": "as-modal", "steps":[
+					{"step": "add-sibling", "view": "reply", "with-sibling": [
+						{"step": "set-data", "paths":["description","inReplyTo"]},
+						{"step": "save", "comment": "{{.Author}} added a reply"}
+					]}
+				]}
+			]
+		},
 		"list-item": {
 			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
 			"step": "view-html"
 		},
 		"edit":{
 			"roles": ["owner", "moderator", "author"],
-			"steps": [
-				{
-					"step": "as-modal",
-					"steps": [{
-						"step": "form-html",
-						"form": {
-							"kind": "layout-vertical",
-							"label": "Edit Forum",
-							"children": [{
-								"kind": "wysiwyg",
-								"label": "Description",
-								"path": "description"
-							}]
-						}},
-						{"step": "save"}
-					]
-				} 
-			]
+			"steps": [{
+				"step": "as-modal", "steps": [{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"label": "Edit Forum",
+						"children": [{
+							"kind": "wysiwyg",
+							"label": "Description",
+							"path": "description"
+						}]
+					}},
+					{"step": "save"}
+				]
+			}]
 		},
 		"hide": {
 			"states": ["awaiting-moderation", "visible"],

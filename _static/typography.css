@@ -50,7 +50,7 @@ h3.space-below {
     display:flex;
     flex-direction:row;
     align-items: stretch;
-    gap:20px;
+    gap:10px;
 }
 
 .flex-column {
@@ -68,6 +68,13 @@ h3.space-below {
     display:flex;
     flex-wrap: nowrap;
     overflow:scroll;
+}
+
+.width-40 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 40px;
+    width: 40px;
 }
 
 .width-50 {
@@ -111,20 +118,20 @@ h3.space-below {
 
 .space-above,
 .space-before {
-    margin-top: 20px;
+    margin-top: 1.5em;
 }
 
 .space-below,
 .space-after {
-    margin-bottom: 20px;
+    margin-bottom: 1.5em;
 }
 
 .space-left {
-    margin-left:20px;
+    margin-left:1.5em;
 }
 
 .space-right {
-    margin-right: 20px;
+    margin-right: 1.5em;
 }
 
 .padding-5 {
@@ -220,8 +227,8 @@ a, .link {
 }
 
 a:hover,
-.link:hover,
-tr.link:hover > td {
+[role=link]:hover,
+tr[role=link]:hover > td {
 	cursor:pointer;
 	color: var(--blue60);
 }

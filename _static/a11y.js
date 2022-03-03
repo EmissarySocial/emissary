@@ -24,9 +24,9 @@ htmx.defineExtension("a11y", {
 				node.tabIndex = 0
 			}
 
-			// If node is focusable (and not already a link or button) then add keyboard handlers
+			// If node is focusable (and not already a link or button) then add keyboard handlers for ENTER and SPACE keys
 			if (node.tabIndex != -1) {
-				if (["a", "button"].indexOf(node.tagName) == -1) {
+				if (["A", "BUTTON"].indexOf(node.tagName) == -1) {
 					node.addEventListener("keyup", function(event) {
 						if ((event.key == "Enter") || (event.key == " ")) {
 							htmx.trigger(node, "click")
@@ -34,7 +34,6 @@ htmx.defineExtension("a11y", {
 					})
 				}
 			}
-			
 		})
 	}
 })

@@ -64,6 +64,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "add-child":
 		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
 
+	case "add-sibling":
+		return NewStepAddSiblingStream(factory.Template(), factory.Stream(), stepInfo), nil
+
 	case "add-top-level":
 		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
 

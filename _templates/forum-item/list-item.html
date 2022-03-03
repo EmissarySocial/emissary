@@ -1,21 +1,26 @@
 <div class="flex-row hover-trigger">
-	<div class="width-60 align-center">
-		{{.Avatar .AuthorImage 40}}
+	<div class="width-60 align-center clickable" hx-get="/{{.ThreadID}}/reply">
+		<div>{{.Avatar .AuthorImage 40}}</div>
 	</div>
-	<div>
-		<div class="float-right text-xs">
-			{{- if .UserCan "edit" -}}
-				<button hx-get="/{{.Token}}/edit" class="hover-reveal">Edit</button>
-			{{- end -}}
-			{{- if .UserCan "delete" -}}
-				<button hx-get="/{{.Token}}/delete" class="hover-reveal">Delete</button>
-			{{- end -}}    
-		</div>
-		<div>
-			<span class="bold">{{.AuthorName}}</span> &middot;
-			<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
+	<div class="clickable" hx-get="/{{.ThreadID}}/reply">
+		<div class="flex-row">
+			<div>
+				<span class="bold">{{.AuthorName}}</span> &middot;
+				<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
+				{{- if .IsReply -}}
+					<span class="gray50">&nbsp;<i class="fa-solid fa-reply"></i></span>
+				{{- end -}}
+			</div>
+			<div class="align-right text-xs">
+				<button hx-get="/{{.ThreadID}}/reply" class="hover-reveal">Reply</button>
+				{{- if .UserCan "edit" -}}
+					<button hx-get="/{{.Token}}/edit" class="hover-reveal">Edit</button>
+				{{- end -}}
+				{{- if .UserCan "delete" -}}
+					<button hx-get="/{{.Token}}/delete" class="hover-reveal">Delete</button>
+				{{- end -}}
+			</div>
 		</div>
 		<div>{{.DescriptionHTML}}</div>
-
 	</div>
 </div>

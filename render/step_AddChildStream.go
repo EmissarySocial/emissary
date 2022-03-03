@@ -7,7 +7,9 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/service"
 )
 
@@ -56,6 +58,7 @@ func (step StepAddChildStream) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 
 	streamRenderer := renderer.(*Stream)
+	context := streamRenderer.context()
 	templateID := streamRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
@@ -75,41 +78,7 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 		return derp.Wrap(err, "render.StepAddChildStream.Post", "Error creating new child stream", templateID)
 	}
 
-	// Create child stream
-	action := template.Action("view")
-	childStream, err := NewStream(streamRenderer.factory(), streamRenderer.context(), template, action, &child)
-
-	if err != nil {
-		return derp.Wrap(err, "render.StepAddChildStream.Post", "Error creating renderer", child)
-	}
-
-	// Assign the current user as the author
-	if err := childStream.setAuthor(); err != nil {
-		return derp.Wrap(err, "render.StepAddChildStream.Post", "Error retrieving author inforation", child)
-	}
-
-	// If there is an "init" step for the child's template, then execute it now
-	if action := template.Action("init"); action != nil {
-		if err := DoPipeline(&childStream, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "render.StepAddChildStream.Post", "Unable to execute 'init' action on child")
-		}
-	}
-
-	// If the child was not saved by the "init" steps, then save it now
-	if child.IsNew() {
-		if err := step.streamService.Save(&child, "Created"); err != nil {
-			return derp.Wrap(err, "render.StepAddChildStream.Post", "Error saving child stream to database")
-		}
-	}
-
-	// Execute additional "with-child" steps
-	if len(step.withChild) > 0 {
-		if err := DoPipeline(&childStream, buffer, step.withChild, ActionMethodPost); err != nil {
-			return derp.Wrap(err, "render.StepAddChildStream.Post", "Unable to execute action steps on child")
-		}
-	}
-
-	return nil
+	return finalizeAddStream(buffer, renderer.factory(), context, &child, template, step.withChild)
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
@@ -143,4 +112,52 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 	result := WrapModalWithCloseButton(response, b.String())
 
 	io.WriteString(buffer, result)
+}
+
+// finalizeAddStream takes all of the follow-on actions required to initialize a new stream.
+// - sets the author to the current user
+// - executes the correct "init" action for this template
+// - saves the stream (if not already saved by "init")
+// - executes any additional "with-stream" steps
+func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Context, stream *model.Stream, template *model.Template, steps []datatype.Map) error {
+
+	const location = "render.finalizeAddStream"
+
+	// Create stream renderer
+	action := template.Action("view")
+	renderer, err := NewStream(factory, context, template, action, stream)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating renderer", stream)
+	}
+
+	// Assign the current user as the author
+	if err := renderer.setAuthor(); err != nil {
+		return derp.Wrap(err, location, "Error retrieving author inforation", stream)
+	}
+
+	// If there is an "init" step for the stream's template, then execute it now
+	if action := template.Action("init"); action != nil {
+		if err := DoPipeline(&renderer, buffer, action.Steps, ActionMethodPost); err != nil {
+			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
+		}
+	}
+
+	// If the stream was not saved by the "init" steps, then save it now
+	if stream.IsNew() {
+
+		streamService := factory.Stream()
+		if err := streamService.Save(stream, "Created"); err != nil {
+			return derp.Wrap(err, location, "Error saving stream stream to database")
+		}
+	}
+
+	// Execute additional "with-stream" steps
+	if len(steps) > 0 {
+		if err := DoPipeline(&renderer, buffer, steps, ActionMethodPost); err != nil {
+			return derp.Wrap(err, location, "Unable to execute action steps on stream")
+		}
+	}
+
+	return nil
 }
