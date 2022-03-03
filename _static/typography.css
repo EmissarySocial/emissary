@@ -77,6 +77,13 @@ h3.space-below {
     width: 50px;
 }
 
+.width-60 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 60px;
+    width: 60px;
+}
+
 .width-100 {
     flex-grow: 0;
     flex-shrink: 0;
