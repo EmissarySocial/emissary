@@ -20,7 +20,6 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 		 */
 		init: function(apiRef) {
 
-			console.log(apiRef)
 			// store a reference to the internal API.
 			api = apiRef;
 
@@ -84,9 +83,6 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 		if (parent == undefined) {
 			return;
 		}
-
-		console.log(api)
-		console.log(parent)
 
 		var internalData = api.getInternalData(parent);
 

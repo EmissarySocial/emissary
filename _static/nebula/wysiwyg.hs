@@ -7,10 +7,6 @@ behavior wysiwyg(name)
 		set element input to form.elements[name]
 		set element editor to first <.wysiwyg-editor /> in me
 
-		log element form
-		log element input
-		log element editor
-
 		-- configure related DOM nodes
 		add [@tabIndex=0] to element editor
 		add [@contentEditable=true] to element editor
