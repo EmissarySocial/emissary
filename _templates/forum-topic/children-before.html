@@ -9,7 +9,8 @@
 			hx-get="/{{.Token}}/children-before?journal.createDate=lt:{{$first.CreateDate}}" 
 			hx-push-url="false"
 			hx-target="closest div" 
-			hx-swap="outerHTML">Show Older Messages</button>
+			hx-swap="outerHTML"
+			data-script="on click measure me then set position to (result.y-70) then wait 100ms then window.scrollBy({'top':position, 'behavior':'smooth'})">Show Older Messages</button>
 		</div>
 	{{- end -}}
 
