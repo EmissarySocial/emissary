@@ -6,18 +6,12 @@
 		"type": "object",
 		"properties": {
 			"label": {
-				"type": "string"
+				"type": "string",
+				"format": "no-html"
 			},
 			"description": {
-				"type": "string"
-			},
-			"data": {
-				"type": "object",
-				"properties": {
-					"answerId": {
-						"type":"string"
-					}
-				}
+				"type": "string",
+				"format": "html"
 			}
 		}
 	},

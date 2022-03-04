@@ -12,6 +12,15 @@
 			"description": {
 				"type": "string",
 				"format": "html"
+			},
+			"data": {
+				"type": "object",
+				"properties": {
+					"answerId": {
+						"type":"string",
+						"format": "objectId"
+					}
+				}
 			}
 		}
 	},
@@ -77,6 +86,10 @@
 								"kind": "text",
 								"label": "Label",
 								"path": "label"
+							}, {
+								"kind": "wysiwyg",
+								"label": "Description",
+								"path": "description"
 							}]
 						}
 					}]
@@ -92,6 +105,14 @@
 					{"step":"save", "comment":"Comment by {{.Author}}"},
 					{"step":"trigger-event", "event":"new-comments"}
 				]}
+			]
+		},
+		"set-answer": {
+			"roles": ["owner", "moderator", "author"],
+			"steps": [
+				{"step": "set-path", "paths": ["data.answerId"]},
+				{"step": "save"},
+				{"step": "refresh-page"}
 			]
 		},
 		"hide": {

@@ -2,6 +2,10 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
+replace (
+	github.com/benpate/schema => ../../benpate/schema
+)
+
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
