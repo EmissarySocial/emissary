@@ -1,9 +1,10 @@
 {{ $prev := .NextSibling "journal.updateDate" "view"}}
 {{ $next := .PrevSibling "journal.updateDate" "view"}}
 
+{{- $canSetAnswer := and (.UserCan "set-answer") (eq nil (.Data "answerId")) -}}
+
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
-
 	<div class="flex-row">
 		
 		<div>

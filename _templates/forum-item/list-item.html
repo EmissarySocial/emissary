@@ -13,6 +13,9 @@
 			</div>
 			<div class="align-right text-xs">
 				<button hx-get="/{{.ThreadID}}/reply" class="hover-reveal">Reply</button>
+				{{- if $canSetAnswer -}}
+					<button hx-post="/{{.ParentID}}/mark-answer" class="hover-reveal">Mark Answer</button>
+				{{- end -}}
 				{{- if .UserCan "edit" -}}
 					<button hx-get="/{{.Token}}/edit" class="hover-reveal">Edit</button>
 				{{- end -}}

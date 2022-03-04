@@ -98,7 +98,7 @@
 			]
 		},
 		"comment": {
-			"roles": ["owner", "moderator", "participant", "moderated-participant"],
+			"roles": ["owner", "author", "moderator", "participant", "moderated-participant"],
 			"steps": [
 				{"step":"add-child", "template":"forum-item", "with-child":[
 					{"step":"set-data", "paths":["description"]},
