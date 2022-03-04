@@ -44,6 +44,8 @@ github.com/PuerkitoBio/goquery v1.8.0/go.mod h1:ypIiRMtY7COPGk+I/YbZLbxsxn9g5ejn
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
+github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
+github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/benpate/compare v0.1.0/go.mod h1:Ii/Lnmvvw+CCvBLAKoKXHWUqQEttAozkiFKVKMzeh6Q=
 github.com/benpate/compare v0.1.1 h1:rpO2mLSWFEReq/hCKd4ULxJV+HSJLYINORodg8rMvMQ=
 github.com/benpate/compare v0.1.1/go.mod h1:djtVm+GtoMdMKsdbOdYtd4H4/mV2sL2l/SnqiPexECU=
@@ -73,8 +75,8 @@ github.com/benpate/exp v0.1.1 h1:3Wao3iVt7HrN4g07DIP9WeQgiBPzFQ+kZsdT3ba4UxU=
 github.com/benpate/exp v0.1.1/go.mod h1:AELV4lX/Jr7GF8D46oYLFnXpH89jogoc61UWY86I8lk=
 github.com/benpate/first v0.0.2 h1:Cron2IbWwpL8N9ChevW5Ccw16HAfClDv46jhf72/SKE=
 github.com/benpate/first v0.0.2/go.mod h1:eswv4JF5zI4gS8FMPtiYkEVGC9dY394oV9K/8m9fOMs=
-github.com/benpate/form v0.4.0 h1:Mx18h/rLgK+Uu3dlOxNmKZ8MWm7km45nZjwUTMDwOkk=
-github.com/benpate/form v0.4.0/go.mod h1:hswD2dXqbt1yjde9dSOQAjNO6bpM7YCp5FYnbtmNBO4=
+github.com/benpate/form v0.5.1 h1:rZ3fpUNKDy+lhgKQogtEptb4kwGPpJPhSgyY3it1gfM=
+github.com/benpate/form v0.5.1/go.mod h1:q4qxivf/opsdp7Vk+CTxOvIFdFvBoprXjWfJhpemv8w=
 github.com/benpate/html v0.11.5 h1:637RE/jVdasQy1H/2sTqjWW0pG87SKs4qRnmExfuGfw=
 github.com/benpate/html v0.11.5/go.mod h1:/6BdNS8//g1lH602FSMt6VTXaCVUxEQuXLg40HT/EXw=
 github.com/benpate/htmlconv v0.3.1 h1:25DAbra+ozCWiSin84K4F8pf3hNMwaoNnH4IaE2UUac=
@@ -93,8 +95,9 @@ github.com/benpate/path v0.8.3/go.mod h1:142Jbmmb6dtRf6Icao23WfJcEhNE7zd1kUXNMkH
 github.com/benpate/remote v0.6.1 h1:NtvvbZi7+NOI4J+J/oaXc6EuPKFNMw4Fy45ekYn+gG4=
 github.com/benpate/remote v0.6.1/go.mod h1:k6deqKnlK51phgKplCsIL8Gib113NGZDQy5n6vOluRM=
 github.com/benpate/schema v0.12.0/go.mod h1:dlmr+tSRgmVpFdP+IRJaXuCM9g3vIA8A0p0gsE5NHwI=
-github.com/benpate/schema v0.13.0 h1:p1iiDWRCg8K3KYw0w6v1pynUOOfpMbRyUQZs5aAtUxo=
 github.com/benpate/schema v0.13.0/go.mod h1:cXbnXgerabIQH/FZirFGnTu5/mBWyJMZ0rhJZLoH2Lk=
+github.com/benpate/schema v0.14.0 h1:49dmw4Zi27VzfDdkQHXZ2TG7rxg5kpxFxOC4+42z5k0=
+github.com/benpate/schema v0.14.0/go.mod h1:AUWkPO+zXXTQ8yKqmArxS4Dv6LldQcIAf5ZqKQumuWc=
 github.com/benpate/steranko v0.7.0 h1:gGKcdakz5Qnxf49lbEfAnPgSgsbtWy1LJr0UPGBwjPk=
 github.com/benpate/steranko v0.7.0/go.mod h1:XZRuq4gqfDdRLyWDzNc+bIFQvWNs7T+dvhyVb7jV80s=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -197,6 +200,8 @@ github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/googleapis/google-cloud-go-testing v0.0.0-20200911160855-bcd43fbb19e8/go.mod h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=
+github.com/gorilla/css v1.0.0 h1:BQqNyPTi50JCFMTw/b67hByjMVXZRwGha6wxVGkeihY=
+github.com/gorilla/css v1.0.0/go.mod h1:Dn721qIggHpt4+EFCcTLTU/vk5ySda2ReITrtgBl60c=
 github.com/gorilla/feeds v1.1.1 h1:HwKXxqzcRNg9to+BbvJog4+f3s/xzvtZXICcQGutYfY=
 github.com/gorilla/feeds v1.1.1/go.mod h1:Nk0jZrvPFZX1OBe5NPiddPw7CfwF6Q9eqzaBbaightA=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
@@ -230,6 +235,8 @@ github.com/mattn/go-colorable v0.1.12 h1:jF+Du6AlPIjs2BiUiQlKOX0rt3SujHxPnksPKZb
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-isatty v0.0.14 h1:yVuAays6BHfxijgZPzw+3Zlu5yQgKGP2/hcQbHb7S9Y=
 github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27kJ6hsGG94=
+github.com/microcosm-cc/bluemonday v1.0.18 h1:6HcxvXDAi3ARt3slx6nTesbvorIc3QeTzBNRvWktHBo=
+github.com/microcosm-cc/bluemonday v1.0.18/go.mod h1:Z0r70sCuXHig8YpBzCc5eGHAap2K7e/u082ZUpDRRqM=
 github.com/mmcdole/gofeed v1.1.3 h1:pdrvMb18jMSLidGp8j0pLvc9IGziX4vbmvVqmLH6z8o=
 github.com/mmcdole/gofeed v1.1.3/go.mod h1:QQO3maftbOu+hiVOGOZDRLymqGQCos4zxbA4j89gMrE=
 github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf/go.mod h1:pasqhqstspkosTneA62Nc+2p9SOBBYAPbnmRRWPQ0V8=
@@ -399,6 +406,7 @@ golang.org/x/net v0.0.0-20201031054903-ff519b6c9102/go.mod h1:sp8m0HH+o8qH0wwXwY
 golang.org/x/net v0.0.0-20201209123823-ac852fbbde11/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/net v0.0.0-20201224014010-6772e930b67b/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
+golang.org/x/net v0.0.0-20210614182718-04defd469f4e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210913180222-943fd674d43e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210916014120-12bc252f5db8/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
