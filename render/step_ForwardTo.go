@@ -34,5 +34,6 @@ func (step StepForwardTo) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	CloseModal(renderer.context(), nextPage)
+
 	return nil
 }

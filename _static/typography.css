@@ -1,5 +1,6 @@
 * {
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-weight:300;
 }
  
 /****************************
@@ -227,6 +228,7 @@ a, .link {
 }
 
 a:hover,
+.link:hover,
 [role=link]:hover,
 tr[role=link]:hover > td {
 	cursor:pointer;

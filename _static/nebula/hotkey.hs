@@ -7,19 +7,11 @@ behavior hotkey
 		if window.navigator.userAgent contains "Macintosh" then 
 			if metaKey then 
 				append "Ctrl+" to shortcut
-			else
-				exit
 			end
 		else 
 			if ctrlKey then
 				append "Ctrl+" to shortcut
-			else
-				exit
 			end
-		end
-
-		if key.length > 1 then 
-			exit
 		end
 
 		if shiftKey then
@@ -27,6 +19,7 @@ behavior hotkey
 		end
 
 		append key.toUpperCase() to shortcut
+
 		set button to first <[aria-keyshortcuts="${shortcut}"] />
 
 		if button is undefined then

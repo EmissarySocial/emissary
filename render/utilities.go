@@ -96,7 +96,8 @@ func CloseModal(ctx echo.Context, url string) {
 	if url == "" {
 		ctx.Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage": ""}`)
 	} else {
-		ctx.Response().Header().Set("HX-Trigger", `{"closeModal":{"nextPage":"`+url+`"}}`)
+		ctx.Response().Header().Set("HX-Trigger", `closeModal`)
+		ctx.Response().Header().Set("HX-Redirect", url)
 	}
 }
 

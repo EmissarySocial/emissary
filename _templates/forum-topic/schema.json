@@ -6,10 +6,12 @@
 		"type": "object",
 		"properties": {
 			"label": {
-				"type": "string"
+				"type": "string",
+				"format": "no-html"
 			},
 			"description": {
-				"type": "string"
+				"type": "string",
+				"format": "html"
 			}
 		}
 	},
@@ -75,10 +77,6 @@
 								"kind": "text",
 								"label": "Label",
 								"path": "label"
-							},{
-								"kind": "wysiwyg",
-								"label": "Description",
-								"path": "description"
 							}]
 						}
 					}]

@@ -15,7 +15,6 @@ behavior PrettyDate(date)
 		
 			if secondCount < 60 then
 				set my innerHTML to "just now"
-				exit
 				wait ((60 * 1000) - milisecondCount) ms 
 				continue
 			end
@@ -24,8 +23,8 @@ behavior PrettyDate(date)
 
 			if minuteCount < 60 then 
 				set my innerHTML to minuteCount + "min ago"
-				exit
-				wait((60 * 60 * 1000) - milisecondCount) ms
+				set delay to (60000 - Math.floor(milisecondCount / 60000))
+				wait delay ms
 				continue
 			end
 
@@ -36,54 +35,23 @@ behavior PrettyDate(date)
 				exit
 			end
 
-			set yearCount to DateDiffYears(original, now)
-
-			if yearCount > 0 then 
-				set my innerHTML to yearCount + "y ago"
-				exit
-			end
-
-			set monthCount to DateDiffMonths(original, now)
-
-			if monthCount >= 2 then 
-				set my innerHTML to monthCount + "m ago"
-				exit
-			end
-
 			set dayCount to Math.floor(hourCount / 24)
-			set my innerHTML to dayCount + "d ago"
-			exit
+
+			if dayCount < 4 then
+				set my innerHTML to dayCount + "d ago"
+				exit
+			end
+
+			set my innerHTML to original.toLocaleDateString('en-US', {
+				day:'numeric',
+				month:'long',
+				year:'numeric'
+			}) + " &middot; " + original.toLocaleTimeString('en-US', {
+				hour12: true,
+				hour:'numeric',
+				minute: '2-digit'
+			})
 
 		end
 	end
 end
-
-def DateDiffMonths(old, new)
-	set oldYear to old.getYear()
-	set oldMonth to old.getMonth()
-	set newYear to new.getYear()
-	set newMonth to new.getMonth()
-	set result to (newYear - oldYear) * 12
-
-	if oldMonth > newMonth then
-		set result to result - 1
-	end
-
-	return result
-
-
-def DateDiffYears(old, new) 
-
-	set oldYear to old.getYear()
-	set oldMonth to old.getMonth()
-	set newYear to new.getYear()
-	set newMonth to new.getMonth()
-	set result to newYear - oldYear
-
-	if oldMonth > newMonth then
-		set result to result - 1
-	end
-
-	return result
-
-

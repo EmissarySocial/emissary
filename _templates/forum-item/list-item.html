@@ -1,10 +1,10 @@
 <div class="flex-row hover-trigger">
 	<div class="width-60 align-center clickable" hx-get="/{{.ThreadID}}/reply">
-		<div>{{.Avatar .AuthorImage 40}}</div>
+		<div>{{.Avatar .AuthorImage 60}}</div>
 	</div>
-	<div class="clickable" hx-get="/{{.ThreadID}}/reply">
+	<div class="clickable">
 		<div class="flex-row">
-			<div>
+			<div hx-get="/{{.ThreadID}}/reply">
 				<span class="bold">{{.AuthorName}}</span> &middot;
 				<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
 				{{- if .IsReply -}}
@@ -21,6 +21,6 @@
 				{{- end -}}
 			</div>
 		</div>
-		<div>{{.DescriptionHTML}}</div>
+		<div hx-get="/{{.ThreadID}}/reply">{{.DescriptionHTML}}</div>
 	</div>
 </div>

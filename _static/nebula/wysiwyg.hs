@@ -60,17 +60,16 @@ behavior wysiwyg(name)
 
 	-- Autosave the WYSIWYG after 15s of inactivity
 	on input debounced at 15s
-		set element input's value to element editor's innerHTML
 		send updated to form
 	end
 	
 	-- Autosave the WYSIWYG whenever it loses focus
 	on blur from <.wysiwyg-editor />
-		set element input's value to element editor's innerHTML
 		send updated to form
 	end
 
-	on htmx:beforeRequest from closest <form/>
-		set element input's value to element editor's innerHTML
-		log "works?"
+	-- Push the value directly into the XHR request before it's sent.
+	on htmx:configRequest(parameters) from closest <form/>
+		set value to the editor's innerHTML
+		Object.defineProperty(parameters, name, {value: value, writable:'true'})
 	end

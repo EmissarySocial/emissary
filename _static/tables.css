@@ -18,7 +18,6 @@ table.table td {
 
 table.table td {
     border-top: solid 1px var(--gray20);
-    font-weight:300;
 }
 
 table.table tr[role="link"]:hover td,
@@ -39,7 +38,6 @@ div.table > div {
     padding: 10px 0px;
     vertical-align: top;
     border-bottom: solid 1px var(--gray20);
-    font-weight:300;
 }
 
 div.table > [role=link]:hover,

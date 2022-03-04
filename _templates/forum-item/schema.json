@@ -7,6 +7,7 @@
 		"properties": {
 			"description": {
 				"type": "string",
+				"format": "html",
 				"description": "The raw contents of the comment (before any post-processing is performed)"
 			},
 			"inReplyTo": {
@@ -80,10 +81,9 @@
 					"step": "form-html",
 					"form": {
 						"kind": "layout-vertical",
-						"label": "Edit Forum",
+						"label": "Edit Comment",
 						"children": [{
 							"kind": "wysiwyg",
-							"label": "Description",
 							"path": "description"
 						}]
 					}},

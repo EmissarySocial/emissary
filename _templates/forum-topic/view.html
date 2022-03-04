@@ -4,7 +4,7 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-	<div class="flex-row space-after">
+	<div class="flex-row">
 		
 		<div>
 			<div class="text-sm space-after" hx-push-url="true">
@@ -69,13 +69,12 @@
 			<div class="width-60 align-center">
 				{{.Avatar .UserImage 60}}
 			</div>
-			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false"
-				script="on submit tell <.wysiwyg-editor/> in me set your innerHTML to '' then focus(you) end">
+			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false" hx-trigger="submitForm">
 				<input type="hidden" name="description">
-				<div class="wysiwyg space-below" script="install wysiwyg(name:'description')">
-					<div class="wysiwyg-editor"></div>
+				<div class="wysiwyg" script="install wysiwyg(name:'description')">
+					<div class="wysiwyg-editor" contenteditable="true" tabIndex="0" script="install Autosubmit"></div>
 				</div>
-				<button type="submit" class="text-sm primary">Comment</button>
+				<div class="text-xs gray40">SHIFT+ENTER for new line. &mdash;  ENTER to send</div>
 			</form>
 		</div>
 	{{- end -}}
@@ -84,5 +83,5 @@
 </div>
 
 <link rel="stylesheet" href="/static/nebula/nebula.css">
-<script type="text/hyperscript" src="/static/nebula/hotkey.hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg-autosubmit.hs"></script>
 <script type="text/hyperscript" src="/static/nebula/wysiwyg.hs"></script>

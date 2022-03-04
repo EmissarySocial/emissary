@@ -12,9 +12,11 @@ behavior Modal
 			set the @aria-labelledby to the title's id
 		end
 
+		wait 10ms then
 		focus() the first <[tabindex]/> in me
 
 	on closeModal(nextPage) from window	
+
 		if #modal is not empty then 
 			add .closing to #modal
 			settle
