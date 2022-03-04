@@ -39,7 +39,7 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
-	go.mongodb.org/mongo-driver v1.8.3
+	go.mongodb.org/mongo-driver v1.8.4
 )
 
 require (
