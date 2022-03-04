@@ -12,15 +12,6 @@
 			"description": {
 				"type": "string",
 				"format": "html"
-			},
-			"data": {
-				"type": "object",
-				"properties": {
-					"answerId": {
-						"type":"string",
-						"format": "objectId"
-					}
-				}
 			}
 		}
 	},
@@ -104,15 +95,8 @@
 					{"step":"set-data", "paths":["description"]},
 					{"step":"save", "comment":"Comment by {{.Author}}"},
 					{"step":"trigger-event", "event":"new-comments"}
-				]}
-			]
-		},
-		"set-answer": {
-			"roles": ["owner", "moderator", "author"],
-			"steps": [
-				{"step": "set-path", "paths": ["data.answerId"]},
-				{"step": "save"},
-				{"step": "refresh-page"}
+				]},
+				{"step": "save", "comment": "Comment added by {{.Author}}"}
 			]
 		},
 		"hide": {
@@ -130,7 +114,7 @@
 			]
 		},
 		"delete": {
-			"roles":["owner", "moderator"],
+			"roles":["owner", "author", "moderator"],
 			"steps": [{
 				"step":"delete",
 				"title": "Delete this Topic?",

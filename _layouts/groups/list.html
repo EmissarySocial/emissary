@@ -1,6 +1,7 @@
 {{- $groups := .Groups.Top60.ByLabel.View -}}
+{{- $last := last $groups -}}
 {{- if not $groups.IsEmpty -}}
-    <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
+    <tbody hx-get="/admin/groups/list?label=gt:{{$last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
         <tr>
             <td hx-get="/admin/groups/{{.GroupID}}/edit">
