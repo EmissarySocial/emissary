@@ -2,10 +2,6 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
-replace (
-	github.com/benpate/schema => ../../benpate/schema
-)
-
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
@@ -18,12 +14,13 @@ require (
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.5.1
 	github.com/benpate/html v0.11.5
+	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.0
+	github.com/benpate/schema v0.14.1
 	github.com/benpate/steranko v0.7.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.1
@@ -47,7 +44,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
-	github.com/benpate/htmlconv v0.3.1 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect

@@ -12,8 +12,16 @@
 
 		{{- range $results -}}
 			<tr hx-get="/{{.Token}}" hx-target="#main" hx-swap="innerHTML" hx-push-url="true" role="link">
-				<td>{{.Label}} &nbsp;</td>
-				<td align="right"><span script="install PrettyDate(date:{{.UpdateDate}})"></span></td>
+				<td>
+					<div class="bold">{{.Label}}</div>
+					<div class="text-sm">
+						<span class="gray40">{{.DescriptionSummary}}</span>
+						<span script="install PrettyDate(date:{{.UpdateDate}})">&nbsp;</span>
+					</div>
+					<div class="text-sm">
+						
+					</div>
+				</td>
 			</tr>
 		{{- end -}}
 

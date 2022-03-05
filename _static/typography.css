@@ -229,8 +229,7 @@ a, .link {
 
 a:hover,
 .link:hover,
-[role=link]:hover,
-tr[role=link]:hover > td {
+[role=link]:hover {
 	cursor:pointer;
 	color: var(--blue60);
 }

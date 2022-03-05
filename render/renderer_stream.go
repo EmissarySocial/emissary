@@ -11,12 +11,12 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
 	"github.com/benpate/html"
+	"github.com/benpate/htmlconv"
 	"github.com/benpate/list"
 	"github.com/benpate/nebula"
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -204,6 +204,11 @@ func (w Stream) DescriptionHTML() template.HTML {
 	return template.HTML(w.stream.Description)
 }
 
+// DescriptionSummary returns a plaintext summary (<200 characters) of the stream's description
+func (w Stream) DescriptionSummary() string {
+	return htmlconv.Summary(w.stream.Description)
+}
+
 // Name of the person who created this Stream
 func (w Stream) AuthorName() string {
 	return w.stream.AuthorName
@@ -350,10 +355,6 @@ func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 	)
 
 	sortOption := option.SortAsc(sortField)
-
-	spew.Dump("NextSibling", criteria, sortOption)
-	spew.Dump(path.GetOK(w.stream, "journal"))
-	spew.Dump(path.GetOK(w.stream, sortField))
 
 	return w.getFirstStream(criteria, sortOption, action), nil
 }

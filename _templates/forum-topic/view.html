@@ -70,10 +70,10 @@
 			<div class="width-60 align-center">
 				{{.Avatar .UserImage 60}}
 			</div>
-			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false" hx-trigger="submitForm">
+			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false" hx-trigger="autosubmit">
 				<input type="hidden" name="description">
 				<div class="wysiwyg" script="install wysiwyg(name:'description')">
-					<div class="wysiwyg-editor" contenteditable="true" tabIndex="0" script="install Autosubmit"></div>
+					<div class="wysiwyg-editor" contenteditable="true" tabIndex="0" script="install autosubmit"></div>
 				</div>
 				<div class="text-xs gray40">SHIFT+ENTER for new line. &mdash;  ENTER to send</div>
 			</form>
