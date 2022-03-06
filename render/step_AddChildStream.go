@@ -143,14 +143,14 @@ func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Cont
 		}
 	}
 
-	// If the stream was not saved by the "init" steps, then save it now
+	/*/ If the stream was not saved by the "init" steps, then save it now
 	if stream.IsNew() {
 
 		streamService := factory.Stream()
 		if err := streamService.Save(stream, "Created"); err != nil {
 			return derp.Wrap(err, location, "Error saving stream stream to database")
 		}
-	}
+	}*/
 
 	// Execute additional "with-stream" steps
 	if len(steps) > 0 {

@@ -8,11 +8,11 @@
 			"description": {
 				"type": "string",
 				"format": "html",
-				"description": "The raw contents of the comment (before any post-processing is performed)"
+				"required": true
 			},
 			"inReplyTo": {
 				"type": "string",
-				"description": "The raw contents of the comment (before any post-processing is performed)"
+				"format": "objectId"
 			}
 		}
 	},

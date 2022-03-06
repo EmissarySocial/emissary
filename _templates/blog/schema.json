@@ -37,6 +37,7 @@
 					"template": "article",
 					"with-child": [
 						{"step": "set-data", "values": {"label": "My First Blog Article"}},
+						{"step": "save", "comment": "Created by {{.Author}}"}
 						{"step": "forward-to", "url": "/{{.Token}}/edit"}
 					]
 				}

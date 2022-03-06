@@ -66,13 +66,6 @@
 				]}
 			]
 		},
-		"add": {
-			"roles": ["owner", "author"],
-			"steps": [
-				{"step":"add-child"},
-				{"step": "refresh-page"}
-			]
-		},
 		"delete": {
 			"roles": ["owner", "author"],
 			"steps": [
