@@ -93,7 +93,7 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {
-		b.TR().Data("hx-post", url+"?templateId="+template.Value)
+		b.TR().Role("link").Data("hx-post", url+"?templateId="+template.Value)
 		{
 			b.TD()
 			b.I(template.Icon + " fa-3x gray").Close()

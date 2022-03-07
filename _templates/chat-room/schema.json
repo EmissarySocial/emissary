@@ -2,7 +2,7 @@
 	"label": "Chat Room",
 	"description": "Realtime chat room contains chat items",
 	"icon": "fa-regular fa-message",
-	"containedBy": ["folder", "top"],
+	"containedBy": [],
 	"childSortType": "publishDate",
 	"childSortOrder": "ASC",
 	"schema": {

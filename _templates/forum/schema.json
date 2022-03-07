@@ -1,6 +1,7 @@
 {
 	"label": "Forum",
 	"description": "Discussion area containing several discussion topics.",
+	"icon": "fa-regular fa-message",
 	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",

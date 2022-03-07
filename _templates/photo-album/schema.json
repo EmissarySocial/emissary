@@ -1,6 +1,6 @@
 {
 	"label": "Photo Album",
-	"description": "For regular use. Contains text, images, and more.",
+	"description": "A collection of photographs",
 	"icon": "fa-regular fa-images",
 	"containedBy": ["top", "folder"],
 	"childSortType": "journal.createDate",

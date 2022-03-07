@@ -27,6 +27,15 @@ type User struct {
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
+// UserSummary is used as a lightweight, read-only summary of a user record.
+type UserSummary struct {
+	UserID      primitive.ObjectID `bson:"_id"`
+	DisplayName string             `bson:"displayName"`
+	Username    string             `bson:"username"`
+	AvatarURL   string             `bson:"avatarUrl"`
+}
+
+// NewUser returns a fully initialized User object.
 func NewUser() User {
 	return User{
 		UserID:     primitive.NewObjectID(),

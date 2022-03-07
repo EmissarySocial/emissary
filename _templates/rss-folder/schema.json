@@ -2,7 +2,7 @@
 	"label": "RSS Folder",
 	"description": "RSS Folders listen for new articles from other websites.",
 	"icon": "fa-solid fa-rss",
-	"containedBy": ["top", "folder"],
+	"containedBy": [],
 	"schema": {
 		"title": "RSS Folder",
 		"type": "object",
