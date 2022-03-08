@@ -46,11 +46,8 @@ behavior PrettyDate(date)
 				day:'numeric',
 				month:'long',
 				year:'numeric'
-			}) + " &middot; " + original.toLocaleTimeString('en-US', {
-				hour12: true,
-				hour:'numeric',
-				minute: '2-digit'
 			})
+			exit
 
 		end
 	end
