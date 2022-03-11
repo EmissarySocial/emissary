@@ -2,9 +2,7 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
-replace (
-	github.com/benpate/schema => ../../benpate/schema
-)
+replace github.com/benpate/schema => ../../benpate/schema
 
 require (
 	github.com/benpate/compare v0.1.1
@@ -69,7 +67,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
-	github.com/stretchr/objx v0.1.0 // indirect
 	github.com/tdewolff/parse/v2 v2.5.27 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
