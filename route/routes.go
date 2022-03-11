@@ -55,7 +55,10 @@ func New(factory *server.Factory) *echo.Echo {
 	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
 	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
 
+	// Hard-coded routes for additional stream services
 	// TODO: Can Attachments and SSE be moved into a custom render step?
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory), domain)
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), domain)
@@ -65,10 +68,6 @@ func New(factory *server.Factory) *echo.Echo {
 	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory), domain)
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), domain)
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), domain)
-
-	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory), domain)
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 
 	// Profile Pages / ActivityPub
 	e.GET("/inbox", handler.GetProfileInbox(factory), domain)

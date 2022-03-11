@@ -32,6 +32,11 @@ func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 		streamToken := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
+
+			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
+			if streamToken == "home" {
+				return ctx.Redirect(http.StatusTemporaryRedirect, "/admin")
+			}
 			return derp.Wrap(err, "whisper.handler.GetStream", "Error loading Stream by Token", streamToken)
 		}
 

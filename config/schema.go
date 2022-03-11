@@ -25,7 +25,6 @@ func Schema() schema.Schema {
 					},
 				},
 				"layoutPath": schema.String{},
-				"showAdmin":  schema.Boolean{Default: null.NewBool(false)},
 			},
 		},
 	}

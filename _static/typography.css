@@ -231,7 +231,7 @@ a:hover,
 .link:hover,
 [role=link]:hover {
 	cursor:pointer;
-	color: var(--blue60);
+	color: var(--blue60)!important;
 }
 
 .clickable, [role=link] {

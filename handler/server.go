@@ -25,7 +25,7 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 		pageHeader(ctx, b, "Domains")
 
-		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {document.cookie='admin=; Max-Age=-999999999;'; console.log(document.cookie); document.location.reload();}").Close()
+		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {document.cookie='admin=; Max-Age=-999999999;'; document.location.reload();}").Close()
 
 		b.Div().ID("menu-bar").EndBracket()
 
@@ -43,31 +43,52 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 		b.H2().InnerHTML("Domains on this Server").Close()
 
 		// List existing domains
-		b.Table().Class("table").Data("hx-push-url", "false").EndBracket()
+		b.Div().Class("pure-g").Data("hx-push-url", "false").EndBracket()
 
 		// First row is "Add" link
-		b.TR().Class("link")
-		b.TD().Attr("colspan", "3").Attr("nowrap", "true").Data("hx-get", factory.AdminURL()+"/new")
-		b.I("fa-solid fa-plus-circle").Close()
-		b.Space()
-		b.Span().InnerHTML("Add a Domain").Close()
+		b.Div().Class("pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5")
+		b.Div().Class("card").Role("link").Data("hx-get", factory.AdminURL()+"/new")
+		b.Div().Class("align-center space-above space-below")
+		{
+			b.I("fa-4x fa-solid fa-plus-circle gray30").Close()
+		}
+		b.Close()
+		b.H3().Class("align-center").InnerHTML("Add a Domain").Close()
+		b.Div().Class("text-sm").InnerHTML("&nbsp;").Close()
 		b.Close()
 		b.Close()
 
 		for index, d := range domains {
 			indexString := convert.String(index)
-			b.TR()
-			b.TD().Attr("nowrap", "true").Data("hx-get", factory.AdminURL()+"/"+indexString)
-			b.I("fa-solid fa-server").Close()
-			b.Space()
-			b.Span().InnerHTML(d.Label).Close()
+			b.Div().Class("pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5")
+			b.Div().Class("card")
+			b.Div().Role("link").Data("hx-get", factory.AdminURL()+"/"+indexString)
+			b.Div().Class("align-center space-above space-below")
+			{
+				b.I("fa-4x fa-solid fa-server gray30").Close()
+			}
 			b.Close()
-			b.TD().Data("hx-get", factory.AdminURL()+"/"+indexString).Style("width:100%;").InnerHTML(d.Hostname).Close()
-			b.TD()
-			b.I("fa-solid fa-trash").
+			b.H3().Class("align-center").InnerHTML(d.Label)
+			if d.ConnectString == "" {
+				b.I("red fa-solid fa-asterisk").Close()
+			}
+			b.Close()
+
+			b.Div().Class("text-sm align-center")
+
+			b.A("//" + d.Hostname).InnerHTML("view").Close()
+			b.Span().InnerHTML(" | ").Close()
+			b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("edit").Close()
+			b.Span().InnerHTML(" | ").Close()
+			b.Span().
+				Class("red").
+				Role("link").
 				Data("hx-delete", factory.AdminURL()+"/"+indexString).
 				Data("hx-confirm", "Delete this Domain?").
+				InnerHTML("delete").
 				Close()
+
+			b.Close()
 			b.Close()
 		}
 
@@ -269,10 +290,11 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Link("stylesheet", "/static/typography.css")
 		b.Link("stylesheet", "/static/fontawesome-free-6.0.0/css/all.css")
 
-		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/modal._hs").Attr("type", "text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/tabs._hs").Attr("type", "text/hyperscript").Close()
-		b.Container("script").Attr("src", "https://unpkg.com/hyperscript.org").Close()
+		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
+		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()
+		b.Container("script").Attr("src", "/static/ally.js").Close()
 
 		b.Close()
 		b.Container("body")
