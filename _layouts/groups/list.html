@@ -1,6 +1,6 @@
 {{- $groups := .Groups.Top60.ByLabel.View -}}
-{{- $last := last $groups -}}
-{{- if not $groups.IsEmpty -}}
+{{- if notEmpty $groups -}}
+    {{- $last := last $groups -}}
     <tbody hx-get="/admin/groups/list?label=gt:{{$last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
         <tr>

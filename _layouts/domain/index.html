@@ -1,3 +1,4 @@
+<!--
 <div class="page">
 
 	<h1>Settings</h1>
@@ -7,6 +8,75 @@
 		{{- range .AdminSections -}}
 			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
 		{{- end -}}
+	</div>
+
+</div>
+-->
+
+<script type="text/hyperscript" src="/static/wizard._hs"></script>
+
+<div class="page">
+
+	<h1>Let's Set Up Your New Server</h1>
+
+	<div class="tabs" script="install TabContainer install Wizard">
+
+		<div role="tablist">
+			<div role="tab" aria-controls="wizard-step-1" aria-selected="true">About You</div>
+			<div role="tab" aria-controls="wizard-step-2" disabled="true">Website Basics</div>
+			<div role="tab" aria-controls="wizard-step-3" disabled="true">Top Level Links</div>
+			<div role="tab" aria-controls="wizard-step-4" disabled="true">Next Steps</div>
+		</div>
+
+		<div id="wizard-step-1" role="tabpanel">
+			<div>About You</div>
+
+			<button data-wizard-step="next">Next &raquo;</button>
+		</div>
+		<div id="wizard-step-2" role="tabpanel" hidden="true">
+			<div>Website Basics</div>
+
+			<button data-wizard-step="back">&laquo; Back</button>
+			<button data-wizard-step="next">Next &raquo;</button>
+		</div>
+		<div id="wizard-step-3" role="tabpanel" hidden="true">
+			<h3>Choose Your Top-Level Pages</h3>
+			<p>Don't worry, you can always re-organize or change these later.</p>
+
+			<div class="layout-vertical">
+				<div class="layout-vertical-label"></div>
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<label>
+							<input type="checkbox" name="toplevel" value="GALLERY"> Photo Gallery
+						</label>
+					</div>
+					<div class="layout-vertical-element">
+						<label>
+							<input type="checkbox" name="toplevel" value="BLOG"> Blog
+						</label>
+					</div>
+					<div class="layout-vertical-element">
+						<label>
+							<input type="checkbox" name="toplevel" value="FORUM"> Forum
+						</label>
+					</div>
+					<div class="layout-vertical-element">
+						<label>
+							<input type="checkbox" name="toplevel" value="ABOUT"> About
+						</label>
+					</div>
+				</div>
+			</div>
+			<button data-wizard-step="back">&laquo; Back</button>
+			<button data-wizard-step="next">Next &raquo;</button>
+		</div>
+		<div id="wizard-step-4" role="tabpanel" hidden="true">
+			<div>Next Steps</div>
+
+			<button data-wizard-step="back">&laquo; Back</button>
+			<button class="primary">Continue</button>
+		</div>
 	</div>
 
 </div>

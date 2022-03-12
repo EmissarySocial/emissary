@@ -76,7 +76,7 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 			b.Div().Class("text-sm align-center")
 
-			b.A("//" + d.Hostname).InnerHTML("view").Close()
+			b.A("//"+d.Hostname).Attr("target", "_blank").InnerHTML("visit").Close()
 			b.Span().InnerHTML(" | ").Close()
 			b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("edit").Close()
 			b.Span().InnerHTML(" | ").Close()
@@ -295,6 +295,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()
 		b.Container("script").Attr("src", "/static/ally.js").Close()
+		b.Container("script").Attr("src", "/static/extensions.js").Close()
 
 		b.Close()
 		b.Container("body")

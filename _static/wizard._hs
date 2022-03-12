@@ -1,0 +1,15 @@
+behavior Wizard
+
+    on click from <[data-wizard-step="back"]/>
+        set selected to the first <[aria-selected="true"]/> in me
+        set sibling to the selected's previousElementSibling
+        send select to the sibling
+
+    on click from <[data-wizard-step="next"]/>
+        set selected to the first <[aria-selected="true"]/> in me
+        set sibling to the selected's nextElementSibling
+
+        remove [@disabled] from sibling
+        send select to the sibling
+    end
+end

@@ -2,8 +2,6 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
-replace github.com/benpate/schema => ../../benpate/schema
-
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
@@ -22,7 +20,7 @@ require (
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.3
+	github.com/benpate/schema v0.14.4
 	github.com/benpate/steranko v0.7.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.1

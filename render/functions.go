@@ -33,6 +33,9 @@ func FuncMap() template.FuncMap {
 			}
 			return result
 		},
+		"isEmpty": func(slice List) bool { // Returns true if there are NO records in the resultset
+			return len(slice) == 0
+		},
 		"notEmpty": func(slice List) bool { // Returns true if there are records in the resultset
 			return len(slice) > 0
 		},

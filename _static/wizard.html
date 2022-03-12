@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/static/colors.css">
+        <link rel="stylesheet" href="/static/accessibility.css">
+        <link rel="stylesheet" href="/static/animations.css">
+        <link rel="stylesheet" href="/static/cards.css">
+        <link rel="stylesheet" href="/static/content.css">
+        <link rel="stylesheet" href="/static/forms.css">
+        <link rel="stylesheet" href="/static/layout.css">
+        <link rel="stylesheet" href="/static/modal.css">
+        <link rel="stylesheet" href="/static/responsive.css">
+        <link rel="stylesheet" href="/static/tabs.css">
+        <link rel="stylesheet" href="/static/tables.css">
+        <link rel="stylesheet" href="/static/typography.css">
+        <link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
+
+        <script src="/static/tabs._hs" type="text/hyperscript"></script>
+        <script src="/static/wizard._hs" type="text/hyperscript"></script>
+        <script src="/static/hyperscript/_hyperscript_web.min.js"></script>
+    </head>
+    <body>
+
+        <div class="tabs" script="install TabContainer install Wizard">
+
+            <div role="tablist">
+                <div role="tab" aria-controls="wizard-step-1" aria-selected="true">First</div>
+                <div role="tab" aria-controls="wizard-step-2" disabled="true">Second</div>
+                <div role="tab" aria-controls="wizard-step-3" disabled="true">Third</div>
+                <div role="tab" aria-controls="wizard-step-4" disabled="true">Fourth</div>
+            </div>
+
+            <div id="wizard-step-1" role="tabpanel">
+                <div>Step 1</div>
+
+                <button data-wizard-step="next">Next</button>
+            </div>
+            <div id="wizard-step-2" role="tabpanel" hidden="true">
+                <div>Step 2</div>
+
+                <button data-wizard-step="back">Back</button>
+                <button data-wizard-step="next">Next</button>
+            </div>
+            <div id="wizard-step-3" role="tabpanel" hidden="true">
+                <div>Step 3</div>
+
+                <button data-wizard-step="back">Back</button>
+                <button data-wizard-step="next">Next</button>
+            </div>
+            <div id="wizard-step-4" role="tabpanel" hidden="true">
+                <div>Step 4</div>
+
+                <button data-wizard-step="back">Back</button>
+                <button data-wizard-step="next">Next</button>
+            </div>
+        </div>
+
+    </body>
+</html>

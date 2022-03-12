@@ -9,28 +9,38 @@
         {{- end -}}
     </div>
 
-    <div class="space-below">
-        <i>Drag and Drop Items to Sort.</i>
-    </div>
+    {{ $topLevel := .TopLevel}}
+    {{- if notEmpty $topLevel -}}
 
-    <div class="space-below">
-        <a hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i> Add a Top-Level Stream</a>
-    </div>
+        <div class="space-below">
+            <i>Drag and Drop Items to Sort.</i>
+        </div>
 
-    <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
-        {{- range .TopLevel -}}
-            <div class="draggable">
-                <div class="text-sm" style="float:right;">
-                    <a href="/{{.Token}}" class="button">View</a>
-                    <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="fa-regular fa-trash-can"></i></button>
+        <div class="space-below">
+            <a hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i> Add a Top-Level Stream</a>
+        </div>
+
+        <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+            {{- range $topLevel -}}
+                <div class="draggable">
+                    <div class="text-sm" style="float:right;">
+                        <a href="/{{.Token}}" class="button">View</a>
+                        <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                    <i class="fa-regular fa-grip"></i>
+                    {{.Label}}
+                    <input type="hidden" name="keys" value="{{.StreamID}}">
                 </div>
-                <i class="fa-regular fa-grip"></i>
-                {{.Label}}
-                <input type="hidden" name="keys" value="{{.StreamID}}">
-            </div>
-        {{- end -}}
-    </form>
+            {{- end -}}
+        </form>
 
+    {{- else -}}
+
+        <h2>Let's Set Up Your Site</h2>
+        <p>This page helps you to add top-level items to this website.  You can re-arrange them afterwards, if you need to.</p>
+        <button hx-get="/admin/toplevel/add" class="primary">Add a Top-Level Stream</button>
+
+    {{- end -}}
 
 </div>
 

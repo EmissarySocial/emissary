@@ -23,15 +23,21 @@
     text-decoration: none;
 }
 
-[role="tablist"] > [role="tab"]:hover,
-[role="tablist"] > [role="tab"]:focus {
+[role="tablist"] > [role="tab"]:hover:not([disabled]),
+[role="tablist"] > [role="tab"]:focus:not([disabled]) {
     background-color: var(--gray20);
     border-color:var(--gray10);
     border-bottom: solid 1px var(--gray40);
     color:#666;
 }
 
-[role="tablist"] > [role="tab"][aria-selected="true"] {
+[role="tablist"] > [role="tab"][disabled] {
+    background-color: var(--gray10);
+    color: var(--gray30);
+    cursor:not-allowed;
+}
+
+[role="tablist"] > [role="tab"][aria-selected="true"]:not([disabled]) {
     border-color: var(--gray40);
     border-bottom: solid 1px white;
     background-color: white;
