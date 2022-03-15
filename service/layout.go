@@ -20,6 +20,7 @@ type Layout struct {
 	domain    model.Layout
 	global    model.Layout
 	group     model.Layout
+	startup   model.Layout
 	topLevel  model.Layout
 	user      model.Layout
 }
@@ -53,6 +54,10 @@ func (service *Layout) Group() *model.Layout {
 	return &service.group
 }
 
+func (service *Layout) Startup() *model.Layout {
+	return &service.startup
+}
+
 func (service *Layout) TopLevel() *model.Layout {
 	return &service.topLevel
 }
@@ -67,7 +72,7 @@ func (service *Layout) User() *model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"global", "toplevel", "domain", "groups", "users", "analytics"}
+	return []string{"analytics", "domain", "global", "groups", "startup", "toplevel", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -170,6 +175,8 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 		service.global = layout
 	case "groups":
 		service.group = layout
+	case "startup":
+		service.startup = layout
 	case "toplevel":
 		service.topLevel = layout
 	case "users":

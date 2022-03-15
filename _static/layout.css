@@ -12,7 +12,7 @@ body {
 }
 
 nav {
-	position:fixed;
+	position:sticky;
 	top:0px;
 	left: 0px;
 	right: 0px;
@@ -76,7 +76,7 @@ nav button.selected:focus {
 main {
 	display: flex;
 	justify-content: center;
-	padding-top: 90px;
+	padding-top: 20px;
 }
 
 #page,

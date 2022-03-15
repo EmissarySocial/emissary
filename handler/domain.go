@@ -70,20 +70,6 @@ func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMet
 			action := layout.Action(actionID)
 			renderer = render.NewDomain(factory, sterankoContext, layout, action)
 
-		case "toplevel":
-			layout := layoutService.TopLevel()
-			action := layout.Action(actionID)
-			service := factory.Stream()
-			stream := model.NewStream()
-
-			if !objectID.IsZero() {
-				if err := service.LoadByID(objectID, &stream); err != nil {
-					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading TopLevel stream", objectID)
-				}
-			}
-
-			renderer = render.NewTopLevel(factory, sterankoContext, layout, action, &stream)
-
 		case "groups":
 			layout := layoutService.Group()
 			action := layout.Action(actionID)
@@ -97,6 +83,25 @@ func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMet
 			}
 
 			renderer = render.NewGroup(factory, sterankoContext, layout, action, &group)
+
+		case "startup":
+			layout := layoutService.Startup()
+			action := layout.Action(actionID)
+			renderer = render.NewDomain(factory, sterankoContext, layout, action)
+
+		case "toplevel":
+			layout := layoutService.TopLevel()
+			action := layout.Action(actionID)
+			service := factory.Stream()
+			stream := model.NewStream()
+
+			if !objectID.IsZero() {
+				if err := service.LoadByID(objectID, &stream); err != nil {
+					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading TopLevel stream", objectID)
+				}
+			}
+
+			renderer = render.NewTopLevel(factory, sterankoContext, layout, action, &stream)
 
 		case "users":
 			layout := layoutService.User()

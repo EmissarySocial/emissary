@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/config"
+	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/server"
 )
@@ -76,7 +77,7 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 			b.Div().Class("text-sm align-center")
 
-			b.A("//"+d.Hostname).Attr("target", "_blank").InnerHTML("visit").Close()
+			b.A(factory.AdminURL()+"/"+indexString+"/signin").Attr("target", "_blank").InnerHTML("sign in").Close()
 			b.Span().InnerHTML(" | ").Close()
 			b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("edit").Close()
 			b.Span().InnerHTML(" | ").Close()
@@ -105,27 +106,13 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func GetServerEdit(factory *server.Factory) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-		return nil
-	}
-}
-
-func PostServerEdit(factory *server.Factory) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-		return nil
-	}
-}
-
 func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domain, err := factory.DomainByIndex(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.GetServerDomain", "Error loading Domain config")
+			return derp.Wrap(err, "handler.GetServerDomain", "Error loading configuration")
 		}
 
 		lib := factory.FormLibrary()
@@ -179,7 +166,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := f.HTML(&lib, &s, &domain)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.GetServerDomain", "Error generating form")
+			return derp.Wrap(err, "handler.GetServerDomain", "Error generating form")
 		}
 
 		b := html.New()
@@ -218,27 +205,27 @@ func PostServerDomain(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.DomainByIndex(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
+			return derp.Wrap(err, "handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
 		input := datatype.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error binding form input")
+			return derp.Wrap(err, "handler.PostServerDomain", "Error binding form input")
 		}
 
 		s := config.Schema()
 
 		if err := s.Validate(input); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error validating input", domain)
+			return derp.Wrap(err, "handler.PostServerDomain", "Error validating input", domain)
 		}
 
 		if err := path.SetAll(&domain, input); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error setting domain data", input)
+			return derp.Wrap(err, "handler.PostServerDomain", "Error setting domain data", input)
 		}
 
 		if err := factory.UpdateDomain(domainID, domain); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error saving domain")
+			return derp.Wrap(err, "handler.PostServerDomain", "Error saving domain")
 		}
 
 		render.CloseModal(ctx, "")
@@ -246,6 +233,40 @@ func PostServerDomain(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetSigninToDomain signs you in to the requested domain as an administrator
+func GetSigninToDomain(fm *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		// Get the domain config requested in the URL (by index)
+		domain, err := fm.DomainByIndex(ctx.Param("domain"))
+
+		if err != nil {
+			return derp.Wrap(err, "handler.PostSigninDomain", "Error loading configuration")
+		}
+
+		// Get the real factory for this domain
+		factory, err := fm.ByDomainName(domain.Hostname)
+
+		if err != nil {
+			return derp.Wrap(err, "handler.PostSigninDomain", "Error loading Domain")
+		}
+
+		// Create a fake "User" record for the system administrator and sign in
+		s := factory.Steranko()
+
+		administrator := model.NewUser()
+		administrator.DisplayName = "System Administrator"
+		administrator.IsOwner = true
+
+		if err := s.CreateCertificate(ctx, &administrator); err != nil {
+			return derp.Wrap(err, "handler.PostSigninDomain", "Error creating certificate")
+		}
+
+		// Redirect to the admin page of this domain
+		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/admin")
+	}
+}
 func DeleteServerDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
@@ -254,11 +275,11 @@ func DeleteServerDomain(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.DomainByIndex(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
+			return derp.Wrap(err, "handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
 		if err := factory.DeleteDomain(domain); err != nil {
-			return derp.Wrap(err, "whisper.handler.DeleteServerDomain", "Error deleting domain")
+			return derp.Wrap(err, "handler.DeleteServerDomain", "Error deleting domain")
 		}
 
 		render.CloseModal(ctx, "")
@@ -290,8 +311,8 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Link("stylesheet", "/static/typography.css")
 		b.Link("stylesheet", "/static/fontawesome-free-6.0.0/css/all.css")
 
-		b.Container("script").Attr("src", "/static/modal._hs").Attr("type", "text/hyperscript").Close()
-		b.Container("script").Attr("src", "/static/tabs._hs").Attr("type", "text/hyperscript").Close()
+		b.Container("script").Attr("src", "/static/modal._hs").Type("text/hyperscript").Close()
+		b.Container("script").Attr("src", "/static/tabs._hs").Type("text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()
 		b.Container("script").Attr("src", "/static/ally.js").Close()
