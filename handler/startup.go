@@ -9,18 +9,50 @@ import (
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
 	"github.com/labstack/echo/v4"
+	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/server"
 )
 
-func GetStartupWelcome(fm *server.Factory) echo.HandlerFunc {
+// StartupWelcome figures out where you should be in the startup process and
+// displays a welcome page if you're brand new
+func StartupWelcome(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
+
+		factory, err := fm.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "handler.StartupWelcome", "Error finding domain")
+		}
+
+		userService := factory.User()
+
+		streamService := factory.Stream()
+
+		streamCount, err := streamService.Count(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, "handler.StartupWelcome", "Error counting streams")
+		}
+
+		if streamCount > 0 {
+			return ctx.Redirect(http.StatusTemporaryRedirect, "/admin")
+		}
+
+		userCount, err := userService.Count(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, "handler.StartupWelcome", "Error counting users")
+		}
+
+		if userCount > 0 {
+			return ctx.Redirect(http.StatusTemporaryRedirect, "/startup/toplevel")
+		}
 
 		b := html.New()
 		pageHeader(ctx, b, "Let's Get Started")
 
 		b.Div().Class("align-center")
-
 		b.Div().Class("space-below")
 		b.I("fa-8x fa-solid fa-volume-xmark gray20").Close()
 		b.Close()
@@ -36,78 +68,215 @@ func GetStartupWelcome(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func GetStartupUsername(fm *server.Factory) echo.HandlerFunc {
+// StartupUsername prompts users to create an initial admin account on this server
+func StartupUsername(fm *server.Factory) echo.HandlerFunc {
 
 	library := fm.FormLibrary()
 
 	s := schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"sitename": schema.String{Format: "no-html"},
-				"username": schema.String{Format: "no-html"},
-				"password": schema.String{MinLength: null.NewInt(12)},
+				"displayname": schema.String{Format: "no-html"},
+				"username":    schema.String{Format: "no-html"},
+				"password":    schema.String{MinLength: null.NewInt(12)},
 			},
 		},
 	}
 
 	f := form.Form{
-		Kind:  "layout-vertical",
-		Label: "Step 1. Set Up Your Admin Account",
+		Kind: "layout-vertical",
 		Children: []form.Form{{
 			Kind:        "text",
-			Path:        "sitename",
-			Label:       "Name of this Server",
-			Description: "Choose a name for this server.  You can always change it later.",
+			Path:        "displayname",
+			Label:       "Your Name",
+			Description: "Choose your publicly visible name.  You can always change it later.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
 		}, {
 			Kind:        "text",
 			Path:        "username",
-			Label:       "Choose a Username",
-			Description: "There are no other accounts yet, so you can use anything you want",
+			Label:       "Username",
+			Description: "The name you'll use to sign in.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
 		}, {
 			Kind:        "text",
 			Path:        "password",
-			Label:       "Choose a Password",
-			Description: "This is important. Don't reuse passwords. Don't make it guessable.",
+			Label:       "Password",
+			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
 		}},
 	}
 
 	return func(ctx echo.Context) error {
 
-		b := html.New()
-		pageHeader(ctx, b, "Create Your Account")
+		if ctx.Request().Method == http.MethodGet {
 
-		b.Form("post", "/startup/username").EndBracket()
+			b := html.New()
+			pageHeader(ctx, b, "Create Your Administrator Account")
+			b.Div().Class("pure-g")
+			b.Div().Class("pure-u-1", "pure-u-md-3-4", "pure-u-lg-2-3", "pure-u-xl-1-2")
 
-		formHTML, err := f.HTML(&library, &s, nil)
+			b.H1().InnerHTML("Step 1. Create an Administrator Account")
+			b.Div().Class("space-below").InnerHTML("Create an account for yourself that you'll use to sign in and manage your server.")
 
-		if err != nil {
-			return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
+			b.Form("post", "/startup/username").EndBracket()
+
+			formHTML, err := f.HTML(&library, &s, nil)
+
+			if err != nil {
+				return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
+			}
+
+			b.WriteString(formHTML)
+			b.Button().Type("submit").Class("primary").InnerHTML("Create My Account &raquo;").Close()
+
+			return ctx.HTML(http.StatusOK, b.String())
 		}
 
-		b.WriteString(formHTML)
-		b.Button().Type("submit").Class("primary").InnerHTML("Create My Account &raquo;").Close()
+		// Fall through means POST
 
-		return ctx.HTML(http.StatusOK, b.String())
+		factory, err := fm.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error locating domain")
+		}
+
+		body := map[string]string{}
+
+		if err := ctx.Bind(&body); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error binding request body")
+		}
+
+		if err := s.Element.Validate(body); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Invalid form data")
+		}
+
+		// Create a new user and save it
+
+		userService := factory.User()
+
+		user := model.NewUser()
+		user.SetPassword(body["password"])
+		user.Username = body["username"]
+		user.DisplayName = body["displayname"]
+		user.IsOwner = true
+
+		if err := userService.Save(&user, ""); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error saving user")
+		}
+
+		return ctx.Redirect(http.StatusTemporaryRedirect, "/startup/toplevel")
 	}
 }
 
-func PostStartupUsername(fm *server.Factory) echo.HandlerFunc {
+// StartupTopLevel prompts the administrator to choose the top-level
+// items on this server.
+func StartupTopLevel(fm *server.Factory) echo.HandlerFunc {
 
-	return func(ctx echo.Context) error {
-		return nil
+	library := fm.FormLibrary()
+
+	s := schema.Schema{
+		Element: schema.Object{
+			Properties: map[string]schema.Element{
+				"displayname": schema.String{Format: "no-html"},
+				"username":    schema.String{Format: "no-html"},
+				"password":    schema.String{MinLength: null.NewInt(12)},
+			},
+		},
 	}
-}
 
-func GetStartupTopLevel(fm *server.Factory) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-		return nil
+	f := form.Form{
+		Kind: "layout-vertical",
+		Children: []form.Form{{
+			Kind:        "text",
+			Path:        "displayname",
+			Label:       "Your Name",
+			Description: "Choose your publicly visible name.  You can always change it later.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
+		}, {
+			Kind:        "text",
+			Path:        "username",
+			Label:       "Username",
+			Description: "The name you'll use to sign in.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
+		}, {
+			Kind:        "text",
+			Path:        "password",
+			Label:       "Password",
+			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
+			Options: form.Map{
+				"autocomplete": "OFF",
+			},
+		}},
 	}
-}
-
-func PostStartupTopLevel(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-		return nil
+
+		if ctx.Request().Method == http.MethodGet {
+
+			b := html.New()
+			pageHeader(ctx, b, "Create Your Administrator Account")
+			b.Div().Class("pure-g")
+			b.Div().Class("pure-u-1", "pure-u-md-3-4", "pure-u-lg-2-3", "pure-u-xl-1-2")
+
+			b.H1().InnerHTML("Step 1. Create an Administrator Account")
+			b.Div().Class("space-below").InnerHTML("Create an account for yourself that you'll use to sign in and manage your server.")
+
+			b.Form("post", "/startup/username").EndBracket()
+
+			formHTML, err := f.HTML(&library, &s, nil)
+
+			if err != nil {
+				return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
+			}
+
+			b.WriteString(formHTML)
+			b.Button().Type("submit").Class("primary").InnerHTML("Create My Account &raquo;").Close()
+
+			return ctx.HTML(http.StatusOK, b.String())
+		}
+
+		// Fall through means POST
+
+		factory, err := fm.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error locating domain")
+		}
+
+		body := map[string]string{}
+
+		if err := ctx.Bind(&body); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error binding request body")
+		}
+
+		if err := s.Element.Validate(body); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Invalid form data")
+		}
+
+		// Create a new user and save it
+
+		userService := factory.User()
+
+		user := model.NewUser()
+		user.SetPassword(body["password"])
+		user.Username = body["username"]
+		user.DisplayName = body["displayname"]
+		user.IsOwner = true
+
+		if err := userService.Save(&user, ""); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error saving user")
+		}
+
+		return ctx.Redirect(http.StatusTemporaryRedirect, "/startup/toplevel")
 	}
 }

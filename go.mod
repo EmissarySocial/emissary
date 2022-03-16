@@ -2,6 +2,8 @@ module github.com/whisperverse/whisperverse
 
 go 1.17
 
+replace github.com/benpate/form => ../../benpate/form
+
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
@@ -36,7 +38,9 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
+	github.com/yeqown/go-qrcode/v2 v2.2.0
 	go.mongodb.org/mongo-driver v1.8.4
+
 )
 
 require (
@@ -46,8 +50,10 @@ require (
 	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
+	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
@@ -71,6 +77,8 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/yeqown/go-qrcode v1.5.10 // indirect
+	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70 // indirect
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867 // indirect

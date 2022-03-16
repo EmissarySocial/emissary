@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"time"
 
 	"github.com/benpate/data"
@@ -11,6 +12,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/schema"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -157,25 +159,6 @@ func (service *Stream) Debug() datatype.Map {
  * CUSTOM QUERIES
  *******************************************/
 
-// DeleteChildren removes all child streams from the provided stream (virtual delete)
-func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
-
-	var child model.Stream
-	it, err := service.ListByParent(stream.StreamID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Stream.Delete", "Error listing child streams", stream)
-	}
-
-	for it.Next(&child) {
-		if err := service.Delete(&child, note); err != nil {
-			return derp.Wrap(err, "service.Stream.Delete", "Error deleting child stream", child)
-		}
-	}
-
-	return nil
-}
-
 // ListByParent returns all Streams that match a particular parentID
 func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(exp.Equal("parentId", parentID))
@@ -272,9 +255,33 @@ func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
 	return service.templateService.ListByContainer(stream.TemplateID)
 }
 
+// Count returns the number of (non-deleted) records in the Stream collection
+func (service *Stream) Count(ctx context.Context) (int, error) {
+	return queries.CountRecords(ctx, service.collection)
+}
+
 /*******************************************
  * CUSTOM ACTIONS
  *******************************************/
+
+// DeleteChildren removes all child streams from the provided stream (virtual delete)
+func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
+
+	var child model.Stream
+	it, err := service.ListByParent(stream.StreamID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Stream.Delete", "Error listing child streams", stream)
+	}
+
+	for it.Next(&child) {
+		if err := service.Delete(&child, note); err != nil {
+			return derp.Wrap(err, "service.Stream.Delete", "Error deleting child stream", child)
+		}
+	}
+
+	return nil
+}
 
 // NewTopLevel creates a new stream at the top level of the tree
 func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Template, error) {

@@ -1,0 +1,55 @@
+package render
+
+import (
+	"io"
+
+	"github.com/benpate/datatype"
+	"github.com/benpate/derp"
+	"github.com/yeqown/go-qrcode/v2"
+	"github.com/yeqown/go-qrcode/writer/standard"
+)
+
+// StepQRCode represents an action-step that returns a QR Code for the current stream URL.
+type StepQRCode struct {
+	size int
+}
+
+// NewStepQRCode generates a fully initialized StepQRCode step.
+func NewStepQRCode(stepInfo datatype.Map) StepQRCode {
+
+	size := stepInfo.GetInt("size")
+
+	if size == 0 {
+		size = 256
+	}
+
+	return StepQRCode{
+		size: size,
+	}
+}
+
+// Get renders the Stream HTML to the context
+func (step StepQRCode) Get(buffer io.Writer, renderer Renderer) error {
+
+	qrc, err := qrcode.New("https://github.com/yeqown/go-qrcode")
+	if err != nil {
+		return derp.Wrap(err, "render.StepQRCode.Get", "Error generating QR Code")
+	}
+
+	w, err := standard.NewWithWriter(buffer)
+	if err != nil {
+		return derp.Wrap(err, "render.StepQRCode.Get", "Error generating QR Code writer")
+	}
+
+	// save file
+	if err = qrc.Save(w); err != nil {
+		return derp.Wrap(err, "render.StepQRCode.Get", "Error writing image")
+	}
+
+	return nil
+}
+
+// Post is not supported for this step.
+func (step StepQRCode) Post(buffer io.Writer, renderer Renderer) error {
+	return nil
+}

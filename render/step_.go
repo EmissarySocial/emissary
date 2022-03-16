@@ -73,6 +73,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "edit-content":
 		return NewStepEditContent(factory.ContentLibrary(), stepInfo), nil
 
+	// case "qr-code":
+	//	return NewStepQRCode(stepInfo), nil
+
 	// DRAFTS
 
 	case "promote-draft":

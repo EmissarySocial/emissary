@@ -1,12 +1,15 @@
 package service
 
 import (
+	"context"
+
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -153,6 +156,16 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 	return service.Load(criteria, result)
 }
 
+// Count returns the number of (non-deleted) records in the User collection
+func (service *User) Count(ctx context.Context) (int, error) {
+	return queries.CountRecords(ctx, service.collection)
+}
+
+/*******************************************
+ * CUSTOM ACTIONS
+ *******************************************/
+
+// CreateInbox creates a personal "inbox" stream for a user
 func (service *User) CreateInbox(user *model.User) error {
 
 	streamID, err := service.streamService.CreatePersonalStream(user, "social-inbox")
@@ -164,6 +177,7 @@ func (service *User) CreateInbox(user *model.User) error {
 	return err
 }
 
+// CreateOutbox creates a personal "outbox" stream for a user
 func (service *User) CreateOutbox(user *model.User) error {
 
 	streamID, err := service.streamService.CreatePersonalStream(user, "social-outbox")

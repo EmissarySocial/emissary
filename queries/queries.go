@@ -46,5 +46,13 @@ func pipeline(ctx context.Context, collection data.Collection, result interface{
 // This method is unsafe, but it *should never* fail, unless we're mid-way
 // through migrating to another database.
 func mongoCollection(original data.Collection) *mongo.Collection {
-	return original.(*mongodb.Collection).Mongo()
+
+	switch orig := original.(type) {
+	case mongodb.Collection:
+		return orig.Mongo()
+	case *mongodb.Collection:
+		return orig.Mongo()
+	default:
+		panic("This should never happen.  OMG. What kind of unsupported database did you hack into this? shame!")
+	}
 }

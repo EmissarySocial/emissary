@@ -41,7 +41,8 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 		b.Close()
 
-		b.H2().InnerHTML("Domains on this Server").Close()
+		b.H1().InnerHTML("Domains on this Server").Close()
+		b.Div().Class("space-below").InnerHTML("Manage domains configured on this server.  For more settings, you can also edit the config.json file manually.").Close()
 
 		// List existing domains
 		b.Div().Class("pure-g").Data("hx-push-url", "false").EndBracket()
@@ -70,31 +71,38 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 			}
 			b.Close()
 			b.H3().Class("align-center").InnerHTML(d.Label)
-			if d.ConnectString == "" {
-				b.I("red fa-solid fa-asterisk").Close()
-			}
 			b.Close()
 
 			b.Div().Class("text-sm align-center")
 
-			b.A(factory.AdminURL()+"/"+indexString+"/signin").Attr("target", "_blank").InnerHTML("sign in").Close()
-			b.Span().InnerHTML(" | ").Close()
-			b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("edit").Close()
-			b.Span().InnerHTML(" | ").Close()
-			b.Span().
-				Class("red").
-				Role("link").
-				Data("hx-delete", factory.AdminURL()+"/"+indexString).
-				Data("hx-confirm", "Delete this Domain?").
-				InnerHTML("delete").
-				Close()
+			// Show edit links
+			if d.ConnectString == "" {
+				b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("CONFIGURE DOMAIN").Close()
+			} else {
+				b.A(factory.AdminURL()+"/"+indexString+"/signin").Attr("target", "_blank").InnerHTML("sign in").Close()
+				b.Span().InnerHTML(" | ").Close()
+				b.A("").Data("hx-get", factory.AdminURL()+"/"+indexString).InnerHTML("edit").Close()
+			}
+
+			// Server admin can delete all domains EXCEPT for localhost
+			if d.Hostname != "localhost" {
+				b.Span().InnerHTML(" | ").Close()
+				b.Span().
+					Class("red").
+					Role("link").
+					Data("hx-delete", factory.AdminURL()+"/"+indexString).
+					Data("hx-confirm", "Delete this Domain?").
+					InnerHTML("delete").
+					Close()
+			}
 
 			b.Close()
 			b.Close()
 		}
 
-		if ctx.QueryParam("first") != "" {
-			for index := range domains {
+		// If there is a domain WITHOUT database info, then display its popup now.
+		for index, domain := range domains {
+			if domain.ConnectString == "" {
 				indexString := convert.String(index)
 				b.Div().Data("hx-get", factory.AdminURL()+"/"+indexString).Data("hx-trigger", "load").Close()
 				break
@@ -180,7 +188,11 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 			EndBracket()
 
 		// Contents
-		b.H1().InnerHTML("Domain Settings").Close()
+		b.H1().InnerHTML("Domain Setup").Close()
+
+		if domain.ConnectString == "" {
+			b.Div().Class("space-below").InnerHTML("Welcome to server setup.  To begin, enter the database connection info for your local server.").Close()
+		}
 		b.WriteString(formHTML)
 
 		// Controls
@@ -264,7 +276,7 @@ func GetSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Redirect to the admin page of this domain
-		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/admin")
+		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/startup")
 	}
 }
 func DeleteServerDomain(factory *server.Factory) echo.HandlerFunc {
