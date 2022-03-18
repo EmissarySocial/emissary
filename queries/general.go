@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/benpate/data"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -12,11 +14,11 @@ type CountRecordsResult struct {
 	Count int `bson:"count"`
 }
 
-func CountRecords(ctx context.Context, collection data.Collection) (int, error) {
+func CountRecords(ctx context.Context, collection data.Collection, criteria exp.Expression) (int, error) {
 
 	// Set up the mongodb pipeline query and result
 	query := bson.A{
-		bson.M{"$match": bson.M{"journal.deleteDate": 0}},
+		bson.M{"$match": mongodb.ExpressionToBSON(criteria)},
 		bson.M{"$count": "count"},
 	}
 

@@ -90,12 +90,9 @@ func New(factory *server.Factory) *echo.Echo {
 		// e.POST("/me/:action", handler.PostProfile(factory))
 	*/
 
-	startup := e.Group("/startup", middleware.StartupWizard(factory))
-	startup.GET("", handler.StartupWelcome(factory))
-	startup.GET("/username", handler.StartupUsername(factory))
-	startup.POST("/username", handler.StartupUsername(factory))
-	startup.GET("/toplevel", handler.StartupTopLevel(factory))
-	startup.POST("/toplevel", handler.StartupTopLevel(factory))
+	// Startup Wizard
+	e.GET("/startup", handler.Startup(factory))
+	e.POST("/startup", handler.Startup(factory))
 
 	// SERVER ADMIN PAGES (dynamic URLs help discourage 4337 H4XX0RZ)
 	if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {

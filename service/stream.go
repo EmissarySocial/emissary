@@ -256,8 +256,8 @@ func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
 }
 
 // Count returns the number of (non-deleted) records in the Stream collection
-func (service *Stream) Count(ctx context.Context) (int, error) {
-	return queries.CountRecords(ctx, service.collection)
+func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
+	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
 }
 
 /*******************************************

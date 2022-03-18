@@ -157,8 +157,8 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 }
 
 // Count returns the number of (non-deleted) records in the User collection
-func (service *User) Count(ctx context.Context) (int, error) {
-	return queries.CountRecords(ctx, service.collection)
+func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, error) {
+	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
 }
 
 /*******************************************
