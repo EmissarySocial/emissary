@@ -6,14 +6,9 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {
-				"type": "string",
-				"description": "The human-readable title for this article"
-			},
-			"description": {
-				"type": "string",
-				"description": "The HTML content for this article"
-			}
+			"label": {"type": "string"},
+			"description": {"type": "string"},
+			"stateId": {"type": "string", "enum": ["unpublished", "published"]}
 		}
 	},
 	"states": {

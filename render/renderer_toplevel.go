@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -29,18 +28,6 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, a
 		stream: stream,
 		Common: NewCommon(factory, ctx),
 	}
-}
-
-/*******************************************
- * PATH INTERFACE
- *******************************************/
-
-func (w TopLevel) GetPath(name string) (interface{}, bool) {
-	return path.GetOK(w.stream, name)
-}
-
-func (w TopLevel) SetPath(name string, value interface{}) error {
-	return path.Set(w.stream, name, value)
 }
 
 /*******************************************

@@ -28,5 +28,5 @@ func (step StepStreamState) Get(buffer io.Writer, renderer Renderer) error {
 func (step StepStreamState) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Try to set the state via the Path interface.
-	return path.Set(renderer, "stateId", step.stateID)
+	return path.Set(renderer.object(), "stateId", step.stateID)
 }

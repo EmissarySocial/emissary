@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -166,46 +167,113 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	s := schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"blog":        schema.Boolean{},
-				"photo-album": schema.Boolean{},
-				"forum":       schema.Boolean{},
+				"home":  schema.Boolean{Default: null.NewBool(false)},
+				"blog":  schema.Boolean{Default: null.NewBool(false)},
+				"album": schema.Boolean{Default: null.NewBool(false)},
+				"forum": schema.Boolean{Default: null.NewBool(false)},
 			},
 		},
 	}
+
+	streamService := factory.Stream()
+
+	if ctx.Request().Method == http.MethodPost {
+
+		body := map[string]interface{}{}
+
+		if err := ctx.Bind(&body); err != nil {
+			return derp.Wrap(err, location, "Error binding request body")
+		}
+
+		converted, err := s.Convert(body)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid form data")
+		}
+
+		body = convert.MapOfInterface(converted)
+
+		streams := make([]model.Stream, 0)
+
+		if convert.Bool(body["home"]) {
+			stream := model.NewStream()
+			stream.Label = "Welcome"
+			stream.TemplateID = "article"
+			streams = append(streams, stream)
+		}
+
+		if convert.Bool(body["blog"]) {
+			stream := model.NewStream()
+			stream.Label = "Blog"
+			stream.TemplateID = "folder"
+			stream.Data["format"] = "CARDS"
+			stream.Data["showImages"] = true
+			streams = append(streams, stream)
+		}
+
+		if convert.Bool(body["album"]) {
+			stream := model.NewStream()
+			stream.Label = "Photo Album"
+			stream.TemplateID = "photo-album"
+			streams = append(streams, stream)
+		}
+
+		if convert.Bool(body["forum"]) {
+			stream := model.NewStream()
+			stream.Label = "Forum"
+			stream.TemplateID = "forum"
+			streams = append(streams, stream)
+		}
+
+		for index, stream := range streams {
+			stream.Rank = index
+
+			if err := streamService.Save(&stream, "Created by startup wizard"); err != nil {
+				return derp.Wrap(err, location, "Error saving stream", stream)
+			}
+		}
+
+		return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+	}
+
+	b := html.New()
+	pageHeader(ctx, b, "Let's Get Started")
+
+	b.H2().InnerHTML("Step 2. Choose Apps").Close()
+	b.Div().Class("space-below").InnerHTML("How will you use this server?  Don't worry, you can always add and remove apps later.")
+
+	b.Form(http.MethodPost, "/startup").EndBracket()
 
 	f := form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{{
 			Kind:        "checkbox",
+			Path:        "home",
+			Label:       "Home Page",
+			Description: "Landing page when visitors first reach your site.",
+		}, {
+			Kind:        "checkbox",
 			Path:        "blog",
-			Label:       "Blog",
-			Description: "Create and publish full-length blog articles.  Automatically organized by post date",
+			Label:       "Blog Folder",
+			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
 			Kind:        "checkbox",
 			Path:        "photo-album",
 			Label:       "Photo Album",
-			Description: "Upload photographs into an online album",
+			Description: "Upload and share photographs.",
 		}, {
 			Kind:        "checkbox",
 			Path:        "forum",
 			Label:       "Discussion Forum",
-			Description: "Realtime chat page for all your visitors, organized into discussion topics.",
+			Description: "Realtime chat, organized into topics and threads.",
 		}},
 	}
 
 	library := fm.FormLibrary()
-	if ctx.Request().Method == http.MethodPost {
-	}
-
-	b := html.New()
-
-	formHTML, err := f.HTML(&library, &s, nil)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error generating form output")
-	}
+	formHTML, _ := f.HTML(&library, &s, nil)
 
 	b.WriteString(formHTML)
+	b.Button().Type("submit").Class("primary").InnerHTML("Continue")
 
 	return ctx.HTML(http.StatusOK, b.String())
 }

@@ -44,6 +44,7 @@ func NewStream() Stream {
 	return Stream{
 		StreamID:  streamID,
 		Token:     streamID.Hex(),
+		ParentID:  primitive.NilObjectID,
 		ParentIDs: make([]primitive.ObjectID, 0),
 		StateID:   "new",
 		Criteria:  NewCriteria(),

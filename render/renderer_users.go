@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -31,19 +30,6 @@ func NewUser(factory Factory, ctx *steranko.Context, layout *model.Layout, actio
 		user:   user,
 		Common: NewCommon(factory, ctx),
 	}
-}
-
-/*******************************************
- * PATH INTERFACE
- * (not available via templates)
- *******************************************/
-
-func (w User) GetPath(name string) (interface{}, bool) {
-	return path.GetOK(w.object(), name)
-}
-
-func (w User) SetPath(name string, value interface{}) error {
-	return path.Set(w.object(), name, value)
 }
 
 /*******************************************
