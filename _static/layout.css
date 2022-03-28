@@ -123,7 +123,7 @@ main {
 	padding: 10px 20px;
 	border-radius: var(--border-radius);
 	color: var(--gray80);
-	background-color:var(--white);
+	background-color:inherit;
 	margin:0px 4px;
 }
 

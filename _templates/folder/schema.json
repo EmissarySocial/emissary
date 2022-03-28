@@ -67,7 +67,9 @@
 		},
 		"delete": {
 			"roles": ["owner", "editor"],
-			"step": "delete"
+			"steps": [{
+				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
+			}]
 		},
 		"new": {
 			"roles": ["owner", "editor"],

@@ -327,7 +327,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("script").Attr("src", "/static/tabs._hs").Type("text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()
-		b.Container("script").Attr("src", "/static/ally.js").Close()
+		b.Container("script").Attr("src", "/static/a11y.js").Close()
 		b.Container("script").Attr("src", "/static/extensions.js").Close()
 
 		b.Close()

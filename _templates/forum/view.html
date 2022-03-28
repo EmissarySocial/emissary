@@ -21,6 +21,10 @@
 				<button hx-get="/{{.Token}}/sharing">Sharing</button>
 			{{- end -}}
 
+			{{- if .UserCan "delete" -}}
+				<button hx-get="/{{.Token}}/delete">Delete Forum</button>
+			{{- end -}}
+
 		</div>
 
 		<table id="children" class="table">

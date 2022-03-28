@@ -3,9 +3,11 @@
 
 	<h1>{{.Label}}</h1>
 
-	<article class="space-after">
-		<div>{{.Description}}</div>
-	</article>
+	{{- if ne .Description "" -}}
+		<article class="space-after">
+			{{.Description}}
+		</article>
+	{{- end -}}
 
 	{{ if .UserCan "edit" }}
 		<div id="menu-bar">

@@ -111,7 +111,9 @@
 		},
 		"delete": {
 			"roles":["owner", "moderator"],
-			"step": "delete"
+			"steps": [{
+				"step":"delete", "title": "Delete This Forum?", "message": "This will permanently delete this forum and all messages."
+			}]
 		}
 	}
 }

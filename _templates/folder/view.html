@@ -10,10 +10,18 @@
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
+			{{- if .UserCan "new" -}}
+				<button hx-get="/{{.Token}}/new">Add Item</button>
+			{{- end -}}
+
 			<button hx-get="/{{.Token}}/edit">Edit</button>
 
 			{{- if .UserCan "sharing" -}}
 				<button hx-get="/{{.Token}}/sharing">Sharing</button>
+			{{- end -}}
+
+			{{- if .UserCan "delete" -}}
+				<button hx-get="/{{.Token}}/delete">Delete Folder</button>
 			{{- end -}}
 		</div>
 	{{- end -}}
@@ -28,11 +36,6 @@
 				</tr>
 			</thead>
 			<tbody hx-push-url="true">
-				{{- if .UserCan "new" -}}
-					<tr hx-get="/{{.Token}}/new" role="button">
-						<td colspan="3" class="link"><i class="fa-solid fa-circle-plus"></i> Add Stream</td>
-					</tr>
-				{{- end -}}
 				{{- range .Children.ByLabel.View -}}
 					<tr hx-get="/{{.Token}}" role="link">
 						<td><i class="fa-regular fa-file-lines"></i> {{.Label}}</td>

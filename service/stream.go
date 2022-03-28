@@ -75,6 +75,15 @@ func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(stream *model.Stream, note string) error {
 
+	// Special rules for top-level streams
+	if stream.ParentID == primitive.NilObjectID {
+		if stream.Rank == 0 {
+			stream.Token = "home" // First stream in the list is the "home" page
+		} else if stream.Token == "home" {
+			stream.Token = "" // No other stream can be marked "home".
+		}
+	}
+
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
 	}
@@ -100,6 +109,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "service.Stream.Delete", "Error deleting Stream", stream, note)
 	}
 
+	// Delete related records -- this can happen in the background
 	go func() {
 
 		// Delete all related Children
@@ -118,6 +128,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 	}()
 
+	// Bueno!!
 	return nil
 }
 
