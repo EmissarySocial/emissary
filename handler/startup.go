@@ -53,8 +53,8 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 			return StartupStreams(fm, factory, ctx)
 		}
 
-		// Fall through..  we're done.  Jump to admin.
-		return ctx.Redirect(http.StatusTemporaryRedirect, "/admin")
+		// Fall through..  we're done.  Display "next steps" page
+		return StartupDone(ctx)
 	}
 }
 
@@ -74,6 +74,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 	// IF POST, THEN TRY TO CREATE A NEW ADMIN ACCOUNT
 	if ctx.Request().Method == http.MethodPost {
 
+		// Collect and validate the form information
 		body := map[string]string{}
 
 		if err := ctx.Bind(&body); err != nil {
@@ -85,7 +86,6 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 		}
 
 		// Create a new user record and save it to the database
-
 		userService := factory.User()
 
 		user := model.NewUser()
@@ -98,7 +98,8 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			return derp.Wrap(err, "handler.GetStartupUsername", "Error saving user")
 		}
 
-		return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+		// Redirect to the next page (this forces a "GET" request)
+		return ctx.Redirect(http.StatusSeeOther, "/startup?refresh=true")
 	}
 
 	// OTHERWISE, DISPLAY THE USER FORM
@@ -112,7 +113,11 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 	b.Close()
 	b.Close()
 
-	b.H2().InnerHTML("Step 1. Create an Administrator Account").Close()
+	b.Div().Class("pure-g")
+	b.Div().Class("pure-u-md-1-6", "pure-u-lg-1-4").Close()
+	b.Div().Class("pure-u-1", " pure-u-md-2-3", "pure-u-lg-1-2")
+
+	b.H2().InnerHTML("Step 1/3 - Create an Administrator Account").Close()
 	b.Div().Class("space-below").InnerHTML("Create an account for yourself that you'll use to sign in and manage your server.")
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
@@ -167,10 +172,10 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	s := schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"home":  schema.Boolean{Default: null.NewBool(false)},
-				"blog":  schema.Boolean{Default: null.NewBool(false)},
-				"album": schema.Boolean{Default: null.NewBool(false)},
-				"forum": schema.Boolean{Default: null.NewBool(false)},
+				"home":  schema.Boolean{Default: null.NewBool(true)},
+				"blog":  schema.Boolean{Default: null.NewBool(true)},
+				"album": schema.Boolean{Default: null.NewBool(true)},
+				"forum": schema.Boolean{Default: null.NewBool(true)},
 			},
 		},
 	}
@@ -199,6 +204,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			stream := model.NewStream()
 			stream.Label = "Welcome"
 			stream.TemplateID = "article"
+			stream.StateID = "published"
 			streams = append(streams, stream)
 		}
 
@@ -233,14 +239,16 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			}
 		}
 
-		return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+		return ctx.Redirect(http.StatusSeeOther, "/startup")
 	}
 
 	b := html.New()
 	pageHeader(ctx, b, "Let's Get Started")
 
-	b.H2().InnerHTML("Step 2. Choose Apps").Close()
-	b.Div().Class("space-below").InnerHTML("How will you use this server?  Don't worry, you can always add and remove apps later.")
+	b.Div().Class("bold").InnerHTML("Step 2 of 3")
+	b.H1().InnerHTML("How Do You Want To Use This Server?").Close()
+
+	b.H3().InnerHTML("Choose which starter pages to put in your navigation bar.  You can always make changes later.").Close()
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
 
@@ -258,7 +266,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
 			Kind:        "checkbox",
-			Path:        "photo-album",
+			Path:        "album",
 			Label:       "Photo Album",
 			Description: "Upload and share photographs.",
 		}, {
@@ -273,7 +281,45 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	formHTML, _ := f.HTML(&library, &s, nil)
 
 	b.WriteString(formHTML)
-	b.Button().Type("submit").Class("primary").InnerHTML("Continue")
+	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")
+
+	return ctx.HTML(http.StatusOK, b.String())
+}
+
+// StartupDone prompts the administrator to take their next steps with the server
+func StartupDone(ctx echo.Context) error {
+
+	b := html.New()
+
+	pageHeader(ctx, b, "You're All Clear, Kid.")
+
+	b.Div().Class("align-center")
+	b.Div().Class("space-below")
+	b.I("fa-solid", "fa-circle-check", "fa-8x", "gray20").Close()
+	b.Close()
+	b.H1().InnerHTML("Setup Is Complete").Close()
+	b.H2().Class("gray70").InnerHTML("Here are some next steps you can take.").Close()
+	b.Close()
+
+	b.Table().Class("table", "space-above")
+
+	b.TR().Role("link").Script("on click set window.location to '/home'")
+	b.TD().Class("align-center")
+	b.I("fa-solid", "fa-house", "fa-2x").Close()
+	b.Close()
+	b.TD().Style("width:100%")
+	b.Div().Class("bold").InnerHTML("Visit Your New Home Page")
+	b.Div().Class("gray70").InnerHTML("Start editing your new server.")
+	b.Close()
+
+	b.TR().Role("link").Script("on click set window.location to '/admin/users'")
+	b.TD().Class("align-center")
+	b.I("fa-solid", "fa-user", "fa-2x").Close()
+	b.Close()
+	b.TD().Style("width:100%")
+	b.Div().Class("bold").InnerHTML("Invite People")
+	b.Div().Class("gray70").InnerHTML("Send invitiations for other people to sign in and collaborate with you.")
+	b.Close()
 
 	return ctx.HTML(http.StatusOK, b.String())
 }
