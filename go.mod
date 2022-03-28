@@ -36,7 +36,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/tdewolff/minify/v2 v2.10.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
