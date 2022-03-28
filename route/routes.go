@@ -50,15 +50,16 @@ func New(factory *server.Factory) *echo.Echo {
 	e.POST("/:stream/:action", handler.PostStream(factory), domain)
 	e.DELETE("/:stream", handler.PostStream(factory), domain)
 
-	e.GET("/subscriptions", handler.ListSubscriptions(factory))
-	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
-	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
-	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
+	e.GET("/subscriptions", handler.ListSubscriptions(factory), domain)
+	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory), domain)
+	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory), domain)
+	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory), domain)
 
 	// Hard-coded routes for additional stream services
 	// TODO: Can Attachments and SSE be moved into a custom render step?
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory), domain)
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
+	e.GET("/:stream/qrcode", handler.GetQRCode(factory), domain)
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), domain)
