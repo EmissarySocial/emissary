@@ -1,11 +1,6 @@
 module github.com/whisperverse/whisperverse
 
-go 1.17
-
-replace (
-	github.com/benpate/form => ../../benpate/form
-	github.com/benpate/schema => ../../benpate/schema
-)
+go 1.18
 
 require (
 	github.com/benpate/compare v0.1.1
@@ -17,15 +12,15 @@ require (
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.5.1
-	github.com/benpate/html v0.11.5
+	github.com/benpate/form v0.5.2
+	github.com/benpate/html v0.11.6
 	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.4
+	github.com/benpate/schema v0.14.5
 	github.com/benpate/steranko v0.7.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.1
@@ -36,7 +31,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/tdewolff/minify/v2 v2.10.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
