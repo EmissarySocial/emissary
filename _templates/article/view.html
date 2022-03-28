@@ -2,10 +2,7 @@
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 	<div class="flex-row">
-		<div>
-			{{.Ancestors}}
-			<h1 class="space-after">{{.Label}}</h1>
-		</div>
+		<h1>{{.Label}}</h1>
 		<div class="text-sm align-right">
 			{{- if eq .StateID "published" -}}
 				<span style="color: green;"><i class="fa-regular fa-check"></i> PUBLISHED</span>
