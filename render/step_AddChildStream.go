@@ -131,10 +131,8 @@ func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Cont
 		return derp.Wrap(err, location, "Error creating renderer", stream)
 	}
 
-	// Assign the current user as the author
-	if err := renderer.setAuthor(); err != nil {
-		return derp.Wrap(err, location, "Error retrieving author information", stream)
-	}
+	// Assign the current user as the author (with silent failure)
+	renderer.setAuthor()
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
