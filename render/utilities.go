@@ -78,7 +78,7 @@ func WrapForm(endpoint string, content string) string {
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerHTML("Save Changes").Close()
 	b.Space()
-	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+	b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 
 	// Done
 	b.CloseAll()
