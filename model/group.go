@@ -29,8 +29,7 @@ func (group *Group) Schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"groupId": schema.String{MinLength: null.NewInt(24), MaxLength: null.NewInt(24), Format: "objectId"},
-				"label":   schema.String{MaxLength: null.NewInt(50)},
+				"label": schema.String{MaxLength: null.NewInt(50)},
 			},
 		},
 	}
