@@ -3,10 +3,12 @@
 
     <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend">
     {{- range $index, $user := $users -}}
-            <tr hx-get="/admin/users/{{$user.UserID}}/edit" hx-push-url="true" class="padded card clickable">
-                <td><i class="fa-solid fa-user"></i> {{$user.DisplayName}}</td>
-                <td align="right">
-                    <span hx-get="/admin/users/{{$user.UserID}}/delete"><i class="fa-regular fa-trash-can"></i></span>
+            <tr class="clickable">
+                <td role="link" hx-get="/admin/users/{{$user.UserID}}/edit" class="width-full">
+                    <i class="fa-solid fa-user"></i> {{$user.DisplayName}}
+                </td>
+                <td role="link" hx-get="/admin/users/{{$user.UserID}}/delete">
+                    <i class="fa-regular fa-trash-can"></i>
                 </td>
             </tr>
         </div>

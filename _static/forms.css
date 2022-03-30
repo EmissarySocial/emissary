@@ -137,9 +137,9 @@ button[disabled]:hover,
     display:block;
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-label {
+.layout-vertical > .layout-vertical-label {
     font-size:24px;
-    font-weight:600;
+    font-weight:500;
     margin-bottom:20px;
 }
 

@@ -3,11 +3,12 @@
     {{- $last := last $groups -}}
     <tbody hx-get="/admin/groups/list?label=gt:{{$last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
-        <tr>
-            <td hx-get="/admin/groups/{{.GroupID}}/edit">
-                <i class="fa-solid fa-user-group"></i> {{.Label}}</td>
-            <td align="right">
-                <span hx-get="/admin/groups/{{.GroupID}}/delete"><i class="fa-regular fa-trash-can"></i></span>
+        <tr class="clickable">
+            <td role="link" hx-get="/admin/groups/{{.GroupID}}/edit" class="width-full">
+                <i class="fa-solid fa-user-group"></i> {{.Label}}
+            </td>
+            <td role="link" hx-get="/admin/groups/{{.GroupID}}/delete">
+                <i class="fa-regular fa-trash-can"></i>
             </td>
         </tr>
     {{- end -}}

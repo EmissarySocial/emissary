@@ -113,6 +113,10 @@ h3.space-below {
     width: 200px;
 }
 
+.width-full {
+    width:100%;
+}
+
 /****************************
  * Block Spacing
  ****************************/

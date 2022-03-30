@@ -21,7 +21,10 @@ table.table td {
 }
 
 table.table tr[role="link"]:hover td,
-table.table tr[role="link"]:focus td {
+table.table tr[role="link"]:focus td,
+table.table td[role="link"]:focus,
+table.table tr.clickable:hover td,
+table.table tr.clickable:focus td {
     background-color:var(--gray10);
     cursor:pointer;
 }
