@@ -28,14 +28,16 @@ func (step StepSave) Get(buffer io.Writer, renderer Renderer) error {
 // Post saves the object to the database
 func (step StepSave) Post(buffer io.Writer, renderer Renderer) error {
 
+	object := renderer.object()
+
 	// Validate the object against the schema
-	if err := renderer.schema().Validate(renderer.object()); err != nil {
-		return derp.Wrap(err, "render.StepSave.Post", "Object has invalid data")
+	if err := renderer.schema().Validate(object); err != nil {
+		return derp.Wrap(err, "render.StepSave.Post", "Object has invalid data", object)
 	}
 
 	// Try to update the stream
-	if err := renderer.service().ObjectSave(renderer.object(), step.comment); err != nil {
-		return derp.Wrap(err, "render.StepSave.Post", "Error saving Stream")
+	if err := renderer.service().ObjectSave(object, step.comment); err != nil {
+		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object", object)
 	}
 
 	return nil
