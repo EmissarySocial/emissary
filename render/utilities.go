@@ -68,6 +68,7 @@ func WrapForm(endpoint string, content string) string {
 		Attr("hx-post", endpoint).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
+		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 
 	// Contents

@@ -53,14 +53,19 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	// Heading
 	b.H1().InnerHTML(step.title).Close()
 	b.Div().Class("space-below").InnerHTML(step.message).Close()
-	b.Container("HR").Close()
 
 	// Form
-	b.Form("", "").Data("hx-post", renderer.URL()).Data("hx-push-url", "false").Data("hx-swap", "none").EndBracket()
+	b.Form("", "").
+		Data("hx-post", renderer.URL()).
+		Data("hx-swap", "none").
+		Data("hx-push-url", "false").
+		Script("init send checkFormRules(changed:me as Values)").
+		EndBracket()
+
 	b.WriteString(formHTML)
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerHTML("Save Changes").Close()
-	b.Button().Type("button").Script("on click send closeModal to #modal").InnerHTML("Cancel").Close()
+	b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 	b.CloseAll()
 
 	// Write it to the output buffer and quit
@@ -118,7 +123,7 @@ func (step StepSetSimpleSharing) form() form.Form {
 		Kind: "layout-vertical",
 		Children: []form.Form{
 			{Kind: "select", Path: "public", Options: form.Map{"format": "radio", "provider": "sharing"}},
-			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}},
+			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}, Show: form.Rule{Path: "public", Value: "'false'"}},
 		},
 	}
 }
