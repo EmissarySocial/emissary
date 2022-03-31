@@ -1,18 +1,16 @@
 {{- $hasChildren := notEmpty .Children.Top1.View -}}
 
-<link rel="stylesheet" href="/static/editor/uploader.css" />
-<script type="text/hyperscript" src="/static/editor/uploader._hs"></script>
+<link rel="stylesheet" href="/static/nebula/uploader.css" />
+<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
 
 <h1>{{.Label}}</h1>
 
-<article class="space-after">
-	<div>{{.Description}}</div>
-</article>
+{{- if ne "" .Description -}}
+	<div class="space-after">{{.Description}}</div>
+{{- end -}}
 
 <div id="menu-bar">
-	{{- if $hasChildren -}}
-	<a href="/{{.Token}}"><i class="fa-regular fa-arrow-left"></i> View Photos</a>
-	{{- end -}}
+	<a href="/{{.Token}}">View Album</a>
 
 	{{- if .UserCan "properties" -}}
 		<a hx-get="/{{.Token}}/properties">Edit Info</a>
@@ -29,7 +27,7 @@
 
 <article>
 
-	<div class="uploader" _="install Uploader(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
+	<div class="uploader" _="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
 	
 		<div class="space-below gray40"><i class="fa-solid fa-arrow-up-from-bracket fa-8x"></i></div>
 		<h2 class="space-below">Drag Files Here to Upload</h2>
@@ -37,6 +35,7 @@
 		<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">
 			<input type="file" id="manual-upload" name="file"/>
 		</form>
+		<div class="space-below"></div>
 
 	</div>
 
