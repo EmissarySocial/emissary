@@ -12,7 +12,7 @@ require (
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.5.2
+	github.com/benpate/form v0.6.0
 	github.com/benpate/html v0.11.6
 	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/list v0.4.2
