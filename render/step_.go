@@ -73,6 +73,9 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	case "edit-content":
 		return NewStepEditContent(factory.ContentLibrary(), stepInfo), nil
 
+	case "view-rss":
+		return NewStepViewRSS(factory.Stream(), stepInfo), nil
+
 	// DRAFTS
 
 	case "promote-draft":

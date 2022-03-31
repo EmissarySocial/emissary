@@ -13,12 +13,14 @@ import (
 // renderPage collects the logic to render complete vs. partial HTML pages.
 func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer) error {
 
+	const location = "handler.renderPage"
+
 	// Partial Page requests are served directly from the renderer
-	if renderer.IsPartialRequest() {
+	if renderer.IsPartialRequest() || renderer.SkipFullPageRendering() {
 		result, err := renderer.Render()
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.renderPage", "Error rendering partial page request")
+			return derp.Wrap(err, location, "Error rendering partial page request")
 		}
 		return ctx.HTML(http.StatusOK, string(result))
 	}
@@ -28,7 +30,7 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 	var buffer bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&buffer, "page", renderer); err != nil {
-		return derp.Wrap(err, "whisper.handler.renderPage", "Error rendering full-page content")
+		return derp.Wrap(err, location, "Error rendering full-page content")
 	}
 
 	return ctx.HTML(http.StatusOK, buffer.String())

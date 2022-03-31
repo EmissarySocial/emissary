@@ -35,9 +35,6 @@ func New(factory *server.Factory) *echo.Echo {
 	// Local links for static resources
 	e.Static("/static", factory.StaticPath())
 
-	// RSS Feed
-	e.GET("/feed.json", handler.GetRSS(factory), domain)
-
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory), domain)
 	e.POST("/signin", handler.PostSignIn(factory), domain)

@@ -16,6 +16,8 @@ import (
 // GetStream handles GET requests
 func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.GetStream"
+
 	return func(ctx echo.Context) error {
 
 		stream := model.NewStream()
@@ -24,7 +26,7 @@ func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.GetStream", "Unrecognized Domain")
+			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Try to load the stream using request data
@@ -38,7 +40,7 @@ func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
 			}
 
-			return derp.Wrap(err, "whisper.handler.GetStream", "Error loading Stream by Token", streamToken)
+			return derp.Wrap(err, location, "Error loading Stream by Token", streamToken)
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
@@ -47,10 +49,14 @@ func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
 		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.GetStream", "Error creating Renderer")
+			return derp.Wrap(err, location, "Error creating Renderer")
 		}
 
-		return renderPage(factory, sterankoContext, &renderer)
+		if err := renderPage(factory, sterankoContext, &renderer); err != nil {
+			return derp.Wrap(err, location, "Error rendering page")
+		}
+
+		return nil
 	}
 }
 

@@ -62,6 +62,20 @@ func (w Common) BannerURL() string {
  * REQUEST INFO
  *******************************************/
 
+// Protocol returns http:// or https:// used for this request
+func (w Common) Protocol() string {
+	if w.ctx.Request().TLS == nil {
+		return "http://"
+	}
+
+	return "https://"
+}
+
+// Hostname returns the configured hostname for this request
+func (w Common) Hostname() string {
+	return w.ctx.Request().Host
+}
+
 // URL returns the originally requested URL
 func (w Common) URL() string {
 	return w.context().Request().URL.RequestURI()
@@ -80,6 +94,12 @@ func (w Common) QueryParam(param string) string {
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
 	return (w.context().Request().Header.Get("HX-Request") != "")
+}
+
+// SkipFullPageRendering returns TRUE if this request does not use the common site chrome.
+// Default is FALSE, overridden in specific cases.
+func (w Common) SkipFullPageRendering() bool {
+	return false
 }
 
 // Now returns the current time in milliseconds since the Unix epoch

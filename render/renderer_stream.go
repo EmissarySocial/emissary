@@ -263,6 +263,11 @@ func (w Stream) SourceURL() string {
 	return w.stream.SourceURL
 }
 
+// Permalink returns a complete URL for this stream
+func (w Stream) Permalink() string {
+	return w.Protocol() + w.Hostname() + "/" + w.stream.StreamID.Hex()
+}
+
 // Data returns the custom data map of the stream being rendered
 func (w Stream) Data(value string) interface{} {
 	return w.stream.Data[value]
@@ -593,6 +598,28 @@ func (w Stream) draftRenderer() (Stream, error) {
 		action:       w.action,
 		Common:       NewCommon(w.factory(), w.ctx),
 	}, nil
+}
+
+/*******************************************
+ * REQUEST METHODS
+ *******************************************/
+
+// SkipFullPageRendering returns TRUE if this request does not use the common site chrome.
+// Default is FALSE, overridden in specific cases.
+func (w Stream) SkipFullPageRendering() bool {
+
+	// TODO: This is a giant hack that I'm ashamed of, but not so ashamed
+	// that I'm going to fix it right now.  The real solution is to pre-compile
+	// all these datatype.Maps into real steps, and add a function to the step
+	// interface that can say "yes" or "no" intelligently.
+	for _, stepInfo := range w.action.Steps {
+		switch stepInfo["step"] {
+		case "view-rss":
+			return true
+		}
+	}
+
+	return false
 }
 
 /*******************************************

@@ -90,6 +90,11 @@
 					{"step":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]
+		},
+		"rss": {
+			"steps": [
+				{"step":"view-rss", "format": "rss"}
+			]
 		}
 	}
 }
