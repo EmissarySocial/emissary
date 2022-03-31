@@ -42,7 +42,7 @@ func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error 
 	for attachments.Next(attachment) {
 
 		if attachment.MimeCategory() == "image" {
-			return path.Set(renderer, "thumbnailImage", attachment.Filename)
+			return path.Set(renderer.object(), "thumbnailImage", attachment.Filename)
 		}
 		attachment = new(model.Attachment)
 	}

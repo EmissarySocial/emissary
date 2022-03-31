@@ -91,7 +91,7 @@ func (factory *Factory) start(d config.Domain) error {
 	}
 
 	// Try to open attachment cache folder
-	cache, err := factory.config.AttachmentOriginals.GetFilesystem()
+	cache, err := factory.config.AttachmentCache.GetFilesystem()
 
 	if err != nil {
 		return derp.Wrap(err, "whisper.server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
