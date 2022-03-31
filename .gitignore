@@ -19,5 +19,4 @@
 
 # Application config info
 config.json
-uploads
-uploads-cache
+_attachments
