@@ -12,7 +12,7 @@
 			},
 			"description": {
 				"type": "string",
-				"format": "html"
+				"format": "no-html"
 			}
 		}
 	},
@@ -76,7 +76,7 @@
 								"label": "Label",
 								"path": "label"
 							}, {
-								"kind": "wysiwyg",
+								"kind": "textarea",
 								"label": "Description",
 								"path": "description"
 							}]

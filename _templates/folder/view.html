@@ -14,7 +14,7 @@
 				<button hx-get="/{{.Token}}/new">Add Item</button>
 			{{- end -}}
 
-			<button hx-get="/{{.Token}}/edit">Edit</button>
+			<button hx-get="/{{.Token}}/edit">Edit Info</button>
 
 			{{- if .UserCan "sharing" -}}
 				<button hx-get="/{{.Token}}/sharing">Sharing</button>

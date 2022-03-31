@@ -12,13 +12,13 @@
 		</div>
 	</div>
 
-	<div class="space-after">
-		<div>{{.Description}}</div>
-	</div>
+	{{- if ne "" .Description -}}
+		<div class="space-after">{{.Description}}</div>
+	{{- end -}}
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
-			<a href="/{{.Token}}/edit">Edit</a>
+			<a href="/{{.Token}}/edit">Edit Content</a>
 
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.Token}}/sharing">Sharing</a>
