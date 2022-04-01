@@ -14,12 +14,14 @@ input:not([type=submit], [type=checkbox], [type=radio]), textarea {
     font-size:13pt;
 }
 
-input:invalid {
+input:invalid,
+input.invalid {
     border: solid 1px var(--input-border-invalid);
     background-color: var(--input-background-invalid);
 }
 
-input:invalid:focus {
+input:invalid:focus,
+input.invalid:focus {
     outline-color: var(--red70) ;
 }
 
@@ -44,7 +46,7 @@ input[type=radio] {
 
 .toggle-container label {
     cursor:pointer;
-    margin-left:0.5em;
+    padding-left:0.5em;
 }
 
 .toggle {
@@ -115,6 +117,9 @@ button,
     border-radius: 5px;
     border:none;
     color: var(--gray90);
+    user-select:none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
 }
 
 .text-sm button,

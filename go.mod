@@ -14,7 +14,7 @@ require (
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.0
+	github.com/benpate/form v0.6.1
 	github.com/benpate/html v0.11.6
 	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/list v0.4.2
@@ -72,7 +72,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
-	github.com/stretchr/objx v0.1.0 // indirect
 	github.com/tdewolff/parse/v2 v2.5.27 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect

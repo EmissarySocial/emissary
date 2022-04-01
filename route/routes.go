@@ -39,6 +39,8 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/signin", handler.GetSignIn(factory), domain)
 	e.POST("/signin", handler.PostSignIn(factory), domain)
 	e.POST("/signout", handler.PostSignOut(factory), domain)
+	e.GET("/register", handler.GetRegister(factory), domain)
+	e.POST("/register", handler.PostRegister(factory), domain)
 
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factory), domain)
