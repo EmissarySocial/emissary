@@ -1,23 +1,20 @@
-<div class="page">
+<div class="page" hx-get="/admin/groups/index" hx-trigger="refreshPage from:body">
+  
+    <h1>Settings</h1>
 
-    <div hx-get="/admin/groups/index" hx-trigger="refreshPage from:body">
-        <h1>Settings</h1>
-
-        <div id="menu-bar" hx-push-url="true">
-            {{- $token := .Token -}}
-            {{- range .AdminSections -}}
-                <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-            {{- end -}}
-        </div>
-
-        <table id="groups" class="table">
-            <tbody>
-                <tr role="link" hx-get="/admin/groups/add"><td colspan="2" class="link">
-                    <i class="fa-regular fa-plus-circle"></i> Add a Group
-                </td></tr>
-            </tbody>
-            {{.View "list"}}
-        </table>
+    <div id="menu-bar" hx-push-url="true">
+        {{- $token := .Token -}}
+        {{- range .AdminSections -}}
+            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+        {{- end -}}
     </div>
 
+    <table id="groups" class="table">
+        <tbody>
+            <tr role="link" hx-get="/admin/groups/add"><td colspan="2" class="link">
+                <i class="fa-regular fa-plus-circle"></i> Add a Group
+            </td></tr>
+        </tbody>
+        {{.View "list"}}
+    </table>
 </div>

@@ -1,22 +1,19 @@
-<div class="page">
+<div class="page" hx-get="/admin/users/index" hx-trigger="refreshPage from:body">
+   
+    <h1>Settings</h1>
 
-    <div hx-get="/admin/users/index" hx-trigger="refreshPage from:body">
-        <h1>Settings</h1>
-
-        <div id="menu-bar" hx-push-url="true">
-            {{- $token := .Token -}}
-            {{- range .AdminSections -}}
-                <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-            {{- end -}}
-        </div>
-
-        <table id="users" class="table">
-            <tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
-                <i class="fa-solid fa-plus-circle"></i> Invite a Person
-            </td></tr>
-
-            {{- .View "list" -}}
-        </table>
+    <div id="menu-bar" hx-push-url="true">
+        {{- $token := .Token -}}
+        {{- range .AdminSections -}}
+            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+        {{- end -}}
     </div>
 
+    <table id="users" class="table">
+        <tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
+            <i class="fa-solid fa-plus-circle"></i> Invite a Person
+        </td></tr>
+
+        {{- .View "list" -}}
+    </table>
 </div>

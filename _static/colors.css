@@ -37,6 +37,17 @@
 	--red90: #520408;
 	--red100: #2d0709;
 
+	--green10: #f1fff1;
+	--green20: #d7ffd9;
+	--green30: #b3ffb8;
+	--green40: #83ff89;
+	--green50: #4dfa56;
+	--green60: #1eda28;
+	--green70: #19a21f;
+	--green80: #0e7513;
+	--green90: #045208;
+	--green100: #072d09;
+
 	--input-border: var(--gray30);
 	--input-background: var(--gray05);
 	--input-color: var(--gray80);
@@ -67,7 +78,7 @@
 		--input-border-invalid: var(--red60);
 		--input-background-invalid: var(--red80);
 		--input-color-invalid: var(--red50);
-		}
+	}
 }
 
 .white {color:var(--white);}
@@ -82,4 +93,5 @@
 .gray80 {color:var(--gray80);}
 .gray90 {color:var(--gray90);}
 .black {color:var(--black);}
-.red {color:var(--red60)};
+.red {color:var(--red60);}
+.green {color:var(--green70);}

@@ -1,4 +1,4 @@
-<div class="page">
+<div class="page" hx-get="/admin/domain/index" hx-trigger="refreshPage from:body">
 
 	<h1>Settings</h1>
 
@@ -7,6 +7,19 @@
 		{{- range .AdminSections -}}
 			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
 		{{- end -}}
+	</div>
+
+	<div>
+		<h3>Let New People Sign Up?</h3>
+ 
+		<span role="link" hx-get="/admin/domain/signup">
+			{{- if .SignupForm.Active -}}
+				<i class="fa-solid fa-toggle-on fa-xl green"></i>  YES.  New people CAN make new accounts on this server.
+			{{- else -}}
+				<i class="fa-solid fa-toggle-off fa-xl gray60"></i>  NO. New people CAN NOT make new accounts on this server.
+			{{- end -}}
+		</span>
+
 	</div>
 
 </div>

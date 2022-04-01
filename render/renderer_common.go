@@ -161,7 +161,7 @@ func (w Common) UserImage() (string, error) {
  *******************************************/
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
-func (w Common) getUser() (*model.User, error) {
+func (w *Common) getUser() (*model.User, error) {
 
 	// If we haven't already loaded the user, then do it now.
 	if w.user == nil {
@@ -179,17 +179,23 @@ func (w Common) getUser() (*model.User, error) {
 }
 
 // getDomain loads/caches the domain record to be used by other functions in this renderer
-func (w Common) getDomain() (*model.Domain, error) {
+func (w *Common) getDomain() (*model.Domain, error) {
 
 	// If we haven't already loaded the domain, then do it now.
 	if w.domain == nil {
 
 		domainService := w.factory().Domain()
 		authorization := getAuthorization(w.context())
-		w.domain = new(model.Domain)
+
+		domain := model.NewDomain()
+		w.domain = &domain
 
 		if err := domainService.Load(w.domain); err != nil {
-			return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
+
+			// Only "legitimate" errors are reported. "Not Found" is skipped.
+			if !derp.NotFound(err) {
+				return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
+			}
 		}
 	}
 

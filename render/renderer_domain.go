@@ -16,17 +16,23 @@ import (
 type Domain struct {
 	layout *model.Layout
 	action *model.Action
-	domain *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action) Domain {
+func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action) (Domain, error) {
 
-	return Domain{
+	result := Domain{
 		layout: layout,
 		action: action,
 		Common: NewCommon(factory, ctx),
 	}
+
+	// Pre-load the domain record
+	if _, err := result.getDomain(); err != nil {
+		return result, derp.Wrap(err, "render.NewDomain", "Error loading Domain")
+	}
+
+	return result, nil
 }
 
 /*******************************************
@@ -83,6 +89,12 @@ func (w Domain) executeTemplate(wr io.Writer, name string, data interface{}) err
 
 func (w Domain) TopLevelID() string {
 	return "admin"
+}
+
+// SignupForm returns the SignupForm associated with this Domain.
+func (w Domain) SignupForm() model.SignupForm {
+
+	return w.domain.SignupForm
 }
 
 /*******************************************

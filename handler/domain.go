@@ -23,13 +23,15 @@ func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
 
 func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
+	const location = "handler.adminRenderer"
+
 	return func(ctx echo.Context) error {
 
 		// Try to get the factory from the Context
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.GetAdmin", "Unrecognized Domain")
+			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Authenticate the page request
@@ -63,54 +65,56 @@ func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMet
 		case "analytics":
 			layout := layoutService.Analytics()
 			action := layout.Action(actionID)
-			renderer = render.NewDomain(factory, sterankoContext, layout, action)
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, action)
+
+			if err != nil {
+				return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading domain")
+			}
 
 		case "domain":
 			layout := layoutService.Domain()
 			action := layout.Action(actionID)
-			renderer = render.NewDomain(factory, sterankoContext, layout, action)
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, action)
+
+			if err != nil {
+				return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading domain")
+			}
 
 		case "groups":
-			layout := layoutService.Group()
-			action := layout.Action(actionID)
-			service := factory.Group()
 			group := model.NewGroup()
 
 			if !objectID.IsZero() {
+				service := factory.Group()
 				if err := service.LoadByID(objectID, &group); err != nil {
 					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading Group", objectID)
 				}
 			}
 
-			renderer = render.NewGroup(factory, sterankoContext, layout, action, &group)
+			renderer, err = render.NewRenderer(factory, sterankoContext, &group, actionID)
 
 		case "toplevel":
-			layout := layoutService.TopLevel()
-			action := layout.Action(actionID)
-			service := factory.Stream()
 			stream := model.NewStream()
 
 			if !objectID.IsZero() {
+				service := factory.Stream()
 				if err := service.LoadByID(objectID, &stream); err != nil {
 					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading TopLevel stream", objectID)
 				}
 			}
 
-			renderer = render.NewTopLevel(factory, sterankoContext, layout, action, &stream)
+			renderer, err = render.NewRenderer(factory, sterankoContext, &stream, actionID)
 
 		case "users":
-			layout := layoutService.User()
-			action := layout.Action(actionID)
-			service := factory.User()
 			user := model.NewUser()
 
 			if !objectID.IsZero() {
+				service := factory.User()
 				if err := service.LoadByID(objectID, &user); err != nil {
 					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading User", objectID)
 				}
 			}
 
-			renderer = render.NewUser(factory, sterankoContext, layout, action, &user)
+			renderer, err = render.NewRenderer(factory, sterankoContext, &user, actionID)
 
 		default:
 			return derp.NewNotFoundError("whisper.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))

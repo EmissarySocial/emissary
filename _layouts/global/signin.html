@@ -34,7 +34,6 @@
 		end
 
 		on htmx:beforeRequest
-			log event
 			add [@hidden=true] to #message
 			add [@disabled=true] to #submitButton
 

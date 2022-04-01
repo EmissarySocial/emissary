@@ -41,6 +41,12 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 
 	switch obj := object.(type) {
 
+	case *model.Domain:
+		layout := factory.Layout().Domain()
+		action := layout.Action(actionID)
+		result, err := NewDomain(factory, ctx, layout, action)
+		return &result, err
+
 	case *model.Group:
 		layout := factory.Layout().Group()
 		action := layout.Action(actionID)

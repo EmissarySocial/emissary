@@ -29,13 +29,18 @@ func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 func (service *Domain) Load(domain *model.Domain) error {
 
 	if err := service.collection.Load(exp.All(), domain); err != nil {
-		return derp.Wrap(err, "whisper.service.Domain", "Error loading Domain")
+		return derp.Wrap(err, "service.Domain.Save", "Error loading Domain")
 	}
 
 	return nil
 }
 
-func (service *Domain) Save(domain *model.Domain, comment string) error {
+func (service *Domain) Save(domain *model.Domain, note string) error {
+
+	if err := service.collection.Save(domain, note); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
+	}
+
 	return nil
 }
 
@@ -50,7 +55,7 @@ func (service *Domain) ObjectNew() data.Object {
 }
 
 func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return nil, derp.New(derp.CodeBadRequestError, "whisper.service.Domain.ObjectDelete", "Unsupported")
+	return nil, derp.New(derp.CodeBadRequestError, "service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
@@ -59,12 +64,12 @@ func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
 	return &result, err
 }
 
-func (service *Domain) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.Domain), comment)
+func (service *Domain) ObjectSave(object data.Object, note string) error {
+	return service.Save(object.(*model.Domain), note)
 }
 
-func (service *Domain) ObjectDelete(object data.Object, comment string) error {
-	return derp.New(derp.CodeBadRequestError, "whisper.service.Domain.ObjectDelete", "Unsupported")
+func (service *Domain) ObjectDelete(object data.Object, note string) error {
+	return derp.New(derp.CodeBadRequestError, "service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) Debug() datatype.Map {
