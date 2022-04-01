@@ -14,9 +14,15 @@
  
 		<span role="link" hx-get="/admin/domain/signup">
 			{{- if .SignupForm.Active -}}
-				<i class="fa-solid fa-toggle-on fa-xl green"></i>  YES.  New people CAN make new accounts on this server.
+				<div class="toggle-container" value="true">
+					<span class="toggle"><span class="marker"></span></span>
+					<label>YES.  New people CAN make new accounts.</label>
+				</div>
 			{{- else -}}
-				<i class="fa-solid fa-toggle-off fa-xl gray60"></i>  NO. New people CAN NOT make new accounts on this server.
+			<div class="toggle-container" value="false">
+				<span class="toggle"><span class="marker"></span></span>
+				<label>NO. New people CAN NOT make new accounts.</label>
+			</div>
 			{{- end -}}
 		</span>
 

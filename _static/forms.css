@@ -33,6 +33,58 @@ input[type=radio] {
 }
 
 
+/** TOGGLE CONTROLS ********/
+
+.toggle-container {
+    cursor:pointer;
+    user-select:none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+.toggle-container label {
+    cursor:pointer;
+    margin-left:0.5em;
+}
+
+.toggle {
+    display:inline-block;
+    vertical-align: middle;
+    box-sizing: content-box;
+    position:relative;
+    border-radius: 1em;
+    width:3em;
+    height:1.5em;
+    border-style:solid;
+    border-width: 2px;
+    background-color: #e0e0e0;
+    border-color: #c6c6c6;
+}
+
+.toggle-container[value=true] .toggle {
+    background-color: #19a21f;
+    border-color: #19a21f;
+}
+
+.toggle-container .marker {
+    display:inline-block;
+    border-radius:1em;
+    background-color:white;
+    height: 1.5em;
+    width: 1.5em;
+    transition:transform 0.1s ease-in-out;
+}
+
+.toggle .marker {
+    box-shadow:3px 0px 3px 0px rgba(0,0,0,0.15);
+}
+
+.toggle-container[value=true] .marker {
+    box-shadow:-3px 0px 3px 0px rgba(0,0,0,0.15);
+    transform:translateX(100%);
+}
+
+
 /* Alternate colors for dark mode */
 @media (prefers-color-scheme: dark) {
 
@@ -42,6 +94,7 @@ input[type=radio] {
 		color:var(--gray90);
 	}
 }
+
 
 /***************************
  * SUBMIT BUTTONS
@@ -71,7 +124,6 @@ button.text-sm,
     font-size:10pt;
     padding:8px 16px;
 }
-
 
 .text-xs button,
 .text-xs .button,
@@ -131,7 +183,6 @@ button[disabled]:hover,
 /***************************
  * FORM LAYOUTS
  ***************************/
-
 
 .layout-vertical {
     display:block;
