@@ -85,6 +85,13 @@
 								<span class="htmx-request-hide">Sign In</span>
 							</button>
 
+							{{- if .HasSignupForm -}}
+								<div class="space-above">
+									Don't have a profile? 
+									<a href="/register">Register Now</a>
+								</div>
+							{{- end -}}
+
 							<span id="message" class="red" hidden></span>
 
 						</form>

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"net/http"
 
 	"github.com/benpate/derp"
@@ -13,22 +12,7 @@ import (
 func GetSignIn(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-
-		var buffer bytes.Buffer
-
-		factory, err := factoryManager.ByContext(ctx)
-
-		if err != nil {
-			return derp.Report(derp.Wrap(err, "whisper.handler.GetSignin", "Error getting factory"))
-		}
-
-		template := factory.Layout().Global().HTMLTemplate
-
-		if err := template.ExecuteTemplate(&buffer, "signin", "error message goes here."); err != nil {
-			return derp.Report(derp.Wrap(err, "whisper.handler.GetSignin", "Error executing template"))
-		}
-
-		return ctx.HTML(200, buffer.String())
+		return executeDomainTemplate(factoryManager, ctx, "signin")
 	}
 }
 

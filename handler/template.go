@@ -49,7 +49,7 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 	// Find and execute the template
 	template := factory.Layout().Global().HTMLTemplate
 
-	if err := template.ExecuteTemplate(&buffer, templateName, domain); err != nil {
+	if err := template.ExecuteTemplate(&buffer, templateName, &domain); err != nil {
 		return derp.Report(derp.Wrap(err, location, "Error executing template"))
 	}
 

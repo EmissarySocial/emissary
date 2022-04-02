@@ -27,7 +27,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// If the signup form is not active, then this is a "not found" error
-		if domain.SignupForm.Active != true {
+		if !domain.HasSignupForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 
@@ -60,7 +60,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// If the signup form is not active, then this is a "not found" error
-		if domain.SignupForm.Active != true {
+		if !domain.HasSignupForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 

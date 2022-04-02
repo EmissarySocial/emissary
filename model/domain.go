@@ -32,6 +32,15 @@ func (domain *Domain) ID() string {
 }
 
 /*******************************************
+ * OTHER DATA ACCESSORS
+ *******************************************/
+
+// HasSignupForm returns TRUE if this domain includes a valid signup form.
+func (domain *Domain) HasSignupForm() bool {
+	return domain.SignupForm.Active
+}
+
+/*******************************************
  * SCHEMA VALIDATOR
  *******************************************/
 

@@ -4,6 +4,10 @@ behavior toggle
         add .toggle-container to me
         add [@tabIndex=0] to me
 
+        tell .toggle in me
+            remove yourself
+        end
+
         append `<span class="toggle"><span class="marker"></span></span>` to my innerHTML
         append `<input type="hidden" name="${my @name}" value=""/>` to my innerHTML
 
