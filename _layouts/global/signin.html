@@ -24,8 +24,7 @@
 	<script type="text/hyperscript">	
 		init 
 			set lastPage to document.referrer
-			log lastPage
-			if (lastPage is empty) or (lastPage contains "/signin") then 
+			if (lastPage is empty) or (lastPage contains "/signin") or (lastPage contains "/register") then 
 				call sessionStorage.removeItem("signin-return")
 				exit
 			end
