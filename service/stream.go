@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
-	"github.com/benpate/schema"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +19,6 @@ import (
 type Stream struct {
 	collection            data.Collection
 	attachmentService     *Attachment
-	templateService       *Template
 	draftService          *StreamDraft
 	formLibrary           *form.Library
 	templateUpdateChannel chan string
@@ -28,11 +26,10 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
 
 	return Stream{
 		collection:            collection,
-		templateService:       templateService,
 		draftService:          draftService,
 		attachmentService:     attachmentService,
 		formLibrary:           formLibrary,
@@ -261,11 +258,6 @@ func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *mod
 	return service.Load(criteria, result)
 }
 
-// ChildTemplates returns an iterator of Templates that can be added as a sub-stream
-func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
-	return service.templateService.ListByContainer(stream.TemplateID)
-}
-
 // Count returns the number of (non-deleted) records in the Stream collection
 func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
 	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
@@ -294,6 +286,7 @@ func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 	return nil
 }
 
+/*
 // NewTopLevel creates a new stream at the top level of the tree
 func (service *Stream) NewTopLevel(templateID string) (model.Stream, *model.Template, error) {
 
@@ -342,6 +335,7 @@ func (service *Stream) NewChild(parent *model.Stream, templateID string) (model.
 	return result, template, nil
 }
 
+
 // NewTopLevel creates a new stream at the top level of the tree
 func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (model.Stream, *model.Template, error) {
 
@@ -356,27 +350,7 @@ func (service *Stream) NewSibling(sibling *model.Stream, templateID string) (mod
 
 	return service.NewTopLevel(templateID)
 }
-
-// Template returns the Template associated with this Stream
-func (service *Stream) Template(templateID string) (*model.Template, error) {
-	template, err := service.templateService.Load(templateID)
-	return template, err
-}
-
-// State returns the detailed State information associated with this Stream
-func (service *Stream) State(stream *model.Stream) (model.State, error) {
-	return service.templateService.State(stream.TemplateID, stream.StateID)
-}
-
-// Schema returns the Schema associated with this Stream
-func (service *Stream) Schema(stream *model.Stream) (schema.Schema, error) {
-	return service.templateService.Schema(stream.TemplateID)
-}
-
-// Action returns the action definition that matches the stream and type provided
-func (service *Stream) Action(stream *model.Stream, actionID string) (*model.Action, error) {
-	return service.templateService.Action(stream.TemplateID, actionID)
-}
+*/
 
 // updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
 func (service *Stream) updateStreamsByTemplate(templateID string) {

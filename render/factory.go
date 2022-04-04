@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/nebula"
 	"github.com/whisperverse/mediaserver"
 	"github.com/whisperverse/whisperverse/service"
+	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // Factory is used to locate all necessary services
@@ -14,11 +15,11 @@ type Factory interface {
 	Domain() *service.Domain
 	FormLibrary() *form.Library
 	Group() *service.Group
-	Layout() *service.Layout
+	Layout() *singleton.Layout
 	MediaServer() mediaserver.MediaServer
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Subscription() *service.Subscription
-	Template() *service.Template
+	Template() *singleton.Template
 	User() *service.User
 }

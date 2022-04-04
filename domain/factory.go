@@ -19,6 +19,7 @@ import (
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/service"
+	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // Factory knows how to create an populate all services
@@ -27,8 +28,8 @@ type Factory struct {
 	domain  config.Domain
 
 	// singletons (from server)
-	layoutService   *service.Layout
-	templateService *service.Template
+	layoutService   *singleton.Layout
+	templateService *singleton.Template
 
 	// singletons (within this domain/factory)
 	streamService       service.Stream
@@ -50,7 +51,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *singleton.Layout, templateService *singleton.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
 
@@ -104,7 +105,6 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		// Stream Service
 		factory.streamService = service.NewStream(
 			factory.collection(CollectionStream),
-			factory.Template(),
 			factory.StreamDraft(),
 			factory.Attachment(),
 			factory.FormLibrary(),
@@ -211,12 +211,12 @@ func (factory *Factory) Group() *service.Group {
  *******************************************/
 
 // Layout service manages global website layouts (managed globally by the server.Factory)
-func (factory *Factory) Layout() *service.Layout {
+func (factory *Factory) Layout() *singleton.Layout {
 	return factory.layoutService
 }
 
 // Template returns a fully populated Template service (managed globally by the server.Factory)
-func (factory *Factory) Template() *service.Template {
+func (factory *Factory) Template() *singleton.Template {
 	return factory.templateService
 }
 

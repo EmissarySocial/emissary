@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/service"
+	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
@@ -19,12 +20,12 @@ type StepAddChildStream struct {
 	view        string         // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
 	withChild   []datatype.Map // List of steps to take on the newly created child record on POST.
 
-	templateService *service.Template
+	templateService *singleton.Template
 	streamService   *service.Stream
 }
 
 // NewStepAddChildStream returns a fully initialized StepAddChildStream record
-func NewStepAddChildStream(templateService *service.Template, streamService *service.Stream, stepInfo datatype.Map) StepAddChildStream {
+func NewStepAddChildStream(templateService *singleton.Template, streamService *service.Stream, stepInfo datatype.Map) StepAddChildStream {
 	return StepAddChildStream{
 		templateService: templateService,
 		streamService:   streamService,
@@ -57,33 +58,50 @@ func (step StepAddChildStream) Get(buffer io.Writer, renderer Renderer) error {
 
 func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 
+	const location = "render.SetpAddChildStream.Post"
+
+	// Collect prerequisites
 	streamRenderer := renderer.(*Stream)
 	context := streamRenderer.context()
+	parent := streamRenderer.stream
 	templateID := streamRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
 	if len(step.templateIDs) > 0 {
-
 		if templateID == "" {
 			templateID = step.templateIDs[0]
 		} else if !compare.Contains(step.templateIDs, templateID) {
-			return derp.New(derp.CodeBadRequestError, "render.StepAddChildStream.Post", "Cannot create new template of this kind", templateID)
+			return derp.New(derp.CodeBadRequestError, location, "Cannot create new template of this kind", templateID)
 		}
 	}
 
-	// Create new child stream
-	child, template, err := step.streamService.NewChild(streamRenderer.stream, templateID)
+	// Try to load the template for the new stream
+	template, err := step.templateService.Load(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "render.StepAddChildStream.Post", "Error creating new child stream", templateID)
+		return derp.Wrap(err, location, "Cannot find template")
 	}
+
+	// Verify that the new stream belongs in the parent stream
+	if !template.CanBeContainedBy(parent.TemplateID) {
+		return derp.New(derp.CodeInternalError, location, "Template cannot be placed at top level", templateID)
+	}
+
+	// Create the new child stream
+	child := model.NewStream()
+	child.ParentID = parent.StreamID
+	child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	child.TemplateID = templateID
+
+	// TODO: sort order?
+	// TODO: presets defined by templates?
 
 	return finalizeAddStream(buffer, renderer.factory(), context, &child, template, step.withChild)
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *singleton.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
 	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 
@@ -133,6 +151,8 @@ func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Cont
 
 	// Assign the current user as the author (with silent failure)
 	renderer.setAuthor()
+
+	// TODO: Sort order??
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {

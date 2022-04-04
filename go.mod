@@ -34,7 +34,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
 	github.com/stretchr/testify v1.7.1
-	github.com/tdewolff/minify/v2 v2.10.0
+	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
 	github.com/whisperverse/mediaserver v0.1.2
@@ -72,7 +72,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
-	github.com/tdewolff/parse/v2 v2.5.27 // indirect
+	github.com/tdewolff/parse v2.3.4+incompatible // indirect
+	github.com/tdewolff/test v1.0.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect

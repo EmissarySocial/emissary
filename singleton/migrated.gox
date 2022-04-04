@@ -1,0 +1,25 @@
+// ChildTemplates returns an iterator of Templates that can be added as a sub-stream
+func (service *Stream) ChildTemplates(stream *model.Stream) []model.Option {
+	return service.templateService.ListByContainer(stream.TemplateID)
+}
+
+// Template returns the Template associated with this Stream
+func (service *Stream) Template(templateID string) (*model.Template, error) {
+	template, err := service.templateService.Load(templateID)
+	return template, err
+}
+
+// State returns the detailed State information associated with this Stream
+func (service *Stream) State(stream *model.Stream) (model.State, error) {
+	return service.templateService.State(stream.TemplateID, stream.StateID)
+}
+
+// Schema returns the Schema associated with this Stream
+func (service *Stream) Schema(stream *model.Stream) (schema.Schema, error) {
+	return service.templateService.Schema(stream.TemplateID)
+}
+
+// Action returns the action definition that matches the stream and type provided
+func (service *Stream) Action(stream *model.Stream, actionID string) (*model.Action, error) {
+	return service.templateService.Action(stream.TemplateID, actionID)
+}
