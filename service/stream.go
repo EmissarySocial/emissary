@@ -296,11 +296,11 @@ func (service *Stream) updateStreamsByTemplate(templateID string) {
 		return
 	}
 
-	stream := new(model.Stream)
+	stream := model.NewStream()
 
-	for iterator.Next(stream) {
-		service.streamUpdateChannel <- *stream
-		stream = new(model.Stream)
+	for iterator.Next(&stream) {
+		service.streamUpdateChannel <- stream
+		stream = model.NewStream()
 	}
 }
 
