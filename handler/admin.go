@@ -13,15 +13,15 @@ import (
 
 // GetAdmin handles GET requests
 func GetAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return adminRenderer(factoryManager, render.ActionMethodGet)
+	return renderAdmin(factoryManager, render.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
 func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return adminRenderer(factoryManager, render.ActionMethodPost)
+	return renderAdmin(factoryManager, render.ActionMethodPost)
 }
 
-func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.adminRenderer"
 
@@ -120,16 +120,6 @@ func adminRenderer(factoryManager *server.Factory, actionMethod render.ActionMet
 			return derp.NewNotFoundError("whisper.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
 		}
 
-		// If this is a POST, then execute the action pipeline
-		if actionMethod == render.ActionMethodPost {
-
-			if err := render.DoPipeline(renderer, ctx.Response().Writer, renderer.Action().Steps, actionMethod); err != nil {
-				return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
-			}
-			return nil
-		}
-
-		// Otherwise, use the standard "renderPage" function to return HTML
-		return renderPage(factory, sterankoContext, renderer)
+		return renderPage(factory, sterankoContext, renderer, actionMethod)
 	}
 }

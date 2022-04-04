@@ -60,6 +60,10 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory), domain)
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory), domain)
 
+	// Profile Pages / ActivityPub
+	e.GET("/users/:user", handler.GetProfile(factory), domain)
+	e.GET("/users/:user/:action", handler.GetProfile(factory), domain)
+
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), domain)
 	e.GET("/admin/:param1", handler.GetAdmin(factory), domain)
@@ -69,10 +73,8 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), domain)
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), domain)
 
-	// Profile Pages / ActivityPub
-	e.GET("/inbox", handler.GetProfileInbox(factory), domain)
-
 	/*
+		e.GET("/inbox", handler.GetProfileInbox(factory), domain)
 		e.GET("/outbox", handler.GetProfileOutbox(factory), domain)
 		e.GET("/people/:userId", handler.GetProfile(factory), domain)
 		e.GET("/people/:userId/inbox", handler.GetSocialInbox(factory), domain)

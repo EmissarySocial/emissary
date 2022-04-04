@@ -324,6 +324,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Link("stylesheet", "/static/fontawesome-free-6.0.0/css/all.css")
 
 		b.Container("script").Attr("src", "/static/modal._hs").Type("text/hyperscript").Close()
+		b.Container("script").Attr("src", "/static/forms._hs").Type("text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/tabs._hs").Type("text/hyperscript").Close()
 		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
 		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()

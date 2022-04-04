@@ -29,6 +29,24 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error finding domain")
 		}
 
+		// If there are no groups, then add some defaults...
+		groupService := factory.Group()
+		groupCount, err := groupService.Count(ctx.Request().Context(), exp.All())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error counting groups")
+		}
+
+		if groupCount == 0 {
+			for _, label := range []string{"Friends", "Editors", "Internet Randos"} {
+				group := model.NewGroup()
+				group.Label = label
+				if err := groupService.Save(&group, "Created by Startup"); err != nil {
+					return derp.Wrap(err, location, "Error creating group", label)
+				}
+			}
+		}
+
 		// If there are no users in the database, then display the USERS page
 		userService := factory.User()
 		userCount, err := userService.Count(ctx.Request().Context(), exp.All())
@@ -255,24 +273,24 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	f := form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{{
-			Kind:        "checkbox",
+			Kind:        "toggle",
 			Path:        "home",
-			Label:       "Home Page",
+			Options:     form.Map{"true-text": "Home Page", "false-text": "Home Page"},
 			Description: "Landing page when visitors first reach your site.",
 		}, {
-			Kind:        "checkbox",
+			Kind:        "toggle",
 			Path:        "blog",
-			Label:       "Blog Folder",
+			Options:     form.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
-			Kind:        "checkbox",
+			Kind:        "toggle",
 			Path:        "album",
-			Label:       "Photo Album",
+			Options:     form.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
 		}, {
-			Kind:        "checkbox",
+			Kind:        "toggle",
 			Path:        "forum",
-			Label:       "Discussion Forum",
+			Options:     form.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
 			Description: "Realtime chat, organized into topics and threads.",
 		}},
 	}

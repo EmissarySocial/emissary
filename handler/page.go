@@ -11,9 +11,18 @@ import (
 )
 
 // renderPage collects the logic to render complete vs. partial HTML pages.
-func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer) error {
+func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
 
 	const location = "handler.renderPage"
+
+	// If this is a POST, then execute the action pipeline
+	if actionMethod == render.ActionMethodPost {
+
+		if err := render.DoPipeline(renderer, ctx.Response().Writer, renderer.Action().Steps, actionMethod); err != nil {
+			return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
+		}
+		return nil
+	}
 
 	// Partial Page requests are served directly from the renderer
 	if renderer.IsPartialRequest() || renderer.SkipFullPageRendering() {

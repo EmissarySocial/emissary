@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/datatype"
@@ -8,6 +10,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -180,4 +183,9 @@ func (service *Group) ListAsOptions() ([]form.OptionCode, error) {
 	}
 
 	return result, nil
+}
+
+// Count returns the number of (non-deleted) records in the User collection
+func (service *Group) Count(ctx context.Context, criteria exp.Expression) (int, error) {
+	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
 }

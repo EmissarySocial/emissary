@@ -1,6 +1,7 @@
 package render
 
 import (
+	"fmt"
 	"html/template"
 	"time"
 
@@ -93,7 +94,21 @@ func (w Common) QueryParam(param string) string {
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
-	return (w.context().Request().Header.Get("HX-Request") != "")
+
+	if context := w.context(); context != nil {
+		if request := context.Request(); request != nil {
+			if header := request.Header; header != nil {
+				return header.Get("HX-Request") != ""
+			} else {
+				fmt.Println("header is nil")
+			}
+		} else {
+			fmt.Println("request is nil")
+		}
+	} else {
+		fmt.Println("context is nil")
+	}
+	return false
 }
 
 // SkipFullPageRendering returns TRUE if this request does not use the common site chrome.

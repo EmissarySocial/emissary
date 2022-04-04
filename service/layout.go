@@ -20,6 +20,7 @@ type Layout struct {
 	domain    model.Layout
 	global    model.Layout
 	group     model.Layout
+	profile   model.Layout
 	topLevel  model.Layout
 	user      model.Layout
 }
@@ -53,10 +54,13 @@ func (service *Layout) Group() *model.Layout {
 	return &service.group
 }
 
+func (service *Layout) Profile() *model.Layout {
+	return &service.profile
+}
+
 func (service *Layout) TopLevel() *model.Layout {
 	return &service.topLevel
 }
-
 func (service *Layout) User() *model.Layout {
 	return &service.user
 }
@@ -67,7 +71,7 @@ func (service *Layout) User() *model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"analytics", "domain", "global", "groups", "toplevel", "users"}
+	return []string{"analytics", "domain", "global", "groups", "profiles", "toplevel", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -170,10 +174,15 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 		service.global = layout
 	case "groups":
 		service.group = layout
+	case "profiles":
+		service.profile = layout
 	case "toplevel":
 		service.topLevel = layout
 	case "users":
 		service.user = layout
+	default:
+		// This should never happen
+		panic("Unrecognized layout: " + filename)
 	}
 
 	return nil
