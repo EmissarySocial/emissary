@@ -1,5 +1,8 @@
 {
 	"actions": {
-		"view": {"step": "view-html"}
+		"view": {"step": "view-html"},
+		"photo": {"steps": [
+			{"step": "redirect-to", }
+		]}
 	}
 }

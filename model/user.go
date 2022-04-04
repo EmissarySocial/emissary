@@ -56,6 +56,31 @@ func (user User) Copy() User {
 	return user
 }
 
+// Roles returns a list of all roles that match the provided authorization
+func (user *User) Roles(authorization *Authorization) []string {
+
+	// Everyone has "public" access
+	result := []string{"public"}
+
+	if authorization == nil {
+		return result
+	}
+
+	// Owners are hard-coded to do everything, so no other roles need to be returned.
+	if authorization.DomainOwner {
+		return []string{"owner"}
+	}
+
+	// Authors sometimes have special permissions, too.
+	if authorization.UserID == user.UserID {
+		result = append(result, "self")
+	}
+
+	// TODO: special roles for follower/following...
+
+	return result
+}
+
 func (user *User) Schema() schema.Schema {
 	return schema.Schema{
 		ID: "whisper.model.user",
