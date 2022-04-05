@@ -8,35 +8,51 @@ import (
 	"github.com/benpate/form"
 )
 
-// StepAddModelObject is an action that can add new sub-streams to the domain.
+// StepAddModelObject is an action that can add new model objects of any type
 type StepAddModelObject struct {
-	formLibrary *form.Library
-	form        form.Form
-	defaults    []datatype.Map
+	form     form.Form
+	defaults Pipeline
+
+	BaseStep
 }
 
 // NewStepAddModelObject returns a fully initialized StepAddModelObject record
-func NewStepAddModelObject(formLibrary *form.Library, stepInfo datatype.Map) StepAddModelObject {
-	return StepAddModelObject{
-		formLibrary: formLibrary,
-		form:        form.MustParse(stepInfo.GetInterface("form")),
-		defaults:    stepInfo.GetSliceOfMap("defaults"),
+func NewStepAddModelObject(stepInfo datatype.Map) (StepAddModelObject, error) {
+
+	// Parse form
+	f, err := form.Parse(stepInfo.GetInterface("form"))
+
+	if err != nil {
+		return StepAddModelObject{}, derp.Wrap(err, "render.NewStepAddModelObject", "Invalid form", stepInfo["form"])
 	}
+
+	// Parse default pipeline
+	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"))
+
+	if err != nil {
+		return StepAddModelObject{}, derp.Wrap(err, "render.NewStepAddModelObject", "Invalid defaults", stepInfo["defaults"])
+	}
+
+	// Success
+	return StepAddModelObject{
+		form:     f,
+		defaults: defaults,
+	}, nil
 }
 
 // Get displays a modal form that lets users enter data for their new model object.
-func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepAddModelObject) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	schema := renderer.schema()
 	object := renderer.object()
 
 	// First, try to execute any "default" steps so that the object is initialized
-	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
-		return derp.Wrap(err, "whisper.render.StepAddModelObject.Get", "Error executing default steps")
+	if err := step.defaults.Get(factory, renderer, buffer); err != nil {
+		return derp.Wrap(err, "render.StepAddModelObject.Get", "Error executing default steps")
 	}
 
 	// Try to render the Form HTML
-	result, err := step.form.HTML(step.formLibrary, &schema, object)
+	result, err := step.form.HTML(factory.FormLibrary(), &schema, object)
 
 	if err != nil {
 		return derp.Wrap(err, "whisper.render.StepAddModelObject.Get", "Error generating form")
@@ -50,7 +66,7 @@ func (step StepAddModelObject) Get(buffer io.Writer, renderer Renderer) error {
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepAddModelObject) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAddModelObject) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	// This finds/creates a new object in the renderer
 	request := renderer.context().Request()
@@ -58,7 +74,7 @@ func (step StepAddModelObject) Post(buffer io.Writer, renderer Renderer) error {
 	schema := renderer.schema()
 
 	// Execute any "default" steps so that the object is initialized
-	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
+	if err := step.defaults.Post(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, "whisper.render.StepAddModelObject.Get", "Error executing default steps")
 	}
 

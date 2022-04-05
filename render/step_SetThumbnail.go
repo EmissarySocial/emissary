@@ -7,44 +7,35 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/path"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepStreamThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepStreamThumbnail struct {
-	attachmentService *service.Attachment
+	BaseStep
 }
 
-func NewStepStreamThumbnail(attachmentService *service.Attachment, command datatype.Map) StepStreamThumbnail {
-
-	return StepStreamThumbnail{
-		attachmentService: attachmentService,
-	}
-}
-
-// Get displays a form where users can update stream data
-func (step StepStreamThumbnail) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+func NewStepStreamThumbnail(stepInfo datatype.Map) (StepStreamThumbnail, error) {
+	return StepStreamThumbnail{}, nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStreamThumbnail) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepStreamThumbnail) Post(factory Factory, renderer Renderer, _ io.Writer) error {
 
 	// Find best icon from attachments
-	attachments, err := step.attachmentService.ListByObjectID(renderer.objectID())
+	attachments, err := factory.Attachment().ListByObjectID(renderer.objectID())
 
 	if err != nil {
 		return derp.New(derp.CodeBadRequestError, "whisper.render.StepStreamThumbnail.Post", "Error listing attachments")
 	}
 
 	// Scan all attachments and use the first one that is an image.
-	attachment := new(model.Attachment)
-	for attachments.Next(attachment) {
+	attachment := model.NewAttachment(renderer.objectID())
+	for attachments.Next(&attachment) {
 
 		if attachment.MimeCategory() == "image" {
 			return path.Set(renderer.object(), "thumbnailImage", attachment.Filename)
 		}
-		attachment = new(model.Attachment)
+		attachment = model.NewAttachment(renderer.objectID())
 	}
 
 	// Fall through to here means we should look at body content (but not now)

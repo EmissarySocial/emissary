@@ -6,50 +6,54 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepWithParent represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithParent struct {
-	streamService *service.Stream
-	steps         []datatype.Map
+	subSteps Pipeline
+
+	BaseStep
 }
 
 // NewStepWithParent returns a fully initialized StepWithParent object
-func NewStepWithParent(streamService *service.Stream, stepInfo datatype.Map) StepWithParent {
+func NewStepWithParent(stepInfo datatype.Map) (StepWithParent, error) {
+
+	const location = "render.NewStepWithParent"
+
+	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+
+	if err != nil {
+		return StepWithParent{}, derp.Wrap(err, location, "Invalid 'steps'")
+	}
 
 	return StepWithParent{
-		streamService: streamService,
-		steps:         stepInfo.GetSliceOfMap("steps"),
-	}
+		subSteps: subSteps,
+	}, nil
 }
 
-// Get displays a form where users can update stream data
-func (step StepWithParent) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
-}
+// Post executes the subSteps on the parent Stream
+func (step StepWithParent) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
-// Post updates the stream with approved data from the request body.
-func (step StepWithParent) Post(buffer io.Writer, renderer Renderer) error {
+	const location = "whisper.render.StepWithParent.Post"
 
 	var parent model.Stream
 
 	streamRenderer := renderer.(*Stream)
 
-	if err := step.streamService.LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
-		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error listing parent")
+	if err := factory.Stream().LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
+		return derp.Wrap(err, location, "Error listing parent")
 	}
 
 	// Make a renderer with the new parent stream
 	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &parent, renderer.ActionID())
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error creating renderer for parent")
+		return derp.Wrap(err, location, "Error creating renderer for parent")
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := DoPipeline(&parentStream, buffer, step.steps, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "whisper.render.StepWithParent.Post", "Error executing steps for parent")
+	if err := step.subSteps.Post(factory, &parentStream, buffer); err != nil {
+		return derp.Wrap(err, location, "Error executing steps for parent")
 	}
 
 	return nil

@@ -10,30 +10,38 @@ import (
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepForm struct {
-	formLibrary *form.Library
-	form        form.Form
+	form form.Form
+
+	BaseStep
 }
 
 // NewStepForm returns a fully initialized StepForm object
-func NewStepForm(formLibrary *form.Library, stepInfo datatype.Map) StepForm {
+func NewStepForm(stepInfo datatype.Map) (StepForm, error) {
+
+	f, err := form.Parse(stepInfo.GetInterface("form"))
+
+	if err != nil {
+		return StepForm{}, derp.Wrap(err, "render.NewStepForm", "Invalid 'form'", stepInfo)
+	}
 
 	return StepForm{
-		formLibrary: formLibrary,
-		form:        form.MustParse(stepInfo.GetInterface("form")),
-	}
+		form: f,
+	}, nil
 }
 
 // Get displays a form where users can update stream data
-func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepForm) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepForm.Get"
 
 	// Try to find the schema for this Template
 	schema := renderer.schema()
 
 	// Try to render the Form HTML
-	result, err := step.form.HTML(step.formLibrary, &schema, renderer.object())
+	result, err := step.form.HTML(factory.FormLibrary(), &schema, renderer.object())
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepForm.Get", "Error generating form")
+		return derp.Wrap(err, location, "Error generating form")
 	}
 
 	// Wrap result as a modal dialog and return to caller
@@ -42,14 +50,16 @@ func (step StepForm) Get(buffer io.Writer, renderer Renderer) error {
 }
 
 // Post updates the object with approved data from the request body.
-func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepForm) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepForm.Post"
 
 	request := renderer.context().Request()
 	schema := renderer.schema()
 
 	// Parse form information
 	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, "whisper.render.StepForm.Post", "Error parsing form data")
+		return derp.Wrap(err, location, "Error parsing form data")
 	}
 
 	object := renderer.object()
@@ -58,7 +68,7 @@ func (step StepForm) Post(buffer io.Writer, renderer Renderer) error {
 	for _, element := range step.form.AllPaths() {
 		value := request.Form[element.Path]
 		if err := schema.Set(object, element.Path, value); err != nil {
-			return derp.Wrap(err, "whisper.render.StepForm.Post", "Error setting path value", element, value)
+			return derp.Wrap(err, location, "Error setting path value", element, value)
 		}
 	}
 

@@ -15,24 +15,24 @@ import (
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
 type StepSetSimpleSharing struct {
-	formLibrary *form.Library
-	title       string
-	message     string
-	roles       []string
+	title   string
+	message string
+	roles   []string
+
+	BaseStep
 }
 
 // NewStepSetSimpleSharing returns a fully parsed StepSetSimpleSharing object
-func NewStepSetSimpleSharing(formLibrary *form.Library, stepInfo datatype.Map) StepSetSimpleSharing {
+func NewStepSetSimpleSharing(stepInfo datatype.Map) (StepSetSimpleSharing, error) {
 
 	return StepSetSimpleSharing{
-		formLibrary: formLibrary,
-		title:       stepInfo.GetString("title"),
-		message:     stepInfo.GetString("message"),
-		roles:       stepInfo.GetSliceOfString("roles"),
-	}
+		title:   stepInfo.GetString("title"),
+		message: stepInfo.GetString("message"),
+		roles:   stepInfo.GetSliceOfString("roles"),
+	}, nil
 }
 
-func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepSetSimpleSharing) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	streamRenderer := renderer.(*Stream)
 	model := streamRenderer.stream.Criteria.SimpleModel()
@@ -41,7 +41,7 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	schema := step.schema()
 	form := step.form()
 
-	formHTML, err := form.HTML(step.formLibrary, &schema, model)
+	formHTML, err := form.HTML(factory.FormLibrary(), &schema, model)
 
 	if err != nil {
 		return derp.Wrap(err, "whisper.render.StepSetSimpleSharing.Get", "Error rendering form")
@@ -73,7 +73,7 @@ func (step StepSetSimpleSharing) Get(buffer io.Writer, renderer Renderer) error 
 	return nil
 }
 
-func (step StepSetSimpleSharing) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepSetSimpleSharing) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	streamRenderer := renderer.(*Stream)
 	request := streamRenderer.context().Request()

@@ -10,36 +10,53 @@ import (
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
 type StepEditModelObject struct {
-	formLibrary *form.Library
-	form        form.Form
-	defaults    []datatype.Map
+	form     form.Form
+	defaults Pipeline
+
+	BaseStep
 }
 
 // NewStepEditModelObject returns a fully initialized StepEditModelObject record
-func NewStepEditModelObject(formLibrary *form.Library, stepInfo datatype.Map) StepEditModelObject {
-	return StepEditModelObject{
-		formLibrary: formLibrary,
-		form:        form.MustParse(stepInfo.GetInterface("form")),
-		defaults:    stepInfo.GetSliceOfMap("defaults"),
+func NewStepEditModelObject(stepInfo datatype.Map) (StepEditModelObject, error) {
+
+	// Parse form
+	f, err := form.Parse(stepInfo.GetInterface("form"))
+
+	if err != nil {
+		return StepEditModelObject{}, derp.Wrap(err, "render.NewStepEditModelObject", "Invalid 'form'", stepInfo)
 	}
+
+	// Parse defaults
+	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"))
+
+	if err != nil {
+		return StepEditModelObject{}, derp.Wrap(err, "render.NewStepEditModelObject", "Invalid 'defaults'", stepInfo)
+	}
+
+	return StepEditModelObject{
+		form:     f,
+		defaults: defaults,
+	}, nil
 }
 
 // Get displays a modal form that lets users enter data for their new model object.
-func (step StepEditModelObject) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepEditModelObject) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepEditModelObject.Get"
 
 	schema := renderer.schema()
 	object := renderer.object()
 
 	// First, try to execute any "default" steps so that the object is initialized
-	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditModelObject.Get", "Error executing default steps")
+	if err := step.defaults.Get(factory, renderer, buffer); err != nil {
+		return derp.Wrap(err, location, "Error executing default steps")
 	}
 
 	// Try to render the Form HTML
-	result, err := step.form.HTML(step.formLibrary, &schema, object)
+	result, err := step.form.HTML(factory.FormLibrary(), &schema, object)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditModelObject.Get", "Error generating form")
+		return derp.Wrap(err, location, "Error generating form")
 	}
 
 	result = WrapForm(renderer.URL(), result)
@@ -50,7 +67,9 @@ func (step StepEditModelObject) Get(buffer io.Writer, renderer Renderer) error {
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepEditModelObject) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepEditModelObject) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepEditModelObject.Post"
 
 	// This finds/creates a new object in the renderer
 	request := renderer.context().Request()
@@ -58,25 +77,25 @@ func (step StepEditModelObject) Post(buffer io.Writer, renderer Renderer) error 
 	schema := renderer.schema()
 
 	// Execute any "default" steps so that the object is initialized
-	if err := DoPipeline(renderer, buffer, step.defaults, ActionMethodGet); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditModelObject.Get", "Error executing default steps")
+	if err := step.defaults.Post(factory, renderer, buffer); err != nil {
+		return derp.Wrap(err, location, "Error executing default steps")
 	}
 
 	// Parse form information
 	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, "whisper.render.AddModelObject.Post", "Error parsing form data")
+		return derp.Wrap(err, location, "Error parsing form data")
 	}
 
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
 	for key, value := range request.Form {
 		if err := schema.Set(renderer, key, value); err != nil {
-			return derp.Wrap(err, "whisper.render.AddModelObject.Post", "Error setting path value", key, value)
+			return derp.Wrap(err, location, "Error setting path value", key, value)
 		}
 	}
 
 	// Save the object to the database
 	if err := renderer.service().ObjectSave(object, "Created"); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditModelObject.Post", "Error saving model object to database")
+		return derp.Wrap(err, location, "Error saving model object to database")
 	}
 
 	// Success!

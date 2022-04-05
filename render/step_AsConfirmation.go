@@ -13,20 +13,22 @@ type StepAsConfirmation struct {
 	title   string
 	message string
 	submit  string
+
+	BaseStep
 }
 
 // NewStepAsConfirmation returns a fully initialized StepAsConfirmation object
-func NewStepAsConfirmation(stepInfo datatype.Map) StepAsConfirmation {
+func NewStepAsConfirmation(stepInfo datatype.Map) (StepAsConfirmation, error) {
 
 	return StepAsConfirmation{
 		title:   stepInfo.GetString("title"),
 		message: stepInfo.GetString("message"),
 		submit:  first.String(stepInfo.GetString("submit"), "Continue"),
-	}
+	}, nil
 }
 
 // Get displays a modal that asks users to continue or not.
-func (step StepAsConfirmation) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepAsConfirmation) Get(_ Factory, renderer Renderer, buffer io.Writer) error {
 
 	header := renderer.context().Response().Header()
 	header.Set("HX-Retarget", "aside")
@@ -52,7 +54,7 @@ func (step StepAsConfirmation) Get(buffer io.Writer, renderer Renderer) error {
 }
 
 // Post does nothing. (Other steps in the pipeline will make changes)
-func (step StepAsConfirmation) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAsConfirmation) Post(_ Factory, renderer Renderer, buffer io.Writer) error {
 	CloseModal(renderer.context(), "")
 	return nil
 }

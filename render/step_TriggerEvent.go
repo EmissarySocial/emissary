@@ -11,28 +11,25 @@ import (
 type StepTriggerEvent struct {
 	event string
 	data  string
+
+	BaseStep
 }
 
 // NewStepTriggerEvent returns a fully initialized StepTriggerEvent object
-func NewStepTriggerEvent(stepInfo datatype.Map) StepTriggerEvent {
+func NewStepTriggerEvent(stepInfo datatype.Map) (StepTriggerEvent, error) {
 
 	return StepTriggerEvent{
 		event: stepInfo.GetString("event"),
 		data:  stepInfo.GetString("data"),
-	}
-}
-
-// Get displays a form where users can update stream data
-func (step StepTriggerEvent) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+	}, nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepTriggerEvent) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepTriggerEvent) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 	data, err := executeSingleTemplate(step.data, renderer)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepTriggerEvent.Post", "Error executing template", step.event, step.data)
+		return derp.Wrap(err, "render.StepTriggerEvent.Post", "Error executing template", step.event, step.data)
 	}
 
 	if data == "" {

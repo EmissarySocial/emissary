@@ -10,23 +10,20 @@ import (
 // StepSave represents an action-step that can save changes to any object
 type StepSave struct {
 	comment string
+
+	BaseStep
 }
 
 // NewStepSave returns a fully initialized StepSave object
-func NewStepSave(stepInfo datatype.Map) StepSave {
+func NewStepSave(stepInfo datatype.Map) (StepSave, error) {
 
 	return StepSave{
 		comment: stepInfo.GetString("comment"),
-	}
-}
-
-// Get does nothing.
-func (step StepSave) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+	}, nil
 }
 
 // Post saves the object to the database
-func (step StepSave) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepSave) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 
 	object := renderer.object()
 

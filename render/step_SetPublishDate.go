@@ -8,20 +8,17 @@ import (
 )
 
 // StepSetPublishDate represents an action-step that can update a stream's PublishDate with the current time.
-type StepSetPublishDate struct{}
-
-// NewStepSetPublishDate returns a fully initialized StepSetPublishDate object
-func NewStepSetPublishDate(stepInfo datatype.Map) StepSetPublishDate {
-	return StepSetPublishDate{}
+type StepSetPublishDate struct {
+	BaseStep
 }
 
-// Get does not display any data
-func (step StepSetPublishDate) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+// NewStepSetPublishDate returns a fully initialized StepSetPublishDate object
+func NewStepSetPublishDate(stepInfo datatype.Map) (StepSetPublishDate, error) {
+	return StepSetPublishDate{}, nil
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepSetPublishDate) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepSetPublishDate) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 	streamRenderer := renderer.(*Stream)
 	streamRenderer.stream.PublishDate = time.Now().UnixMilli()
 	return nil

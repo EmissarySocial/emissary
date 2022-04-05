@@ -7,35 +7,39 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
 type StepAddChildStream struct {
-	templateIDs []string       // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
-	view        string         // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
-	withChild   []datatype.Map // List of steps to take on the newly created child record on POST.
+	templateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	view        string   // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
+	withChild   Pipeline // List of steps to take on the newly created child record on POST.
 
-	templateService *singleton.Template
-	streamService   *service.Stream
+	BaseStep
 }
 
 // NewStepAddChildStream returns a fully initialized StepAddChildStream record
-func NewStepAddChildStream(templateService *singleton.Template, streamService *service.Stream, stepInfo datatype.Map) StepAddChildStream {
-	return StepAddChildStream{
-		templateService: templateService,
-		streamService:   streamService,
-		view:            stepInfo.GetString("view"),
-		templateIDs:     stepInfo.GetSliceOfString("template"),
-		withChild:       stepInfo.GetSliceOfMap("with-child"),
+func NewStepAddChildStream(stepInfo datatype.Map) (StepAddChildStream, error) {
+
+	withChild, err := NewPipeline(stepInfo.GetSliceOfMap("with-child"))
+
+	if err != nil {
+		return StepAddChildStream{}, derp.Wrap(err, "render.NewStepAddChildStream", "Error parsing with-child")
 	}
+
+	return StepAddChildStream{
+		view:        stepInfo.GetString("view"),
+		templateIDs: stepInfo.GetSliceOfString("template"),
+		withChild:   withChild,
+	}, nil
 }
 
-func (step StepAddChildStream) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepAddChildStream) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepAddChildStream.Get"
 
 	// This can only be used on a Stream Renderer
 	streamRenderer := renderer.(*Stream)
@@ -44,21 +48,21 @@ func (step StepAddChildStream) Get(buffer io.Writer, renderer Renderer) error {
 	if step.view != "" {
 
 		if err := renderer.executeTemplate(buffer, step.view, renderer); err != nil {
-			return derp.Wrap(err, "whisper.render.StepViewHTML.Get", "Error executing template")
+			return derp.Wrap(err, location, "Error executing template")
 		}
 
 		return nil
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), step.templateService, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
 
 	return nil
 }
 
-func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAddChildStream) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
-	const location = "render.SetpAddChildStream.Post"
+	const location = "render.StepAddChildStream.Post"
 
 	// Collect prerequisites
 	streamRenderer := renderer.(*Stream)
@@ -76,7 +80,7 @@ func (step StepAddChildStream) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Try to load the template for the new stream
-	template, err := step.templateService.Load(templateID)
+	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Cannot find template")
@@ -130,52 +134,4 @@ func modalAddStream(response *echo.Response, templateService *singleton.Template
 	result := WrapModalWithCloseButton(response, b.String())
 
 	io.WriteString(buffer, result)
-}
-
-// finalizeAddStream takes all of the follow-on actions required to initialize a new stream.
-// - sets the author to the current user
-// - executes the correct "init" action for this template
-// - saves the stream (if not already saved by "init")
-// - executes any additional "with-stream" steps
-func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Context, stream *model.Stream, template *model.Template, steps []datatype.Map) error {
-
-	const location = "render.finalizeAddStream"
-
-	// Create stream renderer
-	action := template.Action("view")
-	renderer, err := NewStream(factory, context, template, action, stream)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating renderer", stream)
-	}
-
-	// Assign the current user as the author (with silent failure)
-	renderer.setAuthor()
-
-	// TODO: Sort order??
-
-	// If there is an "init" step for the stream's template, then execute it now
-	if action := template.Action("init"); action != nil {
-		if err := DoPipeline(&renderer, buffer, action.Steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
-		}
-	}
-
-	/*/ If the stream was not saved by the "init" steps, then save it now
-	if stream.IsNew() {
-
-		streamService := factory.Stream()
-		if err := streamService.Save(stream, "Created"); err != nil {
-			return derp.Wrap(err, location, "Error saving stream stream to database")
-		}
-	}*/
-
-	// Execute additional "with-stream" steps
-	if len(steps) > 0 {
-		if err := DoPipeline(&renderer, buffer, steps, ActionMethodPost); err != nil {
-			return derp.Wrap(err, location, "Unable to execute action steps on stream")
-		}
-	}
-
-	return nil
 }

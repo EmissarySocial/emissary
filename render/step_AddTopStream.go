@@ -7,36 +7,38 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
-	"github.com/whisperverse/whisperverse/singleton"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepAddTopStream represents an action that can create top-level folders in the Domain
 type StepAddTopStream struct {
-	templateService *singleton.Template
-	streamService   *service.Stream
-	templateIDs     []string
-	withNewStream   []datatype.Map
+	templateIDs   []string // List of valid templateIds that the new top-level stream could be
+	withNewStream Pipeline // Pipeline of steps to take on the newly-created stream
+
+	BaseStep
 }
 
 // NewStepAddTopStream returns a fully parsed StepAddTopStream object
-func NewStepAddTopStream(templateService *singleton.Template, streamService *service.Stream, config datatype.Map) StepAddTopStream {
+func NewStepAddTopStream(stepInfo datatype.Map) (StepAddTopStream, error) {
+
+	withNewStream, err := NewPipeline(stepInfo.GetSliceOfMap("with-new-stream"))
+
+	if err != nil {
+		return StepAddTopStream{}, derp.Wrap(err, "render.StepAddTopStream", "Invalid 'with-new-stream", stepInfo)
+	}
 
 	return StepAddTopStream{
-		templateService: templateService,
-		streamService:   streamService,
-		templateIDs:     config.GetSliceOfString("templateIds"),
-		withNewStream:   config.GetSliceOfMap("with-new-stream"),
-	}
+		templateIDs:   stepInfo.GetSliceOfString("templateIds"),
+		withNewStream: withNewStream,
+	}, nil
 }
 
-func (step StepAddTopStream) Get(buffer io.Writer, renderer Renderer) error {
-	modalAddStream(renderer.context().Response(), step.templateService, buffer, renderer.URL(), "top", step.templateIDs)
+func (step StepAddTopStream) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+	modalAddStream(renderer.context().Response(), factory.Template(), buffer, renderer.URL(), "top", step.templateIDs)
 	return nil
 }
 
-func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAddTopStream) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddTopStream.Post"
 
@@ -54,7 +56,7 @@ func (step StepAddTopStream) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// Try to load the template for the new stream
-	template, err := step.templateService.Load(templateID)
+	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Cannot find template")

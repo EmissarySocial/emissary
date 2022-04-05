@@ -8,12 +8,13 @@ import (
 )
 
 type Step interface {
-	Get(io.Writer, Renderer) error
-	Post(io.Writer, Renderer) error
+	Get(Factory, Renderer, io.Writer) error
+	Post(Factory, Renderer, io.Writer) error
+	isWrapped() bool // Returns true if this step can be wrapped by the global frame.
 }
 
 // NewStep uses an Step object to create a new action
-func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
+func NewStep(stepInfo datatype.Map) (Step, error) {
 
 	// Populate the action with the data from
 	switch stepInfo["step"] {
@@ -21,101 +22,98 @@ func NewStep(factory Factory, stepInfo datatype.Map) (Step, error) {
 	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
 	case "add":
-		return NewStepAddModelObject(factory.FormLibrary(), stepInfo), nil
+		return NewStepAddModelObject(stepInfo)
 
 	case "edit":
-		return NewStepEditModelObject(factory.FormLibrary(), stepInfo), nil
+		return NewStepEditModelObject(stepInfo)
 
 	case "delete":
-		return NewStepDelete(stepInfo), nil
+		return NewStepDelete(stepInfo)
 
 	case "save":
-		return NewStepSave(stepInfo), nil
+		return NewStepSave(stepInfo)
 
 	case "form-html":
-		return NewStepForm(factory.FormLibrary(), stepInfo), nil
+		return NewStepForm(stepInfo)
 
 	case "set-data":
-		return NewStepSetData(stepInfo), nil
-
-	case "set-mentions":
-		return NewStepSetMentions(stepInfo), nil
+		return NewStepSetData(stepInfo)
 
 	case "set-thumbnail":
-		return NewStepStreamThumbnail(factory.Attachment(), stepInfo), nil
+		return NewStepStreamThumbnail(stepInfo)
 
 	case "set-publishdate":
-		return NewStepSetPublishDate(stepInfo), nil
+		return NewStepSetPublishDate(stepInfo)
 
 	case "set-simple-sharing":
-		return NewStepSetSimpleSharing(factory.FormLibrary(), stepInfo), nil
+		return NewStepSetSimpleSharing(stepInfo)
 
 	case "set-state":
-		return NewStepStreamState(stepInfo), nil
+		return NewStepStreamState(stepInfo)
 
 	case "sort":
-		return NewStepSort(stepInfo), nil
+		return NewStepSort(stepInfo)
 
 	case "view-html":
-		return NewStepViewHTML(stepInfo), nil
+		return NewStepViewHTML(stepInfo)
 
 	// STREAM-SPECIFIC STEPS
 
 	case "add-child":
-		return NewStepAddChildStream(factory.Template(), factory.Stream(), stepInfo), nil
+		return NewStepAddChildStream(stepInfo)
 
 	case "add-sibling":
-		return NewStepAddSiblingStream(factory.Template(), factory.Stream(), stepInfo), nil
+		return NewStepAddSiblingStream(stepInfo)
 
 	case "add-top-level":
-		return NewStepAddTopStream(factory.Template(), factory.Stream(), stepInfo), nil
+		return NewStepAddTopStream(stepInfo)
 
 	case "edit-content":
-		return NewStepEditContent(factory.ContentLibrary(), stepInfo), nil
+		return NewStepEditContent(stepInfo)
 
 	case "view-rss":
-		return NewStepViewRSS(factory.Stream(), stepInfo), nil
+		return NewStepViewRSS(stepInfo)
 
 	// DRAFTS
 
 	case "promote-draft":
-		return NewStepStreamPromoteDraft(factory.StreamDraft(), stepInfo), nil
+		return NewStepStreamPromoteDraft(stepInfo)
 
 	case "with-draft":
-		return NewStepWithDraft(factory.Stream(), stepInfo), nil
+		return NewStepWithDraft(stepInfo)
 
 	// ATTACHMENTS
 
 	case "upload-attachments":
-		return NewStepUploadAttachment(factory.Stream(), factory.Attachment(), factory.MediaServer(), stepInfo), nil
+		return NewStepUploadAttachment(stepInfo)
 
 	// SERVER-SIDE CONTROL LOGIC
 
 	case "with-children":
-		return NewStepWithChildren(factory.Stream(), stepInfo), nil
+		return NewStepWithChildren(stepInfo)
 
 	case "with-parent":
-		return NewStepWithParent(factory.Stream(), stepInfo), nil
+		return NewStepWithParent(stepInfo)
 
 	case "if":
-		return NewStepIfCondition(factory, stepInfo), nil
+		return NewStepIfCondition(stepInfo)
 
 	// CLIENT-SIDE CONTROLS
 
 	case "as-modal":
-		return NewStepAsModal(stepInfo), nil
+		return NewStepAsModal(stepInfo)
 
 	case "as-confirmation":
-		return NewStepAsConfirmation(stepInfo), nil
+		return NewStepAsConfirmation(stepInfo)
 
 	case "forward-to":
-		return NewStepForwardTo(stepInfo), nil
+		return NewStepForwardTo(stepInfo)
 
 	case "trigger-event":
-		return NewStepTriggerEvent(stepInfo), nil
+		return NewStepTriggerEvent(stepInfo)
 
 	case "refresh-page":
-		return NewStepRefreshPage(stepInfo), nil
+		return NewStepRefreshPage(stepInfo)
 
 	}
 

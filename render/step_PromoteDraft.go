@@ -6,33 +6,27 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/first"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepStreamPromoteDraft represents an action-step that can copy the Container from a StreamDraft into its corresponding Stream
 type StepStreamPromoteDraft struct {
-	draftService *service.StreamDraft
-	stateID      string
+	stateID string
+
+	BaseStep
 }
 
-func NewStepStreamPromoteDraft(draftService *service.StreamDraft, stepInfo datatype.Map) StepStreamPromoteDraft {
+func NewStepStreamPromoteDraft(stepInfo datatype.Map) (StepStreamPromoteDraft, error) {
 	return StepStreamPromoteDraft{
-		draftService: draftService,
-		stateID:      first.String(stepInfo.GetString("state"), "published"),
-	}
-}
-
-// Get is not implemented
-func (step StepStreamPromoteDraft) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+		stateID: first.String(stepInfo.GetString("state"), "published"),
+	}, nil
 }
 
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
-func (step StepStreamPromoteDraft) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepStreamPromoteDraft) Post(factory Factory, renderer Renderer, _ io.Writer) error {
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := step.draftService.Publish(renderer.objectID(), step.stateID); err != nil {
-		return derp.Wrap(err, "whisper.renderer.StepStreamPromoteDraft.Post", "Error publishing Draft")
+	if err := factory.StreamDraft().Publish(renderer.objectID(), step.stateID); err != nil {
+		return derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft")
 	}
 
 	return nil

@@ -14,19 +14,21 @@ type StepDelete struct {
 	title   string
 	message string
 	submit  string
+
+	BaseStep
 }
 
 // NewStepDelete returns a fully populated StepDelete object
-func NewStepDelete(stepInfo datatype.Map) StepDelete {
+func NewStepDelete(stepInfo datatype.Map) (StepDelete, error) {
 	return StepDelete{
 		title:   first.String(stepInfo.GetString("title"), "Confirm Delete"),
 		message: first.String(stepInfo.GetString("message"), "Are you sure you want to delete this item?  There is NO UNDO."),
 		submit:  first.String(stepInfo.GetString("submit"), "Delete"),
-	}
+	}, nil
 }
 
 // Get displays a customizable confirmation form for the delete
-func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepDelete) Get(_ Factory, renderer Renderer, buffer io.Writer) error {
 
 	b := html.New()
 
@@ -49,7 +51,7 @@ func (step StepDelete) Get(buffer io.Writer, renderer Renderer) error {
 }
 
 // Post removes the object from the database (likely using a soft-delete, though)
-func (step StepDelete) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepDelete) Post(_ Factory, renderer Renderer, buffer io.Writer) error {
 
 	// Delete the object via the model service.
 	if err := renderer.service().ObjectDelete(renderer.object(), "Deleted"); err != nil {

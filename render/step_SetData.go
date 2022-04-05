@@ -11,29 +11,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// StepSetData represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepSetData represents an action-step that can update the custom data stored in a Stream
 type StepSetData struct {
 	paths    []string     // List of paths to pull from form data
 	values   datatype.Map // values to set directly into the object
 	defaults datatype.Map // values to set into the object IFF they are currently empty.
+
+	BaseStep
 }
 
-func NewStepSetData(stepInfo datatype.Map) StepSetData {
+// NewStepSetData returns a fully initialized StepSetData object
+func NewStepSetData(stepInfo datatype.Map) (StepSetData, error) {
 
 	return StepSetData{
 		paths:    stepInfo.GetSliceOfString("paths"),
 		values:   stepInfo.GetMap("values"),
 		defaults: stepInfo.GetMap("defaults"),
-	}
-}
-
-// Get does not display anything.
-func (step StepSetData) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+	}, nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepSetData) Post(_ Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepSetData.Post"
 
 	object := renderer.object()
 
@@ -43,7 +43,7 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 
 	// Collect form POST information
 	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {
-		result := derp.Wrap(err, "render.StepSetData.Post", "Error binding body")
+		result := derp.Wrap(err, location, "Error binding body")
 		derp.SetErrorCode(result, http.StatusBadRequest)
 		return result
 	}
@@ -51,7 +51,7 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 	// Put approved form data into the stream
 	for _, p := range step.paths {
 		if err := schema.Set(object, p, inputs[p]); err != nil {
-			result := derp.Wrap(err, "render.StepSetData.Post", "Error seting value from user input", inputs, p)
+			result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return result
 		}
@@ -60,7 +60,7 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 	// Put values from schema.json into the stream
 	for key, value := range step.values {
 		if err := schema.Set(object, key, value); err != nil {
-			result := derp.Wrap(err, "render.StepSetData.Post", "Error setting value from schema.json", step.values)
+			result := derp.Wrap(err, location, "Error setting value from schema.json", step.values)
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return result
 		}
@@ -70,13 +70,13 @@ func (step StepSetData) Post(buffer io.Writer, renderer Renderer) error {
 	for name, value := range step.defaults {
 		if convert.IsZeroValue(path.Get(renderer, name)) {
 			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, "render.StepSetData.Post", "Error setting default value", name, value)
+				result := derp.Wrap(err, location, "Error setting default value", name, value)
 				derp.SetErrorCode(result, http.StatusBadRequest)
 				return result
 			}
 		}
 	}
 
-	// Silence is Golden
+	// Silence is AU-some
 	return nil
 }

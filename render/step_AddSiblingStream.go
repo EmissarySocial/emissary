@@ -7,32 +7,34 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
-	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // StepAddSiblingStream is an action that can add new sub-streams to the domain.
 type StepAddSiblingStream struct {
-	templateIDs []string       // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
-	view        string         // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
-	withSibling []datatype.Map // List of steps to take on the newly created sibling record on POST.
+	templateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	view        string   // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
+	withSibling Pipeline // List of steps to take on the newly created sibling record on POST.
 
-	templateService *singleton.Template
-	streamService   *service.Stream
+	BaseStep
 }
 
 // NewStepAddSiblingStream returns a fully initialized StepAddSiblingStream record
-func NewStepAddSiblingStream(templateService *singleton.Template, streamService *service.Stream, stepInfo datatype.Map) StepAddSiblingStream {
-	return StepAddSiblingStream{
-		templateService: templateService,
-		streamService:   streamService,
-		view:            stepInfo.GetString("view"),
-		templateIDs:     stepInfo.GetSliceOfString("template"),
-		withSibling:     stepInfo.GetSliceOfMap("with-sibling"),
+func NewStepAddSiblingStream(stepInfo datatype.Map) (StepAddSiblingStream, error) {
+
+	withSibling, err := NewPipeline(stepInfo.GetSliceOfMap("with-sibling"))
+
+	if err != nil {
+		return StepAddSiblingStream{}, derp.Wrap(err, "render.NewStepAddWithSibling", "Invalid 'with-sibling", stepInfo)
 	}
+
+	return StepAddSiblingStream{
+		view:        stepInfo.GetString("view"),
+		templateIDs: stepInfo.GetSliceOfString("template"),
+		withSibling: withSibling,
+	}, nil
 }
 
-func (step StepAddSiblingStream) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepAddSiblingStream) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	// This can only be used on a Stream Renderer
 	streamRenderer := renderer.(*Stream)
@@ -48,12 +50,12 @@ func (step StepAddSiblingStream) Get(buffer io.Writer, renderer Renderer) error 
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), step.templateService, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
 
 	return nil
 }
 
-func (step StepAddSiblingStream) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAddSiblingStream) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	// Collect prerequisites
 	streamRenderer := renderer.(*Stream)
@@ -74,12 +76,12 @@ func (step StepAddSiblingStream) Post(buffer io.Writer, renderer Renderer) error
 
 	// Try to load parent Stream to validate data
 	parent := model.NewStream()
-	if err := step.streamService.LoadParent(sibling, &parent); err != nil {
+	if err := factory.Stream().LoadParent(sibling, &parent); err != nil {
 		return derp.Wrap(err, "service.Stream.NewSiblling", "Error loading parent Stream")
 	}
 
 	// Try to load parent's Template
-	template, err := step.templateService.Load(templateID)
+	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Stream.NewTopLevel", "Cannot find template")

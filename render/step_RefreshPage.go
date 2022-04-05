@@ -7,20 +7,17 @@ import (
 )
 
 // StepRefreshPage represents an action-step that forwards the user to a new page.
-type StepRefreshPage struct{}
-
-// NewStepRefreshPage returns a fully initialized StepRefreshPage object
-func NewStepRefreshPage(stepInfo datatype.Map) StepRefreshPage {
-	return StepRefreshPage{}
+type StepRefreshPage struct {
+	BaseStep
 }
 
-// Get displays a form where users can update stream data
-func (step StepRefreshPage) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+// NewStepRefreshPage returns a fully initialized StepRefreshPage object
+func NewStepRefreshPage(stepInfo datatype.Map) (StepRefreshPage, error) {
+	return StepRefreshPage{}, nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepRefreshPage) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepRefreshPage) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 	renderer.context().Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage":""}`)
 	return nil
 }

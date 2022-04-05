@@ -13,21 +13,19 @@ import (
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
-	filename       string
-	contentLibrary *nebula.Library
+	filename string
+
+	BaseStep
 }
 
-func NewStepEditContent(contentLibrary *nebula.Library, stepInfo datatype.Map) StepEditContent {
-
-	filename := first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId"))
+func NewStepEditContent(stepInfo datatype.Map) (StepEditContent, error) {
 
 	return StepEditContent{
-		contentLibrary: contentLibrary,
-		filename:       filename,
-	}
+		filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
+	}, nil
 }
 
-func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepEditContent) Get(_ Factory, renderer Renderer, buffer io.Writer) error {
 
 	context := renderer.context()
 	params := context.QueryParams()
@@ -44,7 +42,7 @@ func (step StepEditContent) Get(buffer io.Writer, renderer Renderer) error {
 	return nil
 }
 
-func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepEditContent) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	object := renderer.object()
 	getterSetter, ok := object.(nebula.GetterSetter)
@@ -61,14 +59,15 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	}
 
 	// UPLOADS: If present, inject the uploaded filename into the form post. (One attachment per content item)
-	if attachments := uploadedFiles(renderer.factory(), renderer.context(), renderer.objectID()); len(attachments) > 0 {
+	if attachments := uploadedFiles(factory, renderer.context(), renderer.objectID()); len(attachments) > 0 {
 		body["file"] = "/" + renderer.Token() + "/attachments/" + attachments[0].Filename
 		body["mimeType"] = attachments[0].MimeType()
 	}
 
 	// Try to execute the transaction
+	contentLibrary := factory.ContentLibrary()
 	container := getterSetter.GetContainer()
-	changedID, err := container.Post(step.contentLibrary, body)
+	changedID, err := container.Post(contentLibrary, body)
 
 	if err != nil {
 		return derp.Wrap(err, "whisper.render.StepEditContent.Post", "Error executing content action")
@@ -95,15 +94,9 @@ func (step StepEditContent) Post(buffer io.Writer, renderer Renderer) error {
 	header.Set("HX-Trigger", "closeModal")
 	header.Set("ChangedID", convert.String(changedID))
 	header.Set("HX-Retarget", `.content-editor`)
-	// header.Set("HX-Retarget", `[data-id="0"]`)
-	// header.Set("HX-Retarget", `[data-id="`+convert.String(changedID)+`"]`)
 
 	// Re-render ALL items, including the Sortable behavior
-	result := nebula.Edit(step.contentLibrary, &container, renderer.URL())
-	// Re-render JUST the updated item
-	// b := html.New()
-	// step.contentLibrary.Edit(b, &container, changedID, renderer.URL())
-	// result := b.String()
+	result := nebula.Edit(contentLibrary, &container, renderer.URL())
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, result); err != nil {

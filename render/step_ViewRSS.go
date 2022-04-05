@@ -9,33 +9,32 @@ import (
 	"github.com/benpate/derp"
 	"github.com/gorilla/feeds"
 	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepViewRSS represents an action-step that can render a Stream into HTML
 type StepViewRSS struct {
-	streamService *service.Stream
-	Format        string // atom, rss, json (default is rss)
+	Format string // atom, rss, json (default is rss)
+
+	BaseStep
 }
 
 // NewStepViewRSS generates a fully initialized StepViewRSS step.
-func NewStepViewRSS(streamService *service.Stream, stepInfo datatype.Map) StepViewRSS {
+func NewStepViewRSS(stepInfo datatype.Map) (StepViewRSS, error) {
 
 	return StepViewRSS{
-		streamService: streamService,
-		Format:        convert.String(stepInfo["format"]),
-	}
+		Format: convert.String(stepInfo["format"]),
+	}, nil
 }
 
 // Get renders the Stream HTML to the context
-func (step StepViewRSS) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepViewRSS) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepViewRSS.Get"
 
 	streamRenderer := renderer.(*Stream)
 
 	// Get all child streams from the database
-	children, err := step.streamService.ListByParent(renderer.objectID())
+	children, err := factory.Stream().ListByParent(renderer.objectID())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error querying child streams")
@@ -102,9 +101,4 @@ func (step StepViewRSS) Get(buffer io.Writer, renderer Renderer) error {
 		buffer.Write([]byte(xml))
 		return nil
 	}
-}
-
-// Post is not supported for this step.
-func (step StepViewRSS) Post(buffer io.Writer, renderer Renderer) error {
-	return nil
 }

@@ -10,19 +10,29 @@ import (
 
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
-	subSteps []datatype.Map
+	subSteps Pipeline
+
+	BaseStep
 }
 
 // NewStepAsModal returns a fully initialized StepAsModal object
-func NewStepAsModal(stepInfo datatype.Map) StepAsModal {
+func NewStepAsModal(stepInfo datatype.Map) (StepAsModal, error) {
+
+	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+
+	if err != nil {
+		return StepAsModal{}, derp.Wrap(err, "render.NewStepAsModal", "Invalid 'steps'", stepInfo)
+	}
 
 	return StepAsModal{
-		subSteps: stepInfo.GetSliceOfMap("steps"),
-	}
+		subSteps: subSteps,
+	}, nil
 }
 
 // Get displays a form where users can update stream data
-func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
+func (step StepAsModal) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepAsModal.Get"
 
 	header := renderer.context().Response().Header()
 	header.Set("HX-Retarget", "aside")
@@ -36,8 +46,8 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 	b.Div().Class("modal-content").EndBracket()
 
 	// Write inner items
-	if err := DoPipeline(renderer, b, step.subSteps, ActionMethodGet); err != nil {
-		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error executing subSteps")
+	if err := step.subSteps.Get(factory, renderer, b); err != nil {
+		return derp.Wrap(err, location, "Error executing subSteps")
 	}
 
 	// Done
@@ -45,18 +55,18 @@ func (step StepAsModal) Get(buffer io.Writer, renderer Renderer) error {
 
 	// Write the modal dialog into the response buffer
 	if _, err := io.WriteString(buffer, b.String()); err != nil {
-		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error writing from builder to buffer")
+		return derp.Wrap(err, location, "Error writing from builder to buffer")
 	}
 
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepAsModal) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepAsModal) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	// Write inner items
-	if err := DoPipeline(renderer, buffer, step.subSteps, ActionMethodPost); err != nil {
-		return derp.Wrap(err, "whisper.render.StepAsModal.Get", "Error executing subSteps")
+	if err := step.subSteps.Post(factory, renderer, buffer); err != nil {
+		return derp.Wrap(err, "render.StepAsModal.Post", "Error executing subSteps")
 	}
 
 	CloseModal(renderer.context(), "")

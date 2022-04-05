@@ -17,24 +17,21 @@ type StepSort struct {
 	keys    string
 	values  string
 	message string
+
+	BaseStep
 }
 
-func NewStepSort(stepInfo datatype.Map) StepSort {
+func NewStepSort(stepInfo datatype.Map) (StepSort, error) {
 
 	return StepSort{
 		keys:    first.String(stepInfo.GetString("keys"), "_id"),
 		values:  first.String(stepInfo.GetString("values"), "rank"),
 		message: stepInfo.GetString("message"),
-	}
-}
-
-// Get does not display anything.
-func (step StepSort) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
+	}, nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSort) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepSort) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 
 	var formPost struct {
 		Keys []string `form:"keys"`

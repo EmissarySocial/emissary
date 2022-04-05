@@ -5,48 +5,66 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepWithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithDraft struct {
-	streamService *service.Stream
-	steps         []datatype.Map
+	subSteps Pipeline
+
+	BaseStep
 }
 
 // NewStepWithDraft returns a fully initialized StepWithDraft object
-func NewStepWithDraft(streamService *service.Stream, stepInfo datatype.Map) StepWithDraft {
+func NewStepWithDraft(stepInfo datatype.Map) (StepWithDraft, error) {
+
+	const location = "render.NewStepWithDraft"
+
+	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+
+	if err != nil {
+		return StepWithDraft{}, derp.Wrap(err, location, "Invalid 'steps'")
+	}
 
 	return StepWithDraft{
-		streamService: streamService,
-		steps:         stepInfo.GetSliceOfMap("steps"),
-	}
+		subSteps: subSteps,
+	}, nil
 }
 
 // Get displays a form where users can update stream data
-func (step StepWithDraft) Get(buffer io.Writer, renderer Renderer) error {
-	return step.execute(buffer, renderer, ActionMethodGet)
-}
+func (step StepWithDraft) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
-// Post updates the stream with approved data from the request body.
-func (step StepWithDraft) Post(buffer io.Writer, renderer Renderer) error {
-	return step.execute(buffer, renderer, ActionMethodPost)
-}
-
-// Execute makes a separate renderer bound to the StreamDraft service that executes a list of sub-steps on
-// the draft copy of the provided Stream
-func (step StepWithDraft) execute(buffer io.Writer, renderer Renderer, actionMethod ActionMethod) error {
+	const location = "whisper.render.StepWithDraft.Get"
 
 	streamRenderer := renderer.(*Stream)
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepWithDraft.Post", "Error getting draft renderer")
+		return derp.Wrap(err, location, "Error getting draft renderer")
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := DoPipeline(&draftRenderer, buffer, step.steps, actionMethod); err != nil {
-		return derp.Wrap(err, "whisper.render.StepWithDraft.Post", "Error executing steps for parent")
+	if err := step.subSteps.Get(factory, &draftRenderer, buffer); err != nil {
+		return derp.Wrap(err, location, "Error executing steps on draft")
+	}
+
+	return nil
+}
+
+// Post updates the stream with approved data from the request body.
+func (step StepWithDraft) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+
+	const location = "whisper.render.StepWithDraft.Post"
+
+	streamRenderer := renderer.(*Stream)
+	draftRenderer, err := streamRenderer.draftRenderer()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting draft renderer")
+	}
+
+	// Execute the POST render pipeline on the parent
+	if err := step.subSteps.Post(factory, &draftRenderer, buffer); err != nil {
+		return derp.Wrap(err, location, "Error executing steps for parent")
 	}
 
 	return nil

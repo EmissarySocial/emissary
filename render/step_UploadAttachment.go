@@ -5,32 +5,19 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/mediaserver"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
 type StepUploadAttachment struct {
-	streamService     *service.Stream
-	attachmentService *service.Attachment
-	mediaServer       mediaserver.MediaServer
+	BaseStep
 }
 
 // NewStepUploadAttachment returns a fully parsed StepUploadAttachment object
-func NewStepUploadAttachment(streamService *service.Stream, attachmentService *service.Attachment, mediaServer mediaserver.MediaServer, config datatype.Map) StepUploadAttachment {
-
-	return StepUploadAttachment{
-		streamService:     streamService,
-		attachmentService: attachmentService,
-		mediaServer:       mediaServer,
-	}
+func NewStepUploadAttachment(stepInfo datatype.Map) (StepUploadAttachment, error) {
+	return StepUploadAttachment{}, nil
 }
 
-func (step StepUploadAttachment) Get(buffer io.Writer, renderer Renderer) error {
-	return nil
-}
-
-func (step StepUploadAttachment) Post(buffer io.Writer, renderer Renderer) error {
+func (step StepUploadAttachment) Post(factory Factory, renderer Renderer, _ io.Writer) error {
 
 	// TODO: could this be generalized to work with more than just streams???
 	streamRenderer := renderer.(*Stream)
@@ -56,11 +43,11 @@ func (step StepUploadAttachment) Post(buffer io.Writer, renderer Renderer) error
 
 		defer source.Close()
 
-		if err := step.mediaServer.Put(attachment.Filename, source); err != nil {
+		if err := factory.MediaServer().Put(attachment.Filename, source); err != nil {
 			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
 		}
 
-		if err := step.attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
+		if err := factory.Attachment().Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
 		}
 	}
