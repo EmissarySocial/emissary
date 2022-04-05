@@ -3,27 +3,20 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 )
 
 // StepSave represents an action-step that can save changes to any object
 type StepSave struct {
-	comment string
-
-	BaseStep
+	Comment string
 }
 
-// NewStepSave returns a fully initialized StepSave object
-func NewStepSave(stepInfo datatype.Map) (StepSave, error) {
-
-	return StepSave{
-		comment: stepInfo.GetString("comment"),
-	}, nil
+func (step StepSave) Get(renderer Renderer, _ io.Writer) error {
+	return nil
 }
 
 // Post saves the object to the database
-func (step StepSave) Post(_ Factory, renderer Renderer, _ io.Writer) error {
+func (step StepSave) Post(renderer Renderer, _ io.Writer) error {
 
 	object := renderer.object()
 
@@ -33,7 +26,7 @@ func (step StepSave) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 	}
 
 	// Try to update the stream
-	if err := renderer.service().ObjectSave(object, step.comment); err != nil {
+	if err := renderer.service().ObjectSave(object, step.Comment); err != nil {
 		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object", object)
 	}
 

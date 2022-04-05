@@ -13,25 +13,17 @@ import (
 
 // StepSetData represents an action-step that can update the custom data stored in a Stream
 type StepSetData struct {
-	paths    []string     // List of paths to pull from form data
-	values   datatype.Map // values to set directly into the object
-	defaults datatype.Map // values to set into the object IFF they are currently empty.
-
-	BaseStep
+	Paths    []string     // List of paths to pull from form data
+	Values   datatype.Map // values to set directly into the object
+	Defaults datatype.Map // values to set into the object IFF they are currently empty.
 }
 
-// NewStepSetData returns a fully initialized StepSetData object
-func NewStepSetData(stepInfo datatype.Map) (StepSetData, error) {
-
-	return StepSetData{
-		paths:    stepInfo.GetSliceOfString("paths"),
-		values:   stepInfo.GetMap("values"),
-		defaults: stepInfo.GetMap("defaults"),
-	}, nil
+func (step StepSetData) Get(renderer Renderer, buffer io.Writer) error {
+	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetData) Post(_ Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepSetData) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepSetData.Post"
 
@@ -49,7 +41,7 @@ func (step StepSetData) Post(_ Factory, renderer Renderer, buffer io.Writer) err
 	}
 
 	// Put approved form data into the stream
-	for _, p := range step.paths {
+	for _, p := range step.Paths {
 		if err := schema.Set(object, p, inputs[p]); err != nil {
 			result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
 			derp.SetErrorCode(result, http.StatusBadRequest)
@@ -58,16 +50,16 @@ func (step StepSetData) Post(_ Factory, renderer Renderer, buffer io.Writer) err
 	}
 
 	// Put values from schema.json into the stream
-	for key, value := range step.values {
+	for key, value := range step.Values {
 		if err := schema.Set(object, key, value); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from schema.json", step.values)
+			result := derp.Wrap(err, location, "Error setting value from schema.json", key, value)
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return result
 		}
 	}
 
 	// Set default values (only if no value already exists)
-	for name, value := range step.defaults {
+	for name, value := range step.Defaults {
 		if convert.IsZeroValue(path.Get(renderer, name)) {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value)

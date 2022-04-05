@@ -3,33 +3,11 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
-type Pipeline []Step
-
-// NewPipeline converts an array of maps into an array of steps
-func NewPipeline(steps []datatype.Map) (Pipeline, error) {
-
-	const location = "render.NewPipeline"
-
-	result := make([]Step, len(steps))
-
-	for index := range steps {
-
-		// Generate a new pipeline
-		step, err := NewStep(steps[index])
-
-		if err != nil {
-			return result, derp.Wrap(err, location, "Error parsing step", index, steps[index])
-		}
-
-		result[index] = step
-	}
-
-	return result, nil
-}
+type Pipeline []step.Step
 
 // Get runs all of the pipeline steps using the GET method
 func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) error {

@@ -7,25 +7,15 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/first"
 	"github.com/benpate/nebula"
 )
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
-	filename string
-
-	BaseStep
+	Filename string
 }
 
-func NewStepEditContent(stepInfo datatype.Map) (StepEditContent, error) {
-
-	return StepEditContent{
-		filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
-	}, nil
-}
-
-func (step StepEditContent) Get(_ Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
 
 	context := renderer.context()
 	params := context.QueryParams()
@@ -35,15 +25,16 @@ func (step StepEditContent) Get(_ Factory, renderer Renderer, buffer io.Writer) 
 		return step.modalAction(buffer, renderer)
 	}
 
-	if err := renderer.executeTemplate(buffer, step.filename, renderer); err != nil {
+	if err := renderer.executeTemplate(buffer, step.Filename, renderer); err != nil {
 		return derp.Wrap(err, "whisper.render.StepEditContent.Get", "Error executing template")
 	}
 
 	return nil
 }
 
-func (step StepEditContent) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 
+	factory := renderer.factory()
 	object := renderer.object()
 	getterSetter, ok := object.(nebula.GetterSetter)
 

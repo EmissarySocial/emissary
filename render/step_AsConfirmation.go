@@ -3,32 +3,18 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
 	"github.com/benpate/html"
 )
 
 // StepAsConfirmation displays a confirmation dialog on GET, giving users an option to continue or not
 type StepAsConfirmation struct {
-	title   string
-	message string
-	submit  string
-
-	BaseStep
-}
-
-// NewStepAsConfirmation returns a fully initialized StepAsConfirmation object
-func NewStepAsConfirmation(stepInfo datatype.Map) (StepAsConfirmation, error) {
-
-	return StepAsConfirmation{
-		title:   stepInfo.GetString("title"),
-		message: stepInfo.GetString("message"),
-		submit:  first.String(stepInfo.GetString("submit"), "Continue"),
-	}, nil
+	Title   string
+	Message string
+	Submit  string
 }
 
 // Get displays a modal that asks users to continue or not.
-func (step StepAsConfirmation) Get(_ Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
 
 	header := renderer.context().Response().Header()
 	header.Set("HX-Retarget", "aside")
@@ -37,11 +23,11 @@ func (step StepAsConfirmation) Get(_ Factory, renderer Renderer, buffer io.Write
 	b := html.New()
 
 	// Modal Content
-	b.H1().InnerHTML(step.title).Close()
-	b.Div().Class("space-below").InnerHTML(step.message).Close()
+	b.H1().InnerHTML(step.Title).Close()
+	b.Div().Class("space-below").InnerHTML(step.Message).Close()
 
 	b.Div()
-	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerHTML(step.submit).Close()
+	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerHTML(step.Submit).Close()
 	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 
 	// Done
@@ -54,7 +40,7 @@ func (step StepAsConfirmation) Get(_ Factory, renderer Renderer, buffer io.Write
 }
 
 // Post does nothing. (Other steps in the pipeline will make changes)
-func (step StepAsConfirmation) Post(_ Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAsConfirmation) Post(renderer Renderer, buffer io.Writer) error {
 	CloseModal(renderer.context(), "")
 	return nil
 }

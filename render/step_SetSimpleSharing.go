@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -15,25 +14,14 @@ import (
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
 type StepSetSimpleSharing struct {
-	title   string
-	message string
-	roles   []string
-
-	BaseStep
+	Title   string
+	Message string
+	Roles   []string
 }
 
-// NewStepSetSimpleSharing returns a fully parsed StepSetSimpleSharing object
-func NewStepSetSimpleSharing(stepInfo datatype.Map) (StepSetSimpleSharing, error) {
+func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error {
 
-	return StepSetSimpleSharing{
-		title:   stepInfo.GetString("title"),
-		message: stepInfo.GetString("message"),
-		roles:   stepInfo.GetSliceOfString("roles"),
-	}, nil
-}
-
-func (step StepSetSimpleSharing) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
-
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	model := streamRenderer.stream.Criteria.SimpleModel()
 
@@ -51,8 +39,8 @@ func (step StepSetSimpleSharing) Get(factory Factory, renderer Renderer, buffer 
 	b := html.New()
 
 	// Heading
-	b.H1().InnerHTML(step.title).Close()
-	b.Div().Class("space-below").InnerHTML(step.message).Close()
+	b.H1().InnerHTML(step.Title).Close()
+	b.Div().Class("space-below").InnerHTML(step.Message).Close()
 
 	// Form
 	b.Form("", "").
@@ -73,7 +61,7 @@ func (step StepSetSimpleSharing) Get(factory Factory, renderer Renderer, buffer 
 	return nil
 }
 
-func (step StepSetSimpleSharing) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepSetSimpleSharing) Post(renderer Renderer, buffer io.Writer) error {
 
 	streamRenderer := renderer.(*Stream)
 	request := streamRenderer.context().Request()
@@ -90,7 +78,7 @@ func (step StepSetSimpleSharing) Post(factory Factory, renderer Renderer, buffer
 
 	// If PUBLIC is checked, then roles are given to the public group.
 	if convert.Bool(request.Form["public"]) {
-		stream.Criteria.Public = step.roles
+		stream.Criteria.Public = step.Roles
 		return nil
 	}
 
@@ -98,7 +86,7 @@ func (step StepSetSimpleSharing) Post(factory Factory, renderer Renderer, buffer
 	groupIDs = request.Form["groupIds"]
 
 	for _, groupID := range groupIDs {
-		stream.Criteria.Groups[groupID] = step.roles
+		stream.Criteria.Groups[groupID] = step.Roles
 	}
 
 	return nil

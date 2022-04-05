@@ -3,38 +3,21 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepWithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithDraft struct {
-	subSteps Pipeline
-
-	BaseStep
-}
-
-// NewStepWithDraft returns a fully initialized StepWithDraft object
-func NewStepWithDraft(stepInfo datatype.Map) (StepWithDraft, error) {
-
-	const location = "render.NewStepWithDraft"
-
-	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
-
-	if err != nil {
-		return StepWithDraft{}, derp.Wrap(err, location, "Invalid 'steps'")
-	}
-
-	return StepWithDraft{
-		subSteps: subSteps,
-	}, nil
+	SubSteps []step.Step
 }
 
 // Get displays a form where users can update stream data
-func (step StepWithDraft) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "whisper.render.StepWithDraft.Get"
 
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	draftRenderer, err := streamRenderer.draftRenderer()
 
@@ -43,7 +26,7 @@ func (step StepWithDraft) Get(factory Factory, renderer Renderer, buffer io.Writ
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := step.subSteps.Get(factory, &draftRenderer, buffer); err != nil {
+	if err := Pipeline(step.SubSteps).Get(factory, &draftRenderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing steps on draft")
 	}
 
@@ -51,10 +34,11 @@ func (step StepWithDraft) Get(factory Factory, renderer Renderer, buffer io.Writ
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithDraft) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "whisper.render.StepWithDraft.Post"
 
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	draftRenderer, err := streamRenderer.draftRenderer()
 
@@ -63,7 +47,7 @@ func (step StepWithDraft) Post(factory Factory, renderer Renderer, buffer io.Wri
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := step.subSteps.Post(factory, &draftRenderer, buffer); err != nil {
+	if err := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing steps for parent")
 	}
 

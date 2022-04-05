@@ -6,65 +6,33 @@ import (
 	"io"
 	"strings"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepIfCondition represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepIfCondition struct {
-	condition *template.Template
-	then      Pipeline
-	otherwise Pipeline
-
-	BaseStep
-}
-
-func NewStepIfCondition(stepInfo datatype.Map) (StepIfCondition, error) {
-
-	const location = "render.NewStepIfCondition"
-
-	// Parse "condition" property
-	condition, err := template.New("").Parse(stepInfo.GetString("condition"))
-
-	if err != nil {
-		return StepIfCondition{}, derp.Wrap(err, location, "Invalid 'condition'", stepInfo)
-	}
-
-	// Parse "then" property
-	then, err := NewPipeline(stepInfo.GetSliceOfMap("then"))
-
-	if err != nil {
-		return StepIfCondition{}, derp.Wrap(err, location, "Invalid 'then'", stepInfo)
-	}
-
-	// Parse "else" property
-	otherwise, err := NewPipeline(stepInfo.GetSliceOfMap("else"))
-
-	if err != nil {
-		return StepIfCondition{}, derp.Wrap(err, location, "Invalid 'else'", stepInfo)
-	}
-
-	return StepIfCondition{
-		condition: condition,
-		then:      then,
-		otherwise: otherwise,
-	}, nil
+	Condition *template.Template
+	Then      []step.Step
+	Otherwise []step.Step
 }
 
 // Get displays a form where users can update stream data
-func (step StepIfCondition) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "renderer.StepIfCondition.Get"
 
+	factory := renderer.factory()
+
 	if step.evaluateCondition(renderer) {
-		if err := step.then.Get(factory, renderer, buffer); err != nil {
+		if err := Pipeline(step.Then).Get(factory, renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error executing 'then' sub-steps")
 		}
 
 		return nil
 	}
 
-	if err := step.otherwise.Get(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.Otherwise).Get(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing 'otherwise' sub-steps")
 	}
 
@@ -72,19 +40,21 @@ func (step StepIfCondition) Get(factory Factory, renderer Renderer, buffer io.Wr
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepIfCondition) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "renderer.StepIfCondition.Post"
 
+	factory := renderer.factory()
+
 	if step.evaluateCondition(renderer) {
-		if err := step.then.Post(factory, renderer, buffer); err != nil {
+		if err := Pipeline(step.Then).Post(factory, renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error executing 'then' sub-steps")
 		}
 
 		return nil
 	}
 
-	if err := step.otherwise.Post(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.Otherwise).Post(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing 'otherwise' sub-steps")
 	}
 
@@ -96,7 +66,7 @@ func (step StepIfCondition) evaluateCondition(renderer Renderer) bool {
 
 	var result bytes.Buffer
 
-	if err := step.condition.Execute(&result, renderer); err != nil {
+	if err := step.Condition.Execute(&result, renderer); err != nil {
 		return false
 	}
 

@@ -3,27 +3,21 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/path"
 )
 
-// StepStreamState represents an action-step that can change a Stream's state
-type StepStreamState struct {
-	stateID string
-
-	BaseStep
+// StepSetState represents an action-step that can change a Stream's state
+type StepSetState struct {
+	StateID string
 }
 
-func NewStepStreamState(stepInfo datatype.Map) (StepStreamState, error) {
-
-	return StepStreamState{
-		stateID: stepInfo.GetString("state"),
-	}, nil
+func (step StepSetState) Get(renderer Renderer, _ io.Writer) error {
+	return nil
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step StepStreamState) Post(_ Factory, renderer Renderer, _ io.Writer) error {
+func (step StepSetState) Post(renderer Renderer, _ io.Writer) error {
 
 	// Try to set the state via the Path interface.
-	return path.Set(renderer.object(), "stateId", step.stateID)
+	return path.Set(renderer.object(), "stateId", step.StateID)
 }

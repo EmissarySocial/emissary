@@ -3,34 +3,18 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
-	subSteps Pipeline
-
-	BaseStep
-}
-
-// NewStepAsModal returns a fully initialized StepAsModal object
-func NewStepAsModal(stepInfo datatype.Map) (StepAsModal, error) {
-
-	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
-
-	if err != nil {
-		return StepAsModal{}, derp.Wrap(err, "render.NewStepAsModal", "Invalid 'steps'", stepInfo)
-	}
-
-	return StepAsModal{
-		subSteps: subSteps,
-	}, nil
+	SubSteps []step.Step
 }
 
 // Get displays a form where users can update stream data
-func (step StepAsModal) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAsModal.Get"
 
@@ -46,7 +30,7 @@ func (step StepAsModal) Get(factory Factory, renderer Renderer, buffer io.Writer
 	b.Div().Class("modal-content").EndBracket()
 
 	// Write inner items
-	if err := step.subSteps.Get(factory, renderer, b); err != nil {
+	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {
 		return derp.Wrap(err, location, "Error executing subSteps")
 	}
 
@@ -62,10 +46,10 @@ func (step StepAsModal) Get(factory Factory, renderer Renderer, buffer io.Writer
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepAsModal) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAsModal) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Write inner items
-	if err := step.subSteps.Post(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer); err != nil {
 		return derp.Wrap(err, "render.StepAsModal.Post", "Error executing subSteps")
 	}
 

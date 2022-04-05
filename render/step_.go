@@ -3,120 +3,104 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
-	"github.com/benpate/derp"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 type Step interface {
-	Get(Factory, Renderer, io.Writer) error
-	Post(Factory, Renderer, io.Writer) error
-	isWrapped() bool // Returns true if this step can be wrapped by the global frame.
+	Get(Renderer, io.Writer) error
+	Post(Renderer, io.Writer) error
+	// isWrapped() bool // Returns true if this step can be wrapped by the global frame.
 }
 
 // NewStep uses an Step object to create a new action
-func NewStep(stepInfo datatype.Map) (Step, error) {
+func NewStep(stepInfo step.Step) Step {
 
-	// Populate the action with the data from
-	switch stepInfo["step"] {
+	switch s := stepInfo.(type) {
+	case step.AddChildStream:
+		return StepAddChildStream(s)
 
-	// STEPS THAT WORK ON ALL MODEL OBJECTS
+	case step.AddModelObject:
+		return StepAddModelObject(s)
 
-	case "add":
-		return NewStepAddModelObject(stepInfo)
+	case step.AddSiblingStream:
+		return StepAddSiblingStream(s)
 
-	case "edit":
-		return NewStepEditModelObject(stepInfo)
+	case step.AddTopStream:
+		return StepAddTopStream(s)
 
-	case "delete":
-		return NewStepDelete(stepInfo)
+	case step.AsConfirmation:
+		return StepAsConfirmation(s)
 
-	case "save":
-		return NewStepSave(stepInfo)
+	case step.AsModal:
+		return StepAsModal(s)
 
-	case "form-html":
-		return NewStepForm(stepInfo)
+	case step.Delete:
+		return StepDelete(s)
 
-	case "set-data":
-		return NewStepSetData(stepInfo)
+	case step.EditContent:
+		return StepEditContent(s)
 
-	case "set-thumbnail":
-		return NewStepStreamThumbnail(stepInfo)
+	case step.EditModelObject:
+		return StepEditModelObject(s)
 
-	case "set-publishdate":
-		return NewStepSetPublishDate(stepInfo)
+	case step.Form:
+		return StepForm(s)
 
-	case "set-simple-sharing":
-		return NewStepSetSimpleSharing(stepInfo)
+	case step.ForwardTo:
+		return StepForwardTo(s)
 
-	case "set-state":
-		return NewStepStreamState(stepInfo)
+	case step.IfCondition:
+		return StepIfCondition(s)
 
-	case "sort":
-		return NewStepSort(stepInfo)
+	case step.RefreshPage:
+		return StepRefreshPage(s)
 
-	case "view-html":
-		return NewStepViewHTML(stepInfo)
+	case step.Save:
+		return StepSave(s)
 
-	// STREAM-SPECIFIC STEPS
+	case step.SetData:
+		return StepSetData(s)
 
-	case "add-child":
-		return NewStepAddChildStream(stepInfo)
+	case step.SetPublishDate:
+		return StepSetPublishDate(s)
 
-	case "add-sibling":
-		return NewStepAddSiblingStream(stepInfo)
+	case step.SetSimpleSharing:
+		return StepSetSimpleSharing(s)
 
-	case "add-top-level":
-		return NewStepAddTopStream(stepInfo)
+	case step.SetState:
+		return StepSetState(s)
 
-	case "edit-content":
-		return NewStepEditContent(stepInfo)
+	case step.SetThumbnail:
+		return StepSetThumbnail(s)
 
-	case "view-rss":
-		return NewStepViewRSS(stepInfo)
+	case step.Sort:
+		return StepSort(s)
 
-	// DRAFTS
+	case step.StreamPromoteDraft:
+		return StepStreamPromoteDraft(s)
 
-	case "promote-draft":
-		return NewStepStreamPromoteDraft(stepInfo)
+	case step.TriggerEvent:
+		return StepTriggerEvent(s)
 
-	case "with-draft":
-		return NewStepWithDraft(stepInfo)
+	case step.UploadAttachment:
+		return StepUploadAttachment(s)
 
-	// ATTACHMENTS
+	case step.ViewHTML:
+		return StepViewHTML(s)
 
-	case "upload-attachments":
-		return NewStepUploadAttachment(stepInfo)
+	case step.ViewRSS:
+		return StepViewRSS(s)
 
-	// SERVER-SIDE CONTROL LOGIC
+	case step.WithChildren:
+		return StepWithChildren(s)
 
-	case "with-children":
-		return NewStepWithChildren(stepInfo)
+	case step.WithDraft:
+		return StepWithDraft(s)
 
-	case "with-parent":
-		return NewStepWithParent(stepInfo)
-
-	case "if":
-		return NewStepIfCondition(stepInfo)
-
-	// CLIENT-SIDE CONTROLS
-
-	case "as-modal":
-		return NewStepAsModal(stepInfo)
-
-	case "as-confirmation":
-		return NewStepAsConfirmation(stepInfo)
-
-	case "forward-to":
-		return NewStepForwardTo(stepInfo)
-
-	case "trigger-event":
-		return NewStepTriggerEvent(stepInfo)
-
-	case "refresh-page":
-		return NewStepRefreshPage(stepInfo)
-
+	case step.WithParent:
+		return StepWithParent(s)
 	}
 
-	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "whisper.factory.RenderStep", "Unrecognized action configuration", stepInfo)
+	return StepError{Original: stepInfo}
+
 }

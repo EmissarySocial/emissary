@@ -3,39 +3,26 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepWithChildren represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithChildren struct {
-	steps Pipeline
-
-	BaseStep
+	SubSteps []step.Step
 }
 
-// NewStepWithChildren returns a fully initialized StepWithChildren object
-func NewStepWithChildren(stepInfo datatype.Map) (StepWithChildren, error) {
-
-	const location = "NewStepWithChildren"
-
-	steps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
-
-	if err != nil {
-		return StepWithChildren{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
-	}
-
-	return StepWithChildren{
-		steps: steps,
-	}, nil
+func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) error {
+	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithChildren) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepWithChildren.Post"
 
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 
 	children, err := factory.Stream().ListByParent(streamRenderer.stream.ParentID)
@@ -56,7 +43,7 @@ func (step StepWithChildren) Post(factory Factory, renderer Renderer, buffer io.
 		}
 
 		// Execute the POST render pipeline on the child
-		if err := step.steps.Post(factory, &childStream, buffer); err != nil {
+		if err := Pipeline(step.SubSteps).Post(factory, &childStream, buffer); err != nil {
 			return derp.Wrap(err, location, "Error executing steps for child")
 		}
 

@@ -3,57 +3,33 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
 type StepEditModelObject struct {
-	form     form.Form
-	defaults Pipeline
-
-	BaseStep
-}
-
-// NewStepEditModelObject returns a fully initialized StepEditModelObject record
-func NewStepEditModelObject(stepInfo datatype.Map) (StepEditModelObject, error) {
-
-	// Parse form
-	f, err := form.Parse(stepInfo.GetInterface("form"))
-
-	if err != nil {
-		return StepEditModelObject{}, derp.Wrap(err, "render.NewStepEditModelObject", "Invalid 'form'", stepInfo)
-	}
-
-	// Parse defaults
-	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"))
-
-	if err != nil {
-		return StepEditModelObject{}, derp.Wrap(err, "render.NewStepEditModelObject", "Invalid 'defaults'", stepInfo)
-	}
-
-	return StepEditModelObject{
-		form:     f,
-		defaults: defaults,
-	}, nil
+	Form     form.Form
+	Defaults []step.Step
 }
 
 // Get displays a modal form that lets users enter data for their new model object.
-func (step StepEditModelObject) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepEditModelObject.Get"
 
+	factory := renderer.factory()
 	schema := renderer.schema()
 	object := renderer.object()
 
 	// First, try to execute any "default" steps so that the object is initialized
-	if err := step.defaults.Get(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.Defaults).Get(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing default steps")
 	}
 
 	// Try to render the Form HTML
-	result, err := step.form.HTML(factory.FormLibrary(), &schema, object)
+	result, err := step.Form.HTML(factory.FormLibrary(), &schema, object)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")
@@ -67,17 +43,18 @@ func (step StepEditModelObject) Get(factory Factory, renderer Renderer, buffer i
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepEditModelObject) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepEditModelObject) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepEditModelObject.Post"
 
 	// This finds/creates a new object in the renderer
+	factory := renderer.factory()
 	request := renderer.context().Request()
 	object := renderer.object()
 	schema := renderer.schema()
 
 	// Execute any "default" steps so that the object is initialized
-	if err := step.defaults.Post(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.Defaults).Post(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing default steps")
 	}
 

@@ -4,34 +4,25 @@ import (
 	"io"
 
 	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/first"
 	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepSort represents an action-step that can update multiple records at once
 type StepSort struct {
-	keys    string
-	values  string
-	message string
-
-	BaseStep
+	Keys    string
+	Values  string
+	Message string
 }
 
-func NewStepSort(stepInfo datatype.Map) (StepSort, error) {
-
-	return StepSort{
-		keys:    first.String(stepInfo.GetString("keys"), "_id"),
-		values:  first.String(stepInfo.GetString("values"), "rank"),
-		message: stepInfo.GetString("message"),
-	}, nil
+func (step StepSort) Get(renderer Renderer, _ io.Writer) error {
+	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSort) Post(_ Factory, renderer Renderer, _ io.Writer) error {
+func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 
 	var formPost struct {
 		Keys []string `form:"keys"`
@@ -51,7 +42,7 @@ func (step StepSort) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 			return derp.Wrap(err, "whisper.render.StepSort.Post", "Invalid objectId", id)
 		}
 
-		criteria := exp.Equal(step.keys, objectID)
+		criteria := exp.Equal(step.Keys, objectID)
 
 		// Try to load the object from the database
 		object, err := renderer.service().ObjectLoad(criteria)
@@ -61,20 +52,19 @@ func (step StepSort) Post(_ Factory, renderer Renderer, _ io.Writer) error {
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
-		if convert.Int(path.Get(object, step.values)) == rank {
+		if convert.Int(path.Get(object, step.Values)) == rank {
 			continue
 		}
 
 		// Update the object
-		if err := path.Set(object, step.values, rank); err != nil {
+		if err := path.Set(object, step.Values, rank); err != nil {
 			return derp.Wrap(err, "whisper.render.StepSort.Post", "Error updating field: ", objectID, rank)
 		}
 
 		// Try to save back to the database
-		if err := renderer.service().ObjectSave(object, step.message); err != nil {
+		if err := renderer.service().ObjectSave(object, step.Message); err != nil {
 			return derp.Wrap(err, "whisper.render.StepSort.Post", "Error saving record tot he database", object)
 		}
-
 	}
 
 	// Done.  Nothing more to do here.

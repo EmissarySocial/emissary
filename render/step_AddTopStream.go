@@ -4,53 +4,38 @@ import (
 	"io"
 
 	"github.com/benpate/compare"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/model/step"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepAddTopStream represents an action that can create top-level folders in the Domain
 type StepAddTopStream struct {
-	templateIDs   []string // List of valid templateIds that the new top-level stream could be
-	withNewStream Pipeline // Pipeline of steps to take on the newly-created stream
-
-	BaseStep
+	TemplateIDs   []string    // List of valid templateIds that the new top-level stream could be
+	WithNewStream []step.Step // Pipeline of steps to take on the newly-created stream
 }
 
-// NewStepAddTopStream returns a fully parsed StepAddTopStream object
-func NewStepAddTopStream(stepInfo datatype.Map) (StepAddTopStream, error) {
-
-	withNewStream, err := NewPipeline(stepInfo.GetSliceOfMap("with-new-stream"))
-
-	if err != nil {
-		return StepAddTopStream{}, derp.Wrap(err, "render.StepAddTopStream", "Invalid 'with-new-stream", stepInfo)
-	}
-
-	return StepAddTopStream{
-		templateIDs:   stepInfo.GetSliceOfString("templateIds"),
-		withNewStream: withNewStream,
-	}, nil
-}
-
-func (step StepAddTopStream) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
-	modalAddStream(renderer.context().Response(), factory.Template(), buffer, renderer.URL(), "top", step.templateIDs)
+func (step StepAddTopStream) Get(renderer Renderer, buffer io.Writer) error {
+	factory := renderer.factory()
+	modalAddStream(renderer.context().Response(), factory.Template(), buffer, renderer.URL(), "top", step.TemplateIDs)
 	return nil
 }
 
-func (step StepAddTopStream) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAddTopStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddTopStream.Post"
 
 	// Collect prerequisites
+	factory := renderer.factory()
 	topLevelRenderer := renderer.(TopLevel)
 	templateID := topLevelRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
-	if len(step.templateIDs) > 0 {
+	if len(step.TemplateIDs) > 0 {
 		if templateID == "" {
-			templateID = step.templateIDs[0]
-		} else if !compare.Contains(step.templateIDs, templateID) {
+			templateID = step.TemplateIDs[0]
+		} else if !compare.Contains(step.TemplateIDs, templateID) {
 			return derp.New(derp.CodeBadRequestError, location, "Cannot create new template of this kind", templateID)
 		}
 	}
@@ -75,5 +60,5 @@ func (step StepAddTopStream) Post(factory Factory, renderer Renderer, buffer io.
 
 	// TODO: sort order?
 
-	return finalizeAddStream(buffer, renderer.factory(), renderer.context(), &stream, template, step.withNewStream)
+	return finalizeAddStream(buffer, renderer.factory(), renderer.context(), &stream, template, step.WithNewStream)
 }

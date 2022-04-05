@@ -3,23 +3,20 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 )
 
 // StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
-type StepUploadAttachment struct {
-	BaseStep
+type StepUploadAttachment struct{}
+
+func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) error {
+	return nil
 }
 
-// NewStepUploadAttachment returns a fully parsed StepUploadAttachment object
-func NewStepUploadAttachment(stepInfo datatype.Map) (StepUploadAttachment, error) {
-	return StepUploadAttachment{}, nil
-}
-
-func (step StepUploadAttachment) Post(factory Factory, renderer Renderer, _ io.Writer) error {
+func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
 
 	// TODO: could this be generalized to work with more than just streams???
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	form, err := streamRenderer.ctx.MultipartForm()
 

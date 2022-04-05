@@ -4,8 +4,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/gorilla/feeds"
 	"github.com/whisperverse/whisperverse/model"
@@ -14,23 +12,14 @@ import (
 // StepViewRSS represents an action-step that can render a Stream into HTML
 type StepViewRSS struct {
 	Format string // atom, rss, json (default is rss)
-
-	BaseStep
-}
-
-// NewStepViewRSS generates a fully initialized StepViewRSS step.
-func NewStepViewRSS(stepInfo datatype.Map) (StepViewRSS, error) {
-
-	return StepViewRSS{
-		Format: convert.String(stepInfo["format"]),
-	}, nil
 }
 
 // Get renders the Stream HTML to the context
-func (step StepViewRSS) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepViewRSS.Get"
 
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 
 	// Get all child streams from the database
@@ -101,4 +90,8 @@ func (step StepViewRSS) Get(factory Factory, renderer Renderer, buffer io.Writer
 		buffer.Write([]byte(xml))
 		return nil
 	}
+}
+
+func (step StepViewRSS) Post(renderer Renderer, buffer io.Writer) error {
+	return nil
 }

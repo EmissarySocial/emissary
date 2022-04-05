@@ -4,40 +4,22 @@ import (
 	"io"
 
 	"github.com/benpate/compare"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/model/step"
 	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
 type StepAddChildStream struct {
-	templateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
-	view        string   // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
-	withChild   Pipeline // List of steps to take on the newly created child record on POST.
-
-	BaseStep
+	TemplateIDs []string    // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	View        string      // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
+	WithChild   []step.Step // List of steps to take on the newly created child record on POST.
 }
 
-// NewStepAddChildStream returns a fully initialized StepAddChildStream record
-func NewStepAddChildStream(stepInfo datatype.Map) (StepAddChildStream, error) {
-
-	withChild, err := NewPipeline(stepInfo.GetSliceOfMap("with-child"))
-
-	if err != nil {
-		return StepAddChildStream{}, derp.Wrap(err, "render.NewStepAddChildStream", "Error parsing with-child")
-	}
-
-	return StepAddChildStream{
-		view:        stepInfo.GetString("view"),
-		templateIDs: stepInfo.GetSliceOfString("template"),
-		withChild:   withChild,
-	}, nil
-}
-
-func (step StepAddChildStream) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddChildStream.Get"
 
@@ -45,9 +27,9 @@ func (step StepAddChildStream) Get(factory Factory, renderer Renderer, buffer io
 	streamRenderer := renderer.(*Stream)
 
 	// If a view has been specified, then use it to render a "create" page
-	if step.view != "" {
+	if step.View != "" {
 
-		if err := renderer.executeTemplate(buffer, step.view, renderer); err != nil {
+		if err := renderer.executeTemplate(buffer, step.View, renderer); err != nil {
 			return derp.Wrap(err, location, "Error executing template")
 		}
 
@@ -55,12 +37,12 @@ func (step StepAddChildStream) Get(factory Factory, renderer Renderer, buffer io
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), factory.Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.templateIDs)
+	modalAddStream(renderer.context().Response(), renderer.factory().Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
 
 	return nil
 }
 
-func (step StepAddChildStream) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (step StepAddChildStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddChildStream.Post"
 
@@ -71,16 +53,16 @@ func (step StepAddChildStream) Post(factory Factory, renderer Renderer, buffer i
 	templateID := streamRenderer.ctx.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
-	if len(step.templateIDs) > 0 {
+	if len(step.TemplateIDs) > 0 {
 		if templateID == "" {
-			templateID = step.templateIDs[0]
-		} else if !compare.Contains(step.templateIDs, templateID) {
+			templateID = step.TemplateIDs[0]
+		} else if !compare.Contains(step.TemplateIDs, templateID) {
 			return derp.New(derp.CodeBadRequestError, location, "Cannot create new template of this kind", templateID)
 		}
 	}
 
 	// Try to load the template for the new stream
-	template, err := factory.Template().Load(templateID)
+	template, err := renderer.factory().Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Cannot find template")
@@ -100,7 +82,7 @@ func (step StepAddChildStream) Post(factory Factory, renderer Renderer, buffer i
 	// TODO: sort order?
 	// TODO: presets defined by templates?
 
-	return finalizeAddStream(buffer, renderer.factory(), context, &child, template, step.withChild)
+	return finalizeAddStream(buffer, renderer.factory(), context, &child, template, step.WithChild)
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
