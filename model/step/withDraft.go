@@ -1,6 +1,7 @@
 package step
 
 import (
+	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 )
@@ -15,7 +16,7 @@ func NewWithDraft(stepInfo datatype.Map) (WithDraft, error) {
 
 	const location = "render.NewWithDraft"
 
-	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 
 	if err != nil {
 		return WithDraft{}, derp.Wrap(err, location, "Invalid 'steps'")

@@ -36,11 +36,6 @@ func NewGroup(factory Factory, ctx *steranko.Context, layout *model.Layout, acti
  * RENDERER INTERFACE
  *******************************************/
 
-// ActionID returns the unique ID of the Action configured into this renderer
-func (w Group) ActionID() string {
-	return w.action.ActionID
-}
-
 // Action returns the model.Action configured into this renderer
 func (w Group) Action() *model.Action {
 	return w.action
@@ -52,7 +47,7 @@ func (w Group) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "whisper.render.Group.Render", "Error generating HTML"))
 	}
 

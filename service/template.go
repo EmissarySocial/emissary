@@ -1,4 +1,4 @@
-package singleton
+package service
 
 import (
 	"fmt"
@@ -332,8 +332,6 @@ func (service *Template) loadFromFilesystem(templateID string) (model.Template, 
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
 		return result, derp.Wrap(err, "service.Template.loadFromFilesystem", "Error loading template")
 	}
-
-	result.Validate()
 
 	// Save the Template into the memory cache
 	service.Save(&result)

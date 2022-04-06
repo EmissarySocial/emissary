@@ -18,8 +18,10 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 	// If this is a POST, then execute the action pipeline
 	if actionMethod == render.ActionMethodPost {
 
-		if err := render.DoPipeline(renderer, ctx.Response().Writer, renderer.Action().Steps, actionMethod); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", renderer.Action())
+		pipeline := render.Pipeline(renderer.Action().Steps)
+
+		if err := pipeline.Execute(factory, renderer, ctx.Response().Writer, actionMethod); err != nil {
+			return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", pipeline)
 		}
 		return nil
 	}

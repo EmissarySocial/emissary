@@ -91,6 +91,9 @@ func New(stepInfo datatype.Map) (Step, error) {
 
 	// SERVER-SIDE CONTROL LOGIC
 
+	case "redirect-to":
+		return NewRedirectTo(stepInfo)
+
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
@@ -124,7 +127,7 @@ func New(stepInfo datatype.Map) (Step, error) {
 }
 
 // NewPipeline parses a series of render steps into a new array
-func NewPipeline(stepInfo []datatype.Map) ([]Step, error) {
+func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
 
 	const location = "model.step.NewPipeline"
 
@@ -132,7 +135,7 @@ func NewPipeline(stepInfo []datatype.Map) ([]Step, error) {
 
 	for index := range stepInfo {
 
-		if step, err := New(stepInfo[index]); err != nil {
+		if step, err := New(datatype.Map(stepInfo[index])); err != nil {
 			return result, derp.Wrap(err, location, "Error parsing step", stepInfo)
 		} else {
 			result[index] = step

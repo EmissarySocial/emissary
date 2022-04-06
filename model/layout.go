@@ -33,21 +33,9 @@ func (layout *Layout) Action(actionID string) *Action {
 		return &action
 	}
 
-	result := Action{
-		ActionID: actionID,
-	}
+	result := NewAction()
 
 	return &result
-}
-
-// Validate runs any post-processing required after a Layout is parsed by the LayoutService
-func (layout *Layout) Validate() {
-
-	for actionID, action := range layout.Actions {
-		action.ActionID = actionID
-		action.Validate()
-		layout.Actions[actionID] = action
-	}
 }
 
 func (layout *Layout) Debug() datatype.Map {

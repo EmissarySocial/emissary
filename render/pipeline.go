@@ -9,6 +9,16 @@ import (
 
 type Pipeline []step.Step
 
+// Execute switches between GET and POST methods for this pipeline, based on the provided ActionMethod
+func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
+
+	if actionMethod == ActionMethodGet {
+		return pipeline.Get(factory, renderer, buffer)
+	}
+
+	return pipeline.Post(factory, renderer, buffer)
+}
+
 // Get runs all of the pipeline steps using the GET method
 func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
 
@@ -18,7 +28,7 @@ func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Write
 	for _, step := range pipeline {
 
 		// Fall through implies GET
-		if err := step.Get(buffer, renderer); err != nil {
+		if err := ExecutableStep(step).Get(renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error GET-ing from step", step)
 		}
 	}
@@ -34,7 +44,7 @@ func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writ
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		if err := step.Post(buffer, renderer); err != nil {
+		if err := ExecutableStep(step).Post(renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error POST-ing to step", step)
 		}
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/model/step"
-	"github.com/whisperverse/whisperverse/singleton"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
@@ -87,7 +87,7 @@ func (step StepAddChildStream) Post(renderer Renderer, buffer io.Writer) error {
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *singleton.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
 	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 

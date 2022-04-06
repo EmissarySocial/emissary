@@ -144,7 +144,7 @@ func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Cont
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
-		if err := action.Steps.Post(factory, &renderer, buffer); err != nil {
+		if err := Pipeline(action.Steps).Post(factory, &renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
 		}
 	}

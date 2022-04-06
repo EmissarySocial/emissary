@@ -12,8 +12,8 @@ type Step interface {
 	// isWrapped() bool // Returns true if this step can be wrapped by the global frame.
 }
 
-// NewStep uses an Step object to create a new action
-func NewStep(stepInfo step.Step) Step {
+// ExecutableStep uses an Step object to create a new action
+func ExecutableStep(stepInfo step.Step) Step {
 
 	switch s := stepInfo.(type) {
 	case step.AddChildStream:

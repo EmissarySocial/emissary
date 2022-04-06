@@ -36,7 +36,8 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
 	for children.Next(&child) {
 
 		// Make a renderer with the new child stream
-		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, renderer.ActionID())
+		// TODO: Is "view" really the best action to use here??
+		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, "")
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer for child")

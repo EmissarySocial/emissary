@@ -1,17 +1,20 @@
 package model
 
 import (
+	"encoding/json"
+
+	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
+	"github.com/benpate/derp"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	ActionID   string              `path:"actionId"   json:"actionId"   bson:"actionId"`   // Unique ID for this action.
 	Roles      []string            `path:"roles"      json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
 	States     []string            `path:"states"     json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
 	RoleStates map[string][]string `path:"roleStates" json:"roleStates" bson:"roleStates"` // Map of roles -> list of states that grant access to this Action.
-	Step       string              `path:"step"       json:"step"       bson:"step"`       // Shortcut for a single step to execute for this Action (all parameters are defaults)
-	Steps      []datatype.Map      `path:"steps"      json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	Steps      []step.Step         `path:"steps"      json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
 // NewAction returns a fully initialized Action
@@ -20,7 +23,7 @@ func NewAction() Action {
 		Roles:      make([]string, 0),
 		States:     make([]string, 0),
 		RoleStates: make(map[string][]string),
-		Steps:      make([]datatype.Map, 0),
+		Steps:      make([]step.Step, 0),
 	}
 }
 
@@ -70,26 +73,46 @@ func (action Action) UserCan(stream *Stream, authorization *Authorization) bool 
 	return true
 }
 
-// Validate runs any required post-processing steps after
-// an action is loaded from JSON
-func (action *Action) Validate() {
+func (action *Action) UnmarshalJSON(data []byte) error {
+	var asMap map[string]any
 
-	// Convert single "step" shortcut into a list of actual steps
+	if err := json.Unmarshal(data, &asMap); err != nil {
+		return derp.Wrap(err, "model.Action.UnmarshalJSON", "Invalid JSON")
+	}
+
+	return action.UnmarshalMap(asMap)
+}
+
+func (action *Action) UnmarshalMap(data map[string]any) error {
+
+	// Import easy values
+	action.Roles = convert.SliceOfString(data["roles"])
+	action.States = convert.SliceOfString(data["states"])
+
+	// Import roleStates
+	action.RoleStates = make(map[string][]string, 0)
+	roleStates := convert.MapOfInterface(data["roleStates"])
+	for key, value := range roleStates {
+		action.RoleStates[key] = convert.SliceOfString(value)
+	}
+
+	// Import steps
+	stepsInfo := convert.SliceOfMap(data["steps"])
+	if pipeline, err := step.NewPipeline(stepsInfo); err == nil {
+		action.Steps = pipeline
+	} else {
+		return derp.Wrap(err, "model.action.UnmarshalMap", "Error reading steps", stepsInfo)
+	}
+
+	// If no steps configued, then try the "step" alias
 	if len(action.Steps) == 0 {
-		if action.Step != "" {
-			// Convert action.Step into a default action
-			action.Steps = []datatype.Map{{
-				"step": action.Step,
-			}}
-			action.Step = ""
+		if name := convert.String(data["step"]); name != "" {
+			alias, _ := step.NewPipeline([]datatype.Map{{"step": name}})
+			data["steps"] = alias
 		}
 	}
 
-	// Push actionID into every step.
-	for i := range action.Steps {
-		action.Steps[i]["actionId"] = action.ActionID
-	}
-
+	return nil
 }
 
 // matchOne returns TRUE if the value matches one (or more) of the values in the slice

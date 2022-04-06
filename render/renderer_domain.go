@@ -39,11 +39,6 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, act
  * RENDERER INTERFACE
  *******************************************/
 
-// ActionID returns the name of the action being performed
-func (w Domain) ActionID() string {
-	return w.action.ActionID
-}
-
 // Action returns the model.Action configured into this renderer
 func (w Domain) Action() *model.Action {
 	return w.action
@@ -55,7 +50,7 @@ func (w Domain) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.Render", "Error generating HTML"))
 	}
 

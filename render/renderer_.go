@@ -23,7 +23,6 @@ type Renderer interface {
 	Hostname() string            // Hostname for this server
 	Token() string               // URL Token of the record being rendered
 	URL() string                 // Complete URL of the requested page
-	ActionID() string            // The ID of the action to be taken by this renderer
 	Action() *model.Action       // The pipeline action to be taken by this renderer
 	IsPartialRequest() bool      // Returns TRUE if this is an HTMX request for a page fragment
 	SkipFullPageRendering() bool // Returns TRUE if this renderer does not use the common site chrome.

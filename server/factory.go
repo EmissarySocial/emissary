@@ -14,7 +14,7 @@ import (
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/domain"
 	"github.com/whisperverse/whisperverse/render"
-	"github.com/whisperverse/whisperverse/singleton"
+	"github.com/whisperverse/whisperverse/service"
 )
 
 // Factory manages all server-level services, and generates individual
@@ -24,8 +24,8 @@ type Factory struct {
 	mutex  sync.RWMutex
 
 	// Server-level services
-	layoutService   singleton.Layout
-	templateService singleton.Template
+	layoutService   service.Layout
+	templateService service.Template
 	templateChannel chan string
 
 	domains map[string]*domain.Factory
@@ -46,7 +46,7 @@ func NewFactory(cfg config.Config) *Factory {
 	}
 
 	// Global Layout Service
-	factory.layoutService = singleton.NewLayout(
+	factory.layoutService = service.NewLayout(
 		cfg.Layouts,
 		render.FuncMap(),
 	)
@@ -54,7 +54,7 @@ func NewFactory(cfg config.Config) *Factory {
 	go factory.layoutService.Watch()
 
 	// Global Template Service
-	factory.templateService = singleton.NewTemplate(
+	factory.templateService = service.NewTemplate(
 		factory.Layout(),
 		render.FuncMap(),
 		cfg.Templates,
@@ -114,7 +114,7 @@ func (factory *Factory) start(d config.Domain) error {
  * Services
  ****************************/
 
-func (factory *Factory) Layout() *singleton.Layout {
+func (factory *Factory) Layout() *service.Layout {
 	return &factory.layoutService
 }
 

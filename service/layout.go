@@ -1,4 +1,4 @@
-package singleton
+package service
 
 import (
 	"fmt"
@@ -78,6 +78,8 @@ func (service *Layout) fileNames() []string {
 // "Updates" channel for news that a template has been updated.
 func (service *Layout) Watch() {
 
+	const location = "service.Layout.Watch"
+
 	// Only synchronize on folders that are configured to do so.
 	if !service.folder.Sync {
 		return
@@ -102,13 +104,13 @@ func (service *Layout) Watch() {
 
 		// Add all other directories into the Template service as Templates
 		if err := service.loadFromFilesystem(filename); err != nil {
-			derp.Report(derp.Wrap(err, "whisper.service.layout.watch", "Error loading Layout from filesystem", filename))
+			derp.Report(derp.Wrap(err, location, "Error loading Layout from filesystem", filename))
 			panic("Error loading Layout from Filesystem")
 		}
 
 		// Add fsnotify watchers for all other directories
 		if err := watcher.Add(service.folder.Location + "/" + filename); err != nil {
-			derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error adding file watcher to file", filename))
+			derp.Report(derp.Wrap(err, location, "Error adding file watcher to file", filename))
 		}
 	}
 
@@ -128,7 +130,7 @@ func (service *Layout) Watch() {
 			filename := list.Last(list.RemoveLast(event.Name, "/"), "/")
 
 			if err := service.loadFromFilesystem(filename); err != nil {
-				derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error loading changes to layout", event, filename))
+				derp.Report(derp.Wrap(err, location, "Error loading changes to layout", event, filename))
 				continue
 			}
 
@@ -137,7 +139,7 @@ func (service *Layout) Watch() {
 		case err, ok := <-watcher.Errors:
 
 			if ok {
-				derp.Report(derp.Wrap(err, "whisper.service.Layout.watch", "Error watching filesystem"))
+				derp.Report(derp.Wrap(err, location, "Error watching filesystem"))
 			}
 		}
 	}
@@ -160,9 +162,6 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
 	}
-
-	// Normalize steps
-	layout.Validate()
 
 	switch filename {
 

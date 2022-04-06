@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	formlib "github.com/benpate/form/vocabulary"
@@ -19,7 +18,6 @@ import (
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/service"
-	"github.com/whisperverse/whisperverse/singleton"
 )
 
 // Factory knows how to create an populate all services
@@ -27,11 +25,11 @@ type Factory struct {
 	Session data.Session
 	domain  config.Domain
 
-	// singletons (from server)
-	layoutService   *singleton.Layout
-	templateService *singleton.Template
+	// services (from server)
+	layoutService   *service.Layout
+	templateService *service.Template
 
-	// singletons (within this domain/factory)
+	// services (within this domain/factory)
 	streamService       service.Stream
 	userService         service.User
 	subscriptionService *service.Subscription
@@ -51,7 +49,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *singleton.Layout, templateService *singleton.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
 
@@ -211,18 +209,13 @@ func (factory *Factory) Group() *service.Group {
  *******************************************/
 
 // Layout service manages global website layouts (managed globally by the server.Factory)
-func (factory *Factory) Layout() *singleton.Layout {
+func (factory *Factory) Layout() *service.Layout {
 	return factory.layoutService
 }
 
 // Template returns a fully populated Template service (managed globally by the server.Factory)
-func (factory *Factory) Template() *singleton.Template {
+func (factory *Factory) Template() *service.Template {
 	return factory.templateService
-}
-
-// RenderStep uses an Step object to create a new action
-func (factory *Factory) RenderStep(stepInfo datatype.Map) (render.Step, error) {
-	return render.NewStep(factory, stepInfo)
 }
 
 // Content returns a content.Widget that can view content

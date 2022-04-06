@@ -82,11 +82,6 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
  * RENDERER INTERFACE
  *******************************************/
 
-// ActionID returns the name of the action being performed
-func (w Stream) ActionID() string {
-	return w.action.ActionID
-}
-
 // Action returns the model.Action configured into this renderer
 func (w Stream) Action() *model.Action {
 	return w.action
@@ -98,7 +93,7 @@ func (w Stream) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := DoPipeline(&w, &buffer, w.action.Steps, ActionMethodGet); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -620,12 +615,14 @@ func (w Stream) SkipFullPageRendering() bool {
 	// that I'm going to fix it right now.  The real solution is to pre-compile
 	// all these datatype.Maps into real steps, and add a function to the step
 	// interface that can say "yes" or "no" intelligently.
-	for _, stepInfo := range w.action.Steps {
-		switch stepInfo["step"] {
-		case "view-rss":
-			return true
+	/*
+		for _, stepInfo := range w.action.Steps {
+			switch stepInfo["step"] {
+			case "view-rss":
+				return true
+			}
 		}
-	}
+	*/
 
 	return false
 }

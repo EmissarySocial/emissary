@@ -64,13 +64,3 @@ func (template *Template) Action(actionID string) *Action {
 
 	return nil
 }
-
-// Validate runs any post-processing required after a Template is parsed by the TemplateService
-func (template *Template) Validate() {
-
-	for actionID, action := range template.Actions {
-		action.ActionID = actionID
-		action.Validate()
-		template.Actions[actionID] = action
-	}
-}

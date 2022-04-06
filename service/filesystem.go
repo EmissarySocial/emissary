@@ -1,4 +1,4 @@
-package singleton
+package service
 
 import (
 	"strings"
