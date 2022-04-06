@@ -17,6 +17,7 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,7 +26,6 @@ import (
 type Stream struct {
 	modelService ModelService    // Service to use to access streams (could be Stream or StreamDraft)
 	template     *model.Template // Template that the Stream uses
-	action       *model.Action   // The action to be used to render this Stream
 	stream       *model.Stream   // The Stream to be displayed
 
 	Common
@@ -36,13 +36,22 @@ type Stream struct {
  *******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, action *model.Action, stream *model.Stream) (Stream, error) {
+func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Stream, error) {
+
+	const location = "render.NewStream"
+
+	// Verify the requested action
+	action := template.Action(actionID)
+
+	if action == nil {
+		return Stream{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
 	if !action.UserCan(stream, authorization) {
-		return Stream{}, derp.NewForbiddenError("render.NewStream", "Forbidden")
+		return Stream{}, derp.NewForbiddenError(location, "Forbidden")
 	}
 
 	// Success.  Populate Stream
@@ -50,8 +59,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 		modelService: factory.Stream(),
 		stream:       stream,
 		template:     template,
-		action:       action,
-		Common:       NewCommon(factory, ctx),
+		Common:       NewCommon(factory, ctx, action, actionID),
 	}, nil
 }
 
@@ -75,7 +83,7 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 	}
 
 	// Return a fully populated service
-	return NewStream(factory, ctx, template, action, stream)
+	return NewStream(factory, ctx, template, stream, actionID)
 }
 
 /*******************************************
@@ -91,6 +99,8 @@ func (w Stream) Action() *model.Action {
 func (w Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
+
+	spew.Dump("stream.Render", w.action)
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
@@ -130,18 +140,13 @@ func (w Stream) service() ModelService {
 // View executes a separate view for this Stream
 func (w Stream) View(actionID string) (template.HTML, error) {
 
-	// Find and validate the action
-	action := w.template.Action(actionID)
-
-	if action == nil {
-		return template.HTML(""), derp.NewNotFoundError("render.Stream.View", "Invalid Action", actionID)
-	}
+	const location = "render.Stream.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewStream(w.factory(), w.context(), w.template, action, w.stream)
+	subStream, err := NewStream(w.factory(), w.context(), w.template, w.stream, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "render.Stream.View", "Error creating sub-renderer", action)
+		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
 	}
 
 	// Generate HTML template
@@ -590,8 +595,7 @@ func (w Stream) draftRenderer() (Stream, error) {
 		stream:       &draft,
 		modelService: draftService,
 		template:     w.template,
-		action:       w.action,
-		Common:       NewCommon(w.factory(), w.ctx),
+		Common:       NewCommon(w.factory(), w.ctx, w.action, w.actionID),
 	}, nil
 }
 

@@ -38,17 +38,20 @@ func renderProfile(fm *server.Factory, actionMethod render.ActionMethod) echo.Ha
 		user := model.NewUser()
 
 		userToken := ctx.Param("user")
-		actionID := getActionID(ctx)
 
 		if err := service.LoadByToken(userToken, &user); err != nil {
 			return derp.Wrap(err, location, "Error loading User", userToken)
 		}
 
+		// Try to make a renderer for this request
 		sterankoContext := ctx.(*steranko.Context)
-		profileLayout := factory.Layout().Profile()
-		action := profileLayout.Action(actionID)
+		actionID := getActionID(ctx)
 
-		renderer := render.NewProfile(factory, sterankoContext, profileLayout, action, &user)
+		renderer, err := render.NewProfile(factory, sterankoContext, &user, actionID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error creating renderer")
+		}
 
 		return renderPage(factory, sterankoContext, renderer, actionMethod)
 	}

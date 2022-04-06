@@ -23,6 +23,7 @@ type Renderer interface {
 	Hostname() string            // Hostname for this server
 	Token() string               // URL Token of the record being rendered
 	URL() string                 // Complete URL of the requested page
+	ActionID() string            // Token that identifies the action requested via the URL.
 	Action() *model.Action       // The pipeline action to be taken by this renderer
 	IsPartialRequest() bool      // Returns TRUE if this is an HTMX request for a page fragment
 	SkipFullPageRendering() bool // Returns TRUE if this renderer does not use the common site chrome.
@@ -39,29 +40,16 @@ type Renderer interface {
 
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
 
-	switch obj := object.(type) {
-
-	case *model.Domain:
-		layout := factory.Layout().Domain()
-		action := layout.Action(actionID)
-		result, err := NewDomain(factory, ctx, layout, action)
-		return &result, err
+	switch object := object.(type) {
 
 	case *model.Group:
-		layout := factory.Layout().Group()
-		action := layout.Action(actionID)
-		result := NewGroup(factory, ctx, layout, action, obj)
-		return &result, nil
+		return NewGroup(factory, ctx, object, actionID)
 
 	case *model.Stream:
-		result, err := NewStreamWithoutTemplate(factory, ctx, obj, actionID)
-		return &result, err
+		return NewStreamWithoutTemplate(factory, ctx, object, actionID)
 
 	case *model.User:
-		layout := factory.Layout().User()
-		action := layout.Action(actionID)
-		result := NewUser(factory, ctx, layout, action, obj)
-		return &result, nil
+		return NewUser(factory, ctx, object, actionID)
 	}
 
 	return nil, derp.New(derp.CodeInternalError, "whisper.render.NewRenderer", "Unrecognized object", object)

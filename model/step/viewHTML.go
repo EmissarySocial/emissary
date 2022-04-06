@@ -11,15 +11,8 @@ type ViewHTML struct {
 
 // NewViewHTML generates a fully initialized ViewHTML step.
 func NewViewHTML(stepInfo datatype.Map) (ViewHTML, error) {
-
-	filename := stepInfo.GetString("file")
-
-	if filename == "" {
-		filename = stepInfo.GetString("actionId")
-	}
-
 	return ViewHTML{
-		Filename: filename,
+		Filename: stepInfo.GetString("file"),
 	}, nil
 }
 

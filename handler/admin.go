@@ -27,6 +27,14 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 
 	return func(ctx echo.Context) error {
 
+		// Authenticate the page request
+		sterankoContext := ctx.(*steranko.Context)
+
+		// Only domain owners can access admin pages
+		if !isOwner(sterankoContext.Authorization()) {
+			return derp.NewForbiddenError(location, "Unauthorized")
+		}
+
 		// Try to get the factory from the Context
 		factory, err := factoryManager.ByContext(ctx)
 
@@ -34,19 +42,9 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Authenticate the page request
-		sterankoContext := ctx.(*steranko.Context)
-
-		// Only domain owners can access admin pages
-		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError("whisper.handler.adminRenderer", "Unauthorized")
-		}
-
 		var renderer render.Renderer
 		var objectID primitive.ObjectID
 		var actionID string
-
-		layoutService := factory.Layout()
 
 		// Parse request arguments
 		controller := first.String(ctx.Param("param1"), "domain")
@@ -63,22 +61,12 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 		switch controller {
 
 		case "analytics":
-			layout := layoutService.Analytics()
-			action := layout.Action(actionID)
-			renderer, err = render.NewDomain(factory, sterankoContext, layout, action)
-
-			if err != nil {
-				return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading domain")
-			}
+			layout := factory.Layout().Analytics()
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, actionID)
 
 		case "domain":
-			layout := layoutService.Domain()
-			action := layout.Action(actionID)
-			renderer, err = render.NewDomain(factory, sterankoContext, layout, action)
-
-			if err != nil {
-				return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading domain")
-			}
+			layout := factory.Layout().Domain()
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, actionID)
 
 		case "groups":
 			group := model.NewGroup()
@@ -86,11 +74,11 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if !objectID.IsZero() {
 				service := factory.Group()
 				if err := service.LoadByID(objectID, &group); err != nil {
-					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading Group", objectID)
+					return derp.Wrap(err, location, "Error loading Group", objectID)
 				}
 			}
 
-			renderer, err = render.NewRenderer(factory, sterankoContext, &group, actionID)
+			renderer, err = render.NewGroup(factory, sterankoContext, &group, actionID)
 
 		case "toplevel":
 			stream := model.NewStream()
@@ -98,11 +86,11 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if !objectID.IsZero() {
 				service := factory.Stream()
 				if err := service.LoadByID(objectID, &stream); err != nil {
-					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading TopLevel stream", objectID)
+					return derp.Wrap(err, location, "Error loading TopLevel stream", objectID)
 				}
 			}
 
-			renderer, err = render.NewRenderer(factory, sterankoContext, &stream, actionID)
+			renderer, err = render.NewTopLevel(factory, sterankoContext, &stream, actionID)
 
 		case "users":
 			user := model.NewUser()
@@ -110,16 +98,22 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if !objectID.IsZero() {
 				service := factory.User()
 				if err := service.LoadByID(objectID, &user); err != nil {
-					return derp.Wrap(err, "whisper.handler.adminRenderer", "Error loading User", objectID)
+					return derp.Wrap(err, location, "Error loading User", objectID)
 				}
 			}
 
-			renderer, err = render.NewRenderer(factory, sterankoContext, &user, actionID)
+			renderer, err = render.NewUser(factory, sterankoContext, &user, actionID)
 
 		default:
-			return derp.NewNotFoundError("whisper.handler.getAdminRenderer", "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
+			return derp.NewNotFoundError(location, "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
 		}
 
+		// Error handler for all renderers
+		if err != nil {
+			return derp.Wrap(err, location, "Error generating renderer")
+		}
+
+		// Success!!
 		return renderPage(factory, sterankoContext, renderer, actionMethod)
 	}
 }

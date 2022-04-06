@@ -15,21 +15,36 @@ import (
 
 type Domain struct {
 	layout *model.Layout
-	action *model.Action
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, actionID string) (Domain, error) {
+
+	const location = "render.NewDomain"
+
+	// Verify user's authorization to perform this Action on this Stream
+	authorization := getAuthorization(ctx)
+
+	if !authorization.DomainOwner {
+		return Domain{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
+	// Verify the requested action
+	action := layout.Action(actionID)
+
+	if action == nil {
+		return Domain{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	result := Domain{
 		layout: layout,
-		action: action,
-		Common: NewCommon(factory, ctx),
+		Common: NewCommon(factory, ctx, action, actionID),
 	}
 
 	// Pre-load the domain record
+	// TODO: This is clunky.
 	if _, err := result.getDomain(); err != nil {
-		return result, derp.Wrap(err, "render.NewDomain", "Error loading Domain")
+		return result, derp.Wrap(err, location, "Error loading Domain")
 	}
 
 	return result, nil

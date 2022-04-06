@@ -15,19 +15,35 @@ import (
 
 type TopLevel struct {
 	layout *model.Layout
-	action *model.Action
 	stream *model.Stream
 	Common
 }
 
-func NewTopLevel(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, stream *model.Stream) TopLevel {
+func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (TopLevel, error) {
+
+	const location = "render.NewGroup"
+
+	// Verify user's authorization to perform this Action on this Stream
+	authorization := getAuthorization(ctx)
+
+	if !authorization.DomainOwner {
+		return TopLevel{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
+	layout := factory.Layout().TopLevel()
+
+	// Verify the requested action
+	action := layout.Action(actionID)
+
+	if action == nil {
+		return TopLevel{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	return TopLevel{
 		layout: layout,
-		action: action,
 		stream: stream,
-		Common: NewCommon(factory, ctx),
-	}
+		Common: NewCommon(factory, ctx, action, actionID),
+	}, nil
 }
 
 /*******************************************

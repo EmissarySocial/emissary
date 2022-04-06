@@ -17,19 +17,26 @@ import (
 
 type Profile struct {
 	layout *model.Layout
-	action *model.Action
 	user   *model.User
 	Common
 }
 
-func NewProfile(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, user *model.User) Profile {
+func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Profile, error) {
+
+	layout := factory.Layout().Profile()
+
+	// Verify the requested action
+	action := layout.Action(actionID)
+
+	if action == nil {
+		return Profile{}, derp.NewBadRequestError("render.NewProfile", "Invalid action", actionID)
+	}
 
 	return Profile{
 		layout: layout,
-		action: action,
 		user:   user,
-		Common: NewCommon(factory, ctx),
-	}
+		Common: NewCommon(factory, ctx, action, actionID),
+	}, nil
 }
 
 /*******************************************
@@ -59,9 +66,13 @@ func (w Profile) Render() (template.HTML, error) {
 // View executes a separate view for this Profile
 func (w Profile) View(actionID string) (template.HTML, error) {
 
-	action := w.layout.Action(actionID)
+	renderer, err := NewProfile(w.factory(), w.ctx, w.user, actionID)
 
-	return NewProfile(w.factory(), w.ctx, w.layout, action, w.user).Render()
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, "render.Profile.View", "Error creating Profile renderer")
+	}
+
+	return renderer.Render()
 }
 
 func (w Profile) TopLevelID() string {

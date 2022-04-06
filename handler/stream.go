@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
@@ -53,6 +54,8 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
+
+		spew.Dump("HANDLER", actionID)
 		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {

@@ -107,8 +107,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	// If no steps configued, then try the "step" alias
 	if len(action.Steps) == 0 {
 		if name := convert.String(data["step"]); name != "" {
-			alias, _ := step.NewPipeline([]datatype.Map{{"step": name}})
-			data["steps"] = alias
+			action.Steps, _ = step.NewPipeline([]datatype.Map{{"step": name}})
 		}
 	}
 

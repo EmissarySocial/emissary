@@ -1,8 +1,6 @@
 package render
 
 import (
-	"bytes"
-	"html/template"
 	"io"
 
 	"github.com/benpate/derp"
@@ -89,23 +87,6 @@ func CloseModal(ctx echo.Context, url string) {
 	}
 }
 
-func executeSingleTemplate(t string, renderer Renderer) (string, error) {
-
-	executable, err := template.New("").Parse(t)
-
-	if err != nil {
-		return "", derp.Wrap(err, "whisper.render.executeSingleTemplate", "Error parsing template", t)
-	}
-
-	var buffer bytes.Buffer
-
-	if err := executable.Execute(&buffer, renderer); err != nil {
-		return "", derp.Wrap(err, "whisper.render.executeSingleTemplate", "Error executing template", t)
-	}
-
-	return buffer.String(), nil
-}
-
 // getAuthorization extracts a model.Authorization record from the steranko.Context
 func getAuthorization(ctx *steranko.Context) *model.Authorization {
 
@@ -130,8 +111,7 @@ func finalizeAddStream(buffer io.Writer, factory Factory, context *steranko.Cont
 	const location = "render.finalizeAddStream"
 
 	// Create stream renderer
-	action := template.Action("view")
-	renderer, err := NewStream(factory, context, template, action, stream)
+	renderer, err := NewStream(factory, context, template, stream, "view")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating renderer", stream)

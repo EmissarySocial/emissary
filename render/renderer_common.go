@@ -16,18 +16,22 @@ import (
 
 // Common provides common rendering functions that are needed by ALL renderers
 type Common struct {
-	f   Factory           // Factory interface is required for locating other services.
-	ctx *steranko.Context // Contains request context and authentication data.
+	f        Factory           // Factory interface is required for locating other services.
+	ctx      *steranko.Context // Contains request context and authentication data.
+	action   *model.Action     // Action to be performed on the (template or layout)
+	actionID string            // Token that identifies the action requested in the URL
 
 	// Cached values, do not populate unless needed
 	user   *model.User
 	domain *model.Domain
 }
 
-func NewCommon(factory Factory, ctx *steranko.Context) Common {
+func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, actionID string) Common {
 	return Common{
-		f:   factory,
-		ctx: ctx,
+		f:        factory,
+		ctx:      ctx,
+		action:   action,
+		actionID: actionID,
 	}
 }
 
@@ -43,6 +47,10 @@ func (w Common) factory() Factory {
 // context returns request context embedded in this renderer.
 func (w Common) context() *steranko.Context {
 	return w.ctx
+}
+
+func (w Common) ActionID() string {
+	return w.actionID
 }
 
 func (w Common) DomainLabel() string {

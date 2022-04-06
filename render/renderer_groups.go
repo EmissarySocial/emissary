@@ -17,19 +17,35 @@ import (
 
 type Group struct {
 	layout *model.Layout
-	action *model.Action
 	group  *model.Group
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, group *model.Group) Group {
+func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, actionID string) (Group, error) {
+
+	const location = "render.NewGroup"
+
+	// Verify user's authorization to perform this Action on this Stream
+	authorization := getAuthorization(ctx)
+
+	if !authorization.DomainOwner {
+		return Group{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
+	layout := factory.Layout().Group()
+
+	// Verify the requested action
+	action := layout.Action(actionID)
+
+	if action == nil {
+		return Group{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	return Group{
 		group:  group,
 		layout: layout,
-		action: action,
-		Common: NewCommon(factory, ctx),
-	}
+		Common: NewCommon(factory, ctx, action, actionID),
+	}, nil
 }
 
 /*******************************************
@@ -58,13 +74,15 @@ func (w Group) Render() (template.HTML, error) {
 // View executes a separate view for this Group
 func (w Group) View(actionID string) (template.HTML, error) {
 
-	action := w.layout.Action(actionID)
+	const location = "render.Group.View"
 
-	if action == nil {
-		return template.HTML(""), derp.NewNotFoundError("whisper.render.Group.View", "Unrecognized Action", actionID)
+	renderer, err := NewGroup(w.factory(), w.context(), w.group, actionID)
+
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
 	}
 
-	return NewGroup(w.factory(), w.context(), w.layout, action, w.group).Render()
+	return renderer.Render()
 }
 
 func (w Group) TopLevelID() string {

@@ -1,21 +1,31 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/datatype"
+	"github.com/benpate/derp"
 )
 
 // TriggerEvent represents an action-step that forwards the user to a new page.
 type TriggerEvent struct {
 	Event string
-	Data  string
+	Data  *template.Template
 }
 
 // NewTriggerEvent returns a fully initialized TriggerEvent object
 func NewTriggerEvent(stepInfo datatype.Map) (TriggerEvent, error) {
 
+	dataString := stepInfo.GetString("data")
+	data, err := template.New("").Parse(dataString)
+
+	if err != nil {
+		return TriggerEvent{}, derp.Wrap(err, "model.step.NewTriggerEvent", "Invalid data template", dataString)
+	}
+
 	return TriggerEvent{
 		Event: stepInfo.GetString("event"),
-		Data:  stepInfo.GetString("data"),
+		Data:  data,
 	}, nil
 }
 

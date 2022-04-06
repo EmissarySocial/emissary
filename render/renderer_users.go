@@ -17,19 +17,35 @@ import (
 
 type User struct {
 	layout *model.Layout
-	action *model.Action
 	user   *model.User
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, layout *model.Layout, action *model.Action, user *model.User) User {
+func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (User, error) {
+
+	const location = "render.NewGroup"
+
+	// Verify user's authorization to perform this Action on this Stream
+	authorization := getAuthorization(ctx)
+
+	if !authorization.DomainOwner {
+		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
+	layout := factory.Layout().User()
+
+	// Verify the requested action
+	action := layout.Action(actionID)
+
+	if action == nil {
+		return User{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	return User{
 		layout: layout,
-		action: action,
 		user:   user,
-		Common: NewCommon(factory, ctx),
-	}
+		Common: NewCommon(factory, ctx, action, actionID),
+	}, nil
 }
 
 /*******************************************
@@ -48,7 +64,7 @@ func (w User) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "whisper.render.User.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "render.User.Render", "Error generating HTML"))
 
 	}
 
@@ -59,9 +75,13 @@ func (w User) Render() (template.HTML, error) {
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
 
-	action := w.layout.Action(actionID)
+	renderer, err := NewUser(w.factory(), w.ctx, w.user, actionID)
 
-	return NewUser(w.factory(), w.ctx, w.layout, action, w.user).Render()
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, "render.User.View", "Error creating renderer")
+	}
+
+	return renderer.Render()
 }
 
 func (w User) TopLevelID() string {
@@ -142,5 +162,5 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w.factory().Group()
 	result, err := groupService.ListByIDs(w.user.GroupIDs...)
 
-	return result, derp.Wrap(err, "whisper.render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
+	return result, derp.Wrap(err, "render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
 }

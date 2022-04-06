@@ -1,7 +1,9 @@
 package render
 
 import (
+	"bytes"
 	"io"
+	"text/template"
 
 	"github.com/benpate/derp"
 )
@@ -9,7 +11,7 @@ import (
 // StepTriggerEvent represents an action-step that forwards the user to a new page.
 type StepTriggerEvent struct {
 	Event string
-	Data  string
+	Data  *template.Template
 }
 
 func (step StepTriggerEvent) Get(renderer Renderer, _ io.Writer) error {
@@ -18,11 +20,14 @@ func (step StepTriggerEvent) Get(renderer Renderer, _ io.Writer) error {
 
 // Post updates the stream with approved data from the request body.
 func (step StepTriggerEvent) Post(renderer Renderer, _ io.Writer) error {
-	data, err := executeSingleTemplate(step.Data, renderer)
 
-	if err != nil {
+	var buffer bytes.Buffer
+
+	if err := step.Data.Execute(&buffer, renderer); err != nil {
 		return derp.Wrap(err, "render.StepTriggerEvent.Post", "Error executing template", step.Event, step.Data)
 	}
+
+	data := buffer.String()
 
 	if data == "" {
 		renderer.context().Response().Header().Set("HX-Trigger", step.Event)
