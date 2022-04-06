@@ -91,7 +91,7 @@ func (service StreamSource) SaveObject(object data.Object, note string) error {
 	}
 
 	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.StreamSource", "Object is not a model.StreamSource", object, note)
+	return derp.NewInternalError("service.StreamSource", "Object is not a model.StreamSource", object, note)
 }
 
 // DeleteObject wraps the `Delete` method as a generic Object
@@ -102,7 +102,7 @@ func (service StreamSource) DeleteObject(object data.Object, note string) error 
 	}
 
 	// This should never happen.
-	return derp.New(derp.CodeInternalError, "service.StreamSource", "Object is not a model.StreamSource", object, note)
+	return derp.NewInternalError("service.StreamSource", "Object is not a model.StreamSource", object, note)
 }
 
 /*

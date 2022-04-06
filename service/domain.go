@@ -55,7 +55,7 @@ func (service *Domain) ObjectNew() data.Object {
 }
 
 func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return nil, derp.New(derp.CodeBadRequestError, "service.Domain.ObjectDelete", "Unsupported")
+	return nil, derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
@@ -69,7 +69,7 @@ func (service *Domain) ObjectSave(object data.Object, note string) error {
 }
 
 func (service *Domain) ObjectDelete(object data.Object, note string) error {
-	return derp.New(derp.CodeBadRequestError, "service.Domain.ObjectDelete", "Unsupported")
+	return derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) Debug() datatype.Map {

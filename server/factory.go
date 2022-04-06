@@ -206,7 +206,7 @@ func (factory *Factory) DomainByIndex(domainID string) (config.Domain, error) {
 	index := convert.Int(domainID)
 
 	if (index < 0) || (index >= len(factory.config.Domains)) {
-		return config.Domain{}, derp.New(derp.CodeNotFoundError, "server.Factory.DomainByIndex", "Index out of bounds", index)
+		return config.Domain{}, derp.NewNotFoundError("server.Factory.DomainByIndex", "Index out of bounds", index)
 	}
 
 	return factory.config.Domains[index], nil

@@ -113,7 +113,7 @@ func (step StepEditContent) modalAction(buffer io.Writer, renderer Renderer) err
 		result := content.Get(library, params, renderer.URL())
 
 		if result == "" {
-			return derp.New(derp.CodeBadRequestError, "render.StepEditContent.Get", "No action modal available", params)
+			return derp.NewBadRequestError("render.StepEditContent.Get", "No action modal available", params)
 		}
 
 		// Success!

@@ -36,7 +36,7 @@ func (step StepAddTopStream) Post(renderer Renderer, buffer io.Writer) error {
 		if templateID == "" {
 			templateID = step.TemplateIDs[0]
 		} else if !compare.Contains(step.TemplateIDs, templateID) {
-			return derp.New(derp.CodeBadRequestError, location, "Cannot create new template of this kind", templateID)
+			return derp.NewBadRequestError(location, "Cannot create new template of this kind", templateID)
 		}
 	}
 
@@ -49,7 +49,7 @@ func (step StepAddTopStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Verify that the template can be placed at the top level
 	if !template.CanBeContainedBy("top") {
-		return derp.New(derp.CodeInternalError, location, "Template cannot be placed at top level", templateID)
+		return derp.NewInternalError(location, "Template cannot be placed at top level", templateID)
 	}
 
 	// Create new top-level stream

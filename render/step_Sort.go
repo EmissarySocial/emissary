@@ -30,7 +30,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 
 	// Collect form POST information
 	if err := renderer.context().Bind(&formPost); err != nil {
-		return derp.New(derp.CodeBadRequestError, "render.StepSort.Post", "Error binding body")
+		return derp.NewBadRequestError("render.StepSort.Post", "Error binding body")
 	}
 
 	for rank, id := range formPost.Keys {
