@@ -79,9 +79,11 @@ func (service *Mention) Save(stream *model.Mention, note string) error {
 // Delete removes an Mention from the database (virtual delete)
 func (service *Mention) Delete(stream *model.Mention, note string) error {
 
+	criteria := exp.Equal("_id", stream.StreamID)
+
 	// Delete this Mention
-	if err := service.collection.HardDelete(stream); err != nil {
-		return derp.Wrap(err, "service.Mention.Delete", "Error deleting Mention", stream)
+	if err := service.collection.HardDelete(criteria); err != nil {
+		return derp.Wrap(err, "service.Mention.Delete", "Error deleting Mention", criteria)
 	}
 
 	return nil

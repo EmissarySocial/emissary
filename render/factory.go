@@ -9,6 +9,7 @@ import (
 
 // Factory is used to locate all necessary services
 type Factory interface {
+	Activity() *service.Activity
 	Attachment() *service.Attachment
 	ContentLibrary() *nebula.Library
 	Domain() *service.Domain

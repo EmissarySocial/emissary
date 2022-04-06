@@ -156,6 +156,14 @@ h3.space-below {
     width: 100%;
 }
 
+.inline-block {
+	display:inline-block;
+}
+
+.inline {
+	display: inline;
+}
+
 .align-left {
     text-align:left;
 }

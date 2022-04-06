@@ -71,7 +71,7 @@ func (service *Group) Delete(user *model.Group, note string) error {
  * GENERIC DATA FUNCTIONS
  *******************************************/
 
-// New returns a fully initialized model.Stream as a data.Object.
+// New returns a fully initialized model.Group as a data.Object.
 func (service *Group) ObjectNew() data.Object {
 	result := model.NewGroup()
 	return &result

@@ -73,6 +73,9 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "edit-content":
 		return NewEditContent(stepInfo)
 
+	case "log-activity":
+		return NewLogActivity(stepInfo)
+
 	case "view-rss":
 		return NewViewRSS(stepInfo)
 
@@ -123,7 +126,7 @@ func New(stepInfo datatype.Map) (Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.New(derp.CodeInternalError, "whisper.factory.RenderStep", "Unrecognized action configuration", stepInfo)
+	return nil, derp.New(derp.CodeInternalError, "whisper.factory.RenderStep", "Unrecognized step type", stepInfo["step"], stepInfo)
 }
 
 // NewPipeline parses a series of render steps into a new array

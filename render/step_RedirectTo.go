@@ -33,5 +33,5 @@ func (step StepRedirectTo) redirect(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error evaluating 'url'")
 	}
 
-	return renderer.context().NoContent(http.StatusTemporaryRedirect)
+	return renderer.context().Redirect(http.StatusTemporaryRedirect, nextPage.String())
 }

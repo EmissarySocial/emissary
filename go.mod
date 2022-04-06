@@ -2,7 +2,11 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace github.com/benpate/form => ../../benpate/form
+replace (
+	github.com/benpate/data => ../../benpate/data
+	github.com/benpate/data-mongo => ../../benpate/data-mongo
+	github.com/benpate/form => ../../benpate/form
+)
 
 require (
 	github.com/benpate/compare v0.1.1
@@ -40,7 +44,7 @@ require (
 	github.com/whisperverse/mediaserver v0.1.2
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
-	go.mongodb.org/mongo-driver v1.8.4
+	go.mongodb.org/mongo-driver v1.9.0
 
 )
 

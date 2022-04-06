@@ -52,11 +52,17 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.IfCondition:
 		return StepIfCondition(s)
 
+	case step.RedirectTo:
+		return StepRedirectTo(s)
+
 	case step.RefreshPage:
 		return StepRefreshPage(s)
 
 	case step.Save:
 		return StepSave(s)
+
+	case step.LogActivity:
+		return StepLogActivity(s)
 
 	case step.SetData:
 		return StepSetData(s)

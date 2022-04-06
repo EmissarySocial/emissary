@@ -83,7 +83,6 @@ func (user *User) Roles(authorization *Authorization) []string {
 
 func (user *User) Schema() schema.Schema {
 	return schema.Schema{
-		ID: "whisper.model.user",
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
 				"userId":      schema.String{Format: "objectId"},

@@ -71,6 +71,10 @@ func (w Common) BannerURL() string {
  * REQUEST INFO
  *******************************************/
 
+func (w Common) Host() string {
+	return w.Protocol() + w.Hostname()
+}
+
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
 	if w.ctx.Request().TLS == nil {

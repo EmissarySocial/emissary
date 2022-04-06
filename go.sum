@@ -50,11 +50,7 @@ github.com/benpate/compare v0.1.1 h1:rpO2mLSWFEReq/hCKd4ULxJV+HSJLYINORodg8rMvMQ
 github.com/benpate/compare v0.1.1/go.mod h1:djtVm+GtoMdMKsdbOdYtd4H4/mV2sL2l/SnqiPexECU=
 github.com/benpate/convert v0.12.0 h1:N4aTPQabpyoIgUSZNmkeP3t/kZo72rWaYQ9oX0ggBds=
 github.com/benpate/convert v0.12.0/go.mod h1:kcwWFWAQFvp6s9s/w74gXIYRDvH7pqt83Ad9YIuwo8s=
-github.com/benpate/data v0.15.2 h1:qzwUwS/A3rmbNdYjHOwuO4Q+ayHhiGjP46O0MG/trHo=
-github.com/benpate/data v0.15.2/go.mod h1:3SAaSNNExLhft16b68okYE/S/SU+aMqQ7qMtWvHAbQw=
 github.com/benpate/data-mock v0.1.0 h1:NXKY/WGNrav7oLg6SNLo4YUKsPq7o13vtq1eVQIXCY4=
-github.com/benpate/data-mongo v0.1.1 h1:en3niAsHsRYxoD3sbJachgldi5pi/B2A5r3M8ecLa/U=
-github.com/benpate/data-mongo v0.1.1/go.mod h1:4gj+EE6sasQpNA2rkTFWro5dXGezYikkZsHgrfNehNk=
 github.com/benpate/datatype v0.2.0 h1:ZEQm89/jfDfmTHXvgLxEWQB8PQJsbjk50utII3KYhX0=
 github.com/benpate/datatype v0.2.0/go.mod h1:yv4SNYtwHWiDk3ZsNG8ej+NKq0s/7dK9fMhmNuydYL4=
 github.com/benpate/derp v0.20.1/go.mod h1:ENjMpkMmxn9gAulMAggElVcD2kNrsbjFhoZK8fUlCxY=
@@ -299,8 +295,8 @@ github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-go.mongodb.org/mongo-driver v1.8.4 h1:NruvZPPL0PBcRJKmbswoWSrmHeUvzdxA3GCPfD/NEOA=
-go.mongodb.org/mongo-driver v1.8.4/go.mod h1:0sQWfOeY63QTntERDJJ/0SuKK0T1uVSgKCuAROlKEPY=
+go.mongodb.org/mongo-driver v1.9.0 h1:f3aLGJvQmBl8d9S40IL+jEyBC6hfLPbJjv9t5hEM9ck=
+go.mongodb.org/mongo-driver v1.9.0/go.mod h1:0sQWfOeY63QTntERDJJ/0SuKK0T1uVSgKCuAROlKEPY=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=

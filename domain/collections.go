@@ -1,5 +1,8 @@
 package domain
 
+// CollectionActivity is the database collection where Activities are stored
+const CollectionActivity = "Activity"
+
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 

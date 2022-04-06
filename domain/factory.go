@@ -149,6 +149,12 @@ func (factory *Factory) Hostname() string {
  * DOMAIN MODEL SERVICES
  *******************************************/
 
+// Activity returns a fully populated Activity service
+func (factory *Factory) Activity() *service.Activity {
+	result := service.NewActivity(factory.collection(CollectionActivity))
+	return &result
+}
+
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	result := service.NewAttachment(factory.collection(CollectionAttachment), factory.MediaServer())

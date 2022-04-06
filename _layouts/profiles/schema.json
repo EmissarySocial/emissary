@@ -1,6 +1,7 @@
 {
 	"actions": {
 		"view": {"step": "view-html"},
+		"feed": {"step": "view-html"},
 		"photo": {"steps": [
 			{"step": "redirect-to", "url":"https://avatars.githubusercontent.com/u/4381040?v=4"}
 		]}
