@@ -248,20 +248,22 @@ func PostServerDomain(factory *server.Factory) echo.HandlerFunc {
 // GetSigninToDomain signs you in to the requested domain as an administrator
 func GetSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.GetSigninToDomain"
+
 	return func(ctx echo.Context) error {
 
 		// Get the domain config requested in the URL (by index)
 		domain, err := fm.DomainByIndex(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, "handler.PostSigninDomain", "Error loading configuration")
+			return derp.Wrap(err, location, "Error loading configuration")
 		}
 
 		// Get the real factory for this domain
 		factory, err := fm.ByDomainName(domain.Hostname)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.PostSigninDomain", "Error loading Domain")
+			return derp.Wrap(err, location, "Error loading Domain")
 		}
 
 		// Create a fake "User" record for the system administrator and sign in
@@ -272,7 +274,7 @@ func GetSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 		administrator.IsOwner = true
 
 		if err := s.CreateCertificate(ctx, &administrator); err != nil {
-			return derp.Wrap(err, "handler.PostSigninDomain", "Error creating certificate")
+			return derp.Wrap(err, location, "Error creating certificate")
 		}
 
 		// Redirect to the admin page of this domain

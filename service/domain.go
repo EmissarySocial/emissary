@@ -29,7 +29,7 @@ func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 func (service *Domain) Load(domain *model.Domain) error {
 
 	if err := service.collection.Load(exp.All(), domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error loading Domain")
+		return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
 	}
 
 	return nil
