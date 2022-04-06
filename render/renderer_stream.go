@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -99,8 +98,6 @@ func (w Stream) Action() *model.Action {
 func (w Stream) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
-
-	spew.Dump("stream.Render", w.action)
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
