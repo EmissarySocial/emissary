@@ -34,17 +34,17 @@ func ParseObjectIDList(value interface{}) (ObjectIDList, error) {
 			case string:
 				objectID, err := primitive.ObjectIDFromHex(item)
 				if err != nil {
-					return nil, derp.Wrap(err, "whisper.datatype.ParseObjectIDList", "Invalid item in array", item)
+					return nil, derp.Wrap(err, "datatype.ParseObjectIDList", "Invalid item in array", item)
 				}
 				result[index] = objectID
 
 			default:
-				return nil, derp.New(500, "whisper.datatype.ParseObjectIDList", "Invalid item in array", index, item)
+				return nil, derp.New(500, "datatype.ParseObjectIDList", "Invalid item in array", index, item)
 			}
 		}
 		return result, nil
 	}
-	return nil, derp.New(500, "whisper.datatype.ParseObjectIDList", "Invalid data type", value)
+	return nil, derp.New(500, "datatype.ParseObjectIDList", "Invalid data type", value)
 }
 
 func (objectIDList ObjectIDList) GetPath(name string) (interface{}, error) {
@@ -52,13 +52,13 @@ func (objectIDList ObjectIDList) GetPath(name string) (interface{}, error) {
 	head, tail := list.Split(name, ".")
 
 	if tail != "" {
-		return nil, derp.NewInternalError("whisper.datatype.ObjectIDlist.GetPath", "Invalid path", name)
+		return nil, derp.NewInternalError("datatype.ObjectIDlist.GetPath", "Invalid path", name)
 	}
 
 	index, err := path.Index(head, len(objectIDList))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "whisper.datatype.ObjectIDlist.GetPath", "Bad index", name)
+		return nil, derp.Wrap(err, "datatype.ObjectIDlist.GetPath", "Bad index", name)
 	}
 
 	return objectIDList[index], nil
@@ -69,19 +69,19 @@ func (objectIDList *ObjectIDList) SetPath(name string, value interface{}) error 
 	head, tail := list.Split(name, ".")
 
 	if tail != "" {
-		return derp.NewInternalError("whisper.datatype.ObjectIDlist.GetPath", "Invalid path", name)
+		return derp.NewInternalError("datatype.ObjectIDlist.GetPath", "Invalid path", name)
 	}
 
 	index, err := path.Index(head, len(*objectIDList))
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.datatype.ObjectIDlist.GetPath", "Bad index", name)
+		return derp.Wrap(err, "datatype.ObjectIDlist.GetPath", "Bad index", name)
 	}
 
 	objectID, err := primitive.ObjectIDFromHex(convert.String(value))
 
 	if err != nil {
-		return derp.New(500, "whisper.datatype.ObjectIDList.SetPath", "Invalid Value", value)
+		return derp.New(500, "datatype.ObjectIDList.SetPath", "Invalid Value", value)
 	}
 
 	for index < len(*objectIDList) {
@@ -97,13 +97,13 @@ func (objectIDList *ObjectIDList) DeletePath(name string) error {
 	head, tail := list.Split(name, ".")
 
 	if tail != "" {
-		return derp.NewInternalError("whisper.datatype.ObjectIDlist.GetPath", "Invalid path", name)
+		return derp.NewInternalError("datatype.ObjectIDlist.GetPath", "Invalid path", name)
 	}
 
 	index, err := path.Index(head, len(*objectIDList))
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.datatype.ObjectIDlist.GetPath", "Bad index", name)
+		return derp.Wrap(err, "datatype.ObjectIDlist.GetPath", "Bad index", name)
 	}
 
 	*objectIDList = append((*objectIDList)[:index], (*objectIDList)[index+1:]...)

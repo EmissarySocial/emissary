@@ -34,5 +34,5 @@ func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error
 		return service.Group.ListAsOptions()
 	}
 
-	return nil, derp.New(500, "whisper.service.OptionProvider.OptionCodes", "Unrecognized Path: ", path)
+	return nil, derp.New(500, "service.OptionProvider.OptionCodes", "Unrecognized Path: ", path)
 }

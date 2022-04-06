@@ -30,7 +30,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 
 	// Collect form POST information
 	if err := renderer.context().Bind(&formPost); err != nil {
-		return derp.New(derp.CodeBadRequestError, "whisper.render.StepSort.Post", "Error binding body")
+		return derp.New(derp.CodeBadRequestError, "render.StepSort.Post", "Error binding body")
 	}
 
 	for rank, id := range formPost.Keys {
@@ -39,7 +39,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 		objectID, err := primitive.ObjectIDFromHex(id)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.render.StepSort.Post", "Invalid objectId", id)
+			return derp.Wrap(err, "render.StepSort.Post", "Invalid objectId", id)
 		}
 
 		criteria := exp.Equal(step.Keys, objectID)
@@ -48,7 +48,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 		object, err := renderer.service().ObjectLoad(criteria)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.render.StepSort.Post", "Error loading object with criteria: ", criteria)
+			return derp.Wrap(err, "render.StepSort.Post", "Error loading object with criteria: ", criteria)
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
@@ -58,12 +58,12 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 
 		// Update the object
 		if err := path.Set(object, step.Values, rank); err != nil {
-			return derp.Wrap(err, "whisper.render.StepSort.Post", "Error updating field: ", objectID, rank)
+			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, rank)
 		}
 
 		// Try to save back to the database
 		if err := renderer.service().ObjectSave(object, step.Message); err != nil {
-			return derp.Wrap(err, "whisper.render.StepSort.Post", "Error saving record tot he database", object)
+			return derp.Wrap(err, "render.StepSort.Post", "Error saving record tot he database", object)
 		}
 	}
 

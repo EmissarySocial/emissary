@@ -42,7 +42,7 @@ func (step StepDelete) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Delete the object via the model service.
 	if err := renderer.service().ObjectDelete(renderer.object(), "Deleted"); err != nil {
-		return derp.Wrap(err, "whisper.render.StepDelete.Post", "Error deleting stream")
+		return derp.Wrap(err, "render.StepDelete.Post", "Error deleting stream")
 	}
 
 	return nil

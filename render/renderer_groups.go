@@ -64,7 +64,7 @@ func (w Group) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "whisper.render.Group.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "render.Group.Render", "Error generating HTML"))
 	}
 
 	// Success!

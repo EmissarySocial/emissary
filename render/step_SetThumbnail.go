@@ -23,7 +23,7 @@ func (step StepSetThumbnail) Post(renderer Renderer, _ io.Writer) error {
 	attachments, err := factory.Attachment().ListByObjectID(renderer.objectID())
 
 	if err != nil {
-		return derp.New(derp.CodeBadRequestError, "whisper.render.StepSetThumbnail.Post", "Error listing attachments")
+		return derp.New(derp.CodeBadRequestError, "render.StepSetThumbnail.Post", "Error listing attachments")
 	}
 
 	// Scan all attachments and use the first one that is an image.

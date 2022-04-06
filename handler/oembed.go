@@ -14,7 +14,7 @@ func GetOEmbed(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handlers.GetOEmbed", "Can't get domain")
+			return derp.Wrap(err, "handlers.GetOEmbed", "Can't get domain")
 		}
 
 		return ctx.JSON(200, factory.Hostname())

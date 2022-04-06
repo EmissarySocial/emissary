@@ -87,21 +87,21 @@ func (factory *Factory) start(d config.Domain) error {
 	originals, err := factory.config.AttachmentOriginals.GetFilesystem()
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
+		return derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
 	}
 
 	// Try to open attachment cache folder
 	cache, err := factory.config.AttachmentCache.GetFilesystem()
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
+		return derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
 	}
 
 	// Try to create a new Factory object
 	result, err := domain.NewFactory(d, &factory.layoutService, &factory.templateService, originals, cache)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.start", "Error creating factory", d)
+		return derp.Wrap(err, "server.Factory.start", "Error creating factory", d)
 	}
 
 	// Assign the new factory to the registry
@@ -150,14 +150,14 @@ func (factory *Factory) DomainByName(hostname string) (config.Domain, error) {
 		}
 	}
 
-	return config.Domain{}, derp.NewNotFoundError("whisper.factoryManager.DomainByName", "Domain not fount", hostname)
+	return config.Domain{}, derp.NewNotFoundError("factoryManager.DomainByName", "Domain not fount", hostname)
 }
 
 func (factory *Factory) write() error {
 
 	// TODO: this hardcoded reference should be moved into the config file itself
 	if err := config.Write(factory.config, "./config.json"); err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.write", "Error writing configuration")
+		return derp.Wrap(err, "server.Factory.write", "Error writing configuration")
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (factory *Factory) UpdateDomain(indexString string, domain config.Domain) e
 
 	// TODO: this hardcoded reference should be moved into the config file itself
 	if err := factory.write(); err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.WriteConfig", "Error writing configuration")
+		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
 	}
 
 	factory.start(domain)
@@ -206,7 +206,7 @@ func (factory *Factory) DomainByIndex(domainID string) (config.Domain, error) {
 	index := convert.Int(domainID)
 
 	if (index < 0) || (index >= len(factory.config.Domains)) {
-		return config.Domain{}, derp.New(derp.CodeNotFoundError, "whisper.server.Factory.DomainByIndex", "Index out of bounds", index)
+		return config.Domain{}, derp.New(derp.CodeNotFoundError, "server.Factory.DomainByIndex", "Index out of bounds", index)
 	}
 
 	return factory.config.Domains[index], nil
@@ -224,7 +224,7 @@ func (factory *Factory) DeleteDomain(domain config.Domain) error {
 	}
 
 	if err := factory.write(); err != nil {
-		return derp.Wrap(err, "whisper.server.Factory.DeleteDomain", "Error saving configuration")
+		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
 	}
 
 	delete(factory.domains, domain.Hostname)
@@ -253,7 +253,7 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.New(404, "whisper.factory.Factory.Get", "Unrecognized Factory Name", name)
+	return nil, derp.New(404, "factory.Factory.Get", "Unrecognized Factory Name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present
@@ -312,7 +312,7 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	result, err := factory.ByContext(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "whisper.server.Factory.Steranko", "Unable to locate factory for domain", ctx.Request().Host)
+		return nil, derp.Wrap(err, "server.Factory.Steranko", "Unable to locate factory for domain", ctx.Request().Host)
 	}
 
 	return result.Steranko(), nil

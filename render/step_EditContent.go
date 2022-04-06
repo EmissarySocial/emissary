@@ -26,7 +26,7 @@ func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	if err := renderer.executeTemplate(buffer, step.Filename, renderer); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditContent.Get", "Error executing template")
+		return derp.Wrap(err, "render.StepEditContent.Get", "Error executing template")
 	}
 
 	return nil
@@ -39,14 +39,14 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 	getterSetter, ok := object.(nebula.GetterSetter)
 
 	if !ok {
-		return derp.NewInternalError("whisper.render.StepEditContent.Post", "Bad configuration - object does not have content to edit", renderer.object())
+		return derp.NewInternalError("render.StepEditContent.Post", "Bad configuration - object does not have content to edit", renderer.object())
 	}
 
 	// Try to read the request body
 	body := datatype.Map{}
 
 	if err := renderer.context().Bind(&body); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditContent.Post", "Error binding data")
+		return derp.Wrap(err, "render.StepEditContent.Post", "Error binding data")
 	}
 
 	// UPLOADS: If present, inject the uploaded filename into the form post. (One attachment per content item)
@@ -61,7 +61,7 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 	changedID, err := container.Post(contentLibrary, body)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditContent.Post", "Error executing content action")
+		return derp.Wrap(err, "render.StepEditContent.Post", "Error executing content action")
 	}
 
 	// Write the updated content back into the object
@@ -69,7 +69,7 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(object, "Content edited"); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditContent.Post", "Error saving stream")
+		return derp.Wrap(err, "render.StepEditContent.Post", "Error saving stream")
 	}
 
 	// If this is an "edit-item" action, then DON'T return HTML
@@ -91,7 +91,7 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Copy the result back to the client response
 	if _, err := io.WriteString(buffer, result); err != nil {
-		return derp.Wrap(err, "whisper.render.StepEditContent.Post", "Error writing to output buffer", result)
+		return derp.Wrap(err, "render.StepEditContent.Post", "Error writing to output buffer", result)
 	}
 
 	// Success!
@@ -113,7 +113,7 @@ func (step StepEditContent) modalAction(buffer io.Writer, renderer Renderer) err
 		result := content.Get(library, params, renderer.URL())
 
 		if result == "" {
-			return derp.New(derp.CodeBadRequestError, "whisper.render.StepEditContent.Get", "No action modal available", params)
+			return derp.New(derp.CodeBadRequestError, "render.StepEditContent.Get", "No action modal available", params)
 		}
 
 		// Success!
@@ -123,6 +123,6 @@ func (step StepEditContent) modalAction(buffer io.Writer, renderer Renderer) err
 	}
 
 	// Generic error because someone done bad.
-	return derp.NewInternalError("whisper.render.StepEditContent.Get", "Unable to create property panel.  Object is not a nebula.GetterSetter", object)
+	return derp.NewInternalError("render.StepEditContent.Get", "Unable to create property panel.  Object is not a nebula.GetterSetter", object)
 
 }

@@ -26,7 +26,7 @@ func (step StepAddSiblingStream) Get(renderer Renderer, buffer io.Writer) error 
 	if step.View != "" {
 
 		if err := renderer.executeTemplate(buffer, step.View, renderer); err != nil {
-			return derp.Wrap(err, "whisper.render.StepViewHTML.Get", "Error executing template")
+			return derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template")
 		}
 
 		return nil

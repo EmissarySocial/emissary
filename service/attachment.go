@@ -80,12 +80,12 @@ func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note strin
 	it, err := service.ListByObjectID(streamID)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.Attachment.DeleteByStream", "Error listing attachments", streamID)
+		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", streamID)
 	}
 
 	for it.Next(&attachment) {
 		if err := service.Delete(&attachment, note); err != nil {
-			return derp.Wrap(err, "whisper.service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
+			return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
 		}
 	}
 

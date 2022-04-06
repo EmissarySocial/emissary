@@ -47,12 +47,12 @@ func uploadedFiles(factory Factory, ctx echo.Context, objectID primitive.ObjectI
 		defer source.Close()
 
 		if err := mediaServer.Put(attachment.Filename, source); err != nil {
-			derp.Report(derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment))
+			derp.Report(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment))
 			continue // semi-silent failure
 		}
 
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			derp.Report(derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment", attachment))
+			derp.Report(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment))
 			continue // semi-silent failure
 		}
 

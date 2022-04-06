@@ -32,7 +32,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	formHTML, err := form.HTML(factory.FormLibrary(), &schema, model)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.render.StepSetSimpleSharing.Get", "Error rendering form")
+		return derp.Wrap(err, "render.StepSetSimpleSharing.Get", "Error rendering form")
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -68,7 +68,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, buffer io.Writer) error
 
 	// Try to parse the form input
 	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, "whisper.render.StepSetSimpleSharing", "Error parsing form input")
+		return derp.Wrap(err, "render.StepSetSimpleSharing", "Error parsing form input")
 	}
 
 	stream := streamRenderer.stream

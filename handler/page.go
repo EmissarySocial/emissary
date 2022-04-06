@@ -21,7 +21,7 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 		pipeline := render.Pipeline(renderer.Action().Steps)
 
 		if err := pipeline.Execute(factory, renderer, ctx.Response().Writer, actionMethod); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostAdmin", "Error executing action pipeline", pipeline)
+			return derp.Wrap(err, "handler.PostAdmin", "Error executing action pipeline", pipeline)
 		}
 		return nil
 	}

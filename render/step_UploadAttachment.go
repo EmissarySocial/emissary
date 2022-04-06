@@ -21,7 +21,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
 	form, err := streamRenderer.ctx.MultipartForm()
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error reading multipart form.")
+		return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading multipart form.")
 	}
 
 	files := form.File["file"]
@@ -35,17 +35,17 @@ func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
 		source, err := fileHeader.Open()
 
 		if err != nil {
-			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader)
+			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader)
 		}
 
 		defer source.Close()
 
 		if err := factory.MediaServer().Put(attachment.Filename, source); err != nil {
-			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
+			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
 		}
 
 		if err := factory.Attachment().Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			return derp.Wrap(err, "whisper.handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
+			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
 		}
 	}
 

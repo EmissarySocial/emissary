@@ -15,7 +15,7 @@ type StepWithDraft struct {
 // Get displays a form where users can update stream data
 func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
 
-	const location = "whisper.render.StepWithDraft.Get"
+	const location = "render.StepWithDraft.Get"
 
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
@@ -36,7 +36,7 @@ func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
 // Post updates the stream with approved data from the request body.
 func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 
-	const location = "whisper.render.StepWithDraft.Post"
+	const location = "render.StepWithDraft.Post"
 
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)

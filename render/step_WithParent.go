@@ -20,7 +20,7 @@ func (step StepWithParent) Get(renderer Renderer, buffer io.Writer) error {
 // Post executes the subSteps on the parent Stream
 func (step StepWithParent) Post(renderer Renderer, buffer io.Writer) error {
 
-	const location = "whisper.render.StepWithParent.Post"
+	const location = "render.StepWithParent.Post"
 
 	var parent model.Stream
 

@@ -31,11 +31,11 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 	user, ok := result.(*model.User)
 
 	if !ok {
-		return derp.New(derp.CodeInternalError, "whisper.service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
+		return derp.New(derp.CodeInternalError, "service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
 	}
 
 	if err := service.userService.LoadByUsername(username, user); err != nil {
-		return derp.Wrap(err, "whisper.service.SterankoUserService.Load", "Error loading user")
+		return derp.Wrap(err, "service.SterankoUserService.Load", "Error loading user")
 	}
 
 	return nil
@@ -48,7 +48,7 @@ func (service SterankoUserService) Save(user steranko.User, comment string) erro
 		return service.userService.Save(user, comment)
 	}
 
-	return derp.New(derp.CodeInternalError, "whisper.service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
+	return derp.New(derp.CodeInternalError, "service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // Delete removes a single User from the database
@@ -58,7 +58,7 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 		return service.userService.Delete(user, comment)
 	}
 
-	return derp.New(derp.CodeInternalError, "whisper.service.SterankoUserService.Delete", "Steranko User is not a valid object.  This should never happen", user)
+	return derp.New(derp.CodeInternalError, "service.SterankoUserService.Delete", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // RequestPasswordReset is not currently implemented in this service. (TODO)

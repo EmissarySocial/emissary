@@ -16,7 +16,7 @@ func WatchTemplates(streamService *service.Stream, streamUpdates chan model.Stre
 		streams, err := streamService.ListByTemplate(template.TemplateID)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "whisper.domain.WatchTemplates", "Error retrieving streams that match templateID", template.TemplateID))
+			derp.Report(derp.Wrap(err, "domain.WatchTemplates", "Error retrieving streams that match templateID", template.TemplateID))
 		}
 
 		var stream model.Stream

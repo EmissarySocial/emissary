@@ -155,12 +155,12 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	// System folders (except for "static" and "global") have a schema.json file
 	if filename != "global" {
 		if err := loadModelFromFilesystem(fs, &layout); err != nil {
-			return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Schema", fs, filename)
+			return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", fs, filename)
 		}
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "whisper.service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
+		return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
 	}
 
 	switch filename {

@@ -29,7 +29,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 	files, err := afero.ReadDir(filesystem, ".")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to list directory", filesystem)
+		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to list directory", filesystem)
 	}
 
 	for _, file := range files {
@@ -44,7 +44,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 			content, err := afero.ReadFile(filesystem, filename)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
+				return derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
 			}
 
 			contentString := string(content)
@@ -58,7 +58,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 			contentTemplate, err := template.New(actionID).Funcs(funcMap).Parse(contentString)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "whisper.service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString))
+				return derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString))
 			}
 
 			// Add this minified template into the resulting parse-tree
@@ -76,19 +76,19 @@ func loadModelFromFilesystem(filesystem afero.Fs, model interface{}) error {
 	file, err := filesystem.Open("schema.json")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Cannot read file: schema.json")
+		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json")
 	}
 
 	// Load the file from the filesystem
 	content, err := io.ReadAll(file)
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Cannot read file: schema.json")
+		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json")
 	}
 
 	// Unmarshal the file into the schema.
 	if err := json.Unmarshal(content, model); err != nil {
-		return derp.Wrap(err, "whisper.service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json")
+		return derp.Wrap(err, "service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json")
 	}
 
 	// Return to caller.

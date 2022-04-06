@@ -19,7 +19,7 @@ func NewStreamWatcher(collection *mongo.Collection) chan model.Stream {
 	cs, err := collection.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "whisper.service.Watcher", "Unable to open Mongodb Change Stream"))
+		derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
 		return result
 	}
 

@@ -131,7 +131,7 @@ func (qb QueryBuilder) Action(action string) (List, error) {
 	iterator, err := qb.query()
 
 	if err != nil {
-		return nil, derp.Wrap(err, "whisper.renderer.QueryBuilder.makeSlice", "Error loading streams from database")
+		return nil, derp.Wrap(err, "renderer.QueryBuilder.makeSlice", "Error loading streams from database")
 	}
 
 	return qb.iteratorToSlice(iterator, qb.MaxRows, action), nil

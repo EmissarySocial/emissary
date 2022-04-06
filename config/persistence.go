@@ -88,11 +88,11 @@ func Write(config Config, filename string) error {
 	output, err := json.MarshalIndent(config, "\n", "\t")
 
 	if err != nil {
-		return derp.Wrap(err, "whisper.config.Write", "Error marshalling configuration")
+		return derp.Wrap(err, "config.Write", "Error marshalling configuration")
 	}
 
 	if err := os.WriteFile(filename, output, 0x777); err != nil {
-		return derp.Wrap(err, "whisper.config.Write", "Error writing configuration")
+		return derp.Wrap(err, "config.Write", "Error writing configuration")
 	}
 
 	return nil

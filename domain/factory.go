@@ -69,13 +69,13 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Server)", domain)
+			return nil, derp.Wrap(err, "service.NewFactory", "Error connecting to MongoDB (Server)", domain)
 		}
 
 		session, err := server.Session(context.Background())
 
 		if err != nil {
-			return nil, derp.Wrap(err, "whisper.service.NewFactory", "Error connecting to MongoDB (Session)", domain)
+			return nil, derp.Wrap(err, "service.NewFactory", "Error connecting to MongoDB (Session)", domain)
 		}
 
 		factory.Session = session

@@ -52,7 +52,7 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 		return NewUser(factory, ctx, object, actionID)
 	}
 
-	return nil, derp.New(derp.CodeInternalError, "whisper.render.NewRenderer", "Unrecognized object", object)
+	return nil, derp.New(derp.CodeInternalError, "render.NewRenderer", "Unrecognized object", object)
 }
 
 /*******************************************

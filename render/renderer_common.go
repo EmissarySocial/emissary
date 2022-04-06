@@ -160,7 +160,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.UserName", "Error loading User"))
+		return "", derp.Report(derp.Wrap(err, "render.Stream.UserName", "Error loading User"))
 	}
 
 	return user.DisplayName, nil
@@ -177,7 +177,7 @@ func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "whisper.render.Stream.UserAvatar", "Error loading User"))
+		return "", derp.Report(derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User"))
 	}
 
 	return user.AvatarURL, nil
@@ -198,7 +198,7 @@ func (w *Common) getUser() (*model.User, error) {
 		w.user = new(model.User)
 
 		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
-			return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading user from database", authorization.UserID)
+			return nil, derp.Wrap(err, "render.Stream.getUser", "Error loading user from database", authorization.UserID)
 		}
 	}
 
@@ -221,7 +221,7 @@ func (w *Common) getDomain() (*model.Domain, error) {
 
 			// Only "legitimate" errors are reported. "Not Found" is skipped.
 			if !derp.NotFound(err) {
-				return nil, derp.Wrap(err, "whisper.render.Stream.getUser", "Error loading domain from database", authorization.UserID)
+				return nil, derp.Wrap(err, "render.Stream.getUser", "Error loading domain from database", authorization.UserID)
 			}
 		}
 	}

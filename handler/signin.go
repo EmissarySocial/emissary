@@ -24,7 +24,7 @@ func PostSignIn(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "whisper.handler.PostSignIn", "Invalid Request.  Please try again later.")
+			return derp.New(500, "handler.PostSignIn", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
@@ -48,13 +48,13 @@ func PostSignOut(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, err := factoryManager.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "whisper.handler.PostSignOut", "Invalid Request.  Please try again later.")
+			return derp.New(500, "handler.PostSignOut", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
 
 		if err := s.SignOut(ctx); err != nil {
-			return derp.Wrap(err, "whisper.handler.PostSignOut", "Error Signing Out")
+			return derp.Wrap(err, "handler.PostSignOut", "Error Signing Out")
 		}
 
 		// Forward the user back to the home page of the website.
