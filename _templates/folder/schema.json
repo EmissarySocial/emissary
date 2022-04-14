@@ -38,8 +38,12 @@
 				{"step": "set-data", "values":{"label": "New Folder"}}
 			]
 		},
+		"view": {
+			"roles": ["viewer"],
+			"step": "view-html"
+		},
 		"edit": {
-			"roles": ["owner", "editor"],
+			"roles": ["editor"],
 			"steps":[{
 				"step": "as-modal",
 				"steps": [
@@ -61,18 +65,14 @@
 				]
 			}]
 		},
-		"view": {
-			"roles": ["owner", "editor", "viewer"],
-			"step": "view-html"
-		},
 		"delete": {
-			"roles": ["owner", "editor"],
+			"roles": ["editor"],
 			"steps": [{
 				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
 			}]
 		},
 		"new": {
-			"roles": ["owner", "editor"],
+			"roles": ["editor"],
 			"steps":[{
 				"step": "add-child",
 				"comment": "Created by {{.Author}}",
@@ -83,7 +83,7 @@
 			}]
 		},
 		"sharing": {
-			"roles": ["owner"],
+			"roles": ["editor"],
 			"steps": [
 				{"step":"as-modal", "steps": [
 					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
@@ -92,6 +92,7 @@
 			]
 		},
 		"rss": {
+			"roles": ["viewer"],
 			"steps": [
 				{"step":"view-rss", "format": "rss"}
 			]
