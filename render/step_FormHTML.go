@@ -38,7 +38,7 @@ func (step StepForm) UseGlobalWrapper() bool {
 }
 
 // Post updates the object with approved data from the request body.
-func (step StepForm) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepForm) Post(renderer Renderer) error {
 
 	const location = "render.StepForm.Post"
 

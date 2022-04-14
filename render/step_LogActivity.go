@@ -26,7 +26,7 @@ func (step StepLogActivity) UseGlobalWrapper() bool {
 }
 
 // Post removes the object from the database (likely using a soft-delete, though)
-func (step StepLogActivity) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepLogActivity) Post(renderer Renderer) error {
 	return step.logActivity(renderer)
 }
 

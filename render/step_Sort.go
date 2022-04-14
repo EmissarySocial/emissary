@@ -26,7 +26,7 @@ func (step StepSort) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSort) Post(renderer Renderer) error {
 
 	var formPost struct {
 		Keys []string `form:"keys"`

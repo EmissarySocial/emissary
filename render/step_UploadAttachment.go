@@ -17,7 +17,7 @@ func (step StepUploadAttachment) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
+func (step StepUploadAttachment) Post(renderer Renderer) error {
 
 	// TODO: could this be generalized to work with more than just streams???
 	factory := renderer.factory()

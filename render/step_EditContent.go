@@ -36,7 +36,7 @@ func (step StepEditContent) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepEditContent) Post(renderer Renderer) error {
 
 	factory := renderer.factory()
 	object := renderer.object()
@@ -85,7 +85,8 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 	// Otherwise, let's try to update the browser with some new content...
 
 	// Close any modal dialogs that are open
-	header := renderer.context().Response().Header()
+	response := renderer.context().Response()
+	header := response.Header()
 	header.Set("HX-Trigger", "closeModal")
 	header.Set("ChangedID", convert.String(changedID))
 	header.Set("HX-Retarget", `.content-editor`)
@@ -94,7 +95,7 @@ func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 	result := nebula.Edit(contentLibrary, &container, renderer.URL())
 
 	// Copy the result back to the client response
-	if _, err := io.WriteString(buffer, result); err != nil {
+	if _, err := io.WriteString(response.Writer, result); err != nil {
 		return derp.Wrap(err, "render.StepEditContent.Post", "Error writing to output buffer", result)
 	}
 

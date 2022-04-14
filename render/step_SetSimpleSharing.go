@@ -65,7 +65,7 @@ func (step StepSetSimpleSharing) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepSetSimpleSharing) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 
 	const location = "render.StepSetSimpleSharing.Post"
 
@@ -82,7 +82,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, buffer io.Writer) error
 
 	switch rule {
 	case "public":
-		groupIDs = []string{model.MagicGroupIDEverybody.Hex()}
+		groupIDs = []string{model.MagicGroupIDAnonymous.Hex()}
 
 	case "authenticated":
 		groupIDs = []string{model.MagicGroupIDAuthenticated.Hex()}

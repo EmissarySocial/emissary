@@ -22,7 +22,7 @@ func (step StepWithParent) UseGlobalWrapper() bool {
 }
 
 // Post executes the subSteps on the parent Stream
-func (step StepWithParent) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepWithParent) Post(renderer Renderer) error {
 
 	const location = "render.StepWithParent.Post"
 
@@ -44,7 +44,7 @@ func (step StepWithParent) Post(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := Pipeline(step.SubSteps).Post(factory, &parentStream, buffer); err != nil {
+	if err := Pipeline(step.SubSteps).Post(factory, &parentStream); err != nil {
 		return derp.Wrap(err, location, "Error executing steps for parent")
 	}
 

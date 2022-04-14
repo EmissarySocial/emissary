@@ -50,10 +50,10 @@ func (step StepAsModal) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepAsModal) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepAsModal) Post(renderer Renderer) error {
 
 	// Write inner items
-	if err := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer); err != nil {
+	if err := Pipeline(step.SubSteps).Post(renderer.factory(), renderer); err != nil {
 		return derp.Wrap(err, "render.StepAsModal.Post", "Error executing subSteps")
 	}
 

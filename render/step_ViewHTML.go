@@ -42,6 +42,6 @@ func (step StepViewHTML) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepViewHTML) Post(renderer Renderer) error {
 	return nil
 }

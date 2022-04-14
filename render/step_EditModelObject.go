@@ -47,7 +47,7 @@ func (step StepEditModelObject) UseGlobalWrapper() bool {
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepEditModelObject) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepEditModelObject) Post(renderer Renderer) error {
 
 	const location = "render.StepEditModelObject.Post"
 
@@ -58,7 +58,7 @@ func (step StepEditModelObject) Post(renderer Renderer, buffer io.Writer) error 
 	schema := renderer.schema()
 
 	// Execute any "default" steps so that the object is initialized
-	if err := Pipeline(step.Defaults).Post(factory, renderer, buffer); err != nil {
+	if err := Pipeline(step.Defaults).Post(factory, renderer); err != nil {
 		return derp.Wrap(err, location, "Error executing default steps")
 	}
 

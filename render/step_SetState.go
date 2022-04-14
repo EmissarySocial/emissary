@@ -20,7 +20,7 @@ func (step StepSetState) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step StepSetState) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSetState) Post(renderer Renderer) error {
 
 	// Try to set the state via the Path interface.
 	return path.Set(renderer.object(), "stateId", step.StateID)

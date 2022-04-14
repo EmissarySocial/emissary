@@ -69,15 +69,15 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 		// Thank you gorilla/feeds for this awesome API.
 		switch step.Format {
 		case "atom":
-			mimeType = "application/atom+xml"
+			mimeType = "application/atom+xml; charset=UTF=8"
 			xml, err = result.ToAtom()
 
 		case "json":
-			mimeType = "application/json"
+			mimeType = "application/json; charset=UTF=8"
 			xml, err = result.ToJSON()
 
 		default:
-			mimeType = "application/rss+xml"
+			mimeType = "application/rss+xml; charset=UTF=8"
 			xml, err = result.ToRss()
 		}
 
@@ -86,7 +86,8 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 		}
 
 		// Write the result to the buffer and then success.
-		renderer.context().Response().Header().Add("mime-type", mimeType)
+		header := renderer.context().Response().Header()
+		header.Add("Content-Type", mimeType)
 		buffer.Write([]byte(xml))
 		return nil
 	}
@@ -96,6 +97,6 @@ func (step StepViewRSS) UseGlobalWrapper() bool {
 	return false
 }
 
-func (step StepViewRSS) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepViewRSS) Post(renderer Renderer) error {
 	return nil
 }
