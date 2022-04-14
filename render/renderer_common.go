@@ -140,18 +140,19 @@ func (w Common) Now() int64 {
 
 // IsAuthenticated returns TRUE if the user is signed in
 func (w Common) IsAuthenticated() bool {
-	return getAuthorization(w.context()).IsAuthenticated()
+	authorization := w.authorization()
+	return authorization.IsAuthenticated()
 }
 
 // IsOwner returns TRUE if the user is a Domain Owner
 func (w Common) IsOwner() bool {
-	authorization := getAuthorization(w.context())
+	authorization := w.authorization()
 	return authorization.DomainOwner
 }
 
 // UserID returns the unique ID of the currently logged in user (may be nil).
 func (w Common) UserID() primitive.ObjectID {
-	authorization := getAuthorization((w.context()))
+	authorization := w.authorization()
 	return authorization.UserID
 }
 
@@ -183,9 +184,32 @@ func (w Common) UserImage() (string, error) {
 	return user.AvatarURL, nil
 }
 
+func (w Common) authorization() model.Authorization {
+	return getAuthorization(w.ctx)
+}
+
 /*******************************************
  * MISC HELPER FUNCTIONS
  *******************************************/
+
+// withViewPermission augments a query criteria to include the
+// group authorizations of the currently signed in user.
+func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
+
+	result := criteria.
+		And(exp.Equal("journal.deleteDate", 0)).                 // Stream must not be deleted
+		And(exp.LessThan("publishDate", time.Now().UnixMilli())) // Stream must be published
+
+	// If the user IS NOT a domain owner, then we must also
+	// check their permission to VIEW this stream
+	authorization := w.authorization()
+
+	if !authorization.DomainOwner {
+		result = result.And(exp.In("defaultAllow", authorization.AllGroupIDs()))
+	}
+
+	return result
+}
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
 func (w *Common) getUser() (*model.User, error) {
@@ -235,7 +259,7 @@ func (w *Common) getDomain() (*model.Domain, error) {
 
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
-	criteria := exp.Equal("parentId", primitive.NilObjectID)
+	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
 	builder := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
 	return builder.Top60().ByRank().View()
 }

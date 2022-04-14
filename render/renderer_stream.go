@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/exp/builder"
-	"github.com/benpate/html"
 	"github.com/benpate/htmlconv"
 	"github.com/benpate/list"
 	"github.com/benpate/nebula"
@@ -49,7 +48,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)
 
-	if !action.UserCan(stream, authorization) {
+	if !action.UserCan(stream, &authorization) {
 		return Stream{}, derp.NewForbiddenError(location, "Forbidden")
 	}
 
@@ -305,8 +304,8 @@ func (w Stream) IsCurrentStream() bool {
 }
 
 func (w Stream) Roles() []string {
-	authorization := getAuthorization(w.context())
-	return w.stream.Roles(authorization)
+	authorization := w.authorization()
+	return w.stream.Roles(&authorization)
 }
 
 /*******************************************
@@ -336,11 +335,8 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 // PrevSibling returns the sibling Stream that immediately preceeds this one, based on the provided sort field
 func (w Stream) PrevSibling(sortField string, action string) (Stream, error) {
 
-	criteria := exp.And(
-		exp.Equal("parentId", w.stream.ParentID),
-		exp.LessThan(sortField, path.Get(w.stream, sortField)),
-		exp.Equal("journal.deleteDate", 0),
-	)
+	criteria := exp.Equal("parentId", w.stream.ParentID).
+		AndLessThan(sortField, path.Get(w.stream, sortField))
 
 	sortOption := option.SortDesc(sortField)
 
@@ -350,11 +346,8 @@ func (w Stream) PrevSibling(sortField string, action string) (Stream, error) {
 // NextSibling returns the sibling Stream that immediately follows this one, based on the provided sort field
 func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 
-	criteria := exp.And(
-		exp.Equal("parentId", w.stream.ParentID),
-		exp.GreaterThan(sortField, path.Get(w.stream, sortField)),
-		exp.Equal("journal.deleteDate", 0),
-	)
+	criteria := exp.Equal("parentId", w.stream.ParentID).
+		AndGreaterThan(sortField, path.Get(w.stream, sortField))
 
 	sortOption := option.SortAsc(sortField)
 
@@ -364,10 +357,7 @@ func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
 func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 
-	criteria := exp.And(
-		exp.Equal("parentId", w.stream.StreamID),
-		exp.Equal("journal.deleteDate", 0),
-	)
+	criteria := exp.Equal("parentId", w.stream.StreamID)
 
 	sortOption := option.SortAsc(sort)
 
@@ -377,11 +367,7 @@ func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 // FirstChild returns the first child Stream underneath this one, based on the provided sort field
 func (w Stream) LastChild(sort string, action string) (Stream, error) {
 
-	criteria := exp.And(
-		exp.Equal("parentId", w.stream.StreamID),
-		exp.Equal("journal.deleteDate", 0),
-	)
-
+	criteria := exp.Equal("parentId", w.stream.StreamID)
 	sortOption := option.SortDesc(sort)
 
 	return w.getFirstStream(criteria, sortOption, action), nil
@@ -390,6 +376,8 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 // getFirstStream scans an iterator for the first stream allowed to this user.
 // It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
+
+	criteria = w.withViewPermission(criteria)
 
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
@@ -415,36 +403,6 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
  * RELATED RESULTSETS
  *******************************************/
 
-func (w Stream) Ancestors() template.HTML {
-
-	// Try to load all ancestors of this stream
-	streamService := w.factory().Stream()
-	ancestors, err := streamService.ListAncestors(w.stream)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "render.Stream.Ancestors", "Error retrieving ancestors"))
-		return template.HTML("")
-	}
-
-	// Build the HTML structure
-	b := html.New()
-
-	if len(ancestors) > 0 {
-		b.Div().Class("ancestors")
-		for index, stream := range ancestors {
-			if index > 0 {
-				b.WriteString(" &middot; ")
-			}
-			b.A("").Data("hx-get", "/"+stream.Token).InnerHTML(stream.Label).Close()
-		}
-		b.Close()
-	}
-
-	result := b.String()
-
-	return template.HTML(result)
-}
-
 // Siblings returns all Streams that have the same "parent" as the current Stream
 func (w Stream) Siblings() QueryBuilder {
 	return w.makeQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
@@ -463,7 +421,7 @@ func (w Stream) Replies() QueryBuilder {
 // makeQueryBuilder returns a fully initialized QueryBuilder
 func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
-	query := builder.NewBuilder().
+	queryBuilder := builder.NewBuilder().
 		Int("journal.createDate").
 		Int("journal.updateDate").
 		Int("publishDate").
@@ -471,10 +429,11 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 		Int("rank").
 		String("label")
 
-	criteria = exp.And(
-		criteria,
-		query.Evaluate(w.context().Request().URL.Query()),
-		exp.Equal("journal.deleteDate", 0),
+	queryValues := w.context().Request().URL.Query()
+	query := queryBuilder.Evaluate(queryValues)
+
+	criteria = w.withViewPermission(
+		criteria.And(query),
 	)
 
 	result := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
@@ -564,9 +523,9 @@ func (w Stream) UserCan(actionID string) bool {
 		return false
 	}
 
-	authorization := getAuthorization(w.context())
+	authorization := w.authorization()
 
-	return action.UserCan(w.stream, authorization)
+	return action.UserCan(w.stream, &authorization)
 }
 
 // CanCreate returns all of the templates that can be created underneath
@@ -577,6 +536,8 @@ func (w Stream) CanCreate() []model.Option {
 	return templateService.ListByContainer(w.template.TemplateID)
 }
 
+// draftRenderer returns a new render.Stream that is bound to the
+// draft service, and a draft copy of the current stream.
 func (w Stream) draftRenderer() (Stream, error) {
 
 	var draft model.Stream

@@ -122,10 +122,6 @@ func (qb QueryBuilder) View() (List, error) {
 	return qb.Action("view")
 }
 
-func (qb QueryBuilder) Edit() (List, error) {
-	return qb.Action("edit")
-}
-
 func (qb QueryBuilder) Action(action string) (List, error) {
 
 	iterator, err := qb.query()
