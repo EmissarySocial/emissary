@@ -51,7 +51,7 @@ func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
 func (criteria *Criteria) SimpleModel() datatype.Map {
 
 	// Special case if this is for EVERYBODY
-	if _, ok := criteria.Groups[MagicGroupIDEverybody.Hex()]; ok {
+	if _, ok := criteria.Groups[MagicGroupIDAnonymous.Hex()]; ok {
 		return datatype.Map{
 			"rule":     "public",
 			"groupIds": []string{},

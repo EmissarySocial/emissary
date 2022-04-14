@@ -46,7 +46,7 @@ func (authorization *Authorization) IsAuthenticated() bool {
 // including the magic "Everybody", "Self", and (if valid) "Authenticated" groups.
 func (authorization Authorization) AllGroupIDs() []primitive.ObjectID {
 
-	result := append(authorization.GroupIDs, authorization.UserID, MagicGroupIDEverybody)
+	result := append(authorization.GroupIDs, authorization.UserID, MagicGroupIDAnonymous)
 
 	if authorization.IsAuthenticated() {
 		result = append(result, MagicGroupIDAuthenticated)
