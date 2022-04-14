@@ -33,6 +33,10 @@ func (step StepForm) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepForm) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the object with approved data from the request body.
 func (step StepForm) Post(renderer Renderer, buffer io.Writer) error {
 

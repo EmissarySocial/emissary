@@ -32,6 +32,10 @@ func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepEditContent) UseGlobalWrapper() bool {
+	return true
+}
+
 func (step StepEditContent) Post(renderer Renderer, buffer io.Writer) error {
 
 	factory := renderer.factory()

@@ -42,6 +42,10 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepAddChildStream) UseGlobalWrapper() bool {
+	return false
+}
+
 func (step StepAddChildStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddChildStream.Post"

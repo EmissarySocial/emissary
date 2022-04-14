@@ -13,6 +13,10 @@ func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepUploadAttachment) UseGlobalWrapper() bool {
+	return true
+}
+
 func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
 
 	// TODO: could this be generalized to work with more than just streams???

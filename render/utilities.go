@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
+	"github.com/whisperverse/whisperverse/model/step"
 )
 
 func WrapModal(response *echo.Response, content string) string {
@@ -99,6 +100,18 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 
 	return model.NewAuthorization()
 }
+
+// useGlobalWrapper returns TRUE if all steps can use the global wrapper
+// if any cannot, then it returns false.
+func useGlobalWrapper(steps []step.Step) bool {
+
+	for _, item := range steps {
+		if !ExecutableStep(item).UseGlobalWrapper() {
+			return false
+		}
+	}
+
+	return true
 }
 
 // finalizeAddStream takes all of the follow-on actions required to initialize a new stream.

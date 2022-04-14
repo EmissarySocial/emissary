@@ -45,6 +45,10 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepAsModal) UseGlobalWrapper() bool {
+	return false
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepAsModal) Post(renderer Renderer, buffer io.Writer) error {
 

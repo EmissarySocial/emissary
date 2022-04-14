@@ -15,6 +15,10 @@ func (step StepSave) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepSave) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post saves the object to the database
 func (step StepSave) Post(renderer Renderer, _ io.Writer) error {
 

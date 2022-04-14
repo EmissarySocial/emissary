@@ -40,6 +40,10 @@ func (step StepAddModelObject) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepAddModelObject) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
 func (step StepAddModelObject) Post(renderer Renderer, buffer io.Writer) error {
 

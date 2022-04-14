@@ -39,6 +39,10 @@ func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepIfCondition) UseGlobalWrapper() bool {
+	return useGlobalWrapper(step.Then) && useGlobalWrapper(step.Otherwise)
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) error {
 

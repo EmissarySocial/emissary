@@ -15,6 +15,10 @@ func (step StepSetState) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepSetState) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with configured data, and moves the stream to a new state
 func (step StepSetState) Post(renderer Renderer, _ io.Writer) error {
 

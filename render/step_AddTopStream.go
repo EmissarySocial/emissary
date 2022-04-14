@@ -22,6 +22,10 @@ func (step StepAddTopStream) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepAddTopStream) UseGlobalWrapper() bool {
+	return false
+}
+
 func (step StepAddTopStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddTopStream.Post"

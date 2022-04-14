@@ -123,10 +123,16 @@ func (w Common) IsPartialRequest() bool {
 	return false
 }
 
-// SkipFullPageRendering returns TRUE if this request does not use the common site chrome.
-// Default is FALSE, overridden in specific cases.
-func (w Common) SkipFullPageRendering() bool {
-	return false
+// UseGlobalWrapper returns TRUE if every step in this request uses the common site chrome.
+// It returns FALSE if any of its sub-steps must not use the common wrapper.
+func (w Common) UseGlobalWrapper() bool {
+
+	// Nil check just in case
+	if w.action == nil {
+		return true
+	}
+
+	return useGlobalWrapper(w.action.Steps)
 }
 
 // Now returns the current time in milliseconds since the Unix epoch

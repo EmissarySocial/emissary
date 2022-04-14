@@ -18,6 +18,10 @@ func (step StepRedirectTo) Get(renderer Renderer, buffer io.Writer) error {
 	return step.redirect(renderer)
 }
 
+func (step StepRedirectTo) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepRedirectTo) Post(renderer Renderer, buffer io.Writer) error {
 	return step.redirect(renderer)

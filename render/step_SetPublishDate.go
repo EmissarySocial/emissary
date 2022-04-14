@@ -12,6 +12,10 @@ func (step StepSetPublishDate) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepSetPublishDate) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with the current date as the "PublishDate"
 func (step StepSetPublishDate) Post(renderer Renderer, _ io.Writer) error {
 	streamRenderer := renderer.(*Stream)

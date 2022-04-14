@@ -21,6 +21,10 @@ func (step StepSort) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepSort) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 

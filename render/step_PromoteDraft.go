@@ -15,6 +15,10 @@ func (step StepStreamPromoteDraft) Get(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 
+func (step StepStreamPromoteDraft) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
 func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) error {
 

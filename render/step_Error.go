@@ -15,6 +15,10 @@ func (step StepError) Get(renderer Renderer, buffer io.Writer) error {
 	return derp.NewInternalError("render.StepError", "Unrecognized Pipeline Step", "This should never happen", step.Original)
 }
 
+func (step StepError) UseGlobalWrapper() bool {
+	return true
+}
+
 func (step StepError) Post(renderer Renderer, buffer io.Writer) error {
 	return derp.NewInternalError("render.StepError", "Unrecognized Pipeline Step", "This should never happen", step.Original)
 }

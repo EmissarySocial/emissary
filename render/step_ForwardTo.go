@@ -17,6 +17,10 @@ func (step StepForwardTo) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepForwardTo) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepForwardTo) Post(renderer Renderer, buffer io.Writer) error {
 

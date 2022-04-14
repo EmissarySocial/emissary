@@ -22,6 +22,10 @@ func (step StepSetData) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepSetData) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepSetData) Post(renderer Renderer, buffer io.Writer) error {
 

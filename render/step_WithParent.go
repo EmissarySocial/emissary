@@ -17,6 +17,10 @@ func (step StepWithParent) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepWithParent) UseGlobalWrapper() bool {
+	return useGlobalWrapper(step.SubSteps)
+}
+
 // Post executes the subSteps on the parent Stream
 func (step StepWithParent) Post(renderer Renderer, buffer io.Writer) error {
 

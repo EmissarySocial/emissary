@@ -17,6 +17,10 @@ func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepWithChildren) UseGlobalWrapper() bool {
+	return useGlobalWrapper(step.SubSteps)
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
 

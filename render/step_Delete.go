@@ -37,6 +37,10 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepDelete) UseGlobalWrapper() bool {
+	return true
+}
+
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepDelete) Post(renderer Renderer, buffer io.Writer) error {
 

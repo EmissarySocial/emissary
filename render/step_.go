@@ -9,6 +9,7 @@ import (
 type Step interface {
 	Get(Renderer, io.Writer) error
 	Post(Renderer, io.Writer) error
+	UseGlobalWrapper() bool
 	// isWrapped() bool // Returns true if this step can be wrapped by the global frame.
 }
 

@@ -92,6 +92,10 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 	}
 }
 
+func (step StepViewRSS) UseGlobalWrapper() bool {
+	return false
+}
+
 func (step StepViewRSS) Post(renderer Renderer, buffer io.Writer) error {
 	return nil
 }

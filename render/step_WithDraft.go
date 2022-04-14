@@ -33,6 +33,10 @@ func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepWithDraft) UseGlobalWrapper() bool {
+	return useGlobalWrapper(step.SubSteps)
+}
+
 // Post updates the stream with approved data from the request body.
 func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 

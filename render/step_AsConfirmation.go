@@ -39,6 +39,10 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
+func (step StepAsConfirmation) UseGlobalWrapper() bool {
+	return false
+}
+
 // Post does nothing. (Other steps in the pipeline will make changes)
 func (step StepAsConfirmation) Post(renderer Renderer, buffer io.Writer) error {
 	CloseModal(renderer.context(), "")

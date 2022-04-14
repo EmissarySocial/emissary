@@ -19,14 +19,14 @@ type Renderer interface {
 	Render() (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Protocol() string            // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
-	Hostname() string            // Hostname for this server
-	Token() string               // URL Token of the record being rendered
-	URL() string                 // Complete URL of the requested page
-	ActionID() string            // Token that identifies the action requested via the URL.
-	Action() *model.Action       // The pipeline action to be taken by this renderer
-	IsPartialRequest() bool      // Returns TRUE if this is an HTMX request for a page fragment
-	SkipFullPageRendering() bool // Returns TRUE if this renderer does not use the common site chrome.
+	Protocol() string       // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
+	Hostname() string       // Hostname for this server
+	Token() string          // URL Token of the record being rendered
+	URL() string            // Complete URL of the requested page
+	ActionID() string       // Token that identifies the action requested via the URL.
+	Action() *model.Action  // The pipeline action to be taken by this renderer
+	IsPartialRequest() bool // Returns TRUE if this is an HTMX request for a page fragment
+	UseGlobalWrapper() bool // Returns TRUE if this renderer uses the common site chrome.
 
 	factory() Factory             // The service factory
 	context() *steranko.Context   // The request context embedded in the Renderer

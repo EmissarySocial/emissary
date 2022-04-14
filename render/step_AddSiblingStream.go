@@ -38,6 +38,10 @@ func (step StepAddSiblingStream) Get(renderer Renderer, buffer io.Writer) error 
 	return nil
 }
 
+func (step StepAddSiblingStream) UseGlobalWrapper() bool {
+	return false
+}
+
 func (step StepAddSiblingStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Collect prerequisites

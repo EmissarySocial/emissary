@@ -27,7 +27,7 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 	}
 
 	// Partial Page requests are served directly from the renderer
-	if renderer.IsPartialRequest() || renderer.SkipFullPageRendering() {
+	if renderer.IsPartialRequest() || !renderer.UseGlobalWrapper() {
 		result, err := renderer.Render()
 
 		if err != nil {
