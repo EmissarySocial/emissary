@@ -253,7 +253,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			stream.Label = "Blog"
 			stream.TemplateID = "folder"
 			stream.Data["format"] = "CARDS"
-			stream.Data["showImages"] = true
+			stream.Data["showImages"] = "SHOW"
 			streams = append(streams, stream)
 		}
 
@@ -271,6 +271,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
+		// Try to add each new stream to the database.
 		for index, stream := range streams {
 			stream.Rank = index
 
