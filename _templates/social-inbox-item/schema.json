@@ -29,20 +29,20 @@
 		"mark-read": {
 			"states": ["unread"],
 			"steps": [{
-				"method": "stream-state",
+				"step": "set-state",
 				"newState": "read"
 			}, {
-				"method": "save",
+				"step": "save",
 				"comment": "State changed to 'read'"
 			}]
 		},
 		"mark-unread": {
-			"method": "update-state",
+			"step": "update-state",
 			"steps": [{
-				"method": "stream-state",
+				"step": "set-state",
 				"newState": "unread"
 			}, {
-				"method": "save",
+				"step": "save",
 				"comment": "State changed to 'unread'"
 			}]
 		}

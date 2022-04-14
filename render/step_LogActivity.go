@@ -1,6 +1,7 @@
 package render
 
 import (
+	"bytes"
 	"io"
 	"text/template"
 
@@ -10,10 +11,9 @@ import (
 
 // StepLogActivity represents an action-step that can delete a Stream from the Domain
 type StepLogActivity struct {
-	Type      string
-	Link      string
-	Container string
-	Comment   *template.Template
+	Type    string
+	Link    string
+	Comment *template.Template
 }
 
 // Get displays a customizable confirmation form for the delete
@@ -31,10 +31,18 @@ func (step StepLogActivity) logActivity(renderer Renderer) error {
 	const location = "render.StepLogActivity.logActivity"
 
 	streamRenderer := renderer.(*Stream)
+	stream := streamRenderer.stream
 
 	// Only log activity when users are signed in
 	if !streamRenderer.IsAuthenticated() {
 		return nil
+	}
+
+	// Try to calculate the comment to be saved
+	var comment bytes.Buffer
+
+	if err := step.Comment.Execute(&comment, renderer); err != nil {
+		return derp.Wrap(err, location, "Error generating comment", step)
 	}
 
 	// Create the new activity record
@@ -42,6 +50,16 @@ func (step StepLogActivity) logActivity(renderer Renderer) error {
 	activity.StreamID = streamRenderer.objectID()
 	activity.UserID = streamRenderer.UserID()
 	activity.Type = step.Type
+	activity.Comment = comment.String()
+
+	switch step.Link {
+	case "parent":
+		activity.Link = streamRenderer.Host() + "/" + stream.ParentID.Hex()
+
+	// case "self":
+	default:
+		activity.Link = streamRenderer.Host() + "/" + stream.StreamID.Hex()
+	}
 
 	// Try to save the new activity
 	activityService := renderer.factory().Activity()

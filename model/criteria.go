@@ -6,27 +6,36 @@ import (
 )
 
 type Criteria struct {
-	Public  []string            `path:"public"  json:"public"  bson:"public"`  // An array of roles that PUBLIC users can use
-	Groups  map[string][]string `path:"groups"  json:"roles"   bson:"roles"`   // A map of groupIDs to the roles that each group can use
+	Groups  map[string][]string `path:"groups"  json:"groups"  bson:"groups"`  // A map of groupIDs to the roles that each group can use
 	OwnerID primitive.ObjectID  `path:"ownerId" json:"ownerId" bson:"ownerId"` // UserID of the person who owns this content.
 }
 
 func NewCriteria() Criteria {
 	return Criteria{
-		Public: make([]string, 0),
 		Groups: make(map[string][]string),
 	}
+}
+
+// FindGroups returns all groups that match the provided roles
+func (criteria *Criteria) FindGroups(roles ...string) []primitive.ObjectID {
+
+	result := make([]primitive.ObjectID, 0)
+
+	for groupID, groupRoles := range criteria.Groups {
+		if matchAny(roles, groupRoles) {
+			if groupID, err := primitive.ObjectIDFromHex(groupID); err == nil {
+				result = append(result, groupID)
+			}
+		}
+	}
+
+	return result
 }
 
 // Roles returns a unique list of all roles that the provided groups can access.
 func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
 
-	result := make([]string, len(criteria.Public))
-
-	// Copy values from public roles
-	for index := range criteria.Public {
-		result[index] = criteria.Public[index]
-	}
+	result := []string{}
 
 	// Copy values from group roles
 	for _, groupID := range groupIDs {
@@ -41,15 +50,24 @@ func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
 // SimpleModel returns a model object for displaying Simple Sharing.
 func (criteria *Criteria) SimpleModel() datatype.Map {
 
-	// If there are PUBLIC roles, then public box is checked.
-	if len(criteria.Public) > 0 {
+	// Special case if this is for EVERYBODY
+	if _, ok := criteria.Groups[MagicGroupIDEverybody.Hex()]; ok {
 		return datatype.Map{
-			"public":   true,
+			"rule":     "public",
+			"groupIds": []string{},
+		}
+	}
+
+	// Special case if this is for AUTHENTICATED
+	if _, ok := criteria.Groups[MagicGroupIDAuthenticated.Hex()]; ok {
+		return datatype.Map{
+			"rule":     "authenticated",
 			"groupIds": []string{},
 		}
 	}
 
 	// Fall through means that additional groups are selected.
+	// First, get all keys to the Groups map
 	groupIDs := make([]string, len(criteria.Groups))
 	index := 0
 
@@ -59,7 +77,7 @@ func (criteria *Criteria) SimpleModel() datatype.Map {
 	}
 
 	return datatype.Map{
-		"public":   false,
+		"rule":     "private",
 		"groupIds": groupIDs,
 	}
 }

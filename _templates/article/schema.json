@@ -24,7 +24,7 @@
 	"roles": {
 		"owner": {
 			"label": "Domain Owner",
-			"decription": "Full control"
+			"decription": "Full control over this stream."
 			}, 
 		"editor": {
 			"label": "Editor",
@@ -32,7 +32,7 @@
 		},
 		"viewer": {
 			"label": "Viewer",
-			"description": "Can read and comment on this article"
+			"description": "Can read and comment on this article."
 		}
 	},
 	"actions": {
@@ -44,8 +44,8 @@
 		},
 		"view": {
 			"roles": ["editor", "owner"],
-			"roleStates": {
-				"viewer": ["published"]
+			"stateRoles": {
+				"published": ["viewer"]
 			},
 			"step": "view-html"
 		},
@@ -84,6 +84,7 @@
 				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step": "set-state", "state": "published"},
 				{"step": "save", "message": "Unpublished by {{.Author}}"},
+				{"step": "log-activity", "link": "self", "comment":"Published Article '{{.Label}}'"},
 				{"step": "refresh-page"}
 			]
 		},

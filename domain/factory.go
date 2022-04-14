@@ -103,6 +103,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		// Stream Service
 		factory.streamService = service.NewStream(
 			factory.collection(CollectionStream),
+			factory.Template(),
 			factory.StreamDraft(),
 			factory.Attachment(),
 			factory.FormLibrary(),

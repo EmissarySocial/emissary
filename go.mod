@@ -2,6 +2,10 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
+replace (
+github.com/benpate/id => ../../benpate/id
+)
+
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
@@ -12,16 +16,17 @@ require (
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.1
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.2
+	github.com/benpate/form v0.6.3
 	github.com/benpate/html v0.11.6
 	github.com/benpate/htmlconv v0.3.3
+	github.com/benpate/id v0.1.0
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.5
-	github.com/benpate/steranko v0.7.1
+	github.com/benpate/schema v0.14.6
+	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/golang-jwt/jwt/v4 v4.4.1
@@ -81,9 +86,9 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29 // indirect
 	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a // indirect
-	golang.org/x/net v0.0.0-20220401154927-543a649e0bdd // indirect
+	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
+	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

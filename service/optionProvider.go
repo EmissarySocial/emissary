@@ -26,8 +26,9 @@ func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error
 
 	case "sharing":
 		return []form.OptionCode{
-			{Value: "true", Label: "Everyone"},
-			{Value: "false", Label: "Only Selected Groups"},
+			{Value: "public", Label: "Everyone (including anonymous visitors)"},
+			{Value: "authenticated", Label: "Authenticated People Only"},
+			{Value: "private", Label: "Only Selected Groups"},
 		}, nil
 
 	case "groups":

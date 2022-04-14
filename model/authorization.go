@@ -41,3 +41,17 @@ func (authorization *Authorization) IsAuthenticated() bool {
 
 	return true
 }
+
+// AllGroupIDs returns a complete slice of groups that this authorization belongs to,
+// including the magic "Everybody", "Self", and (if valid) "Authenticated" groups.
+func (authorization Authorization) AllGroupIDs() []primitive.ObjectID {
+
+	result := append(authorization.GroupIDs, authorization.UserID, MagicGroupIDEverybody)
+
+	if authorization.IsAuthenticated() {
+		result = append(result, MagicGroupIDAuthenticated)
+	}
+
+	return result
+
+}

@@ -15,6 +15,7 @@ type Stream struct {
 	TemplateID      string               `path:"templateId"     json:"templateId"          bson:"templateId"`              // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	InReplyTo       string               `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"`     // If this Stream is a reply to another Stream (or external document on the Interweb) then this field contains the ObjectID or URL of that other document.
 	StateID         string               `path:"stateId"        json:"stateId"             bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	DefaultAllow    []primitive.ObjectID `path:"defaultAllow"   json:"defaultAllow"        bson:"defaultAllow"`            // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	Criteria        Criteria             `path:"criteria"       json:"criteria"            bson:"criteria"`                // Criteria for which users can access this stream.
 	Token           string               `path:"token"          json:"token"               bson:"token"`                   // Unique value that identifies this element in the URL
 	Label           string               `path:"label"          json:"label"               bson:"label"`                   // Text to display in lists of streams, probably displayed at top of stream page, too.
@@ -120,7 +121,7 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	}
 
 	// Otherwise, append all roles matched from the criteria
-	result = append(result, stream.Criteria.Roles(authorization.GroupIDs...)...)
+	result = append(result, stream.Criteria.Roles(authorization.AllGroupIDs()...)...)
 
 	return result
 }

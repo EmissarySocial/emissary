@@ -7,9 +7,9 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/null"
 	"github.com/benpate/schema"
 	"github.com/whisperverse/whisperverse/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepSetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -63,32 +63,45 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 
 func (step StepSetSimpleSharing) Post(renderer Renderer, buffer io.Writer) error {
 
-	streamRenderer := renderer.(*Stream)
-	request := streamRenderer.context().Request()
+	const location = "render.StepSetSimpleSharing.Post"
+
+	request := renderer.context().Request()
 
 	// Try to parse the form input
 	if err := request.ParseForm(); err != nil {
 		return derp.Wrap(err, "render.StepSetSimpleSharing", "Error parsing form input")
 	}
 
+	var groupIDs []string
+
+	rule := convert.String(request.Form["rule"])
+
+	switch rule {
+	case "public":
+		groupIDs = []string{model.MagicGroupIDEverybody.Hex()}
+
+	case "authenticated":
+		groupIDs = []string{model.MagicGroupIDAuthenticated.Hex()}
+
+	case "private":
+		groupIDs = request.Form["groupIds"]
+
+	default:
+		return derp.NewBadRequestError(location, "Invalid rule: ", rule)
+	}
+
+	// Build the stream criteria
+	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
 	stream.Criteria = model.NewCriteria()
 
-	var groupIDs []string
-
-	// If PUBLIC is checked, then roles are given to the public group.
-	if convert.Bool(request.Form["public"]) {
-		stream.Criteria.Public = step.Roles
-		return nil
-	}
-
-	// Fall through means that roles are given to the selected groupIDs
-	groupIDs = request.Form["groupIds"]
-
 	for _, groupID := range groupIDs {
-		stream.Criteria.Groups[groupID] = step.Roles
+		if _, err := primitive.ObjectIDFromHex(groupID); err == nil {
+			stream.Criteria.Groups[groupID] = step.Roles
+		}
 	}
 
+	// Success!
 	return nil
 }
 
@@ -97,7 +110,7 @@ func (step StepSetSimpleSharing) schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"public":   schema.Boolean{Default: null.NewBool(true)},
+				"rule":     schema.String{Default: "public"},
 				"groupIds": schema.Array{Items: schema.String{Format: "objectId"}},
 			},
 		},
@@ -110,8 +123,8 @@ func (step StepSetSimpleSharing) form() form.Form {
 	return form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{
-			{Kind: "select", Path: "public", Options: form.Map{"format": "radio", "provider": "sharing"}},
-			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}, Show: form.Rule{Path: "public", Value: "'false'"}},
+			{Kind: "select", Path: "rule", Options: form.Map{"format": "radio", "provider": "sharing"}},
+			{Kind: "select", Path: "groupIds", Options: form.Map{"provider": "groups"}, Show: form.Rule{Path: "rule", Value: "'private'"}},
 		},
 	}
 }

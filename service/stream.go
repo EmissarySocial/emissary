@@ -18,18 +18,20 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection            data.Collection
-	attachmentService     *Attachment
+	templateService       *Template
 	draftService          *StreamDraft
+	attachmentService     *Attachment
 	formLibrary           *form.Library
 	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
 
 	return Stream{
 		collection:            collection,
+		templateService:       templateService,
 		draftService:          draftService,
 		attachmentService:     attachmentService,
 		formLibrary:           formLibrary,
@@ -72,6 +74,18 @@ func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(stream *model.Stream, note string) error {
 
+	const location = "service.Stream"
+
+	// Calculate "defaultAllow" groups for this stream.
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
+	}
+
+	defaultRoles := template.Default().AllowedRoles(stream)
+	stream.DefaultAllow = stream.Criteria.FindGroups(defaultRoles...)
+
 	// Special rules for top-level streams
 	if stream.ParentID == primitive.NilObjectID {
 		if stream.Rank == 0 {
@@ -82,7 +96,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 
 	if err := service.collection.Save(stream, note); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error saving Stream", stream, note)
+		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -238,7 +252,7 @@ func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL
 func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) error {
 
 	if !stream.HasParent() {
-		return derp.New(404, "service.Stream.LoadParent", "Stream does not have a parent")
+		return derp.NewNotFoundError("service.Stream.LoadParent", "Stream does not have a parent")
 	}
 
 	if err := service.LoadByID(stream.ParentID, parent); err != nil {

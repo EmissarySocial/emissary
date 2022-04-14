@@ -18,7 +18,6 @@
 						"children": [
 							{"kind": "text", "label": "Full Name", "path": "displayName"},
 							{"kind": "text", "label": "Username", "path": "username"},
-							{"kind": "text", "label": "Email Address", "path": "identities.0"},
 							{"kind": "select", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups"}}
 						]
 					}

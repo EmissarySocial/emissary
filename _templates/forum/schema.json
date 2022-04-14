@@ -94,7 +94,6 @@
 				"view": "add-topic",
 				"with-child": [
 					{"step": "set-data", "paths": ["label", "description"]},
-					{"step": "set-mentions", "paths": ["description"]},
 					{"step": "save"},
 					{"step": "forward-to", "url": "/{{.Token}}"}
 				]}

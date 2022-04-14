@@ -23,6 +23,7 @@ type Template struct {
 	States             map[string]State  `path:"states"             json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
 	Roles              map[string]Role   `path:"roles"              json:"roles"              bson:"roles"`              // Map of custom roles defined by this Template.
 	Actions            map[string]Action `path:"actions"            json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
+	DefaultAction      string            `path:"defaultAction"      json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
 	HTMLTemplate       *template.Template
 }
 
@@ -37,6 +38,7 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		States:             make(map[string]State),
 		Roles:              make(map[string]Role),
 		Actions:            make(map[string]Action),
+		DefaultAction:      "view",
 		HTMLTemplate:       template.New("").Funcs(funcMap),
 	}
 }
@@ -64,3 +66,17 @@ func (template *Template) Action(actionID string) *Action {
 
 	return nil
 }
+
+// Default returns the default Action for this Template.
+func (template *Template) Default() *Action {
+	return template.Action(template.DefaultAction)
+}
+
+/*/ AllowedGroups returns the groups allowed to perform the requested Action on the Stream
+func (template *Template) AllowedGroups(stream *Stream, action *Action) []string {
+
+	roles := action.AllowedRoles(stream)
+
+
+}
+*/

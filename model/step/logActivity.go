@@ -9,10 +9,9 @@ import (
 
 // LogActivity represents an action-step that can delete a Stream from the Domain
 type LogActivity struct {
-	Type      string
-	Link      string
-	Container string
-	Comment   *template.Template
+	Type    string
+	Link    string
+	Comment *template.Template
 }
 
 // NewLogActivity returns a fully populated LogActivity object
@@ -26,10 +25,9 @@ func NewLogActivity(stepInfo datatype.Map) (LogActivity, error) {
 	}
 
 	return LogActivity{
-		Type:      stepInfo.GetString("type"),
-		Link:      stepInfo.GetString("link"),
-		Container: stepInfo.GetString("container"),
-		Comment:   comment,
+		Type:    stepInfo.GetString("type"),
+		Link:    stepInfo.GetString("link"),
+		Comment: comment,
 	}, nil
 }
 

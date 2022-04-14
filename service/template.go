@@ -321,16 +321,23 @@ func (service *Template) Watch() error {
 // loadFromFilesystem locates and parses a Template sub-directory within the filesystem path
 func (service *Template) loadFromFilesystem(templateID string) (model.Template, error) {
 
+	const location = "service.Template.loadFromFilesystem"
+
 	filesystem := GetFS(service.folder, templateID)
 
 	result := model.NewTemplate(templateID, service.funcMap)
 
 	if err := loadModelFromFilesystem(filesystem, &result); err != nil {
-		return result, derp.Wrap(err, "service.Template.loadFromFilesystem", "Error loading schema")
+		return result, derp.Wrap(err, location, "Error loading schema")
 	}
 
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return result, derp.Wrap(err, "service.Template.loadFromFilesystem", "Error loading template")
+		return result, derp.Wrap(err, location, "Error loading template")
+	}
+
+	// Validate that the default action is not nil
+	if result.Default() == nil {
+		return result, derp.NewInternalError(location, "Invalid Template: Missing 'default' method", templateID)
 	}
 
 	// Save the Template into the memory cache

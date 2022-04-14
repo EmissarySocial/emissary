@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/domain"
 	"github.com/whisperverse/whisperverse/model"
@@ -27,6 +28,27 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error finding domain")
+		}
+
+		// Authenticate the page request
+		sterankoContext := ctx.(*steranko.Context)
+
+		// Only domain owners can access admin pages
+		if !isOwner(sterankoContext.Authorization()) {
+			return derp.NewForbiddenError(location, "Unauthorized")
+		}
+
+		// Find/Create new database record for the domain.
+		domainService := factory.Domain()
+		var domain model.Domain
+		if err := domainService.Load(&domain); err != nil {
+			if derp.NotFound(err) {
+				if err := domainService.Save(&domain, "Created by startup wizard"); err != nil {
+					return derp.Wrap(err, location, "Error creating domain record")
+				}
+			} else {
+				return derp.Wrap(err, location, "Error searching for domain record")
+			}
 		}
 
 		// If there are no groups, then add some defaults...

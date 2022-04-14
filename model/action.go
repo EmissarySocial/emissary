@@ -13,7 +13,7 @@ import (
 type Action struct {
 	Roles      []string            `path:"roles"      json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
 	States     []string            `path:"states"     json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	RoleStates map[string][]string `path:"roleStates" json:"roleStates" bson:"roleStates"` // Map of roles -> list of states that grant access to this Action.
+	StateRoles map[string][]string `path:"stateRoles" json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
 	Steps      []step.Step         `path:"steps"      json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
@@ -22,7 +22,7 @@ func NewAction() Action {
 	return Action{
 		Roles:      make([]string, 0),
 		States:     make([]string, 0),
-		RoleStates: make(map[string][]string),
+		StateRoles: make(map[string][]string),
 		Steps:      make([]step.Step, 0),
 	}
 }
@@ -30,47 +30,38 @@ func NewAction() Action {
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (action Action) UserCan(stream *Stream, authorization *Authorization) bool {
 
-	// If present, "States" limits the states where this action can take place
+	// Get the list of request roles that the user has
+	userRoles := stream.Roles(authorization)
+
+	// If one or more of these matches the allowed roles, then the request is granted.
+	return matchAny(userRoles, action.AllowedRoles(stream))
+}
+
+// AllowedRoles returns a string of all page request roles that are allowed to
+// perform this action.  This includes system roles slike "anonymous", "authenticated", "author", and "owner".
+func (action *Action) AllowedRoles(stream *Stream) []string {
+
+	// If present, "States" limits the states where this action can take place at all.
 	if len(action.States) > 0 {
-		// If states are present, then the current state MUST be included in the list.
-		// Otherwise, reject this action.
+		// If the current state is not present in the list of allowed states, then this action cannot be
+		// taken until the stream is moved into a new state.
 		if !matchOne(action.States, stream.StateID) {
-			return false
+			return make([]string, 0)
 		}
 	}
 
-	// If present, "Roles" and "RoleStates" limit the user roles that can take this action
-	if (len(action.Roles) > 0) || (len(action.RoleStates) > 0) {
+	// result will collect all of the allowable roles.
+	result := []string{}
 
-		// The user must have AT LEAST ONE of the named roles to take this action.
-		// If not, reject this action.
-		roles := stream.Roles(authorization)
+	// Add roles to the result
+	result = append(result, action.Roles...)
 
-		// If the user matches any of the designated roles, then they can take this action.
-		if matchAny(roles, action.Roles) {
-			return true
-		}
-
-		// Check Roles/States for any limited roles
-		for _, role := range roles {
-
-			// If this role is granted limited permissions
-			if stateList, ok := action.RoleStates[role]; ok {
-				// then check to see if the stream is in a valid state
-				// for this limited role to perform this action...
-				if matchOne(stateList, stream.StateID) {
-					return true
-				}
-			}
-		}
-
-		// Fall through means that there are role-based permissions,
-		// but the user does not meet any of them.
-		return false
+	// If there's a corresponding entry in stateRoles, add that to the result, too.
+	if stateRoles, ok := action.StateRoles[stream.StateID]; ok {
+		result = append(result, stateRoles...)
 	}
 
-	// All filters have passed.  Allow this action.
-	return true
+	return result
 }
 
 func (action *Action) UnmarshalJSON(data []byte) error {
@@ -89,11 +80,11 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	action.Roles = convert.SliceOfString(data["roles"])
 	action.States = convert.SliceOfString(data["states"])
 
-	// Import roleStates
-	action.RoleStates = make(map[string][]string, 0)
-	roleStates := convert.MapOfInterface(data["roleStates"])
-	for key, value := range roleStates {
-		action.RoleStates[key] = convert.SliceOfString(value)
+	// Import stateRoles
+	action.StateRoles = make(map[string][]string, 0)
+	stateRoles := convert.MapOfInterface(data["stateRoles"])
+	for key, value := range stateRoles {
+		action.StateRoles[key] = convert.SliceOfString(value)
 	}
 
 	// Import steps
