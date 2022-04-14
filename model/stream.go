@@ -101,8 +101,8 @@ func (stream *Stream) NewAttachment(filename string) Attachment {
 // Roles returns a list of all roles that match the provided authorization
 func (stream *Stream) Roles(authorization *Authorization) []string {
 
-	// Everyone has "public" access
-	result := []string{"public"}
+	// Everyone has "anonymous" access
+	result := []string{"anomymous"}
 
 	if authorization == nil {
 		return result
@@ -111,6 +111,10 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	// Owners are hard-coded to do everything, so no other roles need to be returned.
 	if authorization.DomainOwner {
 		return []string{"owner"}
+	}
+
+	if authorization.IsAuthenticated() {
+		result = append(result, "authenticated")
 	}
 
 	// Authors sometimes have special permissions, too.
