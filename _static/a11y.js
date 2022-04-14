@@ -17,7 +17,7 @@ htmx.defineExtension("a11y", {
 		}
 
 		// Special rules for links and buttons
-		event.target.querySelectorAll("a,[role=link],button,[role=button]").forEach(function(/** @type {HTMLElement} */ node) {
+		event.target.querySelectorAll("a:not([href]),[role=link],button,[role=button]").forEach(function(/** @type {HTMLElement} */ node) {
 			
 			// If tabIndex is not already set, then default it to 0
 			if (node.attributes["tabIndex"] == undefined) {
@@ -26,13 +26,11 @@ htmx.defineExtension("a11y", {
 
 			// If node is focusable (and not already a link or button) then add keyboard handlers for ENTER and SPACE keys
 			if (node.tabIndex != -1) {
-				if (["A", "BUTTON"].indexOf(node.tagName) == -1) {
-					node.addEventListener("keyup", function(event) {
-						if ((event.key == "Enter") || (event.key == " ")) {
-							htmx.trigger(node, "click")
-						}
-					})
-				}
+				node.addEventListener("keyup", function(event) {
+					if (event.key == "Enter") {
+						htmx.trigger(node, "click")
+					}
+				})
 			}
 		})
 	}
