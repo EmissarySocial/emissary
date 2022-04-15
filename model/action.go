@@ -50,16 +50,13 @@ func (action *Action) AllowedRoles(stream *Stream) []string {
 		}
 	}
 
-	// If no rules are present, then this action is available to everybody
-	if (len(action.Roles) == 0) && (len(action.StateRoles) == 0) {
-		return []string{"anonymous"}
+	// By default, owners can do everything
+	result := []string{MagicRoleOwner}
+
+	// If there are additional roles allowed, then add them to the result
+	if len(action.Roles) > 0 {
+		result = append(result, action.Roles...)
 	}
-
-	// result will collect all of the allowable roles.
-	result := []string{"owner"}
-
-	// Add roles to the result
-	result = append(result, action.Roles...)
 
 	// If there's a corresponding entry in stateRoles, add that to the result, too.
 	if stateRoles, ok := action.StateRoles[stream.StateID]; ok {

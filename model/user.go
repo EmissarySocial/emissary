@@ -59,21 +59,28 @@ func (user User) Copy() User {
 // Roles returns a list of all roles that match the provided authorization
 func (user *User) Roles(authorization *Authorization) []string {
 
-	// Everyone has "public" access
-	result := []string{"public"}
+	// Everyone has "anonymous" access
+	result := []string{MagicRoleAnonymous}
 
 	if authorization == nil {
 		return result
 	}
 
+	if authorization.UserID == primitive.NilObjectID {
+		return result
+	}
+
 	// Owners are hard-coded to do everything, so no other roles need to be returned.
 	if authorization.DomainOwner {
-		return []string{"owner"}
+		return []string{MagicRoleOwner}
 	}
+
+	// If we know who you are, then you're "Authenticated"
+	result = append(result, MagicRoleAuthenticated)
 
 	// Authors sometimes have special permissions, too.
 	if authorization.UserID == user.UserID {
-		result = append(result, "self")
+		result = append(result, MagicRoleMyself)
 	}
 
 	// TODO: special roles for follower/following...

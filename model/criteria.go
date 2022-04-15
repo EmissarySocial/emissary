@@ -53,7 +53,7 @@ func (criteria *Criteria) SimpleModel() datatype.Map {
 	// Special case if this is for EVERYBODY
 	if _, ok := criteria.Groups[MagicGroupIDAnonymous.Hex()]; ok {
 		return datatype.Map{
-			"rule":     "public",
+			"rule":     "anonymous",
 			"groupIds": []string{},
 		}
 	}

@@ -102,7 +102,7 @@ func (stream *Stream) NewAttachment(filename string) Attachment {
 func (stream *Stream) Roles(authorization *Authorization) []string {
 
 	// Everyone has "anonymous" access
-	result := []string{"anomymous"}
+	result := []string{MagicRoleAnonymous}
 
 	if authorization == nil {
 		return result
@@ -110,17 +110,17 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 
 	// Owners are hard-coded to do everything, so no other roles need to be returned.
 	if authorization.DomainOwner {
-		return []string{"owner"}
+		return []string{MagicRoleOwner}
 	}
 
 	if authorization.IsAuthenticated() {
-		result = append(result, "authenticated")
+		result = append(result, MagicRoleAuthenticated)
 	}
 
 	// Authors sometimes have special permissions, too.
 	if !stream.AuthorID.IsZero() {
 		if authorization.UserID == stream.AuthorID {
-			result = append(result, "author")
+			result = append(result, MagicRoleAuthor)
 		}
 	}
 

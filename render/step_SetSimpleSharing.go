@@ -81,7 +81,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 	rule := convert.String(request.Form["rule"])
 
 	switch rule {
-	case "public":
+	case "anomymous":
 		groupIDs = []string{model.MagicGroupIDAnonymous.Hex()}
 
 	case "authenticated":
@@ -114,7 +114,7 @@ func (step StepSetSimpleSharing) schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"rule":     schema.String{Default: "public"},
+				"rule":     schema.String{Default: "anonymous"},
 				"groupIds": schema.Array{Items: schema.String{Format: "objectId"}},
 			},
 		},
