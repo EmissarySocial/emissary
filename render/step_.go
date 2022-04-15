@@ -62,8 +62,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Save:
 		return StepSave(s)
 
-	case step.LogActivity:
-		return StepLogActivity(s)
+	case step.AddOutboxItem:
+		return StepAddOutboxItem(s)
 
 	case step.SetData:
 		return StepSetData(s)

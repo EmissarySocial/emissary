@@ -81,6 +81,14 @@ func (stream *Stream) SetContainer(value nebula.Container) {
 	stream.Content = value
 }
 
+// SetAuthor populates the denormalized author information into this stream.
+func (stream *Stream) SetAuthor(author *User) {
+	stream.AuthorID = author.UserID
+	stream.AuthorImage = author.AvatarURL
+	stream.AuthorName = author.DisplayName
+	stream.AuthorURL = author.ProfileURL
+}
+
 /*******************************************
  * OTHER METHODS
  *******************************************/

@@ -19,21 +19,24 @@ type Renderer interface {
 	Render() (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
+	Host() string           // String representation of the protocol + hostname
 	Protocol() string       // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
 	Hostname() string       // Hostname for this server
 	Token() string          // URL Token of the record being rendered
 	URL() string            // Complete URL of the requested page
 	ActionID() string       // Token that identifies the action requested via the URL.
 	Action() *model.Action  // The pipeline action to be taken by this renderer
+	IsAuthenticated() bool  // Returns TRUE if the user is signed in
 	IsPartialRequest() bool // Returns TRUE if this is an HTMX request for a page fragment
 	UseGlobalWrapper() bool // Returns TRUE if this renderer uses the common site chrome.
 
-	factory() Factory             // The service factory
-	context() *steranko.Context   // The request context embedded in the Renderer
-	service() ModelService        // The abstracted ModelService the backs this Renderer
-	schema() schema.Schema        // Schema to use to validate this Object
-	object() data.Object          // Model Object being rendered
-	objectID() primitive.ObjectID // MongoDB ObjectID of the Object being rendered
+	factory() Factory                   // The service factory
+	context() *steranko.Context         // The request context embedded in the Renderer
+	service() ModelService              // The abstracted ModelService the backs this Renderer
+	authorization() model.Authorization // retrieves the user's authorization data from the context
+	schema() schema.Schema              // Schema to use to validate this Object
+	object() data.Object                // Model Object being rendered
+	objectID() primitive.ObjectID       // MongoDB ObjectID of the Object being rendered
 
 	executeTemplate(io.Writer, string, interface{}) error // The HTML template used by this Renderer
 }

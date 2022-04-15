@@ -7,24 +7,24 @@ import (
 	"github.com/benpate/derp"
 )
 
-// LogActivity represents an action-step that can delete a Stream from the Domain
-type LogActivity struct {
+// AddOutboxItem represents an action-step that logs activity to a user's outbox
+type AddOutboxItem struct {
 	Type    string
 	Link    string
 	Comment *template.Template
 }
 
-// NewLogActivity returns a fully populated LogActivity object
-func NewLogActivity(stepInfo datatype.Map) (LogActivity, error) {
+// NewAddOutboxItem returns a fully populated AddOutboxItem object
+func NewAddOutboxItem(stepInfo datatype.Map) (AddOutboxItem, error) {
 
 	commentString := stepInfo.GetString("comment")
 	comment, err := template.New("").Parse(commentString)
 
 	if err != nil {
-		return LogActivity{}, derp.Wrap(err, "model.step.NewLogActivity", "Invalid 'comment'", commentString)
+		return AddOutboxItem{}, derp.Wrap(err, "model.step.NewAddOutboxItem", "Invalid 'comment'", commentString)
 	}
 
-	return LogActivity{
+	return AddOutboxItem{
 		Type:    stepInfo.GetString("type"),
 		Link:    stepInfo.GetString("link"),
 		Comment: comment,
@@ -32,4 +32,4 @@ func NewLogActivity(stepInfo datatype.Map) (LogActivity, error) {
 }
 
 // AmStep is here only to verify that this struct is a render pipeline step
-func (step LogActivity) AmStep() {}
+func (step AddOutboxItem) AmStep() {}

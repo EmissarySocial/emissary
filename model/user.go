@@ -20,6 +20,7 @@ type User struct {
 	Username    string               `path:"username"    json:"username"    bson:"username"`    // This is the primary public identifier for the user.
 	Password    string               `path:"password"    json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
 	IsOwner     bool                 `path:"isOwner"     json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
+	ProfileURL  string               `path:"profileUrl"  json:"profileUrl"  bson:"profileUrl"`  // URL for the primary profile URL for this user.
 	AvatarURL   string               `path:"avatarUrl"   json:"avatarUrl"   bson:"avatarUrl"`   // Avatar image of this user.
 	InboxID     primitive.ObjectID   `path:"inboxId"     json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
 	OutboxID    primitive.ObjectID   `path:"outboxId"    json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
@@ -33,6 +34,7 @@ type UserSummary struct {
 	DisplayName string             `bson:"displayName"`
 	Username    string             `bson:"username"`
 	AvatarURL   string             `bson:"avatarUrl"`
+	ProfileURL  string             `bson:"profileUrl"`
 }
 
 // NewUser returns a fully initialized User object.

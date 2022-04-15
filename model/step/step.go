@@ -73,8 +73,8 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "edit-content":
 		return NewEditContent(stepInfo)
 
-	case "log-activity":
-		return NewLogActivity(stepInfo)
+	case "add-outbox":
+		return NewAddOutboxItem(stepInfo)
 
 	case "view-rss":
 		return NewViewRSS(stepInfo)

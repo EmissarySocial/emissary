@@ -1,6 +1,9 @@
 package render
 
 import (
+	"bytes"
+	"io"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
@@ -110,6 +113,22 @@ func useGlobalWrapper(steps []step.Step) bool {
 	}
 
 	return true
+}
+
+type templateLike interface {
+	Execute(io.Writer, any) error
+}
+
+func execTemplate(template templateLike, data any) string {
+
+	var buffer bytes.Buffer
+
+	if err := template.Execute(&buffer, data); err != nil {
+		derp.Report(err)
+		return ""
+	}
+
+	return buffer.String()
 }
 
 // finalizeAddStream takes all of the follow-on actions required to initialize a new stream.

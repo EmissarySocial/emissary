@@ -1,50 +1,20 @@
 {
-	"label": "RSS Article",
-	"description": "Link to an external article from an RSS Feed.",
-	"containedBy": [
-		"rss-folder"
-	],
+	"label": "Outbox Item",
+	"description": "Log of activities performed by a user",
+	"containedBy": ["social-outbox"],
 	"schema": {
 		"type": "object",
-		"properties": {}
-	},
-	"roles": {
-		"owner": {
-			"label": "Domain Owner",
-			"decription": "Full control"
-		}
-	},
-	"states": {
-		"unread": {
-			"label": "Unread"
-		}, 
-		"read": {
-			"label": "Read"
+		"properties": {
+			"label": {"type": "string"},
+			"data": {"type": "object", "properties": {
+				"link": {"type": "string", "format": "url"},
+				"type": {"type": "string"}
+			}}
 		}
 	},
 	"actions": {
 		"view": {
 			"step": "view-html"
-		},
-		"mark-read": {
-			"states": ["unread"],
-			"steps": [{
-				"step": "set-state",
-				"newState": "read"
-			}, {
-				"step": "save",
-				"comment": "State changed to 'read'"
-			}]
-		},
-		"mark-unread": {
-			"step": "update-state",
-			"steps": [{
-				"step": "set-state",
-				"newState": "unread"
-			}, {
-				"step": "save",
-				"comment": "State changed to 'unread'"
-			}]
 		}
 	}
 }
