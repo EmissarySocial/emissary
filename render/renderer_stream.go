@@ -571,7 +571,7 @@ func (w Stream) setAuthor() error {
 
 	w.stream.AuthorID = user.UserID
 	w.stream.AuthorName = user.DisplayName
-	w.stream.AuthorImage = user.AvatarURL
+	w.stream.AuthorImage = user.ImageURL
 
 	return nil
 }

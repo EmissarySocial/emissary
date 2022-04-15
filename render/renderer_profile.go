@@ -119,8 +119,8 @@ func (w Profile) Description() string {
 	return w.user.Description
 }
 
-func (w Profile) AvatarURL() string {
-	return w.user.AvatarURL
+func (w Profile) ImageURL() string {
+	return w.user.ImageURL
 }
 
 /*******************************************

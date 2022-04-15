@@ -124,8 +124,8 @@ func (w User) DisplayName() string {
 	return w.user.DisplayName
 }
 
-func (w User) AvatarURL() string {
-	return w.user.AvatarURL
+func (w User) ImageURL() string {
+	return w.user.ImageURL
 }
 
 /*******************************************

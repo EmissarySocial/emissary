@@ -39,7 +39,7 @@ func GetSocialProfile(fm *server.Factory) echo.HandlerFunc {
 		result := writer.Person(user.DisplayName, "en").
 			ID(profile).
 			Summary(user.Description, "en").
-			Icon(user.AvatarURL).
+			Icon(user.ImageURL).
 			Property("inbox", profile+"/inbox").
 			Property("outbox", profile+"/outbox").
 			Property("following", profile+"/following").
