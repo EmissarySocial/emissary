@@ -5,23 +5,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Criteria struct {
-	Groups  map[string][]string `path:"groups"  json:"groups"  bson:"groups"`  // A map of groupIDs to the roles that each group can use
-	OwnerID primitive.ObjectID  `path:"ownerId" json:"ownerId" bson:"ownerId"` // UserID of the person who owns this content.
+type Permissions map[string][]string
+
+func NewPermissions() Permissions {
+	return make(Permissions)
 }
 
-func NewCriteria() Criteria {
-	return Criteria{
-		Groups: make(map[string][]string),
+func (criteria Permissions) Assign(role string, groupID primitive.ObjectID) {
+	groupIDHex := groupID.Hex()
+
+	if _, ok := criteria[groupIDHex]; !ok {
+		criteria[groupIDHex] = []string{role}
+		return
 	}
+
+	criteria[groupIDHex] = append(criteria[groupIDHex], role)
 }
 
-// FindGroups returns all groups that match the provided roles
-func (criteria *Criteria) FindGroups(roles ...string) []primitive.ObjectID {
+// Groups returns all groups that match the provided roles
+func (criteria Permissions) Groups(roles ...string) []primitive.ObjectID {
 
 	result := make([]primitive.ObjectID, 0)
 
-	for groupID, groupRoles := range criteria.Groups {
+	for groupID, groupRoles := range criteria {
 		if matchAny(roles, groupRoles) {
 			if groupID, err := primitive.ObjectIDFromHex(groupID); err == nil {
 				result = append(result, groupID)
@@ -33,13 +39,13 @@ func (criteria *Criteria) FindGroups(roles ...string) []primitive.ObjectID {
 }
 
 // Roles returns a unique list of all roles that the provided groups can access.
-func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
+func (criteria Permissions) Roles(groupIDs ...primitive.ObjectID) []string {
 
 	result := []string{}
 
 	// Copy values from group roles
 	for _, groupID := range groupIDs {
-		if roles, ok := criteria.Groups[groupID.Hex()]; ok {
+		if roles, ok := criteria[groupID.Hex()]; ok {
 			result = append(result, roles...)
 		}
 	}
@@ -48,10 +54,10 @@ func (criteria *Criteria) Roles(groupIDs ...primitive.ObjectID) []string {
 }
 
 // SimpleModel returns a model object for displaying Simple Sharing.
-func (criteria *Criteria) SimpleModel() datatype.Map {
+func (criteria Permissions) SimpleModel() datatype.Map {
 
 	// Special case if this is for EVERYBODY
-	if _, ok := criteria.Groups[MagicGroupIDAnonymous.Hex()]; ok {
+	if _, ok := criteria[MagicGroupIDAnonymous.Hex()]; ok {
 		return datatype.Map{
 			"rule":     "anonymous",
 			"groupIds": []string{},
@@ -59,7 +65,7 @@ func (criteria *Criteria) SimpleModel() datatype.Map {
 	}
 
 	// Special case if this is for AUTHENTICATED
-	if _, ok := criteria.Groups[MagicGroupIDAuthenticated.Hex()]; ok {
+	if _, ok := criteria[MagicGroupIDAuthenticated.Hex()]; ok {
 		return datatype.Map{
 			"rule":     "authenticated",
 			"groupIds": []string{},
@@ -68,10 +74,10 @@ func (criteria *Criteria) SimpleModel() datatype.Map {
 
 	// Fall through means that additional groups are selected.
 	// First, get all keys to the Groups map
-	groupIDs := make([]string, len(criteria.Groups))
+	groupIDs := make([]string, len(criteria))
 	index := 0
 
-	for groupID := range criteria.Groups {
+	for groupID := range criteria {
 		groupIDs[index] = groupID
 		index++
 	}

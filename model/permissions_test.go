@@ -14,9 +14,9 @@ func TestCriteria(t *testing.T) {
 	id1, _ := primitive.ObjectIDFromHex("000000000000000000000001")
 	id2, _ := primitive.ObjectIDFromHex("000000000000000000000002")
 
-	c := NewCriteria()
+	c := NewPermissions()
 
-	c.Groups = map[string][]string{
+	c = map[string][]string{
 		"000000000000000000000000": {"friends", "family"},
 		"000000000000000000000001": {"friends", "family", "internet randos"},
 		"000000000000000000000002": {"internet randos", "system administrators"},
@@ -44,19 +44,19 @@ func TestFindGroups(t *testing.T) {
 	id1, _ := primitive.ObjectIDFromHex("000000000000000000000001")
 	id2, _ := primitive.ObjectIDFromHex("000000000000000000000002")
 
-	c := NewCriteria()
+	c := NewPermissions()
 
-	c.Groups = map[string][]string{
+	c = map[string][]string{
 		"000000000000000000000000": {"friends", "family"},
 		"000000000000000000000001": {"friends", "family", "internet randos"},
 		"000000000000000000000002": {"internet randos", "system administrators"},
 	}
 
 	{
-		require.Equal(t, []primitive.ObjectID{id0, id1}, id.Sort(c.FindGroups("friends")))
+		require.Equal(t, []primitive.ObjectID{id0, id1}, id.Sort(c.Groups("friends")))
 	}
 
 	{
-		require.Equal(t, []primitive.ObjectID{id1, id2}, id.Sort(c.FindGroups("internet randos")))
+		require.Equal(t, []primitive.ObjectID{id1, id2}, id.Sort(c.Groups("internet randos")))
 	}
 }

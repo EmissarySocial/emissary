@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
+	"github.com/benpate/id"
 	"github.com/benpate/schema"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +24,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
-	model := streamRenderer.stream.Criteria.SimpleModel()
+	model := streamRenderer.stream.Permissions.SimpleModel()
 
 	// Try to write form HTML
 	schema := step.schema()
@@ -76,19 +77,19 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 		return derp.Wrap(err, "render.StepSetSimpleSharing", "Error parsing form input")
 	}
 
-	var groupIDs []string
+	var groupIDs []primitive.ObjectID
 
 	rule := convert.String(request.Form["rule"])
 
 	switch rule {
 	case "anomymous":
-		groupIDs = []string{model.MagicGroupIDAnonymous.Hex()}
+		groupIDs = []primitive.ObjectID{model.MagicGroupIDAnonymous}
 
 	case "authenticated":
-		groupIDs = []string{model.MagicGroupIDAuthenticated.Hex()}
+		groupIDs = []primitive.ObjectID{model.MagicGroupIDAuthenticated}
 
 	case "private":
-		groupIDs = request.Form["groupIds"]
+		groupIDs = id.Slice(request.Form["groupIds"])
 
 	default:
 		return derp.NewBadRequestError(location, "Invalid rule: ", rule)
@@ -97,11 +98,11 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 	// Build the stream criteria
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
-	stream.Criteria = model.NewCriteria()
+	stream.Permissions = model.NewPermissions()
 
 	for _, groupID := range groupIDs {
-		if _, err := primitive.ObjectIDFromHex(groupID); err == nil {
-			stream.Criteria.Groups[groupID] = step.Roles
+		for _, role := range step.Roles {
+			stream.Permissions.Assign(role, groupID)
 		}
 	}
 

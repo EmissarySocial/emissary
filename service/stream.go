@@ -84,7 +84,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 
 	defaultRoles := template.Default().AllowedRoles(stream)
-	stream.DefaultAllow = stream.Criteria.FindGroups(defaultRoles...)
+	stream.DefaultAllow = stream.Permissions.Groups(defaultRoles...)
 
 	// Special rules for top-level streams
 	if stream.ParentID == primitive.NilObjectID {
@@ -326,8 +326,8 @@ func (service *Stream) CreatePersonalStream(user *model.User, templateID string)
 	stream.TemplateID = templateID
 	stream.ParentID = user.UserID
 	stream.AuthorID = user.UserID
-	stream.Criteria = model.NewCriteria()
-	stream.Criteria.OwnerID = user.UserID
+	stream.Permissions = model.NewPermissions()
+	stream.Permissions.Assign("myself", user.UserID)
 
 	err := service.Save(&stream, "auto: create inbox")
 
