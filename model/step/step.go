@@ -64,17 +64,20 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "add-child":
 		return NewAddChildStream(stepInfo)
 
+	case "add-outbox":
+		return NewAddOutboxItem(stepInfo)
+
 	case "add-sibling":
 		return NewAddSiblingStream(stepInfo)
 
 	case "add-top-level":
 		return NewAddTopStream(stepInfo)
 
+	case "delete-outbox":
+		return NewDeleteOutboxItem(stepInfo)
+
 	case "edit-content":
 		return NewEditContent(stepInfo)
-
-	case "add-outbox":
-		return NewAddOutboxItem(stepInfo)
 
 	case "view-rss":
 		return NewViewRSS(stepInfo)

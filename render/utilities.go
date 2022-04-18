@@ -115,10 +115,15 @@ func useGlobalWrapper(steps []step.Step) bool {
 	return true
 }
 
+// templateLike bridges the interfaces of html/template and text/template so that
+// either one can be used
 type templateLike interface {
 	Execute(io.Writer, any) error
 }
 
+// execTemplate provides a simplified interface for executing known/trusted
+// templaes. If there is an error during execution, it is reported via
+// derp.Report, but this function does not halt, instead returning an empty string
 func execTemplate(template templateLike, data any) string {
 
 	var buffer bytes.Buffer

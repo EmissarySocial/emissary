@@ -8,7 +8,8 @@
 			"label": {"type": "string"},
 			"data": {"type": "object", "properties": {
 				"link": {"type": "string", "format": "url"},
-				"type": {"type": "string"}
+				"type": {"type": "string"},
+				"originalStreamId": {"type": "string", "format": "objectId"}
 			}}
 		}
 	},

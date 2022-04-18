@@ -53,13 +53,6 @@
 			"roles": ["viewer", "editor", "owner"],
 			"step": "view-html"
 		},
-		"delete": {
-			"roles": ["owner"],
-			"steps": [
-				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
-				{"step": "forward-to", "url":"/{{.ParentID}}"}
-			]
-		},
 		"edit": {
 			"roles": ["owner", "editor"],
 			"steps": [
@@ -84,7 +77,7 @@
 				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step": "set-state", "state": "published"},
 				{"step": "save", "message": "Unpublished by {{.Author}}"},
-				{"step": "log-activity", "link": "self", "comment":"Published Article '{{.Label}}'"},
+				{"step": "add-outbox", "link": "self", "comment":"Published Article '{{.Label}}'"},
 				{"step": "refresh-page"}
 			]
 		},
@@ -94,7 +87,8 @@
 			"steps": [
 				{"step": "as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
 				{"step": "set-state", "state": "unpublished"},
-				{"step": "save", "message": "Published by {{.Author}}"},
+				{"step": "save", "message": "Un-Published by {{.Author}}"},
+				{"step": "delete-outbox"},
 				{"step": "refresh-page"}
 			]
 		},
@@ -140,6 +134,14 @@
 					{"step": "save", "comment": "Properties updated by {{.Author}}"}
 				]
 			}]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
+				{"step": "delete-outbox"},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
+			]
 		}
 	}
 }

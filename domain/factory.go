@@ -279,10 +279,6 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * OTHER NON-MODEL SERVICES
  *******************************************/
 
-func (factory *Factory) Outbox() service.Outbox {
-	return service.NewOutbox()
-}
-
 // FormLibrary returns our custom form widget library for
 // use in the form.Form package
 func (factory *Factory) FormLibrary() *form.Library {

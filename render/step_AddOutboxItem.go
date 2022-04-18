@@ -9,16 +9,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepAddOutboxItem represents an action-step that can delete a Stream from the Domain
+// StepAddOutboxItem represents an action-step that can add an activity log to a user's outbox
 type StepAddOutboxItem struct {
-	Type    string
-	Link    string
-	Comment *template.Template
+	Label       *template.Template
+	Description *template.Template
+	Type        string
+	Link        string
 }
 
 // Get displays a customizable confirmation form for the delete
 func (step StepAddOutboxItem) Get(renderer Renderer, buffer io.Writer) error {
-	return step.addOutboxItem(renderer)
+	return nil
 }
 
 func (step StepAddOutboxItem) UseGlobalWrapper() bool {
@@ -27,12 +28,8 @@ func (step StepAddOutboxItem) UseGlobalWrapper() bool {
 
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepAddOutboxItem) Post(renderer Renderer) error {
-	return step.addOutboxItem(renderer)
-}
 
-func (step StepAddOutboxItem) addOutboxItem(renderer Renderer) error {
-
-	const location = "render.StepAddOutboxItem.addOutboxItem"
+	const location = "render.StepAddOutboxItem.Post"
 
 	// Get the User's authorization for this request.
 	authorization := renderer.authorization()
@@ -65,10 +62,11 @@ func (step StepAddOutboxItem) addOutboxItem(renderer Renderer) error {
 	stream.TemplateID = "social-outbox-item"
 	stream.ParentID = user.OutboxID
 	stream.ParentIDs = []primitive.ObjectID{user.OutboxID}
-	stream.Label = execTemplate(step.Comment, renderer)
+	stream.Label = execTemplate(step.Label, renderer)
+	stream.Description = execTemplate(step.Description, renderer)
 	stream.SetAuthor(&user)
-
 	stream.Data["type"] = step.Type
+	stream.Data["originalStreamId"] = renderer.objectID()
 
 	switch step.Link {
 	case "parent":

@@ -94,6 +94,7 @@
 				{"step":"add-child", "template":"forum-item", "with-child":[
 					{"step":"set-data", "paths":["description"]},
 					{"step":"save", "comment":"Comment by {{.Author}}"},
+					{"step": "add-outbox", "label":"{{.Author}} commented in forum", "description":"{{.Description}}", "type":"comment", "link":"parent"},
 					{"step":"trigger-event", "event":"new-comments"}
 				]},
 				{"step": "save", "comment": "Comment added by {{.Author}}"}
@@ -115,15 +116,16 @@
 		},
 		"delete": {
 			"roles":["owner", "author", "moderator"],
-			"steps": [{
-				"step":"delete",
-				"title": "Delete this Topic?",
-				"description": "Continuing will permanently remove this topic and all comments",
-				"submit": "Yes. Delete Topic"
-			}, {
-				"step": "forward-to",
-				"url": "/{{.ParentID}}"
-			}]
+			"steps": [
+				{
+					"step":"delete",
+					"title": "Delete this Topic?",
+					"description": "Continuing will permanently remove this topic and all comments",
+					"submit": "Yes. Delete Topic"
+				}, 
+				{"step": "delete-outbox"},
+				{"step": "forward-to", "url": "/{{.ParentID}}"}
+			]
 		}
 	}
 }

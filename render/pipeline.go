@@ -29,7 +29,7 @@ func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Write
 
 		// Fall through implies GET
 		if err := ExecutableStep(step).Get(renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Error GET-ing from step", step)
+			return derp.Wrap(err, location, "Error GET-ing from step")
 		}
 	}
 
@@ -45,7 +45,7 @@ func (pipeline Pipeline) Post(factory Factory, renderer Renderer) error {
 	for _, step := range pipeline {
 
 		if err := ExecutableStep(step).Post(renderer); err != nil {
-			return derp.Wrap(err, location, "Error POST-ing to step", step)
+			return derp.Wrap(err, location, "Error POST-ing to step")
 		}
 	}
 

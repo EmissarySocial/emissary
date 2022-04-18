@@ -318,7 +318,8 @@ func (service *Stream) updateStreamsByTemplate(templateID string) {
 	}
 }
 
-// CreatePersonalStream generates a hidden stream that is tightly linked to a specific user
+// CreatePersonalStream generates a hidden stream that is tightly linked to a specific user.
+// Used to create inbox/outbox streams
 func (service *Stream) CreatePersonalStream(user *model.User, templateID string) (primitive.ObjectID, error) {
 
 	stream := model.NewStream()

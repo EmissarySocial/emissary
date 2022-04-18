@@ -23,6 +23,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.AddModelObject:
 		return StepAddModelObject(s)
 
+	case step.AddOutboxItem:
+		return StepAddOutboxItem(s)
+
 	case step.AddSiblingStream:
 		return StepAddSiblingStream(s)
 
@@ -37,6 +40,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.Delete:
 		return StepDelete(s)
+
+	case step.DeleteOutboxItem:
+		return StepDeleteOutboxItem(s)
 
 	case step.EditContent:
 		return StepEditContent(s)
@@ -61,9 +67,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.Save:
 		return StepSave(s)
-
-	case step.AddOutboxItem:
-		return StepAddOutboxItem(s)
 
 	case step.SetData:
 		return StepSetData(s)
