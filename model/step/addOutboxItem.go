@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/first"
 )
 
 // AddOutboxItem represents an action-step that logs activity to a user's outbox
@@ -18,14 +19,14 @@ type AddOutboxItem struct {
 // NewAddOutboxItem returns a fully populated AddOutboxItem object
 func NewAddOutboxItem(stepInfo datatype.Map) (AddOutboxItem, error) {
 
-	labelString := stepInfo.GetString("label")
+	labelString := first.String(stepInfo.GetString("label"), "{{.Label}}")
 	label, err := template.New("").Parse(labelString)
 
 	if err != nil {
 		return AddOutboxItem{}, derp.Wrap(err, "model.step.NewAddOutboxItem", "Invalid 'label'", labelString)
 	}
 
-	descriptionString := stepInfo.GetString("description")
+	descriptionString := first.String(stepInfo.GetString("description"), "{{.Description}}")
 	description, err := template.New("").Parse(descriptionString)
 
 	if err != nil {

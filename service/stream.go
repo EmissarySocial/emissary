@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -295,6 +296,20 @@ func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
 		if err := service.Delete(&child, note); err != nil {
 			return derp.Wrap(err, "service.Stream.Delete", "Error deleting child stream", child)
 		}
+	}
+
+	return nil
+}
+
+// Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
+func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, originalStreamID primitive.ObjectID) error {
+
+	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
+
+	spew.Dump("DeleteRelatedDuplicate", criteria)
+
+	if err := service.collection.HardDelete(criteria); err != nil {
+		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Error deleting related duplicate")
 	}
 
 	return nil

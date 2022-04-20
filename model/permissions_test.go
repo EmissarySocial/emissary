@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestCriteria(t *testing.T) {
+func TestPermissions(t *testing.T) {
 
 	id0, _ := primitive.ObjectIDFromHex("000000000000000000000000")
 	id1, _ := primitive.ObjectIDFromHex("000000000000000000000001")

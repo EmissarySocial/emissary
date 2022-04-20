@@ -61,6 +61,11 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory), domain)
 
 	// Profile Pages / ActivityPub
+	e.GET("/inbox", handler.GetInbox(factory), domain)
+	e.GET("/profile", handler.GetProfile(factory), domain)
+	e.GET("/profile/:action", handler.GetProfile(factory), domain)
+
+	e.GET("/users", handler.GetUserList(factory), domain)
 	e.GET("/users/:user", handler.GetProfile(factory), domain)
 	e.GET("/users/:user/:action", handler.GetProfile(factory), domain)
 

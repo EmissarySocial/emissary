@@ -154,19 +154,19 @@ func (service *StreamDraft) LoadByToken(token string, result *model.Stream) erro
  * CUSTOM ACTIONS
  *******************************************/
 
-func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string) error {
+func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string) (model.Stream, error) {
 
 	var draft model.Stream
 	var stream model.Stream
 
 	// Try to load the draft
 	if err := service.LoadByID(streamID, &draft); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
 	}
 
 	// Try to load the production stream
 	if err := service.streamService.LoadByID(streamID, &stream); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
 	}
 
 	// Copy data from draft to production
@@ -182,13 +182,13 @@ func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string)
 
 	// Try to save the updated stream back to the database
 	if err := service.streamService.Save(&stream, "published"); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Publish", "Error publishing stream")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error publishing stream")
 	}
 
 	// Try to save the updated stream back to the database
 	if err := service.Delete(&draft, "published"); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Publish", "Error deleting draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error deleting draft")
 	}
 
-	return nil
+	return stream, nil
 }

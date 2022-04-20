@@ -87,7 +87,8 @@
 							"path": "description"
 						}]
 					}},
-					{"step": "save"}
+					{"step": "save"},
+					{"step": "add-outbox"}
 				]
 			}]
 		},

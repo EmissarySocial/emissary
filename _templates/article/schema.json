@@ -76,8 +76,8 @@
 			"steps": [
 				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step": "set-state", "state": "published"},
-				{"step": "save", "message": "Unpublished by {{.Author}}"},
-				{"step": "add-outbox", "link": "self", "comment":"Published Article '{{.Label}}'"},
+				{"step": "save", "message": "Published by {{.Author}}"},
+				{"step": "add-outbox", "link": "self"},
 				{"step": "refresh-page"}
 			]
 		},
@@ -97,6 +97,7 @@
 			"steps": [
 				{"step": "as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step": "promote-draft"},
+				{"step": "add-outbox"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},

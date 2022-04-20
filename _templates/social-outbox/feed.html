@@ -1,0 +1,9 @@
+{{- $children := .Children.Top60.ByPublishDate.Reverse.View -}}
+
+{{- range $children -}}
+<div class="h-entry">
+	{{.ThumbnailImage}}
+	{{.Label}}
+	- {{.DescriptionHTML}}
+</div>
+{{- end -}}

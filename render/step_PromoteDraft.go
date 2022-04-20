@@ -22,12 +22,20 @@ func (step StepStreamPromoteDraft) UseGlobalWrapper() bool {
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
 func (step StepStreamPromoteDraft) Post(renderer Renderer) error {
 
+	streamRenderer := renderer.(*Stream)
+
 	factory := renderer.factory()
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	if err := factory.StreamDraft().Publish(renderer.objectID(), step.StateID); err != nil {
+	stream, err := factory.StreamDraft().Publish(renderer.objectID(), step.StateID)
+
+	if err != nil {
 		return derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft")
 	}
+
+	// Push the newly updated stream back to the renderer so that subsequent
+	// steps (e.g. add-outbox) can use the correct data.
+	streamRenderer.stream = &stream
 
 	return nil
 }

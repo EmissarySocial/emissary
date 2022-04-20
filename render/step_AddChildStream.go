@@ -43,7 +43,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 }
 
 func (step StepAddChildStream) UseGlobalWrapper() bool {
-	return false
+	return true
 }
 
 func (step StepAddChildStream) Post(renderer Renderer) error {

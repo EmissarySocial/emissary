@@ -56,8 +56,15 @@ func (step StepAddOutboxItem) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error loading current user from database", authorization.UserID)
 	}
 
-	// Create the new outbox item
+	// Now let's get to the stream...
 	streamService := factory.Stream()
+
+	// If there is already an outbox item connected to this stream, then remove it before creating a duplicate
+	if err := streamService.DeleteRelatedDuplicate(user.OutboxID, renderer.objectID()); err != nil {
+		return derp.Wrap(err, location, "Error deleting related duplicate")
+	}
+
+	// Create the new outbox item
 	stream := model.NewStream()
 	stream.TemplateID = "social-outbox-item"
 	stream.ParentID = user.OutboxID

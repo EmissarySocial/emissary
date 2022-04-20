@@ -25,6 +25,19 @@ func getActionID(ctx echo.Context) string {
 	return "view"
 }
 
+// getAuthorization extracts a model.Authorization record from the steranko.Context
+func getAuthorization(ctx *steranko.Context) model.Authorization {
+
+	if claims, err := ctx.Authorization(); err == nil {
+
+		if auth, ok := claims.(*model.Authorization); ok {
+			return *auth
+		}
+	}
+
+	return model.NewAuthorization()
+}
+
 // getSignedInUserID returns the UserID for the current request.
 // If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
 func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
