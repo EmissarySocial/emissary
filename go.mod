@@ -2,9 +2,7 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace (
-github.com/benpate/id => ../../benpate/id
-)
+replace github.com/benpate/id => ../../benpate/id
 
 require (
 	github.com/benpate/compare v0.1.1
@@ -28,7 +26,7 @@ require (
 	github.com/benpate/schema v0.14.6
 	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/fsnotify/fsnotify v1.5.1
+	github.com/fsnotify/fsnotify v1.5.3
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.7.2
