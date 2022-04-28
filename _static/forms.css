@@ -92,6 +92,7 @@ input[type=radio] {
 	background-color: var(--input-background);
 	height:auto;
 	overflow-y:scroll;
+	overflow-x:hidden;
 }
 
 .multiselect > label {

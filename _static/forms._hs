@@ -1,16 +1,33 @@
 behavior multiselect 
 
-	on change 
-		tell <label/> in me
-			set input to first <input/> in yourself
-			if input.checked then 
-				add .selected to yourself
-			otherwise
-				remove .selected from yourself
-			end
-		end
+	on change		
+		set label to the closest <label/> to the target
+		-- take .selected for label
 	end
 
+	on keypress
+		log event
+	end
+
+	on keypress[code=="ArrowUp"]
+		log "up"
+		set label to the closest <label/> to the target
+		set selection to the previous <label/> within me
+		take .selected for the selection
+		halt the event
+	end
+
+	on keypress[code=="ArrowDown"]
+		log "down"
+		set label to the closest <label/> to the target
+		set selection to the next <label/> within me
+		take .selected for the selection
+		halt the event
+	end
+
+	on keypress[code=="Space"]
+		log "space"
+	end
 end
 		
 

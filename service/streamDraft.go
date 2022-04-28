@@ -80,7 +80,7 @@ func (service *StreamDraft) Save(draft *model.Stream, note string) error {
 	return nil
 }
 
-// Delete removes an StreamDraft from the database (virtual delete)
+// Delete removes an StreamDraft from the database (hard delete)
 func (service *StreamDraft) Delete(draft *model.Stream, _note string) error {
 
 	criteria := exp.Equal("_id", draft.StreamID)
