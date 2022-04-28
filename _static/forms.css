@@ -34,7 +34,6 @@ input[type=radio] {
     margin-right:5px;
 }
 
-
 /** TOGGLE CONTROLS ********/
 
 .toggle-container {
@@ -86,6 +85,41 @@ input[type=radio] {
     transform:translateX(100%);
 }
 
+/** MULTI-SELECT ********/
+
+.multiselect {
+	border: solid 1px var(--input-border);
+	background-color: var(--input-background);
+	height:auto;
+	overflow-y:scroll;
+}
+
+.multiselect > label {
+	display:block;
+	padding:5px;
+	cursor: pointer;
+	border: solid 1px var(--gray20);
+	margin:-1px -1px -1px -1px;
+	transition:background-color 100ms;
+}
+
+.multiselect > label.selected {
+	background-color: Highlight;
+	color: HighlightText;
+}
+
+.multiselect > label > input {
+	vertical-align: middle;
+	display:inline-block;
+	margin-right:0.5em;
+	height:1em;
+	width:1em;
+}
+
+.multiselect > label > div {
+	display:inline-block;
+	vertical-align:top;
+}
 
 /* Alternate colors for dark mode */
 @media (prefers-color-scheme: dark) {

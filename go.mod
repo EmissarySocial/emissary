@@ -3,7 +3,8 @@ module github.com/whisperverse/whisperverse
 go 1.18
 
 replace (
-github.com/benpate/id => ../../benpate/id
+	github.com/benpate/form => ../../benpate/form
+	github.com/benpate/id => ../../benpate/id
 )
 
 require (

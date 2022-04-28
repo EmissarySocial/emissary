@@ -77,17 +77,20 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	const location = "service.Stream"
 
-	// Calculate "defaultAllow" groups for this stream.
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
 	}
 
+	// RULE: Calculate "defaultAllow" groups for this stream.
 	defaultRoles := template.Default().AllowedRoles(stream)
 	stream.DefaultAllow = stream.Permissions.Groups(defaultRoles...)
 
-	// Special rules for top-level streams
+	// RULE: Copy AsFeature flag from Template into Stream
+	stream.AsFeature = template.AsFeature
+
+	// RULE: First Top-Level Item is "home", no other streams can be marked "home"
 	if stream.ParentID == primitive.NilObjectID {
 		if stream.Rank == 0 {
 			stream.Token = "home" // First stream in the list is the "home" page
@@ -124,17 +127,17 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	// Delete related records -- this can happen in the background
 	go func() {
 
-		// Delete all related Children
+		// RULE: Delete all related Children
 		if err := service.DeleteChildren(stream, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting child streams", stream, note))
 		}
 
-		// Delete all related Attachments
+		// RULE: Delete all related Attachments
 		if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting attachments", stream, note))
 		}
 
-		// Delete all related Drafts
+		// RULE: Delete all related Drafts
 		if err := service.draftService.Delete(stream, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting drafts", stream, note))
 		}
@@ -182,11 +185,6 @@ func (service *Stream) Debug() datatype.Map {
  * CUSTOM QUERIES
  *******************************************/
 
-// ListByParent returns all Streams that match a particular parentID
-func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(exp.Equal("parentId", parentID))
-}
-
 // ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListTopLevel() (data.Iterator, error) {
 	return service.List(
@@ -213,6 +211,54 @@ func (service *Stream) ListAncestors(stream *model.Stream) ([]model.Stream, erro
 	}
 
 	return result, nil
+}
+
+// ListByParent returns all Streams that match a particular parentID
+func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
+	return service.List(exp.Equal("parentId", parentID))
+}
+
+// ListFeatures returns all Streams that match a particular parentID
+func (service *Stream) ListFeatures(streamID primitive.ObjectID) (data.Iterator, error) {
+	criteria := exp.Equal("parentId", streamID).AndEqual("asFeature", true)
+	return service.List(criteria, option.SortAsc("rank"))
+}
+
+func (service *Stream) ListAllFeaturesBySelectionAndRank(streamID primitive.ObjectID) ([]form.OptionCode, []string, error) {
+
+	const location = "service.Stream.ListAllFeaturesBySelectionAndRank"
+
+	streams, err := service.ListFeatures(streamID)
+
+	if err != nil {
+		return []form.OptionCode{}, []string{}, derp.Wrap(err, location, "Error getting features for this stream", streamID)
+	}
+
+	features := service.templateService.ListFeatures()
+	templateIDs := []string{}
+	selected := []form.OptionCode{}
+
+	stream := model.NewStream()
+	for streams.Next(&stream) {
+
+		for index := range features {
+
+			if features[index].Value == stream.TemplateID {
+
+				// copy the selected feature into the selected array
+				selected = append(selected, features[index])
+				templateIDs = append(templateIDs, features[index].Value)
+
+				// Remove the feature from the list
+				features = append(features[:index], features[index+1:]...)
+			}
+		}
+
+		stream = model.NewStream()
+	}
+
+	selected = append(selected, features...)
+	return selected, templateIDs, nil
 }
 
 // ListByTemplate returns all Streams that use a particular Template

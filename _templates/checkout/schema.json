@@ -1,0 +1,48 @@
+{
+	"label": "Checkout",
+	"description": "Add a 'buy now' option to this stream.",
+	"icon": "fa-regular fa-shopping-cart",
+	"asFeature": true,
+	"schema": {
+		"type": "object",
+		"properties": {
+			"data": {
+				"type": "object",
+				"properties": {
+					"sku": {"type": "string"},
+					"price": {"type": "number", "maximum": 0},
+					"inventoy": {"type": "number", "maximum":0}
+				}
+			}
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}, 
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"feature": {"step": "view-html"},
+		"edit": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "form-html", "form": {
+						"kind": "layout-vertical",
+						"children": [
+							{"label": "SKU", "path": "data.sku"},
+							{"label": "Price", "path": "data.price"},
+							{"label": "Inventory", "path": "data.inventory"}
+						]
+					}},
+					{"step": "save", "message": "Updated by {{.Author}}"}
+				]}
+			]
+		}
+	}
+}

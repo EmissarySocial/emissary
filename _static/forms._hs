@@ -1,3 +1,19 @@
+behavior multiselect 
+
+	on change 
+		tell <label/> in me
+			set input to first <input/> in yourself
+			if input.checked then 
+				add .selected to yourself
+			otherwise
+				remove .selected from yourself
+			end
+		end
+	end
+
+end
+		
+
 behavior toggle
 
     init
@@ -56,5 +72,5 @@ behavior toggle
         if the label is not null then
             set the label's innerHTML to the text
         end
-end
+	end
 end

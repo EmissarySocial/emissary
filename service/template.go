@@ -8,10 +8,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/benpate/compare"
 	"github.com/benpate/derp"
-	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/list"
-	"github.com/benpate/path"
 	"github.com/benpate/schema"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
@@ -48,13 +48,13 @@ func NewTemplate(layoutService *Layout, funcMap template.FuncMap, folder config.
  *******************************************/
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(criteria exp.Expression) []model.Option {
+func (service *Template) List(filter func(*model.Template) bool) []form.OptionCode {
 
-	result := []model.Option{}
+	result := []form.OptionCode{}
 
 	for _, template := range service.templates {
-		if path.Match(&template, criteria) {
-			result = append(result, model.Option{
+		if filter(&template) {
+			result = append(result, form.OptionCode{
 				Value:       template.TemplateID,
 				Label:       template.Label,
 				Description: template.Description,
@@ -78,6 +78,7 @@ func (service *Template) List(criteria exp.Expression) []model.Option {
 // Load retrieves an Template from the database
 func (service *Template) Load(templateID string) (*model.Template, error) {
 
+	// READ Mutex to make multi-threaded access safe.
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
 
@@ -97,8 +98,11 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 // Save adds/updates an Template in the memory cache
 func (service *Template) Save(template *model.Template) error {
 
+	// WRITE Mutex to make multi-threaded access safe.
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
+
+	// Do the thing.
 	service.templates[template.TemplateID] = *template
 	return nil
 }
@@ -107,26 +111,40 @@ func (service *Template) Save(template *model.Template) error {
  * CUSTOM QUERIES
  *******************************************/
 
+// ListFeatures returns all templates that are used as "feature" templates
+func (service *Template) ListFeatures() []form.OptionCode {
+
+	filter := func(t *model.Template) bool {
+		return t.AsFeature
+	}
+
+	return service.List(filter)
+}
+
 // ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []model.Option {
-	return service.List(exp.Contains("containedBy", containedBy))
+func (service *Template) ListByContainer(containedBy string) []form.OptionCode {
+
+	filter := func(t *model.Template) bool {
+		return compare.Contains(t.ContainedBy, containedBy)
+	}
+
+	return service.List(filter)
 }
 
 // ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
 // are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
 // are returned.
-func (service *Template) ListByContainerLimited(containedBy string, limits []string) []model.Option {
+func (service *Template) ListByContainerLimited(containedBy string, limits []string) []form.OptionCode {
 
 	if len(limits) == 0 {
 		return service.ListByContainer(containedBy)
 	}
 
-	return service.List(
-		exp.And(
-			exp.Contains("containedBy", containedBy),
-			exp.ContainedBy("templateId", limits),
-		),
-	)
+	filter := func(t *model.Template) bool {
+		return compare.Contains(t.ContainedBy, containedBy) && compare.Contains(limits, t.TemplateID)
+	}
+
+	return service.List(filter)
 }
 
 /*******************************************
@@ -333,6 +351,11 @@ func (service *Template) loadFromFilesystem(templateID string) (model.Template, 
 
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
 		return result, derp.Wrap(err, location, "Error loading template")
+	}
+
+	// RULE: If this is a "feature" template, then the default action is always "feature"
+	if result.AsFeature {
+		result.DefaultAction = "feature"
 	}
 
 	// Validate that the default action is not nil
