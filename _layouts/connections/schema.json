@@ -1,0 +1,17 @@
+{
+	"label": "Connections",
+	"description": "Domain Owners only.  Site Admin",
+	"schema": {"type": "object", "properties": {
+		"connections": {"type": "object", "properties": {
+			"stripe_apiKey": {"type":"string", "format":"token", "minlength":32, "maxlength":32}
+		}}
+	}},
+	"actions": {
+		"index": {"step": "view-html"},
+		"stripe": {"steps": [{"step": "as-modal", "steps": [
+			{"step": "view-html"},
+			{"step": "set-data", "paths":["connections.stripe_apiKey"]},
+			{"step": "save"}
+		]}]}
+	}
+}

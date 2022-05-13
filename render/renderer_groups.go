@@ -144,12 +144,3 @@ func (w Group) Groups() *QueryBuilder {
 
 	return &result
 }
-
-/*******************************************
- * ADDITIONAL DATA
- *******************************************/
-
-// AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (w Group) AdminSections() []model.Option {
-	return AdminSections()
-}

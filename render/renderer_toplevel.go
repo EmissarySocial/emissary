@@ -86,7 +86,7 @@ func (w TopLevel) objectID() primitive.ObjectID {
 }
 
 func (w TopLevel) schema() schema.Schema {
-	return w.domain.Schema()
+	return w.layout.Schema
 }
 
 func (w TopLevel) service() ModelService {
@@ -95,13 +95,4 @@ func (w TopLevel) service() ModelService {
 
 func (w TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
-}
-
-/*******************************************
- * ADDITIONAL DATA
- *******************************************/
-
-// AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (w TopLevel) AdminSections() []model.Option {
-	return AdminSections()
 }
