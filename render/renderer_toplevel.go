@@ -93,6 +93,6 @@ func (w TopLevel) service() ModelService {
 	return w.f.Stream()
 }
 
-func (w TopLevel) executeTemplate(wr io.Writer, name string, data interface{}) error {
+func (w TopLevel) executeTemplate(wr io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }

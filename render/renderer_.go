@@ -38,7 +38,7 @@ type Renderer interface {
 	object() data.Object                // Model Object being rendered
 	objectID() primitive.ObjectID       // MongoDB ObjectID of the Object being rendered
 
-	executeTemplate(io.Writer, string, interface{}) error // The HTML template used by this Renderer
+	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
 
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {

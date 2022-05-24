@@ -94,7 +94,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 		// Report errors
 		if len(errorMessages) > 0 {
-			event := map[string]interface{}{"eventValidatorError": errorMessages}
+			event := map[string]any{"eventValidatorError": errorMessages}
 			eventBytes, _ := json.Marshal(event)
 			ctx.Response().Header().Add("HX-Trigger", string(eventBytes))
 			return ctx.NoContent(http.StatusOK)

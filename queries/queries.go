@@ -19,7 +19,7 @@ import (
 )
 
 // pipeline executes a mongodb pipeline and populates the results into "result"
-func pipeline(ctx context.Context, collection data.Collection, result interface{}, pipeline bson.A, opts ...*options.AggregateOptions) error {
+func pipeline(ctx context.Context, collection data.Collection, result any, pipeline bson.A, opts ...*options.AggregateOptions) error {
 
 	const location = "queries.pipeline"
 

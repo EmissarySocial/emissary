@@ -108,7 +108,7 @@ func (w User) service() ModelService {
 	return w.f.User()
 }
 
-func (w User) executeTemplate(writer io.Writer, name string, data interface{}) error {
+func (w User) executeTemplate(writer io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 

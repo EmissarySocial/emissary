@@ -88,7 +88,7 @@ func (w Domain) service() ModelService {
 	return w.f.Domain()
 }
 
-func (w Domain) executeTemplate(wr io.Writer, name string, data interface{}) error {
+func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 

@@ -85,7 +85,7 @@ func PostSocialInbox(fm *server.Factory) echo.HandlerFunc {
 		// TODO: Validate signatures here
 
 		// Try to import the ActivityPub record
-		body := make(map[string]interface{})
+		body := make(map[string]any)
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Error binding request body")
 		}

@@ -109,7 +109,7 @@ func (w Group) service() ModelService {
 	return w.f.Group()
 }
 
-func (w Group) executeTemplate(writer io.Writer, name string, data interface{}) error {
+func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 

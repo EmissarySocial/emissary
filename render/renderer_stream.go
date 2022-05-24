@@ -109,7 +109,7 @@ func (w Stream) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (w Stream) executeTemplate(wr io.Writer, name string, data interface{}) error {
+func (w Stream) executeTemplate(wr io.Writer, name string, data any) error {
 	return w.template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 
@@ -267,7 +267,7 @@ func (w Stream) Permalink() string {
 }
 
 // Data returns the custom data map of the stream being rendered
-func (w Stream) Data(value string) interface{} {
+func (w Stream) Data(value string) any {
 	return w.stream.Data[value]
 }
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/benpate/convert"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -170,7 +171,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "displayname",
 			Label:       "Your Name",
 			Description: "Choose your publicly visible name.  You can always change it later.",
-			Options: form.Map{
+			Options: datatype.Map{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -178,7 +179,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "username",
 			Label:       "Username",
 			Description: "The name you'll use to sign in.",
-			Options: form.Map{
+			Options: datatype.Map{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -186,7 +187,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "password",
 			Label:       "Password",
 			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
-			Options: form.Map{
+			Options: datatype.Map{
 				"autocomplete": "OFF",
 			},
 		}},
@@ -224,7 +225,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 	if ctx.Request().Method == http.MethodPost {
 
-		body := map[string]interface{}{}
+		body := map[string]any{}
 
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Error binding request body")
@@ -298,22 +299,22 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		Children: []form.Form{{
 			Kind:        "toggle",
 			Path:        "home",
-			Options:     form.Map{"true-text": "Home Page", "false-text": "Home Page"},
+			Options:     datatype.Map{"true-text": "Home Page", "false-text": "Home Page"},
 			Description: "Landing page when visitors first reach your site.",
 		}, {
 			Kind:        "toggle",
 			Path:        "blog",
-			Options:     form.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
+			Options:     datatype.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
 			Kind:        "toggle",
 			Path:        "album",
-			Options:     form.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
+			Options:     datatype.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
 		}, {
 			Kind:        "toggle",
 			Path:        "forum",
-			Options:     form.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
+			Options:     datatype.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
 			Description: "Realtime chat, organized into topics and threads.",
 		}},
 	}

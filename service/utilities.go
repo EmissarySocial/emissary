@@ -71,7 +71,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 }
 
 // loadModelFromFilesystem locates and parses a schema from the filesystem path
-func loadModelFromFilesystem(filesystem afero.Fs, model interface{}) error {
+func loadModelFromFilesystem(filesystem afero.Fs, model any) error {
 
 	file, err := filesystem.Open("schema.json")
 
