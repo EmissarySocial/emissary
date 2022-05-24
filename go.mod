@@ -2,28 +2,26 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace github.com/benpate/id => ../../benpate/id
-
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
-	github.com/benpate/data v0.16.0
-	github.com/benpate/data-mongo v0.2.1
+	github.com/benpate/data v0.16.2
+	github.com/benpate/data-mongo v0.2.2
 	github.com/benpate/datatype v0.2.0
 	github.com/benpate/derp v0.22.2
 	github.com/benpate/digit v0.3.0
-	github.com/benpate/exp v0.1.1
+	github.com/benpate/exp v0.1.4
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.3
-	github.com/benpate/html v0.11.6
+	github.com/benpate/form v0.6.4
+	github.com/benpate/html v0.12.0
 	github.com/benpate/htmlconv v0.3.3
-	github.com/benpate/id v0.1.0
+	github.com/benpate/id v0.1.1
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.1
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.6
+	github.com/benpate/schema v0.14.7
 	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
@@ -41,7 +39,7 @@ require (
 	github.com/whisperverse/mediaserver v0.1.2
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
-	go.mongodb.org/mongo-driver v1.9.0
+	go.mongodb.org/mongo-driver v1.9.1
 
 )
 

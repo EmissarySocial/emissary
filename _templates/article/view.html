@@ -25,21 +25,26 @@
 			{{- end -}}
 
 			<div class="right">
-			{{- if .UserCan "publish" -}}
-				<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
-			{{- end -}}
+				{{- if .UserCan "publish" -}}
+					<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+				{{- end -}}
 
-			{{- if .UserCan "unpublish" -}}
-				<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
-			{{- end -}}
+				{{- if .UserCan "unpublish" -}}
+					<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
+				{{- end -}}
 			</div>
 
 		</div>
 	{{- end -}}
 
-	<article class="space-after">
-		<div>{{.Content}}</div>
-	</article>
+	<section>
+		<article class="space-after">
+			<div>{{.Content}}</div>
+		</article>
+	</section>
 
+	<section>
+		{{- .Features -}}
+	</section>
 </div>
 </div>

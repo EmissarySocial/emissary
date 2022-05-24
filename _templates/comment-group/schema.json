@@ -1,8 +1,8 @@
 {
 	"label": "Comment Section",
-	"description": "A block where visitors can post comments about this page",
+	"description": "Allow visitors to comment on this stream.",
 	"icon": "fa-regular fa-message",
-	"containedBy": ["article", "photograph"],
+	"asFeature": true,
 	"schema": {
 		"type": "object",
 		"properties": {
@@ -33,18 +33,13 @@
 		}
 	},
 	"actions": {
-		"init": {
-			"steps": [
-				{"step": "set-publishdate"}
-			]
-		},
-		"view": {"step": "view-html"},
+		"feature": {"step": "view-html"},
 		"children": {"step": "view-html"},
 		"edit": {
 			"roles": ["owner", "author"],
 			"steps": [
 				{"step": "set-data", "paths": "label"},
-				{"step": "save", "message": "Upaded by {{.Author}}"}
+				{"step": "save", "message": "Updated by {{.Author}}"}
 			]
 		},
 		"delete": {

@@ -18,7 +18,7 @@ type Domain struct {
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -41,12 +41,7 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, act
 		Common: NewCommon(factory, ctx, action, actionID),
 	}
 
-	// Pre-load the domain record
-	// TODO: This is clunky.
-	if _, err := result.getDomain(); err != nil {
-		return result, derp.Wrap(err, location, "Error loading Domain")
-	}
-
+	result.domain = domain
 	return result, nil
 }
 
@@ -86,7 +81,7 @@ func (w Domain) objectID() primitive.ObjectID {
 }
 
 func (w Domain) schema() schema.Schema {
-	return w.domain.Schema()
+	return w.layout.Schema
 }
 
 func (w Domain) service() ModelService {
@@ -101,17 +96,16 @@ func (w Domain) TopLevelID() string {
 	return "admin"
 }
 
-// SignupForm returns the SignupForm associated with this Domain.
-func (w Domain) SignupForm() model.SignupForm {
-
-	return w.domain.SignupForm
-}
-
 /*******************************************
- * ADDITIONAL DATA
+ * OTHER DATA ACCESSORS
  *******************************************/
 
-// AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (w Domain) AdminSections() []model.Option {
-	return AdminSections()
+// Connections returns the data associated with a particular connection
+func (w Domain) Connections(name string) string {
+	return w.domain.Connections[name]
+}
+
+// SignupForm returns the SignupForm associated with this Domain.
+func (w Domain) SignupForm() model.SignupForm {
+	return w.domain.SignupForm
 }

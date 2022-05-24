@@ -1,0 +1,59 @@
+{
+	"label": "Checkout",
+	"description": "Add a 'buy now' option to this stream.",
+	"icon": "fa-regular fa-shopping-cart",
+	"asFeature": true,
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type": "string", "default": "Buy Now"},
+			"data": {
+				"type": "object",
+				"properties": {
+					"sku": {"type": "string"},
+					"price": {"type": "number", "maximum": 0},
+					"inventoy": {"type": "number", "maximum":0},
+					"active": {"type": "boolean"}
+				}
+			}
+		}
+	},
+	"states": {
+		"new": {},
+		"ready": {}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}, 
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"feature": {"step": "view-html"},
+		"checkout": {"step": "view-html", "states": ["ready"]},
+		"edit": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "form-html", "form": {
+						"kind": "layout-vertical",
+						"label":"Edit Checkout Options",
+						"children": [
+							{"kind":"text", "label": "Label", "path": "label"},
+							{"kind":"text", "label": "SKU", "path": "data.sku"},
+							{"kind":"text", "label": "Price", "path": "data.price"},
+							{"kind":"text", "label": "Inventory", "path": "data.inventory"},
+							{"kind": "toggle", "label": "Active?", "path":"data.active"}
+						]
+					}},
+					{"step": "set-state", "state": "ready"},
+					{"step": "save", "message": "Updated by {{.Author}}"}
+				]}
+			]
+		}
+	}
+}

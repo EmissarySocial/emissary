@@ -62,11 +62,30 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 
 		case "analytics":
 			layout := factory.Layout().Analytics()
-			renderer, err = render.NewDomain(factory, sterankoContext, layout, actionID)
+			service := factory.Domain()
+			object := model.NewDomain()
+			if err := service.Load(&object); err != nil {
+				return derp.Wrap(err, location, "Error loading Group", objectID)
+			}
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, &object, actionID)
+
+		case "connections":
+			layout := factory.Layout().Connections()
+			service := factory.Domain()
+			object := model.NewDomain()
+			if err := service.Load(&object); err != nil {
+				return derp.Wrap(err, location, "Error loading Group", objectID)
+			}
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, &object, actionID)
 
 		case "domain":
 			layout := factory.Layout().Domain()
-			renderer, err = render.NewDomain(factory, sterankoContext, layout, actionID)
+			service := factory.Domain()
+			object := model.NewDomain()
+			if err := service.Load(&object); err != nil {
+				return derp.Wrap(err, location, "Error loading Group", objectID)
+			}
+			renderer, err = render.NewDomain(factory, sterankoContext, layout, &object, actionID)
 
 		case "groups":
 			group := model.NewGroup()

@@ -1,6 +1,15 @@
 {
 	"label": "Domain",
 	"description": "Domain Owners only.  Site Admin",
+	"schema": {"type": "object", "properties": {
+		"label":     {"type":"string", "maxLength":100},
+		"bannerUrl": {"type":"string", "maxLength":255},
+		"signupForm": {"type":"object", "properties": {
+			"title":   {"type":"string", "format":"no-html", "maxLength":100},
+			"message": {"type":"string", "format":"no-html", "maxLength":100},
+			"active":  {"type":"boolean"}
+		}}
+	}},
 	"actions": {
 		"index": {"step": "view-html"},
 		"signup": {

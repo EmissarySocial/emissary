@@ -210,6 +210,25 @@ h3.space-below {
 	border-radius: 100px;
 }
 
+/****************************
+ * MISC WIDGETS
+ ****************************/
+
+.info {
+	display: block;
+	border: solid 1px var(--blue20);
+	border-radius:10px;
+	background-color: var(--blue10);
+	color: var(--gray90);
+	padding:15px 15px;
+	margin-bottom: 40px;
+}
+
+.info > .info-marker {
+	float:left;
+	margin-right:15px;
+	color: var(--blue60);
+}
 
 /****************************
  * PLACEHOLDER

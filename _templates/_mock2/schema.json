@@ -1,0 +1,9 @@
+{
+	"label": "QR Code",
+	"description": "Another feature that doesn't actually exist, but that's okay, you get the idea.",
+	"icon": "fa-regular fa-message",
+	"asFeature": true,
+	"actions":{
+		"feature": {"step": "view-html"}
+	}
+}

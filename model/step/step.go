@@ -79,6 +79,9 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "edit-content":
 		return NewEditContent(stepInfo)
 
+	case "edit-features":
+		return NewEditFeatures(stepInfo)
+
 	case "view-rss":
 		return NewViewRSS(stepInfo)
 

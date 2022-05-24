@@ -15,6 +15,7 @@ type Template struct {
 	Description        string            `path:"description"        json:"description"        bson:"description"`        // Human-readable long-description text used in management UI.
 	Category           string            `path:"category"           json:"category"           bson:"category"`           // Human-readable category (grouping) used in management UI.
 	Icon               string            `path:"icon"               json:"icon"               bson:"icon"`               // Icon image used in management UI.
+	AsFeature          bool              `path:"asFeature"          json:"asFeature"          bson:"asFeature"`          // If TRUE, then this template is used as a "feature" template, to be optionally embedded in other streams
 	ContainedBy        []string          `path:"containedBy"        json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
 	ChildSortType      string            `path:"childSortType"      json:"childSortType"      bson:"childSortType"`      // SortType used to display children
 	ChildSortDirection string            `path:"childSortDirection" json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)

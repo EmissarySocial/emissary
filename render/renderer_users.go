@@ -152,11 +152,6 @@ func (w User) Users() *QueryBuilder {
  * ADDITIONAL DATA
  *******************************************/
 
-// AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (w User) AdminSections() []model.Option {
-	return AdminSections()
-}
-
 // AssignedGroups lists all groups to which the current user is assigned.
 func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w.factory().Group()

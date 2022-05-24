@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
@@ -268,4 +269,44 @@ func (w Common) TopLevel() (List, error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
 	builder := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
 	return builder.Top60().ByRank().View()
+}
+
+/*******************************************
+ * ADDITIONAL DATA
+ *******************************************/
+
+// AdminSections returns labels and values for all hard-coded sections of the administrator area.
+func (w Common) AdminSections() []form.OptionCode {
+	return []form.OptionCode{
+		{
+			Value: "domain",
+			Label: "Site",
+			Icon:  "",
+		},
+		{
+			Value: "toplevel",
+			Label: "Navigation",
+			Icon:  "",
+		},
+		{
+			Value: "users",
+			Label: "People",
+			Icon:  "",
+		},
+		{
+			Value: "groups",
+			Label: "Groups",
+			Icon:  "",
+		},
+		{
+			Value: "connections",
+			Label: "Connections",
+			Icon:  "",
+		},
+		{
+			Value: "analytics",
+			Label: "Analytics",
+			Icon:  "",
+		},
+	}
 }

@@ -29,6 +29,7 @@ type Stream struct {
 	Tags            []string             `path:"tags"           json:"tags"                bson:"tags,omitempty"`          // Organizational Tags
 	ThumbnailImage  string               `path:"thumbnailImage" json:"thumbnailImage"      bson:"thumbnailImage"`          // Image to display next to the stream in lists.
 	Rank            int                  `path:"rank"           json:"rank"                bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	AsFeature       bool                 `path:"asFeature"      json:"asFeature"           bson:"asFeature"`               // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
 	SourceID        primitive.ObjectID   `path:"sourceId"       json:"sourceId"            bson:"sourceId,omitempty"`      // Internal identifier of the source configuration that generated this stream
 	SourceURL       string               `path:"sourceUrl"      json:"sourceUrl"           bson:"sourceUrl,omitempty"`     // URL of the original document published by the source server
 	SourceUpdated   int64                `path:"sourceUpdated"  json:"sourceUpdated"       bson:"sourceUpdated,omitempty"` // Date the the source updated the original content.

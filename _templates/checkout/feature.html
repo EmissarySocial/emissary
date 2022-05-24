@@ -1,0 +1,12 @@
+{{- if .UserCan "checkout" -}}
+	This is where the checkout button will go
+	<button class="primary" hx-post="/{{.StreamID}}/checkout">{{.Label}}</button>
+{{- end -}}
+
+{{- if .UserCan "edit" -}}
+	<div class="text-xs">
+		<button hx-get="/{{.StreamID}}/edit">Configure Checkout</button>
+		[ADMIN ONLY]
+	</div>
+{{- end -}}
+
