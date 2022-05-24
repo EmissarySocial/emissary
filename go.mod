@@ -2,12 +2,6 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace (
-	github.com/benpate/data => ../../benpate/data
-	github.com/benpate/data-mongo => ../../benpate/data-mongo
-	github.com/benpate/form => ../../benpate/form
-)
-
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0

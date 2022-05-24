@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/schema"
@@ -36,7 +37,7 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 		Kind:  "layout-vertical",
 		Label: "Add/Remove Features of this Stream",
 		Children: []form.Form{
-			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: form.Map{"options": features}},
+			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: datatype.Map{"options": features}},
 		},
 	}
 

@@ -127,7 +127,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 
 		f := form.Form{
 			Kind:    "layout-tabs",
-			Options: form.Map{"labels": "Server,Email"},
+			Options: datatype.Map{"labels": "Server,Email"},
 			Children: []form.Form{{
 				Kind: "layout-vertical",
 				Children: []form.Form{{
