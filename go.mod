@@ -2,12 +2,6 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace (
-	github.com/benpate/data => ../../benpate/data
-	github.com/benpate/data-mongo => ../../benpate/data-mongo
-	github.com/benpate/form => ../../benpate/form
-)
-
 require (
 	github.com/benpate/compare v0.1.1
 	github.com/benpate/convert v0.12.0
@@ -30,7 +24,7 @@ require (
 	github.com/benpate/schema v0.14.7
 	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/fsnotify/fsnotify v1.5.1
+	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.7.2
@@ -90,7 +84,7 @@ require (
 	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a // indirect
 	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
