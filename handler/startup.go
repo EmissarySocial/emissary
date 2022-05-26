@@ -139,6 +139,12 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			return derp.Wrap(err, "handler.GetStartupUsername", "Error saving user")
 		}
 
+		// Sign in as the new user
+		s := factory.Steranko()
+		if err := s.CreateCertificate(ctx, &user); err != nil {
+			return derp.Wrap(err, "handler.GetStartupUsername", "Error signing in new user")
+		}
+
 		// Redirect to the next page (this forces a "GET" request)
 		return ctx.Redirect(http.StatusSeeOther, "/startup?refresh=true")
 	}
