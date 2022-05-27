@@ -155,7 +155,7 @@ func (factory *Factory) DomainByName(hostname string) (config.Domain, error) {
 
 func (factory *Factory) write() error {
 
-	// TODO: this hardcoded reference should be moved into the config file itself
+	// TODO: this hardcoded reference should probably be moved into the config file itself
 	if err := config.Write(factory.config, "./config.json"); err != nil {
 		return derp.Wrap(err, "server.Factory.write", "Error writing configuration")
 	}
@@ -168,12 +168,10 @@ func (factory *Factory) UpdateDomain(indexString string, domain config.Domain) e
 
 	if indexString == "new" {
 		factory.config.Domains = append(factory.config.Domains, domain)
-		return nil
+	} else {
+		index := convert.Int(indexString)
+		factory.config.Domains[index] = domain
 	}
-
-	index := convert.Int(indexString)
-
-	factory.config.Domains[index] = domain
 
 	// TODO: this hardcoded reference should be moved into the config file itself
 	if err := factory.write(); err != nil {
@@ -223,11 +221,11 @@ func (factory *Factory) DeleteDomain(domain config.Domain) error {
 		}
 	}
 
+	delete(factory.domains, domain.Hostname)
+
 	if err := factory.write(); err != nil {
 		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
 	}
-
-	delete(factory.domains, domain.Hostname)
 
 	return nil
 }

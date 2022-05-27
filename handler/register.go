@@ -85,10 +85,10 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 			errorMessages["username"] = "Pick a different username.  This one is already in use."
 		} else if !derp.NotFound(err) {
 			return derp.Report(derp.Wrap(err, location, "Error searching for username"))
-		} else {
-			// We got a 404 error, which is actually what we want here.
-			// It means that the username is unique.
 		}
+
+		// Otherwise, we got a 404 error, which is actually what we want here.
+		// It means that the username is unique.
 
 		// TODO: Other validations here? Password quality?
 

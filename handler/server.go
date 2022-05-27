@@ -98,6 +98,7 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 			b.Close()
 			b.Close()
+			b.Close()
 		}
 
 		// If there is a domain WITHOUT database info, then display its popup now.

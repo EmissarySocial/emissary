@@ -85,7 +85,7 @@ func Load() Config {
 // Write saves the current configuration to permanent storage (currently filesystem)
 func Write(config Config, filename string) error {
 
-	output, err := json.MarshalIndent(config, "\n", "\t")
+	output, err := json.MarshalIndent(config, "", "\t")
 
 	if err != nil {
 		return derp.Wrap(err, "config.Write", "Error marshalling configuration")
