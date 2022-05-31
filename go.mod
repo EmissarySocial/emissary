@@ -20,7 +20,7 @@ require (
 	github.com/benpate/id v0.1.1
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
-	github.com/benpate/null v0.6.1
+	github.com/benpate/null v0.6.3
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
 	github.com/benpate/schema v0.14.7
