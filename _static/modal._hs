@@ -42,9 +42,9 @@ behavior Modal
 		set focusedElement to the first <:focus/>
 
 		if event.shiftKey
-			focus() the previous <[tabindex]/> from focusedElement with wrapping
+			focus() the previous <[tabindex]/> from focusedElement within me with wrapping
 		else
-			focus() the next <[tabindex]/> from focusedElement with wrapping
+			focus() the next <[tabindex]/> from focusedElement within me with wrapping
 		end
 
 		halt the event

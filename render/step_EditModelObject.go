@@ -69,7 +69,7 @@ func (step StepEditModelObject) Post(renderer Renderer) error {
 
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
 	for key, value := range request.Form {
-		if err := schema.Set(renderer, key, value); err != nil {
+		if err := schema.Set(object, key, value); err != nil {
 			return derp.Wrap(err, location, "Error setting path value", key, value)
 		}
 	}

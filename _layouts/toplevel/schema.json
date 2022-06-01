@@ -1,6 +1,12 @@
 {
 	"label": "Top Level",
 	"description": "Manages list of top-level items. (Site Admins Only)",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"rank": {"type":"integer"}
+		}
+	},
 	"actions": {
 		"index": {"step": "view-html"},
 		"view": {"step": "view-html"},

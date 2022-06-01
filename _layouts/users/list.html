@@ -5,7 +5,7 @@
     {{- range $index, $user := $users -}}
             <tr class="clickable">
                 <td role="link" hx-get="/admin/users/{{$user.UserID}}/edit" class="width-full">
-                    <i class="fa-solid fa-user"></i> {{$user.DisplayName}}
+                    <i class="fa-solid fa-user"></i>&nbsp;{{$user.DisplayName}}
                 </td>
                 <td role="link" hx-get="/admin/users/{{$user.UserID}}/delete">
                     <i class="fa-regular fa-trash-can"></i>

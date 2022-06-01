@@ -76,6 +76,11 @@ func (w Profile) View(actionID string) (template.HTML, error) {
 }
 
 func (w Profile) TopLevelID() string {
+
+	if w.UserID() == w.Common.UserID().Hex() {
+		return "profile"
+	}
+
 	return ""
 }
 

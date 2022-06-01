@@ -3,7 +3,10 @@ package model
 import (
 	"time"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
+	"github.com/benpate/id"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
 	"github.com/golang-jwt/jwt/v4"
@@ -21,7 +24,7 @@ type User struct {
 	Password    string               `path:"password"    json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
 	IsOwner     bool                 `path:"isOwner"     json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
 	ProfileURL  string               `path:"profileUrl"  json:"profileUrl"  bson:"profileUrl"`  // URL for the primary profile URL for this user.
-	ImageURL    string               `path:"imageUrl"   json:"imageUrl"   bson:"imageUrl"`      // Avatar image of this user.
+	ImageURL    string               `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl"`    // Avatar image of this user.
 	InboxID     primitive.ObjectID   `path:"inboxId"     json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
 	OutboxID    primitive.ObjectID   `path:"outboxId"    json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
 
@@ -93,7 +96,7 @@ func (user *User) Roles(authorization *Authorization) []string {
 func (user *User) Schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
-			Properties: map[string]schema.Element{
+			Properties: schema.ElementMap{
 				"userId":      schema.String{Format: "objectId"},
 				"groupIds":    schema.Array{Items: schema.String{Format: "objectId"}},
 				"displayName": schema.String{MaxLength: null.NewInt(50)},
@@ -102,6 +105,50 @@ func (user *User) Schema() schema.Schema {
 			},
 		},
 	}
+}
+
+func (user *User) GetPath(path string) (any, error) {
+
+	switch path {
+
+	case "groupIds":
+		return id.SliceOfString(user.GroupIDs), nil
+
+	case "displayName":
+		return user.DisplayName, nil
+
+	case "username":
+		return user.Username, nil
+
+	case "imageUrl":
+		return user.ImageURL, nil
+
+	}
+
+	return nil, derp.NewBadRequestError("model.User.SetPath", "Invalid Path", path)
+}
+
+func (user *User) SetPath(path string, value any) error {
+
+	switch path {
+
+	case "groupIds":
+		user.GroupIDs = id.Slice(value)
+
+	case "displayName":
+		user.DisplayName = convert.String(value)
+
+	case "username":
+		user.Username = convert.String(value)
+
+	case "imageUrl":
+		user.ImageURL = convert.String(value)
+
+	default:
+		return derp.NewBadRequestError("model.User.SetPath", "Invalid Path", path, value)
+	}
+
+	return nil
 }
 
 /******************************

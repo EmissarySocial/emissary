@@ -3,7 +3,6 @@ package model
 import (
 	"testing"
 
-	"github.com/benpate/id"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -38,6 +37,7 @@ func TestPermissions(t *testing.T) {
 	}
 }
 
+/*
 func TestFindGroups(t *testing.T) {
 
 	id0, _ := primitive.ObjectIDFromHex("000000000000000000000000")
@@ -60,3 +60,14 @@ func TestFindGroups(t *testing.T) {
 		require.Equal(t, []primitive.ObjectID{id1, id2}, id.Sort(c.Groups("internet randos")))
 	}
 }
+
+func Sort(value []primitive.ObjectID) []primitive.ObjectID {
+
+	sort.Slice(value, func(i int, j int) bool {
+		return (value[i].Hex() < value[j].Hex())
+	})
+
+	return value
+}
+
+*/

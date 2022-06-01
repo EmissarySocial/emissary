@@ -18,7 +18,7 @@
 						"children": [
 							{"kind": "text", "label": "Full Name", "path": "displayName"},
 							{"kind": "text", "label": "Username", "path": "username"},
-							{"kind": "select", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups"}}
+							{"kind": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups", "sort":false}}
 						]
 					}
 				}]
@@ -38,7 +38,7 @@
 						"children": [
 							{"kind": "text", "label": "Full Name", "path": "displayName"},
 							{"kind": "text", "label": "Username", "path": "username"},
-							{"kind": "select", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups"}}
+							{"kind": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
 						]
 					}},
 					{"step": "save", "type":"user", "comment": "Updated by {{.Author}}"}

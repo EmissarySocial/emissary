@@ -17,7 +17,7 @@ htmx.defineExtension("a11y", {
 		}
 
 		// Special rules for links and buttons
-		event.target.querySelectorAll("a:not([href]),[role=link],button,[role=button]").forEach(function(/** @type {HTMLElement} */ node) {
+		event.target.querySelectorAll("a:not([href]),[role=link],button,[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
 			
 			// If tabIndex is not already set, then default it to 0
 			if (node.attributes["tabIndex"] == undefined) {

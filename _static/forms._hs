@@ -1,4 +1,4 @@
-behavior multiselect 
+behavior multiselect(sort)
 
 	init
 		add .multiselect
@@ -14,7 +14,7 @@ behavior multiselect
 		end
 
 		-- if available, make the label sortable
-		if Sortable is not null then
+		if (sort is true) and (Sortable is not null) then
 			tell <div.options/> in me
 				make a Sortable from yourself, {animation:150, whisperClass:'multiselect-whisper', onEnd: \ evt -> evt.item.focus()}
 			end

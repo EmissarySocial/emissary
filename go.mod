@@ -2,11 +2,13 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace github.com/benpate/html => ../../benpate/html
+replace github.com/benpate/form => ../../benpate/form
+
+replace github.com/benpate/path => ../../benpate/path
 
 require (
 	github.com/benpate/compare v0.1.1
-	github.com/benpate/convert v0.12.0
+	github.com/benpate/convert v0.13.1
 	github.com/benpate/data v0.16.2
 	github.com/benpate/data-mongo v0.2.2
 	github.com/benpate/datatype v0.2.0
@@ -15,15 +17,15 @@ require (
 	github.com/benpate/exp v0.1.4
 	github.com/benpate/first v0.0.2
 	github.com/benpate/form v0.6.4
-	github.com/benpate/html v0.12.0
+	github.com/benpate/html v0.12.1
 	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/id v0.1.1
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
-	github.com/benpate/null v0.6.1
+	github.com/benpate/null v0.6.3
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.7
+	github.com/benpate/schema v0.15.0
 	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4

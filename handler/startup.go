@@ -237,9 +237,9 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			return derp.Wrap(err, location, "Error binding request body")
 		}
 
-		converted, err := s.Convert(body)
+		converted := map[string]bool{}
 
-		if err != nil {
+		if err := s.SetAll(&converted, body); err != nil {
 			return derp.Wrap(err, location, "Invalid form data")
 		}
 
@@ -247,7 +247,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		streams := make([]model.Stream, 0)
 
-		if convert.Bool(body["home"]) {
+		if converted["home"] {
 			stream := model.NewStream()
 			stream.Label = "Welcome"
 			stream.TemplateID = "article"
@@ -255,7 +255,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if convert.Bool(body["blog"]) {
+		if converted["blog"] {
 			stream := model.NewStream()
 			stream.Label = "Blog"
 			stream.TemplateID = "folder"
@@ -264,14 +264,14 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if convert.Bool(body["album"]) {
+		if converted["album"] {
 			stream := model.NewStream()
 			stream.Label = "Photo Album"
 			stream.TemplateID = "photo-album"
 			streams = append(streams, stream)
 		}
 
-		if convert.Bool(body["forum"]) {
+		if converted["forum"] {
 			stream := model.NewStream()
 			stream.Label = "Forum"
 			stream.TemplateID = "forum"

@@ -26,7 +26,7 @@ func GetServerIndex(factory *server.Factory) echo.HandlerFunc {
 
 		pageHeader(ctx, b, "Domains")
 
-		b.Container("script").Type("text/javascript").InnerHTML("function signOut() {document.cookie='admin=; Max-Age=-999999999;'; document.location.reload();}").Close()
+		b.Script().Type("text/javascript").InnerHTML("function signOut() {document.cookie='admin=; Max-Age=-999999999;'; document.location.reload();}").Close()
 
 		b.Div().ID("menu-bar").EndBracket()
 
@@ -137,17 +137,20 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 					Label:       "Label",
 					Description: "Admin-friendly label for this domain",
 				}, {
-					Kind:  "text",
-					Path:  "hostname",
-					Label: "Hostname",
+					Kind:        "text",
+					Path:        "hostname",
+					Label:       "Hostname",
+					Description: "Complete domain name (but no https:// or trailing slashes)",
 				}, {
-					Kind:  "text",
-					Path:  "connectString",
-					Label: "MongoDB Connection String",
+					Kind:        "text",
+					Path:        "connectString",
+					Label:       "MongoDB Connection String",
+					Description: "Should look like mongodb://host:port/database",
 				}, {
-					Kind:  "text",
-					Path:  "databaseName",
-					Label: "MongoDB Database Name",
+					Kind:        "text",
+					Path:        "databaseName",
+					Label:       "MongoDB Database Name",
+					Description: "Name of the database to use on the server",
 				}},
 			}, {
 				Kind: "layout-vertical",
@@ -182,7 +185,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 		pageHeader(ctx, b, "Server Config")
 
 		// Form Wrapper
-		b.Form("post", "").
+		b.Form("post", ctx.Request().URL.String()).
 			Attr("hx-post", ctx.Request().URL.String()).
 			Attr("hx-swap", "#main").
 			Attr("hx-push-url", "false").
@@ -309,30 +312,30 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("head")
 		b.Container("title").InnerHTML(title).Close()
 
-		b.Link("stylesheet", "/static/purecss/pure-min.css")
-		b.Link("stylesheet", "/static/purecss/pure-grids-responsive-min.css")
-		b.Link("stylesheet", "/static/colors.css")
+		b.Stylesheet("/static/purecss/pure-min.css")
+		b.Stylesheet("/static/purecss/pure-grids-responsive-min.css")
+		b.Stylesheet("/static/colors.css")
 
-		b.Link("stylesheet", "/static/accessibility.css")
-		b.Link("stylesheet", "/static/animations.css")
-		b.Link("stylesheet", "/static/cards.css")
-		b.Link("stylesheet", "/static/content.css")
-		b.Link("stylesheet", "/static/forms.css")
-		b.Link("stylesheet", "/static/layout.css")
-		b.Link("stylesheet", "/static/modal.css")
-		b.Link("stylesheet", "/static/responsive.css")
-		b.Link("stylesheet", "/static/tabs.css")
-		b.Link("stylesheet", "/static/tables.css")
-		b.Link("stylesheet", "/static/typography.css")
-		b.Link("stylesheet", "/static/fontawesome-free-6.0.0/css/all.css")
+		b.Stylesheet("/static/accessibility.css")
+		b.Stylesheet("/static/animations.css")
+		b.Stylesheet("/static/cards.css")
+		b.Stylesheet("/static/content.css")
+		b.Stylesheet("/static/forms.css")
+		b.Stylesheet("/static/layout.css")
+		b.Stylesheet("/static/modal.css")
+		b.Stylesheet("/static/responsive.css")
+		b.Stylesheet("/static/tabs.css")
+		b.Stylesheet("/static/tables.css")
+		b.Stylesheet("/static/typography.css")
+		b.Stylesheet("/static/fontawesome-free-6.0.0/css/all.css")
 
-		b.Container("script").Attr("src", "/static/modal._hs").Type("text/hyperscript").Close()
-		b.Container("script").Attr("src", "/static/forms._hs").Type("text/hyperscript").Close()
-		b.Container("script").Attr("src", "/static/tabs._hs").Type("text/hyperscript").Close()
-		b.Container("script").Attr("src", "/static/htmx/htmx.js").Close()
-		b.Container("script").Attr("src", "/static/hyperscript/_hyperscript_web.min.js").Close()
-		b.Container("script").Attr("src", "/static/a11y.js").Close()
-		b.Container("script").Attr("src", "/static/extensions.js").Close()
+		b.Script().Src("/static/modal._hs").Type("text/hyperscript").Close()
+		b.Script().Src("/static/forms._hs").Type("text/hyperscript").Close()
+		b.Script().Src("/static/tabs._hs").Type("text/hyperscript").Close()
+		b.Script().Src("/static/htmx/htmx.js").Close()
+		b.Script().Src("/static/hyperscript/_hyperscript_web.min.js").Close()
+		b.Script().Src("/static/a11y.js").Close()
+		b.Script().Src("/static/extensions.js").Close()
 
 		b.Close()
 		b.Container("body")

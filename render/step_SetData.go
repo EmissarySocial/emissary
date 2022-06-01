@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
 	"github.com/labstack/echo/v4"
 )
 
@@ -64,7 +63,8 @@ func (step StepSetData) Post(renderer Renderer) error {
 
 	// Set default values (only if no value already exists)
 	for name, value := range step.Defaults {
-		if convert.IsZeroValue(path.Get(renderer, name)) {
+		currentValue, _, _ := schema.Get(renderer, name)
+		if convert.IsZeroValue(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value)
 				derp.SetErrorCode(result, http.StatusBadRequest)

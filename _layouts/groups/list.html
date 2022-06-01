@@ -5,7 +5,7 @@
     {{- range $groups -}}
         <tr class="clickable">
             <td role="link" hx-get="/admin/groups/{{.GroupID}}/edit" class="width-full">
-                <i class="fa-solid fa-user-group"></i> {{.Label}}
+                <i class="fa-solid fa-user-group"></i>&nbsp;{{.Label}}
             </td>
             <td role="link" hx-get="/admin/groups/{{.GroupID}}/delete">
                 <i class="fa-regular fa-trash-can"></i>

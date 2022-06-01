@@ -22,6 +22,7 @@
 	<link rel="stylesheet" href="/static/typography.css">	
 
 	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
+	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
 
 </head>
 
@@ -39,7 +40,7 @@
 			<div class="right">
 				{{- if .IsAuthenticated -}}
 				<a href="/inbox" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
-				<a href="/profile" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Profile</a>
+				<a href="/profile" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
 					{{- if .IsOwner -}}<a href="/admin/domain"  class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
 					<!--button hx-post="/signout" hx-target="body">Sign Out</button-->
 				{{- else -}}
@@ -63,7 +64,6 @@
 	<script type="text/hyperscript" src="/static/modal._hs"></script>
 	<script type="text/hyperscript" src="/static/tabs._hs"></script>
 
-	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
 	<script type="text/javascript" src="/static/hyperscript/_hyperscript_web.min.js"></script>
 	<script type="text/javascript" src="/static/a11y.js"></script>
 	<script type="text/javascript" src="/static/preload.js"></script>
