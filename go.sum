@@ -50,6 +50,8 @@ github.com/benpate/compare v0.1.1 h1:rpO2mLSWFEReq/hCKd4ULxJV+HSJLYINORodg8rMvMQ
 github.com/benpate/compare v0.1.1/go.mod h1:djtVm+GtoMdMKsdbOdYtd4H4/mV2sL2l/SnqiPexECU=
 github.com/benpate/convert v0.12.0 h1:N4aTPQabpyoIgUSZNmkeP3t/kZo72rWaYQ9oX0ggBds=
 github.com/benpate/convert v0.12.0/go.mod h1:kcwWFWAQFvp6s9s/w74gXIYRDvH7pqt83Ad9YIuwo8s=
+github.com/benpate/convert v0.13.1 h1:0sjtkEgef+jYXvUlaFR6CeER7T2NI0EKHo5rDJHzFEc=
+github.com/benpate/convert v0.13.1/go.mod h1:RZltwOXXTmin71PEMR6tFJD+CPg0OROBEUlZTa0DvAQ=
 github.com/benpate/data v0.16.2 h1:pbXvVQ91CCdHKNr8odZ2oIas3VYrkanR+K9hAWN3dng=
 github.com/benpate/data v0.16.2/go.mod h1:IXfzgRA8ZwjsaM6T1cppy7/I5tOqJutXaG7Mq3UYUD4=
 github.com/benpate/data-mock v0.2.1 h1:sf+yAHd341IZAEpH1qOcgGo9/RQpr4DD9zKFvKHMq9w=

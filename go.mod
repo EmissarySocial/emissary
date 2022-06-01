@@ -6,7 +6,7 @@ replace github.com/benpate/html => ../../benpate/html
 
 require (
 	github.com/benpate/compare v0.1.1
-	github.com/benpate/convert v0.12.0
+	github.com/benpate/convert v0.13.1
 	github.com/benpate/data v0.16.2
 	github.com/benpate/data-mongo v0.2.2
 	github.com/benpate/datatype v0.2.0
