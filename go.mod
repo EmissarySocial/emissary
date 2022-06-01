@@ -23,7 +23,7 @@ require (
 	github.com/benpate/null v0.6.3
 	github.com/benpate/path v0.8.3
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.14.7
+	github.com/benpate/schema v0.15.0
 	github.com/benpate/steranko v0.7.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
