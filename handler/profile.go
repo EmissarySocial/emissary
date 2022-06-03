@@ -5,41 +5,45 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/server"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-func GetUserList(factoryManager *server.Factory) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
-		return ctx.HTML(http.StatusOK, "<h1>User List</h1>")
-	}
-}
 
 // GetProfile handles GET requests
 func GetProfile(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "social-outbox", render.ActionMethodGet)
+	return renderProfile(factoryManager, "", render.ActionMethodGet)
 }
 
 // PostProfile handles POST/DELETE requests
 func PostProfile(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "social-outbox", render.ActionMethodPost)
+	return renderProfile(factoryManager, "", render.ActionMethodPost)
 }
 
 // GetInbox handles GET requests
 func GetInbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "social-inbox", render.ActionMethodGet)
+	return renderProfile(factoryManager, "inbox", render.ActionMethodGet)
 }
 
 // PostInbox handles POST/DELETE requests
 func PostInbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "social-inbox", render.ActionMethodPost)
+	return renderProfile(factoryManager, "inbox", render.ActionMethodPost)
+}
+
+// GetOutbox handles GET requests
+func GetOutbox(factoryManager *server.Factory) echo.HandlerFunc {
+	return renderProfile(factoryManager, "outbox", render.ActionMethodGet)
+}
+
+// PostOutbox handles POST/DELETE requests
+func PostOutbox(factoryManager *server.Factory) echo.HandlerFunc {
+	return renderProfile(factoryManager, "outbox", render.ActionMethodPost)
 }
 
 // renderProfile is the common Profile handler for both GET and POST requests
-func renderProfile(fm *server.Factory, templateID string, actionMethod render.ActionMethod) echo.HandlerFunc {
+func renderProfile(fm *server.Factory, actionID string, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.renderProfile"
 
@@ -60,6 +64,13 @@ func renderProfile(fm *server.Factory, templateID string, actionMethod render.Ac
 			userToken = authorization.UserID.Hex()
 		}
 
+		// If actionID has not been set for us, then get it from the context
+		if actionID == "" {
+			actionID = getActionID(ctx)
+		}
+
+		spew.Dump("renderProfile", userToken, actionID)
+
 		// Try to locate the domain from the Context
 		factory, err := fm.ByContext(ctx)
 
@@ -75,33 +86,14 @@ func renderProfile(fm *server.Factory, templateID string, actionMethod render.Ac
 			return derp.Wrap(err, location, "Error loading User", userToken)
 		}
 
-		// Retrieve the StreamID to display (inbox / outbox / ???)
-		var streamID primitive.ObjectID
-
-		if templateID == "social-inbox" {
-			streamID = user.InboxID
-		} else {
-			streamID = user.OutboxID
-		}
-
-		// Try to load the inbox for this user
-		streamService := factory.Stream()
-		stream := model.NewStream()
-
-		if err := streamService.LoadByID(streamID, &stream); err != nil {
-			return derp.Wrap(err, location, "Error loading Outbox", userToken)
-		}
-
-		// Try to make a renderer for this request
-		actionID := getActionID(ctx)
-
-		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
+		// Create a profile renderer
+		renderer, err := render.NewProfile(factory, sterankoContext, &user, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating renderer")
+			return derp.Wrap(err, location, "Error creating renderer", userToken, actionID)
 		}
 
-		// Render the page
+		// Render the resulting page.
 		return renderPage(factory, sterankoContext, renderer, actionMethod)
 	}
 }

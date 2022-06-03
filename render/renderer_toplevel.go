@@ -50,11 +50,6 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, a
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w TopLevel) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this Stream
 func (w TopLevel) Render() (template.HTML, error) {
 

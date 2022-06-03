@@ -50,6 +50,11 @@ func (w Common) context() *steranko.Context {
 	return w.ctx
 }
 
+// Action returns the model.Action configured into this renderer
+func (w Common) Action() *model.Action {
+	return w.action
+}
+
 func (w Common) ActionID() string {
 	return w.actionID
 }

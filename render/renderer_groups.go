@@ -52,11 +52,6 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w Group) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this Stream
 func (w Group) Render() (template.HTML, error) {
 

@@ -43,11 +43,6 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w Profile) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this Profile
 func (w Profile) Render() (template.HTML, error) {
 
@@ -78,6 +73,10 @@ func (w Profile) View(actionID string) (template.HTML, error) {
 func (w Profile) TopLevelID() string {
 
 	if w.UserID() == w.Common.UserID().Hex() {
+
+		if w.actionID == "inbox" {
+			return "inbox"
+		}
 		return "profile"
 	}
 
@@ -126,6 +125,24 @@ func (w Profile) Description() string {
 
 func (w Profile) ImageURL() string {
 	return w.user.ImageURL
+}
+
+func (w Profile) Inbox() QueryBuilder {
+	factory := w.factory()
+	context := w.context()
+	streamService := w.factory().Stream()
+	criteria := exp.Equal("parentId", w.user.InboxID)
+
+	return NewQueryBuilder(factory, context, streamService, criteria)
+}
+
+func (w Profile) Outbox() QueryBuilder {
+	factory := w.factory()
+	context := w.context()
+	streamService := w.factory().Stream()
+	criteria := exp.Equal("parentId", w.user.OutboxID)
+
+	return NewQueryBuilder(factory, context, streamService, criteria)
 }
 
 /*******************************************

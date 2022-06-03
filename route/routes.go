@@ -61,13 +61,16 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory), domain)
 
 	// Profile Pages / ActivityPub
-	e.GET("/inbox", handler.GetInbox(factory), domain)
 	e.GET("/profile", handler.GetProfile(factory), domain)
+	e.POST("/profile", handler.PostProfile(factory), domain)
 	e.GET("/profile/:action", handler.GetProfile(factory), domain)
+	e.POST("/profile/:action", handler.PostProfile(factory), domain)
 
-	e.GET("/users", handler.GetUserList(factory), domain)
+	e.GET("/users", handler.TBD, domain)
 	e.GET("/users/:user", handler.GetProfile(factory), domain)
+	e.POST("/users/:user", handler.PostProfile(factory), domain)
 	e.GET("/users/:user/:action", handler.GetProfile(factory), domain)
+	e.POST("/users/:user/:action", handler.PostProfile(factory), domain)
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), domain)

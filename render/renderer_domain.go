@@ -49,11 +49,6 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, dom
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w Domain) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this Stream
 func (w Domain) Render() (template.HTML, error) {
 

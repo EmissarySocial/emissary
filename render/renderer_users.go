@@ -52,11 +52,6 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w User) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this User
 func (w User) Render() (template.HTML, error) {
 

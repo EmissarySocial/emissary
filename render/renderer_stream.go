@@ -90,11 +90,6 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
  * RENDERER INTERFACE
  *******************************************/
 
-// Action returns the model.Action configured into this renderer
-func (w Stream) Action() *model.Action {
-	return w.action
-}
-
 // Render generates the string value for this Stream
 func (w Stream) Render() (template.HTML, error) {
 
