@@ -17,6 +17,10 @@
 				<label for="apiKey">API Key</label>
 				<input id="apiKey" type="text" name="connections.stripe_apiKey" value="{{$apiKey}}">
 			</div>
+			<div class="layout-vertical-element">
+				<label for="isActive">Enable?</label>
+				<span id="isActive" script="install toggle" name="connections.stripe_isActive" value="{{.Connections `stripe_isActive`}}" true-text="Stripe Payments are enabled" false-text="Stripe Payments are disabled">
+			</div>
 		</div>
 	</div>
 

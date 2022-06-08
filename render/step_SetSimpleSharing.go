@@ -83,7 +83,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 	rule := convert.String(request.Form["rule"])
 
 	switch rule {
-	case "anomymous":
+	case "anonymous":
 		groupIDs = []primitive.ObjectID{model.MagicGroupIDAnonymous}
 
 	case "authenticated":

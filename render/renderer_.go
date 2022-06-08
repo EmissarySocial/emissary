@@ -30,6 +30,17 @@ type Renderer interface {
 	IsPartialRequest() bool // Returns TRUE if this is an HTMX request for a page fragment
 	UseGlobalWrapper() bool // Returns TRUE if this renderer uses the common site chrome.
 
+	GetBool(name string) bool
+	GetFloat(name string) float64
+	GetInt(name string) int
+	GetInt64(name string) int64
+	GetString(name string) string
+	SetBool(name string, value bool)
+	SetFloat(name string, value float64)
+	SetInt(name string, value int)
+	SetInt64(name string, value int64)
+	SetString(name string, value string)
+
 	factory() Factory                   // The service factory
 	context() *steranko.Context         // The request context embedded in the Renderer
 	service() ModelService              // The abstracted ModelService the backs this Renderer

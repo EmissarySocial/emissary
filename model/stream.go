@@ -91,20 +91,13 @@ func (stream *Stream) SetAuthor(author *User) {
 }
 
 /*******************************************
- * OTHER METHODS
+ * RoleStateEnumerator Methods
  *******************************************/
 
-// HasParent returns TRUE if this Stream has a valid parentID
-func (stream *Stream) HasParent() bool {
-	return !stream.ParentID.IsZero()
-}
-
-// NewAttachment creates a new file Attachment linked to this Stream.
-func (stream *Stream) NewAttachment(filename string) Attachment {
-	result := NewAttachment(stream.StreamID)
-	result.Original = filename
-
-	return result
+// State returns the current state of this Stream.  It is
+// part of the implementation of the RoleStateEmulator interface
+func (stream *Stream) State() string {
+	return stream.StateID
 }
 
 // Roles returns a list of all roles that match the provided authorization
@@ -135,6 +128,23 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 
 	// Otherwise, append all roles matched from the permissions
 	result = append(result, stream.Permissions.Roles(authorization.AllGroupIDs()...)...)
+
+	return result
+}
+
+/*******************************************
+ * OTHER METHODS
+ *******************************************/
+
+// HasParent returns TRUE if this Stream has a valid parentID
+func (stream *Stream) HasParent() bool {
+	return !stream.ParentID.IsZero()
+}
+
+// NewAttachment creates a new file Attachment linked to this Stream.
+func (stream *Stream) NewAttachment(filename string) Attachment {
+	result := NewAttachment(stream.StreamID)
+	result.Original = filename
 
 	return result
 }

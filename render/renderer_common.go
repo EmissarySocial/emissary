@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benpate/convert"
+	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -22,6 +23,8 @@ type Common struct {
 	action   *model.Action     // Action to be performed on the (template or layout)
 	actionID string            // Token that identifies the action requested in the URL
 
+	requestData datatype.Map // Temporary data scope for this request
+
 	// Cached values, do not populate unless needed
 	user   *model.User
 	domain *model.Domain
@@ -29,10 +32,11 @@ type Common struct {
 
 func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, actionID string) Common {
 	return Common{
-		f:        factory,
-		ctx:      ctx,
-		action:   action,
-		actionID: actionID,
+		f:           factory,
+		ctx:         ctx,
+		action:      action,
+		actionID:    actionID,
+		requestData: datatype.NewMap(),
 	}
 }
 
@@ -77,6 +81,7 @@ func (w Common) BannerURL() string {
  * REQUEST INFO
  *******************************************/
 
+// Host returns the protocol + the Hostname
 func (w Common) Host() string {
 	return w.Protocol() + w.Hostname()
 }
@@ -144,6 +149,50 @@ func (w Common) UseGlobalWrapper() bool {
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().UnixMilli()
+}
+
+/***************************
+ * REQUEST DATA (Getters and Setters)
+ **************************/
+
+func (w Common) GetBool(name string) bool {
+	return w.requestData.GetBool(name)
+}
+
+func (w Common) GetFloat(name string) float64 {
+	return w.requestData.GetFloat(name)
+}
+
+func (w Common) GetInt(name string) int {
+	return w.requestData.GetInt(name)
+}
+
+func (w Common) GetInt64(name string) int64 {
+	return w.requestData.GetInt64(name)
+}
+
+func (w Common) GetString(name string) string {
+	return w.requestData.GetString(name)
+}
+
+func (w Common) SetBool(name string, value bool) {
+	w.requestData.SetBool(name, value)
+}
+
+func (w Common) SetFloat(name string, value float64) {
+	w.requestData.SetFloat(name, value)
+}
+
+func (w Common) SetInt(name string, value int) {
+	w.requestData.SetInt(name, value)
+}
+
+func (w Common) SetInt64(name string, value int64) {
+	w.requestData.SetInt64(name, value)
+}
+
+func (w Common) SetString(name string, value string) {
+	w.requestData.SetString(name, value)
 }
 
 /***************************

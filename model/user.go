@@ -61,38 +61,6 @@ func (user User) Copy() User {
 	return user
 }
 
-// Roles returns a list of all roles that match the provided authorization
-func (user *User) Roles(authorization *Authorization) []string {
-
-	// Everyone has "anonymous" access
-	result := []string{MagicRoleAnonymous}
-
-	if authorization == nil {
-		return result
-	}
-
-	if authorization.UserID == primitive.NilObjectID {
-		return result
-	}
-
-	// Owners are hard-coded to do everything, so no other roles need to be returned.
-	if authorization.DomainOwner {
-		return []string{MagicRoleOwner}
-	}
-
-	// If we know who you are, then you're "Authenticated"
-	result = append(result, MagicRoleAuthenticated)
-
-	// Authors sometimes have special permissions, too.
-	if authorization.UserID == user.UserID {
-		result = append(result, MagicRoleMyself)
-	}
-
-	// TODO: special roles for follower/following...
-
-	return result
-}
-
 func (user *User) Schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
@@ -187,6 +155,48 @@ func (user *User) Claims() jwt.Claims {
 			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(10, 0, 0)), // Expires ten years from now (but re-validated sooner by Steranko)
 		},
 	}
+
+	return result
+}
+
+/*******************************************
+ * RoleStateEnumerator Interface
+ *******************************************/
+
+// State returns the current state of this object.
+// For users, there is no state, so it returns ""
+func (user *User) State() string {
+	return ""
+}
+
+// Roles returns a list of all roles that match the provided authorization
+func (user *User) Roles(authorization *Authorization) []string {
+
+	// Everyone has "anonymous" access
+	result := []string{MagicRoleAnonymous}
+
+	if authorization == nil {
+		return result
+	}
+
+	if authorization.UserID == primitive.NilObjectID {
+		return result
+	}
+
+	// Owners are hard-coded to do everything, so no other roles need to be returned.
+	if authorization.DomainOwner {
+		return []string{MagicRoleOwner}
+	}
+
+	// If we know who you are, then you're "Authenticated"
+	result = append(result, MagicRoleAuthenticated)
+
+	// Users sometimes have special permissions over their own records.
+	if authorization.UserID == user.UserID {
+		result = append(result, MagicRoleMyself)
+	}
+
+	// TODO: special roles for follower/following...
 
 	return result
 }

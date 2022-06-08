@@ -1,4 +1,4 @@
-<div class="page" hx-get="/admin/domain/index" hx-trigger="refreshPage from:body">
+<div class="page" hx-get="/admin/connections/index" hx-trigger="refreshPage from:body">
 
 	<h1>Settings</h1>
 
@@ -17,6 +17,7 @@
 				<div hx-get="/admin/connections/stripe" class="card aspect-16-9 align-center" role="link">
 					<div class="space-above text-lg bold">Stripe</div>
 					<div class="text-sm gray40">Accept Online Payments</div>
+					{{- if eq "true" (.Connections "stripe_isActive") -}}ACTIVE{{- end -}}
 				</div>
 			</div>
 		</div>

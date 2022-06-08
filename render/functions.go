@@ -1,16 +1,32 @@
 package render
 
-import "html/template"
+import (
+	"html/template"
+
+	"github.com/benpate/convert"
+)
 
 func FuncMap() template.FuncMap {
 
 	return template.FuncMap{
+		"dollarFormat": func(value int64) string {
+			stringValue := convert.String(value)
+			length := len(stringValue)
+			return "$" + stringValue[:length-2] + "." + stringValue[length-2:]
+		},
+
+		"html": func(value string) template.HTML {
+			return template.HTML(value)
+		},
+
 		"head": func(slice List) Renderer { // Returns the first item in a resultSet
 			return slice[0]
 		},
+
 		"last": func(slice List) Renderer { // Returns the last item in a resultSet
 			return slice[len(slice)-1]
 		},
+
 		"tail": func(slice List) List { // Returns all but the first item in a resultSet
 			length := len(slice)
 			if length == 0 {
@@ -18,6 +34,7 @@ func FuncMap() template.FuncMap {
 			}
 			return slice[1:]
 		},
+
 		"removeLast": func(slice List) List { // Returns all but the last item in a resultSet
 			length := len(slice)
 			if length == 0 {
@@ -25,6 +42,7 @@ func FuncMap() template.FuncMap {
 			}
 			return slice[:length-1]
 		},
+
 		"reverse": func(slice List) List { // Returns a new resultSet with reverse ordering
 			length := len(slice)
 			result := make(List, length)
@@ -33,9 +51,11 @@ func FuncMap() template.FuncMap {
 			}
 			return result
 		},
+
 		"isEmpty": func(slice List) bool { // Returns true if there are NO records in the resultset
 			return len(slice) == 0
 		},
+
 		"notEmpty": func(slice List) bool { // Returns true if there are records in the resultset
 			return len(slice) > 0
 		},

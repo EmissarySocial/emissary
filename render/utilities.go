@@ -64,7 +64,12 @@ func WrapForm(endpoint string, content string) string {
 
 	// Controls
 	b.Div()
-	b.Button().Type("submit").Class("primary").InnerHTML("Save Changes").Close()
+	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML("Save Changes").Close()
+	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true")
+	b.I("fa-solid", "fa-spinner", "fa-spin-pulse").Close()
+	b.Space()
+	b.Span().InnerHTML("Save Changes").Close()
+	b.Close()
 	b.Space()
 	b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
 

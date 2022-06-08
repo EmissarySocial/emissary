@@ -1,40 +1,14 @@
-<div class="h-entry">
-	Entry here...
-</div>
+{{- $children := .Outbox.Top60.ByPublishDate.Reverse.View -}}
 
+{{- range $children -}}
 <div class="h-entry">
-	Entry here...
+	<a href="{{.Data `link`}}">
+	{{.ThumbnailImage}}
+	{{- if ne .Label "" -}}
+		{{.Label}}
+		{{- if ne .DescriptionHTML "" -}} - {{- end -}}
+	{{- end -}}
+	{{.DescriptionHTML}}
+	</a>
 </div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
-<div class="h-entry">
-	Entry here...
-</div>
-
+{{- end -}}

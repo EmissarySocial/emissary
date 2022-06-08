@@ -2,7 +2,7 @@
  * INPUT ELEMENTS
  ***************************/
 
-input:not([type=submit], [type=checkbox], [type=radio]), textarea {
+input:not([type=submit], [type=checkbox], [type=radio]), textarea, select {
     border: solid 1px var(--input-border);
     background-color: var(--input-background);
     color: var(--input-color);
@@ -12,6 +12,15 @@ input:not([type=submit], [type=checkbox], [type=radio]), textarea {
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     font-size:13pt;
+    border-radius:3px;
+}
+
+select {
+    background: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0Ljk1IDEwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9LmNscy0ye2ZpbGw6IzQ0NDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmFycm93czwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB3aWR0aD0iNC45NSIgaGVpZ2h0PSIxMCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxLjQxIDQuNjcgMi40OCAzLjE4IDMuNTQgNC42NyAxLjQxIDQuNjciLz48cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMy41NCA1LjMzIDIuNDggNi44MiAxLjQxIDUuMzMgMy41NCA1LjMzIi8+PC9zdmc+) no-repeat 99% 50%;
+    background-color: var(--input-background);
+    -moz-appearance:none;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 input:invalid,
@@ -242,6 +251,35 @@ button[disabled]:hover,
     background:var(--gray10)!important;
     color: var(--gray50)!important;
     cursor: not-allowed;
+}
+
+.button.barberpole,
+.button.primary.barberpole,
+button.barberpole,
+button.primary.barberpole, 
+button[disabled].barberpole
+{
+    background-image: repeating-linear-gradient(
+        -45deg, 
+        var(--blue60), 
+        var(--blue60) 1rem,
+        var(--blue70) 1rem,
+        var(--blue70) 2rem
+    )!important;
+  background-size: 200% 200%;
+  animation: barberpole 3s linear infinite;
+}
+
+@-webkit-keyframes barberpole {
+    100% {
+        background-position: 100% 100%;
+    }
+}
+
+@keyframes barberpole {
+    100% {
+        background-position: 100% 100%;
+    }
 }
 
 /***************************

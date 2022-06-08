@@ -1,0 +1,14 @@
+<div class="page">
+
+	<h1>Thank you for your order</h1>
+
+	{{- .Data "successHTML" | html -}}
+
+	Order Details:<br>
+	{{- .GetString "customerName" -}}<br>
+	{{- .GetString "customerEmail" -}}<br>
+
+	Total Charged: {{- .GetInt64 "total" | dollarFormat -}}<br>
+
+
+</div>

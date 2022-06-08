@@ -107,6 +107,20 @@ func (w Profile) executeTemplate(writer io.Writer, name string, data any) error 
 	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
+// UserCan returns TRUE if this Request is authorized to access the requested view
+func (w Profile) UserCan(actionID string) bool {
+
+	action := w.layout.Action(actionID)
+
+	if action == nil {
+		return false
+	}
+
+	authorization := w.authorization()
+
+	return action.UserCan(w.user, &authorization)
+}
+
 /*******************************************
  * DATA ACCESSORS
  *******************************************/

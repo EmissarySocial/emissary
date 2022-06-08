@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -216,65 +215,50 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 	const location = "handler.StartupStreams"
 
-	s := schema.Schema{
-		Element: schema.Object{
-			Properties: map[string]schema.Element{
-				"home":  schema.Boolean{Default: null.NewBool(true)},
-				"blog":  schema.Boolean{Default: null.NewBool(true)},
-				"album": schema.Boolean{Default: null.NewBool(true)},
-				"forum": schema.Boolean{Default: null.NewBool(true)},
-			},
-		},
-	}
-
 	streamService := factory.Stream()
 
 	if ctx.Request().Method == http.MethodPost {
 
-		body := map[string]any{}
+		body := datatype.NewMap()
 
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Error binding request body")
 		}
 
-		converted := map[string]bool{}
-
-		if err := s.SetAll(&converted, body); err != nil {
-			return derp.Wrap(err, location, "Invalid form data")
-		}
-
-		body = convert.MapOfInterface(converted)
-
 		streams := make([]model.Stream, 0)
 
-		if converted["home"] {
+		if body.GetBool("home") {
 			stream := model.NewStream()
 			stream.Label = "Welcome"
 			stream.TemplateID = "article"
 			stream.StateID = "published"
+			stream.Token = "home"
 			streams = append(streams, stream)
 		}
 
-		if converted["blog"] {
+		if body.GetBool("blog") {
 			stream := model.NewStream()
 			stream.Label = "Blog"
 			stream.TemplateID = "folder"
+			stream.Token = "blog"
 			stream.Data["format"] = "CARDS"
 			stream.Data["showImages"] = "SHOW"
 			streams = append(streams, stream)
 		}
 
-		if converted["album"] {
+		if body.GetBool("album") {
 			stream := model.NewStream()
 			stream.Label = "Photo Album"
 			stream.TemplateID = "photo-album"
+			stream.Token = "photos"
 			streams = append(streams, stream)
 		}
 
-		if converted["forum"] {
+		if body.GetBool("forum") {
 			stream := model.NewStream()
 			stream.Label = "Forum"
 			stream.TemplateID = "forum"
+			stream.Token = "forum"
 			streams = append(streams, stream)
 		}
 
@@ -326,7 +310,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	}
 
 	library := fm.FormLibrary()
-	formHTML, _ := f.HTML(&library, &s, nil)
+	formHTML, _ := f.HTML(&library, nil, nil)
 
 	b.WriteString(formHTML)
 	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")

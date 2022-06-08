@@ -115,6 +115,9 @@ func New(factory *server.Factory) *echo.Echo {
 		server.DELETE("/:domain", handler.DeleteServerDomain(factory))
 	}
 
+	// EXTERNAL SERVICES (WEBHOOKS)
+	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
+
 	// SITE-WIDE ERROR HANDLER
 	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
 

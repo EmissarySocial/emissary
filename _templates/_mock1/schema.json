@@ -1,9 +1,0 @@
-{
-	"label": "Related Articles",
-	"description": "A feature that doesn't actually exist, but I'm usig for the demo anyway.",
-	"icon": "fa-regular fa-message",
-	"asFeature": true,
-	"actions":{
-		"feature": {"step": "view-html"}
-	}
-}

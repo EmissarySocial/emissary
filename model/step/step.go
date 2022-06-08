@@ -98,20 +98,6 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "upload-attachments":
 		return NewUploadAttachment(stepInfo)
 
-	// SERVER-SIDE CONTROL LOGIC
-
-	case "redirect-to":
-		return NewRedirectTo(stepInfo)
-
-	case "with-children":
-		return NewWithChildren(stepInfo)
-
-	case "with-parent":
-		return NewWithParent(stepInfo)
-
-	case "if":
-		return NewIfCondition(stepInfo)
-
 	// CLIENT-SIDE CONTROLS
 
 	case "as-modal":
@@ -129,10 +115,37 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "refresh-page":
 		return NewRefreshPage(stepInfo)
 
+	// SERVER-SIDE CONTROL LOGIC
+
+	case "if":
+		return NewIfCondition(stepInfo)
+
+	case "redirect-to":
+		return NewRedirectTo(stepInfo)
+
+	case "with-children":
+		return NewWithChildren(stepInfo)
+
+	case "with-parent":
+		return NewWithParent(stepInfo)
+
+	// EXTERNAL CONNECTIONS
+
+	case "stripe-checkout":
+		return NewStripeCheckout(stepInfo)
+
+	case "stripe-complete":
+		return NewStripeComplete(stepInfo)
+
+	case "stripe-product":
+		return NewStripeProduct(stepInfo)
+
+	case "stripe-setup":
+		return NewStripeSetup(stepInfo)
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.NewInternalError("factory.RenderStep", "Unrecognized step type", stepInfo["step"], stepInfo)
+	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo["step"], stepInfo)
 }
 
 // NewPipeline parses a series of render steps into a new array

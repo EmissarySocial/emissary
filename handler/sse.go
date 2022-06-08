@@ -84,9 +84,8 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 				}
 
 				// Write to the ResponseWriter, `w`.
-				// eventName := "EventName1"
-				// fmt.Fprintf(w, "event: %s\n", streamID.Hex())
-				fmt.Fprintf(w, "data: \n\n")
+				fmt.Fprintf(w, "event: %s\n", streamID.Hex())
+				fmt.Fprintf(w, "data: updated\n\n")
 
 				// Flush the response.  This is only possible if the response supports streaming.
 				f.Flush()

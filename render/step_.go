@@ -92,6 +92,18 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.StreamPromoteDraft:
 		return StepStreamPromoteDraft(s)
 
+	case step.StripeComplete:
+		return StepStripeComplete(s)
+
+	case step.StripeCheckout:
+		return StepStripeCheckout(s)
+
+	case step.StripeProduct:
+		return StepStripeProduct(s)
+
+	case step.StripeSetup:
+		return StepStripeSetup(s)
+
 	case step.TriggerEvent:
 		return StepTriggerEvent(s)
 

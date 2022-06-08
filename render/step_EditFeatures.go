@@ -30,14 +30,18 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	s := schema.Schema{
-		Element: schema.Array{Items: schema.String{}},
+		Element: schema.Object{
+			Properties: schema.ElementMap{
+				"templateIds": schema.Array{Items: schema.String{}},
+			},
+		},
 	}
 
 	f := form.Form{
 		Kind:  "layout-vertical",
 		Label: "Add/Remove Features of this Stream",
 		Children: []form.Form{
-			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: datatype.Map{"options": features}},
+			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: datatype.Map{"options": features, "sort": true}},
 		},
 	}
 

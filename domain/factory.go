@@ -18,6 +18,8 @@ import (
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
 	"github.com/whisperverse/whisperverse/service"
+
+	"github.com/stripe/stripe-go/v72/client"
 )
 
 // Factory knows how to create an populate all services
@@ -313,6 +315,37 @@ func (factory *Factory) OptionProvider() form.OptionProvider {
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *service.RSS {
 	return service.NewRSS(factory.Stream())
+}
+
+func (factory *Factory) StripeClient() (client.API, error) {
+
+	const location = "domain.factory.StripeClient"
+
+	var domain model.Domain
+	domainService := factory.Domain()
+
+	// Load the domain from the database
+	if err := domainService.Load(&domain); err != nil {
+		return client.API{}, derp.Wrap(err, location, "Error loading domain record")
+	}
+
+	// Confirm that stripe is active
+	if !domain.Connections.GetBool("stripe_isActive") {
+		return client.API{}, derp.NewBadRequestError(location, "Stripe is not active")
+	}
+
+	// Validate the stripe API key exists
+	stripeKey := domain.Connections.GetString("stripe_apiKey")
+
+	if stripeKey == "" {
+		return client.API{}, derp.NewInternalError(location, "Stripe key must not be empty")
+	}
+
+	// Create a new client API and return
+	result := client.API{}
+	result.Init(stripeKey, nil)
+
+	return result, nil
 }
 
 // Other libraries to make it her, eventually...

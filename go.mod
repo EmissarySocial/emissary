@@ -2,13 +2,19 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
+replace github.com/benpate/convert => ../../benpate/convert
+
+replace github.com/benpate/datatype => ../../benpate/datatype
+
+replace github.com/benpate/schema => ../../benpate/schema
+
 replace github.com/benpate/form => ../../benpate/form
 
 replace github.com/benpate/path => ../../benpate/path
 
 require (
 	github.com/benpate/compare v0.1.1
-	github.com/benpate/convert v0.13.1
+	github.com/benpate/convert v0.13.2
 	github.com/benpate/data v0.16.2
 	github.com/benpate/data-mongo v0.2.2
 	github.com/benpate/datatype v0.2.0
@@ -36,7 +42,8 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
+	github.com/stripe/stripe-go/v72 v72.112.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
@@ -90,5 +97,5 @@ require (
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

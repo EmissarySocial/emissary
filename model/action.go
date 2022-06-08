@@ -28,24 +28,32 @@ func NewAction() Action {
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (action Action) UserCan(stream *Stream, authorization *Authorization) bool {
+func (action *Action) UserCan(enumerator RoleStateEnumerator, authorization *Authorization) bool {
+
+	// Prevent nil pointer exceptions
+	if action == nil {
+		return false
+	}
 
 	// Get the list of request roles that the user has
-	userRoles := stream.Roles(authorization)
+	userRoles := enumerator.Roles(authorization)
+
+	// Get a list of the valid roles for this action
+	allowedRoles := action.AllowedRoles(enumerator.State())
 
 	// If one or more of these matches the allowed roles, then the request is granted.
-	return matchAny(userRoles, action.AllowedRoles(stream))
+	return matchAny(userRoles, allowedRoles)
 }
 
 // AllowedRoles returns a string of all page request roles that are allowed to
 // perform this action.  This includes system roles slike "anonymous", "authenticated", "author", and "owner".
-func (action *Action) AllowedRoles(stream *Stream) []string {
+func (action *Action) AllowedRoles(stateID string) []string {
 
 	// If present, "States" limits the states where this action can take place at all.
 	if len(action.States) > 0 {
 		// If the current state is not present in the list of allowed states, then this action cannot be
 		// taken until the stream is moved into a new state.
-		if !matchOne(action.States, stream.StateID) {
+		if !matchOne(action.States, stateID) {
 			return make([]string, 0)
 		}
 	}
@@ -59,7 +67,7 @@ func (action *Action) AllowedRoles(stream *Stream) []string {
 	}
 
 	// If there's a corresponding entry in stateRoles, add that to the result, too.
-	if stateRoles, ok := action.StateRoles[stream.StateID]; ok {
+	if stateRoles, ok := action.StateRoles[stateID]; ok {
 		result = append(result, stateRoles...)
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/render"
@@ -68,8 +67,6 @@ func renderProfile(fm *server.Factory, actionID string, actionMethod render.Acti
 		if actionID == "" {
 			actionID = getActionID(ctx)
 		}
-
-		spew.Dump("renderProfile", userToken, actionID)
 
 		// Try to locate the domain from the Context
 		factory, err := fm.ByContext(ctx)

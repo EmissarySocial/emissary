@@ -3,7 +3,9 @@ package render
 import (
 	"github.com/benpate/form"
 	"github.com/benpate/nebula"
+	"github.com/stripe/stripe-go/v72/client"
 	"github.com/whisperverse/mediaserver"
+	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/service"
 )
 
@@ -18,6 +20,8 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
+	StreamUpdateChannel() chan model.Stream
+	StripeClient() (client.API, error)
 	Subscription() *service.Subscription
 	Template() *service.Template
 	User() *service.User

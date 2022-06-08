@@ -97,7 +97,7 @@ func (w Domain) TopLevelID() string {
 
 // Connections returns the data associated with a particular connection
 func (w Domain) Connections(name string) string {
-	return w.domain.Connections[name]
+	return w.domain.Connections.GetString(name)
 }
 
 // SignupForm returns the SignupForm associated with this Domain.

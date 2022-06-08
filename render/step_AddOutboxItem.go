@@ -77,11 +77,13 @@ func (step StepAddOutboxItem) Post(renderer Renderer) error {
 
 	switch step.Link {
 	case "parent":
-		stream.Data["link"] = renderer.Host() + "/" + stream.ParentID.Hex()
+		if streamRenderer, ok := renderer.(*Stream); ok {
+			stream.Data["link"] = renderer.Host() + "/" + streamRenderer.stream.ParentID.Hex()
+		}
 
 	// case "self":
 	default:
-		stream.Data["link"] = renderer.Host() + "/" + stream.StreamID.Hex()
+		stream.Data["link"] = renderer.Host() + "/" + renderer.objectID().Hex()
 	}
 
 	if err := streamService.Save(&stream, ""); err != nil {

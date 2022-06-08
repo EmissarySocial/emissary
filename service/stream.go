@@ -105,7 +105,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
-	defaultRoles := template.Default().AllowedRoles(stream)
+	defaultRoles := template.Default().AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.Permissions.Groups(defaultRoles...)
 
 	// RULE: Copy AsFeature flag from Template into Stream
@@ -305,9 +305,14 @@ func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 	return service.Load(exp.Equal("token", token), result)
 }
 
-// LoadByID returns a single Stream that matches a particular StreamID
+// LoadByID returns a single Stream that matches the provided streamID
 func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
 	return service.Load(exp.Equal("_id", streamID), result)
+}
+
+// LoadByProductID returns a single Stream with custom data matching the provided productID
+func (service *Stream) LoadByProductID(productID string, result *model.Stream) error {
+	return service.Load(exp.Equal("data.productId", productID), result)
 }
 
 // LoadBySource locates a single stream that matches the provided SourceURL

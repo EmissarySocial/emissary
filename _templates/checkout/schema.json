@@ -7,20 +7,13 @@
 		"type": "object",
 		"properties": {
 			"label": {"type": "string", "default": "Buy Now"},
-			"data": {
-				"type": "object",
-				"properties": {
-					"sku": {"type": "string"},
-					"price": {"type": "number", "maximum": 0},
-					"inventoy": {"type": "number", "maximum":0},
-					"active": {"type": "boolean"}
-				}
-			}
+			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
 		}
 	},
 	"states": {
 		"new": {},
-		"ready": {}
+		"ready": {},
+		"sold-out": {}
 	},
 	"roles": {
 		"owner": {
@@ -30,28 +23,32 @@
 		"readonly": {
 			"label": "Read Only Access",
 			"description": "Can read this article, but cannot make changes"
+		}, 
+		"anonymous": {
+			"label": "Anonymous / Unauthenticated User",
+			"description": "This is useful because Stripe confirmations come back without cookies."
 		}
 	},
 	"actions": {
-		"feature": {"step": "view-html"},
-		"checkout": {"step": "view-html", "states": ["ready"]},
+		"feature": {"step": "view-html", "roles":["anonymous"]},
+		"checkout": {
+			"roles": ["anonymous"],
+			"states": ["ready"],
+			"step": "stripe-checkout"
+		},
+		"success": {
+			"roles":["anonymous"],
+			"states": ["ready", "sold-out"],
+			"steps": [
+				{"step": "stripe-complete"},
+				{"step":"view-html"}
+			]},
 		"edit": {
 			"roles": ["owner"],
 			"steps": [
 				{"step": "as-modal", "steps": [
-					{"step": "form-html", "form": {
-						"kind": "layout-vertical",
-						"label":"Edit Checkout Options",
-						"children": [
-							{"kind":"text", "label": "Label", "path": "label"},
-							{"kind":"text", "label": "SKU", "path": "data.sku"},
-							{"kind":"text", "label": "Price", "path": "data.price"},
-							{"kind":"text", "label": "Inventory", "path": "data.inventory"},
-							{"kind": "toggle", "label": "Active?", "path":"data.active"}
-						]
-					}},
-					{"step": "set-state", "state": "ready"},
-					{"step": "save", "message": "Updated by {{.Author}}"}
+					{"step": "stripe-product"},
+					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
 				]}
 			]
 		}

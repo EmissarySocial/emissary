@@ -3,14 +3,17 @@
 	"description": "Domain Owners only.  Site Admin",
 	"schema": {"type": "object", "properties": {
 		"connections": {"type": "object", "properties": {
-			"stripe_apiKey": {"type":"string", "format":"token", "minlength":32, "maxlength":32}
+			"stripe_isActive": {"type":"string", "enum":["true", "false"], "default":"false"},
+			"stripe_apiKey": {"type":"string", "format":"token", "minlength":32, "maxlength":32},
+			"stripe_webhook_secret": {"type":"string", "format":"token"}
 		}}
 	}},
 	"actions": {
 		"index": {"step": "view-html"},
 		"stripe": {"steps": [{"step": "as-modal", "steps": [
 			{"step": "view-html"},
-			{"step": "set-data", "paths":["connections.stripe_apiKey"]},
+			{"step": "set-data", "paths":["connections.stripe_isActive", "connections.stripe_apiKey"]},
+			{"step": "stripe-setup"},
 			{"step": "save"}
 		]}]}
 	}
