@@ -1,0 +1,66 @@
+{
+	"label": "Product",
+	"description": "Sell products online",
+	"icon": "fa-regular fa-shopping-cart",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type": "string"},
+			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
+		}
+	},
+	"states": {
+		"new": {},
+		"ready": {},
+		"sold-out": {}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+		}, 
+		"anonymous": {
+			"label": "Anonymous / Unauthenticated User",
+			"description": "This is useful because Stripe confirmations come back without cookies."
+		}
+	},
+	"actions": {
+		"view": {
+			"step": "view-html",
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"checkout": {
+			"roles": ["anonymous"],
+			"states": ["ready"],
+			"step": "stripe-checkout"
+		},
+		"success": {
+			"roles":["anonymous"],
+			"states": ["ready", "sold-out"],
+			"steps": [
+				{"step": "stripe-complete"},
+				{"step":"view-html"}
+			]},
+		"edit":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "view-html"},
+				{"step": "save", "comment":"Content edited by {{.Author}}"}
+			]
+		},
+		"edit-stripe": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "stripe-product"},
+					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
+				]}
+			]
+		}
+	}
+}

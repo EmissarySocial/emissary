@@ -49,12 +49,10 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Kind:  "layout-vertical",
 				Label: "Product",
 				Children: []form.Form{
-					{Kind: "text", Label: "Product Name", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
 					{Kind: "text", Label: "Price", Path: "data.decimalAmount", Options: datatype.Map{"step": 0.01}},
-					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to set up tax rates.", Options: datatype.Map{"options": step.getTaxRates(api)}},
+					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: datatype.Map{"options": step.getTaxRates(api)}},
 					{Kind: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: datatype.Map{"options": step.getShippingMethods(api)}},
-					{Kind: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
-					{Kind: "toggle", Label: "Active?", Path: "data.active"},
+					{Kind: "toggle", Label: "", Path: "data.active", Options: datatype.Map{"true-text": "Ready to Sell", "false-text": "Hide Buy Button"}},
 					{Kind: "hidden", Path: "data.productId"},
 					{Kind: "hidden", Path: "data.priceId"},
 				},
@@ -63,8 +61,16 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Kind:  "layout-vertical",
 				Label: "Inventory",
 				Children: []form.Form{
-					{Kind: "toggle", Label: "Track Inventory", Path: "data.trackInventory"},
+					{Kind: "toggle", Label: "", Path: "data.trackInventory", Options: datatype.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
 					{Kind: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero."},
+				},
+			},
+			{
+				Kind:  "layout-vertical",
+				Label: "Appearance",
+				Children: []form.Form{
+					{Kind: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
+					{Kind: "text", Label: "Stripe Product", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
 				},
 			},
 			{
@@ -72,8 +78,9 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Label: "Success Page",
 				Children: []form.Form{
 					{
-						Kind: "wysiwyg",
-						Path: "data.successHTML",
+						Kind:        "wysiwyg",
+						Path:        "data.successHTML",
+						Description: "Displayed when visitors complete a purchase.",
 					},
 				},
 			},

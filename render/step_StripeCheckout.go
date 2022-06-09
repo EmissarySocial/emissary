@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/stripe/stripe-go/v72"
 )
@@ -54,7 +55,8 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		CustomerCreation: stripe.String("if_required"),
 	}
 
-	if shippingRates := stream.Data.GetSliceOfString("shippingMethod"); len(shippingRates) > 0 {
+	if shippingMethod := stream.Data.GetString("shippingMethod"); shippingMethod != "" {
+		shippingRates := convert.SliceOfString(shippingMethod)
 		params.ShippingRates = stripe.StringSlice(shippingRates)
 		params.ShippingAddressCollection = &stripe.CheckoutSessionShippingAddressCollectionParams{
 			AllowedCountries: stripe.StringSlice([]string{"US"}),

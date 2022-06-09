@@ -1,0 +1,11 @@
+<form hx-post="/{{.StreamID}}/edit">
+	<h1><input type="text" name="label" placeholder="Page Title" value="{{.Label}}"></h1>
+	<textarea name="description" placeholder="Description Text (optional)">{{.Description}}</textarea>
+	<button type="submit" class="primary">Save Changes</button>
+
+	{{- if eq "new" .StateID -}}
+		<button type="button" hx-get="/{{.ParentID}}">Cancel</button>
+	{{- else -}}
+		<button type="button" hx-get="/{{.Token}}">Cancel</button>
+	{{- end -}}
+</form>
