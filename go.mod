@@ -2,41 +2,27 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
-replace github.com/benpate/convert => ../../benpate/convert
-
-replace github.com/benpate/datatype => ../../benpate/datatype
-
-replace github.com/benpate/schema => ../../benpate/schema
-
-replace github.com/benpate/form => ../../benpate/form
-
-replace github.com/benpate/mediaserver => ../../benpate/mediaserver
-
-replace github.com/benpate/nebula => ../../benpate/nebula
-
-replace github.com/benpate/path => ../../benpate/path
-
 require (
-	github.com/benpate/compare v0.1.1
-	github.com/benpate/convert v0.13.3
+	github.com/benpate/compare v0.1.3
+	github.com/benpate/convert v0.13.5
 	github.com/benpate/data v0.16.2
 	github.com/benpate/data-mongo v0.2.2
-	github.com/benpate/datatype v0.2.0
+	github.com/benpate/datatype v0.2.3
 	github.com/benpate/derp v0.22.2
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.4
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.4
+	github.com/benpate/form v0.6.5
 	github.com/benpate/html v0.12.1
 	github.com/benpate/htmlconv v0.3.3
-	github.com/benpate/id v0.1.2
+	github.com/benpate/id v0.1.4
 	github.com/benpate/list v0.4.2
-	github.com/benpate/nebula v0.2.1
-	github.com/benpate/null v0.6.3
-	github.com/benpate/path v0.8.3
+	github.com/benpate/nebula v0.2.3
+	github.com/benpate/null v0.6.4
+	github.com/benpate/path v0.8.4
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/schema v0.15.0
-	github.com/benpate/steranko v0.7.2
+	github.com/benpate/schema v0.15.1
+	github.com/benpate/steranko v0.7.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.1
@@ -51,7 +37,7 @@ require (
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
-	github.com/whisperverse/mediaserver v0.1.2
+	github.com/whisperverse/mediaserver v0.1.3
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
