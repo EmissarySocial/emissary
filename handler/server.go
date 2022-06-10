@@ -152,7 +152,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 					Label:       "MongoDB Database Name",
 					Description: "Name of the database to use on the server",
 				}},
-			}, {
+			}, /*{
 				Kind: "layout-vertical",
 				Children: []form.Form{{
 					Kind:  "text",
@@ -171,7 +171,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 					Path:  "smtp.tls",
 					Label: "Use TLS Encryption",
 				}},
-			}},
+			}*/},
 		}
 
 		s := config.Schema()
