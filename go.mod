@@ -10,13 +10,15 @@ replace github.com/benpate/schema => ../../benpate/schema
 
 replace github.com/benpate/form => ../../benpate/form
 
+replace github.com/benpate/mediaserver => ../../benpate/mediaserver
+
 replace github.com/benpate/nebula => ../../benpate/nebula
 
 replace github.com/benpate/path => ../../benpate/path
 
 require (
 	github.com/benpate/compare v0.1.1
-	github.com/benpate/convert v0.13.2
+	github.com/benpate/convert v0.13.3
 	github.com/benpate/data v0.16.2
 	github.com/benpate/data-mongo v0.2.2
 	github.com/benpate/datatype v0.2.0
@@ -27,7 +29,7 @@ require (
 	github.com/benpate/form v0.6.4
 	github.com/benpate/html v0.12.1
 	github.com/benpate/htmlconv v0.3.3
-	github.com/benpate/id v0.1.1
+	github.com/benpate/id v0.1.2
 	github.com/benpate/list v0.4.2
 	github.com/benpate/nebula v0.2.1
 	github.com/benpate/null v0.6.3
