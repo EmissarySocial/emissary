@@ -12,12 +12,22 @@
 		{{- end -}}
 
 		<section class="space-below">
+			{{- $attachments := .Attachments -}}
 			{{$streamID := .StreamID}}
-			<div class="slideshow">
+
+			{{- if eq 1 (len $attachments) -}}
 				{{- range .Attachments -}}
-					<div><img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000"></div>
+					<img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000" style="width:100%;">
 				{{- end -}}
-			</div>
+
+			{{- else -}}
+				<div class="slideshow">
+					{{- range .Attachments -}}
+						<div script="on click scrollIntoView() me"><img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000"></div>
+					{{- end -}}
+				</div>
+			{{- end -}}
+
 		</section>
 			
 		{{- if .UserCan "checkout" -}}

@@ -12,6 +12,10 @@ func FuncMap() template.FuncMap {
 		"dollarFormat": func(value int64) string {
 			stringValue := convert.String(value)
 			length := len(stringValue)
+			for length < 3 {
+				stringValue = "0" + stringValue
+				length = len(stringValue)
+			}
 			return "$" + stringValue[:length-2] + "." + stringValue[length-2:]
 		},
 
@@ -54,6 +58,10 @@ func FuncMap() template.FuncMap {
 
 		"isEmpty": func(slice List) bool { // Returns true if there are NO records in the resultset
 			return len(slice) == 0
+		},
+
+		"isSingle": func(slice List) bool { // Returns true if there are NO records in the resultset
+			return len(slice) == 1
 		},
 
 		"notEmpty": func(slice List) bool { // Returns true if there are records in the resultset

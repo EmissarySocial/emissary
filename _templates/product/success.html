@@ -1,14 +1,23 @@
 <div class="page">
 
-	<h1>Thank you for your order</h1>
+	<h1 class="align-center space-below">Thank you for your order</h1>
+	<br>
+	<section class="space-below">
+		{{- .Data "successHTML" | html -}}
+	</section>
 
-	{{- .Data "successHTML" | html -}}
+	<br>
+	<br>
+	<section class="align-center">
+		<a class="button primary" href="/{{.ParentID}}">Return to Store</a>
+	</section>
 
-	Order Details:<br>
-	{{- .GetString "customerName" -}}<br>
-	{{- .GetString "customerEmail" -}}<br>
-
-	Total Charged: {{- .GetInt64 "total" | dollarFormat -}}<br>
-
+	<!-- section style="font-family:'Courier New', Courier, monospace;">
+		Order Details:<br>
+		Name: <b>{{- .GetString "customerName" -}}</b><br>
+		Email: <b>{{- .GetString "customerEmail" -}}</b><br>
+		<br>
+		Total Charged: <b>{{ (.GetInt64 "total") | dollarFormat}}</b>
+	</section -->
 
 </div>

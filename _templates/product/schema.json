@@ -48,9 +48,11 @@
 			"roles":["anonymous"],
 			"states": ["ready", "sold-out"],
 			"steps": [
-				{"step": "stripe-complete"},
-				{"step":"view-html"}
-			]},
+				{"step": "view-html", "filename":"view.html"}
+			],
+			"removed-step": "stripe-complete"
+		},
+
 		"edit":{
 			"roles": ["owner"],
 			"steps":[
@@ -70,21 +72,27 @@
 		"attachments-list":{
 			"roles": ["owner"],
 			"steps": [
-				{"step":"view-html"},
-				{"step": "upload-attachments"}
+				{"step": "view-html"},
+				{"step": "upload-attachments"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
 			]
 		},
 		"attachments-sort":{
 			"roles": ["owner"],
 			"steps": [
-				{"step":"sort-attachments", "message":"Updated sort order"}
+				{"step":"sort-attachments", "message":"Updated sort order"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
 			]
 		},
 		"attachments-delete":{
 			"roles": ["owner"],
 			"steps": [
 				{"step":"view-html"},
-				{"step": "delete-attachments"}
+				{"step": "delete-attachments"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
 			]
 		},
 		"product": {

@@ -27,6 +27,15 @@ func (criteria Permissions) Groups(roles ...string) []primitive.ObjectID {
 
 	result := make([]primitive.ObjectID, 0)
 
+	for _, role := range roles {
+		switch role {
+		case "anonymous":
+			result = append(result, MagicGroupIDAnonymous)
+		case "authenticated":
+			result = append(result, MagicGroupIDAuthenticated)
+		}
+	}
+
 	for groupID, groupRoles := range criteria {
 		if matchAny(roles, groupRoles) {
 			if groupID, err := primitive.ObjectIDFromHex(groupID); err == nil {

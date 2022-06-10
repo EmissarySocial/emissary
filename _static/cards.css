@@ -75,8 +75,8 @@ article {
 .slideshow > div {
 	scroll-snap-align:center;
 	height:100%;
-	width:100%;
-	max-width:100%;
+	width:90%;
+	max-width:90%;
 	flex:none;
 	overflow-y:hidden;
 	overflow-x:hidden;

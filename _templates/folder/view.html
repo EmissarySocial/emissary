@@ -1,5 +1,5 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
+<div hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 <div class="page">
 
 	<h1>{{.Label}}</h1>
@@ -10,19 +10,23 @@
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
-			{{- if .UserCan "new" -}}
-				<button hx-get="/{{.Token}}/new">Add Item</button>
-			{{- end -}}
+			<div class="left">
+				{{- if .UserCan "new" -}}
+					<button hx-get="/{{.Token}}/new">Add Item</button>
+				{{- end -}}
 
-			<button hx-get="/{{.Token}}/edit">Edit Info</button>
+				<button hx-get="/{{.Token}}/edit">Edit Info</button>
 
-			{{- if .UserCan "sharing" -}}
-				<button hx-get="/{{.Token}}/sharing">Sharing</button>
-			{{- end -}}
+				{{- if .UserCan "sharing" -}}
+					<button hx-get="/{{.Token}}/sharing">Sharing</button>
+				{{- end -}}
+			</div>
 
-			{{- if .UserCan "delete" -}}
-				<button hx-get="/{{.Token}}/delete">Delete Folder</button>
-			{{- end -}}
+			<div class="right">
+				{{- if .UserCan "delete" -}}
+					<button hx-get="/{{.Token}}/delete" class="text-red">Delete</button>
+				{{- end -}}
+			</div>
 		</div>
 	{{- end -}}
 
@@ -51,7 +55,7 @@
 
 		{{- range .Children.ByLabel.View -}}
 			<article class="clickable" hx-get="/{{.Token}}" hx-push-url="true">
-				<h2 role="link">{{.Label}}</h2>
+				<h2 role="link">{{.Label}} [{{.ThumbnailImage}}]</h2>
 				<p>{{.Description}}</p>
 			</article>
 		{{- end -}}
@@ -60,23 +64,16 @@
 
 	{{- if eq (.Data "format") "COLUMNS" -}}
 
-		{{- $showImages := eq "SHOW" (.Data "showImages") -}}
-
 		<div class="pure-g card-group" hx-push-url="true">
 			{{- range .Children.ByLabel.View -}}
 				<div class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4" hx-get="/{{.Token}}">
 					<article class="card" role="link">
-						{{- if $showImages -}}
-						<div class="picture aspect-16-9">
-							{{- if ne .ThumbnailImage "" -}}
-								<img src="{{.ThumbnailImage}}">
-							{{- end -}}
-						</div>
+						{{- if ne .ThumbnailImage "" -}}
+							<div class="picture aspect-4-3">
+								<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}?width=400">
+							</div>
 						{{- end -}}
-						<div class="aspect-1-1">
-							<h2>{{.Label}}</h2>
-							<p>{{.Description}}</p>
-						</div>
+						<div class="bold align-center">{{.Label}}</div>
 					</article>
 				</div>
 			{{- end -}}

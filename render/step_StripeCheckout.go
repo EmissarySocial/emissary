@@ -37,17 +37,10 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 
 	address := renderer.Host()
 
-	// Deterimine tax rates (if any)
-	taxRates := make([]string, 0)
-	if taxrateID := stream.Data.GetString("taxId"); taxrateID != "" {
-		taxRates = append(taxRates, taxrateID)
-	}
-
 	params := &stripe.CheckoutSessionParams{
 		LineItems: []*stripe.CheckoutSessionLineItemParams{{
 			Price:    stripe.String(priceID),
 			Quantity: stripe.Int64(1),
-			TaxRates: stripe.StringSlice(taxRates),
 		}},
 		Mode:             stripe.String(string(stripe.CheckoutSessionModePayment)),
 		SuccessURL:       stripe.String(address + "/" + stream.StreamID.Hex() + "/success?session={CHECKOUT_SESSION_ID}"),
@@ -55,6 +48,14 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		CustomerCreation: stripe.String("if_required"),
 	}
 
+	// If tax rates are assigned, then add them to the order
+	if taxRateID := stream.Data.GetString("taxId"); taxRateID != "" {
+		for index := range params.LineItems {
+			params.LineItems[index].TaxRates = stripe.StringSlice([]string{taxRateID})
+		}
+	}
+
+	// If shipping rates are assinged, then add them to the order
 	if shippingMethod := stream.Data.GetString("shippingMethod"); shippingMethod != "" {
 		shippingRates := convert.SliceOfString(shippingMethod)
 		params.ShippingRates = stripe.StringSlice(shippingRates)

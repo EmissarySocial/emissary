@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepStripeComplete represents an action-step that forwards the user to a new page.
@@ -21,22 +22,33 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 	api, err := factory.StripeClient()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting Stripe client")
+		return derp.Report(derp.Wrap(err, location, "Error getting Stripe client"))
 	}
 
 	renderer.SetBool("valid", false) // Set valid=false until everything is loaded.
 
-	// Retrieve Session data from Stripe
+	// Get session from URL query
 	sessionID := renderer.context().QueryParam("session")
 
 	if sessionID == "" {
 		renderer.SetString("error", "Session ID is missing")
 	}
 
+	// Retrieve Session data from Stripe
 	session, err := api.CheckoutSessions.Get(sessionID, nil)
 
 	if err != nil {
 		renderer.SetString("error", "Invalid Stripe Session ID: '"+sessionID+"'")
+		derp.Report(err)
+		return nil
+	}
+
+	// Retrieve Customer data from Stripe
+	customer, err := api.Customers.Get(session.Customer.ID, nil)
+
+	if err != nil {
+		renderer.SetString("error", "Error retrieving customer record: '"+session.Customer.ID+"'")
+		derp.Report(err)
 		return nil
 	}
 
@@ -44,20 +56,15 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 	renderer.SetInt64("total", session.AmountSubtotal)
 	renderer.SetString("customerId", session.Customer.ID)
 
-	// Retrieve Customer data from Stripe
-	customer, err := api.Customers.Get(session.Customer.ID, nil)
-
-	if err != nil {
-		renderer.SetString("error", "Error retrieving customer record: '"+session.Customer.ID+"'")
-		return nil
-	}
-
 	renderer.SetString("customerName", customer.Name)
 	renderer.SetString("customerEmail", customer.Email)
 	renderer.SetString("customerPhone", customer.Phone)
+
 	renderer.SetBool("valid", true)
 
 	// Success!!
+
+	spew.Dump("StripeComplete: success")
 	return nil
 }
 
