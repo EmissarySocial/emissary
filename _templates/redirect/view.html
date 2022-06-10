@@ -1,0 +1,22 @@
+{{- if .UserCan "edit" -}}
+
+	{{if eq "" (.Data "url")}}
+		This page has not been configured yet.
+	{{else}}
+		<a href="{{.Data `url`}}">Click to continue to {{.Data "url"}}...</a>
+	{{end}}
+
+	Administrators can <a hx-get="/{{.StreamID}}/edit">edit content</a>,
+	<a hx-get="{{.StreamID}}/sharing">sharing</a>,
+	or <a hx-get="/{{.StreamID}}/delete" class="text-red">delete</a> this stream.
+
+{{- else -}}
+
+	{{- if eq "" (.Data "url") -}}
+		This page has not been configured yet.
+	{{- else -}}
+		<meta http-equiv="refresh" content="url={{- .Data `url` -}}"/>
+		Redirecting to {{.Data "url"}}...
+	{{- end -}}
+
+{{- end -}}

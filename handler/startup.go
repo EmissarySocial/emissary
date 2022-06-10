@@ -309,8 +309,15 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		}},
 	}
 
+	s := schema.New(schema.ElementMap{
+		"home":  schema.Boolean{},
+		"blog":  schema.Boolean{},
+		"album": schema.Boolean{},
+		"forum": schema.Boolean{},
+	})
+
 	library := fm.FormLibrary()
-	formHTML, _ := f.HTML(&library, nil, nil)
+	formHTML, _ := f.HTML(&library, &s, nil)
 
 	b.WriteString(formHTML)
 	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")
