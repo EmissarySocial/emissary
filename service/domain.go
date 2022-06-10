@@ -28,8 +28,22 @@ func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 // Load retrieves an Domain from the database
 func (service *Domain) Load(domain *model.Domain) error {
 
-	if err := service.collection.Load(exp.All(), domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
+	err := service.collection.Load(exp.All(), domain)
+
+	if err != nil {
+
+		// Initialize a new record
+		if derp.NotFound(err) {
+
+			if err := service.Save(domain, "Create New Domain"); err != nil {
+				return derp.Wrap(err, "service.Domain.Load", "Error creating new domain")
+			}
+
+			return nil
+
+		} else {
+			return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
+		}
 	}
 
 	return nil
