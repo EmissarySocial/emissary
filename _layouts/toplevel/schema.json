@@ -12,8 +12,10 @@
 		"view": {"step": "view-html"},
 		"sort": {"step": "sort"},
 		"add": {"steps": [
-			{"step": "add-top-level"},
-			{"step": "refresh-page"}
+			{"step": "add-top-level", "with-new-stream": [
+				{"step": "save", "comment": "Top level stream added by {{.Author}}"},
+				{"step": "forward-to", "url": "/{{.StreamID}}"}
+			]}
 		]},
 		"delete": {
 			"steps": [

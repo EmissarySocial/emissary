@@ -11,6 +11,7 @@
 
 	{{ if .UserCan "edit" }}
 		<div id="menu-bar">
+			<div class="left">
 			<a href="/{{.Token}}/edit">Upload Photos</a>
 
 			{{- if .UserCan "properties" -}}
@@ -20,10 +21,13 @@
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.Token}}/sharing">Sharing</a>
 			{{- end -}}
+			</div>
 
+			<div class="right">
 			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.Token}}/delete">Delete Album</a>
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
 			{{- end -}}
+			</div>
 		</div>
 	{{ end }}
 

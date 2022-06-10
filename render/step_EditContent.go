@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/nebula"
+	"github.com/labstack/echo/v4"
 )
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
@@ -19,6 +20,28 @@ func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
 
 	context := renderer.context()
 	params := context.QueryParams()
+
+	factory := renderer.factory()
+	object := renderer.object()
+	getterSetter, ok := object.(nebula.GetterSetter)
+
+	if !ok {
+		return derp.NewInternalError("render.StepEditContent.Post", "Bad configuration - object does not have content to edit", object)
+	}
+
+	// Guarantee that the container is not empty..
+	container := getterSetter.GetContainer()
+
+	if container.Len() == 0 {
+		contentLibrary := factory.ContentLibrary()
+		container = nebula.NewContainer()
+		container.NewItemWithInit(contentLibrary, nebula.ItemTypeLayout, nil)
+		getterSetter.SetContainer(container)
+
+		if err := renderer.service().ObjectSave(object, "Adding default content"); err != nil {
+			return derp.NewInternalError("renderer.StepEditContent.Post", "Error saving default content", object)
+		}
+	}
 
 	// Handle action popups
 	if action := convert.String(params["action"]); action != "" {
@@ -49,7 +72,7 @@ func (step StepEditContent) Post(renderer Renderer) error {
 	// Try to read the request body
 	body := datatype.Map{}
 
-	if err := renderer.context().Bind(&body); err != nil {
+	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &body); err != nil {
 		return derp.Wrap(err, "render.StepEditContent.Post", "Error binding data")
 	}
 

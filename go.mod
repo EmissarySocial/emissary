@@ -10,6 +10,8 @@ replace github.com/benpate/schema => ../../benpate/schema
 
 replace github.com/benpate/form => ../../benpate/form
 
+replace github.com/benpate/nebula => ../../benpate/nebula
+
 replace github.com/benpate/path => ../../benpate/path
 
 require (

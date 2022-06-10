@@ -111,6 +111,14 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	// RULE: Copy AsFeature flag from Template into Stream
 	stream.AsFeature = template.AsFeature
 
+	// RULE: Calculate rank
+	maxRank, err := service.MaxRank(context.TODO(), stream.ParentID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error calculating max rank")
+	}
+	stream.Rank = maxRank
+
 	// RULE: First Top-Level Item is "home", no other streams can be marked "home"
 	if stream.ParentID == primitive.NilObjectID {
 		if stream.Rank == 0 {
@@ -154,7 +162,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 
 		// RULE: Delete all related Attachments
-		if err := service.attachmentService.DeleteByStream(stream.StreamID, note); err != nil {
+		if err := service.attachmentService.DeleteAllFromStream(stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting attachments", stream, note))
 		}
 
@@ -352,6 +360,11 @@ func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *mod
 // Count returns the number of (non-deleted) records in the Stream collection
 func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
 	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
+}
+
+// MaxRank returns the maximum rank of all children of a stream
+func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID) (int, error) {
+	return queries.MaxRank(ctx, service.collection, parentID)
 }
 
 /*******************************************

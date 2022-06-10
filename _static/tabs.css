@@ -25,8 +25,8 @@
 
 [role="tablist"] > [role="tab"]:hover:not([disabled]),
 [role="tablist"] > [role="tab"]:focus:not([disabled]) {
-    background-color: var(--gray20);
-    border-color:var(--gray10);
+    background-color: var(--gray10);
+    border-color:var(--gray40);
     border-bottom: solid 1px var(--gray40);
     color:#666;
 }

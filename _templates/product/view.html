@@ -1,50 +1,41 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-	<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+	<div class="page" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 	
-		<div class="flex-row">
-			<h1 class="text-center">{{.Label}}</h1>
-		</div>
-	
+		{{- if ne "" .Label -}}
+			<h1 class="align-center">{{.Label}}</h1>
+		{{- end -}}
+		
 		{{- if .UserCan "edit" -}}
 			<div id="menu-bar">
-				<a href="/{{.Token}}/edit">Edit Content</a>
-	
-				{{- if .UserCan "sharing" -}}
-					<a hx-get="/{{.Token}}/sharing">Sharing</a>
-				{{- end -}}
-		
+				<a href="/{{.StreamID}}/edit">Edit Product</a>
 			</div>
 		{{- end -}}
-	
-		<section>
-			{{- if .UserCan "checkout" -}}
-		
-				<button class="primary htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
-				<button class="primary htmx-request-show" disabled="true"><i class="fa-solid fa-spinner fa-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
-		
-				{{- if .UserCan "edit" -}}
-					&nbsp; <a hx-get="/{{.StreamID}}/edit"><i class="fa-solid fa-gear gray40" title="Edit Checkout Settings [ADMIN ONLY]"></i></a>
+
+		<section class="space-below">
+			{{$streamID := .StreamID}}
+			<div class="slideshow">
+				{{- range .Attachments -}}
+					<div><img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000"></div>
 				{{- end -}}
+			</div>
+		</section>
+			
+		{{- if .UserCan "checkout" -}}
+			<section class="space-below align-center">
+				<button class="primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
+				<button class="primary text-lg htmx-request-show" disabled="true"><i class="fa-solid fa-spinner fa-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
+			</section>
 		
-			{{- else -}}
-		
-				{{- if eq "sold-out" .StateID -}}
+		{{- else -}}
+	
+			{{- if eq "sold-out" .StateID -}}
+				<section class="space-below align-center">
 					<button type="button" class="primary" disabled="true">{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
 					<span class="red">SOLD OUT</span>
-		
-					{{- if .UserCan "edit" -}}
-						&nbsp; <a hx-get="/{{.StreamID}}/edit"><i class="fa-solid fa-gear gray40" title="Edit Checkout Settings [ADMIN ONLY]"></i></a>
-					{{- end -}}
-				{{- else -}}
-					{{- if .UserCan "edit" -}}
-						<div class="space-below">
-							<button hx-get="/{{.StreamID}}/edit"><i class="fa-solid fa-gear"></i>&nbsp;Activate Checkout</button>
-						</div>
-					{{- end -}}
-				{{- end -}}
-		
+				</section>
 			{{- end -}}
-		</section>
+	
+		{{- end -}}
 
 		<section>
 			{{- if ne "" .Description -}}
@@ -56,5 +47,3 @@
 
 	</div>
 </div>
-
-

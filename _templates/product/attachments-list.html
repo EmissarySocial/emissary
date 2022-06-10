@@ -1,0 +1,16 @@
+<form class="sortable pure-g space-below" hx-post="/{{.StreamID}}/attachments-sort" hx-swap="none" hx-push-url="false" hx-trigger="end"
+	script="on load make a Sortable from me, {animation:150, whisperClass:'draggable-whisper'}">
+	
+	{{$streamID := .StreamID}}
+	{{- range .Attachments -}}
+		<div class="pure-u-1-3 draggable">
+			<input type="hidden" name="keys" value="{{.AttachmentID.Hex}}">
+			<div class="hover-trigger" style="position:relative; padding:0px 10px 10px 0px;">
+				<button hx-post="/{{$streamID}}/attachments-delete?filename={{.Filename}}" class="hover-reveal text-xs" style="position:absolute; top:5px; right:15px;"><i class="fa-solid fa-trash"></i></button>
+				<img src="/{{$streamID}}/attachments/{{.Filename}}?height=200&width=200" style="width:100%">
+			</div>
+		</div>
+	{{- end -}}
+
+</form>
+

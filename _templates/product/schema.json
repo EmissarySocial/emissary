@@ -6,7 +6,7 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type": "string"},
+			"label": {"type": "string", "default": "New Product"},
 			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
 		}
 	},
@@ -26,6 +26,11 @@
 		}
 	},
 	"actions": {
+		"init": {
+			"steps":[
+				{"step": "set-data", "values": {"label": "New Product"}}
+			]
+		},
 		"view": {
 			"step": "view-html",
 			"stateRoles": {
@@ -49,17 +54,53 @@
 		"edit":{
 			"roles": ["owner"],
 			"steps":[
-				{"step": "view-html"},
+				{"step": "set-data", "paths": ["label"]},
+				{"step": "edit-content", "file":"edit"},
 				{"step": "save", "comment":"Content edited by {{.Author}}"}
 			]
 		},
-		"edit-stripe": {
+		"attachments":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "as-modal", "steps":[
+					{"step": "view-html"}
+				]}
+			]
+		},
+		"attachments-list":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"view-html"},
+				{"step": "upload-attachments"}
+			]
+		},
+		"attachments-sort":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"sort-attachments", "message":"Updated sort order"}
+			]
+		},
+		"attachments-delete":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"view-html"},
+				{"step": "delete-attachments"}
+			]
+		},
+		"product": {
 			"roles": ["owner"],
 			"steps": [
 				{"step": "as-modal", "steps": [
 					{"step": "stripe-product"},
 					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
 				]}
+			]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "delete", "comment": "Deleted by {{.Author}}"},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
 			]
 		}
 	}

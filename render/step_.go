@@ -41,6 +41,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Delete:
 		return StepDelete(s)
 
+	case step.DeleteAttachment:
+		return StepDeleteAttachment(s)
+
 	case step.DeleteOutboxItem:
 		return StepDeleteOutboxItem(s)
 
@@ -88,6 +91,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.Sort:
 		return StepSort(s)
+
+	case step.SortAttachments:
+		return StepSortAttachments(s)
 
 	case step.StreamPromoteDraft:
 		return StepStreamPromoteDraft(s)

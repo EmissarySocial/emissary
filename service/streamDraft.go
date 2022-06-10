@@ -55,11 +55,11 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	// Reset the journal so that this item can be saved in the new collection.
 	result.Journal = journal.Journal{}
 
-	// Add default content if the content is empty.
+	/*/ Add default content if the content is empty.
 	if result.Content.Len() == 0 {
 		result.Content = nebula.NewContainer()
 		result.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeLayout, nil)
-	}
+	}*/
 
 	// Save a draft copy of the original stream
 	if err := service.Save(result, "create draft record"); err != nil {

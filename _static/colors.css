@@ -2,6 +2,10 @@
 
 :root {
 	--white: #ffffff;
+	--gray01: #fefefe;
+	--gray02: #fdfdfd;
+	--gray03: #fcfcfc;
+	--gray04: #fbfbfb;
 	--gray05: #fafafa;
 	--gray10: #f4f4f4;
 	--gray15: #eaeaea;
@@ -48,8 +52,8 @@
 	--green90: #045208;
 	--green100: #072d09;
 
-	--input-border: var(--gray30);
-	--input-background: var(--gray05);
+	--input-border: var(--gray20);
+	--input-background: var(--gray03);
 	--input-color: var(--gray80);
 
 	--input-border-invalid: var(--red40);
@@ -73,6 +77,10 @@
 		--gray15: #333333;
 		--gray10: #262626;
 		--gray05: #131313;
+		--gray04: #0F0F0F;
+		--gray03: #0A0A0A;
+		--gray02: #090909;
+		--gray01: #050505;
 		--white: #000000;
 
 		--input-border-invalid: var(--red60);

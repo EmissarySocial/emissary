@@ -62,7 +62,8 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 
 	// Delete uploaded files from MediaServer
 	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
-		return derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachment)
+		derp.Report(derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachment))
+		// Fail loudly, but do not stop.
 	}
 
 	// Delete Attachment record last.
@@ -74,7 +75,7 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 }
 
 // DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note string) error {
+func (service Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
 
 	var attachment model.Attachment
 	it, err := service.ListByObjectID(streamID)
@@ -85,7 +86,8 @@ func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note strin
 
 	for it.Next(&attachment) {
 		if err := service.Delete(&attachment, note); err != nil {
-			return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment)
+			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
+			// Fail loudly, but do not stop.
 		}
 	}
 
@@ -99,12 +101,22 @@ func (service Attachment) DeleteByStream(streamID primitive.ObjectID, note strin
 func (service Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
 		exp.Equal("streamId", objectID).
-			AndEqual("journal.deleteDate", 0))
+			AndEqual("journal.deleteDate", 0),
+		option.SortAsc("rank"))
 }
 
-func (service Attachment) LoadByToken(token string) (model.Attachment, error) {
+func (service Attachment) LoadByStreamID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
 	var result model.Attachment
-	criteria := exp.Equal("filename", list.Head(token, ".")).AndEqual("journal.deleteDate", 0)
+	criteria := exp.Equal("streamId", streamID).AndEqual("_id", attachmentID).AndEqual("journal.deleteDate", 0)
+	err := service.Load(criteria, &result)
+	return result, err
+}
+
+func (service Attachment) LoadByToken(streamID primitive.ObjectID, token string) (model.Attachment, error) {
+	var result model.Attachment
+	criteria := exp.Equal("streamId", streamID).
+		AndEqual("filename", list.Head(token, ".")).
+		AndEqual("journal.deleteDate", 0)
 	err := service.Load(criteria, &result)
 	return result, err
 }

@@ -95,8 +95,14 @@ func New(stepInfo datatype.Map) (Step, error) {
 
 	// ATTACHMENTS
 
+	case "delete-attachments":
+		return NewDeleteAttachment(stepInfo)
+
 	case "upload-attachments":
 		return NewUploadAttachment(stepInfo)
+
+	case "sort-attachments":
+		return NewSortAttachments(stepInfo)
 
 	// CLIENT-SIDE CONTROLS
 

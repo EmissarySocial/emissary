@@ -9,21 +9,25 @@
 
 		<div id="menu-bar">
 
-			{{- if .UserCan "add-topic" -}}
-				<a href="/{{.Token}}/add-topic" hx-push-url="true">Add a Topic</a>
-			{{- end -}}
+			<div class="left">
+				{{- if .UserCan "add-topic" -}}
+					<a href="/{{.Token}}/add-topic" hx-push-url="true">Add a Topic</a>
+				{{- end -}}
 
-			{{- if .UserCan "edit" -}}
-				<button hx-get="/{{.Token}}/edit" role="link">Edit Info</button>
-			{{- end -}}
+				{{- if .UserCan "edit" -}}
+					<button hx-get="/{{.Token}}/edit" role="link">Edit Info</button>
+				{{- end -}}
 
-			{{- if .UserCan "sharing" -}}
-				<button hx-get="/{{.Token}}/sharing">Sharing</button>
-			{{- end -}}
+				{{- if .UserCan "sharing" -}}
+					<button hx-get="/{{.Token}}/sharing">Sharing</button>
+				{{- end -}}
+			</div>
 
-			{{- if .UserCan "delete" -}}
-				<button hx-get="/{{.Token}}/delete">Delete Forum</button>
-			{{- end -}}
+			<div class="right">
+				{{- if .UserCan "delete" -}}
+					<button hx-get="/{{.Token}}/delete" class="text-red">Delete</button>
+				{{- end -}}
+			</div>
 
 		</div>
 

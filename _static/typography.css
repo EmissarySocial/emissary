@@ -255,7 +255,7 @@ h3.space-below {
 }
 
 /****************************
- * Text Sizing
+ * Text Modifiers
  ****************************/
 
  .text-xl {
@@ -272,6 +272,15 @@ h3.space-below {
 
 .text-xs {
 	font-size:8pt;
+}
+
+
+.text-red {
+    color: var(--red50)!important;
+}
+
+.text-red:hover {
+    color:var(--red60)!important;
 }
 
 /****************************

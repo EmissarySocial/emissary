@@ -70,9 +70,14 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 
 // getStreamToken returns the :stream token from the Request (or a default)
 func getStreamToken(ctx echo.Context) string {
-	if token := ctx.Param("stream"); token != "" {
-		return token
+	token := ctx.Param("stream")
+
+	switch token {
+
+	// Empty, or "zero" tokens just go to the home page instead
+	case "", "000000000000000000000000":
+		return "home"
 	}
 
-	return "home"
+	return token
 }

@@ -53,5 +53,7 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 		}
 	}
 
+	renderer.context().Response().Header().Set("HX-Trigger", `attachments-updated`)
+
 	return nil
 }
