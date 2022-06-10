@@ -119,15 +119,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 	stream.Rank = maxRank
 
-	// RULE: First Top-Level Item is "home", no other streams can be marked "home"
-	if stream.ParentID == primitive.NilObjectID {
-		if stream.Rank == 0 {
-			stream.Token = "home" // First stream in the list is the "home" page
-		} else if stream.Token == "home" {
-			stream.Token = "" // No other stream can be marked "home".
-		}
-	}
-
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}

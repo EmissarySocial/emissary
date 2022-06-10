@@ -8,7 +8,7 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type":"string", "required":true},
+			"label": {"type":"string"},
 			"description": {"type":"string"},
 			"data": {"type": "object", "properties": {
 				"url": {"type": "string", "format":"url"}
