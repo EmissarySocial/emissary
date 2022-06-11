@@ -19,7 +19,7 @@ article {
 	text-overflow: ellipsis;
 }
 
-.card .picture {
+.picture {
 	background-color: var(--gray20);
 	margin:-10px -10px 10px -10px;
 	object-fit:cover;
@@ -27,6 +27,13 @@ article {
 
 .picture img {
 	width:100%;
+}
+
+@media screen and (max-width:35.5em) {
+	.card {
+		border:none;
+		margin: 0px -10px 20px -10px!important;
+	}
 }
 
 .aspect-2-3 {

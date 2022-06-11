@@ -88,6 +88,13 @@ main {
 	margin-bottom: 50px;
 }
 
+@media screen and (max-width:35.5em) {
+	.page {
+		border:0px;
+		background-color: var(--gray05);
+	}
+}
+
 #menu-bar {
 	border-top: solid 1px var(--gray20);
 	border-bottom: solid 1px var(--gray20);

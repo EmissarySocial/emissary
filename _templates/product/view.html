@@ -17,7 +17,9 @@
 
 			{{- if eq 1 (len $attachments) -}}
 				{{- range .Attachments -}}
-					<img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000" style="width:100%;">
+					<div class="picture">
+						<img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000">
+					</div>
 				{{- end -}}
 
 			{{- else -}}
