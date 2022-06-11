@@ -127,49 +127,48 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 		lib := factory.FormLibrary()
 
 		f := form.Form{
-				Kind: "layout-vertical",
-				Children: []form.Form{{
-					Kind:        "text",
-					Path:        "label",
-					Label:       "Label",
-					Description: "Admin-friendly label for this domain",
-				}, {
-					Kind:        "text",
-					Path:        "hostname",
-					Label:       "Hostname",
-					Description: "Complete domain name (but no https:// or trailing slashes)",
-				}, {
-					Kind:        "text",
-					Path:        "connectString",
-					Label:       "MongoDB Connection String",
-					Description: "Should look like mongodb://host:port/database",
-				}, {
-					Kind:        "text",
-					Path:        "databaseName",
-					Label:       "MongoDB Database Name",
-					Description: "Name of the database to use on the server",
-				}},
-			}, /*{
-				Kind: "layout-vertical",
-				Children: []form.Form{{
-					Kind:  "text",
-					Path:  "smtp.hostname",
-					Label: "SMTP Server",
-				}, {
-					Kind:  "text",
-					Path:  "smtp.username",
-					Label: "Username",
-				}, {
-					Kind:  "text",
-					Path:  "smtp.password",
-					Label: "Password",
-				}, {
-					Kind:  "checkbox",
-					Path:  "smtp.tls",
-					Label: "Use TLS Encryption",
-				}},
-			}},*/
-		}
+			Kind: "layout-vertical",
+			Children: []form.Form{{
+				Kind:        "text",
+				Path:        "label",
+				Label:       "Label",
+				Description: "Admin-friendly label for this domain",
+			}, {
+				Kind:        "text",
+				Path:        "hostname",
+				Label:       "Hostname",
+				Description: "Complete domain name (but no https:// or trailing slashes)",
+			}, {
+				Kind:        "text",
+				Path:        "connectString",
+				Label:       "MongoDB Connection String",
+				Description: "Should look like mongodb://host:port/database",
+			}, {
+				Kind:        "text",
+				Path:        "databaseName",
+				Label:       "MongoDB Database Name",
+				Description: "Name of the database to use on the server",
+			}},
+		} /*{
+			Kind: "layout-vertical",
+			Children: []form.Form{{
+				Kind:  "text",
+				Path:  "smtp.hostname",
+				Label: "SMTP Server",
+			}, {
+				Kind:  "text",
+				Path:  "smtp.username",
+				Label: "Username",
+			}, {
+				Kind:  "text",
+				Path:  "smtp.password",
+				Label: "Password",
+			}, {
+				Kind:  "checkbox",
+				Path:  "smtp.tls",
+				Label: "Use TLS Encryption",
+			}},
+		}},*/
 
 		s := config.Schema()
 		formHTML, err := f.HTML(&lib, &s, &domain)
