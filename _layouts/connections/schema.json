@@ -13,6 +13,7 @@
 		"stripe": {"steps": [{"step": "as-modal", "steps": [
 			{"step": "view-html"},
 			{"step": "set-data", "paths":["connections.stripe_isActive", "connections.stripe_apiKey"]},
+			{"step": "save"},
 			{"step": "stripe-setup"},
 			{"step": "save"}
 		]}]}
