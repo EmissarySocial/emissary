@@ -150,7 +150,8 @@ func New(factory *server.Factory) *echo.Echo {
 		}
 
 		// Fall through to general error handler
-		ctx.String(derp.ErrorCode(err), derp.Message(err))
+		ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+		// ctx.String(derp.ErrorCode(err), derp.Message(err))
 	}
 
 	return e
