@@ -13,9 +13,9 @@ func Schema() schema.Schema {
 			Properties: map[string]schema.Element{
 				"label":         schema.String{Required: true},
 				"hostname":      schema.String{Required: true},
-				"connectString": schema.String{Required: true},
+				"connectString": schema.String{},
 				// "connectString": schema.String{Pattern: `^(mongodb(\+srv)?:(\/{2})?)((\w+?):(\w+?)@|:?@?)(\w+?):(\d+)\/(\w+?)$`, Required: true},
-				"databaseName": schema.String{Pattern: `[a-zA-Z0-9]+`, Required: true},
+				"databaseName": schema.String{Pattern: `[a-zA-Z0-9]+`},
 				/* "smtp": schema.Object{
 					Properties: map[string]schema.Element{
 						"hostname": schema.String{},

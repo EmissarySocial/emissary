@@ -127,9 +127,6 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 		lib := factory.FormLibrary()
 
 		f := form.Form{
-			Kind:    "layout-tabs",
-			Options: datatype.Map{"labels": "Server,Email"},
-			Children: []form.Form{{
 				Kind: "layout-vertical",
 				Children: []form.Form{{
 					Kind:        "text",
@@ -171,7 +168,7 @@ func GetServerDomain(factory *server.Factory) echo.HandlerFunc {
 					Path:  "smtp.tls",
 					Label: "Use TLS Encryption",
 				}},
-			}*/},
+			}},*/
 		}
 
 		s := config.Schema()
