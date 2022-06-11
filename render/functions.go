@@ -9,8 +9,20 @@ import (
 func FuncMap() template.FuncMap {
 
 	return template.FuncMap{
-		"dollarFormat": func(value int64) string {
-			stringValue := convert.String(value)
+		"dollarFormat": func(value any) string {
+
+			var unitAmount int64
+
+			switch value := value.(type) {
+			case float32:
+				unitAmount = int64(value * 100)
+			case float64:
+				unitAmount = int64(value * 100)
+			default:
+				unitAmount = convert.Int64(value)
+			}
+
+			stringValue := convert.String(unitAmount)
 			length := len(stringValue)
 			for length < 3 {
 				stringValue = "0" + stringValue

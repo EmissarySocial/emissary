@@ -32,15 +32,15 @@
 			
 		{{- if .UserCan "checkout" -}}
 			<section class="space-below align-center">
-				<button class="primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
-				<button class="primary text-lg htmx-request-show" disabled="true"><i class="fa-solid fa-spinner fa-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
+				<button class="primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
+				<button class="primary text-lg htmx-request-show" disabled="true"><i class="fa-solid fa-spinner fa-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
 			</section>
 		
 		{{- else -}}
 	
 			{{- if eq "sold-out" .StateID -}}
 				<section class="space-below align-center">
-					<button type="button" class="primary" disabled="true">{{.Data "buttonLabel"}} ({{.Data "decimalAmount"}})</button>
+					<button type="button" class="primary" disabled="true">{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
 					<span class="red">SOLD OUT</span>
 				</section>
 			{{- end -}}

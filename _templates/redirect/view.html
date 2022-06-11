@@ -15,8 +15,10 @@
 	{{- if eq "" (.Data "url") -}}
 		This page has not been configured yet.
 	{{- else -}}
-		<meta http-equiv="refresh" content="url={{- .Data `url` -}}"/>
 		Redirecting to {{.Data "url"}}...
+		<script type="text/javascript">
+			window.location = "{{- .Data `url` -}}";
+		</script>
 	{{- end -}}
 
 {{- end -}}
