@@ -18,6 +18,12 @@
 		padding:10px;
 	}
 
+	.page {
+		border-right: none;
+		border-left: none;
+		padding: 10px;
+	}
+
 	.show-xs {
 		display:inherit;
 	}
