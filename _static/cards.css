@@ -22,6 +22,7 @@ article {
 .card .picture {
 	background-color: var(--gray20);
 	margin:-10px -10px 10px -10px;
+	object-fit:cover;
 }
 
 .picture img {
