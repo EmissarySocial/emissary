@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepStripeComplete represents an action-step that forwards the user to a new page.
@@ -63,8 +62,6 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 	renderer.SetBool("valid", true)
 
 	// Success!!
-
-	spew.Dump("StripeComplete: success")
 	return nil
 }
 

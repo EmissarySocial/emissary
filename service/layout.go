@@ -17,6 +17,7 @@ type Layout struct {
 	folder      config.Folder
 	funcMap     template.FuncMap
 	analytics   model.Layout
+	appearance  model.Layout
 	connections model.Layout
 	domain      model.Layout
 	global      model.Layout
@@ -41,6 +42,10 @@ func NewLayout(folder config.Folder, funcMap template.FuncMap) Layout {
 
 func (service *Layout) Analytics() *model.Layout {
 	return &service.analytics
+}
+
+func (service *Layout) Appearance() *model.Layout {
+	return &service.appearance
 }
 
 func (service *Layout) Connections() *model.Layout {
@@ -76,7 +81,7 @@ func (service *Layout) User() *model.Layout {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"analytics", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
+	return []string{"analytics", "appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
 }
 
 // watch must be run as a goroutine, and constantly monitors the
@@ -172,20 +177,31 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 
 	case "analytics":
 		service.analytics = layout
+
+	case "appearance":
+		service.appearance = layout
+
 	case "connections":
 		service.connections = layout
+
 	case "domain":
 		service.domain = layout
+
 	case "global":
 		service.global = layout
+
 	case "groups":
 		service.group = layout
+
 	case "profiles":
 		service.profile = layout
+
 	case "toplevel":
 		service.topLevel = layout
+
 	case "users":
 		service.user = layout
+
 	default:
 		// This should never happen
 		panic("Unrecognized layout: " + filename)

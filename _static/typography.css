@@ -42,6 +42,9 @@ h3.space-below {
     margin-bottom:30px;
 }
 
+.monospace {
+    font-family: ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+}
 
 /****************************
  * Block - Flexbox

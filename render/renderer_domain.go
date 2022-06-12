@@ -15,6 +15,7 @@ import (
 
 type Domain struct {
 	layout *model.Layout
+	domain *model.Domain
 	Common
 }
 
@@ -89,6 +90,10 @@ func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
 
 func (w Domain) TopLevelID() string {
 	return "admin"
+}
+
+func (w Domain) PageTitle() string {
+	return "Settings"
 }
 
 /*******************************************

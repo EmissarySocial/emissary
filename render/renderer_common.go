@@ -26,8 +26,8 @@ type Common struct {
 	requestData datatype.Map // Temporary data scope for this request
 
 	// Cached values, do not populate unless needed
-	user   *model.User
-	domain *model.Domain
+	domain model.Domain // This is a value because we expect to use it in every request.
+	user   *model.User  // This is a pointer because it may not be used in every request.
 }
 
 func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, actionID string) Common {
@@ -61,13 +61,6 @@ func (w Common) Action() *model.Action {
 
 func (w Common) ActionID() string {
 	return w.actionID
-}
-
-func (w Common) DomainLabel() string {
-	if domain, err := w.getDomain(); err == nil {
-		return domain.Label
-	}
-	return ""
 }
 
 func (w Common) BannerURL() string {
@@ -195,6 +188,42 @@ func (w Common) SetString(name string, value string) {
 	w.requestData.SetString(name, value)
 }
 
+/*******************************************
+ * DOMAIN DATA
+ *******************************************/
+
+func (w Common) DomainLabel() (string, error) {
+	if domain, err := w.getDomain(); err != nil {
+		return "", err
+	} else {
+		return domain.Label, nil
+	}
+}
+
+func (w Common) DomainHeaderHTML() (string, error) {
+	if domain, err := w.getDomain(); err != nil {
+		return "", err
+	} else {
+		return domain.HeaderHTML, nil
+	}
+}
+
+func (w Common) DomainFooterHTML() (string, error) {
+	if domain, err := w.getDomain(); err != nil {
+		return "", err
+	} else {
+		return domain.FooterHTML, nil
+	}
+}
+
+func (w Common) DomainCustomCSS() (string, error) {
+	if domain, err := w.getDomain(); err != nil {
+		return "", err
+	} else {
+		return domain.CustomCSS, nil
+	}
+}
+
 /***************************
  * ACCESS PERMISSIONS
  **************************/
@@ -278,40 +307,30 @@ func (w *Common) getUser() (*model.User, error) {
 	// If we haven't already loaded the user, then do it now.
 	if w.user == nil {
 
+		w.user = new(model.User)
 		userService := w.factory().User()
 		authorization := getAuthorization(w.context())
-		w.user = new(model.User)
 
 		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
-			return nil, derp.Wrap(err, "render.Stream.getUser", "Error loading user from database", authorization.UserID)
+			return nil, derp.Wrap(err, "render.Common.getUser", "Error loading user from database", authorization.UserID)
 		}
 	}
 
 	return w.user, nil
 }
 
-// getDomain loads/caches the domain record to be used by other functions in this renderer
+// getDomain retrieves the current domain model object from the domain service cache
 func (w *Common) getDomain() (*model.Domain, error) {
 
-	// If we haven't already loaded the domain, then do it now.
-	if w.domain == nil {
-
+	if w.domain.DomainID.IsZero() {
 		domainService := w.factory().Domain()
-		authorization := getAuthorization(w.context())
 
-		domain := model.NewDomain()
-		w.domain = &domain
-
-		if err := domainService.Load(w.domain); err != nil {
-
-			// Only "legitimate" errors are reported. "Not Found" is skipped.
-			if !derp.NotFound(err) {
-				return nil, derp.Wrap(err, "render.Stream.getUser", "Error loading domain from database", authorization.UserID)
-			}
+		if err := domainService.Load(&w.domain); err != nil {
+			return nil, derp.Wrap(err, "render.Common.getDomain", "Error loading domain")
 		}
 	}
 
-	return w.domain, nil
+	return &w.domain, nil
 }
 
 /*******************************************
@@ -335,32 +354,26 @@ func (w Common) AdminSections() []form.OptionCode {
 		{
 			Value: "domain",
 			Label: "Site",
-			Icon:  "",
+		},
+		{
+			Value: "appearance",
+			Label: "Appearance",
 		},
 		{
 			Value: "toplevel",
 			Label: "Navigation",
-			Icon:  "",
 		},
 		{
 			Value: "users",
 			Label: "People",
-			Icon:  "",
 		},
 		{
 			Value: "groups",
 			Label: "Groups",
-			Icon:  "",
 		},
 		{
 			Value: "connections",
 			Label: "Connections",
-			Icon:  "",
-		},
-		{
-			Value: "analytics",
-			Label: "Analytics",
-			Icon:  "",
 		},
 	}
 }

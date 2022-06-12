@@ -167,6 +167,11 @@ func (w Stream) TopLevelID() string {
 	return w.stream.ParentIDs[0].Hex()
 }
 
+// PageTitle returns the Label for the stream being rendered
+func (w Stream) PageTitle() string {
+	return w.stream.Label
+}
+
 // StateID returns the current state of the stream being rendered
 func (w Stream) StateID() string {
 	return w.stream.StateID

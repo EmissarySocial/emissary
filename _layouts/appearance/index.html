@@ -1,0 +1,39 @@
+<script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
+
+<div class="page" hx-get="/admin/appearance/index" hx-trigger="refreshPage from:body">
+
+	<h1>Settings</h1>
+
+	<div id="menu-bar" hx-push-url="true">
+		{{- $token := .Token -}}
+		{{- range .AdminSections -}}
+			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+		{{- end -}}
+	</div>
+
+	<form hx-post="/admin/appearance/index">
+		<div class="layout-vertical">
+			<div class="layout-vertical-elements">
+				<div class="layout-vertical-element">
+					<label for="idLabel">Site Title</label>
+					<input id="idLabel" name="label" maxlength="100" value="{{.DomainLabel}}"/>
+				</div>
+				<div class="layout-vertical-element">
+					<label for="idHeaderHTML">Custom Header</label>
+					<textarea id="idHeaderHTML" name="headerHtml" class="monospace" rows="5" maxlength="10000" script="install Autosize">{{.DomainHeaderHTML}}</textarea>
+				</div>
+				<div class="layout-vertical-element">
+					<label for="idFooterHTML">Custom Footer</label>
+					<textarea id="idFooterHTML" name="footerHtml" class="monospace" rows="5" maxlength="10000" script="install Autosize">{{.DomainFooterHTML}}</textarea>
+				</div>
+				<div class="layout-vertical-element">
+					<label for="idCustomCSS">Custom CSS</label>
+					<textarea id="idCustomCSS" name="customCss" class="monospace" rows="5" maxlength="10000" script="install Autosize">{{.DomainCustomCSS}}</textarea>
+				</div>
+			</div>
+		</div>
+
+		<button class="primary">Save Changes</button>
+	</form>
+
+</div>

@@ -23,6 +23,7 @@ type Renderer interface {
 	Protocol() string       // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
 	Hostname() string       // Hostname for this server
 	Token() string          // URL Token of the record being rendered
+	PageTitle() string      // Human-friendly title to put at the top of the page.
 	URL() string            // Complete URL of the requested page
 	ActionID() string       // Token that identifies the action requested via the URL.
 	Action() *model.Action  // The pipeline action to be taken by this renderer

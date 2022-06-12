@@ -25,13 +25,14 @@ import (
 // Factory knows how to create an populate all services
 type Factory struct {
 	Session data.Session
-	domain  config.Domain
+	config  config.Domain
 
 	// services (from server)
 	layoutService   *service.Layout
 	templateService *service.Template
 
 	// services (within this domain/factory)
+	domainService       service.Domain
 	streamService       service.Stream
 	userService         service.User
 	subscriptionService *service.Subscription
@@ -57,7 +58,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 	// Base Factory object
 	factory := Factory{
-		domain:                domain,
+		config:                domain,
 		layoutService:         layoutService,
 		templateService:       templateService,
 		templateUpdateChannel: make(chan string),
@@ -102,6 +103,12 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 		/** SINGLETON SERVICES *********************/
 
+		// Domain Service
+		factory.domainService = service.NewDomain(
+			factory.collection(CollectionDomain),
+			render.FuncMap(),
+		)
+
 		// Stream Service
 		factory.streamService = service.NewStream(
 			factory.collection(CollectionStream),
@@ -145,7 +152,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
  *******************************************/
 
 func (factory *Factory) Hostname() string {
-	return factory.domain.Hostname
+	return factory.config.Hostname
 }
 
 /*******************************************
@@ -160,8 +167,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
-	result := service.NewDomain(factory.collection(CollectionDomain), render.FuncMap())
-	return &result
+	return &factory.domainService
 }
 
 // Mention returns a fully populated Mention service

@@ -87,6 +87,10 @@ func (w User) Token() string {
 	return "users"
 }
 
+func (w User) PageTitle() string {
+	return "Settings"
+}
+
 func (w User) object() data.Object {
 	return w.user
 }

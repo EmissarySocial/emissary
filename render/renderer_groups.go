@@ -88,6 +88,10 @@ func (w Group) Token() string {
 	return "groups"
 }
 
+func (w Group) PageTitle() string {
+	return "Settings"
+}
+
 func (w Group) object() data.Object {
 	return w.group
 }

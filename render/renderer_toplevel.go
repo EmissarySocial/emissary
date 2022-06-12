@@ -72,6 +72,10 @@ func (w TopLevel) TopLevelID() string {
 	return "admin"
 }
 
+func (w TopLevel) PageTitle() string {
+	return "Settings"
+}
+
 func (w TopLevel) object() data.Object {
 	return w.stream
 }

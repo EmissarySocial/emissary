@@ -11,6 +11,10 @@ body {
 	color: var(--black);
 }
 
+header {
+
+}
+
 nav {
 	position:sticky;
 	top:0px;
@@ -77,6 +81,10 @@ main {
 	display: flex;
 	justify-content: center;
 	padding-top: 20px;
+}
+
+footer {
+	
 }
 
 .page {

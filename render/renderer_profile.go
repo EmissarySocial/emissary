@@ -83,6 +83,19 @@ func (w Profile) TopLevelID() string {
 	return ""
 }
 
+func (w Profile) PageTitle() string {
+
+	if w.UserID() == w.Common.UserID().Hex() {
+
+		if w.actionID == "inbox" {
+			return "Inbox"
+		}
+		return "Profile"
+	}
+
+	return ""
+}
+
 func (w Profile) Token() string {
 	return "users"
 }

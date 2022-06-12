@@ -1,6 +1,4 @@
 {
-	"label": "Analytics",
-	"description": "Domain Owners only.  Site Admin",
 	"actions": {
 		"index": {"step": "view-html"},
 		"view": {"step": "view-html"}

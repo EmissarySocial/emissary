@@ -15,6 +15,7 @@ import (
 type Domain struct {
 	collection data.Collection
 	funcMap    template.FuncMap
+	model      model.Domain
 }
 
 // NewDomain returns a fully initialized Domain service
@@ -25,35 +26,49 @@ func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 	}
 }
 
-// Load retrieves an Domain from the database
+// Load retrieves an Domain from the database (or in-memory cache)
 func (service *Domain) Load(domain *model.Domain) error {
 
-	err := service.collection.Load(exp.All(), domain)
-
-	if err != nil {
-
-		// Initialize a new record
-		if derp.NotFound(err) {
-
-			if err := service.Save(domain, "Create New Domain"); err != nil {
-				return derp.Wrap(err, "service.Domain.Load", "Error creating new domain")
-			}
-
-			return nil
-
-		} else {
-			return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
-		}
+	// If the value is already cached, then return it
+	if !service.model.DomainID.IsZero() {
+		*domain = service.model
+		return nil
 	}
 
-	return nil
+	// If not cached, try to load from database
+	err := service.collection.Load(exp.All(), &service.model)
+
+	// If present in database, return success
+	if err == nil {
+		*domain = service.model
+		return nil
+	}
+
+	// If not in database, try to create a new record
+	if derp.NotFound(err) {
+
+		if err := service.Save(domain, "Create New Domain"); err != nil {
+			return derp.Wrap(err, "service.Domain.Load", "Error creating new domain")
+		}
+
+		*domain = service.model
+		return nil
+	}
+
+	// Otherwise, there's some bigger error happening, fail un-gracefully
+	return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
 }
 
+// Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain *model.Domain, note string) error {
 
+	// Try to save the value to the database
 	if err := service.collection.Save(domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
 	}
+
+	// Update the in-memory cache
+	service.model = *domain
 
 	return nil
 }

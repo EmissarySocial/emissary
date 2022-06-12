@@ -35,6 +35,10 @@ func FuncMap() template.FuncMap {
 			return template.HTML(value)
 		},
 
+		"css": func(value string) template.CSS {
+			return template.CSS(value)
+		},
+
 		"head": func(slice List) Renderer { // Returns the first item in a resultSet
 			return slice[0]
 		},
