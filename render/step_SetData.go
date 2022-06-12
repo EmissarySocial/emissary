@@ -34,21 +34,25 @@ func (step StepSetData) Post(renderer Renderer) error {
 
 	// Try to find the schema for this Template
 	schema := renderer.schema()
-	inputs := make(datatype.Map)
 
-	// Collect form POST information
-	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {
-		result := derp.Wrap(err, location, "Error binding body")
-		derp.SetErrorCode(result, http.StatusBadRequest)
-		return result
-	}
+	if len(step.Paths) > 0 {
 
-	// Put approved form data into the stream
-	for _, p := range step.Paths {
-		if err := schema.Set(object, p, inputs[p]); err != nil {
-			result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
+		inputs := make(datatype.Map)
+
+		// Collect form POST information
+		if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {
+			result := derp.Wrap(err, location, "Error binding body")
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return result
+		}
+
+		// Put approved form data into the stream
+		for _, p := range step.Paths {
+			if err := schema.Set(object, p, inputs[p]); err != nil {
+				result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
+				derp.SetErrorCode(result, http.StatusBadRequest)
+				return result
+			}
 		}
 	}
 
