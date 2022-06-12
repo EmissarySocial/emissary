@@ -8,15 +8,15 @@ import (
 
 // Domain represents an account or node on this server.
 type Domain struct {
-	DomainID    primitive.ObjectID `                    bson:"_id"`                   // This is the internal ID for the domain.  It should not be available via the web service.
-	Label       string             `path:"label"        bson:"label"`                 // Human-friendly name displayed at the top of this domain
-	HeaderHTML  string             `path:"headerHtml"   bson:"headerHtml,omitempty"`  // Pure HTML added to the top of the page navigation
-	FooterHTML  string             `path:"footerHtml"   bson:"footerHtml,omitempty"`  // Pure HTML added to the bottom of the page footer
-	CustomCSS   string             `path:"customCss"    bson:"customCss,omitempty"`   // Pure CSS added to every page.
-	BannerURL   string             `path:"bannerUrl"    bson:"bannerUrl,omitempty"`   // URL of a banner image to display at the top of this domain
-	Forward     string             `path:"forward"      bson:"forward,omitempty"`     // If present, then all requests for this domain should be forwarded to the designated new domain.
-	SignupForm  SignupForm         `path:"signupForm"   bson:"signupForm,omitempty"`  // Valid signup forms to make new accounts.
-	Connections datatype.Map       `path:"connections"  bson:"connections,omitempty"` // Configuration information for connections.
+	DomainID    primitive.ObjectID `                    bson:"_id"`         // This is the internal ID for the domain.  It should not be available via the web service.
+	Label       string             `path:"label"        bson:"label"`       // Human-friendly name displayed at the top of this domain
+	HeaderHTML  string             `path:"headerHtml"   bson:"headerHtml"`  // Pure HTML added to the top of the page navigation
+	FooterHTML  string             `path:"footerHtml"   bson:"footerHtml"`  // Pure HTML added to the bottom of the page footer
+	CustomCSS   string             `path:"customCss"    bson:"customCss"`   // Pure CSS added to every page.
+	BannerURL   string             `path:"bannerUrl"    bson:"bannerUrl"`   // URL of a banner image to display at the top of this domain
+	Forward     string             `path:"forward"      bson:"forward"`     // If present, then all requests for this domain should be forwarded to the designated new domain.
+	SignupForm  SignupForm         `path:"signupForm"   bson:"signupForm"`  // Valid signup forms to make new accounts.
+	Connections datatype.Map       `path:"connections"  bson:"connections"` // Configuration information for connections.
 	journal.Journal
 }
 
