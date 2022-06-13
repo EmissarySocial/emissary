@@ -12,14 +12,6 @@
     {{ $topLevel := .TopLevel}}
     {{- if notEmpty $topLevel -}}
 
-        <div class="space-below">
-            <i>Drag and Drop Items to Sort.</i>
-        </div>
-
-        <div class="space-below">
-            <a hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i>&nbsp;Add a Top-Level Stream</a>
-        </div>
-
         <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
             {{- range $topLevel -}}
                 <div class="draggable">
@@ -34,6 +26,15 @@
                 </div>
             {{- end -}}
         </form>
+
+        <div class="text text-sm space-below">
+            <i>Drag and Drop Items to Sort.</i>
+        </div>
+
+        <div class="space-below">
+            <button hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i>&nbsp;Add a Top-Level Stream</button>
+        </div>
+
 
     {{- else -}}
 
@@ -64,7 +65,7 @@
     .draggable {
         padding:10px 20px;
         border: solid 1px var(--gray10);
-        background-color: var(--white);
+        background-color: var(--gray00);
         color: var(--gray80);
         margin-bottom: -1px;
         cursor: grab;

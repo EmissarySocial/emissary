@@ -322,7 +322,7 @@ b, strong, .bold {
 }
 
 a, .link {
-	color:var(--blue70);
+	color:var(--link-color);
 	text-decoration:none;
 }
 
@@ -330,7 +330,7 @@ a:hover,
 .link:hover,
 [role=link]:hover {
 	cursor:pointer;
-	color: var(--blue60)!important;
+	color: var(--link-color-hover)!important;
 }
 
 .clickable, [role=link] {

@@ -72,8 +72,6 @@ input[type=radio] {
 }
 
 .toggle-container[value=true] .toggle {
-    -background-color: #19a21f;
-    -border-color: #19a21f;
     background-color: var(--blue50);
     border-color: var(--blue50);
 }
