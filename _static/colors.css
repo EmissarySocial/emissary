@@ -89,8 +89,7 @@
 		--gray00: #171714;
 		--white: #000000;
 
-		--body-background: var(--gray00);
-		--page-border: solid 1px var(--gray20);
+		--body-background: var(--gray05);
 		--page-background: var(--gray15);
 		--input-border-invalid: var(--red60);
 		--input-background-invalid: var(--red80);
@@ -100,8 +99,7 @@
 
 @media (max-width:768px) {
 	:root {
-		--page-background: var(--gray00);
-		--page-border: none;
+		--page-background: var(--gray05);
 	}
 }
 

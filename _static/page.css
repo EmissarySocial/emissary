@@ -3,7 +3,6 @@
  ************************/
 
 .page {
-    border: var(--page-border);
     background-color: var(--page-background);
     padding: 20px;
     position:relative;
