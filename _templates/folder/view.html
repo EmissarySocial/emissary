@@ -69,7 +69,7 @@
 				<div class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4" hx-get="/{{.Token}}">
 					<article class="card" role="link">
 						{{- if ne .ThumbnailImage "" -}}
-						<picture>
+						<picture loading="lazy" style="aspect-ratio:4/3;">
 							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=600&height=450"/>
 							<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=600&height=450"/>
 						</picture>

@@ -17,7 +17,7 @@
 
 			{{- if eq 1 (len $attachments) -}}
 				{{- range .Attachments -}}
-					<picture style="aspect-ratio:{{.Width}}/{{.Height}}">
+					<picture style="aspect-ratio:{{.Width}}/{{.Height}};">
 						<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700" />
 						<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900" />
 						<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200" />
