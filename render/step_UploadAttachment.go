@@ -44,10 +44,18 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 
 		defer source.Close()
 
-		if err := factory.MediaServer().Put(attachment.Filename, source); err != nil {
+		// Add the image into the media server
+		width, height, err := factory.MediaServer().Put(attachment.Filename, source)
+
+		if err != nil {
 			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment)
 		}
 
+		// Update original dimensions
+		attachment.Width = width
+		attachment.Height = height
+
+		// Try to save
 		if err := factory.Attachment().Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
 		}

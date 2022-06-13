@@ -17,9 +17,11 @@
 
 			{{- if eq 1 (len $attachments) -}}
 				{{- range .Attachments -}}
-					<picture>
-						<source media="(max-width:768)" srcset="/{{$streamID}}/attachments/{{.Filename}}?width=800"/>
-						<img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000">
+					<picture style="aspect-ratio:{{.Width}}/{{.Height}}">
+						<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700" />
+						<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900" />
+						<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200" />
+						<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200" />
 					</picture>
 				{{- end -}}
 

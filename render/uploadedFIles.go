@@ -46,10 +46,15 @@ func uploadedFiles(factory Factory, ctx echo.Context, objectID primitive.ObjectI
 
 		defer source.Close()
 
-		if err := mediaServer.Put(attachment.Filename, source); err != nil {
+		width, height, err := mediaServer.Put(attachment.Filename, source)
+
+		if err != nil {
 			derp.Report(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment))
 			continue // semi-silent failure
 		}
+
+		attachment.Width = width
+		attachment.Height = height
 
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			derp.Report(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment))

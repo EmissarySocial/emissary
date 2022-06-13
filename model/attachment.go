@@ -11,13 +11,15 @@ import (
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `                json:"attachmentId" bson:"_id"`      // ID of this Attachment
-	StreamID     primitive.ObjectID `                json:"streamId"     bson:"streamId"` // ID of the Stream that owns this Attachment
-	Filename     string             `path:"filename" json:"filename"     bson:"filename"` // Name of the file that is currently stored on the filesystem
-	Original     string             `path:"original" json:"original"     bson:"original"` // Original filename uploaded by user
-	Rank         int                `path:"rank"     json:"rank"         bson:"rank"`     // The sort order to display the attachments in.
+	AttachmentID primitive.ObjectID `                bson:"_id"`      // ID of this Attachment
+	StreamID     primitive.ObjectID `                bson:"streamId"` // ID of the Stream that owns this Attachment
+	Filename     string             `path:"filename" bson:"filename"` // Name of the file that is currently stored on the filesystem
+	Original     string             `path:"original" bson:"original"` // Original filename uploaded by user
+	Rank         int                `path:"rank"     bson:"rank"`     // The sort order to display the attachments in.
+	Height       int                `path:"height"   bson:"height"`
+	Width        int                `path:"width"    bson:"width"`
 
-	journal.Journal `json:"journal" bson:"journal"` // Journal entry for fetch compatability
+	journal.Journal `bson:"journal"` // Journal entry for fetch compatability
 }
 
 // NewAttachment returns a fully initialized Attachment object.

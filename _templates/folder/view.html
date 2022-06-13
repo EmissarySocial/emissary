@@ -70,7 +70,8 @@
 					<article class="card" role="link">
 						{{- if ne .ThumbnailImage "" -}}
 						<picture>
-							<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}?width=600&height=450"/>
+							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=600&height=450"/>
+							<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=600&height=450"/>
 						</picture>
 						{{- end -}}
 						<div class="text text-lg align-center">{{.Label}}</div>

@@ -2,6 +2,8 @@ module github.com/whisperverse/whisperverse
 
 go 1.18
 
+replace github.com/whisperverse/mediaserver => ../mediaserver
+
 require (
 	github.com/benpate/compare v0.1.3
 	github.com/benpate/convert v0.13.5
@@ -37,7 +39,7 @@ require (
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
-	github.com/whisperverse/mediaserver v0.1.3
+	github.com/whisperverse/mediaserver v0.2.0
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
