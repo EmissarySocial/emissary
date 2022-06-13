@@ -1,5 +1,5 @@
 /****************************
- * Page-Layout classes
+ * PAGE LAYOUT CLASSES
  ****************************/
 
 * {
@@ -7,12 +7,13 @@
 }
 
 body {
-	background-color: var(--gray05);
-	color: var(--black);
+	background-color: var(--body-background);
+	color: var(--gray80);
 }
 
 header {
-
+	background-color: var(--white);
+	color: var(--gray80);
 }
 
 nav {
@@ -85,89 +86,4 @@ main {
 
 footer {
 	
-}
-
-.page {
-    border: solid 1px var(--gray20);
-    background-color: var(--white);
-    padding: 20px;
-    position:relative;
-	line-height:180%;
-	margin-bottom: 50px;
-}
-
-@media screen and (max-width:35.5em) {
-	.page {
-		border:0px;
-		background-color: var(--gray05);
-	}
-}
-
-#menu-bar {
-	border-top: solid 1px var(--gray20);
-	border-bottom: solid 1px var(--gray20);
-	margin-bottom: 30px;
-	padding: 5px 0px;
-	line-height: 100%;
-	display:flex;
-	flex-direction: row;
-	flex-wrap:nowrap;
-	overflow-x: scroll;
-}
-
-#menu-bar div {
-	white-space: nowrap;
-	flex-grow: 1;
-}
-
-#menu-bar div.left {
-	text-align: left;
-}
-
-#menu-bar div.center {
-	text-align: center;
-}
-
-#menu-bar div.right {
-	text-align: right;
-}
-
-#menu-bar a,
-#menu-bar button {
-	display: inline-block;
-	padding: 10px 20px;
-	border-radius: var(--border-radius);
-	color: var(--gray80);
-	background-color:inherit;
-	margin:0px 4px;
-}
-
-#menu-bar a:hover,
-#menu-bar a:focus,
-#menu-bar button:hover,
-#menu-bar button:focus {
-	background-color: var(--gray10);
-	color: var(--gray90);
-}
-
-#menu-bar a.selected,
-#menu-bar a.selected:hover,
-#menu-bar a.selected:focus,
-#menu-bar button.selected,
-#menu-bar button.selected:hover,
-#menu-bar button.selected:hover {
-	background-color: var(--gray20);
-	color: var(--black);
-}
-
-#breadcrumbs {
-	margin-bottom:20px;
-}
-
-/* Alternate colors for dark mode */
-@media (prefers-color-scheme: dark) {
-
-	body {
-		color:var(--gray80);
-	}
 }

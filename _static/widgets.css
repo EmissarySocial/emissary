@@ -1,7 +1,6 @@
-article {
-	padding:10px;
-	margin-bottom:25px;
-}
+/****************************
+ * CARD WIDGET CLASSES
+ ****************************/
 
 .card-group {
 	margin-right: -1px;
@@ -19,14 +18,8 @@ article {
 	text-overflow: ellipsis;
 }
 
-.picture {
-	background-color: var(--gray20);
-	margin:-10px -10px 10px -10px;
-	object-fit:cover;
-}
-
-.picture img {
-	width:100%;
+.card picture {
+	margin-bottom:10px;
 }
 
 @media screen and (max-width:35.5em) {
@@ -34,6 +27,87 @@ article {
 		border:none;
 		margin: 0px -10px 20px -10px!important;
 	}
+}
+
+@media screen and (min-width:35.5em) {
+
+	.card-group {
+		margin-right: -5px;
+	}
+
+	.card {
+		margin:0px 5px 5px 0px;
+	}
+
+	.card.padded {
+		padding:5px;
+	}
+}
+
+@media screen and (min-width:48em) {
+
+	.card-group {
+		margin-right: -10px;
+	}
+
+	.card-group .card {
+		margin: 0px 10px 10px 0px;
+	}
+
+	.card.padded {
+		padding:10px;
+	}
+}
+
+@media screen and (min-width:64em) {
+
+	.card-group {
+		margin-right: -20px;
+	}
+
+	.card-group .card {
+		margin: 0px 20px 20px 0px;
+	}
+
+	.card.padded {
+		padding:50px;
+	}
+}
+
+@media screen and (min-width:80em) {
+
+	.card-group {
+		margin-right: -30px;
+	}
+
+	.card-group .card {
+		margin: 0px 30px 30px 0px;
+	}
+
+	.card.padded {
+		padding:20px;
+	}
+}
+
+/****************************
+ * PICTURE/PHOTO FORMATTING
+ ****************************/
+
+ picture {
+	display: block;
+	width:100%;
+	background-color: var(--gray20);
+	margin:0px;
+	padding:0px;
+	border:0px;
+}
+
+picture img {
+	display:block;
+	margin:0px;
+	padding:0px;
+	border:0px;
+	width:100%;
 }
 
 .aspect-2-3 {
@@ -95,64 +169,4 @@ article {
 
 .slideshow > div > img {
 	object-fit:scale-down;
-}
-
-@media screen and (min-width:35.5em) {
-
-	.card-group {
-		margin-right: -5px;
-	}
-
-	.card {
-		margin:0px 5px 5px 0px;
-	}
-
-	.card.padded {
-		padding:5px;
-	}
-}
-
-@media screen and (min-width:48em) {
-
-	.card-group {
-		margin-right: -10px;
-	}
-
-	.card-group .card {
-		margin: 0px 10px 10px 0px;
-	}
-
-	.card.padded {
-		padding:10px;
-	}
-}
-
-@media screen and (min-width:64em) {
-
-	.card-group {
-		margin-right: -20px;
-	}
-
-	.card-group .card {
-		margin: 0px 20px 20px 0px;
-	}
-
-	.card.padded {
-		padding:50px;
-	}
-}
-
-@media screen and (min-width:80em) {
-
-	.card-group {
-		margin-right: -30px;
-	}
-
-	.card-group .card {
-		margin: 0px 30px 30px 0px;
-	}
-
-	.card.padded {
-		padding:20px;
-	}
 }
