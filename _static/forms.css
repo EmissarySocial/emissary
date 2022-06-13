@@ -216,16 +216,16 @@ button:focus,
 
 button.primary,
 .button.primary {
-    background:linear-gradient(var(--blue50), var(--blue60));
-    color: white!important;
+    background-image: linear-gradient(var(--button-primary-background))!important;
+    color: var(--button-primary-color)!important;
 }
 
 button.primary:hover,
 button.primary:focus,
 .button.primary:hover,
 .button.primary:focus {
-    background:linear-gradient(var(--blue40), var(--blue50));
-    color: white;
+    background-image: linear-gradient(var(--button-primary-background-hover))!important;
+    color: var(--button-primary-color-hover)!important;
 }
 
 button.warning,

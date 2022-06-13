@@ -63,6 +63,11 @@
 	--input-border-invalid: var(--red40);
 	--input-background-invalid: var(--red20);
 	--input-color-invalid: var(--red50);
+	--button-primary-color:var(--white);
+	--button-primary-color-hover:var(--white);
+	--button-primary-background:var(--blue50), var(--blue60);
+	--button-primary-background-hover:var(--blue40), var(--blue50);
+	--heading-color:var(--black);
 
 	--border-radius: 7px;
 }
@@ -94,6 +99,11 @@
 		--input-border-invalid: var(--red60);
 		--input-background-invalid: var(--red80);
 		--input-color-invalid: var(--red50);
+
+		--button-primary-color: var(--blue20);
+		--button-primary-color-hover: var(--blue10);
+		--button-primary-background: var(--blue70), var(--blue80);
+		--button-primary-background-hover: var(--blue50), var(--blue60);
 	}
 }
 

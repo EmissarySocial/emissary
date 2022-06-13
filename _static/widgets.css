@@ -13,19 +13,22 @@
 
 .card {
 	border: solid 1px var(--gray20);
-	background-color: var(--white);
+	background-color: var(--gray00);
 	position:relative;
 	text-overflow: ellipsis;
 }
 
-.card picture {
-	margin-bottom:10px;
+.card .text {
+	padding-top:var(--rhythm);
+	padding-bottom:var(--rhythm);
 }
 
+
 @media screen and (max-width:35.5em) {
+
 	.card {
 		border:none;
-		margin: 0px -10px 40px -10px!important;
+		margin-bottom: 40px!important;
 	}
 }
 
@@ -109,6 +112,16 @@ picture img {
 	padding:0px;
 	border:0px;
 	width:100%;
+}
+
+@media screen and (max-width:568px) {
+
+	picture {
+		margin-left: -10px;
+		margin-right: -10px;
+		margin-bottom: 20px;
+	}
+
 }
 
 .aspect-2-3 {
