@@ -2,9 +2,11 @@ package config
 
 // Config defines all of the domains available on this server
 type Config struct {
-	AdminURL            string     `path:"adminUrl"            json:"adminUrl"`            // path to use for the server admin console (if blank, then console is not available)
+	AdminURL            string     `path:"adminUrl"            json:"adminUrl"`            // Path to use for the server admin console (if blank, then console is not available)
+	AdminEmail          string     `path:"adminEmail"          json:"adminEmail"`          // Email address of the server owner - also used as primary contact for this server
 	AdminPassword       string     `path:"adminPassword"       json:"adminPassword"`       // Password for access to domain admin console
 	Domains             DomainList `path:"domains"             json:"domains"`             // Slice of one or more domain configurations
+	Certificates        Folder     `path:"certificates"        json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
 	Templates           Folder     `path:"templates"           json:"templates"`           // Folder containing all stream templates
 	Layouts             Folder     `path:"layouts"             json:"layouts"`             // Folder containing all system layouts
 	Static              Folder     `path:"static"              json:"static"`              // Folder containing all attachments
@@ -52,6 +54,11 @@ func DefaultConfig(adminURL string, adminPassword string) Config {
 			Adapter:  "FILE",
 			Location: "./_templates/",
 			Sync:     true,
+		},
+		Certificates: Folder{
+			Adapter:  "FILE",
+			Location: "./_certificates/",
+			Sync:     false,
 		},
 		AttachmentOriginals: Folder{
 			Adapter:  "FILE",

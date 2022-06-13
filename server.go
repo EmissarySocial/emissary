@@ -9,6 +9,7 @@ import (
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/route"
 	"github.com/whisperverse/whisperverse/server"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 func main() {
@@ -27,21 +28,25 @@ func main() {
 	fmt.Println("Initializing web server...")
 	e := route.New(factory)
 
-	e.Use(middleware.Recover())
+	// Global middleware
 	// TODO: implement echo.Security middleware
+	e.Use(middleware.Recover())
 	e.Use(steranko.Middleware(factory))
 
-	/*
-		e.AutoTLSManager = autocert.Manager{
-			HostPolicy: autocert.HostWhitelist(c.DomainNames()...),
-			Cache:      autocert.DirCache(".cache"),
-			Prompt:     autocert.AcceptTOS,
-		}
+	// Initialize Let's Encrypt autocert for TLS certificates
+	e.AutoTLSManager = autocert.Manager{
+		HostPolicy: autocert.HostWhitelist(c.DomainNames()...),
+		Cache:      autocert.DirCache(c.Certificates.Location),
+		Prompt:     autocert.AcceptTOS,
+		Email:      c.AdminEmail,
+	}
 
-		fmt.Println("Starting web server..")
-		e.Logger.Fatal(e.StartAutoTLS(":443"))
-	*/
+	spew.Dump(c.DomainNames())
 
-	fmt.Println("Starting web server..")
+	fmt.Println("Starting HTTPS web server..")
+	go e.StartAutoTLS(":443")
+
+	// Start HTTP web server
+	fmt.Println("Starting HTTP web server..")
 	e.Logger.Fatal(e.Start(":80"))
 }
