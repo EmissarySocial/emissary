@@ -72,8 +72,17 @@ input[type=radio] {
 }
 
 .toggle-container[value=true] .toggle {
-    background-color: #19a21f;
-    border-color: #19a21f;
+    -background-color: #19a21f;
+    -border-color: #19a21f;
+    background-color: var(--blue50);
+    border-color: var(--blue50);
+}
+
+@media (prefers-color-scheme: dark) {
+    .toggle-container[value=true] .toggle {
+        background-color: var(--blue70);
+        border-color: var(--blue70);
+    }
 }
 
 .toggle-container .marker {
@@ -268,18 +277,6 @@ button[disabled].barberpole
     )!important;
   background-size: 200% 200%;
   animation: barberpole 3s linear infinite;
-}
-
-@-webkit-keyframes barberpole {
-    100% {
-        background-position: 100% 100%;
-    }
-}
-
-@keyframes barberpole {
-    100% {
-        background-position: 100% 100%;
-    }
 }
 
 /***************************
