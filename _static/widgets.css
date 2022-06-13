@@ -157,7 +157,6 @@ picture img {
 	-webkit-overflow-scrolling: touch;
 	scroll-behavior: smooth;
 	width:100%;
-	aspect-ratio:1.3;
 }
 
 .slideshow::-webkit-scrollbar {
@@ -168,7 +167,7 @@ picture img {
 	background: transparent;
 }
 
-.slideshow > div {
+.slideshow > picture {
 	scroll-snap-align:center;
 	height:100%;
 	width:90%;
@@ -181,6 +180,7 @@ picture img {
 	margin-right:5px;
 }
 
-.slideshow > div > img {
-	object-fit:scale-down;
+.slideshow > picture > img {
+	display:block;
+	width:100%;
 }

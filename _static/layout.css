@@ -9,6 +9,7 @@
 body {
 	background-color: var(--body-background);
 	color: var(--gray70);
+	overflow-x: hidden;
 }
 
 header {

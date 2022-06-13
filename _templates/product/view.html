@@ -28,7 +28,12 @@
 			{{- else -}}
 				<div class="slideshow">
 					{{- range .Attachments -}}
-						<div script="on click scrollIntoView() me"><img src="/{{$streamID}}/attachments/{{.Filename}}?width=1000"></div>
+						<picture script="on click scrollIntoView() me">
+							<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700&height=525" />
+							<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900&height=675" />
+							<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200&height=900" />
+							<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200&height=900" />
+						</picture>
 					{{- end -}}
 				</div>
 			{{- end -}}
