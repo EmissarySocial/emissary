@@ -73,6 +73,9 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 // save adds/updates an StreamDraft in the database
 func (service *StreamDraft) Save(draft *model.Stream, note string) error {
 
+	// RULE: Sanitize content
+	service.contentLibrary.Validate(&draft.Content)
+
 	if err := service.collection.Save(draft, note); err != nil {
 		return derp.Wrap(err, "service.StreamDraft.Save", "Error saving draft", draft, note)
 	}

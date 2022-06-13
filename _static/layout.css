@@ -26,7 +26,7 @@ nav {
     color: var(--gray80);
 	font-weight:400;
 	background-color: var(--white);
-	border-bottom: solid 1px var(--gray20);
+	border-bottom: solid 1px var(--gray10);
 	display: flex;
 	justify-content: center;
 	flex-wrap:wrap;

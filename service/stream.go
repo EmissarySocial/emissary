@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/nebula"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,12 +23,13 @@ type Stream struct {
 	draftService          *StreamDraft
 	attachmentService     *Attachment
 	formLibrary           *form.Library
+	contentLibrary        *nebula.Library
 	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, contentLibrary *nebula.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
 
 	return Stream{
 		collection:            collection,
@@ -35,6 +37,7 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
 		draftService:          draftService,
 		attachmentService:     attachmentService,
 		formLibrary:           formLibrary,
+		contentLibrary:        contentLibrary,
 		templateUpdateChannel: templateUpdateChannel,
 		streamUpdateChannel:   streamUpdateChannel,
 	}
@@ -118,6 +121,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Error calculating max rank")
 	}
 	stream.Rank = maxRank
+
+	// RULE: Sanitize Content
+	service.contentLibrary.Validate(&stream.Content)
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)

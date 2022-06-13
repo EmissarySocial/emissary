@@ -116,6 +116,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 			factory.StreamDraft(),
 			factory.Attachment(),
 			factory.FormLibrary(),
+			factory.ContentLibrary(),
 			factory.TemplateUpdateChannel(),
 			factory.StreamUpdateChannel(),
 		)
