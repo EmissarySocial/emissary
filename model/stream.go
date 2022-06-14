@@ -132,6 +132,17 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	return result
 }
 
+// DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
+// is visible to anonymous visitors
+func (stream *Stream) DefaultAllowAnonymous() bool {
+	for index := range stream.DefaultAllow {
+		if stream.DefaultAllow[index] == MagicGroupIDAnonymous {
+			return true
+		}
+	}
+	return false
+}
+
 /*******************************************
  * OTHER METHODS
  *******************************************/
