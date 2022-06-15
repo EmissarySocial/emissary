@@ -202,9 +202,8 @@ func (step StepStripeProduct) getTaxRates(api client.API) []form.OptionCode {
 	for it.Next() {
 		taxRate := it.TaxRate()
 		result = append(result, form.OptionCode{
-			Value:       taxRate.ID,
-			Label:       taxRate.DisplayName,
-			Description: taxRate.Description,
+			Value: taxRate.ID,
+			Label: taxRate.Description,
 		})
 	}
 
