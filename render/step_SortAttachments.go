@@ -39,9 +39,10 @@ func (step StepSortAttachments) Post(renderer Renderer) error {
 	factory := renderer.factory()
 	attachmentService := factory.Attachment()
 
-	for rank, id := range formPost.Keys {
+	for index, id := range formPost.Keys {
 
 		var attachment model.Attachment
+		newRank := index + 1 // Adding one so that ranks don't include 0 (rank unset)
 
 		// Collect inputs to make a selection criteria
 		attachmentID, err := primitive.ObjectIDFromHex(id)
@@ -60,11 +61,11 @@ func (step StepSortAttachments) Post(renderer Renderer) error {
 		}
 
 		// If the rank for this attachment has not changed, then don't waste time saving it again.
-		if attachment.Rank == rank {
+		if attachment.Rank == newRank {
 			continue
 		}
 
-		attachment.Rank = rank
+		attachment.Rank = newRank
 
 		// Try to save back to the database
 		if err := attachmentService.Save(&attachment, step.Message); err != nil {

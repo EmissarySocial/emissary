@@ -37,7 +37,10 @@ func (step StepSort) Post(renderer Renderer) error {
 		return derp.NewBadRequestError("render.StepSort.Post", "Error binding body")
 	}
 
-	for rank, id := range formPost.Keys {
+	for index, id := range formPost.Keys {
+
+		// Adding one so that our index does not include 0 (rank not set)
+		newRank := index + 1
 
 		// Collect inputs to make a selection criteria
 		objectID, err := primitive.ObjectIDFromHex(id)
@@ -56,13 +59,13 @@ func (step StepSort) Post(renderer Renderer) error {
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
-		if convert.Int(path.Get(object, step.Values)) == rank {
+		if convert.Int(path.Get(object, step.Values)) == newRank {
 			continue
 		}
 
 		// Update the object
-		if err := path.Set(object, step.Values, rank); err != nil {
-			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, rank)
+		if err := path.Set(object, step.Values, newRank); err != nil {
+			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank)
 		}
 
 		// Try to save back to the database

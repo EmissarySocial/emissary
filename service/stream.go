@@ -115,17 +115,19 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	stream.AsFeature = template.AsFeature
 
 	// RULE: Calculate rank
-	maxRank, err := service.MaxRank(context.TODO(), stream.ParentID)
+	if stream.Rank == 0 {
+		maxRank, err := service.MaxRank(context.TODO(), stream.ParentID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error calculating max rank")
+		}
+		stream.Rank = maxRank
+	}
 
 	// RULE: Default Token
 	if stream.Token == "" {
 		stream.Token = stream.StreamID.Hex()
 	}
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error calculating max rank")
-	}
-	stream.Rank = maxRank
 
 	// RULE: Sanitize Content
 	service.contentLibrary.Validate(&stream.Content)
