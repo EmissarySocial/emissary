@@ -132,6 +132,12 @@ func New(stepInfo datatype.Map) (Step, error) {
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
+	case "with-prev-sibling":
+		return NewWithPrevSibling(stepInfo)
+
+	case "with-next-sibling":
+		return NewWithNextSibling(stepInfo)
+
 	case "with-parent":
 		return NewWithParent(stepInfo)
 

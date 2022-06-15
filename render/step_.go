@@ -130,6 +130,12 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithParent:
 		return StepWithParent(s)
+
+	case step.WithPrevSibling:
+		return StepWithPrevSibling(s)
+
+	case step.WithNextSibling:
+		return StepWithNextSibling(s)
 	}
 
 	return StepError{Original: stepInfo}

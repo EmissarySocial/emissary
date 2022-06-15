@@ -354,6 +354,71 @@ func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *mod
 	return service.Load(criteria, result)
 }
 
+func (service *Stream) LoadWithOptions(criteria exp.Expression, options option.Option, result *model.Stream) error {
+
+	const location = "service.stream.LoadWithOptions"
+
+	it, err := service.List(notDeleted(criteria), options)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting iterator")
+	}
+
+	for it.Next(result) {
+		return nil
+	}
+
+	return derp.NewNotFoundError(location, "collection is empty")
+}
+
+func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortAsc("rank"), result)
+}
+
+func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+
+	if rank == 0 {
+		return service.LoadLastSibling(parentID, result)
+	}
+
+	criteria := exp.Equal("parentId", parentID).AndLessThan("rank", rank)
+	options := option.SortDesc("rank")
+
+	err := service.LoadWithOptions(criteria, options, result)
+
+	if err == nil {
+		return nil
+	}
+
+	if derp.NotFound(err) {
+		return service.LoadLastSibling(parentID, result)
+	}
+
+	return derp.Wrap(err, "service.stream.LoadPreviousSibling", "Error loading Previous Sibling")
+}
+
+func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+
+	criteria := exp.Equal("parentId", parentID).AndGreaterThan("rank", rank)
+	options := option.SortAsc("rank")
+
+	err := service.LoadWithOptions(criteria, options, result)
+
+	if err == nil {
+		return nil
+	}
+
+	if derp.NotFound(err) {
+		return service.LoadFirstSibling(parentID, result)
+	}
+
+	return derp.Wrap(err, "service.stream.LoadPreviousSibling", "Error loading Previous Sibling")
+}
+
+func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortDesc("rank"), result)
+}
+
 // Count returns the number of (non-deleted) records in the Stream collection
 func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
 	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))

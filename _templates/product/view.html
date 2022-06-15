@@ -5,11 +5,24 @@
 			<h1 class="align-center">{{.Label}}</h1>
 		{{- end -}}
 		
-		{{- if .UserCan "edit" -}}
-			<div id="menu-bar">
-				<a href="/{{.StreamID}}/edit">Edit Product</a>
-			</div>
+		{{- if ne "" .Description -}}
+			<article class="space-after">{{.Description}}</article>
 		{{- end -}}
+
+		<div id="menu-bar" hx-push-url="true">
+			<div class="left">
+				<a hx-get="/{{.StreamID}}/prev">&larr; Previous</a>
+			</div>
+			<div class="center">
+				<a hx-get="/{{.ParentID}}">All</a>
+				{{- if .UserCan "edit" -}}
+					<a href="/{{.StreamID}}/edit">Edit Product</a>
+				{{- end -}}
+			</div>
+			<div class="right">
+				<a hx-get="/{{.StreamID}}/next">Next &rarr;</a>
+			</div>
+		</div>
 
 		<article class="space-below">
 			{{- $attachments := .Attachments -}}
@@ -55,10 +68,6 @@
 				</article>
 			{{- end -}}
 	
-		{{- end -}}
-
-		{{- if ne "" .Description -}}
-			<article class="space-after">{{.Description}}</article>
 		{{- end -}}
 
 		<article class="space-after">{{- .Content -}}</article>

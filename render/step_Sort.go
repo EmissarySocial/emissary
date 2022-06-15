@@ -3,8 +3,10 @@ package render
 import (
 	"io"
 
+	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,8 +37,6 @@ func (step StepSort) Post(renderer Renderer) error {
 		return derp.NewBadRequestError("render.StepSort.Post", "Error binding body")
 	}
 
-	schema := renderer.schema()
-
 	for rank, id := range formPost.Keys {
 
 		// Collect inputs to make a selection criteria
@@ -56,19 +56,20 @@ func (step StepSort) Post(renderer Renderer) error {
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
-		if schema.GetInt(object, step.Values) == rank {
+		if convert.Int(path.Get(object, step.Values)) == rank {
 			continue
 		}
 
 		// Update the object
-		if err := schema.Set(object, step.Values, rank); err != nil {
-			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, rank)
+		if err := path.Set(object, step.Values, rank); err != nil {
+			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, rank)
 		}
 
 		// Try to save back to the database
 		if err := renderer.service().ObjectSave(object, step.Message); err != nil {
 			return derp.Wrap(err, "render.StepSort.Post", "Error saving record tot he database", object)
 		}
+
 	}
 
 	// Done.  Nothing more to do here.

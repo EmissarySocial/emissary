@@ -7,6 +7,7 @@
 		"type": "object",
 		"properties": {
 			"label": {"type": "string", "default": "New Product"},
+			"rank": {"type":"integer", "minimum":0},
 			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
 		}
 	},
@@ -33,6 +34,30 @@
 		},
 		"view": {
 			"step": "view-html",
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"prev": {
+			"steps": [
+				{"step":"with-prev-sibling", "steps":[
+					{"step": "redirect-to", "url":"/{{.StreamID}}"}
+				]}
+			],
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"next": {
+			"steps": [
+				{"step":"with-next-sibling", "steps":[
+					{"step": "redirect-to", "url":"/{{.StreamID}}"}
+				]}
+			],
 			"stateRoles": {
 				"new": ["owner"], 
 				"ready":["anonymous"],

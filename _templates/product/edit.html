@@ -15,47 +15,43 @@
 		<h1 class="align-center">{{.Label}}</h1>
 	{{- end -}}
 
-	{{- if .UserCan "edit" -}}
-		<div id="menu-bar">
-			<div class="left">
-				<a href="/{{.Token}}/view">&larr; Public View</a>
+	<div id="menu-bar">
+		<div class="left">
+			<a href="/{{.Token}}/view">&larr; Public View</a>
 
-				{{- if .UserCan "product" -}}
-					<a hx-get="/{{.Token}}/product">Product Info</a>
-				{{- end -}}
+			{{- if .UserCan "product" -}}
+				<a hx-get="/{{.Token}}/product">Product Info</a>
+			{{- end -}}
 
-				{{- if .UserCan "attachments" -}}
-					<a hx-get="/{{.Token}}/attachments">Attachments</a>
-				{{- end -}}
+			{{- if .UserCan "attachments" -}}
+				<a hx-get="/{{.Token}}/attachments">Attachments</a>
+			{{- end -}}
 
-			</div>
-
-			<div class="right">
-				{{- if .UserCan "delete" -}}
-					<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-				{{- end -}}
-			</div>
 		</div>
-	{{- end -}}
 
-		<div class="layout-vertical">
-			<div class="layout-vertical-elements">
-				<div class="layout-vertical-element">
-					<form hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="autosave">
-						<label>Title</label>
-						<input type="text" placeholder="Product Name" name="label" value="{{.Label}}" script="install Autosave">
-					</form>
-				</div>
-				<div class="layout-vertical-element">
-					<label>Product Description</label>
-					<div class="content-editor">
-						{{.ContentEditor}}
-						<div class="text-sm gray50">This content is updated live on the website.</div>
-					</div>
+		<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+		</div>
+	</div>
+
+	<div class="layout-vertical">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-element">
+				<form hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="autosave">
+					<label>Title</label>
+					<input type="text" placeholder="Product Name" name="label" value="{{.Label}}" script="install Autosave">
+				</form>
+			</div>
+			<div class="layout-vertical-element">
+				<label>Product Description</label>
+				<div class="content-editor">
+					{{.ContentEditor}}
+					<div class="text-sm gray50">This content is updated live on the website.</div>
 				</div>
 			</div>
 		</div>
-
-	</form>
+	</div>
 
 </div>

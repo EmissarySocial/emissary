@@ -65,12 +65,6 @@
 				]
 			}]
 		},
-		"delete": {
-			"roles": ["editor"],
-			"steps": [{
-				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
-			}]
-		},
 		"new": {
 			"roles": ["editor"],
 			"steps":[{
@@ -82,6 +76,10 @@
 				]
 			}]
 		},
+		"sort":{
+			"roles":["editor"],
+			"step":"sort"
+		},
 		"sharing": {
 			"roles": ["editor"],
 			"steps": [
@@ -90,6 +88,12 @@
 					{"step":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]
+		},
+		"delete": {
+			"roles": ["editor"],
+			"steps": [{
+				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
+			}]
 		},
 		"rss": {
 			"roles": ["viewer"],
