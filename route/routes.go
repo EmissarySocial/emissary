@@ -33,7 +33,8 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/.well-known/webmention", handler.PostWebMention(factory), domain)
 
 	// Local links for static resources
-	e.Static("/static", factory.StaticPath())
+	e.Group("", middleware.CacheControl("public, max-age=60")).
+		Static("/static", factory.StaticPath())
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory), domain)
