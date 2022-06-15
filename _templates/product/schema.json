@@ -82,7 +82,6 @@
 		"edit":{
 			"roles": ["owner"],
 			"steps":[
-				{"step": "set-data", "paths": ["label"]},
 				{"step": "edit-content", "file":"edit"},
 				{"step": "save", "comment":"Content edited by {{.Author}}"}
 			]

@@ -1,15 +1,16 @@
-<link rel="stylesheet" href="/static/nebula/nebula.css">
+<div class="page" hx-sse="connect:/{{.StreamID}}/sse">
+<div hx-get="/{{.StreamID}}/edit" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
+	<link rel="stylesheet" href="/static/nebula/nebula.css">
 
-<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
+	<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
 
-<div class="page">
+	<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
+	<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
+	<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
+	<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
+	<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
+	<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
 
 	{{- if ne "" .Label -}}
 		<h1 class="align-center">{{.Label}}</h1>
@@ -46,4 +47,5 @@
 		<div class="text-sm gray50">This content is updated live on the website.</div>
 	</div>
 
+</div>
 </div>
