@@ -117,6 +117,11 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	// RULE: Calculate rank
 	maxRank, err := service.MaxRank(context.TODO(), stream.ParentID)
 
+	// RULE: Default Token
+	if stream.Token == "" {
+		stream.Token = stream.StreamID.Hex()
+	}
+
 	if err != nil {
 		return derp.Wrap(err, location, "Error calculating max rank")
 	}

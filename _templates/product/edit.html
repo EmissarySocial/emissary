@@ -17,14 +17,18 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<a href="/{{.Token}}/view">&larr; Public View</a>
+			<a href="/{{.StreamID}}">&larr; Public View</a>
+
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.StreamID}}/properties">Page Properties</a>
+			{{- end -}}
 
 			{{- if .UserCan "product" -}}
-				<a hx-get="/{{.Token}}/product">Product Info</a>
+				<a hx-get="/{{.StreamID}}/product">Product Info</a>
 			{{- end -}}
 
 			{{- if .UserCan "attachments" -}}
-				<a hx-get="/{{.Token}}/attachments">Attachments</a>
+				<a hx-get="/{{.StreamID}}/attachments">Attachments</a>
 			{{- end -}}
 
 		</div>
@@ -36,22 +40,10 @@
 		</div>
 	</div>
 
-	<div class="layout-vertical">
-		<div class="layout-vertical-elements">
-			<div class="layout-vertical-element">
-				<form hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="autosave">
-					<label>Title</label>
-					<input type="text" placeholder="Product Name" name="label" value="{{.Label}}" script="install Autosave">
-				</form>
-			</div>
-			<div class="layout-vertical-element">
-				<label>Product Description</label>
-				<div class="content-editor">
-					{{.ContentEditor}}
-					<div class="text-sm gray50">This content is updated live on the website.</div>
-				</div>
-			</div>
-		</div>
+	<label>Rich Text Description</label>
+	<div class="content-editor">
+		{{.ContentEditor}}
+		<div class="text-sm gray50">This content is updated live on the website.</div>
 	</div>
 
 </div>

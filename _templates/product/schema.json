@@ -6,7 +6,9 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type": "string", "default": "New Product"},
+			"token": {"type":"string", "format":"token", "maxlength":100},
+			"label": {"type": "string", "format":"no-html", "default": "New Product", "maxlength":100},
+			"description": {"type": "string", "format":"no-html", "maxlength":1000},
 			"rank": {"type":"integer", "minimum":0},
 			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
 		}
@@ -77,12 +79,18 @@
 			],
 			"removed-step": "stripe-complete"
 		},
-
 		"edit":{
 			"roles": ["owner"],
 			"steps":[
 				{"step": "set-data", "paths": ["label"]},
 				{"step": "edit-content", "file":"edit"},
+				{"step": "save", "comment":"Content edited by {{.Author}}"}
+			]
+		},
+		"properties":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "edit-properties"},
 				{"step": "save", "comment":"Content edited by {{.Author}}"}
 			]
 		},
