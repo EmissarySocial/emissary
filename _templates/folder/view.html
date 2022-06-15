@@ -1,4 +1,4 @@
-<div class="page">
+<div class="page" hx-push-url="true">
 
 	<h1>{{.Label}}</h1>
 
@@ -7,7 +7,7 @@
 	{{- end -}}
 
 	{{- if .UserCan "edit" -}}
-		<div id="menu-bar" hx-push-url="true">
+		<div id="menu-bar">
 			<div class="left">
 				{{- if .UserCan "new" -}}
 					<button hx-get="/{{.Token}}/new">Add Item</button>

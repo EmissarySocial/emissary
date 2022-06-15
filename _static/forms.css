@@ -181,7 +181,6 @@ button,
 .button {
     font-size:12pt;
     font-weight:400;
-    line-height:100%;
     margin-right:5px;
     box-sizing:border-box;
     width:auto;

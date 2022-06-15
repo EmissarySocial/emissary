@@ -65,7 +65,7 @@
 	--input-color-invalid: var(--red50);
 	--button-primary-color:var(--white);
 	--button-primary-color-hover:var(--white);
-	--button-primary-background:var(--blue50), var(--blue60);
+	--button-primary-background:#3333cc, #3333cc;
 	--button-primary-background-hover:var(--blue40), var(--blue50);
 	--heading-color:var(--black);
 	--link-color:var(--blue60);
