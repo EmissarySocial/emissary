@@ -42,7 +42,6 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 			Price:    stripe.String(priceID),
 			Quantity: stripe.Int64(1),
 		}},
-		AutomaticTax:     &stripe.CheckoutSessionAutomaticTaxParams{Enabled: stripe.Bool(true)}, // TODO: This could be a parameter :)
 		Mode:             stripe.String(string(stripe.CheckoutSessionModePayment)),
 		SuccessURL:       stripe.String(address + "/" + stream.StreamID.Hex() + "/success?session={CHECKOUT_SESSION_ID}"),
 		CancelURL:        stripe.String(address + "/" + stream.ParentID.Hex()),
@@ -54,6 +53,10 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		for index := range params.LineItems {
 			params.LineItems[index].TaxRates = stripe.StringSlice([]string{taxRateID})
 		}
+	} else {
+		// Otherwise, use automatic tax calculation
+		// TODO: This could be a parameter :)
+		params.AutomaticTax = &stripe.CheckoutSessionAutomaticTaxParams{Enabled: stripe.Bool(true)}
 	}
 
 	// If shipping rates are assinged, then add them to the order
