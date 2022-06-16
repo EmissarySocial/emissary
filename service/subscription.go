@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/benpate/data"
@@ -44,6 +43,8 @@ func (service *Subscription) New() model.Subscription {
 
 func (service *Subscription) start() {
 
+	/* COMMENTED OUT TO SEE HOW THIS AFFECTS LIVE SERVER PERFORMANCE.
+
 	ticker := time.NewTicker(20 * time.Minute)
 	defer ticker.Stop()
 
@@ -64,6 +65,7 @@ func (service *Subscription) start() {
 			subscription = model.Subscription{}
 		}
 	}
+	*/
 }
 
 func (service *Subscription) pollSubscription(sub *model.Subscription) {
