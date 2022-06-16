@@ -26,8 +26,8 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Modal Wrapper
 	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
-	b.Div().Class("modal-underlay").Close()
-	b.Div().Class("modal-content").EndBracket()
+	b.Div().ID("modal-underlay").Close()
+	b.Div().ID("modal-window").EndBracket()
 
 	// Write inner items
 	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {

@@ -56,7 +56,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: datatype.Map{"options": step.getTaxRates(api)}},
 					{Kind: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: datatype.Map{"options": step.getShippingMethods(api)}},
 					{Kind: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
-					{Kind: "toggle", Label: "", Path: "data.active", Options: datatype.Map{"true-text": "Visible to Public", "false-text": "Hide from Public"}},
+					{Kind: "toggle", Label: "", Path: "data.active", Options: datatype.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
 					{Kind: "hidden", Path: "data.productId"},
 					{Kind: "hidden", Path: "data.priceId"},
 				},

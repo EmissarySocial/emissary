@@ -1,3 +1,5 @@
+<title>{{.DomainLabel}} | {{.Label}}</title>
+
 <div hx-sse="connect:/{{.StreamID}}/sse">
 	<div class="page" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
