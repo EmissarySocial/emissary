@@ -1,7 +1,6 @@
 module github.com/whisperverse/whisperverse
 
 go 1.18
-
 require (
 	github.com/benpate/compare v0.1.3
 	github.com/benpate/convert v0.13.5
@@ -21,6 +20,7 @@ require (
 	github.com/benpate/null v0.6.4
 	github.com/benpate/path v0.8.4
 	github.com/benpate/remote v0.6.1
+	github.com/benpate/rosetta v0.1.1
 	github.com/benpate/schema v0.15.1
 	github.com/benpate/steranko v0.7.3
 	github.com/davecgh/go-spew v1.1.1
