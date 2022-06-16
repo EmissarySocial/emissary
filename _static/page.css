@@ -4,11 +4,11 @@
 
 .page {
     background-color: var(--page-background);
-    padding: 20px;
+    padding: 10px 20px;
     position:relative;
 	line-height:150%;
 	margin-bottom: 50px;
-	border-radius: 8px;
+	border: solid 1px var(--gray15);
 }
 
 /************************
@@ -16,7 +16,6 @@
  ************************/
 
  #menu-bar {
-	border-top: solid 1px var(--gray20);
 	border-bottom: solid 1px var(--gray20);
 	margin-bottom: 30px;
 	padding: 5px 0px;

@@ -1,8 +1,8 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
+	<!--
 	<div class="flex-row">
-		<h1>{{.Label}}</h1>
 		<div class="text-sm align-right">
 			{{- if .UserCan "publish" -}}
 				{{- if eq .StateID "published" -}}
@@ -14,9 +14,12 @@
 		</div>
 	</div>
 
+	<h1>{{.Label}}</h1>
+
 	{{- if ne "" .Description -}}
 		<div class="space-after">{{.Description}}</div>
 	{{- end -}}
+	-->
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
