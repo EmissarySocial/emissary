@@ -82,11 +82,11 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 		case stream := <-b.streamUpdates:
 
 			// Send an update to every client that has subscribed to this stream
-			b.notify(stream.StreamID)
+			go b.notify(stream.StreamID)
 
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
-				b.notify(stream.ParentID)
+				go b.notify(stream.ParentID)
 			}
 		}
 	}
