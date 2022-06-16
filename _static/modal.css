@@ -18,10 +18,8 @@
 	overflow-y: clip;
 	overflow-x: clip;
 
-	/* Animate when opening */
-	animation-name: fadeIn;
-	animation-duration: 150ms;
-	animation-timing-function: ease;
+	/* Opacity updated by animations */
+	opacity: 0;
 }
 
 #modal-underlay {
@@ -56,15 +54,25 @@
 	background-color: var(--white);
 	padding: 20px;
 	line-height: 150%;
+}
 
-	/* Animate when opening */
-	animation-name:zoomIn;
-	animation-duration:150ms;
-	animation-timing-function: ease;
+/* Animations */
+
+#modal.ready {
+	opacity: 1;
+	transition:opacity;
+	transition-duration:150ms;
+	transition-timing-function: ease-in-out;
+}
+
+#modal.ready #modal-window {
+	transform:scale(1);
+	transition:transform;
+	transition-duration:150ms;
+	transition-timing-function: ease-in-out;
 }
 
 #modal.closing {
-	/* Animate when closing */
 	animation-name:fadeOut;
 	animation-duration:150ms;
 	animation-timing-function: ease;
@@ -74,13 +82,13 @@
 }
 
 #modal.closing #modal-content {
-	/* Aniate when closing */
 	animation-name: zoomOut;
 	animation-duration:150ms;
 	animation-timing-function: ease;
 }
 
 /* Alternate colors for dark mode */
+
 @media (prefers-color-scheme: dark) {
 	#modal-content {
 		background-color:var(--gray20);
