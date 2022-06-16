@@ -94,8 +94,10 @@ func (step StepEditProperties) Post(renderer Renderer) error {
 	stream := streamRenderer.stream
 
 	for _, path := range step.Paths {
-		if err := schema.Set(&stream, path, body[path]); err != nil {
-			return derp.Wrap(err, location, "Error setting value", path, body[path])
+		if value, ok := body[path]; ok {
+			if err := schema.Set(&stream, path, value); err != nil {
+				return derp.Wrap(err, location, "Error setting value", path, body[path])
+			}
 		}
 	}
 

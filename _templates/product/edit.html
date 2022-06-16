@@ -1,45 +1,80 @@
-<div class="page" hx-sse="connect:/{{.StreamID}}/sse">
-<div hx-get="/{{.StreamID}}/edit" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+<link rel="stylesheet" href="/static/nebula/nebula.css">
 
-	<link rel="stylesheet" href="/static/nebula/nebula.css">
+<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
 
-	<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
+<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
 
-	<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
-
-	<div id="menu-bar">
-		<div class="left">
-			<a hx-get="/{{.Token}}/prev">&larr; Previous</a>
-		</div>
-		<div class="center">
-			<a href="/{{.Token}}">View</a>
-			<a hx-get="/{{.StreamID}}/properties">Info</a>
-			<a href="/{{.StreamID}}/edit" class="selected">Description</a>
-			<a hx-get="/{{.StreamID}}/attachments">Photos</a>
-			<a hx-get="/{{.StreamID}}/product">Stripe</a>
-			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-			{{- end -}}
-		</div>
-		<div class="right">
-			<a hx-get="/{{.Token}}/next">Next &rarr;</a>
-		</div>
+<div id="menu-bar">
+	<div class="left">
+		<a hx-get="/{{.Token}}/prev">&larr; Previous</a>
 	</div>
-
-	{{- if ne "" .Label -}}
-		<h1 class="align-center">{{.Label}}</h1>
-	{{- end -}}
-
-	<label>Rich Text Description</label>
-	<div class="content-editor">
-		{{.ContentEditor}}
-		<div class="text-sm gray50">This content is updated live on the website.</div>
+	<div class="center">
+		<a href="/{{.Token}}">View</a>
+		<a href="/{{.StreamID}}/edit" class="selected">Edit</a>
+		<a hx-get="/{{.StreamID}}/properties">Info</a>
+		<a hx-get="/{{.StreamID}}/attachments">Photos</a>
+		<a hx-get="/{{.StreamID}}/product">Stripe</a>
+		{{- if .UserCan "delete" -}}
+			<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+		{{- end -}}
 	</div>
-
+	<div class="right">
+		<a hx-get="/{{.Token}}/next">Next &rarr;</a>
+	</div>
 </div>
+
+<div class="pure-g">
+	<div class="pure-u-1 pure-u-lg-1-2">
+
+		<div class="space-below">
+			{{- $attachments := .Attachments -}}
+			{{$streamID := .StreamID}}
+
+			{{- if eq 1 (len $attachments) -}}
+				{{- range .Attachments -}}
+					<picture style="aspect-ratio:{{.Width}}/{{.Height}};" hx-get="/{{$streamID}}/attachments" class="clickable">
+						<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700" />
+						<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900" />
+						<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200" />
+						<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200" />
+					</picture>
+				{{- end -}}
+
+			{{- else -}}
+				<div class="clickable slideshow" hx-get="/{{.StreamID}}/attachments">
+					{{- range .Attachments -}}
+						<picture script="on click scrollIntoView() me">
+							<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700&height=525" />
+							<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900&height=675" />
+							<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200&height=900" />
+							<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200&height=900" />
+						</picture>
+					{{- end -}}
+				</div>
+			{{- end -}}
+
+		</div>
+
+	</div>
+	<div class="pure-u-1 pure-u-lg-1-24"></div>
+	<div class="pure-u-1 pure-u-lg-10-24">
+
+		<form hx-post="/{{.StreamID}}/properties" hx-trigger="autosave" hx-swap="none">
+			<input class="text-xxl bold" type="text" name="label" value="{{.Label}}" script="install Autosave">
+		</form>
+
+		<div class="space-below">
+			<button hx-get="/{{.StreamID}}/product">{{.Data "decimalAmount" | dollarFormat}}USD (edit checkout)</button>
+		</div>
+
+		<div class="content-editor space-after">
+			{{.ContentEditor}}
+			<div class="text-sm gray50">This content is updated live on the website.</div>
+		</div>
+	</div>
 </div>

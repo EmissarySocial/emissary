@@ -10,8 +10,8 @@
 			<div class="center">
 				{{- if .UserCan "edit" -}}
 					<a href="/{{.Token}}" class="selected">View</a>
+					<a href="/{{.StreamID}}/edit">Edit</a>
 					<a hx-get="/{{.StreamID}}/properties">Info</a>
-					<a href="/{{.StreamID}}/edit">Description</a>
 					<a hx-get="/{{.StreamID}}/attachments">Photos</a>
 					<a hx-get="/{{.StreamID}}/product">Stripe</a>		
 					{{- if .UserCan "delete" -}}
