@@ -1,11 +1,5 @@
 <div class="page" hx-push-url="true">
 
-	<h1>{{.Label}}</h1>
-
-	{{- if ne "" .Description -}}
-		<div class="space-below">{{.Description}}</div>
-	{{- end -}}
-
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<div class="left">
@@ -26,6 +20,12 @@
 				{{- end -}}
 			</div>
 		</div>
+	{{- end -}}
+
+	<h1>{{.Label}}</h1>
+
+	{{- if ne "" .Description -}}
+		<div class="space-below">{{.Description}}</div>
 	{{- end -}}
 
 	{{- if eq (.Data "format") "TABLE" -}}
