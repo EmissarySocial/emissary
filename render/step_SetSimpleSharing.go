@@ -41,8 +41,8 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	b := html.New()
 
 	// Heading
-	b.H1().InnerHTML(step.Title).Close()
-	b.Div().Class("space-below").InnerHTML(step.Message).Close()
+	b.H2().InnerHTML(step.Title).Close()
+	b.H3().InnerHTML(step.Message).Close()
 
 	// Form
 	b.Form("", "").

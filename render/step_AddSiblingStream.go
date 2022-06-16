@@ -11,6 +11,7 @@ import (
 
 // StepAddSiblingStream is an action that can add new sub-streams to the domain.
 type StepAddSiblingStream struct {
+	Title       string
 	TemplateIDs []string    // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
 	View        string      // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
 	WithSibling []step.Step // List of steps to take on the newly created sibling record on POST.
@@ -33,7 +34,7 @@ func (step StepAddSiblingStream) Get(renderer Renderer, buffer io.Writer) error 
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), factory.Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
 
 	return nil
 }

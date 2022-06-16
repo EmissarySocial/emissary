@@ -3,10 +3,12 @@ package step
 import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/first"
 )
 
 // AddSiblingStream is an action that can add new sub-streams to the domain.
 type AddSiblingStream struct {
+	Title       string
 	TemplateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
 	View        string   // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
 	WithSibling []Step   // List of steps to take on the newly created sibling record on POST.
@@ -22,6 +24,7 @@ func NewAddSiblingStream(stepInfo datatype.Map) (AddSiblingStream, error) {
 	}
 
 	return AddSiblingStream{
+		Title:       first.String(stepInfo.GetString("title"), "Add a Stream"),
 		View:        stepInfo.GetString("view"),
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
 		WithSibling: withSibling,

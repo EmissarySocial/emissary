@@ -12,13 +12,14 @@ import (
 
 // StepAddTopStream represents an action that can create top-level folders in the Domain
 type StepAddTopStream struct {
+	Title         string
 	TemplateIDs   []string    // List of valid templateIds that the new top-level stream could be
 	WithNewStream []step.Step // Pipeline of steps to take on the newly-created stream
 }
 
 func (step StepAddTopStream) Get(renderer Renderer, buffer io.Writer) error {
 	factory := renderer.factory()
-	modalAddStream(renderer.context().Response(), factory.Template(), buffer, renderer.URL(), "top", step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), step.Title, buffer, renderer.URL(), "top", step.TemplateIDs)
 	return nil
 }
 

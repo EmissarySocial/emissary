@@ -14,6 +14,7 @@ import (
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.
 type StepAddChildStream struct {
+	Title       string
 	TemplateIDs []string    // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
 	View        string      // If present, use this HTML template as a custom "create" page.  If missing, a default modal pop-up is used.
 	WithChild   []step.Step // List of steps to take on the newly created child record on POST.
@@ -37,7 +38,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), renderer.factory().Template(), buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), renderer.factory().Template(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
 
 	return nil
 }
@@ -91,13 +92,13 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *service.Template, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *service.Template, title string, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
 	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 
 	b := html.New()
 
-	b.H1().InnerHTML("+ Add a Stream").Close()
+	b.H2().InnerHTML(title).Close()
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {

@@ -3,10 +3,12 @@ package step
 import (
 	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/first"
 )
 
 // AddTopStream represents an action that can create top-level folders in the Domain
 type AddTopStream struct {
+	Title         string
 	TemplateIDs   []string // List of valid templateIds that the new top-level stream could be
 	WithNewStream []Step   // Pipeline of steps to take on the newly-created stream
 }
@@ -21,6 +23,7 @@ func NewAddTopStream(stepInfo datatype.Map) (AddTopStream, error) {
 	}
 
 	return AddTopStream{
+		Title:         first.String(stepInfo.GetString("title"), "Add a Stream"),
 		TemplateIDs:   stepInfo.GetSliceOfString("templateIds"),
 		WithNewStream: withNewStream,
 	}, nil

@@ -49,10 +49,9 @@
 				"steps": [
 					{
 						"step": "form-html",
-						"label": "Edit Folder",
 						"form": {
 							"kind": "layout-vertical",
-							"label": "Update Form",
+							"label": "Edit Folder",
 							"children": [
 								{"kind": "text", "label": "Label", "path": "label"},
 								{"kind": "textarea", "label": "Description", "path": "description"},
@@ -69,6 +68,7 @@
 			"roles": ["editor"],
 			"steps":[{
 				"step": "add-child",
+				"title": "Add an Item",
 				"comment": "Created by {{.Author}}",
 				"with-child": [
 					{"step": "save", "comment": "Created by {{.Author}}"},
@@ -84,7 +84,7 @@
 			"roles": ["editor"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Sharing Settings", "message":"Select Which People Can See This Folder"},
 					{"step":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]
