@@ -45,7 +45,7 @@
 		"prev": {
 			"steps": [
 				{"step":"with-prev-sibling", "steps":[
-					{"step": "redirect-to", "url":"/{{.StreamID}}"}
+					{"step": "redirect-to", "url":"/{{.Token}}"}
 				]}
 			],
 			"stateRoles": {
@@ -57,7 +57,7 @@
 		"next": {
 			"steps": [
 				{"step":"with-next-sibling", "steps":[
-					{"step": "redirect-to", "url":"/{{.StreamID}}"}
+					{"step": "redirect-to", "url":"/{{.Token}}"}
 				]}
 			],
 			"stateRoles": {
