@@ -76,7 +76,7 @@
 		"properties":{
 			"roles": ["owner"],
 			"steps":[
-				{"step": "edit-properties", "title":"Page Info"},
+				{"step": "edit-properties", "title":"Page Info", "paths":["token", "label"]},
 				{"step": "save", "comment":"Content edited by {{.Author}}"}
 			]
 		},

@@ -7,7 +7,7 @@
 			<div class="left">
 				<a hx-get="/{{.Token}}/prev">&larr; Previous</a>
 			</div>
-			<div class="center">
+			<div class="center" hx-push-url="true">
 				{{- if .UserCan "edit" -}}
 					<a href="/{{.Token}}" class="selected">View</a>
 					<a href="/{{.StreamID}}/edit">Edit</a>

@@ -288,7 +288,9 @@ h3.space-below {
  * Text Modifiers
  ****************************/
 
-.text-xxl {
+.text-xxl,
+.text-xxl input,
+input.text-xxl {
     font-size: calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 6);
     margin-top:var(--rhythm);
@@ -296,21 +298,27 @@ h3.space-below {
     color: var(--heading-color);
 }
 
-.text-xl {
+.text-xl,
+.text-xl input,
+input.text-xl {
     font-size: calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 4.5);
     margin-top: var(--rhythm);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
-.text-lg {
+.text-lg,
+.text-lg input,
+input.text-lg {
     font-size: calc(var(--rhythm) * 2.5);
     line-height:calc(var(--rhythm) * 3.75);
     margin-top:var(--rhythm);
     margin-bottom:calc(var(--rhythm) * 2);
 }
 
-.text-md {
+.text-md,
+.text-md input,
+input.text-md {
     font-size: calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
     margin-top:var(--rhythm);

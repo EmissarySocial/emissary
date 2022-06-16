@@ -3,6 +3,8 @@ behavior Modal
 	init
 		add [@role="dialog"]
 		set title to the first <h1,h2,h3/> in me
+
+		log #modal-window
 		if (title is not empty) then
 			
 			if title.id is empty  then 

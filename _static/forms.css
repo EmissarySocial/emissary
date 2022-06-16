@@ -200,16 +200,16 @@ button,
 .text-sm .button,
 button.text-sm,
 .button.text-sm {
-    font-size:10pt;
-    padding:8px 16px;
+    font-size: calc(var(--rhythm) * 1.5);
+    padding: var(--rhythm) calc(var(--rhythm) * 2);
 }
 
 .text-xs button,
 .text-xs .button,
 button.text-xs,
 .button.text-xs {
-    font-size:8pt;
-    padding:6px 12px;
+    font-size: var(--rhythm);
+    padding: calc(var(--rhythm) * 3/4) calc(var(--rhythm) * 1.5);
 }
 
 button:hover,
