@@ -14,7 +14,9 @@ import (
 )
 
 // StepStripeProduct represents an action-step that forwards the user to a new page.
-type StepStripeProduct struct{}
+type StepStripeProduct struct {
+	Title string
+}
 
 func (step StepStripeProduct) UseGlobalWrapper() bool {
 	return false
@@ -43,7 +45,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 
 	f := form.Form{
 		Kind:  "layout-tabs",
-		Label: "Edit Product Info",
+		Label: step.Title,
 		Children: []form.Form{
 			{
 				Kind:  "layout-vertical",

@@ -66,19 +66,6 @@
 				"sold-out":["anonymous"]
 			}
 		},
-		"checkout": {
-			"roles": ["anonymous"],
-			"states": ["ready"],
-			"step": "stripe-checkout"
-		},
-		"success": {
-			"roles":["anonymous"],
-			"states": ["ready", "sold-out"],
-			"steps": [
-				{"step": "view-html", "filename":"view.html"}
-			],
-			"removed-step": "stripe-complete"
-		},
 		"edit":{
 			"roles": ["owner"],
 			"steps":[
@@ -89,7 +76,7 @@
 		"properties":{
 			"roles": ["owner"],
 			"steps":[
-				{"step": "edit-properties"},
+				{"step": "edit-properties", "title":"Page Info"},
 				{"step": "save", "comment":"Content edited by {{.Author}}"}
 			]
 		},
@@ -131,10 +118,23 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step": "as-modal", "steps": [
-					{"step": "stripe-product"},
+					{"step": "stripe-product", "title":"Stripe Checkout"},
 					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
 				]}
 			]
+		},
+		"checkout": {
+			"roles": ["anonymous"],
+			"states": ["ready"],
+			"step": "stripe-checkout"
+		},
+		"success": {
+			"roles":["anonymous"],
+			"states": ["ready", "sold-out"],
+			"steps": [
+				{"step": "view-html", "filename":"view.html"}
+			],
+			"removed-step": "stripe-complete"
 		},
 		"delete": {
 			"roles": ["owner"],

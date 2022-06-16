@@ -10,6 +10,7 @@ import (
 
 // StepEditProperties represents an action-step that can edit/update Container in a streamDraft.
 type StepEditProperties struct {
+	Title string
 	Paths []string
 }
 
@@ -22,7 +23,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 	factory := renderer.factory()
 	formLibrary := factory.FormLibrary()
 	element := form.NewForm("layout-vertical")
-	element.Label = "Edit Page Properties"
+	element.Label = step.Title
 
 	for _, path := range step.Paths {
 

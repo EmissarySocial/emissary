@@ -12,7 +12,7 @@ require (
 	github.com/benpate/digit v0.3.0
 	github.com/benpate/exp v0.1.4
 	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.5
+	github.com/benpate/form v0.6.6
 	github.com/benpate/html v0.12.1
 	github.com/benpate/htmlconv v0.3.3
 	github.com/benpate/id v0.1.4
@@ -41,6 +41,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 )
 
 require (
@@ -80,7 +81,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect

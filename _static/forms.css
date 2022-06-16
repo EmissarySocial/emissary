@@ -284,10 +284,13 @@ button[disabled].barberpole
     display:block;
 }
 
-.layout-vertical > .layout-vertical-label {
-    font-size:24px;
-    font-weight:500;
-    margin-bottom:20px;
+.layout-title {
+    font-weight:calc(var(--weight) + 100);
+    font-size: calc(var(--rhythm) * 3);
+    line-height:calc(var(--rhythm) * 4.5);
+    margin-top: var(--rhythm);
+    margin-bottom: calc(var(--rhythm) * 2);
+    color: var(--heading-color);
 }
 
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element {

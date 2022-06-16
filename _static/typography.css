@@ -38,7 +38,7 @@ h1 {
 
 
 h2 {
-    font-weight:calc(var(--weight) + 200);
+    font-weight:calc(var(--weight) + 100);
     font-size: calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 4.5);
     margin-top: var(--rhythm);
@@ -287,11 +287,6 @@ h3.space-below {
 /****************************
  * Text Modifiers
  ****************************/
-
-font-size:calc(var(--rhythm) * 2);
-line-height: calc(var(--rhythm) * 3);
-
-
 
 .text-xl {
     font-size: calc(var(--rhythm) * 3);

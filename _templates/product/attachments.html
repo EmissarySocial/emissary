@@ -1,6 +1,6 @@
 <div script="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
 
-	<h1>Product Photos</h1>
+	<h2>Photos</h2>
 
 	<form hx-post="/{{.StreamID}}/attachments-list" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" class="space-below">
 		Drag files here to upload, or click to <label for="manual-upload" class="link" tabIndex="0">choose a file</label> from your device.

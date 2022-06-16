@@ -6,9 +6,17 @@
 				<a hx-get="/{{.Token}}/prev">&larr; Previous</a>
 			</div>
 			<div class="center">
-				<a hx-get="/{{.ParentID}}">All</a>
 				{{- if .UserCan "edit" -}}
-					<a href="/{{.StreamID}}/edit">Edit Product</a>
+					<a href="/{{.Token}}" class="selected">View</a>
+					<a hx-get="/{{.StreamID}}/properties">Info</a>
+					<a href="/{{.StreamID}}/edit">Description</a>
+					<a hx-get="/{{.StreamID}}/attachments">Photos</a>
+					<a hx-get="/{{.StreamID}}/product">Stripe</a>		
+					{{- if .UserCan "delete" -}}
+						<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+					{{- end -}}
+				{{- else -}}
+					<a hx-get="/{{.ParentID}}">All</a>
 				{{- end -}}
 			</div>
 			<div class="right">
