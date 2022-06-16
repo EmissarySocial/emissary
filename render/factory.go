@@ -25,4 +25,7 @@ type Factory interface {
 	Subscription() *service.Subscription
 	Template() *service.Template
 	User() *service.User
+
+	// Other data services
+	Hostname() string
 }

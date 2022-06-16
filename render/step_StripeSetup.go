@@ -38,7 +38,7 @@ func (step StepStripeSetup) Post(renderer Renderer) error {
 
 		// Configure webhook
 		params := stripe.WebhookEndpointParams{
-			URL: stripe.String("https://webhook.site/9ba66761-15d0-45d7-8e58-f9e8299f9c19"),
+			URL: stripe.String("https://" + factory.Hostname() + "/webhooks/stripe"),
 			EnabledEvents: []*string{
 				stripe.String("checkout.session.completed"),
 			},
