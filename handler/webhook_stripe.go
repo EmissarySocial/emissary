@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/webhook"
@@ -68,6 +69,8 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 			}
 		}
 
+		spew.Dump("WEBHOOK EVENT===============", event)
+
 		// Verify specific Webhook Types
 		if event.Type == "checkout.session.completed" {
 
@@ -76,6 +79,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 			if err := json.Unmarshal(event.Data.Raw, session); err != nil {
 				return derp.Wrap(err, location, "Error unmarshalling checkout session data")
 			}
+			spew.Dump("SESSION 1 ==============", session)
 
 			api, err := factory.StripeClient()
 
@@ -88,6 +92,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 			params.AddExpand("line_items")
 
 			session, err = api.CheckoutSessions.Get(session.ID, &params)
+			spew.Dump("SESSION 2 ===============", session)
 
 			if err != nil {
 				return derp.Wrap(err, location, "Error expanding Webhook line items")
@@ -100,10 +105,14 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 
 				var stream model.Stream
 
+				spew.Dump("LINE ITEM ================", lineItem)
+
 				// Load the matching stream
 				if err := streamService.LoadByProductID(lineItem.Price.Product.ID, &stream); err != nil {
 					return derp.Wrap(err, location, "Error loading Stream by ProductID", lineItem.Product.ID)
 				}
+
+				spew.Dump("STREAM ===================", stream)
 
 				// Check inventory
 				if stream.Data.GetBool("trackInventory") {
@@ -115,6 +124,9 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 					if quantityOnHand <= 0 {
 						stream.StateID = "sold-out"
 					}
+
+					spew.Dump("NEW Quantity:", stream.Data.GetInterface("quantityOnHand"))
+					spew.Dump("NEW STATE: ", stream.StateID)
 
 					if err := streamService.Save(&stream, "webhooks/stripe: updating inventory"); err != nil {
 						return derp.Wrap(err, location, "Error updating inventory")
