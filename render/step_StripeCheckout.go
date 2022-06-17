@@ -46,6 +46,9 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		SuccessURL:       stripe.String(address + "/" + stream.StreamID.Hex() + "/success?session={CHECKOUT_SESSION_ID}"),
 		CancelURL:        stripe.String(address + "/" + stream.ParentID.Hex()),
 		CustomerCreation: stripe.String("if_required"),
+		PhoneNumberCollection: &stripe.CheckoutSessionPhoneNumberCollectionParams{
+			Enabled: stripe.Bool(true),
+		},
 	}
 
 	// If tax rates are assigned, then add them to the order
