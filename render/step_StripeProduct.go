@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
 	"github.com/whisperverse/whisperverse/model"
@@ -127,8 +126,6 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 	if err := streamService.LoadFirstAttachment(stream.StreamID, &attachment); err == nil {
 		images = []string{factory.Host() + "/" + stream.StreamID.Hex() + "/attachments/" + attachment.Filename + ".jpg?width=600"}
 	}
-
-	spew.Dump(images)
 
 	// Connect to the stripe API
 	api, err := factory.StripeClient()
