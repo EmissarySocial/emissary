@@ -27,5 +27,6 @@ type Factory interface {
 	User() *service.User
 
 	// Other data services
+	Host() string
 	Hostname() string
 }

@@ -105,6 +105,13 @@ func (service Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iter
 		option.SortAsc("rank"))
 }
 
+func (service Attachment) ListFirstByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
+	return service.List(
+		exp.Equal("streamId", objectID).
+			AndEqual("journal.deleteDate", 0),
+		option.SortAsc("rank"), option.FirstRow())
+}
+
 func (service Attachment) LoadByStreamID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
 	var result model.Attachment
 	criteria := exp.Equal("streamId", streamID).AndEqual("_id", attachmentID).AndEqual("journal.deleteDate", 0)

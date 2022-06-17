@@ -152,6 +152,15 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
  * DOMAIN DATA ACCESSORS
  *******************************************/
 
+func (factory *Factory) Host() string {
+
+	if factory.config.Hostname == "localhost" {
+		return "http://localhost"
+	}
+
+	return "https://" + factory.config.Hostname
+}
+
 func (factory *Factory) Hostname() string {
 	return factory.config.Hostname
 }

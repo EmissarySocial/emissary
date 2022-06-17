@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/null"
 	"github.com/benpate/schema"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
 	"github.com/whisperverse/whisperverse/model"
@@ -105,7 +106,9 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 
 	// Collect top-level services
 	factory := renderer.factory()
+	streamRenderer := renderer.(*Stream)
 	streamService := factory.Stream()
+	stream := streamRenderer.stream
 	transaction := stepStripeProductTransaction{}
 
 	// Collect and validate transaction from the request body
@@ -116,6 +119,16 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 	if err := transaction.validate(); err != nil {
 		return derp.Wrap(err, location, "Error setting values", transaction)
 	}
+
+	// Find product images
+	var attachment model.Attachment
+	images := []string{}
+
+	if err := streamService.LoadFirstAttachment(stream.StreamID, &attachment); err == nil {
+		images = []string{factory.Host() + "/" + stream.StreamID.Hex() + "/attachments/" + attachment.AttachmentID.Hex() + ".jpg?width=600"}
+	}
+
+	spew.Dump(images)
 
 	// Connect to the stripe API
 	api, err := factory.StripeClient()
@@ -129,6 +142,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 		p, err := api.Products.New(&stripe.ProductParams{
 			Name:   stripe.String(transaction.ProductName),
 			Active: stripe.Bool(transaction.Active),
+			Images: stripe.StringSlice(images),
 		})
 
 		if err != nil {
@@ -142,6 +156,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 		_, err := api.Products.Update(transaction.ProductID, &stripe.ProductParams{
 			Name:   stripe.String(transaction.ProductName),
 			Active: stripe.Bool(transaction.Active),
+			Images: stripe.StringSlice(images),
 		})
 
 		if err != nil {
@@ -165,9 +180,10 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 
 		// Create a new price
 		p, err := api.Prices.New(&stripe.PriceParams{
-			Product:    stripe.String(transaction.ProductID),
-			UnitAmount: stripe.Int64(transaction.unitAmount()),
-			Currency:   stripe.String(string(stripe.CurrencyUSD)),
+			Product:     stripe.String(transaction.ProductID),
+			UnitAmount:  stripe.Int64(transaction.unitAmount()),
+			Currency:    stripe.String(string(stripe.CurrencyUSD)),
+			TaxBehavior: stripe.String("exclusive"), // TODO: should this be a parameter in setup?
 		})
 
 		if err != nil {
@@ -178,9 +194,6 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 	}
 
 	// Update the stream with the new data and save to the database
-	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
-
 	transaction.apply(stream)
 
 	if err := streamService.Save(stream, "Stripe settings updated"); err != nil {

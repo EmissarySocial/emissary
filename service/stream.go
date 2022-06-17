@@ -426,6 +426,23 @@ func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *mode
 	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortDesc("rank"), result)
 }
 
+func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID, attachment *model.Attachment) error {
+
+	const location = "service.stream.LoadFirstAttachment"
+
+	attachments, err := service.attachmentService.ListFirstByObjectID(streamID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error listing attachments")
+	}
+
+	for attachments.Next(attachment) {
+		return nil
+	}
+
+	return derp.NewNotFoundError(location, "No attachments found")
+}
+
 // Count returns the number of (non-deleted) records in the Stream collection
 func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
 	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
