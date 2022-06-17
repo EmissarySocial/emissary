@@ -2,6 +2,7 @@ package service
 
 import (
 	"html/template"
+	"sync"
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -16,6 +17,7 @@ type Domain struct {
 	collection data.Collection
 	funcMap    template.FuncMap
 	model      model.Domain
+	lock       sync.Mutex
 }
 
 // NewDomain returns a fully initialized Domain service
@@ -34,6 +36,12 @@ func (service *Domain) Load(domain *model.Domain) error {
 		*domain = service.model
 		return nil
 	}
+
+	// Initialize a new object (to avoid NPE errors)
+	service.lock.Lock()
+	defer service.lock.Unlock()
+
+	service.model = model.NewDomain()
 
 	// If not cached, try to load from database
 	err := service.collection.Load(exp.All(), &service.model)
