@@ -1,6 +1,7 @@
 module github.com/whisperverse/whisperverse
 
 go 1.18
+
 require (
 	github.com/benpate/compare v0.1.3
 	github.com/benpate/convert v0.13.5

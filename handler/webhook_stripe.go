@@ -36,11 +36,12 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 		event := stripe.Event{}
 
 		// If we're in test mode, then don't validate Webhook signatures
-		if factory.Hostname() == "localhost" {
+		if true || factory.Hostname() == "localhost" {
 
 			if err := json.Unmarshal(body, &event); err != nil {
 				return derp.Wrap(err, location, "Error binding request body")
 			}
+
 		} else {
 
 			// Get the model.Domain for this domain
@@ -113,9 +114,6 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 
 					if quantityOnHand <= 0 {
 						stream.StateID = "sold-out"
-
-						// Send realtime update to this stream (and its parent)
-						factory.StreamUpdateChannel() <- stream
 					}
 
 					if err := streamService.Save(&stream, "webhooks/stripe: updating inventory"); err != nil {
