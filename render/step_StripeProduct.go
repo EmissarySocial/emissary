@@ -125,7 +125,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 	images := []string{}
 
 	if err := streamService.LoadFirstAttachment(stream.StreamID, &attachment); err == nil {
-		images = []string{factory.Host() + "/" + stream.StreamID.Hex() + "/attachments/" + attachment.AttachmentID.Hex() + ".jpg?width=600"}
+		images = []string{factory.Host() + "/" + stream.StreamID.Hex() + "/attachments/" + attachment.Filename + ".jpg?width=600"}
 	}
 
 	spew.Dump(images)
