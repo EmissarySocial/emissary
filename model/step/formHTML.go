@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 )
 
 // Form represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type Form struct {
 }
 
 // NewForm returns a fully initialized Form object
-func NewForm(stepInfo datatype.Map) (Form, error) {
+func NewForm(stepInfo maps.Map) (Form, error) {
 
 	f, err := form.Parse(stepInfo.GetInterface("form"))
 

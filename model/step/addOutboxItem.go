@@ -3,9 +3,9 @@ package step
 import (
 	"text/template"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // AddOutboxItem represents an action-step that logs activity to a user's outbox
@@ -17,7 +17,7 @@ type AddOutboxItem struct {
 }
 
 // NewAddOutboxItem returns a fully populated AddOutboxItem object
-func NewAddOutboxItem(stepInfo datatype.Map) (AddOutboxItem, error) {
+func NewAddOutboxItem(stepInfo maps.Map) (AddOutboxItem, error) {
 
 	labelString := first.String(stepInfo.GetString("label"), "{{.Label}}")
 	label, err := template.New("").Parse(labelString)

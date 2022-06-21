@@ -3,8 +3,8 @@ package step
 import (
 	"html/template"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // ForwardTo represents an action-step that forwards the user to a new page.
@@ -13,7 +13,7 @@ type ForwardTo struct {
 }
 
 // NewForwardTo returns a fully initialized ForwardTo object
-func NewForwardTo(stepInfo datatype.Map) (ForwardTo, error) {
+func NewForwardTo(stepInfo maps.Map) (ForwardTo, error) {
 
 	const location = "model.step.NewForwardTo"
 

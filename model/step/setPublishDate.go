@@ -1,14 +1,12 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // SetPublishDate represents an action-step that can update a stream's PublishDate with the current time.
 type SetPublishDate struct{}
 
 // NewSetPublishDate returns a fully initialized SetPublishDate object
-func NewSetPublishDate(stepInfo datatype.Map) (SetPublishDate, error) {
+func NewSetPublishDate(stepInfo maps.Map) (SetPublishDate, error) {
 	return SetPublishDate{}, nil
 }
 

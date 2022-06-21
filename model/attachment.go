@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/list"
+	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -62,7 +62,7 @@ func (attachment *Attachment) DownloadMimeType() string {
 
 // OriginalExtension returns the file extension of the original filename
 func (attachment *Attachment) OriginalExtension() string {
-	return list.LastDelim(attachment.Original, ".")
+	return "." + list.Last(attachment.Original, ".")
 }
 
 // MimeType returns the mime-type of the attached file

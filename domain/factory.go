@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/form"
 	formlib "github.com/benpate/form/vocabulary"
 	"github.com/benpate/nebula"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
 	"github.com/whisperverse/mediaserver"

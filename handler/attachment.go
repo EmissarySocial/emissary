@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/list"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"

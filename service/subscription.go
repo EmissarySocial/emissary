@@ -5,11 +5,11 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/list"
 	"github.com/benpate/nebula"
+	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/maps"
 	"github.com/mmcdole/gofeed"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -124,7 +124,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 		// Populate content into a nebula container
 		stream.Content = nebula.NewContainer()
-		stream.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeHTML, datatype.Map{
+		stream.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeHTML, maps.Map{
 			"html": item.Content,
 		})
 

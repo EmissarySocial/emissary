@@ -1,14 +1,12 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // RefreshPage represents an pipeline-step that forwards the user to a new page.
 type RefreshPage struct{}
 
 // NewRefreshPage returns a fully initialized RefreshPage object
-func NewRefreshPage(stepInfo datatype.Map) (RefreshPage, error) {
+func NewRefreshPage(stepInfo maps.Map) (RefreshPage, error) {
 	return RefreshPage{}, nil
 }
 

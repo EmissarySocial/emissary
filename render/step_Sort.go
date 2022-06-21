@@ -3,10 +3,10 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/path"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/path"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

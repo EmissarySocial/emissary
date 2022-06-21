@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 )
 
 // WithParent represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithParent struct {
 }
 
 // NewWithParent returns a fully initialized WithParent object
-func NewWithParent(stepInfo datatype.Map) (WithParent, error) {
+func NewWithParent(stepInfo maps.Map) (WithParent, error) {
 
 	const location = "render.NewWithParent"
 

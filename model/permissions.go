@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/benpate/datatype"
+	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -63,11 +63,11 @@ func (criteria Permissions) Roles(groupIDs ...primitive.ObjectID) []string {
 }
 
 // SimpleModel returns a model object for displaying Simple Sharing.
-func (criteria Permissions) SimpleModel() datatype.Map {
+func (criteria Permissions) SimpleModel() maps.Map {
 
 	// Special case if this is for EVERYBODY
 	if _, ok := criteria[MagicGroupIDAnonymous.Hex()]; ok {
-		return datatype.Map{
+		return maps.Map{
 			"rule":     "anonymous",
 			"groupIds": []string{},
 		}
@@ -75,7 +75,7 @@ func (criteria Permissions) SimpleModel() datatype.Map {
 
 	// Special case if this is for AUTHENTICATED
 	if _, ok := criteria[MagicGroupIDAuthenticated.Hex()]; ok {
-		return datatype.Map{
+		return maps.Map{
 			"rule":     "authenticated",
 			"groupIds": []string{},
 		}
@@ -91,7 +91,7 @@ func (criteria Permissions) SimpleModel() datatype.Map {
 		index++
 	}
 
-	return datatype.Map{
+	return maps.Map{
 		"rule":     "private",
 		"groupIds": groupIDs,
 	}

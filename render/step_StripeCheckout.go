@@ -3,8 +3,8 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/stripe/stripe-go/v72"
 )
 

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -86,13 +86,19 @@ func startHttps(e *echo.Echo, c config.Config) {
 	}
 
 	for {
-		derp.Report(e.StartAutoTLS(":443"))
+		if err := e.StartAutoTLS(":443"); err != nil {
+			fmt.Print(".")
+			time.Sleep(1 * time.Second)
+		}
 	}
 }
 
 func startHttp(e *echo.Echo) {
-	fmt.Println("Starting HTTP web server..")
+	fmt.Println("Starting HTTP web server: ")
 	for {
-		derp.Report(e.Start(":80"))
+		if err := e.Start(":80"); err != nil {
+			fmt.Print(".")
+			time.Sleep(1 * time.Second)
+		}
 	}
 }

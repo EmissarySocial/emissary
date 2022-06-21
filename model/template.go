@@ -3,9 +3,9 @@ package model
 import (
 	"html/template"
 
-	"github.com/benpate/compare"
 	"github.com/benpate/data/option"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/compare"
+	"github.com/benpate/rosetta/schema"
 )
 
 // Template represents an HTML template used for rendering Streams

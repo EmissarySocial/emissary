@@ -3,9 +3,9 @@ package model
 import (
 	"encoding/json"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 	"github.com/whisperverse/whisperverse/model/step"
 )
 
@@ -108,7 +108,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	// If no steps configued, then try the "step" alias
 	if len(action.Steps) == 0 {
 		if name := convert.String(data["step"]); name != "" {
-			action.Steps, _ = step.NewPipeline([]datatype.Map{{"step": name}})
+			action.Steps, _ = step.NewPipeline([]maps.Map{{"step": name}})
 		}
 	}
 

@@ -3,7 +3,7 @@ package render
 import (
 	"html/template"
 
-	"github.com/benpate/convert"
+	"github.com/benpate/rosetta/convert"
 )
 
 func FuncMap() template.FuncMap {

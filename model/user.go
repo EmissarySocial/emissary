@@ -3,12 +3,12 @@ package model
 import (
 	"time"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/id"
-	"github.com/benpate/null"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

@@ -3,8 +3,8 @@ package step
 import (
 	"text/template"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // TriggerEvent represents an action-step that forwards the user to a new page.
@@ -14,7 +14,7 @@ type TriggerEvent struct {
 }
 
 // NewTriggerEvent returns a fully initialized TriggerEvent object
-func NewTriggerEvent(stepInfo datatype.Map) (TriggerEvent, error) {
+func NewTriggerEvent(stepInfo maps.Map) (TriggerEvent, error) {
 
 	dataString := stepInfo.GetString("data")
 	data, err := template.New("").Parse(dataString)

@@ -4,10 +4,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/nebula"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 	"github.com/labstack/echo/v4"
 )
 
@@ -70,7 +70,7 @@ func (step StepEditContent) Post(renderer Renderer) error {
 	}
 
 	// Try to read the request body
-	body := datatype.Map{}
+	body := maps.Map{}
 
 	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &body); err != nil {
 		return derp.Wrap(err, "render.StepEditContent.Post", "Error binding data")

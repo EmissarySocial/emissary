@@ -3,13 +3,13 @@ package handler
 import (
 	"net/http"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/null"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/domain"
@@ -176,7 +176,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "displayname",
 			Label:       "Your Name",
 			Description: "Choose your publicly visible name.  You can always change it later.",
-			Options: datatype.Map{
+			Options: maps.Map{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -184,7 +184,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "username",
 			Label:       "Username",
 			Description: "The name you'll use to sign in.",
-			Options: datatype.Map{
+			Options: maps.Map{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -192,7 +192,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "password",
 			Label:       "Password",
 			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
-			Options: datatype.Map{
+			Options: maps.Map{
 				"autocomplete": "OFF",
 			},
 		}},
@@ -219,7 +219,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 	if ctx.Request().Method == http.MethodPost {
 
-		body := datatype.NewMap()
+		body := maps.New()
 
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Error binding request body")
@@ -289,22 +289,22 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		Children: []form.Form{{
 			Kind:        "toggle",
 			Path:        "home",
-			Options:     datatype.Map{"true-text": "Home Page", "false-text": "Home Page"},
+			Options:     maps.Map{"true-text": "Home Page", "false-text": "Home Page"},
 			Description: "Landing page when visitors first reach your site.",
 		}, {
 			Kind:        "toggle",
 			Path:        "blog",
-			Options:     datatype.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
+			Options:     maps.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
 			Kind:        "toggle",
 			Path:        "album",
-			Options:     datatype.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
+			Options:     maps.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
 		}, {
 			Kind:        "toggle",
 			Path:        "forum",
-			Options:     datatype.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
+			Options:     maps.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
 			Description: "Realtime chat, organized into topics and threads.",
 		}},
 	}

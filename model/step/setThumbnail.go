@@ -1,13 +1,11 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // SetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
 type SetThumbnail struct{}
 
-func NewSetThumbnail(stepInfo datatype.Map) (SetThumbnail, error) {
+func NewSetThumbnail(stepInfo maps.Map) (SetThumbnail, error) {
 	return SetThumbnail{}, nil
 }
 

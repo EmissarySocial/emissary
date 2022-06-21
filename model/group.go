@@ -2,8 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/null"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

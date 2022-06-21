@@ -1,15 +1,13 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // SetState represents an action-step that can change a Stream's state
 type SetState struct {
 	StateID string
 }
 
-func NewSetState(stepInfo datatype.Map) (SetState, error) {
+func NewSetState(stepInfo maps.Map) (SetState, error) {
 
 	return SetState{
 		StateID: stepInfo.GetString("state"),

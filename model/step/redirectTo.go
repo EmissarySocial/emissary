@@ -3,8 +3,8 @@ package step
 import (
 	"html/template"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // RedirectTo represents an action-step that forwards the user to a new page.
@@ -13,7 +13,7 @@ type RedirectTo struct {
 }
 
 // NewRedirectTo returns a fully initialized RedirectTo object
-func NewRedirectTo(stepInfo datatype.Map) (RedirectTo, error) {
+func NewRedirectTo(stepInfo maps.Map) (RedirectTo, error) {
 
 	const location = "model.step.NewRedirectTo"
 

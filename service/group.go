@@ -5,10 +5,10 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -95,8 +95,8 @@ func (service *Group) ObjectDelete(object data.Object, comment string) error {
 	return service.Delete(object.(*model.Group), comment)
 }
 
-func (service *Group) Debug() datatype.Map {
-	return datatype.Map{
+func (service *Group) Debug() maps.Map {
+	return maps.Map{
 		"service": "Group",
 	}
 }

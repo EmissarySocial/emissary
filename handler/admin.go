@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"

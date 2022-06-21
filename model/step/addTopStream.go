@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // AddTopStream represents an action that can create top-level folders in the Domain
@@ -14,7 +14,7 @@ type AddTopStream struct {
 }
 
 // NewAddTopStream returns a fully parsed AddTopStream object
-func NewAddTopStream(stepInfo datatype.Map) (AddTopStream, error) {
+func NewAddTopStream(stepInfo maps.Map) (AddTopStream, error) {
 
 	withNewStream, err := NewPipeline(stepInfo.GetSliceOfMap("with-new-stream"))
 

@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // SetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -13,7 +13,7 @@ type SetSimpleSharing struct {
 }
 
 // NewSetSimpleSharing returns a fully parsed SetSimpleSharing object
-func NewSetSimpleSharing(stepInfo datatype.Map) (SetSimpleSharing, error) {
+func NewSetSimpleSharing(stepInfo maps.Map) (SetSimpleSharing, error) {
 
 	return SetSimpleSharing{
 		Title:   first.String(stepInfo.GetString("title"), "Sharing Settings"),

@@ -4,10 +4,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/data/option"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/nebula"
+	"github.com/benpate/rosetta/maps"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -124,8 +124,8 @@ func (service *StreamDraft) ObjectDelete(object data.Object, comment string) err
 	return service.Delete(object.(*model.Stream), comment)
 }
 
-func (service *StreamDraft) Debug() datatype.Map {
-	return datatype.Map{
+func (service *StreamDraft) Debug() maps.Map {
+	return maps.Map{
 		"service": "StreamDraft",
 	}
 }

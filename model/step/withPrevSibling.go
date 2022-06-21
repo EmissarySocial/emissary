@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 )
 
 // WithPrevSibling represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithPrevSibling struct {
 }
 
 // NewWithPrevSibling returns a fully initialized WithPrevSibling object
-func NewWithPrevSibling(stepInfo datatype.Map) (WithPrevSibling, error) {
+func NewWithPrevSibling(stepInfo maps.Map) (WithPrevSibling, error) {
 
 	const location = "NewWithPrevSibling"
 

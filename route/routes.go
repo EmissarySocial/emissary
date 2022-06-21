@@ -3,8 +3,8 @@ package route
 import (
 	"net/http"
 
-	"github.com/benpate/compare"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/compare"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/handler"

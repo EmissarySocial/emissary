@@ -2,8 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/datatype"
 	"github.com/benpate/nebula"
+	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,7 +25,7 @@ type Stream struct {
 	AuthorImage     string               `path:"authorImage"    json:"authorImage"         bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
 	AuthorURL       string               `path:"authorUrl"      json:"authorUrl"           bson:"authorUrl,omitempty"`     // URL address of the person who created this stream
 	Content         nebula.Container     `path:"content"        json:"content"             bson:"content,omitempty"`       // Content objects for this stream.
-	Data            datatype.Map         `path:"data"           json:"data"                bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Data            maps.Map             `path:"data"           json:"data"                bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Tags            []string             `path:"tags"           json:"tags"                bson:"tags,omitempty"`          // Organizational Tags
 	ThumbnailImage  string               `path:"thumbnailImage" json:"thumbnailImage"      bson:"thumbnailImage"`          // Image to display next to the stream in lists.
 	Rank            int                  `path:"rank"           json:"rank"                bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
@@ -51,7 +51,7 @@ func NewStream() Stream {
 		StateID:     "new",
 		Permissions: NewPermissions(),
 		Tags:        make([]string, 0),
-		Data:        make(datatype.Map),
+		Data:        make(maps.Map),
 		Content:     make(nebula.Container, 0),
 	}
 }

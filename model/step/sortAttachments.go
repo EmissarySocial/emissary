@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // SortAttachments represents an action-step that can update multiple records at once
@@ -12,7 +12,7 @@ type SortAttachments struct {
 	Message string
 }
 
-func NewSortAttachments(stepInfo datatype.Map) (SortAttachments, error) {
+func NewSortAttachments(stepInfo maps.Map) (SortAttachments, error) {
 
 	return SortAttachments{
 		Keys:    first.String(stepInfo.GetString("keys"), "_id"),

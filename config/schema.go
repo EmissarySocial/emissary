@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/schema"
 )
 
 func Schema() schema.Schema {

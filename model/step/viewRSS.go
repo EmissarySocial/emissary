@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 )
 
 // ViewRSS represents an action-step that can render a Stream into HTML
@@ -11,7 +11,7 @@ type ViewRSS struct {
 }
 
 // NewViewRSS generates a fully initialized ViewRSS step.
-func NewViewRSS(stepInfo datatype.Map) (ViewRSS, error) {
+func NewViewRSS(stepInfo maps.Map) (ViewRSS, error) {
 
 	return ViewRSS{
 		Format: convert.String(stepInfo["format"]),

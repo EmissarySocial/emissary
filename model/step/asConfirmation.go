@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // AsConfirmation displays a confirmation dialog on GET, giving users an option to continue or not
@@ -13,7 +13,7 @@ type AsConfirmation struct {
 }
 
 // NewAsConfirmation returns a fully initialized AsConfirmation object
-func NewAsConfirmation(stepInfo datatype.Map) (AsConfirmation, error) {
+func NewAsConfirmation(stepInfo maps.Map) (AsConfirmation, error) {
 
 	return AsConfirmation{
 		Title:   stepInfo.GetString("title"),

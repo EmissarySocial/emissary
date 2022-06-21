@@ -5,10 +5,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/benpate/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/config"

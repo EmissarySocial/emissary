@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // AddChildStream is an action that can add new sub-streams to the domain.
@@ -15,7 +15,7 @@ type AddChildStream struct {
 }
 
 // NewAddChildStream returns a fully initialized AddChildStream record
-func NewAddChildStream(stepInfo datatype.Map) (AddChildStream, error) {
+func NewAddChildStream(stepInfo maps.Map) (AddChildStream, error) {
 
 	withChild, err := NewPipeline(stepInfo.GetSliceOfMap("with-child"))
 

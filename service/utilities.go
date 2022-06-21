@@ -7,7 +7,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/list"
+	"github.com/benpate/rosetta/list"
 	"github.com/spf13/afero"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"

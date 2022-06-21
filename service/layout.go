@@ -5,7 +5,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/list"
+	"github.com/benpate/rosetta/list"
 	"github.com/fsnotify/fsnotify"
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/model"

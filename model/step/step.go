@@ -5,8 +5,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // Step interface is used here to bind together the structs in this package
@@ -16,7 +16,7 @@ type Step interface {
 }
 
 // New uses an Step object to create a new action
-func New(stepInfo datatype.Map) (Step, error) {
+func New(stepInfo maps.Map) (Step, error) {
 
 	// Populate the action with the data from
 	switch stepInfo["step"] {
@@ -172,7 +172,7 @@ func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
 
 	for index := range stepInfo {
 
-		if step, err := New(datatype.Map(stepInfo[index])); err != nil {
+		if step, err := New(maps.Map(stepInfo[index])); err != nil {
 			return result, derp.Wrap(err, location, "Error parsing step", stepInfo)
 		} else {
 			result[index] = step

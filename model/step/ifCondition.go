@@ -3,8 +3,8 @@ package step
 import (
 	"html/template"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // IfCondition represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -14,7 +14,7 @@ type IfCondition struct {
 	Otherwise []Step
 }
 
-func NewIfCondition(stepInfo datatype.Map) (IfCondition, error) {
+func NewIfCondition(stepInfo maps.Map) (IfCondition, error) {
 
 	const location = "model.step.NewIfCondition"
 

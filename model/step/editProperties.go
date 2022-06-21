@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // EditProperties contains the configuration data for a modal that lets users edit the features attached to a stream.
@@ -11,7 +11,7 @@ type EditProperties struct {
 	Paths []string
 }
 
-func NewEditProperties(stepInfo datatype.Map) (EditProperties, error) {
+func NewEditProperties(stepInfo maps.Map) (EditProperties, error) {
 	paths := stepInfo.GetSliceOfString("paths")
 
 	if len(paths) == 0 {

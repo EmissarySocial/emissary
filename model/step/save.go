@@ -1,8 +1,6 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // Save represents an action-step that can save changes to any object
 type Save struct {
@@ -10,7 +8,7 @@ type Save struct {
 }
 
 // NewSave returns a fully initialized Save object
-func NewSave(stepInfo datatype.Map) (Save, error) {
+func NewSave(stepInfo maps.Map) (Save, error) {
 
 	return Save{
 		Comment: stepInfo.GetString("comment"),

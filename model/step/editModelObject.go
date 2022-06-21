@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 )
 
 // EditModelObject is an action that can add new sub-streams to the domain.
@@ -13,7 +13,7 @@ type EditModelObject struct {
 }
 
 // NewEditModelObject returns a fully initialized EditModelObject record
-func NewEditModelObject(stepInfo datatype.Map) (EditModelObject, error) {
+func NewEditModelObject(stepInfo maps.Map) (EditModelObject, error) {
 
 	// Parse form
 	f, err := form.Parse(stepInfo.GetInterface("form"))

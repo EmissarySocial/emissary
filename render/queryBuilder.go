@@ -191,9 +191,9 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 }
 
 /*
-func (qb QueryBuilder) debug() datatype.Map {
+func (qb QueryBuilder) debug() maps.Map {
 
-	return datatype.Map{
+	return maps.Map{
 		"Criteria":      qb.Criteria,
 		"SortField":     qb.SortField,
 		"SortDirection": qb.SortDirection,

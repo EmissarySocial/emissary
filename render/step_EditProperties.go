@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 )
 
 // StepEditProperties represents an action-step that can edit/update Container in a streamDraft.
@@ -35,7 +35,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Path:        path,
 					Kind:        "text",
 					Label:       "URL Token",
-					Options:     datatype.Map{"format": "token"},
+					Options:     maps.Map{"format": "token"},
 					Description: "Human-friendly web address",
 				})
 
@@ -46,7 +46,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Kind:        "text",
 					Label:       "Label",
 					Description: "Displayed on navigation, pages, and indexes",
-					Options:     datatype.Map{"maxlength": 100},
+					Options:     maps.Map{"maxlength": 100},
 				})
 
 		case "description":
@@ -57,7 +57,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Path:        path,
 					Label:       "Text Description",
 					Description: "Long description displays on pages and indexes",
-					Options:     datatype.Map{"maxlength": 1000},
+					Options:     maps.Map{"maxlength": 1000},
 				})
 
 		}
@@ -82,7 +82,7 @@ func (step StepEditProperties) UseGlobalWrapper() bool {
 func (step StepEditProperties) Post(renderer Renderer) error {
 
 	const location = "render.StepEditProperties.Post"
-	body := datatype.Map{}
+	body := maps.Map{}
 	context := renderer.context()
 
 	if err := context.Bind(&body); err != nil {

@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // AsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -11,7 +11,7 @@ type AsModal struct {
 }
 
 // NewAsModal returns a fully initialized AsModal object
-func NewAsModal(stepInfo datatype.Map) (AsModal, error) {
+func NewAsModal(stepInfo maps.Map) (AsModal, error) {
 
 	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
 

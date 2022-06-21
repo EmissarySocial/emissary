@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // StreamPromoteDraft represents a pipeline-step that can copy the Container from a StreamDraft into its corresponding Stream
@@ -10,7 +10,7 @@ type StreamPromoteDraft struct {
 	StateID string
 }
 
-func NewStreamPromoteDraft(stepInfo datatype.Map) (StreamPromoteDraft, error) {
+func NewStreamPromoteDraft(stepInfo maps.Map) (StreamPromoteDraft, error) {
 	return StreamPromoteDraft{
 		StateID: first.String(stepInfo.GetString("state"), "published"),
 	}, nil

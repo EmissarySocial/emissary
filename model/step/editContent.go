@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // EditContent represents an action-step that can edit/update Container in a streamDraft.
@@ -10,7 +10,7 @@ type EditContent struct {
 	Filename string
 }
 
-func NewEditContent(stepInfo datatype.Map) (EditContent, error) {
+func NewEditContent(stepInfo maps.Map) (EditContent, error) {
 
 	return EditContent{
 		Filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),

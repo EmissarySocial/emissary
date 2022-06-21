@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/datatype"
+	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,14 +16,14 @@ type Domain struct {
 	BannerURL   string             `path:"bannerUrl"    bson:"bannerUrl"`   // URL of a banner image to display at the top of this domain
 	Forward     string             `path:"forward"      bson:"forward"`     // If present, then all requests for this domain should be forwarded to the designated new domain.
 	SignupForm  SignupForm         `path:"signupForm"   bson:"signupForm"`  // Valid signup forms to make new accounts.
-	Connections datatype.Map       `path:"connections"  bson:"connections"` // Configuration information for connections.
+	Connections maps.Map           `path:"connections"  bson:"connections"` // Configuration information for connections.
 	journal.Journal
 }
 
 // NewDomain returns a fully initialized Domain object
 func NewDomain() Domain {
 	return Domain{
-		Connections: datatype.NewMap(),
+		Connections: maps.New(),
 	}
 }
 

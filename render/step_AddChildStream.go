@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/compare"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/benpate/rosetta/compare"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/model"
 	"github.com/whisperverse/whisperverse/model/step"

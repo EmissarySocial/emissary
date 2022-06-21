@@ -5,12 +5,12 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +23,7 @@ type Common struct {
 	action   *model.Action     // Action to be performed on the (template or layout)
 	actionID string            // Token that identifies the action requested in the URL
 
-	requestData datatype.Map // Temporary data scope for this request
+	requestData maps.Map // Temporary data scope for this request
 
 	// Cached values, do not populate unless needed
 	domain model.Domain // This is a value because we expect to use it in every request.
@@ -36,7 +36,7 @@ func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, act
 		ctx:         ctx,
 		action:      action,
 		actionID:    actionID,
-		requestData: datatype.NewMap(),
+		requestData: maps.New(),
 	}
 }
 

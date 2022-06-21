@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/list"
+	"github.com/benpate/rosetta/list"
 )
 
 type OptionProvider struct {

@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/path"
+	"github.com/benpate/rosetta/path"
 	"github.com/whisperverse/whisperverse/model"
 )
 

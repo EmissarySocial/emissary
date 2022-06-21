@@ -3,7 +3,7 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/path"
+	"github.com/benpate/rosetta/path"
 )
 
 // StepSetState represents an action-step that can change a Stream's state

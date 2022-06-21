@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 
-	"github.com/benpate/path"
+	"github.com/benpate/rosetta/path"
 	"github.com/stretchr/testify/assert"
 )
 

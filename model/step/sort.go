@@ -1,8 +1,8 @@
 package step
 
 import (
-	"github.com/benpate/datatype"
-	"github.com/benpate/first"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 )
 
 // Sort represents an action-step that can update multiple records at once
@@ -12,7 +12,7 @@ type Sort struct {
 	Message string
 }
 
-func NewSort(stepInfo datatype.Map) (Sort, error) {
+func NewSort(stepInfo maps.Map) (Sort, error) {
 
 	return Sort{
 		Keys:    first.String(stepInfo.GetString("keys"), "_id"),

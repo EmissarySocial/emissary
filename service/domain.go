@@ -6,9 +6,9 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/maps"
 	"github.com/whisperverse/whisperverse/model"
 )
 
@@ -109,8 +109,8 @@ func (service *Domain) ObjectDelete(object data.Object, note string) error {
 	return derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
 }
 
-func (service *Domain) Debug() datatype.Map {
-	return datatype.Map{
+func (service *Domain) Debug() maps.Map {
+	return maps.Map{
 		"service": "Domain",
 	}
 }

@@ -3,11 +3,11 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/null"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
 	"github.com/whisperverse/whisperverse/model"
@@ -52,11 +52,11 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Label: "Product",
 				Children: []form.Form{
 					{Kind: "text", Label: "Product Name", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
-					{Kind: "text", Label: "Price", Path: "data.decimalAmount", Options: datatype.Map{"step": 0.01}},
-					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: datatype.Map{"options": step.getTaxRates(api)}},
-					{Kind: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: datatype.Map{"options": step.getShippingMethods(api)}},
+					{Kind: "text", Label: "Price", Path: "data.decimalAmount", Options: maps.Map{"step": 0.01}},
+					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: maps.Map{"options": step.getTaxRates(api)}},
+					{Kind: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: maps.Map{"options": step.getShippingMethods(api)}},
 					{Kind: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
-					{Kind: "toggle", Label: "", Path: "data.active", Options: datatype.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
+					{Kind: "toggle", Label: "", Path: "data.active", Options: maps.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
 					{Kind: "hidden", Path: "data.productId"},
 					{Kind: "hidden", Path: "data.priceId"},
 				},
@@ -65,7 +65,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Kind:  "layout-vertical",
 				Label: "Inventory",
 				Children: []form.Form{
-					{Kind: "toggle", Label: "", Path: "data.trackInventory", Options: datatype.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
+					{Kind: "toggle", Label: "", Path: "data.trackInventory", Options: maps.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
 					{Kind: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero.", Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}},
 				},
 			},
@@ -316,7 +316,7 @@ func (txn stepStripeProductTransaction) unitAmount() int64 {
 
 func (txn stepStripeProductTransaction) apply(stream *model.Stream) {
 
-	stream.Data = datatype.Map{
+	stream.Data = maps.Map{
 		"buttonLabel":    txn.ButtonLabel,
 		"productName":    txn.ProductName,
 		"active":         txn.Active,

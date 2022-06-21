@@ -1,14 +1,12 @@
 package step
 
-import (
-	"github.com/benpate/datatype"
-)
+import "github.com/benpate/rosetta/maps"
 
 // DeleteOutboxItem represents an action-step that can remove a user's activity from their outbox
 type DeleteOutboxItem struct{}
 
 // NewDeleteOutboxItem returns a fully populated DeleteOutboxItem object
-func NewDeleteOutboxItem(stepInfo datatype.Map) (DeleteOutboxItem, error) {
+func NewDeleteOutboxItem(stepInfo maps.Map) (DeleteOutboxItem, error) {
 	return DeleteOutboxItem{}, nil
 }
 

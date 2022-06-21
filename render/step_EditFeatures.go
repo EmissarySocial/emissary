@@ -3,10 +3,10 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 )
 
 type StepEditFeatures struct{}
@@ -41,7 +41,7 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 		Kind:  "layout-vertical",
 		Label: "Add/Remove Features of this Stream",
 		Children: []form.Form{
-			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: datatype.Map{"options": features, "sort": true}},
+			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: maps.Map{"options": features, "sort": true}},
 		},
 	}
 

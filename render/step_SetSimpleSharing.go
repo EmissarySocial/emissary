@@ -3,13 +3,13 @@ package render
 import (
 	"io"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/id"
-	"github.com/benpate/schema"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -129,8 +129,8 @@ func (step StepSetSimpleSharing) form() form.Form {
 	return form.Form{
 		Kind: "layout-vertical",
 		Children: []form.Form{
-			{Kind: "select", Path: "rule", Options: datatype.Map{"format": "radio", "provider": "sharing"}},
-			{Kind: "select", Path: "groupIds", Options: datatype.Map{"provider": "groups"}, Show: form.Rule{Path: "rule", Value: "'private'"}},
+			{Kind: "select", Path: "rule", Options: maps.Map{"format": "radio", "provider": "sharing"}},
+			{Kind: "select", Path: "groupIds", Options: maps.Map{"provider": "groups"}, Show: form.Rule{Path: "rule", Value: "'private'"}},
 		},
 	}
 }

@@ -3,27 +3,18 @@ module github.com/whisperverse/whisperverse
 go 1.18
 
 require (
-	github.com/benpate/compare v0.1.3
-	github.com/benpate/convert v0.13.5
-	github.com/benpate/data v0.16.2
-	github.com/benpate/data-mongo v0.2.2
-	github.com/benpate/datatype v0.2.3
+	github.com/benpate/data v0.17.0
+	github.com/benpate/data-mongo v0.3.0
 	github.com/benpate/derp v0.22.2
 	github.com/benpate/digit v0.3.0
-	github.com/benpate/exp v0.1.4
-	github.com/benpate/first v0.0.2
-	github.com/benpate/form v0.6.6
+	github.com/benpate/exp v0.2.0
+	github.com/benpate/form v0.7.0
 	github.com/benpate/html v0.12.1
-	github.com/benpate/htmlconv v0.3.3
-	github.com/benpate/id v0.1.4
-	github.com/benpate/list v0.4.2
-	github.com/benpate/nebula v0.3.0
-	github.com/benpate/null v0.6.4
-	github.com/benpate/path v0.8.4
+	github.com/benpate/id v0.2.0
+	github.com/benpate/nebula v0.4.1
 	github.com/benpate/remote v0.6.1
-	github.com/benpate/rosetta v0.1.1
-	github.com/benpate/schema v0.15.1
-	github.com/benpate/steranko v0.7.3
+	github.com/benpate/rosetta v0.2.2
+	github.com/benpate/steranko v0.8.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.1
@@ -33,12 +24,12 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.2
-	github.com/stripe/stripe-go/v72 v72.114.0
+	github.com/stretchr/testify v1.7.4
+	github.com/stripe/stripe-go/v72 v72.115.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.4.5
-	github.com/whisperverse/mediaserver v0.2.0
+	github.com/whisperverse/mediaserver v0.3.0
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
@@ -74,7 +65,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
-	github.com/tdewolff/test v1.0.6 // indirect
+	github.com/tdewolff/test v1.0.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -82,10 +73,10 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
-	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
+	golang.org/x/image v0.0.0-20220617043117-41969df76e82 // indirect
+	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220610221304-9f5ed59c137d // indirect
+	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

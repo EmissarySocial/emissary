@@ -3,12 +3,12 @@ package handler
 import (
 	"net/http"
 
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/path"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/path"
 	"github.com/labstack/echo/v4"
 	"github.com/whisperverse/whisperverse/config"
 	"github.com/whisperverse/whisperverse/model"
@@ -220,7 +220,7 @@ func PostServerDomain(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
 		}
 
-		input := datatype.Map{}
+		input := maps.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
 			return derp.Wrap(err, "handler.PostServerDomain", "Error binding form input")

@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/benpate/convert"
-	"github.com/benpate/datatype"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
 )
 
 // WithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithDraft struct {
 }
 
 // NewWithDraft returns a fully initialized WithDraft object
-func NewWithDraft(stepInfo datatype.Map) (WithDraft, error) {
+func NewWithDraft(stepInfo maps.Map) (WithDraft, error) {
 
 	const location = "render.NewWithDraft"
 
