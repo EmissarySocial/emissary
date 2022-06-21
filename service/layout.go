@@ -137,7 +137,7 @@ func (service *Layout) Watch() {
 				continue
 			}
 
-			filename := list.Last(list.RemoveLast(event.Name, "/"), "/")
+			filename := list.Slash(event.Name).RemoveLast().Last()
 
 			if err := service.loadFromFilesystem(filename); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error loading changes to layout", event, filename))

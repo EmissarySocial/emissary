@@ -62,7 +62,7 @@ func (attachment *Attachment) DownloadMimeType() string {
 
 // OriginalExtension returns the file extension of the original filename
 func (attachment *Attachment) OriginalExtension() string {
-	return "." + list.Last(attachment.Original, ".")
+	return "." + list.Dot(attachment.Original).Last()
 }
 
 // MimeType returns the mime-type of the attached file
@@ -71,5 +71,5 @@ func (attachment *Attachment) MimeType() string {
 }
 
 func (attachment *Attachment) MimeCategory() string {
-	return list.Head(attachment.MimeType(), "/")
+	return list.Slash(attachment.MimeType()).Head()
 }

@@ -35,7 +35,8 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 	for _, file := range files {
 
 		filename := file.Name()
-		actionID, extension := list.SplitTail(filename, ".")
+		actionBytes, extension := list.Dot(filename).SplitTail()
+		actionID := actionBytes.String()
 
 		// Only HTML files beyond this point...
 		if extension == "html" {

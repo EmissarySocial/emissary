@@ -20,7 +20,7 @@ func NewOptionProvider(group *Group, user *User) OptionProvider {
 
 func (service OptionProvider) OptionCodes(path string) ([]form.OptionCode, error) {
 
-	path = list.Last(path, "/")
+	path = list.Slash(path).Last()
 
 	switch path {
 

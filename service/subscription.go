@@ -143,7 +143,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 			// Search for an image in the enclosures
 			for _, enclosure := range item.Enclosures {
-				if list.Head(enclosure.Type, "/") == "image" {
+				if list.Slash(enclosure.Type).Head() == "image" {
 					stream.ThumbnailImage = enclosure.URL
 					break
 				}

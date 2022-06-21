@@ -3,18 +3,19 @@ module github.com/whisperverse/whisperverse
 go 1.18
 
 require (
-	github.com/benpate/data v0.17.0
-	github.com/benpate/data-mongo v0.3.0
-	github.com/benpate/derp v0.22.2
-	github.com/benpate/digit v0.3.0
-	github.com/benpate/exp v0.2.0
-	github.com/benpate/form v0.7.0
-	github.com/benpate/html v0.12.1
-	github.com/benpate/id v0.2.0
-	github.com/benpate/nebula v0.4.1
-	github.com/benpate/remote v0.6.1
-	github.com/benpate/rosetta v0.2.2
-	github.com/benpate/steranko v0.8.1
+	github.com/benpate/data v0.18.0
+	github.com/benpate/data-mongo v0.4.0
+	github.com/benpate/derp v0.23.0
+	github.com/benpate/digit v0.4.0
+	github.com/benpate/exp v0.3.0
+	github.com/benpate/exp-builder v0.2.0
+	github.com/benpate/form v0.8.0
+	github.com/benpate/html v0.13.0
+	github.com/benpate/id v0.3.0
+	github.com/benpate/nebula v0.5.0
+	github.com/benpate/remote v0.7.0
+	github.com/benpate/rosetta v0.3.0
+	github.com/benpate/steranko v0.9.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.1
@@ -28,8 +29,8 @@ require (
 	github.com/stripe/stripe-go/v72 v72.115.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
-	github.com/whisperverse/activitystream v0.4.5
-	github.com/whisperverse/mediaserver v0.3.0
+	github.com/whisperverse/activitystream v0.5.0
+	github.com/whisperverse/mediaserver v0.4.0
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
@@ -74,7 +75,7 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82 // indirect
-	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
+	golang.org/x/net v0.0.0-20220621193019-9d032be2e588 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
 	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	golang.org/x/text v0.3.7 // indirect

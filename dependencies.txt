@@ -1,0 +1,27 @@
+List of dependencies.  Promote/tag all large updates from the bottom up:
+
+NO DEPENDENTS
+
+- steranko 
+- nebula
+- mediaserver
+- form
+- exp-builder
+- digit
+- id
+- activitystream
+
+SOME DEPENDENTS
+
+- json-ld
+- html
+- data-mock
+- data-mongo
+- data
+- remote
+
+MANY DEPENDENTS
+
+- rosetta
+- exp
+- derp

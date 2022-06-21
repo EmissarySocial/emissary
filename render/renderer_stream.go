@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/exp/builder"
+	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/nebula"
 	htmlconv "github.com/benpate/rosetta/html"
@@ -302,7 +302,7 @@ func (w Stream) IsEmpty() bool {
 }
 
 func (w Stream) IsCurrentStream() bool {
-	return w.stream.Token == list.Head(w.context().Path(), "/")
+	return w.stream.Token == list.Slash(w.context().Path()).Head()
 }
 
 func (w Stream) Roles() []string {

@@ -13,9 +13,7 @@ func TestPermissions(t *testing.T) {
 	id1, _ := primitive.ObjectIDFromHex("000000000000000000000001")
 	id2, _ := primitive.ObjectIDFromHex("000000000000000000000002")
 
-	c := NewPermissions()
-
-	c = map[string][]string{
+	c := Permissions{
 		"000000000000000000000000": {"friends", "family"},
 		"000000000000000000000001": {"friends", "family", "internet randos"},
 		"000000000000000000000002": {"internet randos", "system administrators"},
@@ -28,12 +26,12 @@ func TestPermissions(t *testing.T) {
 
 	{
 		roles := c.Roles(id0, id1)
-		require.Equal(t, []string{"friends", "family", "internet randos"}, roles)
+		require.Equal(t, []string{"friends", "family", "friends", "family", "internet randos"}, roles)
 	}
 
 	{
 		roles := c.Roles(id2, id1)
-		require.Equal(t, []string{"internet randos", "system administrators", "friends", "family"}, roles)
+		require.Equal(t, []string{"internet randos", "system administrators", "friends", "family", "internet randos"}, roles)
 	}
 }
 

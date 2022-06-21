@@ -36,7 +36,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		// Load the attachment in order to verify that it is valid for this stream
 		// TODO: This might be more efficient as a single query...
 		attachmentService := factory.Attachment()
-		attachment, err := attachmentService.LoadByToken(streamID, list.Head(ctx.Param("attachment"), "."))
+		attachment, err := attachmentService.LoadByToken(streamID, list.Dot(ctx.Param("attachment")).Head())
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading attachment")

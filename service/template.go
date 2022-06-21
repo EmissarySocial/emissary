@@ -237,7 +237,7 @@ func (service *Template) Watch() error {
 	for _, fileInfo := range fileList {
 
 		if fileInfo.IsDir() {
-			templateID := list.Last(fileInfo.Name(), "/")
+			templateID := list.Slash(fileInfo.Name()).Last()
 
 			fmt.Println(".. : " + templateID)
 			// Add all other directories into the Template service as Templates
@@ -299,7 +299,7 @@ func (service *Template) Watch() error {
 					continue
 				}
 
-				templateName := list.Last(list.RemoveLast(event.Name, "/"), "/")
+				templateName := list.Slash(event.Name).RemoveLast().Last()
 
 				// Otherwise, add this folder to the Template service
 				template, err := service.loadFromFilesystem(templateName)

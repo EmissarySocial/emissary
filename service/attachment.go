@@ -122,7 +122,7 @@ func (service Attachment) LoadByStreamID(streamID primitive.ObjectID, attachment
 func (service Attachment) LoadByToken(streamID primitive.ObjectID, token string) (model.Attachment, error) {
 	var result model.Attachment
 	criteria := exp.Equal("streamId", streamID).
-		AndEqual("filename", list.Head(token, ".")).
+		AndEqual("filename", list.Dot(token).Head()).
 		AndEqual("journal.deleteDate", 0)
 	err := service.Load(criteria, &result)
 	return result, err
