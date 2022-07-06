@@ -26,7 +26,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
 	github.com/stretchr/testify v1.8.0
-	github.com/stripe/stripe-go/v72 v72.116.0
+	github.com/stripe/stripe-go/v72 v72.117.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/whisperverse/activitystream v0.5.0
