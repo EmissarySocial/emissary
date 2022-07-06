@@ -3,6 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -12,9 +15,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/domain"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/server"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

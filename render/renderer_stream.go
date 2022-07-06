@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -18,7 +19,6 @@ import (
 	"github.com/benpate/rosetta/path"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

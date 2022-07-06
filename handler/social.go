@@ -3,17 +3,17 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/activitystream/writer"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/activitystream/writer"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetSocialProfile returns a person's ActivityPub Actor profile
 func GetSocialProfile(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "whisperverse.handler.GetSocialProfile"
+	const location = "handler.GetSocialProfile"
 
 	return func(ctx echo.Context) error {
 
@@ -62,7 +62,7 @@ func GetSocialInbox(fm *server.Factory) echo.HandlerFunc {
 // PostSocialInbox accepts messages to a particular ACTOR
 func PostSocialInbox(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "whisperverse.handler.PostSocialInbox"
+	const location = "handler.PostSocialInbox"
 
 	return func(ctx echo.Context) error {
 

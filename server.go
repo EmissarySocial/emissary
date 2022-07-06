@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/EmissarySocial/emissary/config"
+	mw "github.com/EmissarySocial/emissary/middleware"
+	"github.com/EmissarySocial/emissary/route"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/whisperverse/whisperverse/config"
-	mw "github.com/whisperverse/whisperverse/middleware"
-	"github.com/whisperverse/whisperverse/route"
-	"github.com/whisperverse/whisperverse/server"
 	"golang.org/x/crypto/acme/autocert"
 )
 

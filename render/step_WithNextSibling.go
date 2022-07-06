@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepWithNextSibling represents an action-step that can update the data.DataMap custom data stored in a Stream

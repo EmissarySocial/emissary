@@ -1,10 +1,10 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.

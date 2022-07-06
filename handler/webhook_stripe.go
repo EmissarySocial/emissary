@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/webhook"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {

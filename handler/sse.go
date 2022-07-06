@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/domain"
-	"github.com/whisperverse/whisperverse/server"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

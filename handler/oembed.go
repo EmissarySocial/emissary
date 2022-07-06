@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetOEmbed will provide an OEmbed service to be used exclusively by websites on this domain.

@@ -3,13 +3,13 @@ package route
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler"
+	"github.com/EmissarySocial/emissary/middleware"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/handler"
-	"github.com/whisperverse/whisperverse/middleware"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // New returns all of the routes required for this application

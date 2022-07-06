@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
@@ -10,7 +11,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/client"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // StepStripeProduct represents an action-step that forwards the user to a new page.

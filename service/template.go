@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/compare"
@@ -15,8 +17,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
-	"github.com/whisperverse/whisperverse/config"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.

@@ -3,9 +3,9 @@ package handler
 import (
 	"strings"
 
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/server"
 	"github.com/yeqown/go-qrcode/v2"
 	"github.com/yeqown/go-qrcode/writer/standard"
 )

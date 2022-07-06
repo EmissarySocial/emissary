@@ -1,12 +1,12 @@
 package render
 
 import (
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/form"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/stripe/stripe-go/v72/client"
-	"github.com/whisperverse/mediaserver"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // Factory is used to locate all necessary services

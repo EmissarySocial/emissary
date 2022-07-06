@@ -3,8 +3,8 @@ package queries
 import (
 	"context"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
-	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

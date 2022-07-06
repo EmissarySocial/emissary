@@ -3,11 +3,11 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -42,7 +42,7 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 // If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
 func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 
-	const location = "whisperverse.handler.getSignedInUserID"
+	const location = "handler.getSignedInUserID"
 
 	sterankoContext, ok := ctx.(*steranko.Context)
 

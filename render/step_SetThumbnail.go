@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/path"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // StepSetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream

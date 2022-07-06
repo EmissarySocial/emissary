@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // StepDeleteOutboxItem represents an action-step that can delete an activity log item from a user's outbox.

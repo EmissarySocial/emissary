@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/render"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/whisperverse/whisperverse/domain"
-	"github.com/whisperverse/whisperverse/render"
 )
 
 // renderPage collects the logic to render complete vs. partial HTML pages.

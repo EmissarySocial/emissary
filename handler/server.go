@@ -3,6 +3,10 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/render"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -10,10 +14,6 @@ import (
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/path"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/config"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/render"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 func GetServerIndex(factory *server.Factory) echo.HandlerFunc {

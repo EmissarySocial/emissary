@@ -4,8 +4,8 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

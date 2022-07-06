@@ -3,7 +3,7 @@ package render
 import (
 	"io"
 
-	"github.com/whisperverse/whisperverse/model/step"
+	"github.com/EmissarySocial/emissary/model/step"
 )
 
 type Step interface {

@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream

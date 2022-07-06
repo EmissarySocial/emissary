@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 func WrapModal(response *echo.Response, content string) string {

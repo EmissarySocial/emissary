@@ -56,16 +56,17 @@ func loadFromFile(location string) Config {
 	// Try to load the configuration file from disk
 	data, err := ioutil.ReadFile(location)
 
-	// If successful, then unmarshal and return
-	if err == nil {
-		result := NewConfig()
-		if err := json.Unmarshal(data, &result); err != nil {
-			panic("Invalid config.json: " + err.Error())
-		}
-		return result
+	// If the file doesn't exist, create a default one
+	if err != nil {
+		return createDefault()
 	}
 
-	panic(err.Error())
+	// Otherwise unmarshal and return
+	result := NewConfig()
+	if err := json.Unmarshal(data, &result); err != nil {
+		panic("Invalid config.json: " + err.Error())
+	}
+	return result
 }
 
 func loadFromMongoDB(location string) Config {

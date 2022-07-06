@@ -3,11 +3,11 @@ package handler
 import (
 	"bytes"
 
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/domain"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory, model.Domain, error) {

@@ -3,10 +3,10 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/model/step"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

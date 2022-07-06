@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepIfCondition represents an action-step that can update the data.DataMap custom data stored in a Stream

@@ -4,12 +4,12 @@ import (
 	"html/template"
 	"sync"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // Domain service manages all access to the singleton model.Domain in the database

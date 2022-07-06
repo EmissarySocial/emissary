@@ -3,10 +3,10 @@ package model
 import (
 	"encoding/json"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/maps"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.

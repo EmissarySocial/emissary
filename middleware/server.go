@@ -3,10 +3,10 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // ServerAdmin generates a middleware that enforces security permissions
@@ -24,11 +24,11 @@ func ServerAdmin(factory *server.Factory) echo.MiddlewareFunc {
 			domain, err := factory.DomainByName(ctx.Request().Host)
 
 			if err != nil {
-				return derp.NewNotFoundError("whisperverse.middleware.ServerAdmin", "Not Found")
+				return derp.NewNotFoundError("middleware.ServerAdmin", "Not Found")
 			}
 
 			if !domain.ShowAdmin {
-				return derp.NewNotFoundError("whisperverse.middleware.ServerAdmin", "Not Found")
+				return derp.NewNotFoundError("middleware.ServerAdmin", "Not Found")
 			}
 
 			// Verify the admin password cookie

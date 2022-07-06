@@ -3,13 +3,13 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/compare"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/model/step"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // StepAddChildStream is an action that can add new sub-streams to the domain.

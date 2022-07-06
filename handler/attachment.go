@@ -3,13 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/render"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/render"
-	"github.com/whisperverse/whisperverse/server"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

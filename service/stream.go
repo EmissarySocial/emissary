@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -11,8 +13,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/maps"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/queries"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

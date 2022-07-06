@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepAddModelObject is an action that can add new model objects of any type

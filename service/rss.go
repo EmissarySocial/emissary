@@ -3,11 +3,11 @@ package service
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/gorilla/feeds"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // RSS service generates RSS feeds of the available streams in the database

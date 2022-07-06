@@ -4,9 +4,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/gorilla/feeds"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // StepViewRSS represents an action-step that can render a Stream into HTML

@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetWebfinger returns public webfinger information for a designated user.

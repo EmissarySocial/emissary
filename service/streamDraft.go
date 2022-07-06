@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/data/option"
@@ -8,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/maps"
-	"github.com/whisperverse/whisperverse/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

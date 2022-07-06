@@ -3,9 +3,9 @@ package service
 import (
 	"strings"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/afero"
-	"github.com/whisperverse/whisperverse/config"
 )
 
 func GetFS(folder config.Folder, subFolders ...string) afero.Fs {

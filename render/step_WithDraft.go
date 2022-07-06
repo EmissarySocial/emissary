@@ -3,8 +3,8 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepWithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream

@@ -1,9 +1,9 @@
 package domain
 
 import (
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // WatchTemplates may get removed.  I dunno.

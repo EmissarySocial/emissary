@@ -3,9 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/whisperverse/whisperverse/model/step"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.

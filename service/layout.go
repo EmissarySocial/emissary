@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/fsnotify/fsnotify"
-	"github.com/whisperverse/whisperverse/config"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the

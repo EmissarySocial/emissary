@@ -3,14 +3,14 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/render"
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/html"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/model"
-	"github.com/whisperverse/whisperverse/render"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 func ListSubscriptions(fm *server.Factory) echo.HandlerFunc {

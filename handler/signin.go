@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests

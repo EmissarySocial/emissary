@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/server"
 )
 
 // Domain middleware validates that the requested domain has been fully activated before
@@ -17,11 +17,11 @@ func Domain(factory *server.Factory) echo.MiddlewareFunc {
 			domainFactory, err := factory.ByContext(ctx)
 
 			if err != nil {
-				return derp.NewForbiddenError("whisperverse.middleware.Domain", "Unrecognized domain", ctx.Request().URL.Hostname(), err)
+				return derp.NewForbiddenError("middleware.Domain", "Unrecognized domain", ctx.Request().URL.Hostname(), err)
 			}
 
 			if domainFactory.Session == nil {
-				return derp.NewForbiddenError("whisperverse.middleware.Domain", "Database Not Configured for this Domain")
+				return derp.NewForbiddenError("middleware.Domain", "Database Not Configured for this Domain")
 			}
 
 			return next(ctx)

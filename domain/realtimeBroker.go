@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/whisperverse/whisperverse/model"
+	"github.com/EmissarySocial/emissary/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

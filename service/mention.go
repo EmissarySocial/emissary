@@ -4,13 +4,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
 	"github.com/tomnomnom/linkheader"
-	"github.com/whisperverse/whisperverse/model"
 )
 
 /*********************

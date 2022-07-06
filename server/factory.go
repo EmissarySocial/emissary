@@ -5,16 +5,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/render"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"github.com/whisperverse/whisperverse/config"
-	"github.com/whisperverse/whisperverse/domain"
-	"github.com/whisperverse/whisperverse/render"
-	"github.com/whisperverse/whisperverse/service"
 )
 
 // Factory manages all server-level services, and generates individual
