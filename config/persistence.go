@@ -2,9 +2,11 @@ package config
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/pkg/browser"
@@ -14,72 +16,108 @@ import (
 // CONFIG_FILENAME defines the relative path to the Whisperverse configuration file
 const CONFIG_FILENAME = "./config.json"
 
+func GetConfigLocation() string {
+
+	if location := flag.String("config", "", "Path to configuration file"); location != nil {
+		if *location != "" {
+			return *location
+		}
+	}
+
+	if location := os.Getenv("WHISPERVERSE_CONFIG"); location != "" {
+		return location
+	}
+
+	return "file://./config.json"
+}
+
 // Load retrieves all of the configured domains from permanent storage (currently filesystem)
 func Load() Config {
 
-	// Try to load the configuration file from disk
-	{
-		data, err := ioutil.ReadFile(CONFIG_FILENAME)
+	location := GetConfigLocation()
 
-		// If successful, then unmarshal and return
-		if err == nil {
-			result := NewConfig()
-			if err := json.Unmarshal(data, &result); err != nil {
-				panic("Invalid config.json: " + err.Error())
-			}
-			return result
-		}
+	switch {
+	case strings.HasPrefix(location, "file://"):
+		return loadFromFile(strings.TrimPrefix(location, "file://"))
 
-		fmt.Println("Error loading configuration file:" + err.Error())
+	case strings.HasPrefix(location, "mongodb://"):
+		return loadFromMongoDB(location)
+
+	case strings.HasPrefix(location, "mongodb+srv://"):
+		return loadFromMongoDB(location)
+
+	default:
+		return createDefault()
 	}
+}
 
-	// Fall through means it's the first run, and we're generating a new default config from scratch.
-	{
-		fmt.Println("Generating new file...")
+func loadFromFile(location string) Config {
 
-		defaultAdminURL, err := password.Generate(36, 10, 0, false, false)
+	// Try to load the configuration file from disk
+	data, err := ioutil.ReadFile(location)
 
-		if err != nil {
-			panic("Error generating default admin location: " + err.Error())
+	// If successful, then unmarshal and return
+	if err == nil {
+		result := NewConfig()
+		if err := json.Unmarshal(data, &result); err != nil {
+			panic("Invalid config.json: " + err.Error())
 		}
-
-		// Create a default password
-		defaultPassword, err := password.Generate(36, 10, 0, false, false)
-
-		if err != nil {
-			panic("Error generating default password: " + err.Error())
-		}
-
-		// Generate a new configuration file using the default password
-		result := DefaultConfig(defaultAdminURL, defaultPassword)
-		data, err := json.MarshalIndent(result, "", "\t")
-
-		if err != nil {
-			panic("Error marshaling new config file: " + err.Error())
-		}
-
-		// Try to write the new configuration to the file system
-		if err := ioutil.WriteFile(CONFIG_FILENAME, data, 0777); err != nil {
-			panic("Error writing default configuration: " + err.Error() + "\n Check file permissions.")
-		}
-
-		// Output helpful hints for system admins
-		fmt.Println("Default config file created at: " + CONFIG_FILENAME)
-		fmt.Println("")
-		fmt.Println("SAVE THIS INFORMATION SOMEWHERE SAFE")
-		fmt.Println("-----------------------------------------")
-		fmt.Println("To access the server admin, and configure")
-		fmt.Println("websites on this server open this URL:")
-		fmt.Println("http://localhost/" + result.AdminURL)
-		fmt.Println("The admin password is: " + result.AdminPassword)
-		fmt.Println("-----------------------------------------")
-
-		// On first run, open web browser in admin mode
-		browser.OpenURL("http://localhost/" + result.AdminURL + "?first=true")
-
-		// Success!
 		return result
 	}
+
+	panic(err.Error())
+}
+
+func loadFromMongoDB(location string) Config {
+	return Config{}
+}
+
+func createDefault() Config {
+
+	fmt.Println("Generating new file...")
+
+	defaultAdminURL, err := password.Generate(36, 10, 0, false, false)
+
+	if err != nil {
+		panic("Error generating default admin location: " + err.Error())
+	}
+
+	// Create a default password
+	defaultPassword, err := password.Generate(36, 10, 0, false, false)
+
+	if err != nil {
+		panic("Error generating default password: " + err.Error())
+	}
+
+	// Generate a new configuration file using the default password
+	result := DefaultConfig(defaultAdminURL, defaultPassword)
+	data, err := json.MarshalIndent(result, "", "\t")
+
+	if err != nil {
+		panic("Error marshaling new config file: " + err.Error())
+	}
+
+	// Try to write the new configuration to the file system
+	if err := ioutil.WriteFile(CONFIG_FILENAME, data, 0777); err != nil {
+		panic("Error writing default configuration: " + err.Error() + "\n Check file permissions.")
+	}
+
+	// Output helpful hints for system admins
+	fmt.Println("Default config file created at: " + CONFIG_FILENAME)
+	fmt.Println("")
+	fmt.Println("SAVE THIS INFORMATION SOMEWHERE SAFE")
+	fmt.Println("-----------------------------------------")
+	fmt.Println("To access the server admin, and configure")
+	fmt.Println("websites on this server open this URL:")
+	fmt.Println("http://localhost/" + result.AdminURL)
+	fmt.Println("The admin password is: " + result.AdminPassword)
+	fmt.Println("-----------------------------------------")
+
+	// On first run, open web browser in admin mode
+	browser.OpenURL("http://localhost/" + result.AdminURL + "?first=true")
+
+	// Success!
+	return result
 }
 
 // Write saves the current configuration to permanent storage (currently filesystem)
