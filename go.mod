@@ -2,24 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.18
 
-replace (
-	github.com/benpate/activitystream => ./_libs/activitystream
-	github.com/benpate/data => ./_libs/data
-	github.com/benpate/data-mongo => ./_libs/data-mongo
-	github.com/benpate/derp => ./_libs/derp
-	github.com/benpate/digit => ./_libs/digit
-	github.com/benpate/exp => ./_libs/exp
-	github.com/benpate/exp-builder => ./_libs/exp-builder
-	github.com/benpate/form => ./_libs/form
-	github.com/benpate/html => ./_libs/html
-	github.com/benpate/id => ./_libs/id
-	github.com/benpate/mediaserver => ./_libs/mediaserver
-	github.com/benpate/nebula => ./_libs/nebula
-	github.com/benpate/remote => ./_libs/remote
-	github.com/benpate/rosetta => ./_libs/rosetta
-	github.com/benpate/steranko => ./_libs/steranko
-)
-
 require (
 	github.com/benpate/activitystream v0.5.0
 	github.com/benpate/data v0.18.0
