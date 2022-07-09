@@ -8,7 +8,6 @@ NO DEPENDENTS
 - form
 - exp-builder
 - digit
-- id
 - activitystream
 
 SOME DEPENDENTS
