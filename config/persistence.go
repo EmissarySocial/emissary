@@ -16,25 +16,12 @@ import (
 // CONFIG_FILENAME defines the relative path to the Whisperverse configuration file
 const CONFIG_FILENAME = "./config.json"
 
-func GetConfigLocation() string {
-
-	if location := flag.String("config", "", "Path to configuration file"); location != nil {
-		if *location != "" {
-			return *location
-		}
-	}
-
-	if location := os.Getenv("WHISPERVERSE_CONFIG"); location != "" {
-		return location
-	}
-
-	return "file://./config.json"
-}
-
 // Load retrieves all of the configured domains from permanent storage (currently filesystem)
 func Load() Config {
 
-	location := GetConfigLocation()
+	location := getConfigLocation()
+
+	fmt.Println("Using configuration at: " + location + " ************")
 
 	switch {
 	case strings.HasPrefix(location, "file://"):
@@ -49,6 +36,22 @@ func Load() Config {
 	default:
 		return createDefault()
 	}
+}
+
+func getConfigLocation() string {
+
+	location := flag.String("config", "", "Path to configuration file")
+	flag.Parse()
+
+	if (location != nil) && (*location != "") {
+		return *location
+	}
+
+	if location := os.Getenv("EMISSARY_CONFIG"); location != "" {
+		return location
+	}
+
+	return "file://./config.json"
 }
 
 func loadFromFile(location string) Config {
