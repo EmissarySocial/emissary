@@ -4,10 +4,10 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/id"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
@@ -90,7 +90,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 		groupIDs = []primitive.ObjectID{model.MagicGroupIDAuthenticated}
 
 	case "private":
-		groupIDs = id.Slice(request.Form["groupIds"])
+		groupIDs = id.SliceOfID(request.Form["groupIds"])
 
 	default:
 		return derp.NewBadRequestError(location, "Invalid rule: ", rule)

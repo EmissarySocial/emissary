@@ -3,9 +3,9 @@ package model
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/id"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -101,7 +101,7 @@ func (user *User) SetPath(path string, value any) error {
 	switch path {
 
 	case "groupIds":
-		user.GroupIDs = id.Slice(value)
+		user.GroupIDs = id.SliceOfID(value)
 
 	case "displayName":
 		user.DisplayName = convert.String(value)
