@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +10,8 @@ import (
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/route"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -19,28 +22,50 @@ import (
 
 func main() {
 
+	var e *echo.Echo
+
 	spew.Config.DisableMethods = true
 
-	fmt.Println("Starting Whisperverse.")
-	fmt.Println("Loading configuration file...")
+	fmt.Println("Starting Emissary.")
 
-	c := config.Load()
+	configStorage := config.Load()
 
-	fmt.Println("Initializing hosts...")
+	for c := range configStorage.Subscribe() {
 
-	factory := server.NewFactory(c)
+		fmt.Println("Reading configuration file...")
 
-	fmt.Println("Initializing web server...")
-	e := route.New(factory)
+		factory := server.NewFactory(c)
+		domains := c.DomainNames()
 
-	// Global middleware
-	// TODO: implement echo.Security middleware
-	e.Use(middleware.Recover())
-	e.Use(mw.HttpsRedirect)
-	e.Use(steranko.Middleware(factory))
+		fmt.Println("Setting up new server on " + convert.String(len(domains)) + " domains: " + strings.Join(domains, ", "))
 
-	go startHttps(e, c) // Start HTTPS server in background, so that...
-	startHttp(e)        // ...we can also start the HTTP server
+		newServer := route.New(factory)
+
+		// Global middleware
+		// TODO: implement echo.Security middleware
+		newServer.Use(middleware.Recover())
+		newServer.Use(mw.HttpsRedirect)
+		newServer.Use(steranko.Middleware(factory))
+
+		// Prepare HTTP and HTTPS servers using the new configuration
+		go startHttps(newServer, c)
+		go startHttp(newServer)
+
+		// If there is already a server running, then do a graceful shutdown
+		if e != nil {
+
+			// Context for graceful shutdown
+			ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+			// Try to shut down the server
+			if err := e.Shutdown(ctx); err != nil {
+				derp.Report(err)
+			}
+		}
+
+		// Save 'newServer' as the currently running server
+		e = newServer
+	}
 }
 
 func startHttps(e *echo.Echo, c config.Config) {
@@ -71,11 +96,7 @@ func startHttps(e *echo.Echo, c config.Config) {
 		return
 	}
 
-	fmt.Print("Starting HTTPS web server for:")
-	for _, domain := range domains {
-		fmt.Print(" " + domain)
-	}
-	fmt.Println("")
+	fmt.Println("Starting HTTPS server...")
 
 	// Initialize Let's Encrypt autocert for TLS certificates
 	e.AutoTLSManager = autocert.Manager{
@@ -87,18 +108,16 @@ func startHttps(e *echo.Echo, c config.Config) {
 
 	for {
 		if err := e.StartAutoTLS(":443"); err != nil {
-			fmt.Print(".")
-			time.Sleep(1 * time.Second)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
 
 func startHttp(e *echo.Echo) {
-	fmt.Println("Starting HTTP web server: ")
+	fmt.Println("Starting HTTP server...")
 	for {
 		if err := e.Start(":80"); err != nil {
-			fmt.Print(".")
-			time.Sleep(1 * time.Second)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
