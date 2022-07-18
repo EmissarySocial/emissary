@@ -19,7 +19,7 @@ html {
     line-height: calc(var(--rhythm) * 3);
 }
  
-.monospace {
+.monospace, code {
     font-family: ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
 
@@ -378,4 +378,16 @@ p {
 
 p:last-child {
     margin:0px;
+}
+
+code {
+    display:block;
+    background-color: var(--gray10);
+    border: solid 1px var(--gray-20);
+    padding: 5px 10px;
+    white-space: pre-wrap;
+}
+
+code.inline {
+    display:inline;
 }

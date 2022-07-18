@@ -1,0 +1,42 @@
+{
+	"domains": [
+		{
+			"domainId": "000000000000000000000000",
+			"label": "Administration Console",
+			"hostname": "localhost",
+			"connectString": "",
+			"databaseName": "",
+			"showAdmin": true
+		}
+	],
+	"certificates": {
+		"adapter": "FILE",
+		"location": "./_certificates/",
+		"sync": false
+	},
+	"templates": {
+		"adapter": "FILE",
+		"location": "./_templates/",
+		"sync": true
+	},
+	"layouts": {
+		"adapter": "FILE",
+		"location": "./_layouts/",
+		"sync": true
+	},
+	"static": {
+		"adapter": "FILE",
+		"location": "./_static/",
+		"sync": false
+	},
+	"attachmentOriginals": {
+		"adapter": "FILE",
+		"location": "./_attachments/originals",
+		"sync": false
+	},
+	"attachmentCache": {
+		"adapter": "FILE",
+		"location": "./_attachments/cache",
+		"sync": false
+	}
+}

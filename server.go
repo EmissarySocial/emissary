@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/route"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/setup"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/slice"
@@ -17,24 +19,41 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/spf13/pflag"
 	"golang.org/x/crypto/acme/autocert"
 )
 
+//go:embed all:_static/*
+var staticFiles embed.FS
+
 func main() {
 
-	var e *echo.Echo
-
+	// Set global configuration
 	spew.Config.DisableMethods = true
+
+	// See if the setup command is being run
+	doSetup := pflag.BoolP("setup", "s", false, "Run the setup routine")
+	pflag.Parse()
+
+	// Special case to execute the setup server
+	if *doSetup {
+		setup.Setup(staticFiles)
+		return
+	}
+
+	// FALL THROUGH means we're running the standard server
+	var e *echo.Echo
 
 	fmt.Println("Starting Emissary.")
 
 	configStorage := config.Load()
 
+	// Every time the configuration is updated, create a new server (and swap the old one, if necessary)
 	for c := range configStorage.Subscribe() {
 
 		fmt.Println("Reading configuration file...")
 
-		factory := server.NewFactory(c)
+		factory := server.NewFactory(configStorage)
 		domains := c.DomainNames()
 
 		fmt.Println("Setting up new server on " + convert.String(len(domains)) + " domains: " + strings.Join(domains, ", "))
@@ -55,12 +74,13 @@ func main() {
 		if e != nil {
 
 			// Context for graceful shutdown
-			ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 			// Try to shut down the server
 			if err := e.Shutdown(ctx); err != nil {
 				derp.Report(err)
 			}
+			cancel()
 		}
 
 		// Save 'newServer' as the currently running server

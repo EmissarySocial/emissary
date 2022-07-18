@@ -1,6 +1,7 @@
 package render
 
 import (
+	"encoding/json"
 	"html/template"
 
 	"github.com/benpate/rosetta/convert"
@@ -82,6 +83,11 @@ func FuncMap() template.FuncMap {
 
 		"notEmpty": func(slice List) bool { // Returns true if there are records in the resultset
 			return len(slice) > 0
+		},
+
+		"json": func(value any) string {
+			result, _ := json.MarshalIndent(value, "", "  ")
+			return string(result)
 		},
 	}
 }

@@ -18,40 +18,26 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection            data.Collection
-	templateService       *Template
-	draftService          *StreamDraft
-	attachmentService     *Attachment
-	formLibrary           *form.Library
-	contentLibrary        *nebula.Library
-	templateUpdateChannel chan string
-	streamUpdateChannel   chan model.Stream
+	collection          data.Collection
+	templateService     *Template
+	draftService        *StreamDraft
+	attachmentService   *Attachment
+	formLibrary         *form.Library
+	contentLibrary      *nebula.Library
+	streamUpdateChannel chan model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, contentLibrary *nebula.Library, templateUpdateChannel chan string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, contentLibrary *nebula.Library, streamUpdateChannel chan model.Stream) Stream {
 
 	return Stream{
-		collection:            collection,
-		templateService:       templateService,
-		draftService:          draftService,
-		attachmentService:     attachmentService,
-		formLibrary:           formLibrary,
-		contentLibrary:        contentLibrary,
-		templateUpdateChannel: templateUpdateChannel,
-		streamUpdateChannel:   streamUpdateChannel,
-	}
-}
-
-/*******************************************
- * REAL-TIME UPDATES
- *******************************************/
-
-// start begins the background watchers used by the Stream Service
-func (service *Stream) Watch() {
-	for {
-		templateID := <-service.templateUpdateChannel
-		service.updateStreamsByTemplate(templateID)
+		collection:          collection,
+		templateService:     templateService,
+		draftService:        draftService,
+		attachmentService:   attachmentService,
+		formLibrary:         formLibrary,
+		contentLibrary:      contentLibrary,
+		streamUpdateChannel: streamUpdateChannel,
 	}
 }
 
@@ -659,8 +645,8 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 	return nil
 }
 
-// updateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
-func (service *Stream) updateStreamsByTemplate(templateID string) {
+// UpdateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
+func (service *Stream) UpdateStreamsByTemplate(templateID string) {
 
 	iterator, err := service.ListByTemplate(templateID)
 

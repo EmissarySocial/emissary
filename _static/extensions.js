@@ -9,4 +9,4 @@ _hyperscript.config.conversions["FormEncoded"] = function(object) {
     return result.join("&");
 };
 
-htmx.config.useTemplateFragments = true;
+// htmx.config.useTemplateFragments = true;

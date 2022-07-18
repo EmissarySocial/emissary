@@ -1,0 +1,50 @@
+{{template "_navigation.html" "domains"}}
+
+<main>
+	<div id="main" class="framed">
+		<h1>Domains on this Server</h1>
+		<div>Manage domains configured on this server.  For more settings, you can also edit the config.json file manually.</div>
+
+		<!-- List existing domains -->
+		<table class="table">
+
+			<!--  First row is "Add" link -->
+			<tr role="link" hx-get="/domains/new"><td colspan="4">
+				<i class="fas fa-plus-circle"></i> Add a Domain
+			</td></tr>
+
+			{{$empty := true}}
+			{{- range .Domains -}}
+				<tr role="link" hx-get="/domains/{{.ID}}">
+					<td>
+						<i class="fas fa-server"></i> {{ .Label }}
+					</td>
+					<td>
+						{{.Hostname}}
+					</td>
+					<td class="align-right">
+						{{- if eq "" .ConnectString -}}
+						{{- else -}}
+							<a href="https://{{.Name}}/" target="_blank" class="button">Visit</a>
+						{{- end -}}
+					</td>
+					<td class="align-right">
+						{{- if ne "localhost" .Hostname -}}
+							&nbsp;&nbsp;
+							<button class="" hx-delete="/{{.ID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
+						{{- end -}}
+					</td>
+				</tr>
+			{{- end -}}
+		</table>
+
+		{{- range .Domains -}}
+			{{- if eq "" .ConnectString -}}
+				{{- if $empty -}}
+					{{- $empty := false -}}
+					<div hx-get="/domains/{{.ID}}" hx-trigger="load"></div>
+				{{- end -}}
+			{{- end -}}
+		{{- end -}}
+	</div>
+</main>

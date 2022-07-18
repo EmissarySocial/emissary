@@ -10,25 +10,25 @@ import (
 
 // FileStorage is a file-based storage engine for the server configuration
 type FileStorage struct {
-	location string
+	bootstrap     string
+	location      string
+	updateChannel chan Config
 }
 
 // NewFileStorage creates a fully initialized FileStorage instance
-func NewFileStorage(location string) FileStorage {
+func NewFileStorage(bootstrap string, location string) FileStorage {
 
-	return FileStorage{
-		location: location,
+	// Create a new FileStorage instance
+	storage := FileStorage{
+		bootstrap:     bootstrap,
+		location:      location,
+		updateChannel: make(chan Config, 1),
 	}
-}
 
-// Subscribe returns a channel that will receive the configuration every time it is updated
-func (storage FileStorage) Subscribe() <-chan Config {
-
-	result := make(chan Config, 1) // Use a buffered channel to prevent blocking
-
+	// Listen for updates and post them to the update channel
 	go func() {
 
-		result <- storage.load()
+		storage.updateChannel <- storage.load()
 
 		// Create a new file watcher
 		watcher, err := fsnotify.NewWatcher()
@@ -42,13 +42,17 @@ func (storage FileStorage) Subscribe() <-chan Config {
 			return
 		}
 
-		for {
-			result <- storage.load()
-			<-watcher.Events
+		for range watcher.Events {
+			storage.updateChannel <- storage.load()
 		}
 	}()
 
-	return result
+	return storage
+}
+
+// Subscribe returns a channel that will receive the configuration every time it is updated
+func (storage FileStorage) Subscribe() <-chan Config {
+	return storage.updateChannel
 }
 
 // load reads the configuration from the filesystem and
@@ -70,6 +74,9 @@ func (storage FileStorage) load() Config {
 		panic("Invalid configuration file: " + err.Error())
 	}
 
+	result.Bootstrap = storage.bootstrap
+	result.Location = "file://" + storage.location
+
 	return result
 }
 
@@ -87,6 +94,9 @@ func (storage FileStorage) Write(config Config) error {
 	if err := ioutil.WriteFile(storage.location, data, 0777); err != nil {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error writing config.json")
 	}
+
+	// Notify the update channel that the configuration has changed
+	storage.updateChannel <- config
 
 	// Return nil if no errors were encountered
 	return nil

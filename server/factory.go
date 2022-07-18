@@ -9,221 +9,216 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 )
 
 // Factory manages all server-level services, and generates individual
 // domain factories for each domain
 type Factory struct {
-	config config.Config
-	mutex  sync.RWMutex
+	storage config.Storage
+	config  config.Config
+	mutex   sync.RWMutex
 
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
 	templateChannel chan string
 
-	domains map[string]*domain.Factory
+	attachmentOriginals afero.Fs
+	attachmentCache     afero.Fs
+
+	domains set.Map[string, *domain.Factory]
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
 // if there are any errors connecting to a domain's datasource, NewFactory will derp.Report
 // the error, but will continue loading without those domains.
-func NewFactory(cfg config.Config) *Factory {
+func NewFactory(storage config.Storage) *Factory {
 
-	fmt.Println("Starting Server...")
+	fmt.Println("Starting Emissary Server...")
 
-	factory := &Factory{
-		config:          cfg,
+	factory := Factory{
+		storage:         storage,
 		mutex:           sync.RWMutex{},
 		templateChannel: make(chan string),
-		domains:         make(map[string]*domain.Factory, len(cfg.Domains)),
+		domains:         make(map[string]*domain.Factory, 0),
 	}
 
-	// Global Layout Service
-	factory.layoutService = service.NewLayout(
-		cfg.Layouts,
-		render.FuncMap(),
-	)
+	go factory.start()
+	return &factory
+}
 
-	go factory.layoutService.Watch()
+func (factory *Factory) start() {
 
-	// Global Template Service
-	factory.templateService = service.NewTemplate(
-		factory.Layout(),
-		render.FuncMap(),
-		cfg.Templates,
-		factory.templateChannel,
-	)
+	// Read configuration files from the channel
+	for config := range factory.storage.Subscribe() {
 
-	if err := factory.templateService.Watch(); err != nil {
-		derp.Report(err)
-		panic(err)
-	}
+		spew.Dump(factory.config)
 
-	for _, domain := range cfg.Domains {
-		if err := factory.start(domain); err != nil {
+		if attachmentOriginals, err := config.AttachmentOriginals.GetFilesystem(); err == nil {
+			factory.attachmentOriginals = attachmentOriginals
+		} else {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config.AttachmentOriginals))
+		}
+
+		if attachmentCache, err := config.AttachmentCache.GetFilesystem(); err == nil {
+			factory.attachmentCache = attachmentCache
+		} else {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config.AttachmentCache))
+		}
+
+		factory.config = config
+
+		// Global Layout Service
+		factory.layoutService = service.NewLayout(
+			config.Layouts,
+			render.FuncMap(),
+		)
+
+		go factory.layoutService.Watch()
+
+		// Global Template Service
+		factory.templateService = service.NewTemplate(
+			factory.Layout(),
+			render.FuncMap(),
+			config.Templates,
+			factory.templateChannel,
+		)
+
+		if err := factory.templateService.Watch(); err != nil {
 			derp.Report(err)
+			panic(err)
+		}
+
+		// Insert/Update a factory for each domain in the configuration
+		for _, cfg := range config.Domains {
+
+			// Try to find the domain
+			d, err := factory.domains.Get(cfg.Hostname)
+
+			// If the domain already exists, then update configuration info.
+			if err == nil {
+				d.UpdateConfig(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+				continue
+			}
+
+			// Fall through means that the domain does not exist, so we need to create it
+			d, err = domain.NewFactory(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", cfg))
+				continue
+			}
+
+			factory.domains.Put(d)
+		}
+
+		// Unceremoniously remove domains that are no longer in the configuration
+		for domainID := range factory.domains {
+			if _, err := factory.domains.Get(domainID); err != nil {
+				factory.domains.Delete(domainID)
+			}
 		}
 	}
-
-	if len(factory.domains) == 0 {
-		panic("no domains configured")
-	}
-
-	return factory
 }
 
-// Add appends a new domain into the domain service IF it does not already exist.  If the domain
-// is already in the Factory, then no additional action is taken.
-func (factory *Factory) start(d config.Domain) error {
+/****************************
+ * Server Config Methods
+ ****************************/
 
-	// Try to open attachment original folder
-	originals, err := factory.config.AttachmentOriginals.GetFilesystem()
+// Config returns the current configuration for the Factory
+func (factory *Factory) Config() config.Config {
 
-	if err != nil {
-		return derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
+	// Read lock the mutex
+	factory.mutex.RLock()
+	defer factory.mutex.RUnlock()
+
+	result := factory.config
+	return result
+}
+
+// UpdateConfig updates the configuration for the Factory
+func (factory *Factory) UpdateConfig(value config.Config) error {
+
+	// Write lock the mutex
+	factory.mutex.Lock()
+	defer factory.mutex.Unlock()
+
+	factory.config = value
+
+	if err := factory.storage.Write(value); err != nil {
+		return derp.Wrap(err, "server.Factory.UpdateConfig", "Error writing configuration", value)
 	}
-
-	// Try to open attachment cache folder
-	cache, err := factory.config.AttachmentCache.GetFilesystem()
-
-	if err != nil {
-		return derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", factory.config.AttachmentOriginals)
-	}
-
-	// Try to create a new Factory object
-	result, err := domain.NewFactory(d, &factory.layoutService, &factory.templateService, originals, cache)
-
-	if err != nil {
-		return derp.Wrap(err, "server.Factory.start", "Error creating factory", d)
-	}
-
-	// Assign the new factory to the registry
-	factory.domains[d.Hostname] = result
 
 	return nil
-}
-
-/****************************
- * Services
- ****************************/
-
-func (factory *Factory) Layout() *service.Layout {
-	return &factory.layoutService
-}
-
-/****************************
- * Server Methods
- ****************************/
-
-func (factory *Factory) Config() config.Config {
-	return factory.config
-}
-
-func (factory *Factory) UpdateConfig(newConfig config.Config) error {
-	factory.config = newConfig
-	return factory.write()
 }
 
 /****************************
  * Domain Methods
  ****************************/
 
+// ListDomains returns a list of all domains in the Factory
 func (factory *Factory) ListDomains() []config.Domain {
 	return factory.config.Domains
 }
 
-func (factory *Factory) DomainByName(hostname string) (config.Domain, error) {
-
-	hostname = factory.NormalizeHostname(hostname)
-
-	for _, domain := range factory.config.Domains {
-
-		if domain.Hostname == hostname {
-			return domain, nil
-		}
-	}
-
-	return config.Domain{}, derp.NewNotFoundError("factoryManager.DomainByName", "Domain not fount", hostname)
-}
-
-func (factory *Factory) write() error {
-
-	// TODO: this hardcoded reference should probably be moved into the config file itself
-	if err := config.Write(factory.config, "./config.json"); err != nil {
-		return derp.Wrap(err, "server.Factory.write", "Error writing configuration")
-	}
-
-	return nil
-
-}
-
-func (factory *Factory) UpdateDomain(indexString string, domain config.Domain) error {
-
-	if indexString == "new" {
-		factory.config.Domains = append(factory.config.Domains, domain)
-	} else {
-		index := convert.Int(indexString)
-		factory.config.Domains[index] = domain
-	}
-
-	// TODO: this hardcoded reference should be moved into the config file itself
-	if err := factory.write(); err != nil {
-		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
-	}
-
-	factory.start(domain)
-	return nil
-}
-
-// DomainCount returns the number of domains currently configured by this manager.
-func (factory *Factory) DomainCount() int {
-
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
-	return len(factory.domains)
-}
-
-// DomainByIndex returns a domain from its index in the list
-func (factory *Factory) DomainByIndex(domainID string) (config.Domain, error) {
-
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
-	if domainID == "new" {
-		return config.NewDomain(), nil
-	}
-
-	index := convert.Int(domainID)
-
-	if (index < 0) || (index >= len(factory.config.Domains)) {
-		return config.Domain{}, derp.NewNotFoundError("server.Factory.DomainByIndex", "Index out of bounds", index)
-	}
-
-	return factory.config.Domains[index], nil
-}
-
-func (factory *Factory) DeleteDomain(domain config.Domain) error {
+// PutDomain adds a domain to the Factory
+func (factory *Factory) PutDomain(domain config.Domain) error {
 
 	factory.mutex.Lock()
 	defer factory.mutex.Unlock()
 
-	for index, d := range factory.config.Domains {
-		if d.Hostname == domain.Hostname {
-			factory.config.Domains = append(factory.config.Domains[:index], factory.config.Domains[index+1:]...)
-		}
+	// Add the domain to the collection
+	factory.config.Domains.Put(domain)
+
+	// Try to write the configuration to the storage service
+	if err := factory.storage.Write(factory.config); err != nil {
+		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
 	}
 
-	delete(factory.domains, domain.Hostname)
+	// The storage service will trigger a new configuration via the Subscrbe() channel
 
-	if err := factory.write(); err != nil {
+	return nil
+}
+
+// DomainByID finds a domain in the configuration by its ID
+func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
+
+	factory.mutex.RLock()
+	defer factory.mutex.RUnlock()
+
+	// If "new" then create a new domain
+	if strings.ToLower(domainID) == "new" {
+		return config.NewDomain(), nil
+	}
+
+	// Search for the domain in the configuration
+	if domain, err := factory.config.Domains.Get(domainID); err == nil {
+		return domain, nil
+	}
+
+	// Not found, so return an error
+	return config.Domain{}, derp.NewNotFoundError("server.Factory.DomainByIndex", "DomainID not found", domainID)
+}
+
+// DeleteDomain removes a domain from the Factory
+func (factory *Factory) DeleteDomain(domainID string) error {
+
+	factory.mutex.Lock()
+	defer factory.mutex.Unlock()
+
+	// Delete the domain from the collection
+	factory.config.Domains.Delete(domainID)
+
+	// Write changes to the storage engine.
+	if err := factory.storage.Write(factory.config); err != nil {
 		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
 	}
 
@@ -273,34 +268,9 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
  * Other Global Services
  ****************************/
 
-// AdminURL returns the URL path to the admin console for this server.
-// If the admin console is not configured, then an empty string is returned instead
-func (factory *Factory) AdminURL() string {
-	result := factory.config.AdminURL
-
-	if result == "" {
-		return ""
-	}
-
-	return "/" + result
-}
-
-// IsAdminPassword returns TRUE if the provided password matches
-// the admin password for this server.
-func (factory *Factory) IsAdminPassword(password string) bool {
-
-	// Password is required, so empty passwords CANNOT MATCH.
-	if password == "" {
-		return false
-	}
-
-	// Return TRUE if the passwords matches.
-	return password == factory.config.AdminPassword
-}
-
-// HashedPassword returns the hashed value of the admin password.
-func (factory *Factory) HashedPassword() string {
-	return factory.config.AdminPassword
+// Layout returns the global layout service
+func (factory *Factory) Layout() *service.Layout {
+	return &factory.layoutService
 }
 
 // Steranko implements the steranko.Factory method, used for locating the specific

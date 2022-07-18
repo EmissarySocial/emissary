@@ -54,54 +54,85 @@ type Factory struct {
 // NewFactory creates a new factory tied to a MongoDB database
 func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
-	fmt.Println("Starting Hostname: " + domain.Hostname + "...")
+	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
 	// Base Factory object
 	factory := Factory{
 		config:                domain,
 		layoutService:         layoutService,
 		templateService:       templateService,
+		streamUpdateChannel:   make(chan model.Stream),
 		templateUpdateChannel: make(chan string),
 		attachmentOriginals:   attachmentOriginals,
 		attachmentCache:       attachmentCache,
 	}
 
-	// If there is a database then set it up now.
-	if domain.ConnectString != "" {
+	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
+	// Crate content library (for now, only using defaults)
+	factory.contentLibrary = nebula.NewLibrary()
+
+	// Create form library
+	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
+	formlib.All(&factory.formLibrary)
+
+	// Continue updating the configuration with values that (may) change during the lifetime of the factory
+	if err := factory.UpdateConfig(domain, layoutService, templateService, attachmentOriginals, attachmentCache); err != nil {
+		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
+	}
+
+	// Watch for updates to templates and update streams accordingly
+	go factory.watchTemplates()
+
+	// Done (for now)
+	return &factory, nil
+}
+
+func (factory *Factory) UpdateConfig(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+
+	// Update global pointers
+	factory.layoutService = layoutService
+	factory.templateService = templateService
+	factory.attachmentOriginals = attachmentOriginals
+	factory.attachmentCache = attachmentCache
+
+	// If the database connect string has changed...
+	if (factory.config.ConnectString != domain.ConnectString) || (factory.config.DatabaseName != domain.DatabaseName) {
+
+		// If we already have a database connection, then close it
+		if factory.Session != nil {
+			factory.Session.Close()
+		}
+
+		// If the connect string is empty, then we don't need to (re-)connect to a database
+		if domain.ConnectString == "" {
+			factory.config = domain
+			return nil
+		}
+
+		// Fall through means we need to connect to the database
 		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.NewFactory", "Error connecting to MongoDB (Server)", domain)
+			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
 		}
 
+		// Establish a connection
 		session, err := server.Session(context.Background())
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.NewFactory", "Error connecting to MongoDB (Session)", domain)
+			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain)
 		}
 
 		factory.Session = session
 
-		/** REAL TIME COMMUNICATION CHANNELS *********************/
-
-		// Create Stream Update Channel
+		// Watch for updates to streams
 		if session, ok := factory.Session.(*mongodb.Session); ok {
 
 			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-				factory.streamUpdateChannel = service.NewStreamWatcher(collection.Mongo())
+				go service.WatchStreams(collection.Mongo(), factory.streamUpdateChannel)
 			}
 		}
-
-		// Fall through means we're not running on MongoDB.  Just return an "empty" channel for now
-		if factory.streamUpdateChannel == nil {
-			factory.streamUpdateChannel = make(chan model.Stream)
-		}
-
-		// Create Realtime Broker
-		factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
-
-		/** SINGLETON SERVICES *********************/
 
 		// Domain Service
 		factory.domainService = service.NewDomain(
@@ -117,12 +148,10 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 			factory.Attachment(),
 			factory.FormLibrary(),
 			factory.ContentLibrary(),
-			factory.TemplateUpdateChannel(),
 			factory.StreamUpdateChannel(),
 		)
 
-		go factory.streamService.Watch()
-
+		// User Service
 		factory.userService = service.NewUser(
 			factory.collection(CollectionUser),
 			factory.Stream(),
@@ -136,21 +165,29 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		)
 	}
 
-	/** WIDGET LIBRARIES *********************/
+	factory.config = domain
+	return nil
+}
 
-	// Crate content library (for now, only using defaults)
-	factory.contentLibrary = nebula.NewLibrary()
+/*******************************************
+ * REAL-TIME UPDATES
+ *******************************************/
 
-	// Create form library
-	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
-	formlib.All(&factory.formLibrary)
-
-	return &factory, nil
+// start begins the background watchers used by the Stream Service
+func (factory *Factory) watchTemplates() {
+	for templateID := range factory.templateUpdateChannel {
+		factory.streamService.UpdateStreamsByTemplate(templateID)
+	}
 }
 
 /*******************************************
  * DOMAIN DATA ACCESSORS
  *******************************************/
+
+// ID implements the set.Set interface.  (Domains are indexed by their hostname)
+func (factory *Factory) ID() string {
+	return factory.config.Hostname
+}
 
 func (factory *Factory) Host() string {
 

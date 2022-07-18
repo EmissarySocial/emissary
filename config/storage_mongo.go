@@ -10,11 +10,14 @@ import (
 
 // MongoStorage is a MongoDB-backed configuration storage
 type MongoStorage struct {
-	Collection *mongo.Collection
+	bootstrap     string
+	location      string
+	collection    *mongo.Collection
+	updateChannel chan Config
 }
 
 // NewMongoStorage creates a fully initialized MongoStorage instance
-func NewMongoStorage(location string) MongoStorage {
+func NewMongoStorage(bootstrap string, location string) MongoStorage {
 
 	// Try to make a new MongoDB connection
 	client, err := mongo.NewClient(options.Client().ApplyURI(location))
@@ -33,19 +36,17 @@ func NewMongoStorage(location string) MongoStorage {
 	// Get the configuration collection
 	collection := client.Database("emissary").Collection("config")
 
-	return MongoStorage{
-		Collection: collection,
+	storage := MongoStorage{
+		bootstrap:     bootstrap,
+		location:      location,
+		collection:    collection,
+		updateChannel: make(chan Config, 1),
 	}
-}
 
-// Subscribe returns a channel that will receive the configuration every time it is updated
-func (storage MongoStorage) Subscribe() <-chan Config {
-
-	result := make(chan Config, 1)
-	ctx := context.Background()
-
+	// Listen for updates and post them to the update channel
 	go func() {
 
+		ctx := context.Background()
 		config, err := storage.load()
 
 		if err != nil {
@@ -53,10 +54,10 @@ func (storage MongoStorage) Subscribe() <-chan Config {
 			panic("Error loading config from MongoDB: " + err.Error())
 		}
 
-		result <- config
+		storage.updateChannel <- config
 
 		// watch for changes to the configuration
-		cs, err := storage.Collection.Watch(ctx, mongo.Pipeline{})
+		cs, err := storage.collection.Watch(ctx, mongo.Pipeline{})
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
@@ -65,12 +66,17 @@ func (storage MongoStorage) Subscribe() <-chan Config {
 
 		for cs.Next(ctx) {
 			if config, err := storage.load(); err == nil {
-				result <- config
+				storage.updateChannel <- config
 			}
 		}
 	}()
 
-	return result
+	return storage
+}
+
+// Subscribe returns a channel that will receive the configuration every time it is updated
+func (storage MongoStorage) Subscribe() <-chan Config {
+	return storage.updateChannel
 }
 
 // load reads the configuration from the MongoDB database
@@ -78,9 +84,18 @@ func (storage MongoStorage) load() (Config, error) {
 
 	result := NewConfig()
 
-	if err := storage.Collection.FindOne(context.Background(), nil).Decode(&result); err != nil {
+	if err := storage.collection.FindOne(context.Background(), nil).Decode(&result); err != nil {
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")
 	}
 
+	result.Bootstrap = storage.bootstrap
+	result.Location = storage.location
+
 	return result, nil
+}
+
+// Write writes the configuration to the database
+func (storage MongoStorage) Write(config Config) error {
+	storage.updateChannel <- config
+	return nil
 }

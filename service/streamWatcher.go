@@ -8,11 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// NewStreamWatcher initiates a mongodb change stream to on every updates to Stream data objects
-func NewStreamWatcher(collection *mongo.Collection) chan model.Stream {
-
-	// fmt.Println("templatesource.NewStreamWatcher: attempting to create a new watcher.")
-	result := make(chan model.Stream)
+// WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
+func WatchStreams(collection *mongo.Collection, result chan<- model.Stream) {
 
 	ctx := context.Background()
 
@@ -20,30 +17,25 @@ func NewStreamWatcher(collection *mongo.Collection) chan model.Stream {
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
-		return result
+		return
 	}
 
-	go func() {
+	for cs.Next(ctx) {
 
-		for cs.Next(ctx) {
-
-			var event struct {
-				Stream model.Stream `bson:"fullDocument"`
-			}
-
-			if err := cs.Decode(&event); err != nil {
-				derp.Report(err)
-				continue
-			}
-
-			// Skip "zero" sreams
-			if event.Stream.StreamID.IsZero() {
-				continue
-			}
-
-			result <- event.Stream
+		var event struct {
+			Stream model.Stream `bson:"fullDocument"`
 		}
-	}()
 
-	return result
+		if err := cs.Decode(&event); err != nil {
+			derp.Report(err)
+			continue
+		}
+
+		// Skip "zero" sreams
+		if event.Stream.StreamID.IsZero() {
+			continue
+		}
+
+		result <- event.Stream
+	}
 }

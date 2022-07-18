@@ -55,8 +55,18 @@ nav button {
     display:inline-block;
 	padding:10px 20px;
 	border-radius: var(--border-radius);
-	margin:10px 4px;
+	margin:10px 1px;
 	overflow-y:hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav b {
+	display:inline-block;
+	color: var(--black);
+	font-weight: 700;
+	padding: 10px 0px;
+	margin:10px 10px 10px 0px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }

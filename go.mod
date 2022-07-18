@@ -24,8 +24,8 @@ require (
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.8.2
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/stripe/stripe-go/v72 v72.117.0
 	github.com/tdewolff/minify v2.3.6+incompatible
@@ -34,6 +34,7 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 )
 
 require (
@@ -48,7 +49,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.6 // indirect

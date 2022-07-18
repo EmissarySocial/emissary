@@ -2,31 +2,31 @@ package config
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/benpate/derp"
+	"github.com/spf13/pflag"
 )
 
 // GetStorage initializes the storage engine for the server configuration
 func Load() Storage {
 
-	location := getConfigLocation()
+	bootstrap, location := getConfigLocation()
 
 	fmt.Println("Loading configuration from: " + location)
 
 	switch {
 
 	case strings.HasPrefix(location, "mongodb://"):
-		return NewMongoStorage(location)
+		return NewMongoStorage(bootstrap, location)
 
 	case strings.HasPrefix(location, "mongodb+srv://"):
-		return NewMongoStorage(location)
+		return NewMongoStorage(bootstrap, location)
 
 	case strings.HasPrefix(location, "file://"):
-		return NewFileStorage(strings.TrimPrefix(location, "file://"))
+		return NewFileStorage(bootstrap, strings.TrimPrefix(location, "file://"))
 	}
 
 	derp.Report(derp.NewInternalError("config.Load", "Unable to determine storage engine for: "+location))
@@ -34,23 +34,23 @@ func Load() Storage {
 }
 
 // getConfigLocation returns the location of the configuration file
-func getConfigLocation() string {
+func getConfigLocation() (string, string) {
 
 	// Look for the configuration location in the command line arguments
-	location := flag.String("config", "", "Path to configuration file")
-	flag.Parse()
+	location := pflag.String("config", "", "Path to configuration file")
+	pflag.Parse()
 
 	if (location != nil) && (*location != "") {
-		return *location
+		return "Command Line", *location
 	}
 
 	// Look for the configuration location in the environment
 	if location := os.Getenv("EMISSARY_CONFIG"); location != "" {
-		return location
+		return "Environment Variable", location
 	}
 
 	// Use default location
-	return "file://./config.json"
+	return "Default", "file://./config.json"
 }
 
 // Write saves the current configuration to permanent storage (currently filesystem)

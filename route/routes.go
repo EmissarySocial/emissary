@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/compare"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
@@ -106,17 +105,6 @@ func New(factory *server.Factory) *echo.Echo {
 	e.GET("/startup", handler.Startup(factory))
 	e.POST("/startup", handler.Startup(factory))
 
-	// SERVER ADMIN PAGES (dynamic URLs help discourage 4337 H4XX0RZ)
-	if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {
-		server := e.Group(serverAdminURL, middleware.ServerAdmin(factory))
-		server.GET("", handler.GetServerIndex(factory))
-		server.POST("", handler.GetServerIndex(factory))
-		server.GET("/:domain", handler.GetServerDomain(factory))
-		server.GET("/:domain/signin", handler.GetSigninToDomain(factory))
-		server.POST("/:domain", handler.PostServerDomain(factory))
-		server.DELETE("/:domain", handler.DeleteServerDomain(factory))
-	}
-
 	// EXTERNAL SERVICES (WEBHOOKS)
 	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
 
@@ -127,16 +115,6 @@ func New(factory *server.Factory) *echo.Echo {
 		code := derp.ErrorCode(err)
 		switch code {
 		case http.StatusUnauthorized, http.StatusForbidden:
-
-			// If the server admin console is active for this server
-			if serverAdminURL := factory.AdminURL(); serverAdminURL != "" {
-				// ... and the requested page is in the admin section ...
-				if compare.BeginsWith(ctx.Request().URL.Path, serverAdminURL) {
-					// ... then redirect to the root of the admin section.
-					ctx.Redirect(http.StatusTemporaryRedirect, serverAdminURL)
-					return
-				}
-			}
 
 			if ctx.Request().URL.Path != "/signin" {
 				ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
