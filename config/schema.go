@@ -1,32 +1,71 @@
 package config
 
 import (
+	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 )
 
+// Schema returns the data schema for the configuration file.
 func Schema() schema.Schema {
-
-	result := schema.Schema{
-		ID:      "whisper.Domain",
-		Comment: "Validating schema for a domain configuration",
+	return schema.Schema{
+		ID:      "emissary.Server",
+		Comment: "Validating schema for a server configuration",
 		Element: schema.Object{
-			Properties: map[string]schema.Element{
-				"label":         schema.String{Required: true},
-				"hostname":      schema.String{Required: true},
-				"connectString": schema.String{},
-				// "connectString": schema.String{Pattern: `^(mongodb(\+srv)?:(\/{2})?)((\w+?):(\w+?)@|:?@?)(\w+?):(\d+)\/(\w+?)$`, Required: true},
-				"databaseName": schema.String{Pattern: `[a-zA-Z0-9]+`},
-				/* "smtp": schema.Object{
-					Properties: map[string]schema.Element{
-						"hostname": schema.String{},
-						"username": schema.String{},
-						"password": schema.String{},
-						"tls":      schema.Boolean{Default: null.NewBool(false)},
+			Properties: schema.ElementMap{
+				"domains": schema.Array{
+					Items: schema.Object{
+						Properties: map[string]schema.Element{
+							"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
+							"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
+							"connectString": schema.String{MaxLength: null.NewInt(1000)},
+							"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
+						},
 					},
-				},*/
-				"layoutPath": schema.String{},
+				},
+				"certificates": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"templates": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"layouts": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"static": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"attachmentOriginals": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"attachmentCache": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"adminEmail": schema.String{},
 			},
 		},
 	}
-	return result
 }

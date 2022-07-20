@@ -3,14 +3,38 @@ package render
 import (
 	"bytes"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
+
+// WrapInlineConfirmation sends a confirmation message to the #inline-confirmation element
+func WrapInlineConfirmation(ctx echo.Context, message any) error {
+
+	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
+	ctx.Response().Header().Set("HX-Retarget", "#inline-confirmation")
+
+	if messageString, ok := message.(string); ok {
+		return ctx.HTML(http.StatusOK, `<span class="green">`+messageString+`</span>`)
+	}
+
+	if messageError, ok := message.(derp.SingleError); ok {
+		derp.Report(messageError)
+		return ctx.HTML(http.StatusOK, `<span class="red">`+messageError.Message+`</span>`)
+	}
+
+	if messageError, ok := message.(error); ok {
+		return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(messageError)+`</span>`)
+	}
+
+	return ctx.HTML(http.StatusOK, `<span class="red">Unknown error:`+convert.String(message)+`</span>`)
+}
 
 func WrapModal(response *echo.Response, content string) string {
 

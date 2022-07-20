@@ -1,7 +1,20 @@
 {{template "_navigation.html" "server"}}
 
 <main>
-	<div id="main" class="framed">
-		<h1>Server Settings</h1>
+	<div id="main" class="framed page">
+		<h1>Server Setup</h1>
+
+		<form hx-post="/server">
+			{{.Server}}
+
+			<div class="space-above">
+				<button type="submit" class="primary htmx-request-hide">Save Changes</button>
+				<button type="button" disabled class="htmx-request-show"><i class="fa-spin fa-spinner"></i> Saving</button>
+				<span id="inline-confirmation" class="htmx-request-hide"></span>
+			</div>
+			<div class="text-sm gray30">
+				Changes will be immediately applied to all servers in the cluster.
+			</div>
+		</form>
 	</div>
 </main>

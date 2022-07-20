@@ -1,22 +1,20 @@
 {{template "_navigation.html" "index"}}
 
 <main>
-	<div class="framed">
-	<div class="page">
+	<div class="framed page">
 		<h1>Configuration File</h1>
 
 		<div script="install TabContainer" class="space-below">
 
 			<div role="tablist">
-				<button role="tab" aria-controls="bootstrap">Bootstrapping Emissary</button>
+				<button role="tab" aria-controls="bootstrap">Startup</button>
 				<button role="tab" aria-controls="location">Storage Options</button>
-				<button role="tab" aria-controls="current">Current Config</button>
-				<button role="tab" aria-controls="format">Format Docs</button>
+				<button role="tab" aria-controls="format">Documentation</button>
 			</div>
 
 			<div id="bootstrap" role="tabpanel">
 
-				<p>Emissary can use command line arguments or environment variables to locate the configuration file.  If the configuration file cannot be found, the server will not start. The server is currently using: <code class="inline red">{{.Bootstrap}}</code> to find configuration file.</p>
+				<p>Emissary can use command line arguments or environment variables to locate the configuration file.  If the configuration file cannot be found, the server will not start. The server is currently using: <code class="inline red">{{.Config.Bootstrap}}</code> to find configuration file.</p>
 
 				<h3>1. Command Line Argument</h3>
 				<p>If you launch Emissary using the the --config argument, it will look for the config file in the directory you specify.  See the "Storage Options" section for valid config values</p>
@@ -40,7 +38,7 @@
 
 			<div id="location" role="tabpanel">
 
-				<p>Configuration files can be stored as either files accessible through the OS filesystem, or in a dedicated MongoDB database.  URL schemes are used to identify the type of storage. The server's current file location is: <code class="inline red">{{.Location}}</code></p>
+				<p>Configuration files can be stored as either files accessible through the OS filesystem, or in a dedicated MongoDB database.  URL schemes are used to identify the type of storage. The server's current file location is: <code class="inline red">{{.Config.Location}}</code></p>
 
 				<h3>Filesystem Config File</h3>
 				<p>Use the URL scheme <code class="inline">file://</code> to specify a file in the OS Filesystem.  This can be a local file, or a remote file stored on a connected NAS. Filesystem configurations are automatically reloaded whenever they are changed.</p>
@@ -51,11 +49,6 @@
 				<p>Use the URL schemes <code class="inline">mongodb://</code> or <code class="inline">mongodb+src://</code> to read server configuration from a MongoDB database.  Database-driven configurations are automatically reloaded whenever the database is updated.</p>
 
 				<code># emissary --config=mongodb+srv://username:password@cluster.dns/dbname?options=values</code>
-			</div>
-
-			<div id="current" role="tabpanel">
-				<p>This is the current contents of the configuration file</p>
-				<code>{{ . | json }}</code>
 			</div>
 
 			<div id="format" role="tabpanel">
@@ -114,7 +107,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -133,7 +126,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -152,7 +145,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -171,7 +164,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -190,7 +183,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -209,7 +202,7 @@
 					</tr>
 					<tr>
 						<td class="indent-2">"location":</td>
-						<td>"/usr/local/emissary/certificates"</td>
+						<td>"/path/to/certificates"</td>
 						<td>Location where files are stored.</td>
 					</tr>
 					<tr>
@@ -226,7 +219,6 @@
 			</div>
 		</div>
 	</div>
-</div>
 </main>
 
 <style>

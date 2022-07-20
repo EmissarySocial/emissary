@@ -65,12 +65,12 @@ func (storage FileStorage) load() Config {
 	data, err := ioutil.ReadFile(storage.location)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error reading config.json"))
+		derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error reading configuration"))
 		panic("Error reading configuration: " + storage.location)
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
-		derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error unmarshaling config.json"))
+		derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error unmarshaling configuration"))
 		panic("Invalid configuration file: " + err.Error())
 	}
 
@@ -87,12 +87,12 @@ func (storage FileStorage) Write(config Config) error {
 	data, err := json.MarshalIndent(config, "", "\t")
 
 	if err != nil {
-		return derp.Wrap(err, "config.FileStorage.Write", "Error marshaling config.json")
+		return derp.Wrap(err, "config.FileStorage.Write", "Error marshaling configuration")
 	}
 
 	// Try to write the configuration to disk
 	if err := ioutil.WriteFile(storage.location, data, 0777); err != nil {
-		return derp.Wrap(err, "config.FileStorage.Write", "Error writing config.json")
+		return derp.Wrap(err, "config.FileStorage.Write", "Error writing configuration")
 	}
 
 	// Notify the update channel that the configuration has changed

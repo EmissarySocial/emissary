@@ -6,7 +6,13 @@
 			"hostname": "localhost",
 			"connectString": "",
 			"databaseName": "",
-			"showAdmin": true
+			"forwardTo": "",
+			"smtp": {
+				"hostname": "",
+				"username": "",
+				"password": "",
+				"tls": false
+			}
 		}
 	],
 	"certificates": {
@@ -38,5 +44,6 @@
 		"adapter": "FILE",
 		"location": "./_attachments/cache",
 		"sync": false
-	}
+	},
+	"adminEmail": ""
 }

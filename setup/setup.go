@@ -79,24 +79,24 @@ func getPage(factory *server.Factory, templates *template.Template, templateID s
 
 		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
 
-		config := factory.Config()
+		renderer := NewRenderer(factory, factory.Config())
 
 		header := ctx.Response().Header()
 		header.Set("Content-Type", "text/html")
 		header.Set("Cache-Control", "no-cache")
 
 		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", config); err != nil {
+			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", renderer); err != nil {
 				derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
 			}
 		}
 
-		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
+		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, renderer); err != nil {
 			derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
 		}
 
 		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", config); err != nil {
+			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", renderer); err != nil {
 				derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
 			}
 		}
@@ -106,7 +106,27 @@ func getPage(factory *server.Factory, templates *template.Template, templateID s
 
 func postServer(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		return nil
+
+		body := maps.Map{}
+		c := factory.Config()
+		s := config.Schema()
+
+		// Try to get the FORM DATA ONLY
+		if err := (&echo.DefaultBinder{}).BindBody(ctx, &body); err != nil {
+			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error parsing request body"))
+		}
+
+		// Try to update the configuration with the form data
+		if err := s.SetAll(c, body); err != nil {
+			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error setting config values"))
+		}
+
+		// Try to save the configuration to the persistent storage
+		if err := factory.UpdateConfig(c); err != nil {
+			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error saving config"))
+		}
+
+		return render.WrapInlineConfirmation(ctx, "Update successful ("+time.Now().Format("3:04:05 PM")+")")
 	}
 }
 

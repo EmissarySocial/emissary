@@ -1,7 +1,7 @@
 {{template "_navigation.html" "domains"}}
 
 <main>
-	<div id="main" class="framed">
+	<div id="main" class="framed page">
 		<h1>Domains on this Server</h1>
 		<div>Manage domains configured on this server.  For more settings, you can also edit the config.json file manually.</div>
 
@@ -14,7 +14,7 @@
 			</td></tr>
 
 			{{$empty := true}}
-			{{- range .Domains -}}
+			{{- range .Config.Domains -}}
 				<tr role="link" hx-get="/domains/{{.ID}}">
 					<td>
 						<i class="fas fa-server"></i> {{ .Label }}
@@ -38,7 +38,7 @@
 			{{- end -}}
 		</table>
 
-		{{- range .Domains -}}
+		{{- range .Config.Domains -}}
 			{{- if eq "" .ConnectString -}}
 				{{- if $empty -}}
 					{{- $empty := false -}}
