@@ -13,14 +13,7 @@ func Schema() schema.Schema {
 		Element: schema.Object{
 			Properties: schema.ElementMap{
 				"domains": schema.Array{
-					Items: schema.Object{
-						Properties: map[string]schema.Element{
-							"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
-							"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
-							"connectString": schema.String{MaxLength: null.NewInt(1000)},
-							"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
-						},
-					},
+					Items: DomainSchema().Element,
 				},
 				"certificates": schema.Object{
 					Properties: schema.ElementMap{
@@ -65,6 +58,22 @@ func Schema() schema.Schema {
 					},
 				},
 				"adminEmail": schema.String{},
+			},
+		},
+	}
+}
+
+func DomainSchema() schema.Schema {
+
+	return schema.Schema{
+		ID:      "emissary.Domain",
+		Comment: "Validating schema for a domain configuration",
+		Element: schema.Object{
+			Properties: map[string]schema.Element{
+				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
+				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
+				"connectString": schema.String{MaxLength: null.NewInt(1000)},
+				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
 			},
 		},
 	}

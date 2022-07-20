@@ -134,7 +134,17 @@ func postServer(factory *server.Factory) echo.HandlerFunc {
 func getDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
-		domain, err := factory.DomainByID(ctx.Param("domain"))
+		var header string
+
+		domainID := ctx.Param("domain")
+
+		if domainID == "new" {
+			header = "Add a Domain"
+		} else {
+			header = "Edit a Domain"
+		}
+
+		domain, err := factory.DomainByID(domainID)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.GetServerDomain", "Error loading configuration")
@@ -144,7 +154,7 @@ func getDomain(factory *server.Factory) echo.HandlerFunc {
 
 		f := form.Form{
 			Kind:  "layout-vertical",
-			Label: "Edit Domain",
+			Label: header,
 			Children: []form.Form{{
 				Kind:        "text",
 				Path:        "label",
@@ -167,8 +177,10 @@ func getDomain(factory *server.Factory) echo.HandlerFunc {
 				Description: "Name of the database to use on the server",
 			}},
 		}
-		s := config.Schema()
-		formHTML, err := f.HTML(&lib, &s, &domain)
+
+		s := config.DomainSchema()
+
+		formHTML, err := f.HTML(&lib, &s, domain)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.GetServerDomain", "Error generating form")

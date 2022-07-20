@@ -1,9 +1,9 @@
 {{template "_navigation.html" "domains"}}
 
 <main>
-	<div id="main" class="framed page">
+	<div class="framed page">
 		<h1>Domains on this Server</h1>
-		<div>Manage domains configured on this server.  For more settings, you can also edit the config.json file manually.</div>
+		<p>Manage domains configured on this server.  For more settings, you can also edit the config.json file manually.</p>
 
 		<!-- List existing domains -->
 		<table class="table">
@@ -15,7 +15,7 @@
 
 			{{$empty := true}}
 			{{- range .Config.Domains -}}
-				<tr role="link" hx-get="/domains/{{.ID}}">
+				<tr role="link" hx-get="/domains/{{.DomainID}}">
 					<td>
 						<i class="fas fa-server"></i> {{ .Label }}
 					</td>
@@ -31,20 +31,11 @@
 					<td class="align-right">
 						{{- if ne "localhost" .Hostname -}}
 							&nbsp;&nbsp;
-							<button class="" hx-delete="/{{.ID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
+							<button class="" hx-delete="/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
 						{{- end -}}
 					</td>
 				</tr>
 			{{- end -}}
 		</table>
-
-		{{- range .Config.Domains -}}
-			{{- if eq "" .ConnectString -}}
-				{{- if $empty -}}
-					{{- $empty := false -}}
-					<div hx-get="/domains/{{.ID}}" hx-trigger="load"></div>
-				{{- end -}}
-			{{- end -}}
-		{{- end -}}
 	</div>
 </main>

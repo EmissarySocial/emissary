@@ -1,10 +1,14 @@
 {{template "_navigation.html" "server"}}
 
 <main>
-	<div id="main" class="framed page">
+	<div class="framed page">
 		<h1>Server Setup</h1>
 
+		<p>This page configures the file locations for important server resources.</p>
+		<p>All values should be populated before domains are added.</p>
+
 		<form hx-post="/server">
+
 			{{.Server}}
 
 			<div class="space-above">
