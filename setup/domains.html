@@ -9,30 +9,22 @@
 		<table class="table">
 
 			<!--  First row is "Add" link -->
-			<tr role="link" hx-get="/domains/new"><td colspan="4">
+			<tr role="link" hx-get="/domains/new"><td colspan="3">
 				<i class="fas fa-plus-circle"></i> Add a Domain
 			</td></tr>
 
 			{{$empty := true}}
 			{{- range .Config.Domains -}}
-				<tr role="link" hx-get="/domains/{{.DomainID}}">
-					<td>
+				<tr role="link">
+					<td hx-get="/domains/{{.DomainID}}">
 						<i class="fas fa-server"></i> {{ .Label }}
 					</td>
-					<td>
+					<td hx-get="/domains/{{.DomainID}}">
 						{{.Hostname}}
 					</td>
 					<td class="align-right">
-						{{- if eq "" .ConnectString -}}
-						{{- else -}}
-							<a href="https://{{.Name}}/" target="_blank" class="button">Visit</a>
-						{{- end -}}
-					</td>
-					<td class="align-right">
-						{{- if ne "localhost" .Hostname -}}
-							&nbsp;&nbsp;
-							<button class="" hx-delete="/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
-						{{- end -}}
+						&nbsp;&nbsp;
+						<button class="" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
 					</td>
 				</tr>
 			{{- end -}}

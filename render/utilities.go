@@ -14,26 +14,28 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// WrapInlineConfirmation sends a confirmation message to the #inline-confirmation element
-func WrapInlineConfirmation(ctx echo.Context, message any) error {
+// WrapInlineSuccess sends a confirmation message to the #inline-confirmation element
+func WrapInlineSuccess(ctx echo.Context, message any) error {
 
 	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
-	ctx.Response().Header().Set("HX-Retarget", "#inline-confirmation")
+	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
 
-	if messageString, ok := message.(string); ok {
-		return ctx.HTML(http.StatusOK, `<span class="green">`+messageString+`</span>`)
+	return ctx.HTML(http.StatusOK, `<span class="green">`+convert.String(message)+`</span>`)
+}
+
+// WrapInlineError sends a confirmation message to the #inline-confirmation element
+func WrapInlineError(ctx echo.Context, err error) error {
+
+	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
+	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
+
+	if derpError, ok := err.(derp.SingleError); ok {
+		derp.Report(derpError)
+		return ctx.HTML(http.StatusOK, `<span class="red">`+derpError.Message+`</span>`)
 	}
 
-	if messageError, ok := message.(derp.SingleError); ok {
-		derp.Report(messageError)
-		return ctx.HTML(http.StatusOK, `<span class="red">`+messageError.Message+`</span>`)
-	}
-
-	if messageError, ok := message.(error); ok {
-		return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(messageError)+`</span>`)
-	}
-
-	return ctx.HTML(http.StatusOK, `<span class="red">Unknown error:`+convert.String(message)+`</span>`)
+	derp.Report(err)
+	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
 }
 
 func WrapModal(response *echo.Response, content string) string {
@@ -116,6 +118,12 @@ func CloseModal(ctx echo.Context, url string) {
 		ctx.Response().Header().Set("HX-Trigger", `closeModal`)
 		ctx.Response().Header().Set("HX-Redirect", url)
 	}
+}
+
+func RefreshPage(ctx echo.Context) {
+	header := ctx.Response().Header()
+	header.Set("HX-Trigger", "refreshPage")
+	header.Set("HX-Reswap", "none")
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context

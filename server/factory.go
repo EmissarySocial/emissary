@@ -205,7 +205,7 @@ func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
 	}
 
 	// Not found, so return an error
-	return config.Domain{}, derp.NewNotFoundError("server.Factory.DomainByIndex", "DomainID not found", domainID)
+	return config.NewDomain(), derp.NewNotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
 }
 
 // DeleteDomain removes a domain from the Factory

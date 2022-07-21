@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/path"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/browser"
@@ -113,20 +112,20 @@ func postServer(factory *server.Factory) echo.HandlerFunc {
 
 		// Try to get the FORM DATA ONLY
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &body); err != nil {
-			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error parsing request body"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input (BAD FORMAT)."))
 		}
 
 		// Try to update the configuration with the form data
 		if err := s.SetAll(c, body); err != nil {
-			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error setting config values"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input."))
 		}
 
 		// Try to save the configuration to the persistent storage
 		if err := factory.UpdateConfig(c); err != nil {
-			return render.WrapInlineConfirmation(ctx, derp.Wrap(err, "setup.postServer", "Error saving config"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
 		}
 
-		return render.WrapInlineConfirmation(ctx, "Update successful ("+time.Now().Format("3:04:05 PM")+")")
+		return render.WrapInlineSuccess(ctx, "Updated on "+time.Now().Format("3:04:05 PM"))
 	}
 }
 
@@ -186,7 +185,7 @@ func getDomain(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetServerDomain", "Error generating form")
 		}
 
-		result := render.WrapModalForm(ctx.Response(), "/"+domain.DomainID, formHTML)
+		result := render.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)
 
 		return ctx.HTML(200, result)
 	}
@@ -198,30 +197,23 @@ func postDomain(factory *server.Factory) echo.HandlerFunc {
 
 		domainID := ctx.Param("domain")
 
-		domain, err := factory.DomainByID(domainID)
-
-		if err != nil {
-			return derp.Wrap(err, "handler.PostServerDomain", "Error loading domain", ctx.Param("server"))
-		}
+		// Try to load the existing domain.  If it does not exist, then create a new one.
+		domain, _ := factory.DomainByID(domainID)
 
 		input := maps.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return derp.Wrap(err, "handler.PostServerDomain", "Error binding form input")
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error binding form input"))
 		}
 
-		s := config.Schema()
+		s := config.DomainSchema()
 
-		if err := s.Validate(input); err != nil {
-			return derp.Wrap(err, "handler.PostServerDomain", "Error validating input", domain)
-		}
-
-		if err := path.SetAll(&domain, input); err != nil {
-			return derp.Wrap(err, "handler.PostServerDomain", "Error setting domain data", input)
+		if err := s.SetAll(&domain, input); err != nil {
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error setting config values"))
 		}
 
 		if err := factory.PutDomain(domain); err != nil {
-			return derp.Wrap(err, "handler.PostServerDomain", "Error saving domain")
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error saving domain"))
 		}
 
 		render.CloseModal(ctx, "")
@@ -242,7 +234,7 @@ func deleteDomain(factory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Close the modal and return OK
-		render.CloseModal(ctx, "")
+		render.RefreshPage(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

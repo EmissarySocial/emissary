@@ -1,11 +1,25 @@
 {
 	"domains": [
 		{
-			"domainId": "000000000000000000000000",
-			"label": "Administration Console",
-			"hostname": "localhost",
+			"domainId": "62d8977a065116ed396fccef",
+			"label": "Test2",
+			"hostname": "Test2",
 			"connectString": "",
 			"databaseName": "",
+			"forwardTo": "",
+			"smtp": {
+				"hostname": "",
+				"username": "",
+				"password": "",
+				"tls": false
+			}
+		},
+		{
+			"domainId": "62d898321bc573db1f21bcb6",
+			"label": "Test Database",
+			"hostname": "localhost",
+			"connectString": "mongodb://localhost:27017/?serverSelectionTimeoutMS=5000\u0026connectTimeoutMS=10000",
+			"databaseName": "empty",
 			"forwardTo": "",
 			"smtp": {
 				"hostname": "",
