@@ -27,7 +27,7 @@ require (
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
-	github.com/stripe/stripe-go/v72 v72.117.0
+	github.com/stripe/stripe-go/v72 v72.120.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/yeqown/go-qrcode/v2 v2.2.1
