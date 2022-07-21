@@ -25,17 +25,14 @@ import (
 //go:embed all:*.html
 var setupFiles embed.FS
 
-func Setup(staticFiles fs.FS) {
+func Setup(storage config.Storage, staticFiles fs.FS) {
 
 	fmt.Println("Starting Emissary Config Tool.")
 
-	configStorage := config.Load()
-
-	factory := server.NewFactory(configStorage)
-	setupTemplates := template.Must(
-		template.New("").
-			Funcs(render.FuncMap()).
-			ParseFS(setupFiles, "*.html"))
+	factory := server.NewFactory(storage)
+	setupTemplates := template.Must(template.New("").
+		Funcs(render.FuncMap()).
+		ParseFS(setupFiles, "*.html"))
 
 	e := echo.New()
 

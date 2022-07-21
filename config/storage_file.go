@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/fsnotify/fsnotify"
@@ -10,18 +11,18 @@ import (
 
 // FileStorage is a file-based storage engine for the server configuration
 type FileStorage struct {
-	bootstrap     string
+	source        string
 	location      string
 	updateChannel chan Config
 }
 
 // NewFileStorage creates a fully initialized FileStorage instance
-func NewFileStorage(bootstrap string, location string) FileStorage {
+func NewFileStorage(args CommandLineArgs) FileStorage {
 
 	// Create a new FileStorage instance
 	storage := FileStorage{
-		bootstrap:     bootstrap,
-		location:      location,
+		source:        args.Source,
+		location:      strings.TrimPrefix(args.Location, "file://"),
 		updateChannel: make(chan Config, 1),
 	}
 
@@ -74,7 +75,7 @@ func (storage FileStorage) load() Config {
 		panic("Invalid configuration file: " + err.Error())
 	}
 
-	result.Bootstrap = storage.bootstrap
+	result.Source = storage.source
 	result.Location = "file://" + storage.location
 
 	return result

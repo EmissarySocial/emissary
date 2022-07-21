@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/EmissarySocial/emissary/tools/set"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,7 +17,7 @@ type Config struct {
 	AttachmentOriginals Folder                    `path:"attachmentOriginals" json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     Folder                    `path:"attachmentCache"     json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 	AdminEmail          string                    `path:"adminEmail"          json:"adminEmail"`          // Email address of the administrator
-	Bootstrap           string                    `path:"-"                   json:"-"`                   // Location to look for the config file
+	Source              string                    `path:"-"                   json:"-"`                   // Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                    `path:"-"                   json:"-"`                   // Location where this config file is read from/to.  Not a part of the configuration itself.
 }
 
@@ -82,4 +84,66 @@ func (config Config) DomainNames() []string {
 	}
 
 	return result
+}
+
+/************************
+ * Validating Schema
+ ************************/
+
+// Schema returns the data schema for the configuration file.
+func Schema() schema.Schema {
+	return schema.Schema{
+		ID:      "emissary.Server",
+		Comment: "Validating schema for a server configuration",
+		Element: schema.Object{
+			Properties: schema.ElementMap{
+				"domains": schema.Array{
+					Items: DomainSchema().Element,
+				},
+				"certificates": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"templates": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"layouts": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"static": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"attachmentOriginals": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"attachmentCache": schema.Object{
+					Properties: schema.ElementMap{
+						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
+						"location": schema.String{},
+						"sync":     schema.Boolean{Default: null.NewBool(false)},
+					},
+				},
+				"adminEmail": schema.String{},
+			},
+		},
+	}
 }

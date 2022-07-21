@@ -10,17 +10,17 @@ import (
 
 // MongoStorage is a MongoDB-backed configuration storage
 type MongoStorage struct {
-	bootstrap     string
+	source        string
 	location      string
 	collection    *mongo.Collection
 	updateChannel chan Config
 }
 
 // NewMongoStorage creates a fully initialized MongoStorage instance
-func NewMongoStorage(bootstrap string, location string) MongoStorage {
+func NewMongoStorage(args CommandLineArgs) MongoStorage {
 
 	// Try to make a new MongoDB connection
-	client, err := mongo.NewClient(options.Client().ApplyURI(location))
+	client, err := mongo.NewClient(options.Client().ApplyURI(args.Location))
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Error creating MongoDB client"))
@@ -37,8 +37,8 @@ func NewMongoStorage(bootstrap string, location string) MongoStorage {
 	collection := client.Database("emissary").Collection("config")
 
 	storage := MongoStorage{
-		bootstrap:     bootstrap,
-		location:      location,
+		source:        args.Source,
+		location:      args.Location,
 		collection:    collection,
 		updateChannel: make(chan Config, 1),
 	}
@@ -88,7 +88,7 @@ func (storage MongoStorage) load() (Config, error) {
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")
 	}
 
-	result.Bootstrap = storage.bootstrap
+	result.Source = storage.source
 	result.Location = storage.location
 
 	return result, nil

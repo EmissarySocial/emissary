@@ -246,7 +246,7 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.New(404, "factory.Factory.Get", "Unrecognized Factory Name", name)
+	return nil, derp.New(404, "factory.ByDomainName.Get", "Unrecognized Factory Name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present

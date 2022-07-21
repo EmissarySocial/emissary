@@ -19,7 +19,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/spf13/pflag"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -28,25 +27,25 @@ var staticFiles embed.FS
 
 func main() {
 
+	fmt.Println("Starting Emissary.")
+
 	// Set global configuration
 	spew.Config.DisableMethods = true
 
 	// See if the setup command is being run
-	doSetup := pflag.BoolP("setup", "s", false, "Run the setup routine")
-	pflag.Parse()
+	commandLineArgs := config.GetCommandLineArgs()
+
+	configStorage := config.Load(commandLineArgs)
 
 	// Special case to execute the setup server
-	if *doSetup {
-		setup.Setup(staticFiles)
+	if commandLineArgs.Setup {
+		fmt.Println("Starting Setup Mode...")
+		setup.Setup(configStorage, staticFiles)
 		return
 	}
 
 	// FALL THROUGH means we're running the standard server
 	var e *echo.Echo
-
-	fmt.Println("Starting Emissary.")
-
-	configStorage := config.Load()
 
 	// Every time the configuration is updated, create a new server (and swap the old one, if necessary)
 	for c := range configStorage.Subscribe() {

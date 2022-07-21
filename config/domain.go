@@ -1,6 +1,8 @@
 package config
 
 import (
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -26,4 +28,24 @@ func NewDomain() Domain {
 // ID returns the domain ID.
 func (domain Domain) ID() string {
 	return domain.DomainID
+}
+
+/************************
+ * Validating Schema
+ ************************/
+
+func DomainSchema() schema.Schema {
+
+	return schema.Schema{
+		ID:      "emissary.Domain",
+		Comment: "Validating schema for a domain configuration",
+		Element: schema.Object{
+			Properties: map[string]schema.Element{
+				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
+				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
+				"connectString": schema.String{MaxLength: null.NewInt(1000)},
+				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
+			},
+		},
+	}
 }
