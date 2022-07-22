@@ -96,6 +96,10 @@ func (storage MongoStorage) load() (Config, error) {
 
 // Write writes the configuration to the database
 func (storage MongoStorage) Write(config Config) error {
-	storage.updateChannel <- config
+
+	if _, err := storage.collection.InsertOne(context.Background(), config); err != nil {
+		return derp.Wrap(err, "config.MongoStorage", "Error writing config to MongoDB")
+	}
+
 	return nil
 }

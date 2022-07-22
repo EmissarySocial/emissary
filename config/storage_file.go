@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
 // FileStorage is a file-based storage engine for the server configuration
 type FileStorage struct {
-	source        string
-	location      string
-	updateChannel chan Config
+	source   string
+	location string
 }
 
 // NewFileStorage creates a fully initialized FileStorage instance
@@ -21,15 +21,23 @@ func NewFileStorage(args CommandLineArgs) FileStorage {
 
 	// Create a new FileStorage instance
 	storage := FileStorage{
-		source:        args.Source,
-		location:      strings.TrimPrefix(args.Location, "file://"),
-		updateChannel: make(chan Config, 1),
+		source:   args.Source,
+		location: strings.TrimPrefix(args.Location, "file://"),
 	}
 
 	// Listen for updates and post them to the update channel
+	return storage
+}
+
+// Subscribe returns a channel that will receive the configuration every time it is updated
+func (storage FileStorage) Subscribe() <-chan Config {
+
+	updateChannel := make(chan Config, 1)
+
 	go func() {
 
-		storage.updateChannel <- storage.load()
+		spew.Dump("adding configuration")
+		updateChannel <- storage.load()
 
 		// Create a new file watcher
 		watcher, err := fsnotify.NewWatcher()
@@ -44,16 +52,12 @@ func NewFileStorage(args CommandLineArgs) FileStorage {
 		}
 
 		for range watcher.Events {
-			storage.updateChannel <- storage.load()
+			updateChannel <- storage.load()
+			spew.Dump("adding configuration")
 		}
 	}()
 
-	return storage
-}
-
-// Subscribe returns a channel that will receive the configuration every time it is updated
-func (storage FileStorage) Subscribe() <-chan Config {
-	return storage.updateChannel
+	return updateChannel
 }
 
 // load reads the configuration from the filesystem and
@@ -76,7 +80,7 @@ func (storage FileStorage) load() Config {
 	}
 
 	result.Source = storage.source
-	result.Location = "file://" + storage.location
+	result.Location = storage.location
 
 	return result
 }
@@ -95,9 +99,6 @@ func (storage FileStorage) Write(config Config) error {
 	if err := ioutil.WriteFile(storage.location, data, 0777); err != nil {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error writing configuration")
 	}
-
-	// Notify the update channel that the configuration has changed
-	storage.updateChannel <- config
 
 	// Return nil if no errors were encountered
 	return nil

@@ -57,10 +57,12 @@ func NewFactory(storage config.Storage) *Factory {
 
 func (factory *Factory) start() {
 
+	fmt.Println("Waiting for configuration file...")
+
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		spew.Dump(factory.config)
+		fmt.Println("Configuration received...")
 
 		if attachmentOriginals, err := config.AttachmentOriginals.GetFilesystem(); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
@@ -101,23 +103,27 @@ func (factory *Factory) start() {
 		for _, cfg := range config.Domains {
 
 			// Try to find the domain
-			d, err := factory.domains.Get(cfg.Hostname)
+			{
+				d, err := factory.domains.Get(cfg.Hostname)
 
-			// If the domain already exists, then update configuration info.
-			if err == nil {
-				d.UpdateConfig(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
-				continue
+				// If the domain already exists, then update configuration info.
+				if err == nil {
+					d.UpdateConfig(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+					continue
+				}
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			d, err = domain.NewFactory(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+			{
+				d, err := domain.NewFactory(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
 
-			if err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", cfg))
-				continue
+				if err != nil {
+					derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", cfg))
+					continue
+				}
+
+				factory.domains.Put(d)
 			}
-
-			factory.domains.Put(d)
 		}
 
 		// Unceremoniously remove domains that are no longer in the configuration
@@ -246,7 +252,9 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.New(404, "factory.ByDomainName.Get", "Unrecognized Factory Name", name)
+	spew.Dump("FAILED LOOKUP", name)
+
+	return nil, derp.New(404, "factory.ByDomainName.Get", "Unrecognized domain name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present

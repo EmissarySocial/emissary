@@ -50,13 +50,12 @@ func main() {
 	// Every time the configuration is updated, create a new server (and swap the old one, if necessary)
 	for c := range configStorage.Subscribe() {
 
-		fmt.Println("Reading configuration file...")
+		fmt.Println("Reading configuration file:")
+
+		domains := c.DomainNames()
+		fmt.Println("... setting up " + convert.String(len(domains)) + " domains: " + strings.Join(domains, ", "))
 
 		factory := server.NewFactory(configStorage)
-		domains := c.DomainNames()
-
-		fmt.Println("Setting up new server on " + convert.String(len(domains)) + " domains: " + strings.Join(domains, ", "))
-
 		newServer := route.New(factory)
 
 		// Global middleware

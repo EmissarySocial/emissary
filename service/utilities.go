@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"html/template"
-	"io"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -74,21 +73,14 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 // loadModelFromFilesystem locates and parses a schema from the filesystem path
 func loadModelFromFilesystem(filesystem afero.Fs, model any) error {
 
-	file, err := filesystem.Open("schema.json")
-
-	if err != nil {
-		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json")
-	}
-
-	// Load the file from the filesystem
-	content, err := io.ReadAll(file)
+	file, err := afero.ReadFile(filesystem, "schema.json")
 
 	if err != nil {
 		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json")
 	}
 
 	// Unmarshal the file into the schema.
-	if err := json.Unmarshal(content, model); err != nil {
+	if err := json.Unmarshal(file, model); err != nil {
 		return derp.Wrap(err, "service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json")
 	}
 
