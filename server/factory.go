@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
+	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -29,10 +30,12 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
-	templateChannel chan string
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
+
+	// Widget Libraries
+	contentLibrary nebula.Library
 
 	domains set.Map[string, *domain.Factory]
 }
@@ -42,14 +45,26 @@ type Factory struct {
 // the error, but will continue loading without those domains.
 func NewFactory(storage config.Storage) *Factory {
 
-	fmt.Println("Starting Emissary Server...")
-
 	factory := Factory{
-		storage:         storage,
-		mutex:           sync.RWMutex{},
-		templateChannel: make(chan string),
-		domains:         make(map[string]*domain.Factory, 0),
+		storage: storage,
+		mutex:   sync.RWMutex{},
+		domains: make(map[string]*domain.Factory, 0),
 	}
+
+	// Global Layout service
+	factory.layoutService = service.NewLayout(
+		config.Folder{},
+		render.FuncMap(),
+	)
+
+	// Global Template Service
+	factory.templateService = *service.NewTemplate(
+		factory.Layout(),
+		render.FuncMap(),
+		config.Folder{},
+	)
+
+	factory.contentLibrary = nebula.NewLibrary()
 
 	go factory.start()
 	return &factory
@@ -62,7 +77,7 @@ func (factory *Factory) start() {
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		fmt.Println("Configuration received...")
+		fmt.Println("Setting new configuration...")
 
 		if attachmentOriginals, err := config.AttachmentOriginals.GetFilesystem(); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
@@ -78,57 +93,37 @@ func (factory *Factory) start() {
 
 		factory.config = config
 
-		// Global Layout Service
-		factory.layoutService = service.NewLayout(
-			config.Layouts,
-			render.FuncMap(),
-		)
-
-		go factory.layoutService.Watch()
-
-		// Global Template Service
-		factory.templateService = service.NewTemplate(
-			factory.Layout(),
-			render.FuncMap(),
-			config.Templates,
-			factory.templateChannel,
-		)
-
-		if err := factory.templateService.Watch(); err != nil {
-			derp.Report(err)
-			panic(err)
-		}
+		// Refresh cached values in global services
+		factory.layoutService.Refresh(config.Layouts)
+		factory.templateService.Refresh(config.Templates)
 
 		// Insert/Update a factory for each domain in the configuration
-		for _, cfg := range config.Domains {
+		for _, domainConfig := range config.Domains {
 
 			// Try to find the domain
-			{
-				d, err := factory.domains.Get(cfg.Hostname)
+			existing, err := factory.domains.Get(domainConfig.Hostname)
 
-				// If the domain already exists, then update configuration info.
-				if err == nil {
-					d.UpdateConfig(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
-					continue
-				}
+			// If the domain already exists, then update configuration info.
+			if err == nil {
+				existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache)
+				continue
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			{
-				d, err := domain.NewFactory(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+			newDomain, err := domain.NewFactory(domainConfig, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.attachmentOriginals, factory.attachmentCache)
 
-				if err != nil {
-					derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", cfg))
-					continue
-				}
-
-				factory.domains.Put(d)
+			if err != nil {
+				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))
+				continue
 			}
+
+			factory.domains.Put(newDomain)
 		}
 
 		// Unceremoniously remove domains that are no longer in the configuration
-		for domainID := range factory.domains {
-			if _, err := factory.domains.Get(domainID); err != nil {
+		for domainID, domain := range factory.domains {
+			if _, err := config.Domains.Get(domainID); err != nil {
+				domain.Close()
 				factory.domains.Delete(domainID)
 			}
 		}

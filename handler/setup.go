@@ -1,16 +1,12 @@
-package setup
+package handler
 
 import (
-	"embed"
 	_ "embed"
-	"fmt"
 	"html/template"
-	"io/fs"
 	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
-	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
@@ -18,64 +14,18 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/pkg/browser"
 )
 
-//go:embed all:*.html
-var setupFiles embed.FS
-
-func Setup(storage config.Storage, staticFiles fs.FS) {
-
-	fmt.Println("Starting Emissary Config Tool.")
-
-	factory := server.NewFactory(storage)
-	setupTemplates := template.Must(template.New("").
-		Funcs(render.FuncMap()).
-		ParseFS(setupFiles, "*.html"))
-
-	e := echo.New()
-
-	// Global middleware
-	e.Use(middleware.Recover())
-	e.Use(mw.Localhost())
-
-	// Routes
-	e.GET("/", getPage(factory, setupTemplates, "index.html"))
-	e.GET("/server", getPage(factory, setupTemplates, "server.html"))
-	e.POST("/server", postServer(factory))
-	e.GET("/domains", getPage(factory, setupTemplates, "domains.html"))
-	e.GET("/domains/:domain", getDomain(factory))
-	e.POST("/domains/:domain", postDomain(factory))
-	e.DELETE("/domains/:domain", deleteDomain(factory))
-
-	// Static Content
-	var contentHandler = echo.WrapHandler(http.FileServer(http.FS(staticFiles)))
-	var contentRewrite = middleware.Rewrite(map[string]string{"/static/*": "/_static/$1"})
-
-	e.GET("/static/**", contentHandler, contentRewrite)
-
-	// Prepare to open a browser window AFTER the server is ready
-	go func() {
-		time.Sleep(time.Second * 1)
-		browser.OpenURL("http://localhost:8080/")
-	}()
-
-	// Start the HTTP server
-	fmt.Println("Starting HTTP server...")
-	if err := e.Start(":8080"); err != nil {
-		derp.Report(derp.Wrap(err, "setup.Setup", "Error starting HTTP server"))
-	}
-}
-
-// getPage returns the index page for the server
-func getPage(factory *server.Factory, templates *template.Template, templateID string) echo.HandlerFunc {
+// SetupGetPage returns the index page for the server
+func SetupGetPage(factory *server.Factory, templates *template.Template, templateID string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		library := factory.FormLibrary() // TODO: This should be cached in the factory after refactoring the OptionProvider
+
 		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
 
-		renderer := NewRenderer(factory, factory.Config())
+		renderer := render.NewSetup(&library, factory.Config())
 
 		header := ctx.Response().Header()
 		header.Set("Content-Type", "text/html")
@@ -100,7 +50,7 @@ func getPage(factory *server.Factory, templates *template.Template, templateID s
 	}
 }
 
-func postServer(factory *server.Factory) echo.HandlerFunc {
+func SetupPostServer(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		body := maps.Map{}
@@ -126,8 +76,8 @@ func postServer(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// getNewDomain displays the form for creating/editing a domain.
-func getDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupGetDomain displays the form for creating/editing a domain.
+func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var header string
@@ -188,8 +138,8 @@ func getDomain(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// postDomain updates/creates a domain
-func postDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupPostDomain updates/creates a domain
+func SetupPostDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
@@ -218,8 +168,8 @@ func postDomain(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// deleteDomain deletes a domain from the configuration
-func deleteDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupDeleteDomain deletes a domain from the configuration
+func SetupDeleteDomain(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Get the domain ID

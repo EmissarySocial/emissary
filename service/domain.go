@@ -22,11 +22,32 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
-	return Domain{
-		collection: collection,
-		funcMap:    funcMap,
+	service := Domain{
+		funcMap: funcMap,
 	}
+
+	service.Refresh(collection)
+
+	return service
 }
+
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Domain) Refresh(collection data.Collection) {
+	service.collection = collection
+	service.model = model.NewDomain()
+}
+
+// Close stops the subscription service watcher
+func (service *Domain) Close() {
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
 
 // Load retrieves an Domain from the database (or in-memory cache)
 func (service *Domain) Load(domain *model.Domain) error {
@@ -82,7 +103,7 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA FUNCTIONS
+ * GENERIC DATA METHODS
  *******************************************/
 
 // New returns a fully initialized model.Stream as a data.Object.

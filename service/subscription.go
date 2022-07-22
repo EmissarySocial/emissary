@@ -9,9 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/nebula"
-	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/maps"
-	"github.com/mmcdole/gofeed"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,52 +17,69 @@ type Subscription struct {
 	collection     data.Collection
 	streamService  *Stream
 	contentLibrary *nebula.Library
+	close          chan bool
 }
 
 // NewSubscription returns a fully populated Subscription service.
 func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) *Subscription {
 
-	result := Subscription{
+	service := Subscription{
 		collection:     collection,
 		streamService:  streamService,
 		contentLibrary: contentLibrary,
 	}
 
-	go result.start()
+	service.Refresh(collection)
 
-	return &result
+	// Removing 20-minute polling for now, until we can figure out how to handle it properly
+	// go service.start()
+
+	return &service
 }
 
-// New creates a newly initialized Subscription that is ready to use
-func (service *Subscription) New() model.Subscription {
-	return model.NewSubscription()
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Subscription) Refresh(collection data.Collection) {
+	service.collection = collection
 }
 
+// Close stops the subscription service watcher
+func (service *Subscription) Close() {
+	close(service.close)
+}
+
+/* COMMENTED OUT TO SEE HOW THIS AFFECTS LIVE SERVER PERFORMANCE.
 func (service *Subscription) start() {
 
-	/* COMMENTED OUT TO SEE HOW THIS AFFECTS LIVE SERVER PERFORMANCE.
 
 	ticker := time.NewTicker(20 * time.Minute)
 	defer ticker.Stop()
 
 	for {
-		<-ticker.C
-		fmt.Println(".. Polling Subscriptions")
-		it, err := service.ListPollable()
+		select {
+		case <-ticker.C:
+			fmt.Println(".. Polling Subscriptions")
+			it, err := service.ListPollable()
 
-		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Subscription.Run", "Error listing pollable subscriptions"))
-			continue
-		}
+			if err != nil {
+				derp.Report(derp.Wrap(err, "service.Subscription.Run", "Error listing pollable subscriptions"))
+				continue
+			}
 
-		subscription := model.Subscription{}
+			subscription := model.Subscription{}
 
-		for it.Next(&subscription) {
-			service.pollSubscription(&subscription)
-			subscription = model.Subscription{}
+			for it.Next(&subscription) {
+				service.pollSubscription(&subscription)
+				subscription = model.Subscription{}
+			}
+
+		case <-service.close:
+			return
 		}
 	}
-	*/
 }
 
 func (service *Subscription) pollSubscription(sub *model.Subscription) {
@@ -157,10 +171,16 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 
 	return nil
 }
+*/
 
 /*******************************************
- * COMMON DATA FUNCTIONS
+ * COMMON DATA METHODS
  *******************************************/
+
+// New creates a newly initialized Subscription that is ready to use
+func (service *Subscription) New() model.Subscription {
+	return model.NewSubscription()
+}
 
 // List returns an iterator containing all of the Subscriptions who match the provided criteria
 func (service *Subscription) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

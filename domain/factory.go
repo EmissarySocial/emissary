@@ -30,73 +30,95 @@ type Factory struct {
 	// services (from server)
 	layoutService   *service.Layout
 	templateService *service.Template
+	contentLibrary  *nebula.Library
+	formLibrary     form.Library // TODO: this should be cached in the server factory after OptionCodes refactor.
+
+	// Upload Directories (from server)
+	attachmentOriginals afero.Fs
+	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
 	domainService       service.Domain
 	streamService       service.Stream
-	userService         service.User
 	subscriptionService *service.Subscription
-
-	// Widget Libraries
-	formLibrary    form.Library
-	contentLibrary nebula.Library
-
-	// Upload Directories
-	attachmentOriginals afero.Fs
-	attachmentCache     afero.Fs
+	realtimeBroker      *RealtimeBroker
+	userService         service.User
 
 	// real-time watchers
-	realtimeBroker        *RealtimeBroker
 	templateUpdateChannel chan string
 	streamUpdateChannel   chan model.Stream
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
 	// Base Factory object
 	factory := Factory{
-		config:                domain,
-		layoutService:         layoutService,
-		templateService:       templateService,
-		streamUpdateChannel:   make(chan model.Stream),
-		templateUpdateChannel: make(chan string),
+		config: domain,
+
+		layoutService:   layoutService,
+		templateService: templateService,
+
 		attachmentOriginals:   attachmentOriginals,
 		attachmentCache:       attachmentCache,
+		streamUpdateChannel:   make(chan model.Stream),
+		templateUpdateChannel: make(chan string),
 	}
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
-
-	// Crate content library (for now, only using defaults)
-	factory.contentLibrary = nebula.NewLibrary()
 
 	// Create form library
 	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
 	formlib.All(&factory.formLibrary)
 
-	// Continue updating the configuration with values that (may) change during the lifetime of the factory
-	if err := factory.UpdateConfig(domain, layoutService, templateService, attachmentOriginals, attachmentCache); err != nil {
+	// Start the Domain Service
+	factory.domainService = service.NewDomain(
+		factory.collection(CollectionDomain),
+		render.FuncMap(),
+	)
+
+	// Start the Stream Service
+	factory.streamService = service.NewStream(
+		factory.collection(CollectionStream),
+		factory.Template(),
+		factory.StreamDraft(),
+		factory.Attachment(),
+		factory.FormLibrary(),
+		factory.ContentLibrary(),
+		factory.StreamUpdateChannel(),
+	)
+
+	// Start the User Service
+	factory.userService = service.NewUser(
+		factory.collection(CollectionUser),
+		factory.Stream(),
+	)
+
+	// Start the Subscription Service
+	factory.subscriptionService = service.NewSubscription(
+		factory.collection(CollectionSubscription),
+		factory.Stream(),
+		factory.ContentLibrary(),
+	)
+
+	// Refresh the configuration with values that (may) change during the lifetime of the factory
+	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
 		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
 	}
 
-	// Watch for updates to templates and update streams accordingly
-	go factory.watchTemplates()
-
-	// Done (for now)
+	// Success!
 	return &factory, nil
 }
 
-func (factory *Factory) UpdateConfig(domain config.Domain, layoutService *service.Layout, templateService *service.Template, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
 
 	// Update global pointers
-	factory.layoutService = layoutService
-	factory.templateService = templateService
 	factory.attachmentOriginals = attachmentOriginals
 	factory.attachmentCache = attachmentCache
 
-	// If the database connect string has changed...
+	// If the database connect string has changed, then update the database connection
 	if (factory.config.ConnectString != domain.ConnectString) || (factory.config.DatabaseName != domain.DatabaseName) {
 
 		// If we already have a database connection, then close it
@@ -134,50 +156,28 @@ func (factory *Factory) UpdateConfig(domain config.Domain, layoutService *servic
 			}
 		}
 
-		// Domain Service
-		factory.domainService = service.NewDomain(
-			factory.collection(CollectionDomain),
-			render.FuncMap(),
-		)
-
-		// Stream Service
-		factory.streamService = service.NewStream(
-			factory.collection(CollectionStream),
-			factory.Template(),
-			factory.StreamDraft(),
-			factory.Attachment(),
-			factory.FormLibrary(),
-			factory.ContentLibrary(),
-			factory.StreamUpdateChannel(),
-		)
-
-		// User Service
-		factory.userService = service.NewUser(
-			factory.collection(CollectionUser),
-			factory.Stream(),
-		)
-
-		// Subscription Service
-		factory.subscriptionService = service.NewSubscription(
-			factory.collection(CollectionSubscription),
-			factory.Stream(),
-			factory.ContentLibrary(),
-		)
+		// Refresh cached services
+		factory.domainService.Refresh(factory.collection(CollectionDomain))
+		factory.realtimeBroker.Refresh()
+		factory.streamService.Refresh(factory.collection(CollectionStream))
+		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
+		factory.userService.Refresh(factory.collection(CollectionUser))
 	}
 
 	factory.config = domain
 	return nil
 }
 
-/*******************************************
- * REAL-TIME UPDATES
- *******************************************/
+// Close disconnects any background processes before this factory is destroyed
+func (factory *Factory) Close() {
+	factory.Session.Close()
+	close(factory.streamUpdateChannel)
 
-// start begins the background watchers used by the Stream Service
-func (factory *Factory) watchTemplates() {
-	for templateID := range factory.templateUpdateChannel {
-		factory.streamService.UpdateStreamsByTemplate(templateID)
-	}
+	factory.domainService.Close()
+	factory.realtimeBroker.Close()
+	factory.streamService.Close()
+	factory.subscriptionService.Close()
+	factory.userService.Close()
 }
 
 /*******************************************
@@ -276,7 +276,7 @@ func (factory *Factory) Template() *service.Template {
 
 // Content returns a content.Widget that can view content
 func (factory *Factory) ContentLibrary() *nebula.Library {
-	return &factory.contentLibrary
+	return factory.contentLibrary
 }
 
 /*******************************************

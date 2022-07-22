@@ -30,10 +30,26 @@ type Layout struct {
 // NewLayout returns a fully initialized Layout service.
 func NewLayout(folder config.Folder, funcMap template.FuncMap) Layout {
 
-	return Layout{
-		folder:  folder,
+	service := Layout{
 		funcMap: funcMap,
 	}
+
+	service.Refresh(folder)
+
+	return service
+}
+
+func (service *Layout) Refresh(folder config.Folder) {
+
+	// If nothing has changed since the last time we refreshed, then we're done
+	if folder == service.folder {
+		return
+	}
+
+	service.folder = folder
+	// TODO: service.Watch() should be restarted
+
+	go service.Watch()
 }
 
 /*******************************************

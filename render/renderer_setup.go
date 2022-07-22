@@ -1,30 +1,27 @@
-package setup
+package render
 
 import (
 	"html/template"
 
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 )
 
-type Renderer struct {
-	factory *server.Factory
-	Config  config.Config
+type Setup struct {
+	lib    *form.Library
+	Config config.Config
 }
 
-func NewRenderer(factory *server.Factory, config config.Config) Renderer {
+func NewSetup(lib *form.Library, config config.Config) Setup {
 
-	return Renderer{
-		factory: factory,
-		Config:  config,
+	return Setup{
+		lib:    lib,
+		Config: config,
 	}
 }
 
-func (r Renderer) Server() (template.HTML, error) {
-
-	lib := r.factory.FormLibrary()
+func (r Setup) Server() (template.HTML, error) {
 
 	s := config.Schema()
 
@@ -70,7 +67,7 @@ func (r Renderer) Server() (template.HTML, error) {
 		},
 	}
 
-	result, err := f.HTML(&lib, &s, r.Config)
+	result, err := f.HTML(r.lib, &s, r.Config)
 
 	return template.HTML(result), derp.Wrap(err, "setup.ServerForm", "Error rendering form")
 }
