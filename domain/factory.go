@@ -38,7 +38,7 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	domainService       service.Domain
+	domainService       *service.Domain
 	streamService       service.Stream
 	subscriptionService *service.Subscription
 	realtimeBroker      *RealtimeBroker
@@ -214,7 +214,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
-	return &factory.domainService
+	return factory.domainService
 }
 
 // Mention returns a fully populated Mention service

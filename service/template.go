@@ -36,7 +36,7 @@ func NewTemplate(layoutService *Layout, funcMap template.FuncMap, folder config.
 	service := Template{
 		templates:     make(map[string]model.Template),
 		funcMap:       funcMap,
-		filesystem:    GetFS(folder),
+		filesystem:    afero.NewMemMapFs(),
 		layoutService: layoutService,
 	}
 
@@ -51,15 +51,27 @@ func NewTemplate(layoutService *Layout, funcMap template.FuncMap, folder config.
 
 func (service *Template) Refresh(folder config.Folder) {
 
-	// If nothing has changed since the last time we refreshed, then we're done.
+	// RULE: If the Filesystem is empty, then don't try to load
+	if service.folder.IsEmpty() {
+		return
+	}
+
+	// RULE: If nothing has changed since the last time we refreshed, then we're done.
 	if folder == service.folder {
 		return
 	}
 
-	service.folder = folder
+	// Try to get a filesystem that matches this folder
+	filesystem, err := GetFS(folder)
 
-	// abort the existing watcher
-	close(service.closeWatcher)
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Template", "Invalid filesystem", folder))
+		return
+	}
+
+	// Add configuration to the service
+	service.folder = folder
+	service.filesystem = filesystem
 
 	// Load all templates from the filesystem
 	if err := service.loadTemplates(); err != nil {
@@ -124,9 +136,13 @@ func (service *Template) loadFromFilesystem(templateID string) (model.Template, 
 
 	const location = "service.Template.loadFromFilesystem"
 
-	filesystem := GetFS(service.folder, templateID)
-
 	result := model.NewTemplate(templateID, service.funcMap)
+
+	filesystem, err := GetFS(service.folder, templateID)
+
+	if err != nil {
+		return result, derp.Wrap(err, location, "Unable to get filesystem for template", service.folder, templateID)
+	}
 
 	if err := loadModelFromFilesystem(filesystem, &result); err != nil {
 		return result, derp.Wrap(err, location, "Error loading schema")
@@ -157,6 +173,9 @@ func (service *Template) loadFromFilesystem(templateID string) (model.Template, 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
 func (service *Template) watch() {
+
+	// abort the existing watcher
+	close(service.closeWatcher)
 
 	// RULE: Only synchronize on folders that are configured to do so.
 	if !service.folder.Sync {

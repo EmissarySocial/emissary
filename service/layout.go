@@ -174,19 +174,23 @@ func (service *Layout) Watch() {
 // loadFromFilesystem retrieves the template from the disk and parses it into
 func (service *Layout) loadFromFilesystem(filename string) error {
 
-	fs := GetFS(service.folder, filename)
+	filesystem, err := GetFS(service.folder, filename)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Layout.loadFromFilesystem", "Error loading filesystem", service.folder, filename)
+	}
 
 	layout := model.NewLayout(filename, service.funcMap)
 
 	// System folders (except for "static" and "global") have a schema.json file
 	if filename != "global" {
-		if err := loadModelFromFilesystem(fs, &layout); err != nil {
-			return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", fs, filename)
+		if err := loadModelFromFilesystem(filesystem, &layout); err != nil {
+			return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", filesystem, filename)
 		}
 	}
 
-	if err := loadHTMLTemplateFromFilesystem(fs, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", fs, filename)
+	if err := loadHTMLTemplateFromFilesystem(filesystem, layout.HTMLTemplate, service.funcMap); err != nil {
+		return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", filesystem, filename)
 	}
 
 	switch filename {

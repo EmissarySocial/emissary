@@ -21,14 +21,14 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
+func NewDomain(collection data.Collection, funcMap template.FuncMap) *Domain {
 	service := Domain{
 		funcMap: funcMap,
 	}
 
 	service.Refresh(collection)
 
-	return service
+	return &service
 }
 
 /*******************************************

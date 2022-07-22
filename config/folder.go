@@ -16,9 +16,23 @@ type Folder struct {
 	Sync     bool   `path:"sync"     json:"sync"`
 }
 
+// IsEmpty returns TRUE if this folder spec is empty / not valid
+func (folder *Folder) IsEmpty() bool {
+
+	if folder.Adapter == "" {
+		return true
+	}
+
+	if folder.Location == "" {
+		return true
+	}
+
+	return false
+}
+
 // GetFilesystem uses the folder's configuration to create an afero.Fs
 // object that can read/write files.
-func (folder Folder) GetFilesystem() (afero.Fs, error) {
+func (folder *Folder) GetFilesystem() (afero.Fs, error) {
 
 	var base afero.Fs
 
