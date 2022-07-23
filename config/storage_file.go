@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -36,7 +37,7 @@ func (storage FileStorage) Subscribe() <-chan Config {
 
 	go func() {
 
-		spew.Dump("adding configuration")
+		fmt.Println("Loading configuration")
 		updateChannel <- storage.load()
 
 		// Create a new file watcher
@@ -53,7 +54,7 @@ func (storage FileStorage) Subscribe() <-chan Config {
 
 		for range watcher.Events {
 			updateChannel <- storage.load()
-			spew.Dump("adding configuration")
+			spew.Dump("Refreshing configuration")
 		}
 	}()
 

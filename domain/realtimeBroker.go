@@ -38,6 +38,7 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 		streamUpdates: updates,
 		AddClient:     make(chan *RealtimeClient),
 		RemoveClient:  make(chan *RealtimeClient),
+		close:         make(chan bool),
 	}
 
 	go result.listen(factory)
@@ -67,8 +68,6 @@ func (b *RealtimeBroker) Close() {
 // the broadcasting of messages out to clients that are currently attached.
 // It is intended to be run in its own goroutine.
 func (b *RealtimeBroker) listen(factory *Factory) {
-
-	//streamService := factory.Stream()
 
 	for {
 

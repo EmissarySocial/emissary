@@ -45,8 +45,7 @@ type Factory struct {
 	userService         service.User
 
 	// real-time watchers
-	templateUpdateChannel chan string
-	streamUpdateChannel   chan model.Stream
+	streamUpdateChannel chan model.Stream
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
@@ -61,10 +60,9 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		layoutService:   layoutService,
 		templateService: templateService,
 
-		attachmentOriginals:   attachmentOriginals,
-		attachmentCache:       attachmentCache,
-		streamUpdateChannel:   make(chan model.Stream),
-		templateUpdateChannel: make(chan string),
+		attachmentOriginals: attachmentOriginals,
+		attachmentCache:     attachmentCache,
+		streamUpdateChannel: make(chan model.Stream),
 	}
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
@@ -170,7 +168,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 // Close disconnects any background processes before this factory is destroyed
 func (factory *Factory) Close() {
-	factory.Session.Close()
+
+	if factory.Session != nil {
+		factory.Session.Close()
+	}
+
 	close(factory.streamUpdateChannel)
 
 	factory.domainService.Close()
@@ -291,11 +293,6 @@ func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 // StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
 func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 	return factory.streamUpdateChannel
-}
-
-// TemplateUpdateChannel returns a channel for transmitting templates that have changed.
-func (factory *Factory) TemplateUpdateChannel() chan string {
-	return factory.templateUpdateChannel
 }
 
 /*******************************************

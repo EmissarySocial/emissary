@@ -1,6 +1,7 @@
 package server
 
 import (
+	"embed"
 	"fmt"
 	"strings"
 	"sync"
@@ -28,8 +29,10 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	layoutService   service.Layout
-	templateService service.Template
+	layoutService     service.Layout
+	templateService   service.Template
+	filesystemService service.Filesystem
+	embeddedFiles     embed.FS
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
@@ -43,30 +46,34 @@ type Factory struct {
 // NewFactory uses the provided configuration data to generate a new Factory
 // if there are any errors connecting to a domain's datasource, NewFactory will derp.Report
 // the error, but will continue loading without those domains.
-func NewFactory(storage config.Storage) *Factory {
+func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	factory := Factory{
-		storage: storage,
-		mutex:   sync.RWMutex{},
-		domains: make(map[string]*domain.Factory, 0),
+		storage:       storage,
+		mutex:         sync.RWMutex{},
+		domains:       make(map[string]*domain.Factory, 0),
+		embeddedFiles: embeddedFiles,
 	}
 
 	// Global Layout service
 	factory.layoutService = service.NewLayout(
-		config.Folder{},
+		factory.Filesystem(),
 		render.FuncMap(),
+		[]string{},
 	)
 
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
 		factory.Layout(),
+		factory.Filesystem(),
 		render.FuncMap(),
-		config.Folder{},
+		[]string{},
 	)
 
 	factory.contentLibrary = nebula.NewLibrary()
 
 	go factory.start()
+
 	return &factory
 }
 
@@ -74,18 +81,20 @@ func (factory *Factory) start() {
 
 	fmt.Println("Waiting for configuration file...")
 
+	filesystemService := factory.Filesystem()
+
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
 		fmt.Println("Setting new configuration...")
 
-		if attachmentOriginals, err := config.AttachmentOriginals.GetFilesystem(); err == nil {
+		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
 		} else {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config.AttachmentOriginals))
 		}
 
-		if attachmentCache, err := config.AttachmentCache.GetFilesystem(); err == nil {
+		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 			factory.attachmentCache = attachmentCache
 		} else {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config.AttachmentCache))
@@ -276,6 +285,10 @@ func (factory *Factory) Layout() *service.Layout {
 	return &factory.layoutService
 }
 
+func (factory *Factory) Filesystem() service.Filesystem {
+	return service.NewFilesystem(factory.embeddedFiles)
+}
+
 // Steranko implements the steranko.Factory method, used for locating the specific
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
@@ -294,10 +307,4 @@ func (factory *Factory) FormLibrary() form.Library {
 	result := form.NewLibrary(nil)
 	vocabulary.All(&result)
 	return result
-}
-
-// StaticPath returns the configured path to the "static"
-// files for this website.
-func (factory *Factory) StaticPath() string {
-	return factory.config.Static.Location
 }

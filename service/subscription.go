@@ -17,7 +17,7 @@ type Subscription struct {
 	collection     data.Collection
 	streamService  *Stream
 	contentLibrary *nebula.Library
-	close          chan bool
+	closed         chan bool
 }
 
 // NewSubscription returns a fully populated Subscription service.
@@ -27,6 +27,7 @@ func NewSubscription(collection data.Collection, streamService *Stream, contentL
 		collection:     collection,
 		streamService:  streamService,
 		contentLibrary: contentLibrary,
+		closed:         make(chan bool),
 	}
 
 	service.Refresh(collection)
@@ -48,7 +49,7 @@ func (service *Subscription) Refresh(collection data.Collection) {
 
 // Close stops the subscription service watcher
 func (service *Subscription) Close() {
-	close(service.close)
+	close(service.closed)
 }
 
 /* COMMENTED OUT TO SEE HOW THIS AFFECTS LIVE SERVER PERFORMANCE.

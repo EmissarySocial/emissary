@@ -25,11 +25,8 @@ import (
 	"github.com/pkg/browser"
 )
 
-//go:embed all:_system/*
-var systemFiles embed.FS
-
-//go:embed all:_system/static/*
-var staticFiles embed.FS
+//go:embed all:_embed/**
+var embeddedFiles embed.FS
 
 func main() {
 
@@ -41,7 +38,8 @@ func main() {
 	// Locate the configuration file and populate the factory
 	commandLineArgs := config.GetCommandLineArgs()
 	configStorage := config.Load(commandLineArgs)
-	factory := server.NewFactory(configStorage)
+
+	factory := server.NewFactory(configStorage, embeddedFiles)
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -52,13 +50,17 @@ func main() {
 	e.Use(middleware.Recover())
 	// TODO: implement echo.Security middleware
 
-	// Static Content
-	var contentHandler = echo.WrapHandler(http.FileServer(http.FS(staticFiles)))
-	var contentRewrite = middleware.Rewrite(map[string]string{"/static/*": "/_static/$1"})
+	// Static Content MUST come from static files, because we're not re-linking all those files at runtime
+	if staticFiles, err := fs.Sub(embeddedFiles, "_embed"); err == nil {
 
-	e.GET("/static/**", contentHandler, contentRewrite)
+		e.Group("/static", mw.CacheControl("public, max-age=3600")).
+			GET("/*", echo.WrapHandler(http.FileServer(http.FS(staticFiles))))
 
-	// Start Web Server
+	} else {
+		panic(err)
+	}
+
+	// Based on configuration, add all other routes and start web server
 	if commandLineArgs.Setup {
 		makeSetupRoutes(factory, e)
 	} else {
@@ -72,7 +74,7 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	fmt.Println("Starting Emissary Config Tool.")
 
 	// Locate the setup templates
-	setupFiles, err := fs.Sub(systemFiles, "setup")
+	setupFiles, err := fs.Sub(embeddedFiles, "_embed/setup")
 
 	if err != nil {
 		panic("Unable to open embedded files for setup. " + err.Error())
@@ -124,10 +126,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 	e.GET("/.well-known/webmention", handler.PostWebMention(factory))
 
-	// Local links for static resources
-	e.Group("", mw.CacheControl("public, max-age=60")).
-		Static("/static", factory.StaticPath())
-
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
 	e.POST("/signin", handler.PostSignIn(factory))
@@ -174,25 +172,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
 	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
 	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
-
-	/*
-		e.GET("/inbox", handler.GetProfileInbox(factory))
-		e.GET("/outbox", handler.GetProfileOutbox(factory))
-		e.GET("/people/:userId", handler.GetProfile(factory))
-		e.GET("/people/:userId/inbox", handler.GetSocialInbox(factory))
-		e.POST("/people/:userId/inbox", handler.PostSocialInbox(factory))
-		e.GET("/people/:userId/outbox", handler.GetSocialOutbox(factory))
-		e.POST("/people/:userId/outbox", handler.PostSocialOutbox(factory))
-		e.GET("/people/:userId/followers", handler.GetSocialFollowers(factory))
-		e.GET("/people/:userId/following", handler.GetSocialFollowing(factory))
-		e.GET("/people/:userId/liked", handler.GetSocialLiked(factory))
-
-		// PROFILE PAGES
-		// e.GET("/me/", handler.GetProfile(factory))
-		// e.POST("/me", handler.PostProfile(factory))
-		// e.GET("/me/:action", handler.PostProfile(factory))
-		// e.POST("/me/:action", handler.PostProfile(factory))
-	*/
 
 	// Startup Wizard
 	e.GET("/startup", handler.Startup(factory))

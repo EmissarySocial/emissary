@@ -19,5 +19,5 @@
 
 # Application config info
 config.json
-_attachments
-_certificates
+config-env.json
+.emissary

@@ -3,53 +3,137 @@ package service
 import (
 	"fmt"
 	"html/template"
+	"strings"
 
-	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/list"
-	"github.com/fsnotify/fsnotify"
+	"github.com/benpate/rosetta/slice"
 )
 
 // Layout service manages the global site layout that is stored in a particular path of the
 // filesystem.
 type Layout struct {
-	folder      config.Folder
-	funcMap     template.FuncMap
-	analytics   model.Layout
-	appearance  model.Layout
-	connections model.Layout
-	domain      model.Layout
-	global      model.Layout
-	group       model.Layout
-	profile     model.Layout
-	topLevel    model.Layout
-	user        model.Layout
+	filesystemService Filesystem
+	funcMap           template.FuncMap
+	locations         []string
+	analytics         model.Layout
+	appearance        model.Layout
+	connections       model.Layout
+	domain            model.Layout
+	global            model.Layout
+	group             model.Layout
+	profile           model.Layout
+	topLevel          model.Layout
+	user              model.Layout
+
+	changed chan bool
+	closed  chan bool
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(folder config.Folder, funcMap template.FuncMap) Layout {
+func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations []string) Layout {
 
 	service := Layout{
-		funcMap: funcMap,
+		filesystemService: filesystemService,
+		funcMap:           funcMap,
+		changed:           make(chan bool),
+		closed:            make(chan bool),
 	}
 
-	service.Refresh(folder)
+	service.Refresh(locations)
 
 	return service
 }
 
-func (service *Layout) Refresh(folder config.Folder) {
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+func (service *Layout) Refresh(locations []string) {
 
 	// If nothing has changed since the last time we refreshed, then we're done
-	if folder == service.folder {
+	if slice.Equal(locations, service.locations) {
 		return
 	}
 
-	service.folder = folder
-	// TODO: service.Watch() should be restarted
+	fmt.Println("Refreshing layout with:", strings.Join(locations, ", "))
+	service.locations = locations
 
 	go service.Watch()
+}
+
+/*******************************************
+ * REAL TIME UPDATES
+ *******************************************/
+
+// watch must be run as a goroutine, and constantly monitors the
+// "Updates" channel for news that a template has been updated.
+func (service *Layout) Watch() {
+
+	// Close the channel, which will stopp any existing watchers
+	close(service.closed)
+
+	// Create a new "closed" channel to close future watchers
+	service.closed = make(chan bool)
+
+	// Start new watchers.
+	for _, uri := range service.locations {
+
+		for _, filename := range service.fileNames() {
+			service.filesystemService.Watch(uri+"/"+filename, service.changed, service.closed) // Fail silently because many locations may not define all layouts
+		}
+	}
+
+	// All Watchers Started.  Now Listen for Changes
+	for {
+
+		select {
+
+		case <-service.changed:
+			service.loadLayouts()
+
+		case <-service.closed:
+			return
+		}
+	}
+}
+
+// loadLayouts retrieves the template from the disk and parses it into
+func (service *Layout) loadLayouts() error {
+
+	// For each configured location...
+	for _, location := range service.locations {
+
+		// Get a valid filesystem adapter
+		filesystem, err := service.filesystemService.GetFS(location)
+
+		if err != nil {
+			continue // If there's an error, it means that this location just doesn't define this part of the layout.  It's OK
+		}
+
+		// Check each of the standard filenames
+		for _, filename := range service.fileNames() {
+
+			layout := model.NewLayout(filename, service.funcMap)
+
+			// System locations (except for "static" and "global") have a schema.json file
+			if filename != "global" {
+				if err := loadModelFromFilesystem(filesystem, &layout); err != nil {
+					return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", location, filename)
+				}
+			}
+
+			if err := loadHTMLTemplateFromFilesystem(filesystem, layout.HTMLTemplate, service.funcMap); err != nil {
+				return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", location, filename)
+			}
+
+			if err := service.setLayout(filename, layout); err != nil {
+				return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error setting Layout", location, filename)
+			}
+		}
+	}
+
+	return nil
 }
 
 /*******************************************
@@ -87,113 +171,19 @@ func (service *Layout) Profile() *model.Layout {
 func (service *Layout) TopLevel() *model.Layout {
 	return &service.topLevel
 }
+
 func (service *Layout) User() *model.Layout {
 	return &service.user
 }
 
 /*******************************************
- * FILE WATCHER
+ * HELPER METHODS
  *******************************************/
 
-// fileNames returns a list of directories that are owned by the Layout service.
-func (service *Layout) fileNames() []string {
-	return []string{"analytics", "appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
-}
-
-// watch must be run as a goroutine, and constantly monitors the
-// "Updates" channel for news that a template has been updated.
-func (service *Layout) Watch() {
-
-	const location = "service.Layout.Watch"
-
-	// Only synchronize on folders that are configured to do so.
-	if !service.folder.Sync {
-		return
-	}
-
-	// Only synchronize on FILESYSTEM folders (for now)
-	if service.folder.Adapter != "FILE" {
-		return
-	}
-
-	// Create a new directory watcher
-	watcher, err := fsnotify.NewWatcher()
-
-	if err != nil {
-		panic(err)
-	}
-
-	files := service.fileNames()
-
-	// Use a separate counter because not all files will be included in the result
-	for _, filename := range files {
-
-		// Add all other directories into the Template service as Templates
-		if err := service.loadFromFilesystem(filename); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error loading Layout from filesystem", filename))
-			panic("Error loading Layout from Filesystem")
-		}
-
-		// Add fsnotify watchers for all other directories
-		if err := watcher.Add(service.folder.Location + "/" + filename); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error adding file watcher to file", filename))
-		}
-	}
-
-	// All Files Loaded.  Now Listen for Changes
-
-	// Repeat indefinitely, listen and process file updates
-	for {
-
-		select {
-
-		case event, ok := <-watcher.Events:
-
-			if !ok {
-				continue
-			}
-
-			filename := list.Slash(event.Name).RemoveLast().Last()
-
-			if err := service.loadFromFilesystem(filename); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error loading changes to layout", event, filename))
-				continue
-			}
-
-			fmt.Println("Updated layout: " + filename)
-
-		case err, ok := <-watcher.Errors:
-
-			if ok {
-				derp.Report(derp.Wrap(err, location, "Error watching filesystem"))
-			}
-		}
-	}
-}
-
 // loadFromFilesystem retrieves the template from the disk and parses it into
-func (service *Layout) loadFromFilesystem(filename string) error {
+func (service *Layout) setLayout(name string, layout model.Layout) error {
 
-	filesystem, err := GetFS(service.folder, filename)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Layout.loadFromFilesystem", "Error loading filesystem", service.folder, filename)
-	}
-
-	layout := model.NewLayout(filename, service.funcMap)
-
-	// System folders (except for "static" and "global") have a schema.json file
-	if filename != "global" {
-		if err := loadModelFromFilesystem(filesystem, &layout); err != nil {
-			return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", filesystem, filename)
-		}
-	}
-
-	if err := loadHTMLTemplateFromFilesystem(filesystem, layout.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", filesystem, filename)
-	}
-
-	switch filename {
+	switch name {
 
 	case "analytics":
 		service.analytics = layout
@@ -222,10 +212,12 @@ func (service *Layout) loadFromFilesystem(filename string) error {
 	case "users":
 		service.user = layout
 
-	default:
-		// This should never happen
-		panic("Unrecognized layout: " + filename)
 	}
 
-	return nil
+	return derp.NewInternalError("service.layout.setLayouts", "Invalid layout name", name)
+}
+
+// fileNames returns a list of directories that are owned by the Layout service.
+func (service *Layout) fileNames() []string {
+	return []string{"analytics", "appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
 }

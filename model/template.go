@@ -44,6 +44,11 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 	}
 }
 
+// ID implements the set.Value interface
+func (template Template) ID() string {
+	return template.TemplateID
+}
+
 // CanBeContainedBy returns TRUE if this Streams using this Template can be nested inside of
 // Streams using the Template named in the parameters
 func (template *Template) CanBeContainedBy(templateName string) bool {
