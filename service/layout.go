@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"html/template"
+	"io/fs"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -59,6 +60,11 @@ func (service *Layout) Refresh(locations []string) {
 	fmt.Println("Refreshing layout with:", strings.Join(locations, ", "))
 	service.locations = locations
 
+	// Try to load layouts from the filesystems
+	if err := service.loadLayouts(); err != nil {
+		derp.Report(err)
+	}
+
 	go service.Watch()
 }
 
@@ -114,16 +120,24 @@ func (service *Layout) loadLayouts() error {
 		// Check each of the standard filenames
 		for _, filename := range service.fileNames() {
 
+			subFilesystem, err := fs.Sub(filesystem, filename)
+
+			if err != nil {
+				continue // If there's an error, it means that this location just doesn't define this part of the layout.  It's OK
+			}
+
+			fmt.Println("... layout: " + filename)
+
 			layout := model.NewLayout(filename, service.funcMap)
 
 			// System locations (except for "static" and "global") have a schema.json file
 			if filename != "global" {
-				if err := loadModelFromFilesystem(filesystem, &layout); err != nil {
+				if err := loadModelFromFilesystem(subFilesystem, &layout); err != nil {
 					return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", location, filename)
 				}
 			}
 
-			if err := loadHTMLTemplateFromFilesystem(filesystem, layout.HTMLTemplate, service.funcMap); err != nil {
+			if err := loadHTMLTemplateFromFilesystem(subFilesystem, layout.HTMLTemplate, service.funcMap); err != nil {
 				return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", location, filename)
 			}
 
@@ -131,6 +145,43 @@ func (service *Layout) loadLayouts() error {
 				return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error setting Layout", location, filename)
 			}
 		}
+	}
+
+	// Validate required fields.
+	if service.analytics.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Analytics Template could not be loaded from any location", service.locations)
+	}
+
+	if service.appearance.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Appearance Template could not be loaded from any location", service.locations)
+	}
+
+	if service.connections.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Connections Template could not be loaded from any location", service.locations)
+	}
+
+	if service.domain.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Domain Template could not be loaded from any location", service.locations)
+	}
+
+	if service.global.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Global Template could not be loaded from any location", service.locations)
+	}
+
+	if service.group.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Group Template could not be loaded from any location", service.locations)
+	}
+
+	if service.profile.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Profile Template could not be loaded from any location", service.locations)
+	}
+
+	if service.topLevel.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Top Level Template could not be loaded from any location", service.locations)
+	}
+
+	if service.user.HTMLTemplate == nil {
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error User Template could not be loaded from any location", service.locations)
 	}
 
 	return nil
@@ -187,31 +238,39 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 	case "analytics":
 		service.analytics = layout
+		return nil
 
 	case "appearance":
 		service.appearance = layout
+		return nil
 
 	case "connections":
 		service.connections = layout
+		return nil
 
 	case "domain":
 		service.domain = layout
+		return nil
 
 	case "global":
 		service.global = layout
+		return nil
 
 	case "groups":
 		service.group = layout
+		return nil
 
 	case "profiles":
 		service.profile = layout
+		return nil
 
 	case "toplevel":
 		service.topLevel = layout
+		return nil
 
 	case "users":
 		service.user = layout
-
+		return nil
 	}
 
 	return derp.NewInternalError("service.layout.setLayouts", "Invalid layout name", name)

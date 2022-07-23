@@ -10,13 +10,11 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
 )
@@ -29,10 +27,9 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	layoutService     service.Layout
-	templateService   service.Template
-	filesystemService service.Filesystem
-	embeddedFiles     embed.FS
+	layoutService   service.Layout
+	templateService service.Template
+	embeddedFiles   embed.FS
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
@@ -40,7 +37,7 @@ type Factory struct {
 	// Widget Libraries
 	contentLibrary nebula.Library
 
-	domains set.Map[string, *domain.Factory]
+	domains map[string]*domain.Factory
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
@@ -49,10 +46,11 @@ type Factory struct {
 func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	factory := Factory{
-		storage:       storage,
-		mutex:         sync.RWMutex{},
-		domains:       make(map[string]*domain.Factory, 0),
-		embeddedFiles: embeddedFiles,
+		storage:        storage,
+		mutex:          sync.RWMutex{},
+		domains:        make(map[string]*domain.Factory, 0),
+		embeddedFiles:  embeddedFiles,
+		contentLibrary: nebula.NewLibrary(),
 	}
 
 	// Global Layout service
@@ -70,8 +68,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		[]string{},
 	)
 
-	factory.contentLibrary = nebula.NewLibrary()
-
 	go factory.start()
 
 	return &factory
@@ -79,14 +75,14 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 func (factory *Factory) start() {
 
-	fmt.Println("Waiting for configuration file...")
+	fmt.Println("Factory: Waiting for configuration file...")
 
 	filesystemService := factory.Filesystem()
 
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		fmt.Println("Setting new configuration...")
+		fmt.Println("Factory: received new configuration...")
 
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
@@ -102,6 +98,11 @@ func (factory *Factory) start() {
 
 		factory.config = config
 
+		// Mark all domains for deletion (then unmark them later)
+		for index := range factory.domains {
+			factory.domains[index].MarkForDeletion = true
+		}
+
 		// Refresh cached values in global services
 		factory.layoutService.Refresh(config.Layouts)
 		factory.templateService.Refresh(config.Templates)
@@ -110,11 +111,14 @@ func (factory *Factory) start() {
 		for _, domainConfig := range config.Domains {
 
 			// Try to find the domain
-			existing, err := factory.domains.Get(domainConfig.Hostname)
+			if existing := factory.domains[domainConfig.Hostname]; existing != nil {
 
-			// If the domain already exists, then update configuration info.
-			if err == nil {
-				existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache)
+				if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+					derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname))
+				}
+
+				// Even if there's an error "refreshing" the domain, we don't want to delete it
+				existing.MarkForDeletion = false
 				continue
 			}
 
@@ -126,14 +130,15 @@ func (factory *Factory) start() {
 				continue
 			}
 
-			factory.domains.Put(newDomain)
+			// If there are no errors, then add the domain to the list.
+			factory.domains[newDomain.Hostname()] = newDomain
 		}
 
-		// Unceremoniously remove domains that are no longer in the configuration
-		for domainID, domain := range factory.domains {
-			if _, err := config.Domains.Get(domainID); err != nil {
-				domain.Close()
-				factory.domains.Delete(domainID)
+		// Any domains that are still marked for deletion will be gracefully closed, then removed
+		for domainID := range factory.domains {
+			if factory.domains[domainID].MarkForDeletion {
+				factory.domains[domainID].Close()
+				delete(factory.domains, domainID)
 			}
 		}
 	}
@@ -255,8 +260,6 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 	if domain, ok := factory.domains[name]; ok {
 		return domain, nil
 	}
-
-	spew.Dump("FAILED LOOKUP", name)
 
 	return nil, derp.New(404, "factory.ByDomainName.Get", "Unrecognized domain name", name)
 }

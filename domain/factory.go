@@ -46,6 +46,8 @@ type Factory struct {
 
 	// real-time watchers
 	streamUpdateChannel chan model.Stream
+
+	MarkForDeletion bool
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
@@ -55,10 +57,9 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 	// Base Factory object
 	factory := Factory{
-		config: domain,
-
 		layoutService:   layoutService,
 		templateService: templateService,
+		contentLibrary:  contentLibrary,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -146,20 +147,20 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		factory.Session = session
 
-		// Watch for updates to streams
-		if session, ok := factory.Session.(*mongodb.Session); ok {
-
-			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-				go service.WatchStreams(collection.Mongo(), factory.streamUpdateChannel)
-			}
-		}
-
 		// Refresh cached services
 		factory.domainService.Refresh(factory.collection(CollectionDomain))
 		factory.realtimeBroker.Refresh()
 		factory.streamService.Refresh(factory.collection(CollectionStream))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
 		factory.userService.Refresh(factory.collection(CollectionUser))
+
+		// Watch for updates to streams
+		if session, ok := factory.Session.(*mongodb.Session); ok {
+			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
+				go service.WatchStreams(collection.Mongo(), factory.streamUpdateChannel)
+			}
+		}
+
 	}
 
 	factory.config = domain
@@ -202,6 +203,10 @@ func (factory *Factory) Host() string {
 
 func (factory *Factory) Hostname() string {
 	return factory.config.Hostname
+}
+
+func (factory *Factory) Config() config.Domain {
+	return factory.config
 }
 
 /*******************************************

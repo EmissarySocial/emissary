@@ -158,7 +158,7 @@ func (service *Template) loadTemplates() error {
 				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory)
 			}
 
-			fmt.Println("... " + template.TemplateID)
+			fmt.Println("... template: " + template.TemplateID)
 
 			result[template.TemplateID] = template
 		}

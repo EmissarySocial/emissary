@@ -26,6 +26,17 @@ func (set Slice[K, V]) Len() int {
 	return len(set)
 }
 
+// Keys returns a list of all the keys in the set.
+func (set Slice[K, V]) Keys() []K {
+	result := make([]K, len(set))
+
+	for index, value := range set {
+		result[index] = value.ID()
+	}
+
+	return result
+}
+
 // Get returns the object with the given ID.  If no object with the given ID is found, Get returns an empty object.
 func (set Slice[K, V]) Get(key K) (V, error) {
 

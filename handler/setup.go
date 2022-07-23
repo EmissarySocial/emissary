@@ -93,7 +93,7 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.DomainByID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.GetServerDomain", "Error loading configuration")
+			return derp.Wrap(err, "handler.SetupGetDomain", "Error loading configuration")
 		}
 
 		lib := factory.FormLibrary()
@@ -129,7 +129,7 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := f.HTML(&lib, &s, domain)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.GetServerDomain", "Error generating form")
+			return derp.Wrap(err, "handler.SetupGetDomain", "Error generating form")
 		}
 
 		result := render.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)

@@ -5,6 +5,7 @@ import "golang.org/x/exp/constraints"
 // Set interface defines the functions that a set must implement
 type Set[K constraints.Ordered, V Value[K]] interface {
 	Len() int
+	Keys() []K
 	Get(key K) (V, error)
 	GetAll() <-chan V
 	Put(value V)
