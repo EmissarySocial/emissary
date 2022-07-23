@@ -1,0 +1,68 @@
+{
+	"templateId": "redirect",
+	"label": "Redirect",
+	"description": "Forward your visitors to an external website",
+	"icon": "fa-solid fa-arrow-up-right-from-square",
+	"containedBy": ["top", "folder"],
+	"childSortType": "label",
+	"childSortOrder": "ASC",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type":"string"},
+			"description": {"type":"string"},
+			"data": {"type": "object", "properties": {
+				"url": {"type": "string", "format":"url"}
+			}}
+		}
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"description": "Folders only have one state"
+		}
+	},
+	"roles": {
+		"owner": {},
+		"viewer":{}
+	},
+	"actions": {
+		"view": {"step": "view-html", "roles":["viewer"]},
+		"edit": {
+			"roles": ["owner"],
+			"steps":[{
+				"step": "as-modal",
+				"steps": [
+					{
+						"step": "form-html",
+						"label": "Edit Redirect",
+						"form": {
+							"kind": "layout-vertical",
+							"children": [
+								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"},
+								{"kind": "text", "label": "URL", "path": "data.url"}
+							]
+						}
+					}, 
+					{"step": "save", "comment": "Updated Redirect"}
+				]
+			}]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [{
+				"step":"delete", "title":"Delete this Item?", "message":"This will permanently delete this item from your website."
+			}]
+		},
+		"sharing": {
+			"roles": ["editor"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
+					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		}
+	}
+}

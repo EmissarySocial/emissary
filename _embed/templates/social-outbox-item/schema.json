@@ -1,0 +1,22 @@
+{
+	"templateId": "social-outbox-item",
+	"label": "Outbox Item",
+	"description": "Log of activities performed by a user",
+	"containedBy": ["social-outbox"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type": "string"},
+			"data": {"type": "object", "properties": {
+				"link": {"type": "string", "format": "url"},
+				"type": {"type": "string"},
+				"originalStreamId": {"type": "string", "format": "objectId"}
+			}}
+		}
+	},
+	"actions": {
+		"view": {
+			"step": "view-html"
+		}
+	}
+}

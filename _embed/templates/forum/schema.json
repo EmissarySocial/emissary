@@ -1,0 +1,119 @@
+{
+	"templateId": "forum",
+	"label": "Forum",
+	"description": "Discussion area containing several discussion topics.",
+	"icon": "fa-regular fa-message",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {
+				"type": "string",
+				"format": "no-html"
+			},
+			"description": {
+				"type": "string",
+				"format": "no-html"
+			}
+		}
+	},
+	"states": {
+		"awaiting-moderation": {
+			"label": "Awaiting Moderation",
+			"description": "New messages by `moderated-participants` that have not yet been approved by a `moderator`."
+		}, 
+		"visible": {
+			"label": "Visible",
+			"description": "Comment is visible to all participants"
+		}, 
+		"hidden": {
+			"label": "Hidden",
+			"description": "Comment has been hidden by moderators"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Domain Owners have full control over this chatroom"
+		},
+		"author": {
+			"label": "Author",
+			"description": "The authenticated user who originally posted a comment."
+		},
+		"moderator": {
+			"label": "Moderator",
+			"description": "Moderators have full control over this chatroom."
+		},
+		"participant": {
+			"label": "Participant",
+			"description": "Participants can add new chat messages."
+		},
+		"moderated-participant": {
+			"label": "Author",
+			"description": "Authors can edit their existing chat messages."
+		}
+	},
+	"actions": {
+		"view": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
+		},
+		"children": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
+		},
+		"edit":{
+			"roles": ["owner", "moderator", "author"],
+			"steps": [
+				{
+					"step": "as-modal",
+					"steps": [{
+						"step": "form-html",
+						"form": {
+							"kind": "layout-vertical",
+							"label": "Edit Forum",
+							"children": [{
+								"kind": "text",
+								"label": "Label",
+								"path": "label"
+							}, {
+								"kind": "textarea",
+								"label": "Description",
+								"path": "description"
+							}]
+						}},
+						{"step": "save"}
+					]
+				} 
+			]
+		},
+		"add-topic": {
+			"roles": ["owner", "moderator", "author", "participant", "moderated-participant"],
+			"steps": [{
+				"step": "add-child",
+				"template": "forum-topic",
+				"view": "add-topic",
+				"with-child": [
+					{"step": "set-data", "paths": ["label", "description"]},
+					{"step": "save"},
+					{"step": "forward-to", "url": "/{{.Token}}"}
+				]}
+			]
+		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Forum?", "message": "Select who can view and comment in this forum."},
+					{"step": "save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
+		"delete": {
+			"roles":["owner", "moderator"],
+			"steps": [{
+				"step":"delete", "title": "Delete This Forum?", "message": "This will permanently delete this forum and all messages."
+			}]
+		}
+	}
+}

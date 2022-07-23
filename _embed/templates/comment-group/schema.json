@@ -1,0 +1,62 @@
+{
+	"templateId": "comment-group",
+	"label": "Comment Section",
+	"description": "Allow visitors to comment on this stream.",
+	"icon": "fa-regular fa-message",
+	"asFeature": true,
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {
+				"type": "string",
+				"description": "The human-readable title for this article"
+			}
+		}
+	},
+	"states": {
+		"default": {
+			"label": "Default State",
+			"description": "All articles only have one state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+			}, 
+		"editor": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"readonly": {
+			"label": "Read Only Access",
+			"description": "Can read this article, but cannot make changes"
+		}
+	},
+	"actions": {
+		"feature": {"step": "view-html"},
+		"children": {"step": "view-html"},
+		"edit": {
+			"roles": ["owner", "author"],
+			"steps": [
+				{"step": "set-data", "paths": "label"},
+				{"step": "save", "message": "Updated by {{.Author}}"}
+			]
+		},
+		"delete": {
+			"roles": ["owner", "author"],
+			"step": "delete"
+		},
+		"add": {
+			"steps": [{
+				"step": "add-child", 
+				"template": "comment",
+				"with-child": [
+					{"step": "set-data", "paths":["description"]},
+					{"step": "set-publishdate"},
+					{"step": "save", "comment": "New Comment By"}
+				]
+			}]
+		}
+	}
+}

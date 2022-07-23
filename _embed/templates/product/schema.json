@@ -1,0 +1,148 @@
+{
+	"templateId": "product",
+	"label": "Product",
+	"description": "Sell products online",
+	"icon": "fa-regular fa-shopping-cart",
+	"containedBy": ["top", "folder"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"token": {"type":"string", "format":"token", "maxlength":100},
+			"label": {"type": "string", "format":"no-html", "default": "New Product", "maxlength":100},
+			"description": {"type": "string", "format":"no-html", "maxlength":1000},
+			"rank": {"type":"integer", "minimum":0},
+			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
+		}
+	},
+	"states": {
+		"new": {},
+		"ready": {},
+		"sold-out": {}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control"
+		}, 
+		"anonymous": {
+			"label": "Anonymous / Unauthenticated User",
+			"description": "This is useful because Stripe confirmations come back without cookies."
+		}
+	},
+	"actions": {
+		"init": {
+			"steps":[
+				{"step": "set-data", "values": {"label": "New Product"}}
+			]
+		},
+		"view": {
+			"step": "view-html",
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"prev": {
+			"steps": [
+				{"step":"with-prev-sibling", "steps":[
+					{"step": "redirect-to", "url":"/{{.Token}}"}
+				]}
+			],
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"next": {
+			"steps": [
+				{"step":"with-next-sibling", "steps":[
+					{"step": "redirect-to", "url":"/{{.Token}}"}
+				]}
+			],
+			"stateRoles": {
+				"new": ["owner"], 
+				"ready":["anonymous"],
+				"sold-out":["anonymous"]
+			}
+		},
+		"edit":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "edit-content", "file":"edit"},
+				{"step": "save", "comment":"Content edited by {{.Author}}"}
+			]
+		},
+		"properties":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "edit-properties", "title":"Page Info", "paths":["token", "label"]},
+				{"step": "save", "comment":"Content edited by {{.Author}}"}
+			]
+		},
+		"attachments":{
+			"roles": ["owner"],
+			"steps":[
+				{"step": "as-modal", "steps":[
+					{"step": "view-html"}
+				]}
+			]
+		},
+		"attachments-list":{
+			"roles": ["owner"],
+			"steps": [
+				{"step": "view-html"},
+				{"step": "upload-attachments"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
+			]
+		},
+		"attachments-sort":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"sort-attachments", "message":"Updated sort order"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
+			]
+		},
+		"attachments-delete":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"view-html"},
+				{"step": "delete-attachments"},
+				{"step": "set-thumbnail"},
+				{"step": "save"}
+			]
+		},
+		"product": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "stripe-product", "title":"Stripe Checkout"},
+					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
+				]}
+			]
+		},
+		"checkout": {
+			"roles": ["anonymous"],
+			"states": ["ready"],
+			"step": "stripe-checkout"
+		},
+		"success": {
+			"roles":["anonymous"],
+			"states": ["ready", "sold-out"],
+			"steps": [
+				{"step": "view-html", "filename":"view.html"}
+			],
+			"removed-step": "stripe-complete"
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "delete", "comment": "Deleted by {{.Author}}"},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
+			]
+		}
+	}
+}

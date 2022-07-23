@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Signin - Whisperverse</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="/static/purecss/pure-min.css">
+	<link rel="stylesheet" href="/static/purecss/pure-grids-responsive-min.css">
+	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
+	<link rel="stylesheet" href="/static/colors.css">
+
+	<link rel="stylesheet" href="/static/accessibility.css">
+	<link rel="stylesheet" href="/static/animations.css">
+	<link rel="stylesheet" href="/static/cards.css">
+	<link rel="stylesheet" href="/static/content.css">
+	<link rel="stylesheet" href="/static/forms.css">	
+	<link rel="stylesheet" href="/static/layout.css">
+	<link rel="stylesheet" href="/static/modal.css">
+	<link rel="stylesheet" href="/static/responsive.css">	
+	<link rel="stylesheet" href="/static/tables.css">	
+	<link rel="stylesheet" href="/static/typography.css">	
+
+	<script type="text/hyperscript">	
+		init 
+			set lastPage to document.referrer
+			if (lastPage is empty) or (lastPage contains "/signin") or (lastPage contains "/register") then 
+				call sessionStorage.removeItem("signin-return")
+				exit
+			end
+
+			call sessionStorage.setItem("signin-return", lastPage)
+		end
+
+		on htmx:beforeRequest
+			add [@hidden=true] to #message
+			add [@disabled=true] to #submitButton
+
+		on SigninSuccess
+			set lastPage to sessionStorage.getItem("signin-return")
+			call sessionStorage.removeItem("signin-return")
+			if lastPage is empty then
+				set lastPage to "/home"
+			end
+			set window.location to lastPage
+		end
+
+		on SigninError
+			set #message.innerHTML to "Invalid Login.  Please Try Again."
+			remove [@hidden] from #message
+			remove [@disabled] from #submitButton
+	</script>
+
+</head>
+
+<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
+
+	<main>
+		<div id="main" class="framed">
+
+			<div class="pure-g">
+				<div class="pure-u-0 pure-u-sm-1-12 pure-u-md-1-6 pure-u-lg-1-4"></div>
+				<div class="pure-u-1 pure-u-sm-5-6 pure-u-md-2-3 pure-u-lg-1-2">
+					<div class="card padded">
+
+						<form hx-post="/signin" hx-target="#message" class="pure-form pure-form-stacked">
+
+							<h1>Sign In</h1>
+
+							<fieldset>
+								<label for="username">Username</label>
+								<input type="text" name="username" id="username" required="true" maxlength="50">
+							</fieldset>
+
+							<fieldset style="position:relative;">
+								<label for="password">Password</label>
+								<input type="password" name="password" id="password" required="true" maxlength="100">
+							</fieldset>
+
+							<button id="submitButton" type="submit" class="primary">
+								<span class="htmx-request-show">
+									<i class="indicator fa-regular fa-spinner fa-spin"></i> Signing In
+								</span>
+								<span class="htmx-request-hide">Sign In</span>
+							</button>
+
+							{{- if .HasSignupForm -}}
+								<div class="space-above">
+									Don't have a profile? 
+									<a href="/register">Register Now</a>
+								</div>
+							{{- end -}}
+
+							<span id="message" class="red" hidden></span>
+
+						</form>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
+	<script type="text/javascript" src="/static/htmx/ext/sse.js"></script>
+	<script type="text/javascript" src="/static/preload.js"></script>
+	<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js"></script>
+	
+</body>
+</html>
