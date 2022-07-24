@@ -1,0 +1,43 @@
+{{- $hasChildren := notEmpty .Children.Top1.View -}}
+
+<link rel="stylesheet" href="/static/nebula/uploader.css" />
+<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
+
+<h1>{{.Label}}</h1>
+
+{{- if ne "" .Description -}}
+	<div class="space-after">{{.Description}}</div>
+{{- end -}}
+
+<div id="menu-bar">
+	<a href="/{{.Token}}">View Album</a>
+
+	{{- if .UserCan "properties" -}}
+		<a hx-get="/{{.Token}}/properties">Edit Info</a>
+	{{- end -}}
+
+	{{- if .UserCan "sharing" -}}
+		<a hx-get="/{{.Token}}/sharing">Sharing</a>
+	{{- end -}}
+
+	{{- if .UserCan "delete" -}}
+		<a hx-get="/{{.Token}}/delete">Delete Album</a>
+	{{- end -}}
+</div>
+
+<article>
+
+	<div class="uploader" _="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
+	
+		<div class="space-below gray40"><i class="ti ti-cloud-upload"></i></div>
+		<h2 class="space-below">Drag Files Here to Upload</h2>
+		<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
+		<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">
+			<input type="file" id="manual-upload" name="file"/>
+		</form>
+		<div class="space-below"></div>
+
+	</div>
+
+</article>
+

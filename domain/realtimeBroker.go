@@ -24,6 +24,9 @@ type RealtimeBroker struct {
 
 	// Channel into which disconnected clients should be pushed
 	RemoveClient chan *RealtimeClient
+
+	// Channel into which the broker should be closed
+	close chan bool
 }
 
 // NewRealtimeBroker generates a new stream broker
@@ -35,19 +38,36 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBro
 		streamUpdates: updates,
 		AddClient:     make(chan *RealtimeClient),
 		RemoveClient:  make(chan *RealtimeClient),
+		close:         make(chan bool),
 	}
 
-	go result.Listen(factory)
+	go result.listen(factory)
 
 	return result
 }
 
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh
+func (b *RealtimeBroker) Refresh() {
+	// No operation is required right now.  Included for API consistency.
+}
+
+// Stop closes the broker
+func (b *RealtimeBroker) Close() {
+	close(b.close)
+}
+
+/*******************************************
+ * LISTEN/NOTIFY METHODS
+ *******************************************/
+
 // Listen handles the addition & removal of clients, as well as
 // the broadcasting of messages out to clients that are currently attached.
 // It is intended to be run in its own goroutine.
-func (b *RealtimeBroker) Listen(factory *Factory) {
-
-	//streamService := factory.Stream()
+func (b *RealtimeBroker) listen(factory *Factory) {
 
 	for {
 
@@ -88,6 +108,9 @@ func (b *RealtimeBroker) Listen(factory *Factory) {
 			if stream.HasParent() {
 				go b.notify(stream.ParentID)
 			}
+
+		case <-b.close:
+			return
 		}
 	}
 }

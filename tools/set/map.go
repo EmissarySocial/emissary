@@ -24,6 +24,19 @@ func (set Map[K, V]) Len() int {
 	return len(set)
 }
 
+// Keys returns a list of all the keys in the set.
+func (set Map[K, V]) Keys() []K {
+	result := make([]K, len(set))
+
+	index := 0
+	for key := range set {
+		result[index] = key
+		index++
+	}
+
+	return result
+}
+
 // Get returns the object with the given ID.  If no object with the given ID is found, Get returns an empty object.
 func (set Map[K, V]) Get(key K) (V, error) {
 

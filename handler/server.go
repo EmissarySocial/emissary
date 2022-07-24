@@ -33,7 +33,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Script().Src("/static/forms._hs").Type("text/hyperscript").Close()
 		b.Script().Src("/static/tabs._hs").Type("text/hyperscript").Close()
 		b.Script().Src("/static/htmx/htmx.min.js").Close()
-		b.Script().Src("/static/hyperscript/_hyperscript_web.min.js").Close()
+		b.Script().Src("/static/hyperscript/_hyperscript.min.js").Close()
 		b.Script().Src("/static/a11y.js").Close()
 		b.Script().Src("/static/extensions.js").Close()
 

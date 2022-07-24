@@ -1,0 +1,106 @@
+{
+	"templateId": "folder",
+	"label": "Folder",
+	"description": "Folders can contain all other streams",
+	"icon": "ti ti-folder",
+	"containedBy": ["top", "folder"],
+	"childSortType": "label",
+	"childSortOrder": "ASC",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type": "string"},
+			"description": {"type": "string"},
+			"data": {"type": "object", "properties": {
+				"format": {"type": "string", "enum": ["TABLE", "CARDS", "COLUMNS"], "default": "CARDS", "required":true},
+				"showImages": {"type": "string", "enum": ["SHOW", "HIDE"], "default": "SHOW"}
+			}}
+		}
+	},
+	"states": {
+		"default": {
+			"label": "Default",
+			"description": "Folders only have one state"
+		}
+	},
+	"roles": {
+		"editor": {
+			"label": "Editor",
+			"description": "Editors can manage all content in this folder"
+		},
+		"viewer": {
+			"label": "Viewer",
+			"description": "Viewers can access folder contents, but can not add new items"
+		}
+	},
+	"actions": {
+		"init": {
+			"steps":[
+				{"step": "set-data", "values":{"label": "New Folder"}}
+			]
+		},
+		"view": {
+			"roles": ["viewer"],
+			"step": "view-html"
+		},
+		"edit": {
+			"roles": ["editor"],
+			"steps":[{
+				"step": "as-modal",
+				"steps": [
+					{
+						"step": "form-html",
+						"form": {
+							"kind": "layout-vertical",
+							"label": "Edit Folder",
+							"children": [
+								{"kind": "text", "label": "Label", "path": "label"},
+								{"kind": "textarea", "label": "Description", "path": "description"},
+								{"kind": "select", "label": "Format", "path": "data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
+								{"kind": "select", "label": "Show Images", "path": "data.showImages"}
+							]
+						}
+					}, 
+					{"step": "save", "comment": "Updated Folder"}
+				]
+			}]
+		},
+		"new": {
+			"roles": ["editor"],
+			"steps":[{
+				"step": "add-child",
+				"title": "Add an Item",
+				"comment": "Created by {{.Author}}",
+				"with-child": [
+					{"step": "save", "comment": "Created by {{.Author}}"},
+					{"step": "forward-to", "url": "/{{.Token}}/edit"}
+				]
+			}]
+		},
+		"sort":{
+			"roles":["editor"],
+			"step":"sort"
+		},
+		"sharing": {
+			"roles": ["editor"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Sharing Settings", "message":"Select Which People Can See This Folder"},
+					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
+		"delete": {
+			"roles": ["editor"],
+			"steps": [{
+				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
+			}]
+		},
+		"rss": {
+			"roles": ["viewer"],
+			"steps": [
+				{"step":"view-rss", "format": "rss"}
+			]
+		}
+	}
+}

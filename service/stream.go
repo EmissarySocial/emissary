@@ -24,14 +24,13 @@ type Stream struct {
 	attachmentService   *Attachment
 	formLibrary         *form.Library
 	contentLibrary      *nebula.Library
-	streamUpdateChannel chan model.Stream
+	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
 func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, contentLibrary *nebula.Library, streamUpdateChannel chan model.Stream) Stream {
 
-	return Stream{
-		collection:          collection,
+	service := Stream{
 		templateService:     templateService,
 		draftService:        draftService,
 		attachmentService:   attachmentService,
@@ -39,10 +38,28 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
 		contentLibrary:      contentLibrary,
 		streamUpdateChannel: streamUpdateChannel,
 	}
+
+	service.Refresh(collection)
+
+	return service
 }
 
 /*******************************************
- * COMMON DATA FUNCTIONS
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Stream) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *Stream) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
  *******************************************/
 
 // New returns a new stream that uses the named template.
@@ -186,12 +203,12 @@ func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) 
 	return &result, err
 }
 
-func (service *Stream) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.Stream), comment)
+func (service *Stream) ObjectSave(object data.Object, note string) error {
+	return service.Save(object.(*model.Stream), note)
 }
 
-func (service *Stream) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.Stream), comment)
+func (service *Stream) ObjectDelete(object data.Object, note string) error {
+	return service.Delete(object.(*model.Stream), note)
 }
 
 func (service *Stream) Debug() maps.Map {
@@ -643,22 +660,4 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 	}
 
 	return nil
-}
-
-// UpdateStreamsByTemplate pushes every stream that uses a particular template into the streamUpdateChannel.
-func (service *Stream) UpdateStreamsByTemplate(templateID string) {
-
-	iterator, err := service.ListByTemplate(templateID)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Realtime", "Error Listing Streams for Template", templateID))
-		return
-	}
-
-	stream := model.NewStream()
-
-	for iterator.Next(&stream) {
-		service.streamUpdateChannel <- stream
-		stream = model.NewStream()
-	}
 }

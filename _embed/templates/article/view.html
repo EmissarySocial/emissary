@@ -1,0 +1,53 @@
+<div hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+
+	<!--
+	<div class="flex-row">
+		<div class="text-sm align-right">
+			{{- if .UserCan "publish" -}}
+				{{- if eq .StateID "published" -}}
+					<span style="color: green;"><i class="ti ti-check"></i> PUBLISHED</span>
+				{{- else -}}
+					<span style="color: red;"><i class="ti ti-eye-off"></i> NOT PUBLISHED</span>
+				{{- end -}}
+			{{- end -}}
+		</div>
+	</div>
+
+	<h1>{{.Label}}</h1>
+
+	{{- if ne "" .Description -}}
+		<div class="space-after">{{.Description}}</div>
+	{{- end -}}
+	-->
+
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<a href="/{{.Token}}/edit">Edit Content</a>
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+
+			<div class="right">
+				{{- if .UserCan "publish" -}}
+					<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+				{{- end -}}
+
+				{{- if .UserCan "unpublish" -}}
+					<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
+				{{- end -}}
+			</div>
+
+		</div>
+	{{- end -}}
+
+	<article class="text space-after">
+		{{- .Content -}}
+	</article>
+
+	<article>
+		{{- .Features -}}
+	</article>
+</div>
+</div>

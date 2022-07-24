@@ -1,0 +1,93 @@
+{
+	"templateId": "comment",
+	"label": "Comment",
+	"description": "Single comment in the comments section of a page.",
+	"containedBy": ["ti-message"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"description": {
+				"type": "string",
+				"description": "The raw contents of the comment (before any post-processing is performed)"
+			}
+		}
+	},
+	"states": {
+		"awaiting-moderation": {
+			"label": "Awaiting Moderation",
+			"description": "New messages by `moderated-participants` that have not yet been approved by a `moderator`."
+		}, 
+		"visible": {
+			"label": "Visible",
+			"description": "Comment is visible to all participants"
+		}, 
+		"hidden": {
+			"label": "Hidden",
+			"description": "Comment has been hidden by moderators"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Domain Owners have full control over this chatroom"
+		},
+		"author": {
+			"label": "Author",
+			"description": "The authenticated user who originally posted a comment."
+		},
+		"moderator": {
+			"label": "Moderator",
+			"description": "Moderators have full control over this chatroom."
+		},
+		"participant": {
+			"label": "Participant",
+			"description": "Participants can add new chat messages."
+		},
+		"moderated-participant": {
+			"label": "Author",
+			"description": "Authors can edit their existing chat messages."
+		}
+	},
+	"actions": {
+		"view": {
+			"roles": ["owner", "author", "moderator", "participant", "moderated-paricipant"],
+			"step": "view-html"
+		},
+		"edit":{
+			"roles": ["owner", "moderator", "author"],
+			"step": "as-modal",
+			"steps": [
+				{
+					"step": "form-html",
+					"form": {
+						"kind": "layout-vertical",
+						"children": [{
+							"kind": "text",
+							"label": "Edit this Comment",
+							"path": "description"
+						}]
+					}
+				}, 
+				{"step": "save"}
+			]
+		},
+		"hide": {
+			"states": ["awaiting-moderation", "visible"],
+			"roles": ["owner", "moderator"],
+			"steps": [
+				{"step": "set-state", "state":"hidden"}
+			]
+		},
+		"show": {
+			"states": ["awaiting-moderation", "hidden"],
+			"roles": ["owner", "moderator"],
+			"steps": [
+				{"step": "set-state", "state":"hidden"}
+			]
+		},
+		"delete": {
+			"roles":["owner", "moderator"],
+			"step": "delete"
+		}
+	}
+}

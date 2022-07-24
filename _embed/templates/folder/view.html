@@ -1,0 +1,103 @@
+<div class="page" hx-push-url="true">
+
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<div class="left">
+				{{- if .UserCan "new" -}}
+					<button hx-get="/{{.Token}}/new">Add Item</button>
+				{{- end -}}
+
+				<button hx-get="/{{.Token}}/edit">Edit Folder</button>
+
+				{{- if .UserCan "sharing" -}}
+					<button hx-get="/{{.Token}}/sharing">Sharing</button>
+				{{- end -}}
+			</div>
+
+			<div class="right">
+				{{- if .UserCan "delete" -}}
+					<button hx-get="/{{.Token}}/delete" class="text-red">Delete</button>
+				{{- end -}}
+			</div>
+		</div>
+	{{- end -}}
+
+	<h1>{{.Label}}</h1>
+
+	{{- if ne "" .Description -}}
+		<div class="space-below">{{.Description}}</div>
+	{{- end -}}
+
+	{{- if eq (.Data "format") "TABLE" -}}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Description</th>
+					<th>Date</th>
+				</tr>
+			</thead>
+			<tbody script="install sortContainer">
+				{{- range .Children.ByRank.View -}}
+					<tr class="draggable" hx-get="/{{.Token}}" role="link">
+						<input type="hidden" name="keys" value="{{.StreamID}}"/>
+						<td><i class="ti ti-file-description"></i> {{.Label}}</td>
+						<td>{{.Description}}</td>
+						<td></td>
+					</tr>
+				{{- end -}}
+			</tbody>
+		</table>
+	{{- end -}}
+
+	{{- if eq (.Data "format") "CARDS" -}}
+
+		<div script="install sortContainer">
+
+			{{- range .Children.ByRank.View -}}
+				<article class="draggable clickable" hx-get="/{{.Token}}">
+					<input type="hidden" name="keys" value="{{.StreamID}}"/>
+					<h2 role="link">{{.Label}} [{{.ThumbnailImage}}]</h2>
+					<p>{{.Description}}</p>
+				</article>
+			{{- end -}}
+
+		</div>
+
+	{{- end -}}
+
+	{{- if eq (.Data "format") "COLUMNS" -}}
+
+		<div class="pure-g card-group" script="install sortContainer">
+
+			{{- range .Children.ByRank.View -}}
+				<article class="draggable pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4" hx-get="/{{.Token}}">
+					<input type="hidden" name="keys" value="{{.StreamID}}"/>
+					<div class="card" role="link">
+						{{- if ne .ThumbnailImage "" -}}
+						<picture loading="lazy" style="aspect-ratio: 4 / 3;">
+							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=400&height=300"/>
+							<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=400&height=300"/>
+						</picture>
+						{{- end -}}
+						<div class="text text-lg align-center">{{.Label}}</div>
+					</div>
+				</article>
+			{{- end -}}
+		</div>
+	{{- end -}}
+
+</div>
+
+{{- if .UserCan "sort" -}}
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+	<form
+		hx-post="/{{.StreamID}}/sort" 
+		hx-push-url="false" 
+		hx-swap="none"
+		hx-trigger="end from:document"
+		hx-include="[name=keys]">
+	</form>
+
+{{- end -}}

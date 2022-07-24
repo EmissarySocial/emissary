@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/path"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -24,6 +25,8 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 
 	// Find best icon from attachments
 	factory := renderer.factory()
+
+	spew.Dump("Finding Thumbnail for", renderer.object())
 	attachments, err := factory.Attachment().ListByObjectID(renderer.objectID())
 
 	if err != nil {
@@ -34,13 +37,18 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 	attachment := model.NewAttachment(renderer.objectID())
 	for attachments.Next(&attachment) {
 
+		spew.Dump("checking", attachment)
 		if attachment.MimeCategory() == "image" {
-			return path.Set(renderer.object(), "thumbnailImage", attachment.Filename)
+			spew.Dump("Success")
+			err := path.Set(renderer.object(), "thumbnailImage", attachment.AttachmentID.Hex())
+			spew.Dump(err, renderer.object())
+			return err
 		}
 		attachment = model.NewAttachment(renderer.objectID())
 	}
 
 	// Fall through to here means we should look at body content (but not now)
+	// So, for now, if there's no thumbnail, then set "" as default
+	return path.Set(renderer.object(), "thumbnailImage", "")
 
-	return nil
 }

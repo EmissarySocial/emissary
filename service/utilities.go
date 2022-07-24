@@ -3,11 +3,11 @@ package service
 import (
 	"encoding/json"
 	"html/template"
+	"io/fs"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
-	"github.com/spf13/afero"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
 )
@@ -18,14 +18,14 @@ func notDeleted(criteria exp.Expression) exp.Expression {
 }
 
 // loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path
-func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, funcMap template.FuncMap) error {
+func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, funcMap template.FuncMap) error {
 
 	// Create the minifier
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
 
 	// List all files in the target directory
-	files, err := afero.ReadDir(filesystem, ".")
+	files, err := fs.ReadDir(filesystem, ".")
 
 	if err != nil {
 		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to list directory", filesystem)
@@ -41,7 +41,7 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 		if extension == "html" {
 
 			// Try to read the file from the filesystem
-			content, err := afero.ReadFile(filesystem, filename)
+			content, err := fs.ReadFile(filesystem, filename)
 
 			if err != nil {
 				return derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
@@ -71,9 +71,9 @@ func loadHTMLTemplateFromFilesystem(filesystem afero.Fs, t *template.Template, f
 }
 
 // loadModelFromFilesystem locates and parses a schema from the filesystem path
-func loadModelFromFilesystem(filesystem afero.Fs, model any) error {
+func loadModelFromFilesystem(filesystem fs.FS, model any) error {
 
-	file, err := afero.ReadFile(filesystem, "schema.json")
+	file, err := fs.ReadFile(filesystem, "schema.json")
 
 	if err != nil {
 		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json")

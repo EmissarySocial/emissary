@@ -1,0 +1,100 @@
+<title>{{.DomainLabel}} | {{.Label}}</title>
+
+<div hx-sse="connect:/{{.StreamID}}/sse">
+	<div class="page" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+
+		<div id="menu-bar" hx-push-url="true">
+			<div class="left">
+				<a hx-get="/{{.Token}}/prev">&larr; Previous</a>
+			</div>
+			<div class="center" hx-push-url="true">
+				{{- if .UserCan "edit" -}}
+					<a href="/{{.Token}}" class="selected">View</a>
+					<a href="/{{.StreamID}}/edit">Edit</a>
+					<a hx-get="/{{.StreamID}}/properties">Info</a>
+					<a hx-get="/{{.StreamID}}/attachments">Photos</a>
+					<a hx-get="/{{.StreamID}}/product">Stripe</a>		
+					{{- if .UserCan "delete" -}}
+						<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+					{{- end -}}
+				{{- else -}}
+					<a hx-get="/{{.ParentID}}">All</a>
+				{{- end -}}
+			</div>
+			<div class="right">
+				<a hx-get="/{{.Token}}/next">Next &rarr;</a>
+			</div>
+		</div>
+
+		<div class="pure-g">
+			<div class="pure-u-1 pure-u-lg-1-2">
+
+				<div class="space-below">
+					{{- $attachments := .Attachments -}}
+					{{- $streamID := .StreamID -}}
+
+					{{- if eq 1 (len $attachments) -}}
+						{{- range .Attachments -}}
+							{{- $attachmentID := .AttachmentID.Hex -}}
+							<picture style="aspect-ratio:{{.Width}}/{{.Height}};">
+								<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700" />
+								<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900" />
+								<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200" />
+								<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200" />
+							</picture>
+						{{- end -}}
+
+					{{- else -}}
+						<div class="slideshow">
+							{{- range .Attachments -}}
+								{{- $attachmentID := .AttachmentID.Hex -}}
+								<picture script="on click scrollIntoView() me">
+									<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700&height=525" />
+									<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900&height=675" />
+									<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200&height=900" />
+									<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200&height=900" />
+								</picture>
+							{{- end -}}
+						</div>
+					{{- end -}}
+
+				</div>
+
+			</div>
+			<div class="pure-u-1 pure-u-lg-1-24"></div>
+			<div class="pure-u-1 pure-u-lg-10-24">
+					
+				{{- if ne "" .Label -}}
+					<h1>{{.Label}}</h1>
+				{{- end -}}
+
+				<div class="text-lg gray50 space-after">{{.Data "decimalAmount" | dollarFormat}} USD</div>
+				
+				{{- if ne "" .Description -}}
+					<div>{{.Description}}</div>
+				{{- end -}}
+
+				<div class="text space-after">{{- .Content -}}</div>
+
+				{{- if .UserCan "checkout" -}}
+					<div id="idCheckout" class="space-below align-center">
+						<button class="block primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
+						<button class="block primary text-lg htmx-request-show" disabled="true"><i class="ti ti-spinner ti-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
+					</div>
+				
+				{{- else -}}
+			
+					{{- if eq "sold-out" .StateID -}}
+						<div class="space-below align-center">
+							<button type="button" class="block primary" disabled="true">{{.Data "buttonLabel"}}</button>
+							<span class="red">SOLD OUT</span>
+						</div>
+					{{- end -}}
+			
+				{{- end -}}
+
+			</div>
+		</div>
+
+	</div>
+</div>

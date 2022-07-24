@@ -1,0 +1,158 @@
+{
+	"templateId": "article",
+	"label": "Article",
+	"description": "For regular use. Contains text, images, and more.",
+	"icon": "ti ti-notes",
+	"containedBy": ["top", "folder", "article"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"label": {"type": "string"},
+			"description": {"type": "string"},
+			"stateId": {"type": "string", "enum": ["unpublished", "published"]}
+		}
+	},
+	"states": {
+		"unpublished": {
+			"label": "Default State",
+			"description": "Visible only to Authors and Owners"
+		},
+		"published": {
+			"label": "Published",
+			"description": "Visible to all people with permissions"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Domain Owner",
+			"decription": "Full control over this stream."
+			}, 
+		"editor": {
+			"label": "Editor",
+			"description": "Can make changes to this article."
+		},
+		"viewer": {
+			"label": "Viewer",
+			"description": "Can read and comment on this article."
+		}
+	},
+	"actions": {
+		"init": {
+			"steps": [
+				{"step": "set-data", "values": {"label": "New Article"}},
+				{"step": "set-state", "state": "unpublished"}
+			]
+		},
+		"view": {
+			"roles": ["editor", "owner"],
+			"stateRoles": {
+				"published": ["viewer"]
+			},
+			"step": "view-html"
+		},
+		"heading": {
+			"roles": ["viewer", "editor", "owner"],
+			"step": "view-html"
+		},
+		"edit": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "with-draft", "steps": [
+					{"step": "edit-content", "file":"edit"}
+				]}
+			]
+		},
+		"sharing": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"as-modal", "steps": [
+					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message": "Select who can view and comment on this article."},
+					{"step": "save", "message": "Sharing updated by {{.Author}}"}
+				]}
+			]
+		},
+		"publish": {
+			"states": ["unpublished"],
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
+				{"step": "set-state", "state": "published"},
+				{"step": "save", "message": "Published by {{.Author}}"},
+				{"step": "add-outbox", "link": "self"},
+				{"step": "refresh-page"}
+			]
+		},
+		"unpublish": {
+			"states": ["published"],
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
+				{"step": "set-state", "state": "unpublished"},
+				{"step": "save", "message": "Un-Published by {{.Author}}"},
+				{"step": "delete-outbox"},
+				{"step": "refresh-page"}
+			]
+		},
+		"promote-draft": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
+				{"step": "promote-draft"},
+				{"step": "add-outbox"},
+				{"step": "forward-to", "url": "/{{.Token}}"}
+			]
+		},
+		"discard-draft": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "with-draft", "steps":[
+					{"step": "delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
+				]},
+				{"step": "forward-to", "url": "/{{.Token}}"}
+			]
+		},
+		"properties": {
+			"roles": ["editor", "owner"],
+			"steps": [
+				{"step": "with-draft", "steps":[
+					{"step": "as-modal", "steps": [
+						{"step": "form-html",
+							"form": {
+								"kind": "layout-vertical",
+								"label": "Article Properties",
+								"description": "This will update the object in this state",
+								"children": [{
+									"kind": "text",
+									"label": "Label",
+									"path": "label"
+								},{
+									"kind": "textarea",
+									"label": "Description",
+									"path": "description"
+								}]
+							}
+						}]
+					},
+					{"step": "save", "comment": "Properties updated by {{.Author}}"}
+				]
+			}]
+		},
+		"features": {
+			"roles": ["editor", "owner"],
+			"steps": [
+				{"step": "as-modal", "steps": [
+					{"step": "edit-features"},
+					{"step": "save", "comment": "Features updated by {{.Author}}"}
+				]}
+			]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
+				{"step": "delete-outbox"},
+				{"step": "forward-to", "url":"/{{.ParentID}}"}
+			]
+		}
+	}
+}

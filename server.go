@@ -4,26 +4,29 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"html/template"
+	"io/fs"
+	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/handler"
 	mw "github.com/EmissarySocial/emissary/middleware"
-	"github.com/EmissarySocial/emissary/route"
+	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/setup"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"golang.org/x/crypto/acme/autocert"
+	"github.com/pkg/browser"
 )
 
-//go:embed all:_static/*
-var staticFiles embed.FS
+//go:embed all:_embed/**
+var embeddedFiles embed.FS
 
 func main() {
 
@@ -32,82 +35,246 @@ func main() {
 	// Set global configuration
 	spew.Config.DisableMethods = true
 
-	// See if the setup command is being run
+	// Locate the configuration file and populate the factory
 	commandLineArgs := config.GetCommandLineArgs()
-
 	configStorage := config.Load(commandLineArgs)
 
-	// Special case to execute the setup server
-	if commandLineArgs.Setup {
-		fmt.Println("Starting Setup Mode...")
-		setup.Setup(configStorage, staticFiles)
-		return
+	factory := server.NewFactory(configStorage, embeddedFiles)
+
+	// Start and configure the Web server
+	e := echo.New()
+	e.HideBanner = true
+	e.HTTPErrorHandler = errorHandler
+
+	// Global middleware
+	e.Use(middleware.Recover())
+	// TODO: implement echo.Security middleware
+
+	// Static Content MUST come from static files, because we're not re-linking all those files at runtime
+	if staticFiles, err := fs.Sub(embeddedFiles, "_embed"); err == nil {
+
+		e.Group("/static", mw.CacheControl("public, max-age=3600")).
+			GET("/*", echo.WrapHandler(http.FileServer(http.FS(staticFiles))))
+
+	} else {
+		panic(err)
 	}
 
-	// FALL THROUGH means we're running the standard server
-	var e *echo.Echo
-
-	// Every time the configuration is updated, create a new server (and swap the old one, if necessary)
-	for c := range configStorage.Subscribe() {
-
-		fmt.Println("Reading configuration file:")
-
-		domains := c.DomainNames()
-		fmt.Println("... setting up " + convert.String(len(domains)) + " domains: " + strings.Join(domains, ", "))
-
-		factory := server.NewFactory(configStorage)
-		newServer := route.New(factory)
-
-		// Global middleware
-		// TODO: implement echo.Security middleware
-		newServer.Use(middleware.Recover())
-		newServer.Use(mw.HttpsRedirect)
-		newServer.Use(steranko.Middleware(factory))
-
-		// Prepare HTTP and HTTPS servers using the new configuration
-		go startHttps(newServer, c)
-		go startHttp(newServer)
-
-		// If there is already a server running, then do a graceful shutdown
-		if e != nil {
-
-			// Context for graceful shutdown
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-			// Try to shut down the server
-			if err := e.Shutdown(ctx); err != nil {
-				derp.Report(err)
-			}
-			cancel()
-		}
-
-		// Save 'newServer' as the currently running server
-		e = newServer
+	// Based on configuration, add all other routes and start web server
+	if commandLineArgs.Setup {
+		makeSetupRoutes(factory, e)
+	} else {
+		makeStandardRoutes(factory, e)
 	}
 }
 
-func startHttps(e *echo.Echo, c config.Config) {
+// makeSetupRoutes generates a new Echo instance for the setup behavior
+func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
+
+	fmt.Println("Starting Emissary Config Tool.")
+
+	// Locate the setup templates
+	setupFiles, err := fs.Sub(embeddedFiles, "_embed/setup")
+
+	if err != nil {
+		panic("Unable to open embedded files for setup. " + err.Error())
+	}
+
+	setupTemplates := template.Must(template.New("").
+		Funcs(render.FuncMap()).
+		ParseFS(setupFiles, "*.html"))
+
+	// Middleware for setup pages
+	e.Use(mw.Localhost())
+
+	// Setup Routes
+	e.GET("/", handler.SetupGetPage(factory, setupTemplates, "index.html"))
+	e.GET("/server", handler.SetupGetPage(factory, setupTemplates, "server.html"))
+	e.POST("/server", handler.SetupPostServer(factory))
+	e.GET("/domains", handler.SetupGetPage(factory, setupTemplates, "domains.html"))
+	e.GET("/domains/:domain", handler.SetupGetDomain(factory))
+	e.POST("/domains/:domain", handler.SetupPostDomain(factory))
+	e.DELETE("/domains/:domain", handler.SetupDeleteDomain(factory))
+
+	// When running the setup tool, wait a second, then open a browser window to the correct URL
+	go func() {
+		time.Sleep(time.Second * 1)
+		browser.OpenURL("http://localhost:8080/")
+	}()
+
+	// Start the HTTP server on alternate port 8080
+	fmt.Println("Starting HTTP server...")
+	if err := e.Start(":8080"); err != nil {
+		derp.Report(derp.Wrap(err, "setup.Setup", "Error starting HTTP server"))
+	}
+}
+
+// makeStandardRoutes generates a new Echo instance the primary server behavior
+func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
+
+	// Middleware for standard pages
+	e.Use(mw.Domain(factory))
+	e.Use(mw.HttpsRedirect)
+	e.Use(steranko.Middleware(factory))
+
+	// Well-Known API calls
+	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
+
+	e.GET("/favicon.ico", handler.GetFavicon(factory))
+	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
+	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
+	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
+	e.GET("/.well-known/webmention", handler.PostWebMention(factory))
+
+	// Authentication Pages
+	e.GET("/signin", handler.GetSignIn(factory))
+	e.POST("/signin", handler.PostSignIn(factory))
+	e.POST("/signout", handler.PostSignOut(factory))
+	e.GET("/register", handler.GetRegister(factory))
+	e.POST("/register", handler.PostRegister(factory))
+
+	// STREAM PAGES
+	e.GET("/", handler.GetStream(factory))
+	e.GET("/:stream", handler.GetStream(factory))
+	e.GET("/:stream/:action", handler.GetStream(factory))
+	e.POST("/:stream/:action", handler.PostStream(factory))
+	e.DELETE("/:stream", handler.PostStream(factory))
+
+	// Hard-coded routes for additional stream services
+	// TODO: Can Attachments and SSE be moved into a custom render step?
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
+	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
+
+	// Profile Pages / ActivityPub
+	e.GET("/profile", handler.GetProfile(factory))
+	e.POST("/profile", handler.PostProfile(factory))
+	e.GET("/profile/:action", handler.GetProfile(factory))
+	e.POST("/profile/:action", handler.PostProfile(factory))
+
+	e.GET("/users", handler.TBD)
+	e.GET("/users/:user", handler.GetProfile(factory))
+	e.POST("/users/:user", handler.PostProfile(factory))
+	e.GET("/users/:user/:action", handler.GetProfile(factory))
+	e.POST("/users/:user/:action", handler.PostProfile(factory))
+
+	// DOMAIN ADMIN PAGES
+	e.GET("/admin", handler.GetAdmin(factory))
+	e.GET("/admin/:param1", handler.GetAdmin(factory))
+	e.POST("/admin/:param1", handler.PostAdmin(factory))
+	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory))
+	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory))
+	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory))
+	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory))
+
+	// SUBSCRIPTION PAGES
+	e.GET("/subscriptions", handler.ListSubscriptions(factory))
+	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
+	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
+	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
+
+	// Startup Wizard
+	e.GET("/startup", handler.Startup(factory))
+	e.POST("/startup", handler.Startup(factory))
+
+	// EXTERNAL SERVICES (WEBHOOKS)
+	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
+
+	// Prepare HTTP and HTTPS servers using the new configuration
+	go startHttps(e)
+	go startHttp(e)
+
+	// GRACEFUL SHUTDOWN FOR STANDARD SERVER
+	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
+	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
+}
+
+// startHttp starts the HTTPS server using Let's Encrypt SSL certificates.  If port 443 is not available, it will wait 10ms and retry until it is
+func startHttps(e *echo.Echo) {
+	fmt.Println("Starting HTTP server...")
+	for {
+		if err := e.StartAutoTLS(":443"); err != nil {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
+// startHttp starts the HTTP server.  If port 80 is not available, it will wait 10ms and retry until it is
+func startHttp(e *echo.Echo) {
+	fmt.Println("Starting HTTP server...")
+	for {
+		if err := e.Start(":80"); err != nil {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
+// errorHandler is a custom error handler that returns a JSON error message to the client
+func errorHandler(err error, ctx echo.Context) {
+
+	// Special handling of permisssion errors
+	code := derp.ErrorCode(err)
+	switch code {
+	case http.StatusUnauthorized, http.StatusForbidden:
+
+		if ctx.Request().URL.Path != "/signin" {
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
+			return
+		}
+		ctx.String(code, derp.Message(err))
+		return
+	}
+
+	// On localhost, allow developers to see full error dump.
+	if !isRemoteDomain(ctx.Request().Host) {
+		ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+		return
+	}
+
+	// Fall through to general error handler
+	ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+}
+
+// isRemoteDomain returns true if the domain is not localhost or a local IP address
+func isRemoteDomain(hostname string) bool {
+
+	// Nornalize the hostname
+	hostname = strings.ToLower(hostname)
+	hostname = strings.TrimPrefix(hostname, "http://")
+	hostname = strings.TrimPrefix(hostname, "https://")
+
+	if hostname == "localhost" {
+		return false
+	}
+
+	if strings.HasSuffix(hostname, ".local") {
+		return false
+	}
+
+	if strings.HasPrefix(hostname, "10.") {
+		return false
+	}
+
+	if strings.HasPrefix(hostname, "192.168") {
+		return false
+	}
+
+	return true
+}
+
+/** AUTOCERT HOST POLICY
+TODO: Move this into Factory, or somewhere that can listen to configuration changes...
 
 	// Find all NON-LOCAL domain names
-	domains := slice.Filter(c.DomainNames(), func(v string) bool {
-		if v == "localhost" {
-			return false
-		}
-
-		if strings.HasSuffix(v, ".local") {
-			return false
-		}
-
-		if strings.HasPrefix(v, "10.") {
-			return false
-		}
-
-		if strings.HasPrefix(v, "192.168") {
-			return false
-		}
-
-		return true
-	})
+	domains := slice.Filter(c.DomainNames(), isRemoteDomain)
 
 	if len(domains) == 0 {
 		fmt.Println("Skipping HTTPS server because there are no non-local domains.")
@@ -124,18 +291,6 @@ func startHttps(e *echo.Echo, c config.Config) {
 		Email:      c.AdminEmail,
 	}
 
-	for {
-		if err := e.StartAutoTLS(":443"); err != nil {
-			time.Sleep(10 * time.Millisecond)
-		}
-	}
-}
 
-func startHttp(e *echo.Echo) {
-	fmt.Println("Starting HTTP server...")
-	for {
-		if err := e.Start(":80"); err != nil {
-			time.Sleep(10 * time.Millisecond)
-		}
-	}
-}
+
+**/

@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepDeleteAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
@@ -26,9 +27,14 @@ func (step StepDeleteAttachment) Post(renderer Renderer) error {
 
 	attachmentService := factory.Attachment()
 
-	attachmentID := renderer.context().QueryParam("filename")
+	attachmentIDString := renderer.context().QueryParam("attachmentId")
+	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
-	attachment, err := attachmentService.LoadByToken(renderer.objectID(), attachmentID)
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid attachment ID", attachmentIDString)
+	}
+
+	attachment, err := attachmentService.LoadByID(renderer.objectID(), attachmentID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading attachment")

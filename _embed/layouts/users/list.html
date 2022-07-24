@@ -1,0 +1,18 @@
+{{- $users := .Users.Top12.ByDisplayName.View -}}
+{{- if not $users.IsEmpty }}
+
+    <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend">
+    {{- range $index, $user := $users -}}
+            <tr class="clickable">
+                <td role="link" hx-get="/admin/users/{{$user.UserID}}/edit" class="width-full">
+                    <i class="ti ti-user"></i>&nbsp;{{$user.DisplayName}}
+                </td>
+                <td role="link" hx-get="/admin/users/{{$user.UserID}}/delete">
+                    <i class="ti ti-trash"></i>
+                </td>
+            </tr>
+        </div>
+    {{- end -}}
+    </tbody>
+
+{{- end -}}

@@ -21,14 +21,31 @@ type User struct {
 
 // NewUser returns a fully populated User service
 func NewUser(collection data.Collection, streamService *Stream) User {
-	return User{
-		collection:    collection,
+	service := User{
 		streamService: streamService,
 	}
+
+	service.Refresh(collection)
+
+	return service
 }
 
 /*******************************************
- * COMMON DATA FUNCTIONS
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *User) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *User) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
  *******************************************/
 
 // List returns an iterator containing all of the Users who match the provided criteria
@@ -82,7 +99,7 @@ func (service *User) Delete(user *model.User, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA FUNCTIONS
+ * GENERIC DATA METHODS
  *******************************************/
 
 // New returns a fully initialized model.Stream as a data.Object.

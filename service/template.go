@@ -3,48 +3,178 @@ package service
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io/fs"
 	"sort"
-	"strings"
 	"sync"
 
-	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/compare"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/afero"
+	"github.com/benpate/rosetta/slice"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates         map[string]model.Template // map of all templates available within this domain
-	folder            config.Folder             // Configuration for template directory
-	funcMap           template.FuncMap          // Map of functions to use in golang templates
-	mutex             sync.RWMutex              // Mutext that locks access to the templates structure
-	filesystem        afero.Fs                  // Filesystem where templates are stored.
-	layoutService     *Layout                   // Pointer to the Layout service
-	templateUpdateOut chan string               // Channel to notify other processes that a template has changed.
+	templates         set.Map[string, model.Template] // map of all templates available within this domain
+	locations         []string                        // Configuration for template directory
+	funcMap           template.FuncMap                // Map of functions to use in golang templates
+	mutex             sync.RWMutex                    // Mutext that locks access to the templates structure
+	templateService   *Layout                         // Pointer to the Layout service
+	filesystemService Filesystem                      // Filesystem service
+
+	changed chan bool // Channel that is used to signal that a template has changed
+	closed  chan bool // Channel to notify the watcher to close/reset
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(layoutService *Layout, funcMap template.FuncMap, folder config.Folder, templateUpdateChannel chan string) Template {
+func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []string) *Template {
 
-	return Template{
-		templates:         make(map[string]model.Template),
-		folder:            folder,
+	service := Template{
+		templates:         make(set.Map[string, model.Template]),
 		funcMap:           funcMap,
-		filesystem:        GetFS(folder),
-		layoutService:     layoutService,
-		templateUpdateOut: templateUpdateChannel,
+		locations:         []string{},
+		templateService:   templateService,
+		filesystemService: filesystemService,
+		changed:           make(chan bool),
+		closed:            make(chan bool),
 	}
+
+	service.Refresh(locations)
+
+	return &service
 }
 
 /*******************************************
- * COMMON DATA FUNCTIONS
+ * LIFECYCLE METHODS
+ *******************************************/
+
+func (service *Template) Refresh(locations []string) {
+
+	// RULE: If the Filesystem is empty, then don't try to load
+	if len(locations) == 0 {
+		return
+	}
+
+	// RULE: If nothing has changed since the last time we refreshed, then we're done.
+	if slice.Equal(locations, service.locations) {
+		return
+	}
+
+	// Add configuration to the service
+	service.locations = locations
+
+	// Load all templates from the filesystem
+	if err := service.loadTemplates(); err != nil {
+		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Error loading templates from filesystem"))
+		return
+	}
+
+	// Try to watch the template directory for changes
+	go service.watch()
+}
+
+/*******************************************
+ * REAL-TIME UPDATES
+ *******************************************/
+
+// watch must be run as a goroutine, and constantly monitors the
+// "Updates" channel for news that a template has been updated.
+func (service *Template) watch() {
+
+	// abort the existing watcher
+	close(service.closed)
+
+	// open a new channel for the next watcher
+	service.closed = make(chan bool)
+
+	// Start new watchers.
+	for _, uri := range service.locations {
+
+		fmt.Println(".. watching for changes to: " + uri)
+
+		if err := service.filesystemService.Watch(uri, service.changed, service.closed); err != nil {
+			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", uri))
+		}
+	}
+
+	// All Watchers Started.  Now Listen for Changes
+	for {
+
+		select {
+
+		case <-service.changed:
+			service.loadTemplates()
+
+		case <-service.closed:
+			return
+		}
+	}
+}
+
+// loadTemplates retrieves the template from the filesystem and parses it into
+func (service *Template) loadTemplates() error {
+
+	result := make(set.Map[string, model.Template])
+
+	// For each configured location...
+	for _, location := range service.locations {
+
+		// Get a valid filesystem adapter
+		filesystem, err := service.filesystemService.GetFS(location)
+
+		if err != nil {
+			return derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter", location)
+		}
+
+		directories, err := fs.ReadDir(filesystem, ".")
+
+		if err != nil {
+			return derp.Wrap(err, "service.Template.loadTemplates", "Error reading directory", location)
+		}
+
+		for _, directory := range directories {
+
+			if !directory.IsDir() {
+				continue
+			}
+
+			subdirectory, err := fs.Sub(filesystem, directory.Name())
+
+			if err != nil {
+				return derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location)
+			}
+
+			template := model.NewTemplate(location, service.funcMap)
+
+			// System locations (except for "static" and "global") have a schema.json file
+			if err := loadModelFromFilesystem(subdirectory, &template); err != nil {
+				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory)
+			}
+
+			if err := loadHTMLTemplateFromFilesystem(subdirectory, template.HTMLTemplate, service.funcMap); err != nil {
+				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory)
+			}
+
+			fmt.Println("... template: " + template.TemplateID)
+
+			result[template.TemplateID] = template
+		}
+	}
+
+	// Lock service and update templates
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	service.templates = result
+
+	return nil
+}
+
+/*******************************************
+ * COMMON DATA METHODS
  *******************************************/
 
 // List returns all templates that match the provided criteria
@@ -95,18 +225,6 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	return nil, derp.New(404, "sevice.Template.Load", "Template not found", templateID, keys)
 }
 
-// Save adds/updates an Template in the memory cache
-func (service *Template) Save(template *model.Template) error {
-
-	// WRITE Mutex to make multi-threaded access safe.
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
-
-	// Do the thing.
-	service.templates[template.TemplateID] = *template
-	return nil
-}
-
 /*******************************************
  * CUSTOM QUERIES
  *******************************************/
@@ -148,7 +266,7 @@ func (service *Template) ListByContainerLimited(containedBy string, limits []str
 }
 
 /*******************************************
- * OTHER DATA ACCESS FUNCTIONS
+ * OTHER DATA ACCESS METHODS
  *******************************************/
 
 // State returns the detailed State information associated with this Stream
@@ -204,168 +322,4 @@ func (service *Template) Action(templateID string, actionID string) (*model.Acti
 	}
 
 	return action, nil
-}
-
-/*******************************************
- * REAL-TIME UPDATES
- *******************************************/
-
-// watch must be run as a goroutine, and constantly monitors the
-// "Updates" channel for news that a template has been updated.
-func (service *Template) Watch() error {
-
-	// Only synchronize on folders that are configured to do so.
-	if !service.folder.Sync {
-		return nil
-	}
-
-	// Only synchronize on FILESYSTEM folders (for now)
-	if service.folder.Adapter != "FILE" {
-		return nil
-	}
-
-	fmt.Println("Template service is loading templates:")
-
-	// Load all templates from the filesystem
-	fileList, err := ioutil.ReadDir(service.folder.Location)
-
-	if err != nil {
-		return derp.Wrap(err, "service.templateSource.File.List", "Unable to list files in filesystem", service.folder)
-	}
-
-	// Use a separate counter because not all files will be included in the result
-	for _, fileInfo := range fileList {
-
-		if fileInfo.IsDir() {
-			templateID := list.Slash(fileInfo.Name()).Last()
-
-			fmt.Println(".. : " + templateID)
-			// Add all other directories into the Template service as Templates
-			template, err := service.loadFromFilesystem(templateID)
-
-			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template", "Error loading template from filesystem", templateID))
-				continue
-			}
-
-			// Success!
-			if err := service.Save(&template); err != nil {
-				derp.Report(derp.Wrap(err, "service.Template", "Error saving Template to TemplateService", templateID))
-				continue
-			}
-		}
-	}
-
-	go func() {
-
-		fmt.Println("Watching for changes to " + service.folder.Location)
-
-		// Create a new directory watcher
-		watcher, err := fsnotify.NewWatcher()
-
-		if err != nil {
-			panic(err)
-		}
-
-		// List all the files in the directory
-		files, err := ioutil.ReadDir(service.folder.Location)
-
-		if err != nil {
-			panic(err)
-		}
-
-		// Add watchers to each file that is a Directory.
-		for _, file := range files {
-			if file.IsDir() {
-				if err := watcher.Add(service.folder.Location + "/" + file.Name()); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.watch", "Error adding file watcher to file", file.Name()))
-				}
-			}
-		}
-
-		// Repeat indefinitely, listen and process file updates
-		for {
-
-			select {
-
-			case event, ok := <-watcher.Events:
-
-				if !ok {
-					continue
-				}
-
-				// Only update when an HTML or JSON file has been changed
-				if !(strings.HasSuffix(event.Name, ".html") || strings.HasSuffix(event.Name, ".json")) {
-					continue
-				}
-
-				templateName := list.Slash(event.Name).RemoveLast().Last()
-
-				// Otherwise, add this folder to the Template service
-				template, err := service.loadFromFilesystem(templateName)
-
-				if err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.watch", "Error loading changes to template", event, templateName))
-					continue
-				}
-
-				// Save the Template and notify Streams to update.
-				if err := service.Save(&template); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.watch", "Error saving changes to template", event, templateName))
-					continue
-				}
-
-				// Temporarily removed when templates were moved into from "domain" scope into "server" scope
-				// service.templateUpdateOut <- template.TemplateID
-
-				fmt.Println("Updated template: " + template.Label)
-
-			case err, ok := <-watcher.Errors:
-
-				if ok {
-					derp.Report(derp.Wrap(err, "service.Template.watch", "Error watching filesystem"))
-				}
-			}
-		}
-	}()
-
-	return nil
-}
-
-/*******************************************
- * UTILITIES
- *******************************************/
-
-// loadFromFilesystem locates and parses a Template sub-directory within the filesystem path
-func (service *Template) loadFromFilesystem(templateID string) (model.Template, error) {
-
-	const location = "service.Template.loadFromFilesystem"
-
-	filesystem := GetFS(service.folder, templateID)
-
-	result := model.NewTemplate(templateID, service.funcMap)
-
-	if err := loadModelFromFilesystem(filesystem, &result); err != nil {
-		return result, derp.Wrap(err, location, "Error loading schema")
-	}
-
-	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return result, derp.Wrap(err, location, "Error loading template")
-	}
-
-	// RULE: If this is a "feature" template, then the default action is always "feature"
-	if result.AsFeature {
-		result.DefaultAction = "feature"
-	}
-
-	// Validate that the default action is not nil
-	if result.Default() == nil {
-		return result, derp.NewInternalError(location, "Invalid Template: Missing 'default' method", templateID)
-	}
-
-	// Save the Template into the memory cache
-	service.Save(&result)
-
-	// Return to caller.
-	return result, nil
 }

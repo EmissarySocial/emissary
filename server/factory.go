@@ -1,6 +1,7 @@
 package server
 
 import (
+	"embed"
 	"fmt"
 	"strings"
 	"sync"
@@ -9,12 +10,11 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/form/vocabulary"
+	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
 )
@@ -29,48 +29,68 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
-	templateChannel chan string
+	embeddedFiles   embed.FS
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
-	domains set.Map[string, *domain.Factory]
+	// Widget Libraries
+	contentLibrary nebula.Library
+
+	domains map[string]*domain.Factory
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
 // if there are any errors connecting to a domain's datasource, NewFactory will derp.Report
 // the error, but will continue loading without those domains.
-func NewFactory(storage config.Storage) *Factory {
-
-	fmt.Println("Starting Emissary Server...")
+func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	factory := Factory{
-		storage:         storage,
-		mutex:           sync.RWMutex{},
-		templateChannel: make(chan string),
-		domains:         make(map[string]*domain.Factory, 0),
+		storage:        storage,
+		mutex:          sync.RWMutex{},
+		domains:        make(map[string]*domain.Factory, 0),
+		embeddedFiles:  embeddedFiles,
+		contentLibrary: nebula.NewLibrary(),
 	}
 
+	// Global Layout service
+	factory.layoutService = service.NewLayout(
+		factory.Filesystem(),
+		render.FuncMap(),
+		[]string{},
+	)
+
+	// Global Template Service
+	factory.templateService = *service.NewTemplate(
+		factory.Layout(),
+		factory.Filesystem(),
+		render.FuncMap(),
+		[]string{},
+	)
+
 	go factory.start()
+
 	return &factory
 }
 
 func (factory *Factory) start() {
 
-	fmt.Println("Waiting for configuration file...")
+	fmt.Println("Factory: Waiting for configuration file...")
+
+	filesystemService := factory.Filesystem()
 
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		fmt.Println("Configuration received...")
+		fmt.Println("Factory: received new configuration...")
 
-		if attachmentOriginals, err := config.AttachmentOriginals.GetFilesystem(); err == nil {
+		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
 		} else {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config.AttachmentOriginals))
 		}
 
-		if attachmentCache, err := config.AttachmentCache.GetFilesystem(); err == nil {
+		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 			factory.attachmentCache = attachmentCache
 		} else {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config.AttachmentCache))
@@ -78,58 +98,47 @@ func (factory *Factory) start() {
 
 		factory.config = config
 
-		// Global Layout Service
-		factory.layoutService = service.NewLayout(
-			config.Layouts,
-			render.FuncMap(),
-		)
-
-		go factory.layoutService.Watch()
-
-		// Global Template Service
-		factory.templateService = service.NewTemplate(
-			factory.Layout(),
-			render.FuncMap(),
-			config.Templates,
-			factory.templateChannel,
-		)
-
-		if err := factory.templateService.Watch(); err != nil {
-			derp.Report(err)
-			panic(err)
+		// Mark all domains for deletion (then unmark them later)
+		for index := range factory.domains {
+			factory.domains[index].MarkForDeletion = true
 		}
 
+		// Refresh cached values in global services
+		factory.layoutService.Refresh(config.Layouts)
+		factory.templateService.Refresh(config.Templates)
+
 		// Insert/Update a factory for each domain in the configuration
-		for _, cfg := range config.Domains {
+		for _, domainConfig := range config.Domains {
 
 			// Try to find the domain
-			{
-				d, err := factory.domains.Get(cfg.Hostname)
+			if existing := factory.domains[domainConfig.Hostname]; existing != nil {
 
-				// If the domain already exists, then update configuration info.
-				if err == nil {
-					d.UpdateConfig(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
-					continue
+				if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+					derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname))
 				}
+
+				// Even if there's an error "refreshing" the domain, we don't want to delete it
+				existing.MarkForDeletion = false
+				continue
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			{
-				d, err := domain.NewFactory(cfg, &factory.layoutService, &factory.templateService, factory.attachmentOriginals, factory.attachmentCache)
+			newDomain, err := domain.NewFactory(domainConfig, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.attachmentOriginals, factory.attachmentCache)
 
-				if err != nil {
-					derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", cfg))
-					continue
-				}
-
-				factory.domains.Put(d)
+			if err != nil {
+				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))
+				continue
 			}
+
+			// If there are no errors, then add the domain to the list.
+			factory.domains[newDomain.Hostname()] = newDomain
 		}
 
-		// Unceremoniously remove domains that are no longer in the configuration
+		// Any domains that are still marked for deletion will be gracefully closed, then removed
 		for domainID := range factory.domains {
-			if _, err := factory.domains.Get(domainID); err != nil {
-				factory.domains.Delete(domainID)
+			if factory.domains[domainID].MarkForDeletion {
+				factory.domains[domainID].Close()
+				delete(factory.domains, domainID)
 			}
 		}
 	}
@@ -252,8 +261,6 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	spew.Dump("FAILED LOOKUP", name)
-
 	return nil, derp.New(404, "factory.ByDomainName.Get", "Unrecognized domain name", name)
 }
 
@@ -281,6 +288,10 @@ func (factory *Factory) Layout() *service.Layout {
 	return &factory.layoutService
 }
 
+func (factory *Factory) Filesystem() service.Filesystem {
+	return service.NewFilesystem(factory.embeddedFiles)
+}
+
 // Steranko implements the steranko.Factory method, used for locating the specific
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
@@ -299,10 +310,4 @@ func (factory *Factory) FormLibrary() form.Library {
 	result := form.NewLibrary(nil)
 	vocabulary.All(&result)
 	return result
-}
-
-// StaticPath returns the configured path to the "static"
-// files for this website.
-func (factory *Factory) StaticPath() string {
-	return factory.config.Static.Location
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/mediaserver"
-	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -112,17 +111,10 @@ func (service Attachment) ListFirstByObjectID(objectID primitive.ObjectID) (data
 		option.SortAsc("rank"), option.FirstRow())
 }
 
-func (service Attachment) LoadByStreamID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
+func (service Attachment) LoadByID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
 	var result model.Attachment
-	criteria := exp.Equal("streamId", streamID).AndEqual("_id", attachmentID).AndEqual("journal.deleteDate", 0)
-	err := service.Load(criteria, &result)
-	return result, err
-}
-
-func (service Attachment) LoadByToken(streamID primitive.ObjectID, token string) (model.Attachment, error) {
-	var result model.Attachment
-	criteria := exp.Equal("streamId", streamID).
-		AndEqual("filename", list.Dot(token).Head()).
+	criteria := exp.Equal("_id", attachmentID).
+		AndEqual("streamId", streamID).
 		AndEqual("journal.deleteDate", 0)
 	err := service.Load(criteria, &result)
 	return result, err

@@ -2,11 +2,11 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -36,7 +36,7 @@ func (storage FileStorage) Subscribe() <-chan Config {
 
 	go func() {
 
-		spew.Dump("adding configuration")
+		fmt.Println("FileStorage: Loading configuration from:" + storage.location)
 		updateChannel <- storage.load()
 
 		// Create a new file watcher
@@ -53,7 +53,7 @@ func (storage FileStorage) Subscribe() <-chan Config {
 
 		for range watcher.Events {
 			updateChannel <- storage.load()
-			spew.Dump("adding configuration")
+			fmt.Println("Refreshing configuration")
 		}
 	}()
 
