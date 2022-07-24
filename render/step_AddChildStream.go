@@ -98,19 +98,23 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 
 	b := html.New()
 
-	b.H2().InnerHTML(title).Close()
+	b.H2()
+	b.I("ti", "ti-plus").Close()
+	b.Span().InnerHTML(title).Close()
+	b.Close()
+
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {
 		b.TR().Role("link").Data("hx-post", url+"?templateId="+template.Value)
 		{
 			b.TD()
-			b.I(template.Icon + " fa-3x gray").Close()
+			b.I(template.Icon, "text-3xl", "gray80").Close()
 			b.Close()
 
 			b.TD().Style("width:100%")
-			b.Div().Class("big", "bold").InnerHTML(template.Label).Close()
-			b.Div().Class("small", "gray").InnerHTML(template.Description).Close()
+			b.Div().Class("bold").InnerHTML(template.Label).Close()
+			b.Div().Class("gray60").InnerHTML(template.Description).Close()
 			b.Close()
 		}
 		b.Close()

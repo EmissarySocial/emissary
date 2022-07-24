@@ -33,32 +33,46 @@
 	<div class="pure-g">
 		<div class="pure-u-1 pure-u-lg-1-2">
 
-			<div class="space-below">
+			<div class="clickable" hx-get="/{{.StreamID}}/attachments">
 				{{- $attachments := .Attachments -}}
-				{{$streamID := .StreamID}}
+				{{- $streamID := .StreamID -}}
+				{{ $length := len $attachments}}
 
-				{{- if eq 1 (len $attachments) -}}
+				{{- if eq 0 $length -}}
+					<div class="align-center">
+						This product has no images.<br>
+						<br>
+						Click here to add one now.
+					</div>
+				{{- end -}}
+
+				{{- if eq 1 $length -}}
 					{{- range .Attachments -}}
-						<picture style="aspect-ratio:{{.Width}}/{{.Height}};" hx-get="/{{$streamID}}/attachments" class="clickable">
-							<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700" />
-							<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900" />
-							<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200" />
-							<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200" />
+						{{- $attachmentID := .AttachmentID.Hex -}}
+						<picture style="aspect-ratio:{{.Width}}/{{.Height}};">
+							<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700" />
+							<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900" />
+							<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200" />
+							<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200" />
 						</picture>
 					{{- end -}}
 
-				{{- else -}}
-					<div class="clickable slideshow" hx-get="/{{.StreamID}}/attachments">
+				{{- end -}}
+
+				{{- if gt $length 1 -}}
+					<div class="slideshow">
 						{{- range .Attachments -}}
+							{{- $attachmentID := .AttachmentID.Hex -}}
 							<picture script="on click scrollIntoView() me">
-								<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700&height=525" />
-								<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900&height=675" />
-								<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200&height=900" />
-								<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200&height=900" />
+								<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700&height=525" />
+								<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900&height=675" />
+								<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200&height=900" />
+								<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200&height=900" />
 							</picture>
 						{{- end -}}
 					</div>
 				{{- end -}}
+				
 
 			</div>
 
@@ -66,12 +80,12 @@
 		<div class="pure-u-1 pure-u-lg-1-24"></div>
 		<div class="pure-u-1 pure-u-lg-10-24">
 
-			<form hx-post="/{{.StreamID}}/properties" hx-trigger="autosave" hx-swap="none">
+			<form hx-post="/{{$streamID}}/properties" hx-trigger="autosave" hx-swap="none">
 				<input class="text-xxl bold" type="text" name="label" value="{{.Label}}" script="install Autosave">
 			</form>
 
 			<div class="space-below">
-				<button hx-get="/{{.StreamID}}/product">{{.Data "decimalAmount" | dollarFormat}}USD (edit checkout)</button>
+				<button hx-get="/{{$streamID}}/product">{{.Data "decimalAmount" | dollarFormat}}USD (edit checkout)</button>
 			</div>
 
 			<div class="content-editor space-after">

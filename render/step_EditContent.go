@@ -78,7 +78,7 @@ func (step StepEditContent) Post(renderer Renderer) error {
 
 	// UPLOADS: If present, inject the uploaded filename into the form post. (One attachment per content item)
 	if attachments := uploadedFiles(factory, renderer.context(), renderer.objectID()); len(attachments) > 0 {
-		body["file"] = "/" + renderer.Token() + "/attachments/" + attachments[0].Filename
+		body["file"] = "/" + renderer.Token() + "/attachments/" + attachments[0].AttachmentID.Hex()
 		body["mimeType"] = attachments[0].MimeType()
 	}
 

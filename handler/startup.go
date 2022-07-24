@@ -153,9 +153,9 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 	pageHeader(ctx, b, "Let's Get Started")
 
 	b.Div().Class("align-center")
-	b.H1().InnerHTML("Let's Set Up Your Whisperverse Server").Close()
+	b.H1().InnerHTML("Let's Set Up Your Emissary Server").Close()
 	b.Div().Class("space-below")
-	b.I("fa-8x fa-solid fa-volume-xmark gray20").Close()
+	b.I("ti ti-flag gray20").Close()
 	b.Close()
 	b.Close()
 
@@ -334,7 +334,7 @@ func StartupDone(ctx echo.Context) error {
 
 	b.Div().Class("align-center")
 	b.Div().Class("space-below")
-	b.I("fa-solid", "fa-circle-check", "fa-8x", "gray20").Close()
+	b.I("ti", "ti-circle-check", "fa-8x", "gray20").Close()
 	b.Close()
 	b.H1().InnerHTML("Setup Is Complete").Close()
 	b.H2().Class("gray70").InnerHTML("Here are some next steps you can take.").Close()
@@ -344,7 +344,7 @@ func StartupDone(ctx echo.Context) error {
 
 	b.TR().Role("link").Script("on click set window.location to '/home'")
 	b.TD().Class("align-center")
-	b.I("fa-solid", "fa-house", "fa-2x").Close()
+	b.I("ti", "ti-home", "fa-2x").Close()
 	b.Close()
 	b.TD().Style("width:100%")
 	b.Div().Class("bold").InnerHTML("Visit Your New Home Page")
@@ -353,7 +353,7 @@ func StartupDone(ctx echo.Context) error {
 
 	b.TR().Role("link").Script("on click set window.location to '/admin/users'")
 	b.TD().Class("align-center")
-	b.I("fa-solid", "fa-user", "fa-2x").Close()
+	b.I("ti", "ti-user", "fa-2x").Close()
 	b.Close()
 	b.TD().Style("width:100%")
 	b.Div().Class("bold").InnerHTML("Invite People")

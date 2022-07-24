@@ -127,7 +127,25 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		stream.Rank = maxRank
 	}
 
-	// RULE: Default Tokens overlapping stream.CreateDates.  Deal with it.
+	// RULE: Default Token
+	if stream.Token == "" {
+		stream.Token = stream.StreamID.Hex()
+	}
+
+	// RULE: Sanitize Content
+	service.contentLibrary.Validate(&stream.Content)
+
+	if err := service.collection.Save(stream, note); err != nil {
+		return derp.Wrap(err, location, "Error saving Stream", stream, note)
+	}
+
+	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
+	go func() {
+		service.streamUpdateChannel <- *stream
+		// fmt.Println("streamService.Save: sent update update to stream: " + stream.Label)
+	}()
+
+	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
 	// TODO: There has to be a better way than this...
 	time.Sleep(1 * time.Millisecond)
 
@@ -185,12 +203,12 @@ func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) 
 	return &result, err
 }
 
-func (service *Stream) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.Stream), comment)
+func (service *Stream) ObjectSave(object data.Object, note string) error {
+	return service.Save(object.(*model.Stream), note)
 }
 
-func (service *Stream) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.Stream), comment)
+func (service *Stream) ObjectDelete(object data.Object, note string) error {
+	return service.Delete(object.(*model.Stream), note)
 }
 
 func (service *Stream) Debug() maps.Map {

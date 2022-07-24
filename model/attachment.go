@@ -13,7 +13,6 @@ import (
 type Attachment struct {
 	AttachmentID primitive.ObjectID `                bson:"_id"`      // ID of this Attachment
 	StreamID     primitive.ObjectID `                bson:"streamId"` // ID of the Stream that owns this Attachment
-	Filename     string             `path:"filename" bson:"filename"` // Name of the file that is currently stored on the filesystem
 	Original     string             `path:"original" bson:"original"` // Original filename uploaded by user
 	Rank         int                `path:"rank"     bson:"rank"`     // The sort order to display the attachments in.
 	Height       int                `path:"height"   bson:"height"`
@@ -27,7 +26,6 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 	return Attachment{
 		AttachmentID: primitive.NewObjectID(),
 		StreamID:     streamID,
-		Filename:     primitive.NewObjectID().Hex(),
 	}
 }
 
