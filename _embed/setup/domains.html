@@ -10,14 +10,14 @@
 
 			<!--  First row is "Add" link -->
 			<tr role="link" hx-get="/domains/new"><td colspan="3">
-				<i class="fas fa-plus-circle"></i> Add a Domain
+				<i class="ti ti-circle-plus"></i> Add a Domain
 			</td></tr>
 
 			{{$empty := true}}
 			{{- range .Config.Domains -}}
 				<tr role="link">
 					<td hx-get="/domains/{{.DomainID}}">
-						<i class="fas fa-server"></i> {{ .Label }}
+						<i class="ti ti-server"></i> {{ .Label }}
 					</td>
 					<td hx-get="/domains/{{.DomainID}}">
 						{{.Hostname}}

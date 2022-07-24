@@ -29,7 +29,7 @@
 
 	<div class="uploader" _="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
 	
-		<div class="space-below gray40"><i class="fa-solid fa-arrow-up-from-bracket fa-8x"></i></div>
+		<div class="space-below gray40"><i class="ti ti-cloud-upload"></i></div>
 		<h2 class="space-below">Drag Files Here to Upload</h2>
 		<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
 		<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">

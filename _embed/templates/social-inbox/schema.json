@@ -2,7 +2,7 @@
 	"templateId": "social-inbox",
 	"label": "Inbox",
 	"description": "Inbox Collects federated/syndicated content from external websites",
-	"icon": "fa-solid fa-inbox",
+	"icon": "ti ti-inbox",
 	"containedBy": [],
 	"schema": {
 		"title": "RSS Folder",

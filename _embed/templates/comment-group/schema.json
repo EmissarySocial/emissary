@@ -2,7 +2,7 @@
 	"templateId": "comment-group",
 	"label": "Comment Section",
 	"description": "Allow visitors to comment on this stream.",
-	"icon": "fa-regular fa-message",
+	"icon": "ti ti-messages",
 	"asFeature": true,
 	"schema": {
 		"type": "object",

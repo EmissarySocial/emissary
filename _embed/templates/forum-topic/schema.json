@@ -2,6 +2,7 @@
 	"templateId": "forum-topic",
 	"label": "Forum Topic",
 	"description": "Discussion topic in a forum.",
+	"icon": "ti ti-message",
 	"containedBy": ["forum"],
 	"schema": {
 		"type": "object",

@@ -2,7 +2,7 @@
 	"templateId": "forum",
 	"label": "Forum",
 	"description": "Discussion area containing several discussion topics.",
-	"icon": "fa-regular fa-message",
+	"icon": "ti ti-messages",
 	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",

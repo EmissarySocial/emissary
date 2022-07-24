@@ -41,7 +41,7 @@
 				{{- range .Children.ByRank.View -}}
 					<tr class="draggable" hx-get="/{{.Token}}" role="link">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						<td><i class="fa-regular fa-file-lines"></i> {{.Label}}</td>
+						<td><i class="ti ti-file-description"></i> {{.Label}}</td>
 						<td>{{.Description}}</td>
 						<td></td>
 					</tr>
@@ -75,7 +75,7 @@
 					<input type="hidden" name="keys" value="{{.StreamID}}"/>
 					<div class="card" role="link">
 						{{- if ne .ThumbnailImage "" -}}
-						<picture loading="lazy" style="aspect-ratio:4/3;">
+						<picture loading="lazy" style="aspect-ratio: 4 / 3;">
 							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=400&height=300"/>
 							<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=400&height=300"/>
 						</picture>

@@ -30,11 +30,11 @@
 
 	{{- $children := .Children.All.View -}}
 	{{- if eq (len $children) 0 -}}
-		<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.Filename}}?width=1024" style="width:100%;"></div>
+		<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.AttachmentID}}?width=1024" style="width:100%;"></div>
 	{{- end -}}
 	{{- if gt (len $children) 0 -}}
 
-	<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.Filename}}?width=1024" style="width:100%;"></div>
+	<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.AttachmentID}}?width=1024" style="width:100%;"></div>
 	{{- range $children -}}
 	<div class="card padding-5 space-below">
 		{{- .Render -}}

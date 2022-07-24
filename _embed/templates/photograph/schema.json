@@ -2,7 +2,7 @@
 	"templateId": "photograph",
 	"label": "Photograph",
 	"description": "Individual photograph or slideshow to include in your photo album.",
-	"icon": "fa-regular fa-image",
+	"icon": "ti ti-photo",
 	"containedBy": ["photo-album"],
 	"schema": {
 		"type": "object",

@@ -2,7 +2,7 @@
 	"templateId": "photo-album",
 	"label": "Photo Album",
 	"description": "A collection of photographs",
-	"icon": "fa-regular fa-images",
+	"icon": "ti ti-photo",
 	"containedBy": ["top", "folder"],
 	"childSortType": "journal.createDate",
 	"childSortDirection": "DESC",

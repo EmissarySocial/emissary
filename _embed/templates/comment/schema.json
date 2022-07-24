@@ -2,7 +2,7 @@
 	"templateId": "comment",
 	"label": "Comment",
 	"description": "Single comment in the comments section of a page.",
-	"containedBy": ["comment-group"],
+	"containedBy": ["ti-message"],
 	"schema": {
 		"type": "object",
 		"properties": {

@@ -31,26 +31,28 @@
 
 				<div class="space-below">
 					{{- $attachments := .Attachments -}}
-					{{$streamID := .StreamID}}
+					{{- $streamID := .StreamID -}}
 
 					{{- if eq 1 (len $attachments) -}}
 						{{- range .Attachments -}}
+							{{- $attachmentID := .AttachmentID.Hex -}}
 							<picture style="aspect-ratio:{{.Width}}/{{.Height}};">
-								<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700" />
-								<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900" />
-								<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200" />
-								<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200" />
+								<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700" />
+								<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900" />
+								<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200" />
+								<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200" />
 							</picture>
 						{{- end -}}
 
 					{{- else -}}
 						<div class="slideshow">
 							{{- range .Attachments -}}
+								{{- $attachmentID := .AttachmentID.Hex -}}
 								<picture script="on click scrollIntoView() me">
-									<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=700&height=525" />
-									<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=900&height=675" />
-									<source type="image/webp" srcset="/{{$streamID}}/attachments/{{.Filename}}.webp?width=1200&height=900" />
-									<img src="/{{$streamID}}/attachments/{{.Filename}}.jpg?width=1200&height=900" />
+									<source type="image/webp" media="(max-width:768px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=700&height=525" />
+									<source type="image/webp" media="(max-width:1024px)" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=900&height=675" />
+									<source type="image/webp" srcset="/{{$streamID}}/attachments/{{$attachmentID}}.webp?width=1200&height=900" />
+									<img src="/{{$streamID}}/attachments/{{$attachmentID}}.jpg?width=1200&height=900" />
 								</picture>
 							{{- end -}}
 						</div>
@@ -77,7 +79,7 @@
 				{{- if .UserCan "checkout" -}}
 					<div id="idCheckout" class="space-below align-center">
 						<button class="block primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
-						<button class="block primary text-lg htmx-request-show" disabled="true"><i class="fa-solid fa-spinner fa-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
+						<button class="block primary text-lg htmx-request-show" disabled="true"><i class="ti ti-spinner ti-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
 					</div>
 				
 				{{- else -}}

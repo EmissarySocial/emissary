@@ -1,5 +1,6 @@
 {
 	"templateId": "social-outbox",
+	"icon": "ti ti-user",
 	"roles": {
 		"myself": {
 			"label": "Myself",

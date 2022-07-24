@@ -287,15 +287,23 @@ h3.space-below {
 /****************************
  * Text Modifiers
  ****************************/
+ 
+.text-xxxl,
+.text-3xl {
+    font-size: calc(var(--rhythm) * 6);
+    line-height:calc(var(--rhythm) * 9);
+    margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2);
+}
 
-.text-xxl,
+text-xxl,
+.text-2xl,
 .text-xxl input,
 input.text-xxl {
     font-size: calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 6);
     margin-top:var(--rhythm);
     margin-bottom:calc(var(--rhythm) * 2);
-    color: var(--heading-color);
 }
 
 .text-xl,

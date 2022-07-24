@@ -2,7 +2,7 @@
 	"templateId": "folder",
 	"label": "Folder",
 	"description": "Folders can contain all other streams",
-	"icon": "fa-regular fa-folder",
+	"icon": "ti ti-folder",
 	"containedBy": ["top", "folder"],
 	"childSortType": "label",
 	"childSortOrder": "ASC",

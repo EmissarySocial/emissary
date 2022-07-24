@@ -18,9 +18,9 @@
                     <input type="hidden" name="keys" value="{{.StreamID}}">
                     <div class="text-sm" style="float:right;">
                         <a href="/{{.Token}}" class="button">View</a>
-                        <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="fa-regular fa-trash-can"></i></button>
+                        <button hx-get="/admin/toplevel/{{.StreamID}}/delete"><i class="ti ti-trash"></i></button>
                     </div>
-                    <i class="fa-regular fa-grip"></i>
+                    <i class="ti ti-grip-vertical"></i>
                     &nbsp;
                     <span>{{.Label}}</span>
                 </div>
@@ -32,7 +32,7 @@
         </div>
 
         <div class="space-below">
-            <button hx-get="/admin/toplevel/add"><i class="fa-regular fa-plus-circle"></i>&nbsp;Add a Top-Level Stream</button>
+            <button hx-get="/admin/toplevel/add"><i class="ti ti-circle-plus"></i>&nbsp;Add a Top-Level Stream</button>
         </div>
 
 

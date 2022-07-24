@@ -2,7 +2,7 @@
 	"templateId": "article",
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
-	"icon": "fa-regular fa-file-lines",
+	"icon": "ti ti-notes",
 	"containedBy": ["top", "folder", "article"],
 	"schema": {
 		"type": "object",

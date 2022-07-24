@@ -2,6 +2,7 @@
 	"templateId": "social-inbox-item",
 	"label": "Inbox Item",
 	"description": "Message in a social inbox, possibly a link to an external URL",
+	"icon": "ti ti-inbox",
 	"containedBy": [
 		"social-inbox"
 	],
