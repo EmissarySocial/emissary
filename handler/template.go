@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -48,13 +47,7 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 	}
 
 	// Find and execute the template
-	global := factory.Layout().Global()
-
-	spew.Dump(global == nil)
-
 	template := factory.Layout().Global().HTMLTemplate
-
-	spew.Dump(template == nil)
 
 	if err := template.ExecuteTemplate(&buffer, templateName, &domain); err != nil {
 		return derp.Report(derp.Wrap(err, location, "Error executing template"))
