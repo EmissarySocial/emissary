@@ -42,10 +42,6 @@ github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuP
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/benpate/activitystream v0.6.0 h1:GF7sTX5fuZq/0SvZs/3CyiQDetbEVzdYqYkIOpwTuDk=
 github.com/benpate/activitystream v0.6.0/go.mod h1:QgQWP4cnJPTBvYNUVz0NQluymkwZB+qvCGI9WEYVIQ0=
-github.com/benpate/compare v0.1.3 h1:0AHccQUl6EkCIRtUcgKMUtDErS1NN7z9GDRrbGL5YvA=
-github.com/benpate/compare v0.1.3/go.mod h1:VcXm0l0gN62lnbOPCqtC4C1aoqxmoA2WKZQWy6hno6E=
-github.com/benpate/convert v0.13.5 h1:EydjNY29ZBIjC7m6KQW9jwkPy459Kh1RtlswgsYFAUU=
-github.com/benpate/convert v0.13.5/go.mod h1:jWd8HmBIjksct5lu9gxIk1szas2uDu4VabXOsI9kCqU=
 github.com/benpate/data v0.19.0 h1:4E/gkxi/h2rBIJ6wPQKMk/Gb2RmqyNUG4jCfhr+e2ek=
 github.com/benpate/data v0.19.0/go.mod h1:kCisr65xBIjv8vtQOahZwHey/b3WIGoqSCFwmL8Zyqo=
 github.com/benpate/data-mock v0.5.0 h1:T6woAfEsmMsRPctyzo0xJpNbd5Xe029CxVv4EbkA3xs=
@@ -69,8 +65,6 @@ github.com/benpate/mediaserver v0.6.0 h1:8EgNpN5j/J1N3B5OyD0EkMGU4FH/5DigkKkyS25
 github.com/benpate/mediaserver v0.6.0/go.mod h1:QvttowVWvhZGJY6sbK428Vw7bQj08r75VZgrYN6xnwA=
 github.com/benpate/nebula v0.5.0 h1:Y5y097eNE/HJFmT3XxPdAdYhHXsnSlScUivDyQIp3ns=
 github.com/benpate/nebula v0.5.0/go.mod h1:KUEDAOMB4S6ojxAA5GYE4YVvK7ct3rXUpECx1y/65xA=
-github.com/benpate/null v0.6.4 h1:G3Yix3s9AmSY9wg9G2GB1gOyJL3ot96gqf/thTlv+gE=
-github.com/benpate/null v0.6.4/go.mod h1:g6PrO1oxV8OPGQqkuwGGto3aK/uQ7HWn4uM04rbgPkg=
 github.com/benpate/remote v0.8.0 h1:h/xMHtKOyuS5lejwOpqvWzm1t7qaQEXBNrfoNCYBxi0=
 github.com/benpate/remote v0.8.0/go.mod h1:m4btkSd+P0beWcuj444c098EKPi/B85eus/LCsNfdrg=
 github.com/benpate/rosetta v0.5.1 h1:98rPhu5X6Cl3CnvsH9UFFbdGDTYnfjGq5JW7VnRPxuo=
@@ -233,8 +227,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/stripe/stripe-go/v72 v72.117.0 h1:vXascEDirGvHST7FURr+TMlTIyBnrxY651IvIIOkOQI=
-github.com/stripe/stripe-go/v72 v72.117.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKFdsykV9ZepRWwo0=
+github.com/stripe/stripe-go/v72 v72.121.0 h1:QQsjHI9/OUAmVqnQ9LVqxkXGxnATak4b+YPU2jVj4Mc=
+github.com/stripe/stripe-go/v72 v72.121.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKFdsykV9ZepRWwo0=
 github.com/tdewolff/minify v2.3.6+incompatible h1:2hw5/9ZvxhWLvBUnHE06gElGYz+Jv9R4Eys0XUzItYo=
 github.com/tdewolff/minify v2.3.6+incompatible/go.mod h1:9Ov578KJUmAWpS6NeZwRZyT56Uf6o3Mcz9CEsg8USYs=
 github.com/tdewolff/parse v2.3.4+incompatible h1:x05/cnGwIMf4ceLuDMBOdQ1qGniMoxpP46ghf0Qzh38=

@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/benpate/activitystream v0.6.0
-	github.com/benpate/compare v0.1.3
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
 	github.com/benpate/derp v0.24.0
@@ -27,7 +26,7 @@ require (
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
-	github.com/stripe/stripe-go/v72 v72.117.0
+	github.com/stripe/stripe-go/v72 v72.121.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/yeqown/go-qrcode/v2 v2.2.1
@@ -38,9 +37,7 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/convert v0.13.5 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
-	github.com/benpate/null v0.6.4 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
