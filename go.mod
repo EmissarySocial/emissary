@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/benpate/activitystream v0.6.0
-	github.com/benpate/compare v0.1.3
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
 	github.com/benpate/derp v0.24.0
@@ -14,7 +13,7 @@ require (
 	github.com/benpate/form v0.8.0
 	github.com/benpate/html v0.14.0
 	github.com/benpate/mediaserver v0.6.0
-	github.com/benpate/nebula v0.5.0
+	github.com/benpate/nebula v0.6.1
 	github.com/benpate/remote v0.8.0
 	github.com/benpate/rosetta v0.5.1
 	github.com/benpate/steranko v0.9.0
@@ -38,9 +37,7 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/convert v0.13.5 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
-	github.com/benpate/null v0.6.4 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
