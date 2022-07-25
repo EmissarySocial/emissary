@@ -214,15 +214,18 @@
  ***************************/
 
  .uploader {
-    border: 1px solid var(--gray40);
-    font-family: sans-serif;
+	margin:-5px;
+	padding: 5px;
+    -border: 1px dashed var(--gray40);
+    -font-family: sans-serif;
     cursor: pointer;
-    background-color: var(--gray05);
-    text-align:center;
+    -background-color: var(--gray05);
+    -text-align:center;
 }
 
 .uploader.highlight {
-    border: green 1px outset;
+    border: green 2px dashed;
+	padding:3px;
 }
 
 .uploader input[type="file"] {

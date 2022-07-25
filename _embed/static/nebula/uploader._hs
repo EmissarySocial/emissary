@@ -1,10 +1,4 @@
 behavior DropToUpload
-	
-on change(target)
-	log target
-
-on change(target)
-	log target
 
 on dragenter
 	halt the event
@@ -24,6 +18,7 @@ on drop(dataTransfer)
 
 	set input to the first <input[type="file"]/> in me
 	set the input's files to the dataTransfer's files
+	send change to the input
 
 on htmx:xhr:progress
 	log event

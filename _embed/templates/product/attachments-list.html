@@ -1,4 +1,6 @@
-<form class="sortable pure-g space-below" hx-post="/{{.StreamID}}/attachments-sort" hx-swap="none" hx-push-url="false" hx-trigger="end"
+<form class="sortable pure-g space-below" hx-post="/{{.StreamID}}/attachments-sort" hx-swap="none" 
+	hx-push-url="false" 
+	hx-trigger="end"
 	script="on load make a Sortable from me, {animation:150, whisperClass:'draggable-whisper'}">
 	
 	{{$streamID := .StreamID}}
