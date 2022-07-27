@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 )
 
 type Setup struct {
@@ -29,40 +30,36 @@ func (r Setup) Server() (template.HTML, error) {
 		Kind: "layout-vertical",
 		Children: []form.Form{
 			{
+				Kind:        "textarea",
+				Label:       "Templates",
+				Path:        "templates",
+				Description: "Readable location for stream templates. One entry per line.",
+				Options:     maps.Map{"rows": 4},
+			},
+			{
+				Kind:        "textarea",
+				Label:       "Layouts",
+				Path:        "layouts",
+				Description: "Readable location for system layouts. One entry per line.",
+				Options:     maps.Map{"rows": 4},
+			},
+			{
 				Kind:        "text",
 				Label:       "Certificates",
-				Path:        "certificates.location",
+				Path:        "certificates",
 				Description: "Read/Write location to cache SSL certificates.",
 			},
 			{
 				Kind:        "text",
-				Label:       "Templates",
-				Path:        "templates.location",
-				Description: "Readable location for stream templates",
-			},
-			{
-				Kind:        "text",
-				Label:       "Layouts",
-				Path:        "layouts.location",
-				Description: "Readable location for system layouts",
-			},
-			{
-				Kind:        "text",
-				Label:       "Static Files",
-				Path:        "static.location",
-				Description: "Readable location of system static files",
-			},
-			{
-				Kind:        "text",
 				Label:       "Attachments (original files)",
-				Path:        "attachmentOriginals.location",
-				Description: "Read/Write location for original attachment files",
+				Path:        "attachmentOriginals",
+				Description: "Read/Write location for original attachment files.",
 			},
 			{
 				Kind:        "text",
 				Label:       "Attachments (cached files)",
-				Path:        "attachmentCache.location",
-				Description: "Read/Write location for processed attachment files",
+				Path:        "attachmentCache",
+				Description: "Read/Write location for processed attachment files.",
 			},
 		},
 	}
