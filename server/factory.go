@@ -11,8 +11,6 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/benpate/form"
-	"github.com/benpate/form/vocabulary"
 	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -303,11 +301,4 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	}
 
 	return result.Steranko(), nil
-}
-
-// FormLibrary returns a reference to the form widget library
-func (factory *Factory) FormLibrary() form.Library {
-	result := form.NewLibrary(nil)
-	vocabulary.All(&result)
-	return result
 }

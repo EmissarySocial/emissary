@@ -168,11 +168,10 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
 
-	library := fm.FormLibrary()
-	f := form.Form{
-		Kind: "layout-vertical",
-		Children: []form.Form{{
-			Kind:        "text",
+	userSetupForm := form.Element{
+		Type: "layout-vertical",
+		Children: []form.Element{{
+			Type:        "text",
 			Path:        "displayname",
 			Label:       "Your Name",
 			Description: "Choose your publicly visible name.  You can always change it later.",
@@ -180,7 +179,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 				"autocomplete": "OFF",
 			},
 		}, {
-			Kind:        "text",
+			Type:        "text",
 			Path:        "username",
 			Label:       "Username",
 			Description: "The name you'll use to sign in.",
@@ -188,7 +187,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 				"autocomplete": "OFF",
 			},
 		}, {
-			Kind:        "text",
+			Type:        "text",
 			Path:        "password",
 			Label:       "Password",
 			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
@@ -197,7 +196,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			},
 		}},
 	}
-	formHTML, err := f.HTML(&library, &s, nil)
+	formHTML, err := userSetupForm.HTML(nil, &s, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
@@ -284,25 +283,25 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
 
-	f := form.Form{
-		Kind: "layout-vertical",
-		Children: []form.Form{{
-			Kind:        "toggle",
+	f := form.Element{
+		Type: "layout-vertical",
+		Children: []form.Element{{
+			Type:        "toggle",
 			Path:        "home",
 			Options:     maps.Map{"true-text": "Home Page", "false-text": "Home Page"},
 			Description: "Landing page when visitors first reach your site.",
 		}, {
-			Kind:        "toggle",
+			Type:        "toggle",
 			Path:        "blog",
 			Options:     maps.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
-			Kind:        "toggle",
+			Type:        "toggle",
 			Path:        "album",
 			Options:     maps.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
 		}, {
-			Kind:        "toggle",
+			Type:        "toggle",
 			Path:        "forum",
 			Options:     maps.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
 			Description: "Realtime chat, organized into topics and threads.",
@@ -316,8 +315,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		"forum": schema.Boolean{},
 	})
 
-	library := fm.FormLibrary()
-	formHTML, _ := f.HTML(&library, &s, nil)
+	formHTML, _ := f.HTML(nil, &s, nil)
 
 	b.WriteString(formHTML)
 	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")

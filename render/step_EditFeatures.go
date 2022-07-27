@@ -21,7 +21,6 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 
 	factory := renderer.factory()
 	streamService := factory.Stream()
-	formLibrary := factory.FormLibrary()
 
 	features, selected, err := streamService.ListAllFeaturesBySelectionAndRank(renderer.objectID())
 
@@ -37,11 +36,11 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 		},
 	}
 
-	f := form.Form{
-		Kind:  "layout-vertical",
+	featuresForm := form.Element{
+		Type:  "layout-vertical",
 		Label: "Add/Remove Features of this Stream",
-		Children: []form.Form{
-			{Kind: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: maps.Map{"options": features, "sort": true}},
+		Children: []form.Element{
+			{Type: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: maps.Map{"options": features, "sort": true}},
 		},
 	}
 
@@ -50,7 +49,7 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Generate the form HTML
-	html, err := f.HTML(formLibrary, &s, v)
+	html, err := featuresForm.HTML(v, &s, nil)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating Form")

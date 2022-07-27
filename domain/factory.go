@@ -12,7 +12,6 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	formlib "github.com/benpate/form/vocabulary"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/schema"
@@ -31,7 +30,6 @@ type Factory struct {
 	layoutService   *service.Layout
 	templateService *service.Template
 	contentLibrary  *nebula.Library
-	formLibrary     form.Library // TODO: this should be cached in the server factory after OptionCodes refactor.
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -68,10 +66,6 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
-	// Create form library
-	factory.formLibrary = form.NewLibrary(factory.OptionProvider())
-	formlib.All(&factory.formLibrary)
-
 	// Start the Domain Service
 	factory.domainService = service.NewDomain(
 		factory.collection(CollectionDomain),
@@ -84,7 +78,6 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		factory.Template(),
 		factory.StreamDraft(),
 		factory.Attachment(),
-		factory.FormLibrary(),
 		factory.ContentLibrary(),
 		factory.StreamUpdateChannel(),
 	)
@@ -336,12 +329,6 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * OTHER NON-MODEL SERVICES
  *******************************************/
 
-// FormLibrary returns our custom form widget library for
-// use in the form.Form package
-func (factory *Factory) FormLibrary() *form.Library {
-	return &factory.formLibrary
-}
-
 // Key returns an instance of the Key Manager Service (KMS)
 func (factory *Factory) Key() service.Key {
 	return service.Key{}
@@ -359,8 +346,8 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	)
 }
 
-func (factory *Factory) OptionProvider() form.OptionProvider {
-	return service.NewOptionProvider(factory.Group(), factory.User())
+func (factory *Factory) LookupProvider() form.LookupProvider {
+	return service.NewLookupProvider(factory.Group(), factory.User())
 }
 
 /*******************************************

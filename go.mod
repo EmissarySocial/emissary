@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.18
 
+replace github.com/benpate/form => ../../benpate/form
+
 require (
 	github.com/benpate/activitystream v0.6.0
 	github.com/benpate/data v0.19.0
@@ -37,7 +39,12 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/benpate/compare v0.1.1 // indirect
+	github.com/benpate/convert v0.13.2 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
+	github.com/benpate/list v0.4.2 // indirect
+	github.com/benpate/null v0.6.3 // indirect
+	github.com/benpate/path v0.8.4 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
@@ -56,6 +63,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
+	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v1.0.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -67,7 +75,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82 // indirect
-	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
 	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	golang.org/x/text v0.3.7 // indirect

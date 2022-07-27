@@ -27,7 +27,6 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 	const location = "render.StepStripeProduct.Get"
 
 	factory := renderer.factory()
-	formLibrary := factory.FormLibrary()
 	s := stepStripeProductTransaction{}.schema()
 	s = schema.Schema{
 		Element: schema.Object{
@@ -43,38 +42,38 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 		return derp.Wrap(err, location, "Error getting Stripe API client")
 	}
 
-	f := form.Form{
-		Kind:  "layout-tabs",
+	stripeForm := form.Element{
+		Type:  "layout-tabs",
 		Label: step.Title,
-		Children: []form.Form{
+		Children: []form.Element{
 			{
-				Kind:  "layout-vertical",
+				Type:  "layout-vertical",
 				Label: "Product",
-				Children: []form.Form{
-					{Kind: "text", Label: "Product Name", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
-					{Kind: "text", Label: "Price", Path: "data.decimalAmount", Options: maps.Map{"step": 0.01}},
-					{Kind: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: maps.Map{"options": step.getTaxRates(api)}},
-					{Kind: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: maps.Map{"options": step.getShippingMethods(api)}},
-					{Kind: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
-					{Kind: "toggle", Label: "", Path: "data.active", Options: maps.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
-					{Kind: "hidden", Path: "data.productId"},
-					{Kind: "hidden", Path: "data.priceId"},
+				Children: []form.Element{
+					{Type: "text", Label: "Product Name", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
+					{Type: "text", Label: "Price", Path: "data.decimalAmount", Options: maps.Map{"step": 0.01}},
+					{Type: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: maps.Map{"options": step.getTaxRates(api)}},
+					{Type: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: maps.Map{"options": step.getShippingMethods(api)}},
+					{Type: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
+					{Type: "toggle", Label: "", Path: "data.active", Options: maps.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
+					{Type: "hidden", Path: "data.productId"},
+					{Type: "hidden", Path: "data.priceId"},
 				},
 			},
 			{
-				Kind:  "layout-vertical",
+				Type:  "layout-vertical",
 				Label: "Inventory",
-				Children: []form.Form{
-					{Kind: "toggle", Label: "", Path: "data.trackInventory", Options: maps.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
-					{Kind: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero.", Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}},
+				Children: []form.Element{
+					{Type: "toggle", Label: "", Path: "data.trackInventory", Options: maps.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
+					{Type: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero."}, // TODO: , Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}
 				},
 			},
 			{
-				Kind:  "layout-vertical",
+				Type:  "layout-vertical",
 				Label: "Success Page",
-				Children: []form.Form{
+				Children: []form.Element{
 					{
-						Kind:        "wysiwyg",
+						Type:        "wysiwyg",
 						Path:        "data.successHTML",
 						Description: "Displayed when visitors complete a purchase.",
 					},
@@ -83,12 +82,14 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 		},
 	}
 
-	result, err := f.HTML(formLibrary, &s, renderer.object())
+	// Try to render the stripe form into HTML
+	result, err := stripeForm.HTML(renderer.object(), &s, nil)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error rendering form")
 	}
 
+	//Wrap the form and write it to the output buffer
 	result = WrapForm(renderer.URL(), result)
 
 	if _, err := buffer.Write([]byte(result)); err != nil {
@@ -204,16 +205,16 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 }
 
 // getTaxRates queries Stripe for all pre-configured tax rates and returns them as a slice of OptionCodes
-func (step StepStripeProduct) getTaxRates(api client.API) []form.OptionCode {
+func (step StepStripeProduct) getTaxRates(api client.API) []form.LookupCode {
 
-	result := make([]form.OptionCode, 0)
+	result := make([]form.LookupCode, 0)
 
-	// Map all tax rates into a slice of form.OptionCode
+	// Map all tax rates into a slice of form.LookupCode
 	it := api.TaxRates.List(nil)
 
 	for it.Next() {
 		taxRate := it.TaxRate()
-		result = append(result, form.OptionCode{
+		result = append(result, form.LookupCode{
 			Value: taxRate.ID,
 			Label: taxRate.Description,
 		})
@@ -224,16 +225,16 @@ func (step StepStripeProduct) getTaxRates(api client.API) []form.OptionCode {
 }
 
 // getShippingMethods queries Stripe for all pre-configured shipping methods and returns them as a slice of OptionCodes
-func (step StepStripeProduct) getShippingMethods(api client.API) []form.OptionCode {
+func (step StepStripeProduct) getShippingMethods(api client.API) []form.LookupCode {
 
-	result := make([]form.OptionCode, 0)
+	result := make([]form.LookupCode, 0)
 
-	// Map all tax rates into a slice of form.OptionCode
+	// Map all tax rates into a slice of form.LookupCode
 	it := api.ShippingRates.List(nil)
 
 	for it.Next() {
 		shippingRate := it.ShippingRate()
-		result = append(result, form.OptionCode{
+		result = append(result, form.LookupCode{
 			Value: shippingRate.ID,
 			Label: shippingRate.DisplayName,
 		})

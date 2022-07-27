@@ -10,7 +10,7 @@ import (
 
 // StepAddModelObject is an action that can add new model objects of any type
 type StepAddModelObject struct {
-	Form     form.Form
+	Form     form.Element
 	Defaults []step.Step
 }
 
@@ -27,7 +27,7 @@ func (step StepAddModelObject) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Try to render the Form HTML
-	result, err := step.Form.HTML(factory.FormLibrary(), &schema, object)
+	result, err := step.Form.HTML(object, &schema, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepAddModelObject.Get", "Error generating form")

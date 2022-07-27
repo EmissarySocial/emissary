@@ -20,10 +20,11 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
 
-	factory := renderer.factory()
-	formLibrary := factory.FormLibrary()
-	element := form.NewForm("layout-vertical")
-	element.Label = step.Title
+	element := form.Element{
+		Type:     "layout-vertical",
+		Label:    step.Title,
+		Children: []form.Element{},
+	}
 
 	for _, path := range step.Paths {
 
@@ -31,9 +32,9 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 
 		case "token":
 			element.Children = append(element.Children,
-				form.Form{
+				form.Element{
 					Path:        path,
-					Kind:        "text",
+					Type:        "text",
 					Label:       "URL Token",
 					Options:     maps.Map{"format": "token"},
 					Description: "Human-friendly web address",
@@ -41,9 +42,9 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 
 		case "label":
 			element.Children = append(element.Children,
-				form.Form{
+				form.Element{
 					Path:        path,
-					Kind:        "text",
+					Type:        "text",
 					Label:       "Label",
 					Description: "Displayed on navigation, pages, and indexes",
 					Options:     maps.Map{"maxlength": 100},
@@ -52,8 +53,8 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 		case "description":
 
 			element.Children = append(element.Children,
-				form.Form{
-					Kind:        "textarea",
+				form.Element{
+					Type:        "textarea",
 					Path:        path,
 					Label:       "Text Description",
 					Description: "Long description displays on pages and indexes",
@@ -63,7 +64,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 		}
 	}
 
-	html, err := element.HTML(formLibrary, &schema, stream)
+	html, err := element.HTML(stream, &schema, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML")

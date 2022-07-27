@@ -582,7 +582,7 @@ func (w Stream) UserCan(actionID string) bool {
 
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
-func (w Stream) CanCreate() []form.OptionCode {
+func (w Stream) CanCreate() []form.LookupCode {
 
 	templateService := w.factory().Template()
 	return templateService.ListByContainer(w.template.TemplateID)

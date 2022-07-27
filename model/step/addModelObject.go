@@ -8,7 +8,7 @@ import (
 
 // AddModelObject is an action that can add new model objects of any type
 type AddModelObject struct {
-	Form     form.Form
+	Form     form.Element
 	Defaults []Step
 }
 

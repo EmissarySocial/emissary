@@ -349,8 +349,8 @@ func (w Common) TopLevel() (List, error) {
  *******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
-func (w Common) AdminSections() []form.OptionCode {
-	return []form.OptionCode{
+func (w Common) AdminSections() []form.LookupCode {
+	return []form.LookupCode{
 		{
 			Value: "domain",
 			Label: "Site",

@@ -22,19 +22,17 @@ type Stream struct {
 	templateService     *Template
 	draftService        *StreamDraft
 	attachmentService   *Attachment
-	formLibrary         *form.Library
 	contentLibrary      *nebula.Library
 	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, formLibrary *form.Library, contentLibrary *nebula.Library, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, contentLibrary *nebula.Library, streamUpdateChannel chan model.Stream) Stream {
 
 	service := Stream{
 		templateService:     templateService,
 		draftService:        draftService,
 		attachmentService:   attachmentService,
-		formLibrary:         formLibrary,
 		contentLibrary:      contentLibrary,
 		streamUpdateChannel: streamUpdateChannel,
 	}
@@ -263,19 +261,19 @@ func (service *Stream) ListFeatures(streamID primitive.ObjectID) (data.Iterator,
 // ListAllFeaturesBySelectionAndRank returns all features in the system.  Selected features are
 // listed first (according to their sort rank) and unselected features are listed second.  This
 // function also returns a slice of strings that contains the templateIds for all selected features.
-func (service *Stream) ListAllFeaturesBySelectionAndRank(streamID primitive.ObjectID) ([]form.OptionCode, []string, error) {
+func (service *Stream) ListAllFeaturesBySelectionAndRank(streamID primitive.ObjectID) ([]form.LookupCode, []string, error) {
 
 	const location = "service.Stream.ListAllFeaturesBySelectionAndRank"
 
 	streams, err := service.ListFeatures(streamID)
 
 	if err != nil {
-		return []form.OptionCode{}, []string{}, derp.Wrap(err, location, "Error getting features for this stream", streamID)
+		return []form.LookupCode{}, []string{}, derp.Wrap(err, location, "Error getting features for this stream", streamID)
 	}
 
 	features := service.templateService.ListFeatures()
 	templateIDs := []string{}
-	selected := []form.OptionCode{}
+	selected := []form.LookupCode{}
 
 	stream := model.NewStream()
 	for streams.Next(&stream) {

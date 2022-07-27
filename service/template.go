@@ -178,13 +178,13 @@ func (service *Template) loadTemplates() error {
  *******************************************/
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(filter func(*model.Template) bool) []form.OptionCode {
+func (service *Template) List(filter func(*model.Template) bool) []form.LookupCode {
 
-	result := []form.OptionCode{}
+	result := []form.LookupCode{}
 
 	for _, template := range service.templates {
 		if filter(&template) {
-			result = append(result, form.OptionCode{
+			result = append(result, form.LookupCode{
 				Value:       template.TemplateID,
 				Label:       template.Label,
 				Description: template.Description,
@@ -230,7 +230,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
  *******************************************/
 
 // ListFeatures returns all templates that are used as "feature" templates
-func (service *Template) ListFeatures() []form.OptionCode {
+func (service *Template) ListFeatures() []form.LookupCode {
 
 	filter := func(t *model.Template) bool {
 		return t.AsFeature
@@ -240,7 +240,7 @@ func (service *Template) ListFeatures() []form.OptionCode {
 }
 
 // ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []form.OptionCode {
+func (service *Template) ListByContainer(containedBy string) []form.LookupCode {
 
 	filter := func(t *model.Template) bool {
 		return compare.Contains(t.ContainedBy, containedBy)
@@ -252,7 +252,7 @@ func (service *Template) ListByContainer(containedBy string) []form.OptionCode {
 // ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
 // are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
 // are returned.
-func (service *Template) ListByContainerLimited(containedBy string, limits []string) []form.OptionCode {
+func (service *Template) ListByContainerLimited(containedBy string, limits []string) []form.LookupCode {
 
 	if len(limits) == 0 {
 		return service.ListByContainer(containedBy)

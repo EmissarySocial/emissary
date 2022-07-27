@@ -8,7 +8,7 @@ import (
 
 // Form represents an action-step that can update the data.DataMap custom data stored in a Stream
 type Form struct {
-	Form form.Form
+	Form form.Element
 }
 
 // NewForm returns a fully initialized Form object

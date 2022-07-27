@@ -8,7 +8,7 @@ import (
 
 // EditModelObject is an action that can add new sub-streams to the domain.
 type EditModelObject struct {
-	Form     form.Form
+	Form     form.Element
 	Defaults []Step
 }
 

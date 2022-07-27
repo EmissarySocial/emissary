@@ -10,7 +10,7 @@ import (
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
 type StepEditModelObject struct {
-	Form     form.Form
+	Form     form.Element
 	Defaults []step.Step
 }
 
@@ -29,7 +29,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Try to render the Form HTML
-	result, err := step.Form.HTML(factory.FormLibrary(), &schema, object)
+	result, err := step.Form.HTML(object, &schema, nil)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")

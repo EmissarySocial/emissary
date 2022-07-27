@@ -3,7 +3,6 @@ package render
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/benpate/form"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/stripe/stripe-go/v72/client"
@@ -14,7 +13,6 @@ type Factory interface {
 	Attachment() *service.Attachment
 	ContentLibrary() *nebula.Library
 	Domain() *service.Domain
-	FormLibrary() *form.Library
 	Group() *service.Group
 	Layout() *service.Layout
 	MediaServer() mediaserver.MediaServer

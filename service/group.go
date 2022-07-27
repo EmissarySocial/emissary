@@ -167,22 +167,23 @@ func (service *Group) ListByGroup(group string) (data.Iterator, error) {
 	return service.List(exp.Equal("groupId", group))
 }
 
-func (service *Group) ListAsOptions() ([]form.OptionCode, error) {
+func (service *Group) ListAsOptions() []form.LookupCode {
+
+	result := make([]form.LookupCode, 0)
 
 	it, err := service.List(exp.All(), option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Group.ListAsOptions", "Error listing Groups")
+		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Error listing Groups"))
+		return result
 	}
-
-	result := make([]form.OptionCode, 0)
 
 	var group model.Group
 	for it.Next(&group) {
-		result = append(result, form.OptionCode{Label: group.Label, Value: group.GroupID.Hex()})
+		result = append(result, form.LookupCode{Label: group.Label, Value: group.GroupID.Hex()})
 	}
 
-	return result, nil
+	return result
 }
 
 // Count returns the number of (non-deleted) records in the User collection

@@ -23,7 +23,6 @@ type StepSetSimpleSharing struct {
 
 func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error {
 
-	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	model := streamRenderer.stream.Permissions.SimpleModel()
 
@@ -31,7 +30,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	schema := step.schema()
 	form := step.form()
 
-	formHTML, err := form.HTML(factory.FormLibrary(), &schema, model)
+	formHTML, err := form.HTML(model, &schema, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepSetSimpleSharing.Get", "Error rendering form")
@@ -124,13 +123,13 @@ func (step StepSetSimpleSharing) schema() schema.Schema {
 }
 
 // form returns the form to be displayed
-func (step StepSetSimpleSharing) form() form.Form {
+func (step StepSetSimpleSharing) form() form.Element {
 
-	return form.Form{
-		Kind: "layout-vertical",
-		Children: []form.Form{
-			{Kind: "select", Path: "rule", Options: maps.Map{"format": "radio", "provider": "sharing"}},
-			{Kind: "select", Path: "groupIds", Options: maps.Map{"provider": "groups"}, Show: form.Rule{Path: "rule", Value: "'private'"}},
+	return form.Element{
+		Type: "layout-vertical",
+		Children: []form.Element{
+			{Type: "radio", Path: "rule", Options: maps.Map{"provider": "sharing"}},
+			{Type: "select", Path: "groupIds", Options: maps.Map{"provider": "groups"}}, // TODO: , Show: form.Rule{Path: "rule", Value: "'private'"}
 		},
 	}
 }

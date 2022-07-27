@@ -21,11 +21,9 @@ func SetupGetPage(factory *server.Factory, templates *template.Template, templat
 
 	return func(ctx echo.Context) error {
 
-		library := factory.FormLibrary() // TODO: This should be cached in the factory after refactoring the OptionProvider
-
 		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
 
-		renderer := render.NewSetup(&library, factory.Config())
+		renderer := render.NewSetup(factory.Config())
 
 		header := ctx.Response().Header()
 		header.Set("Content-Type", "text/html")
@@ -96,28 +94,26 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.SetupGetDomain", "Error loading configuration")
 		}
 
-		lib := factory.FormLibrary()
-
-		f := form.Form{
-			Kind:  "layout-vertical",
+		domainEditForm := form.Element{
+			Type:  "layout-vertical",
 			Label: header,
-			Children: []form.Form{{
-				Kind:        "text",
+			Children: []form.Element{{
+				Type:        "text",
 				Path:        "label",
 				Label:       "Label",
 				Description: "Admin-friendly label for this domain",
 			}, {
-				Kind:        "text",
+				Type:        "text",
 				Path:        "hostname",
 				Label:       "Hostname",
 				Description: "Complete domain name (but no https:// or trailing slashes)",
 			}, {
-				Kind:        "text",
+				Type:        "text",
 				Path:        "connectString",
 				Label:       "MongoDB Connection String",
 				Description: "Should look like mongodb://host:port/database",
 			}, {
-				Kind:        "text",
+				Type:        "text",
 				Path:        "databaseName",
 				Label:       "MongoDB Database Name",
 				Description: "Name of the database to use on the server",
@@ -126,7 +122,7 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 
 		s := config.DomainSchema()
 
-		formHTML, err := f.HTML(&lib, &s, domain)
+		formHTML, err := domainEditForm.HTML(domain, &s, nil)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.SetupGetDomain", "Error generating form")
