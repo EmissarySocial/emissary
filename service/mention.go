@@ -42,11 +42,28 @@ type Mention struct {
 
 // NewMention returns a fully initialized Mention service
 func NewMention(collection data.Collection) Mention {
-	return Mention{
-		collection: collection,
-	}
+	service := Mention{}
+	service.Refresh(collection)
+	return service
 }
 
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Mention) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *Mention) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
 /*******************************************
  * COMMON DATA FUNCTIONS
  *******************************************/

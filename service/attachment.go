@@ -18,11 +18,32 @@ type Attachment struct {
 
 // NewAttachment returns a fully populated Attachment service
 func NewAttachment(collection data.Collection, mediaServer mediaserver.MediaServer) Attachment {
-	return Attachment{
+	service := Attachment{
 		collection:  collection,
 		mediaServer: mediaServer,
 	}
+
+	service.Refresh(collection)
+	return service
 }
+
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Attachment) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *Attachment) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
 
 // New creates a newly initialized Attachment that is ready to use
 func (service Attachment) New() model.Attachment {

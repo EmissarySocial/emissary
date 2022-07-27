@@ -36,10 +36,12 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	domainService       *service.Domain
+	attachmentService   service.Attachment
+	groupService        service.Group
+	domainService       service.Domain
 	streamService       service.Stream
-	subscriptionService *service.Subscription
-	realtimeBroker      *RealtimeBroker
+	subscriptionService service.Subscription
+	realtimeBroker      RealtimeBroker
 	userService         service.User
 
 	// real-time watchers
@@ -95,6 +97,17 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		factory.ContentLibrary(),
 	)
 
+	// Start the Group Service
+	factory.groupService = service.NewGroup(
+		factory.collection(CollectionGroup),
+	)
+
+	// Start the Attachment Service
+	factory.attachmentService = service.NewAttachment(
+		factory.collection(CollectionAttachment),
+		factory.MediaServer(),
+	)
+
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
 		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
@@ -141,7 +154,10 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.Session = session
 
 		// Refresh cached services
+		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
+		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain))
+		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
 		factory.streamService.Refresh(factory.collection(CollectionStream))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
@@ -153,7 +169,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 				go service.WatchStreams(collection.Mongo(), factory.streamUpdateChannel)
 			}
 		}
-
 	}
 
 	factory.config = domain
@@ -208,13 +223,12 @@ func (factory *Factory) Config() config.Domain {
 
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
-	result := service.NewAttachment(factory.collection(CollectionAttachment), factory.MediaServer())
-	return &result
+	return &factory.attachmentService
 }
 
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
-	return factory.domainService
+	return &factory.domainService
 }
 
 // Mention returns a fully populated Mention service
@@ -246,7 +260,7 @@ func (factory *Factory) StreamSource() *service.StreamSource {
 
 // Subscription returns a fully populated Subscription service
 func (factory *Factory) Subscription() *service.Subscription {
-	return factory.subscriptionService
+	return &factory.subscriptionService
 }
 
 // User returns a fully populated User service
@@ -256,8 +270,7 @@ func (factory *Factory) User() *service.User {
 
 // Group returns a fully populated Group service
 func (factory *Factory) Group() *service.Group {
-	result := service.NewGroup(factory.collection(CollectionGroup))
-	return &result
+	return &factory.groupService
 }
 
 /*******************************************
@@ -285,7 +298,7 @@ func (factory *Factory) ContentLibrary() *nebula.Library {
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
-	return factory.realtimeBroker
+	return &factory.realtimeBroker
 }
 
 // StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.

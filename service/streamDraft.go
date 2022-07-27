@@ -21,12 +21,32 @@ type StreamDraft struct {
 
 // NewStreamDraft returns a fully populated StreamDraft service.
 func NewStreamDraft(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) StreamDraft {
-	return StreamDraft{
-		collection:     collection,
+	service := StreamDraft{
 		streamService:  streamService,
 		contentLibrary: contentLibrary,
 	}
+
+	service.Refresh(collection)
+	return service
 }
+
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *StreamDraft) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *StreamDraft) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
 
 /*******************************************
  * COMMON DATA FUNCTIONS

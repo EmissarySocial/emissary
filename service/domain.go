@@ -17,18 +17,19 @@ type Domain struct {
 	collection data.Collection
 	funcMap    template.FuncMap
 	model      model.Domain
-	lock       sync.Mutex
+	lock       *sync.Mutex
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, funcMap template.FuncMap) *Domain {
+func NewDomain(collection data.Collection, funcMap template.FuncMap) Domain {
 	service := Domain{
 		funcMap: funcMap,
+		lock:    &sync.Mutex{},
 	}
 
 	service.Refresh(collection)
 
-	return &service
+	return service
 }
 
 /*******************************************

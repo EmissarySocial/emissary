@@ -21,13 +21,27 @@ type Group struct {
 
 // NewGroup returns a fully populated Group service
 func NewGroup(collection data.Collection) Group {
-	return Group{
-		collection: collection,
-	}
+	service := Group{}
+	service.Refresh(collection)
+	return service
 }
 
 /*******************************************
- * COMMON DATA FUNCTIONS
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Group) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *Group) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
  *******************************************/
 
 // List returns an iterator containing all of the Groups who match the provided criteria

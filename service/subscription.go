@@ -21,7 +21,7 @@ type Subscription struct {
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) *Subscription {
+func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) Subscription {
 
 	service := Subscription{
 		collection:     collection,
@@ -35,7 +35,7 @@ func NewSubscription(collection data.Collection, streamService *Stream, contentL
 	// Removing 20-minute polling for now, until we can figure out how to handle it properly
 	// go service.start()
 
-	return &service
+	return service
 }
 
 /*******************************************

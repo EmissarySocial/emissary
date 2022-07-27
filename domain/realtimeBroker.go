@@ -30,9 +30,9 @@ type RealtimeBroker struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory *Factory, updates chan model.Stream) *RealtimeBroker {
+func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBroker {
 
-	result := &RealtimeBroker{
+	result := RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
 		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
 		streamUpdates: updates,

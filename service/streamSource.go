@@ -16,10 +16,31 @@ type StreamSource struct {
 
 // NewStreamSource returns a fully populated StreamSource service
 func NewStreamSource(collection data.Collection) *StreamSource {
-	return &StreamSource{
+	service := &StreamSource{
 		collection: collection,
 	}
+
+	service.Refresh(collection)
+	return service
 }
+
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *StreamSource) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *StreamSource) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
 
 // New creates a newly initialized StreamSource that is ready to use
 func (service StreamSource) New() *model.StreamSource {

@@ -120,7 +120,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error setting values", transaction)
 	}
 
-	// Find product images
+	// Find product images to use as thumbnails
 	var attachment model.Attachment
 	images := []string{}
 

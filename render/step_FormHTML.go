@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -17,9 +18,14 @@ func (step StepForm) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepForm.Get"
 
+	spew.Dump(step.Form, renderer.object())
+
 	// Try to render the Form HTML
 	factory := renderer.factory()
 	schema := renderer.schema()
+
+	spew.Dump(schema.Get(renderer.object(), "signupForm"))
+
 	result, err := step.Form.HTML(renderer.object(), &schema, factory.LookupProvider())
 
 	if err != nil {
@@ -53,6 +59,7 @@ func (step StepForm) Post(renderer Renderer) error {
 	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validates inputs before setting.
 	for _, element := range step.Form.AllElements() {
 		value := request.Form[element.Path]
+		spew.Dump("SETTING....", element.Path, value)
 		if err := schema.Set(object, element.Path, value); err != nil {
 			return derp.Wrap(err, location, "Error setting path value", element, value)
 		}
@@ -61,6 +68,8 @@ func (step StepForm) Post(renderer Renderer) error {
 	if err := schema.Validate(object); err != nil {
 		return derp.Wrap(err, location, "Object data is invalid")
 	}
+
+	spew.Dump("UPDATED", object)
 
 	return nil
 }
