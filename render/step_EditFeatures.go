@@ -49,7 +49,7 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Generate the form HTML
-	html, err := featuresForm.HTML(v, &s, nil)
+	html, err := featuresForm.HTML(v, &s, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating Form")

@@ -66,15 +66,15 @@
 					{
 					"step": "form-html",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Edit Photo Album",
 						"description": "",
 						"children": [{
-							"kind": "text",
+							"type": "text",
 							"label": "Label",
 							"path": "label"
 						},{
-							"kind": "textarea",
+							"type": "textarea",
 							"label": "Description",
 							"path": "description",
 							"cssClass": "height300"

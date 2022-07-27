@@ -60,9 +60,9 @@
 				{
 					"step": "form-html",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"children": [{
-							"kind": "text",
+							"type": "text",
 							"label": "Edit this Comment",
 							"path": "description"
 						}]

@@ -83,7 +83,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Try to render the stripe form into HTML
-	result, err := stripeForm.HTML(renderer.object(), &s, nil)
+	result, err := stripeForm.HTML(renderer.object(), &s, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error rendering form")

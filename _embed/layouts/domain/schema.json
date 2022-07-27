@@ -19,12 +19,12 @@
 					{
 						"step": "form-html",
 						"form": {
-							"kind": "layout-vertical",
+							"type": "layout-vertical",
 							"label": "Custom Signup Form",
 							"children": [
-								{"kind": "text", "path":"signupForm.title", "label": "Title", "description": "Large text is displayed at the top of the signup page."},
-								{"kind": "textarea", "path":"signupForm.message", "label":"Message", "description": "A block of regular text displayed below the title.", "cssClass":"height100"},
-								{"kind": "toggle", "path": "signupForm.active", "options":{"true-text":"Activate Form", "false-text": "Activate Form"}}
+								{"type": "text", "path":"signupForm.title", "label": "Title", "description": "Large text is displayed at the top of the signup page."},
+								{"type": "textarea", "path":"signupForm.message", "label":"Message", "description": "A block of regular text displayed below the title.", "cssClass":"height100"},
+								{"type": "toggle", "path": "signupForm.active", "options":{"true-text":"Activate Form", "false-text": "Activate Form"}}
 							]
 						}
 					}, 

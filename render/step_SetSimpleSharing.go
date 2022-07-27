@@ -27,10 +27,11 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	model := streamRenderer.stream.Permissions.SimpleModel()
 
 	// Try to write form HTML
+	factory := renderer.factory()
 	schema := step.schema()
-	form := step.form()
+	simpleSharingForm := step.form()
 
-	formHTML, err := form.HTML(model, &schema, nil)
+	formHTML, err := simpleSharingForm.HTML(model, &schema, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepSetSimpleSharing.Get", "Error rendering form")

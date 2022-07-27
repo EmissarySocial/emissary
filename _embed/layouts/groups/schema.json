@@ -13,10 +13,10 @@
 					"step": "add",
 					"type": "group",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Add a Group",
 						"children": [
-							{"kind": "text", "label": "Label", "path": "label"}
+							{"type": "text", "label": "Label", "path": "label"}
 						]
 					}
 				}]
@@ -29,11 +29,11 @@
 				"steps": [{
 					"step": "form-html",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Edit Group",
 						"description": "",
 						"children": [
-							{"kind": "text", "label": "Label", "path": "label"}
+							{"type": "text", "label": "Label", "path": "label"}
 						]
 					}},
 					{"step": "save","comment": "Updated by {{.Author}}"}

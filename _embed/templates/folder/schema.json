@@ -51,13 +51,13 @@
 					{
 						"step": "form-html",
 						"form": {
-							"kind": "layout-vertical",
+							"type": "layout-vertical",
 							"label": "Edit Folder",
 							"children": [
-								{"kind": "text", "label": "Label", "path": "label"},
-								{"kind": "textarea", "label": "Description", "path": "description"},
-								{"kind": "select", "label": "Format", "path": "data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
-								{"kind": "select", "label": "Show Images", "path": "data.showImages"}
+								{"type": "text", "label": "Label", "path": "label"},
+								{"type": "textarea", "label": "Description", "path": "description"},
+								{"type": "select", "label": "Format", "path": "data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
+								{"type": "select", "label": "Show Images", "path": "data.showImages"}
 							]
 						}
 					}, 

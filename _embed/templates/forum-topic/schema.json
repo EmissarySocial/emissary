@@ -72,15 +72,15 @@
 				{"step": "as-modal", "steps": [
 					{"step": "form-html",
 						"form": {
-							"kind": "layout-vertical",
+							"type": "layout-vertical",
 							"label": "Article Properties",
 							"description": "This will update the object in this state",
 							"children": [{
-								"kind": "text",
+								"type": "text",
 								"label": "Label",
 								"path": "label"
 							}, {
-								"kind": "wysiwyg",
+								"type": "wysiwyg",
 								"label": "Description",
 								"path": "description"
 							}]

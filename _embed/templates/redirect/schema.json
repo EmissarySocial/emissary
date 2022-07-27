@@ -37,11 +37,11 @@
 						"step": "form-html",
 						"label": "Edit Redirect",
 						"form": {
-							"kind": "layout-vertical",
+							"type": "layout-vertical",
 							"children": [
-								{"kind": "text", "label": "Label", "path": "label"},
-								{"kind": "textarea", "label": "Description", "path": "description"},
-								{"kind": "text", "label": "URL", "path": "data.url"}
+								{"type": "text", "label": "Label", "path": "label"},
+								{"type": "textarea", "label": "Description", "path": "description"},
+								{"type": "text", "label": "URL", "path": "data.url"}
 							]
 						}
 					}, 

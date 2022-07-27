@@ -45,15 +45,15 @@
 				"steps": [{
 					"step": "form-html",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Edit Photograph",
 						"description": "This will update the object in this state",
 						"children": [{
-							"kind": "text",
+							"type": "text",
 							"label": "Title",
 							"path": "label"
 						},{
-							"kind": "textarea",
+							"type": "textarea",
 							"label": "Description",
 							"path": "description"
 						}]

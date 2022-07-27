@@ -13,12 +13,12 @@
 					"step": "add",
 					"type": "user",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Add a Person",
 						"children": [
-							{"kind": "text", "label": "Full Name", "path": "displayName"},
-							{"kind": "text", "label": "Username", "path": "username"},
-							{"kind": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups", "sort":false}}
+							{"type": "text", "label": "Full Name", "path": "displayName"},
+							{"type": "text", "label": "Username", "path": "username"},
+							{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups", "sort":false}}
 						]
 					}
 				}]
@@ -32,13 +32,13 @@
 					"step": "edit",
 					"type": "user",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Edit Person",
 						"description": "",
 						"children": [
-							{"kind": "text", "label": "Full Name", "path": "displayName"},
-							{"kind": "text", "label": "Username", "path": "username"},
-							{"kind": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
+							{"type": "text", "label": "Full Name", "path": "displayName"},
+							{"type": "text", "label": "Username", "path": "username"},
+							{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
 						]
 					}},
 					{"step": "save", "type":"user", "comment": "Updated by {{.Author}}"}

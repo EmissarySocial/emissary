@@ -70,14 +70,14 @@
 					"steps": [{
 						"step": "form-html",
 						"form": {
-							"kind": "layout-vertical",
+							"type": "layout-vertical",
 							"label": "Edit Forum",
 							"children": [{
-								"kind": "text",
+								"type": "text",
 								"label": "Label",
 								"path": "label"
 							}, {
-								"kind": "textarea",
+								"type": "textarea",
 								"label": "Description",
 								"path": "description"
 							}]

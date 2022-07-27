@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/list"
 )
 
 type LookupProvider struct {
@@ -18,8 +17,6 @@ func NewLookupProvider(group *Group, user *User) LookupProvider {
 }
 
 func (service LookupProvider) LookupCodes(path string) []form.LookupCode {
-
-	path = list.Slash(path).Last()
 
 	switch path {
 

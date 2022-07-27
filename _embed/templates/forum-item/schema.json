@@ -82,10 +82,10 @@
 				"step": "as-modal", "steps": [{
 					"step": "form-html",
 					"form": {
-						"kind": "layout-vertical",
+						"type": "layout-vertical",
 						"label": "Edit Comment",
 						"children": [{
-							"kind": "wysiwyg",
+							"type": "wysiwyg",
 							"path": "description"
 						}]
 					}},
