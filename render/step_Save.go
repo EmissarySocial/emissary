@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSave represents an action-step that can save changes to any object
@@ -24,7 +23,6 @@ func (step StepSave) UseGlobalWrapper() bool {
 func (step StepSave) Post(renderer Renderer) error {
 
 	object := renderer.object()
-	spew.Dump("SAVING ===========", object)
 
 	// Validate the object against the schema
 	if err := renderer.schema().Validate(object); err != nil {
