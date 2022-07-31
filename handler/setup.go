@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -60,8 +61,12 @@ func SetupPostServer(factory *server.Factory) echo.HandlerFunc {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input (BAD FORMAT)."))
 		}
 
+		// Split array values from the form
+		body["templates"] = strings.Split(body.GetString("templates"), "\n")
+		body["layouts"] = strings.Split(body.GetString("layouts"), "\n")
+
 		// Try to update the configuration with the form data
-		if err := s.SetAll(c, body); err != nil {
+		if err := s.SetAll(&c, body); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input."))
 		}
 
