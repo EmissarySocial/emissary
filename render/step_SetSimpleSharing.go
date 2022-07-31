@@ -130,7 +130,7 @@ func (step StepSetSimpleSharing) form() form.Element {
 		Type: "layout-vertical",
 		Children: []form.Element{
 			{Type: "radio", Path: "rule", Options: maps.Map{"provider": "sharing"}},
-			{Type: "select", Path: "groupIds", Options: maps.Map{"provider": "groups"}}, // TODO: , Show: form.Rule{Path: "rule", Value: "'private'"}
+			{Type: "multiselect", Path: "groupIds", Options: maps.Map{"provider": "groups"}}, // TODO: , Show: form.Rule{Path: "rule", Value: "'private'"}
 		},
 	}
 }
