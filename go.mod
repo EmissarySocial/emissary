@@ -3,6 +3,7 @@ module github.com/EmissarySocial/emissary
 go 1.18
 
 replace github.com/benpate/form => ../../benpate/form
+replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
 	github.com/benpate/activitystream v0.6.0
@@ -17,7 +18,7 @@ require (
 	github.com/benpate/mediaserver v0.6.0
 	github.com/benpate/nebula v0.6.1
 	github.com/benpate/remote v0.8.0
-	github.com/benpate/rosetta v0.5.1
+	github.com/benpate/rosetta v0.5.3
 	github.com/benpate/steranko v0.9.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
