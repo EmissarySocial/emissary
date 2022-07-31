@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/EmissarySocial/emissary/tools/set"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -77,49 +76,18 @@ func Schema() schema.Schema {
 				"domains": schema.Array{
 					Items: DomainSchema().Element,
 				},
-				"certificates": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
+				"templates": schema.Array{
+					Items:     schema.String{},
+					Delimiter: "\n",
 				},
-				"templates": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
+				"layouts": schema.Array{
+					Items:     schema.String{},
+					Delimiter: "\n",
 				},
-				"layouts": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
-				},
-				"static": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
-				},
-				"attachmentOriginals": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
-				},
-				"attachmentCache": schema.Object{
-					Properties: schema.ElementMap{
-						"adapter":  schema.String{Enum: []string{"FILE"}, Default: "FILE"},
-						"location": schema.String{},
-						"sync":     schema.Boolean{Default: null.NewBool(false)},
-					},
-				},
-				"adminEmail": schema.String{},
+				"attachmentOriginals": schema.String{},
+				"attachmentCache":     schema.String{},
+				"certificates":        schema.String{},
+				"adminEmail":          schema.String{},
 			},
 		},
 	}
