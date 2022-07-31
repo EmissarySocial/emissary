@@ -3,6 +3,9 @@ module github.com/EmissarySocial/emissary
 go 1.18
 
 replace github.com/benpate/form => ../../benpate/form
+
+replace github.com/benpate/nebula => ../../benpate/nebula
+
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
@@ -14,7 +17,7 @@ require (
 	github.com/benpate/exp v0.5.0
 	github.com/benpate/exp-builder v0.2.0
 	github.com/benpate/form v0.8.0
-	github.com/benpate/html v0.14.0
+	github.com/benpate/html v0.14.1
 	github.com/benpate/mediaserver v0.6.0
 	github.com/benpate/nebula v0.6.1
 	github.com/benpate/remote v0.8.0
@@ -74,6 +77,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
+	github.com/yuin/goldmark v1.4.13 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect

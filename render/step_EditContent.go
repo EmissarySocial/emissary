@@ -112,7 +112,7 @@ func (step StepEditContent) Post(renderer Renderer) error {
 	header := response.Header()
 	header.Set("HX-Trigger", "closeModal")
 	header.Set("ChangedID", convert.String(changedID))
-	header.Set("HX-Retarget", `.content-editor`)
+	header.Set("HX-Retarget", `#content-editor`)
 
 	// Re-render ALL items, including the Sortable behavior
 	result := nebula.Edit(contentLibrary, &container, renderer.URL())

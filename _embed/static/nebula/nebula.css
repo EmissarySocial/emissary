@@ -3,14 +3,14 @@
  ***************************/
 
 /* Omitted for now, until there's something to put in here...
-.content-editor {}
+#content-editor {}
 */
 
 /***************************
  * LAYOUT
  ***************************/
 
-.content-editor .nebula-layout {
+#content-editor .nebula-layout {
 	display:flex;
 	flex-grow:1;
 	box-sizing: border-box;
@@ -21,11 +21,11 @@
 	background-color:var(--gray15);
 }
 
-.content-editor div.nebula-layout[data-style=ROWS] {
+#content-editor div.nebula-layout[data-style=ROWS] {
 	flex-direction:column;
 }
 
-.content-editor div.nebula-layout[data-style=COLS] {
+#content-editor div.nebula-layout[data-style=COLS] {
 	flex-direction:row;
 }
 
@@ -33,11 +33,11 @@
  * LAYOUT CONTROLS
  ***************************/
 
-.content-editor .nebula-layout-item > .nebula-layout-controls {
+#content-editor .nebula-layout-item > .nebula-layout-controls {
 	display:none;
 }
 
-.content-editor .nebula-layout-item:hover > .nebula-layout-controls {
+#content-editor .nebula-layout-item:hover > .nebula-layout-controls {
 	display:flex;
 	flex-direction:row;
 	position: absolute;
@@ -52,20 +52,20 @@
 	color: var(--gray40);
 }
 
-.content-editor .nebula-layout-controls > div:hover {
+#content-editor .nebula-layout-controls > div:hover {
 	color: cornflowerblue;
 }
 
-.content-editor .nebula-layout-sortable-handle {
+#content-editor .nebula-layout-sortable-handle {
 	cursor: grab;
 	padding: 2px 10px;
 }
 
-.content-editor .nebula-layout-sortable-handle:active {
+#content-editor .nebula-layout-sortable-handle:active {
 	cursor: grabbing;
 }
 
-.content-editor .nebula-layout-delete {
+#content-editor .nebula-layout-delete {
 	cursor: pointer;
 	padding: 2px 10px;
 }
@@ -74,7 +74,7 @@
  * SORTABLE
  ***************************/
 
- .content-editor .nebula-layout-sortable-whisper {
+ #content-editor .nebula-layout-sortable-whisper {
 	opacity:0.3;
 	background-color:black;
 	border: solid 1x purple;
@@ -84,7 +84,7 @@
  * ITEMS
  ***************************/
 
- .content-editor div.nebula-layout-item {
+ #content-editor div.nebula-layout-item {
 	position:relative;
 	background-color:var(--gray05);
 	margin-bottom: 10px;
@@ -95,7 +95,7 @@
  * INSERTION POINTS 
  ***************************/
 
-.content-editor .nebula-layout-insert {
+#content-editor .nebula-layout-insert {
 	display:block;
 	position:absolute;
 	z-index:2;
@@ -103,19 +103,19 @@
 	cursor: copy;
 }
 
-.content-editor .nebula-layout-insert:hover {
+#content-editor .nebula-layout-insert:hover {
 	background-color:cornflowerblue;
 	z-index:4;
 }
 
-.content-editor .nebula-layout-insert[data-place=BEFORE] {
+#content-editor .nebula-layout-insert[data-place=BEFORE] {
 	top:-10px;
 	height:10px;
 	left:0px;
 	right:0px;
 }
 
-.content-editor .nebula-layout-insert[data-place=AFTER]{
+#content-editor .nebula-layout-insert[data-place=AFTER]{
 	bottom:-10px;
 	height:10px;
 	left:0px;
@@ -127,7 +127,7 @@
  * WYSIWYG
  ***************************/
 
-.content-editor .wysiwyg {
+#content-editor .wysiwyg {
 	box-sizing: border-box;
 	position:relative;
 	display:block;
@@ -135,7 +135,7 @@
 	background: var(--white);
 }
 
-.content-editor .wysiwyg-toolbar {
+#content-editor .wysiwyg-toolbar {
 	position: absolute;
 	top: -50px;
 	width:100%;
@@ -148,11 +148,11 @@
 	background-color:var(--gray10);
 }
 
-.content-editor .wysiwyg-toolbar-group {
+#content-editor .wysiwyg-toolbar-group {
 	margin-left: 10px;
 }
 
-.content-editor .wysiwyg-toolbar button {
+#content-editor .wysiwyg-toolbar button {
 	margin:0px -1px 0px 0px;
 	padding:8px 10px;
 	border: solid 1px var(--gray20);
@@ -160,23 +160,23 @@
 	background-color:var(--white);
 }
 
-.content-editor .wysiwyg-toolbar button:hover {
+#content-editor .wysiwyg-toolbar button:hover {
 	background-color:cornflowerblue;
 	border-color:cornflowerblue;
 	color:white;
 }
 
-.content-editor .wysiwyg-toolbar button:first-of-type {
+#content-editor .wysiwyg-toolbar button:first-of-type {
 	border-top-left-radius: 6px;
 	border-bottom-left-radius: 6px;
 }
 
-.content-editor .wysiwyg-toolbar button:last-child {
+#content-editor .wysiwyg-toolbar button:last-child {
 	border-top-right-radius: 6px;
 	border-bottom-right-radius: 6px;
 }
 
-.content-editor .wysiwyg-editor {
+#content-editor .wysiwyg-editor {
 	width:100%;
 	min-height:5em;
 	padding:10px;
@@ -184,7 +184,7 @@
 	border: solid 1px var(--gray30);
 }
 
-.content-editor .wysiwyg-editor:focus{
+#content-editor .wysiwyg-editor:focus{
 	border:solid 1px cornflowerblue;
 	outline:none;
 }

@@ -91,7 +91,7 @@
 				<button hx-get="/{{$streamID}}/product">{{.Data "decimalAmount" | dollarFormat}}USD (edit checkout)</button>
 			</div>
 
-			<div class="content-editor space-after">
+			<div id="content-editor" class="space-after">
 				{{.ContentEditor}}
 				<div class="text-sm gray50">This content is updated live on the website.</div>
 			</div>

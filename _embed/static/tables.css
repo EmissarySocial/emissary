@@ -20,11 +20,12 @@ table.table td {
     border-top: solid 1px var(--gray20);
 }
 
-table.table tr[role="link"]:hover td,
-table.table tr[role="link"]:focus td,
-table.table td[role="link"]:focus,
-table.table tr.clickable:hover td,
-table.table tr.clickable:focus td {
+table.table [role=link]:hover td,
+table.table [role=link]:focus td,
+table.table [role=button]:hover td,
+table.table [role=button]:focus td,
+table.table .clickable:hover td,
+table.table .clickable:focus td {
     background-color:var(--gray10);
     cursor:pointer;
 }
@@ -37,14 +38,16 @@ div.table + div.table {
     border-top:none;
 }
 
-div.table > div {
-    padding: 10px 0px;
+div.table > *{
+    padding: 12px 0px;
     vertical-align: top;
     border-bottom: solid 1px var(--gray20);
 }
 
 div.table > [role=link]:hover,
-div.table > [role=link]:focus {
+div.table > [role=link]:focus, 
+div.table > [role=button]:hover,
+div.table > [role=button]:focus {
     background-color:var(--gray10);
     cursor:pointer;
 }

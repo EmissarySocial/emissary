@@ -206,6 +206,13 @@ h3.space-below {
     text-align:right;
 }
 
+.flex-row {
+    display:flex;
+    flex-direction:row;
+    align-items: stretch;
+    gap:8px;
+}
+
 .float-right {
     float:right;
 }
@@ -296,7 +303,7 @@ h3.space-below {
     margin-bottom:calc(var(--rhythm) * 2);
 }
 
-text-xxl,
+.text-xxl,
 .text-2xl,
 .text-xxl input,
 input.text-xxl {
@@ -329,22 +336,22 @@ input.text-lg {
 input.text-md {
     font-size: calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    /* margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2); */
 }
 
 .text-sm {
     font-size: calc(var(--rhythm) * 1.5);
     line-height:calc(var(--rhythm) * 2.25);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    /* margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2); */
 }
 
 .text-xs {
     font-size: calc(var(--rhythm));
     line-height:calc(var(--rhythm) * 1.5);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    /* margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2); */
 }
 
 
@@ -371,12 +378,12 @@ a, .link {
 
 a:hover,
 .link:hover,
-[role=link]:hover {
+[role="link"]:hover {
 	cursor:pointer;
 	color: var(--link-color-hover)!important;
 }
 
-.clickable, [role=link] {
+.clickable, [role="link"], [role="button"] {
 	cursor:pointer;
 }
 
