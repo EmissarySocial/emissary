@@ -24,7 +24,7 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/spf13/afero v1.8.2
+	github.com/spf13/afero v1.9.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/stripe/stripe-go/v72 v72.117.0
