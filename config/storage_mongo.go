@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -84,7 +85,7 @@ func (storage MongoStorage) load() (Config, error) {
 
 	result := NewConfig()
 
-	if err := storage.collection.FindOne(context.Background(), nil).Decode(&result); err != nil {
+	if err := storage.collection.FindOne(context.Background(), bson.M{}).Decode(&result); err != nil {
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")
 	}
 
