@@ -25,6 +25,7 @@ behavior Modal
 
 		if #modal is not empty then 
 			remove .ready from #modal
+			add .closing to #modal
 			settle
 			remove #modal
 		end

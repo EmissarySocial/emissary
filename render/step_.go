@@ -77,6 +77,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Save:
 		return StepSave(s)
 
+	case step.SendMentions:
+		return StepSendMentions(s)
+
 	case step.SetData:
 		return StepSetData(s)
 
@@ -142,5 +145,4 @@ func ExecutableStep(stepInfo step.Step) Step {
 	}
 
 	return StepError{Original: stepInfo}
-
 }

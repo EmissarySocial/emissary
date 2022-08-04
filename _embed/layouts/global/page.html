@@ -3,7 +3,11 @@
 <head>
 	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
 
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="generator" content="Emissary_0.1.0">
+
+	<link rel="webmention" href="/.well-known/webmentions"/>
 
 	<link rel="stylesheet" href="/static/purecss/pure-min.css">
 	<link rel="stylesheet" href="/static/purecss/pure-grids-responsive-min.css">
@@ -24,6 +28,9 @@
 
 	<link rel="stylesheet" href="/static/nebula/nebula.css">	
 	<link rel="stylesheet" href="/static/responsive.css">	
+
+	<!-- This must be in the header to support streams that invoke htmx directly. -->
+	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
 
 	<style>{{.DomainCustomCSS | css}}</style>
 
@@ -68,7 +75,6 @@
 
 	<link rel="stylesheet" href="/static/tabler/tabler-icons.css">
 
-	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
 	<script type="text/hyperscript" src="/static/date._hs"></script>
 	<script type="text/hyperscript" src="/static/forms._hs"></script>
 	<script type="text/hyperscript" src="/static/modal._hs"></script>

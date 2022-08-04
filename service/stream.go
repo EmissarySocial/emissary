@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,6 +13,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/nebula"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -23,17 +25,19 @@ type Stream struct {
 	draftService        *StreamDraft
 	attachmentService   *Attachment
 	contentLibrary      *nebula.Library
+	hostName            string
 	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, contentLibrary *nebula.Library, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, contentLibrary *nebula.Library, hostName string, streamUpdateChannel chan model.Stream) Stream {
 
 	service := Stream{
 		templateService:     templateService,
 		draftService:        draftService,
 		attachmentService:   attachmentService,
 		contentLibrary:      contentLibrary,
+		hostName:            hostName,
 		streamUpdateChannel: streamUpdateChannel,
 	}
 
@@ -336,6 +340,30 @@ func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL
 		AndEqual("sourceUrl", sourceURL)
 
 	return service.Load(criteria, result)
+}
+
+// LoadByURL returns a single stream that matches the domain and path of the provided URL
+func (service *Stream) LoadByURL(targetURL string, result *model.Stream) error {
+
+	const location = "service.Stream.LoadByURL"
+
+	// Try to parse the URL into its components
+	parsedURL, err := url.Parse(targetURL)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid URL", targetURL)
+	}
+
+	// RULE: Validate that the hostname matches
+	if parsedURL.Host != service.hostName {
+		return derp.NewBadRequestError(location, "Invalid hostname", targetURL)
+	}
+
+	// RULE: Discard leading slash, then only use the first path segment (no actions)
+	token := list.Slash(parsedURL.Path).Tail().Head()
+
+	// Return the stream that matches the token
+	return service.LoadByToken(token, result)
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream

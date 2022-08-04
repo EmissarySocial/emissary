@@ -146,6 +146,9 @@ func New(stepInfo maps.Map) (Step, error) {
 
 	// EXTERNAL CONNECTIONS
 
+	case "send-mentions":
+		return NewSendMentions(stepInfo)
+
 	case "stripe-checkout":
 		return NewStripeCheckout(stepInfo)
 

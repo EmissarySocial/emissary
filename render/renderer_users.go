@@ -91,6 +91,10 @@ func (w User) PageTitle() string {
 	return "Settings"
 }
 
+func (w User) Permalink() string {
+	return ""
+}
+
 func (w User) object() data.Object {
 	return w.user
 }

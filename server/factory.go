@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
@@ -27,6 +28,7 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
+	taskQueue       *queue.Queue
 	embeddedFiles   embed.FS
 
 	attachmentOriginals afero.Fs
@@ -49,6 +51,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:        make(map[string]*domain.Factory, 0),
 		embeddedFiles:  embeddedFiles,
 		contentLibrary: nebula.NewLibrary(),
+		taskQueue:      queue.NewQueue(128, 16),
 	}
 
 	// Global Layout service
@@ -121,7 +124,7 @@ func (factory *Factory) start() {
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			newDomain, err := domain.NewFactory(domainConfig, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.attachmentOriginals, factory.attachmentCache)
+			newDomain, err := domain.NewFactory(domainConfig, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.taskQueue, factory.attachmentOriginals, factory.attachmentCache)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))

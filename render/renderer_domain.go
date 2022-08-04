@@ -64,6 +64,20 @@ func (w Domain) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
+// View executes a separate view for this Group
+func (w Domain) View(actionID string) (template.HTML, error) {
+
+	const location = "render.Domain.View"
+
+	renderer, err := NewDomain(w.factory(), w.context(), w.layout, w.domain, actionID)
+
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
+	}
+
+	return renderer.Render()
+}
+
 func (w Domain) Token() string {
 	return w.context().Param("param1")
 }
@@ -90,6 +104,10 @@ func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
 
 func (w Domain) TopLevelID() string {
 	return "admin"
+}
+
+func (w Domain) Permalink() string {
+	return ""
 }
 
 func (w Domain) PageTitle() string {

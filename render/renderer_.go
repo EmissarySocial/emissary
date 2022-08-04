@@ -16,7 +16,8 @@ import (
 type Renderer interface {
 
 	// Render is the main entry-point for templates to use a Renderer
-	Render() (template.HTML, error) // Render function outputs an HTML template
+	Render() (template.HTML, error)     // Render function outputs an HTML template
+	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
 	Host() string           // String representation of the protocol + hostname
@@ -24,6 +25,7 @@ type Renderer interface {
 	Hostname() string       // Hostname for this server
 	Token() string          // URL Token of the record being rendered
 	PageTitle() string      // Human-friendly title to put at the top of the page.
+	Permalink() string      // Permanent link to the stream being rendered
 	URL() string            // Complete URL of the requested page
 	ActionID() string       // Token that identifies the action requested via the URL.
 	Action() *model.Action  // The pipeline action to be taken by this renderer

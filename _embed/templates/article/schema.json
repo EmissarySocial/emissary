@@ -79,6 +79,7 @@
 				{"step": "set-state", "state": "published"},
 				{"step": "save", "message": "Published by {{.Author}}"},
 				{"step": "add-outbox", "link": "self"},
+				{"step": "send-mentions"},
 				{"step": "refresh-page"}
 			]
 		},
@@ -99,6 +100,7 @@
 				{"step": "as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step": "promote-draft"},
 				{"step": "add-outbox"},
+				{"step": "send-mentions"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
 		},

@@ -6,9 +6,17 @@ import (
 )
 
 type Mention struct {
-	MentionID primitive.ObjectID `json:"mentionId" bson:"_id"`
-	StreamID  primitive.ObjectID `json:"streamId" bson:"streamId"`
-	Source    string             `json:"source" bson:"source"`
+	MentionID        primitive.ObjectID `json:"mentionId"        bson:"_id"`
+	StreamID         primitive.ObjectID `json:"streamId"         bson:"streamId"`
+	SourceURL        string             `json:"sourceUrl"        bson:"sourceUrl"`
+	AuthorName       string             `json:"authorName"       bson:"authorName"`
+	AuthorEmail      string             `json:"authorEmail"      bson:"authorEmail"`
+	AuthorWebsiteURL string             `json:"authorWebsiteUrl" bson:"authorWebsiteUrl"`
+	AuthorPhotoURL   string             `json:"authorPhotoUrl"   bson:"authorPhotoUrl"`
+	AuthorStatus     string             `json:"authorStatus"     bson:"authorStatus"`
+	EntryName        string             `json:"entryName"        bson:"entryName"`
+	EntrySummary     string             `json:"entrySummary"     bson:"entrySummary"`
+	EntryPhotoURL    string             `json:"entryPhotoUrl"    bson:"entryPhotoUrl"`
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

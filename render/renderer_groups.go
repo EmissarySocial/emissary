@@ -84,6 +84,10 @@ func (w Group) TopLevelID() string {
 	return "admin"
 }
 
+func (w Group) Permalink() string {
+	return w.Hostname() + "/groups/" + w.GroupID()
+}
+
 func (w Group) Token() string {
 	return "groups"
 }

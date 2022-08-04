@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -30,6 +31,7 @@ type Factory struct {
 	layoutService   *service.Layout
 	templateService *service.Template
 	contentLibrary  *nebula.Library
+	taskQueue       *queue.Queue
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -39,6 +41,7 @@ type Factory struct {
 	attachmentService   service.Attachment
 	groupService        service.Group
 	domainService       service.Domain
+	mentionService      service.Mention
 	streamService       service.Stream
 	subscriptionService service.Subscription
 	realtimeBroker      RealtimeBroker
@@ -51,7 +54,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -60,6 +63,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		layoutService:   layoutService,
 		templateService: templateService,
 		contentLibrary:  contentLibrary,
+		taskQueue:       taskQueue,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -67,6 +71,8 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	}
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
+
+	factory.mentionService = service.NewMention(factory.collection(CollectionMention))
 
 	// Start the Domain Service
 	factory.domainService = service.NewDomain(
@@ -81,6 +87,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 		factory.StreamDraft(),
 		factory.Attachment(),
 		factory.ContentLibrary(),
+		factory.Host(),
 		factory.StreamUpdateChannel(),
 	)
 
@@ -159,6 +166,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.domainService.Refresh(factory.collection(CollectionDomain))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
+		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(factory.collection(CollectionStream))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
 		factory.userService.Refresh(factory.collection(CollectionUser))
@@ -232,8 +240,9 @@ func (factory *Factory) Domain() *service.Domain {
 }
 
 // Mention returns a fully populated Mention service
-func (factory *Factory) Mention() service.Mention {
-	return service.NewMention(factory.collection(CollectionMention))
+func (factory *Factory) Mention() *service.Mention {
+	result := service.NewMention(factory.collection(CollectionMention))
+	return &result
 }
 
 // Stream returns a fully populated Stream service
@@ -341,6 +350,10 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 /*******************************************
  * OTHER NON-MODEL SERVICES
  *******************************************/
+
+func (factory *Factory) Queue() *queue.Queue {
+	return factory.taskQueue
+}
 
 // Key returns an instance of the Key Manager Service (KMS)
 func (factory *Factory) Key() service.Key {

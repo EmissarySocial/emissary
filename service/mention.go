@@ -1,16 +1,21 @@
 package service
 
 import (
-	"regexp"
+	"io"
+	"net/url"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
+	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/slice"
 	"github.com/tomnomnom/linkheader"
+	"willnorris.com/go/microformats"
 )
 
 /*********************
@@ -24,16 +29,6 @@ import (
  * - https://github.com/google/re2/wiki/Syntax
  *
  *********************/
-
-var mentionSendTag *regexp.Regexp
-var mentionSendAttr *regexp.Regexp
-var mentionVerifyTag *regexp.Regexp
-
-func init() {
-	mentionSendTag = regexp.MustCompile(`(?i)<[a|link][^>]+?rel=["']?mention["']?[^>]*?>`)
-	mentionSendAttr = regexp.MustCompile(`(?i)href=['"]?([^\t\n\v\f\r "'>]+)['"]?`)
-	mentionVerifyTag = regexp.MustCompile(`(?i)<(a|img|video)[^>]+?(href|src)=["']?([^\t\n\v\f\r "'>]+)["']?[^>]*>`) // \S => NOT WHITESPACE
-}
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
@@ -58,14 +53,11 @@ func (service *Mention) Refresh(collection data.Collection) {
 
 // Close stops any background processes controlled by this service
 func (service *Mention) Close() {
-
+	// Nothin to do here.
 }
 
 /*******************************************
  * COMMON DATA METHODS
- *******************************************/
-/*******************************************
- * COMMON DATA FUNCTIONS
  *******************************************/
 
 // List returns an iterator containing all of the Mentions who match the provided criteria
@@ -110,8 +102,25 @@ func (service *Mention) Delete(stream *model.Mention, note string) error {
  * WEB-MENTION HELPERS
  *******************************************/
 
+func (service *Mention) FindLinks(body string) []string {
+
+	result := make([]string, 0)
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
+
+	if err != nil {
+		return result
+	}
+
+	links := doc.Find("a[href]").Map(getHrefFromNode)
+
+	links = slice.Filter(links, isExternalHref)
+
+	return links
+}
+
 // Send will send a mention to the target's endpoint
-func (service Mention) Send(source string, target string) error {
+func (service *Mention) Send(source string, target string) error {
 
 	const location = "service.Mention.Sent"
 
@@ -136,11 +145,11 @@ func (service Mention) Send(source string, target string) error {
 }
 
 // DiscoverEndpoint tries to find the Mention endpoint for the provided URL
-func (service Mention) DiscoverEndpoint(url string) (string, error) {
+func (service *Mention) DiscoverEndpoint(url string) (string, error) {
 
 	const location = "service.Mention.Discover"
-	var body string
 
+	var body string
 	txn := remote.Get(url).Response(&body, nil)
 
 	if err := txn.Send(); err != nil {
@@ -158,19 +167,24 @@ func (service Mention) DiscoverEndpoint(url string) (string, error) {
 		}
 	}
 
-	// Look for Mention links in the response body
-	if tag := mentionSendTag.FindString(body); tag != "" {
-		attributes := mentionSendAttr.FindStringSubmatch(tag)
-		if len(attributes) == 2 {
-			return attributes[1], nil
-		}
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error parsing remote document", url)
 	}
 
-	return "", derp.NewNotFoundError(location, "Webmention link not found in URL", url)
+	linkTag := doc.Find("link[rel=webmention]").First()
+	result := linkTag.AttrOr("href", "")
+
+	if result == "" {
+		return "", derp.NewBadRequestError(location, "No Mention endpoint found", url)
+	}
+
+	return result, nil
 }
 
 // Verify confirms that the source document includes a link to the target document
-func (service Mention) Verify(source string, target string) error {
+func (service *Mention) Verify(source string, target string, buffer io.Writer) error {
 
 	const location = "service.Mention.Verify"
 
@@ -183,14 +197,127 @@ func (service Mention) Verify(source string, target string) error {
 		return derp.Wrap(err, location, "Error retreiving source", source)
 	}
 
-	// Scan for links to the target URL
-	links := mentionVerifyTag.FindAllStringSubmatch(content, -1)
+	// Try to parse the source document as HTML
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(content))
 
-	for _, link := range links {
-		if link[3] == target {
-			return nil // If found, success.  No error returned.
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing source", source)
+	}
+
+	// Find all anchor tags with an href attribute
+	hrefs := doc.Find("a[href]").Map(getHrefFromNode)
+
+	for _, href := range hrefs {
+
+		if href != target {
+			continue
+		}
+
+		// If buffer exists, write the source document to the buffer, then return without error.
+		if buffer != nil {
+			buffer.Write([]byte(content))
+		}
+
+		return nil
+	}
+
+	// Fall through means the link was not found.  Return an error.
+	return derp.NewNotFoundError(location, "Target link not found", source, target)
+}
+
+func (service *Mention) ParseMicroformats(source io.Reader, sourceURL string) model.Mention {
+
+	mention := model.NewMention()
+	mention.SourceURL = sourceURL
+
+	parsedURL, err := url.Parse(sourceURL)
+
+	if err != nil {
+		return mention
+	}
+
+	// Try to parse microformats in the source document...
+	if mf := microformats.Parse(source, parsedURL); mf != nil {
+
+		for _, item := range mf.Items {
+
+			for _, itemType := range item.Type {
+
+				switch itemType {
+
+				// Parse author information [https://microformats.org/wiki/h-card]
+				case "h-card":
+
+					if mention.AuthorName == "" {
+						mention.AuthorName = convert.String(item.Properties["p-name"])
+					}
+
+					if mention.AuthorName == "" {
+						mention.AuthorPhotoURL = convert.String(item.Properties["p-given-name"])
+					}
+
+					if mention.AuthorName == "" {
+						mention.AuthorPhotoURL = convert.String(item.Properties["p-nickname"])
+					}
+
+					if mention.AuthorWebsiteURL == "" {
+						mention.AuthorWebsiteURL = convert.String(item.Properties["u-url"])
+					}
+
+					if mention.AuthorEmail == "" {
+						mention.AuthorEmail = convert.String(item.Properties["u-email"])
+					}
+
+					if mention.AuthorPhotoURL == "" {
+						mention.AuthorPhotoURL = convert.String(item.Properties["u-photo"])
+					}
+
+					if mention.AuthorPhotoURL == "" {
+						mention.AuthorPhotoURL = convert.String(item.Properties["u-logo"])
+					}
+
+					if mention.AuthorStatus == "" {
+						mention.AuthorStatus = convert.String(item.Properties["p-note"])
+					}
+
+					continue
+
+				// Parse entry data
+				case "h-entry": // [https://microformats.org/wiki/h-entry]
+
+					if mention.EntryName == "" {
+						mention.EntryName = convert.String(item.Properties["p-name"])
+					}
+
+					if mention.EntrySummary == "" {
+						mention.EntrySummary = convert.String(item.Properties["p-summary"])
+					}
+
+					if mention.EntryPhotoURL == "" {
+						mention.EntryPhotoURL = convert.String(item.Properties["u-photo"])
+					}
+				}
+			}
+		}
+
+		// Last, scan global values for data that may not have been found in the h-entry
+		if mention.AuthorWebsiteURL == "" {
+			if me, ok := mf.Rels["me"]; ok {
+				mention.AuthorWebsiteURL = convert.String(me)
+			}
 		}
 	}
 
-	return derp.NewNotFoundError(location, "Target link not found", source, target)
+	// No errors
+	return mention
+}
+
+// getHrefFromNode returns the [href] value for a given goquery selection
+func getHrefFromNode(index int, node *goquery.Selection) string {
+	return node.AttrOr("href", "")
+}
+
+// isExternalHref returns TRUE if this URL points to an external domain
+func isExternalHref(href string) bool {
+	return strings.HasPrefix("http://", href) || strings.HasPrefix("https://", href)
 }

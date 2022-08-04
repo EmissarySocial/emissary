@@ -54,6 +54,7 @@
 	background-color: var(--white);
 	padding: 20px;
 	line-height: 150%;
+	transform:scale(0.8);
 }
 
 /* Animations */

@@ -2,6 +2,7 @@ package render
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/form"
 	"github.com/benpate/mediaserver"
@@ -17,6 +18,8 @@ type Factory interface {
 	Group() *service.Group
 	Layout() *service.Layout
 	MediaServer() mediaserver.MediaServer
+	Mention() *service.Mention
+	Queue() *queue.Queue
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	StreamUpdateChannel() chan model.Stream

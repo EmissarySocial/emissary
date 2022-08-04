@@ -2,13 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.18
 
-replace github.com/benpate/form => ../../benpate/form
-
-replace github.com/benpate/nebula => ../../benpate/nebula
-
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/benpate/activitystream v0.6.0
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
@@ -16,12 +11,12 @@ require (
 	github.com/benpate/digit v0.5.0
 	github.com/benpate/exp v0.5.0
 	github.com/benpate/exp-builder v0.2.0
-	github.com/benpate/form v0.8.0
+	github.com/benpate/form v0.9.1
 	github.com/benpate/html v0.14.1
 	github.com/benpate/mediaserver v0.6.0
-	github.com/benpate/nebula v0.6.1
+	github.com/benpate/nebula v0.6.2
 	github.com/benpate/remote v0.8.0
-	github.com/benpate/rosetta v0.5.3
+	github.com/benpate/rosetta v0.5.5
 	github.com/benpate/steranko v0.9.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.5.4
@@ -39,16 +34,14 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.9.1
 	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
+	willnorris.com/go/microformats v1.1.1
+	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/compare v0.1.1 // indirect
-	github.com/benpate/convert v0.13.2 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
-	github.com/benpate/list v0.4.2 // indirect
-	github.com/benpate/null v0.6.3 // indirect
-	github.com/benpate/path v0.8.4 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect

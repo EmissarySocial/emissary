@@ -96,6 +96,10 @@ func (w Profile) PageTitle() string {
 	return ""
 }
 
+func (w Profile) Permalink() string {
+	return ""
+}
+
 func (w Profile) Token() string {
 	return "users"
 }

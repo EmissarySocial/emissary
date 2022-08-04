@@ -64,6 +64,20 @@ func (w TopLevel) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
+// View executes a separate view for this Group
+func (w TopLevel) View(actionID string) (template.HTML, error) {
+
+	const location = "render.TopLevel.View"
+
+	renderer, err := NewTopLevel(w.factory(), w.context(), w.stream, actionID)
+
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
+	}
+
+	return renderer.Render()
+}
+
 func (w TopLevel) Token() string {
 	return w.ctx.Param("param1")
 }
@@ -74,6 +88,10 @@ func (w TopLevel) TopLevelID() string {
 
 func (w TopLevel) PageTitle() string {
 	return "Settings"
+}
+
+func (w TopLevel) Permalink() string {
+	return ""
 }
 
 func (w TopLevel) object() data.Object {
