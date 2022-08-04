@@ -10,7 +10,7 @@ require (
 	github.com/benpate/derp v0.24.0
 	github.com/benpate/digit v0.5.0
 	github.com/benpate/exp v0.5.0
-	github.com/benpate/exp-builder v0.2.0
+	github.com/benpate/exp-builder v0.3.0
 	github.com/benpate/form v0.9.1
 	github.com/benpate/html v0.14.1
 	github.com/benpate/mediaserver v0.6.0
