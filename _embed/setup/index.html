@@ -45,8 +45,13 @@
 
 				<code># emissary --config=file://path/to/file.json</code>
 
-				<h3>MongoDB Config Record</h3>
+				<h3 class="space-above">MongoDB Config Record</h3>
 				<p>Use the URL schemes <code class="inline">mongodb://</code> or <code class="inline">mongodb+src://</code> to read server configuration from a MongoDB database.  Database-driven configurations are automatically reloaded whenever the database is updated.</p>
+				<p><b>IMPORTANT NOTES:</b></p>
+				<ul>
+					<li>In this MongoDB installation, Emissary will attempt to connect to the database named <b>emissary</b> and the collection named <b>config</b>.  You must use these hard-coded values, and populate a single document in this database/collection that contains the configuration file.</li>
+					<li>If you are configuring a MongoDB database via a command-line parameter, be aware that your system shell may identify the "?" in the mongodb connect string as a wildcard character.  In this event, you must escape the "?" with a backslash.</li>
+				</ul>
 
 				<code># emissary --config=mongodb+srv://username:password@cluster.dns/dbname?options=values</code>
 			</div>
