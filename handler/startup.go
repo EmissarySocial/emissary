@@ -308,12 +308,12 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		}},
 	}
 
-	s := schema.New(schema.ElementMap{
+	s := schema.New(schema.Object{Properties: schema.ElementMap{
 		"home":  schema.Boolean{},
 		"blog":  schema.Boolean{},
 		"album": schema.Boolean{},
 		"forum": schema.Boolean{},
-	})
+	}})
 
 	formHTML, _ := defaultStreamsForm.HTML(nil, &s, factory.LookupProvider())
 
