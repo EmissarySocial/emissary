@@ -1,53 +1,77 @@
-table.table {
-    width:100%;
-    border-bottom: solid 1px var(--gray20);
-    border-spacing: 0px;
-    margin-bottom:30px;
-}
-
-table.table th {
-    font-weight:600;
-    text-align:left;
+table.table, [role=table] {
+	width:100%;
+	border-bottom: solid 1px var(--gray20);
+	border-spacing: 0px;
+	margin-bottom:30px;
 }
 
 table.table th,
-table.table td {
-    padding: 10px 10px;
-    vertical-align: top;
+[role=columnheader] {
+	font-weight:600;
+	text-align:left;
 }
 
-table.table td {
-    border-top: solid 1px var(--gray20);
+table.table th,
+table.table td,
+[role=cell] {
+	padding: 6px 6px;
+	vertical-align: top;
 }
+
+table.table td,
+[role=cell] {
+	border-top: solid 1px var(--gray20);
+}
+
+/* TODO:  Remove "clickable" class in favor of roles */
 
 table.table [role=link]:hover td,
 table.table [role=link]:focus td,
 table.table [role=button]:hover td,
 table.table [role=button]:focus td,
 table.table .clickable:hover td,
-table.table .clickable:focus td {
-    background-color:var(--gray10);
-    cursor:pointer;
+table.table .clickable:focus td,
+
+[role=table] [role=link]:hover [role=cell],
+[role=table] [role=link]:focus [role=cell],
+[role=table] [role=button]:hover [role=cell],
+[role=table] [role=button]:focus [role=cell] {
+	background-color:var(--gray10);
+	cursor:pointer;
 }
 
-div.table {
-    border-top: solid 1px var(--gray20);
+div.table,
+[role=table] {
+	border-top: solid 1px var(--gray20);
 }
 
 div.table + div.table {
-    border-top:none;
+	border-top:none;
 }
 
-div.table > *{
-    padding: 12px 0px;
-    vertical-align: top;
-    border-bottom: solid 1px var(--gray20);
+div.table > * {
+	padding: 6px 6px;
+	vertical-align: top;
+	border-bottom: solid 1px var(--gray20);
 }
 
 div.table > [role=link]:hover,
 div.table > [role=link]:focus, 
 div.table > [role=button]:hover,
 div.table > [role=button]:focus {
-    background-color:var(--gray10);
-    cursor:pointer;
+	background-color:var(--gray10);
+	cursor:pointer;
+}
+
+[role=table] {
+	display:table;
+}
+
+[role=row] {
+	display:table-row;
+}
+
+[role=columnheader],
+[role=cell] {
+	display:table-cell;
 }

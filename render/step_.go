@@ -116,6 +116,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.StripeSetup:
 		return StepStripeSetup(s)
 
+	case step.TableEditor:
+		return StepTableEditor(s)
+
 	case step.TriggerEvent:
 		return StepTriggerEvent(s)
 

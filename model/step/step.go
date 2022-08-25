@@ -29,6 +29,9 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "edit":
 		return NewEditModelObject(stepInfo)
 
+	case "edit-table":
+		return NewTableEditor(stepInfo)
+
 	case "delete":
 		return NewDelete(stepInfo)
 

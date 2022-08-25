@@ -20,18 +20,19 @@ type Renderer interface {
 	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Host() string           // String representation of the protocol + hostname
-	Protocol() string       // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
-	Hostname() string       // Hostname for this server
-	Token() string          // URL Token of the record being rendered
-	PageTitle() string      // Human-friendly title to put at the top of the page.
-	Permalink() string      // Permanent link to the stream being rendered
-	URL() string            // Complete URL of the requested page
-	ActionID() string       // Token that identifies the action requested via the URL.
-	Action() *model.Action  // The pipeline action to be taken by this renderer
-	IsAuthenticated() bool  // Returns TRUE if the user is signed in
-	IsPartialRequest() bool // Returns TRUE if this is an HTMX request for a page fragment
-	UseGlobalWrapper() bool // Returns TRUE if this renderer uses the common site chrome.
+	Host() string             // String representation of the protocol + hostname
+	Protocol() string         // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
+	Hostname() string         // Hostname for this server
+	Token() string            // URL Token of the record being rendered
+	PageTitle() string        // Human-friendly title to put at the top of the page.
+	Permalink() string        // Permanent link to the stream being rendered
+	URL() string              // Complete URL of the requested page
+	QueryParam(string) string // Query parameter of the requested page
+	ActionID() string         // Token that identifies the action requested via the URL.
+	Action() *model.Action    // The pipeline action to be taken by this renderer
+	IsAuthenticated() bool    // Returns TRUE if the user is signed in
+	IsPartialRequest() bool   // Returns TRUE if this is an HTMX request for a page fragment
+	UseGlobalWrapper() bool   // Returns TRUE if this renderer uses the common site chrome.
 
 	GetBool(name string) bool
 	GetFloat(name string) float64
