@@ -247,6 +247,7 @@ func (step StepTableEditor) drawEditRow(rowSchema *schema.Schema, row any, targe
 func (step StepTableEditor) drawViewRow(rowSchema *schema.Schema, row any, targetURL string, index string, b *html.Builder) error {
 
 	b.Div().Role("row").
+		Class("hover-trigger").
 		Data("hx-get", targetURL+"?edit="+index).
 		Data("hx-trigger", "click")
 
@@ -262,25 +263,20 @@ func (step StepTableEditor) drawViewRow(rowSchema *schema.Schema, row any, targe
 
 	b.Div().Role("cell").Class("align-right")
 
-	b.A("").
+	b.Button().
 		Role("button").
-		Data("hx-get", targetURL+"?edit="+index)
+		Class("hover-reveal").
+		Data("hx-get", targetURL+"?edit="+index).
+		InnerHTML("Edit").
+		Close()
 
-	b.I("ti", "ti-edit").Close()
-	b.WriteString("Edit")
-	b.Close()
-
-	b.Space()
-
-	b.A("").
+	b.Button().
 		Role("button").
-		Class("text-red").
+		Class("text-red", "hover-reveal").
 		Data("hx-confirm", "Are you sure you want to delete this row?").
-		Data("hx-post", targetURL+"?delete="+index)
-
-	b.I("ti", "ti-trash").Close()
-	b.WriteString("Delete")
-	b.Close()
+		Data("hx-post", targetURL+"?delete="+index).
+		InnerHTML("Delete").
+		Close()
 
 	b.Close() // .cell
 	b.Close() // .row
