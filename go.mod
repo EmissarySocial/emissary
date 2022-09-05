@@ -4,36 +4,40 @@ go 1.18
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/aws/aws-sdk-go v1.44.78
 	github.com/benpate/activitystream v0.6.0
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
 	github.com/benpate/derp v0.24.0
 	github.com/benpate/digit v0.5.0
 	github.com/benpate/exp v0.5.0
-	github.com/benpate/exp-builder v0.2.0
-	github.com/benpate/form v0.9.1
+	github.com/benpate/exp-builder v0.3.0
+	github.com/benpate/form v0.10.0
 	github.com/benpate/html v0.14.1
+	github.com/benpate/icon v0.1.0
 	github.com/benpate/mediaserver v0.6.0
 	github.com/benpate/nebula v0.6.2
 	github.com/benpate/remote v0.8.0
-	github.com/benpate/rosetta v0.5.5
-	github.com/benpate/steranko v0.9.0
+	github.com/benpate/rosetta v0.6.0
+	github.com/benpate/steranko v0.10.0
+	github.com/benpate/table v0.1.0
 	github.com/davecgh/go-spew v1.1.1
+	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gorilla/feeds v1.1.1
-	github.com/labstack/echo/v4 v4.7.2
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/spf13/afero v1.8.2
+	github.com/spf13/afero v1.9.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
-	github.com/stripe/stripe-go/v72 v72.117.0
+	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
-	go.mongodb.org/mongo-driver v1.9.1
-	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
+	go.mongodb.org/mongo-driver v1.10.1
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -45,16 +49,17 @@ require (
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
-	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
-	github.com/klauspost/compress v1.15.6 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.19 // indirect
+	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -71,12 +76,12 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/image v0.0.0-20220617043117-41969df76e82 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
+	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
+	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
