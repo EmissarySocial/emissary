@@ -67,7 +67,7 @@ func (step StepSetData) Post(renderer Renderer) error {
 
 	// Set default values (only if no value already exists)
 	for name, value := range step.Defaults {
-		currentValue, _, _ := schema.Get(renderer, name)
+		currentValue, _ := schema.Get(renderer, name)
 		if convert.IsZeroValue(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value)
