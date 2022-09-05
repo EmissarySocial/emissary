@@ -5,9 +5,16 @@ import (
 	"os"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+
+	s3 "github.com/fclairamb/afero-s3"
 )
 
 // Filesystem is a service that multiplexes between different filesystems.  Currently works with embedded filesystems and file:// URIs
@@ -37,16 +44,18 @@ func (filesystem *Filesystem) GetFS(uri string) (fs.FS, error) {
 		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", uri)
 	}
 
+	// Detect filesystem type
 	if strings.HasPrefix(uri, "file://") {
 		uri = strings.TrimPrefix(uri, "file://")
 		return os.DirFS(uri), nil
 	}
 
-	// * GitHub?
-	// * S3?       https://github.com/fclairamb/afero-s3
-	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
-	// * etc...
+	// Pass through to afero (create a read-only filesystem)
+	if result, err := filesystem.GetAfero(uri); err == nil {
+		return afero.NewIOFS(result), nil
+	}
 
+	// Otherwise, fail.  Unrecognized filesystem type
 	return nil, derp.NewInternalError("service.filesystem.GetFS", "Unsupported filesystem adapter", uri)
 }
 
@@ -78,9 +87,33 @@ func (filesystem *Filesystem) GetAfero(uri string) (afero.Fs, error) {
 		return afero.NewBasePathFs(afero.NewOsFs(), trimmed), nil
 	}
 
-	// * GitHub?
-	// * S3?       https://github.com/fclairamb/afero-s3
+	// Detect S3 filesystem type
+	if uri, err := s3uri.ParseString(uri); err == nil {
+
+		// Read session configuration
+		config := aws.Config{Region: uri.Region}
+
+		if uri.HasCredentials() {
+			config.Credentials = credentials.NewStaticCredentials(uri.GetCredentials())
+		}
+
+		// Try to make an S3 session
+		session, err := session.NewSession(&config)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", uri)
+		}
+
+		// Create an S3 filesystem
+		return s3.NewFs(*uri.Bucket, session), nil
+	}
+
+	// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
+	// * Git? https://github.com/go-git/go-git
 	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
+	// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
+	// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
+	// * Azure?
 	// * etc...
 
 	return nil, derp.NewInternalError("service.filesystem.GetAfero", "Unsupported filesystem adapter", uri)
