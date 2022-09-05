@@ -13,6 +13,8 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/icon"
+	"github.com/benpate/icon/bootstrap"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/schema"
@@ -353,6 +355,10 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 
 func (factory *Factory) Queue() *queue.Queue {
 	return factory.taskQueue
+}
+
+func (factory *Factory) Icons() icon.Provider {
+	return bootstrap.Provider{}
 }
 
 // Key returns an instance of the Key Manager Service (KMS)
