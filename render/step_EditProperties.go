@@ -65,7 +65,8 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 		}
 	}
 
-	html, err := element.HTML(stream, &schema, factory.LookupProvider())
+	// Create HTML for the form
+	html, err := form.Editor(schema, element, stream, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML")

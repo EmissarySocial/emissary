@@ -196,7 +196,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			},
 		}},
 	}
-	formHTML, err := userSetupForm.HTML(nil, &s, factory.LookupProvider())
+	formHTML, err := form.Editor(s, userSetupForm, nil, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
@@ -315,7 +315,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		"forum": schema.Boolean{},
 	}})
 
-	formHTML, _ := defaultStreamsForm.HTML(nil, &s, factory.LookupProvider())
+	formHTML, _ := form.Editor(s, defaultStreamsForm, nil, factory.LookupProvider())
 
 	b.WriteString(formHTML)
 	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")

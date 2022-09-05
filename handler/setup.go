@@ -127,7 +127,7 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 
 		s := config.DomainSchema()
 
-		formHTML, err := domainEditForm.HTML(domain, &s, nil)
+		formHTML, err := form.Editor(s, domainEditForm, domain, nil)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.SetupGetDomain", "Error generating form")

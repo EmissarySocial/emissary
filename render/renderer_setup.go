@@ -22,7 +22,7 @@ func NewSetup(config config.Config) Setup {
 
 func (r Setup) Server() (template.HTML, error) {
 
-	fileLocationsForm := form.Element{
+	fileLocationsElement := form.Element{
 		Type: "layout-vertical",
 		Children: []form.Element{
 			{
@@ -60,8 +60,7 @@ func (r Setup) Server() (template.HTML, error) {
 		},
 	}
 
-	s := config.Schema()
-	result, err := fileLocationsForm.HTML(r.Config, &s, nil)
+	result, err := form.Editor(config.Schema(), fileLocationsElement, r.Config, nil)
 
 	return template.HTML(result), derp.Wrap(err, "setup.ServerForm", "Error rendering form")
 }

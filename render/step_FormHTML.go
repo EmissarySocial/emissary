@@ -19,9 +19,9 @@ func (step StepForm) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Try to render the Form HTML
 	factory := renderer.factory()
-	schema := renderer.schema()
+	form := form.New(renderer.schema(), step.Form)
 
-	result, err := step.Form.HTML(renderer.object(), &schema, factory.LookupProvider())
+	result, err := form.Editor(renderer.object(), factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")

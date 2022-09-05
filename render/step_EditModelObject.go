@@ -29,7 +29,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Try to render the Form HTML
-	result, err := step.Form.HTML(object, &schema, factory.LookupProvider())
+	result, err := form.Editor(schema, step.Form, object, factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")
