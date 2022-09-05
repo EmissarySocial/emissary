@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/form"
+	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/stripe/stripe-go/v72/client"
@@ -32,4 +33,5 @@ type Factory interface {
 	LookupProvider() form.LookupProvider
 	Host() string
 	Hostname() string
+	Icons() icon.Provider
 }
