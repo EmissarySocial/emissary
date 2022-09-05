@@ -355,6 +355,15 @@ input.text-md {
 }
 
 
+.text-green {
+    color:var(--green70)!important;
+}
+
+.text-green:hover {
+    color:var(--green80)!important;
+}
+
+
 .text-red {
     color: var(--red50)!important;
 }

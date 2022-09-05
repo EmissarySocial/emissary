@@ -1,26 +1,30 @@
-table.table, [role=table] {
+/** TABLES **********************/
+
+table.table {
 	width:100%;
 	border-bottom: solid 1px var(--gray20);
 	border-spacing: 0px;
 	margin-bottom:30px;
 }
 
-table.table th,
-[role=columnheader] {
+table.table th {
 	font-weight:600;
 	text-align:left;
 }
 
 table.table th,
-table.table td,
-[role=cell] {
+table.table td {
 	padding: 6px 6px;
 	vertical-align: top;
 }
 
-table.table td,
-[role=cell] {
+table.table td {
 	border-top: solid 1px var(--gray20);
+}
+
+table.table tr.edit td {
+	background-color: var(--blue10);
+	border: solid 1px var(--blue20);
 }
 
 /* TODO:  Remove "clickable" class in favor of roles */
@@ -30,29 +34,15 @@ table.table [role=link]:focus td,
 table.table [role=button]:hover td,
 table.table [role=button]:focus td,
 table.table .clickable:hover td,
-table.table .clickable:focus td,
-
-[role=table] [role=link]:hover [role=cell],
-[role=table] [role=link]:focus [role=cell],
-[role=table] [role=button]:hover [role=cell],
-[role=table] [role=button]:focus [role=cell] {
+table.table .clickable:focus td {
 	background-color:var(--gray10);
 	cursor:pointer;
 }
 
-div.table,
-[role=table] {
+/** DIV "TABLES" ****************/
+
+div.table {
 	border-top: solid 1px var(--gray20);
-}
-
-div.table + div.table {
-	border-top:none;
-}
-
-div.table > * {
-	padding: 6px 6px;
-	vertical-align: top;
-	border-bottom: solid 1px var(--gray20);
 }
 
 div.table > [role=link]:hover,
@@ -63,15 +53,93 @@ div.table > [role=button]:focus {
 	cursor:pointer;
 }
 
-[role=table] {
-	display:table;
+/** GRIDS ***********************/
+
+table.grid {
+	width:100%;
+	background-color:var(--white);
+	border-top: solid 1px var(--gray20);
+	border-collapse: collapse;
+	border-spacing: 0px;
+	margin-bottom:10px;
 }
 
-[role=row] {
-	display:table-row;
+tr.grid-header {
+	border-bottom: solid 1px var(--gray20);
+	font-weight:600;
 }
 
-[role=columnheader],
-[role=cell] {
-	display:table-cell;
+tr.grid-row {
+	border-bottom: solid 1px var(--gray20);
 }
+
+tr.grid-row:hover {
+	cursor: pointer;
+	background-color:var(--gray10);
+}
+
+td.grid-cell {
+	text-align:left;
+	vertical-align: top;
+	padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 1.5);
+}
+
+td.grid-cell.grid-editable {
+	border-top:solid 1px var(--blue20)!important;
+	border-bottom:solid 1px var(--blue20);
+	background-color: var(--blue10);
+	cursor:default;
+}
+
+td.grid-cell.align-right {
+	text-align:right;
+}
+
+td.grid-cell input,
+td.grid-cell select,
+td.grid-cell div {
+	display:block;
+	width:100%;
+	background-color:rgba(0,0,0,0);
+	font-size: calc(var(--rhythm) * 2);
+	line-height: calc(var(--rhythm) * 2);
+	padding: 0px 0px;;
+	margin: 0px 0px;
+	border:none;
+}
+
+td.grid-cell.grid-controls {
+	text-align:right;
+	padding: var(--rhythm) var(--rhythm);
+	white-space: nowrap;
+}
+
+.grid button, 
+td.grid-controls > button {
+	background-color: rgba(0,0,0,0);
+	border: none;
+	margin: 0px;
+	padding: 0px var(--rhythm);
+
+	font-size: calc(var(--rhythm) * 2);
+	line-height: calc(var(--rhythm) * 2);
+}
+
+/*
+td.grid-cell.grid-controls {
+	text-align:right;
+	padding: var(--rhythm) var(--rhythm);
+	white-space: nowrap;
+}
+
+.grid button, 
+td.grid-controls > button {
+	background-color: var(--gray20);
+	border-radius: calc(var(--rhythm) / 2);
+	margin: 0px 0px;
+
+	font-size: calc(var(--rhythm) * 1.5);
+	line-height: calc(var(--rhythm) * 1.5);
+	padding: var(--rhythm) calc(var(--rhythm) * 2);
+}
+*/
