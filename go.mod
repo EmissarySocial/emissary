@@ -2,11 +2,9 @@ module github.com/EmissarySocial/emissary
 
 go 1.18
 
-replace github.com/benpate/icon => ../../benpate/icon
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.78
+	github.com/aws/aws-sdk-go v1.44.92
 	github.com/benpate/activitystream v0.6.0
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
@@ -16,7 +14,7 @@ require (
 	github.com/benpate/exp-builder v0.3.0
 	github.com/benpate/form v0.10.1
 	github.com/benpate/html v0.14.1
-	github.com/benpate/icon v0.1.0
+	github.com/benpate/icon v0.2.0
 	github.com/benpate/mediaserver v0.6.0
 	github.com/benpate/nebula v0.6.2
 	github.com/benpate/remote v0.8.0
@@ -28,7 +26,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gorilla/feeds v1.1.1
-	github.com/labstack/echo/v4 v4.8.0
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/pflag v1.0.5
@@ -39,7 +37,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	go.mongodb.org/mongo-driver v1.10.1
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/exp v0.0.0-20220906200021-fcb1a314c389
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -77,12 +75,12 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	github.com/yuin/goldmark v1.4.13 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
+	github.com/yuin/goldmark v1.4.14 // indirect
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
+	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
+	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
+	golang.org/x/sys v0.0.0-20220906165534-d0df966e6959 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
