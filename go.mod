@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.18
 
+replace github.com/benpate/icon => ../../benpate/icon
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.78
@@ -12,7 +14,7 @@ require (
 	github.com/benpate/digit v0.5.0
 	github.com/benpate/exp v0.5.0
 	github.com/benpate/exp-builder v0.3.0
-	github.com/benpate/form v0.10.0
+	github.com/benpate/form v0.10.1
 	github.com/benpate/html v0.14.1
 	github.com/benpate/icon v0.1.0
 	github.com/benpate/mediaserver v0.6.0
@@ -20,7 +22,7 @@ require (
 	github.com/benpate/remote v0.8.0
 	github.com/benpate/rosetta v0.6.0
 	github.com/benpate/steranko v0.10.0
-	github.com/benpate/table v0.1.0
+	github.com/benpate/table v0.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.5.4
@@ -58,7 +60,7 @@ require (
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.19 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.20 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
@@ -78,7 +80,7 @@ require (
 	github.com/yuin/goldmark v1.4.13 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
-	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
+	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
 	golang.org/x/text v0.3.7 // indirect
