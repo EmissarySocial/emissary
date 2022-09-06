@@ -14,7 +14,7 @@
 
 			<div id="bootstrap" role="tabpanel">
 
-				<p>Emissary can use command line arguments or environment variables to locate the configuration file.  If the configuration file cannot be found, the server will not start. The server is currently using: <code class="inline red">{{.Config.Source}}</code> to find configuration file.</p>
+				<p>Emissary can use command line arguments or environment variables to locate the configuration file.  If the configuration file cannot be found, the server will not start. The server is currently using: <code class="inline red">{{.Source}}</code> to find configuration file.</p>
 
 				<h3>1. Command Line Argument</h3>
 				<p>If you launch Emissary using the the --config argument, it will look for the config file in the directory you specify.  See the "Storage Options" section for valid config values</p>
@@ -38,7 +38,7 @@
 
 			<div id="location" role="tabpanel">
 
-				<p>Configuration files can be stored as either files accessible through the OS filesystem, or in a dedicated MongoDB database.  URL schemes are used to identify the type of storage. The server's current file location is: <code class="inline red">{{.Config.Location}}</code></p>
+				<p>Configuration files can be stored as either files accessible through the OS filesystem, or in a dedicated MongoDB database.  URL schemes are used to identify the type of storage. The server's current file location is: <code class="inline red">{{.Location}}</code></p>
 
 				<h3>Filesystem Config File</h3>
 				<p>Use the URL scheme <code class="inline">file://</code> to specify a file in the OS Filesystem.  This can be a local file, or a remote file stored on a connected NAS. Filesystem configurations are automatically reloaded whenever they are changed.</p>

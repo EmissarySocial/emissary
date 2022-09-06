@@ -3,6 +3,7 @@ package server
 import (
 	"embed"
 	"fmt"
+	"html/template"
 	"strings"
 	"sync"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"github.com/benpate/icon"
+	"github.com/benpate/icon/bootstrap"
 	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -57,16 +60,16 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	// Global Layout service
 	factory.layoutService = service.NewLayout(
 		factory.Filesystem(),
-		render.FuncMap(),
-		[]string{},
+		factory.FuncMap(),
+		[]config.Folder{},
 	)
 
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
 		factory.Layout(),
 		factory.Filesystem(),
-		render.FuncMap(),
-		[]string{},
+		factory.FuncMap(),
+		[]config.Folder{},
 	)
 
 	go factory.start()
@@ -283,6 +286,14 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
 /****************************
  * Other Global Services
  ****************************/
+
+func (factory *Factory) FuncMap() template.FuncMap {
+	return render.FuncMap(factory.Icons())
+}
+
+func (factory *Factory) Icons() icon.Provider {
+	return bootstrap.Provider{}
+}
 
 // Layout returns the global layout service
 func (factory *Factory) Layout() *service.Layout {

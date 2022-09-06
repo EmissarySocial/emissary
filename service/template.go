@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
@@ -19,7 +20,7 @@ import (
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
 	templates         set.Map[string, model.Template] // map of all templates available within this domain
-	locations         []string                        // Configuration for template directory
+	locations         []config.Folder                 // Configuration for template directory
 	funcMap           template.FuncMap                // Map of functions to use in golang templates
 	mutex             sync.RWMutex                    // Mutext that locks access to the templates structure
 	templateService   *Layout                         // Pointer to the Layout service
@@ -30,12 +31,12 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []string) *Template {
+func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
 
 	service := Template{
 		templates:         make(set.Map[string, model.Template]),
 		funcMap:           funcMap,
-		locations:         []string{},
+		locations:         make([]config.Folder, 0),
 		templateService:   templateService,
 		filesystemService: filesystemService,
 		changed:           make(chan bool),
@@ -51,7 +52,7 @@ func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap 
  * LIFECYCLE METHODS
  *******************************************/
 
-func (service *Template) Refresh(locations []string) {
+func (service *Template) Refresh(locations []config.Folder) {
 
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
@@ -91,12 +92,10 @@ func (service *Template) watch() {
 	service.closed = make(chan bool)
 
 	// Start new watchers.
-	for _, uri := range service.locations {
+	for _, folder := range service.locations {
 
-		fmt.Println(".. watching for changes to: " + uri)
-
-		if err := service.filesystemService.Watch(uri, service.changed, service.closed); err != nil {
-			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", uri))
+		if err := service.filesystemService.Watch(folder, service.changed, service.closed); err != nil {
+			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", folder))
 		}
 	}
 
@@ -147,7 +146,7 @@ func (service *Template) loadTemplates() error {
 				return derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location)
 			}
 
-			template := model.NewTemplate(location, service.funcMap)
+			template := model.NewTemplate(directory.Name(), service.funcMap)
 
 			// System locations (except for "static" and "global") have a schema.json file
 			if err := loadModelFromFilesystem(subdirectory, &template); err != nil {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"strings"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
@@ -16,7 +16,7 @@ import (
 type Layout struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
-	locations         []string
+	locations         []config.Folder
 	analytics         model.Layout
 	appearance        model.Layout
 	connections       model.Layout
@@ -32,7 +32,7 @@ type Layout struct {
 }
 
 // NewLayout returns a fully initialized Layout service.
-func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations []string) Layout {
+func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) Layout {
 
 	service := Layout{
 		filesystemService: filesystemService,
@@ -50,14 +50,14 @@ func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations
  * LIFECYCLE METHODS
  *******************************************/
 
-func (service *Layout) Refresh(locations []string) {
+func (service *Layout) Refresh(locations []config.Folder) {
 
 	// If nothing has changed since the last time we refreshed, then we're done
 	if slice.Equal(locations, service.locations) {
 		return
 	}
 
-	fmt.Println("Refreshing layout with:", strings.Join(locations, ", "))
+	fmt.Println("Refreshing layout")
 	service.locations = locations
 
 	// Try to load layouts from the filesystems
@@ -83,11 +83,11 @@ func (service *Layout) Watch() {
 	service.closed = make(chan bool)
 
 	// Start new watchers.
-	for _, uri := range service.locations {
+	for _, folder := range service.locations {
 
-		for _, filename := range service.fileNames() {
-			service.filesystemService.Watch(uri+"/"+filename, service.changed, service.closed) // Fail silently because many locations may not define all layouts
-		}
+		// for _, filename := range service.fileNames() {
+		service.filesystemService.Watch(folder, service.changed, service.closed) // Fail silently because many locations may not define all layouts
+		// }
 	}
 
 	// All Watchers Started.  Now Listen for Changes

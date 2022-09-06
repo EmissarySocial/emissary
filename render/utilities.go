@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -38,7 +39,7 @@ func WrapInlineError(ctx echo.Context, err error) error {
 	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
 }
 
-func WrapModal(response *echo.Response, content string) string {
+func WrapModal(response *echo.Response, content string, options ...string) string {
 
 	// These two headers make it a modal
 	header := response.Header()
@@ -63,7 +64,7 @@ func WrapModal(response *echo.Response, content string) string {
 	return b.String()
 }
 
-func WrapModalWithCloseButton(response *echo.Response, content string) string {
+func WrapModalWithCloseButton(response *echo.Response, content string, options ...string) string {
 	b := html.New()
 
 	b.Div()
@@ -72,7 +73,7 @@ func WrapModalWithCloseButton(response *echo.Response, content string) string {
 	return WrapModal(response, content+b.String())
 }
 
-func WrapForm(endpoint string, content string) string {
+func WrapForm(endpoint string, content string, options ...string) string {
 
 	b := html.New()
 
@@ -96,8 +97,14 @@ func WrapForm(endpoint string, content string) string {
 	b.Space()
 	b.Span().InnerHTML("Save Changes").Close()
 	b.Close()
-	b.Space()
-	b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+
+	if !slice.Contains(options, "cancel-button:hide") {
+		b.Space()
+		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+		b.Space()
+	}
+
+	b.Span().ID("htmx-response-message").Close()
 
 	// Done
 	b.CloseAll()
@@ -105,8 +112,8 @@ func WrapForm(endpoint string, content string) string {
 	return b.String()
 }
 
-func WrapModalForm(response *echo.Response, endpoint string, content string) string {
-	return WrapModal(response, WrapForm(endpoint, content))
+func WrapModalForm(response *echo.Response, endpoint string, content string, options ...string) string {
+	return WrapModal(response, WrapForm(endpoint, content, options...), options...)
 }
 
 // CloseModal sets Response header to close a modal on the client and optionally forward to a new location.

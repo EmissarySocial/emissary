@@ -3,8 +3,8 @@ package service
 import (
 	"io/fs"
 	"os"
-	"strings"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
 	"github.com/fsnotify/fsnotify"
@@ -35,38 +35,37 @@ func NewFilesystem(system fs.FS) Filesystem {
  *******************************************/
 
 // GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
-func (filesystem *Filesystem) GetFS(uri string) (fs.FS, error) {
+func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
+
+	switch folder.Adapter {
 
 	// Detect embedded file system
-	if strings.HasPrefix(uri, "embed://") {
-		uri = strings.TrimPrefix(uri, "embed://")
-		result, err := fs.Sub(filesystem.system, "/_embed/"+uri)
-		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", uri)
-	}
+	case config.FolderAdapterEmbed:
+		result, err := fs.Sub(filesystem.system, "/_embed/"+folder.Location)
+		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", folder)
 
 	// Detect filesystem type
-	if strings.HasPrefix(uri, "file://") {
-		uri = strings.TrimPrefix(uri, "file://")
-		return os.DirFS(uri), nil
+	case config.FolderAdapterFile:
+		return os.DirFS(folder.Location), nil
 	}
 
-	// Pass through to afero (create a read-only filesystem)
-	if result, err := filesystem.GetAfero(uri); err == nil {
+	// Otherwise, pass through to afero (create a read-only filesystem)
+	if result, err := filesystem.GetAfero(folder); err == nil {
 		return afero.NewIOFS(result), nil
 	}
 
 	// Otherwise, fail.  Unrecognized filesystem type
-	return nil, derp.NewInternalError("service.filesystem.GetFS", "Unsupported filesystem adapter", uri)
+	return nil, derp.NewInternalError("service.filesystem.GetFS", "Unsupported filesystem adapter", folder)
 }
 
 // GetFSs returns multiple fs.FS filesystems
-func (filesystem *Filesystem) GetFSs(urls ...string) ([]fs.FS, error) {
+func (filesystem *Filesystem) GetFSs(folders ...config.Folder) ([]fs.FS, error) {
 
-	result := make([]fs.FS, len(urls))
+	result := make([]fs.FS, len(folders))
 	var errAcc error
 
-	for i, url := range urls {
-		item, err := filesystem.GetFS(url)
+	for i, folder := range folders {
+		item, err := filesystem.GetFS(folder)
 		result[i] = item
 		errAcc = derp.Append(errAcc, err)
 	}
@@ -79,16 +78,21 @@ func (filesystem *Filesystem) GetFSs(urls ...string) ([]fs.FS, error) {
  *******************************************/
 
 // GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
-func (filesystem *Filesystem) GetAfero(uri string) (afero.Fs, error) {
+func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
+
+	switch folder.Adapter {
 
 	// Detect filesystem type
-	if strings.HasPrefix(uri, "file://") {
-		trimmed := strings.TrimPrefix(uri, "file://")
-		return afero.NewBasePathFs(afero.NewOsFs(), trimmed), nil
-	}
+	case config.FolderAdapterFile:
+		return afero.NewBasePathFs(afero.NewOsFs(), folder.Location), nil
 
 	// Detect S3 filesystem type
-	if uri, err := s3uri.ParseString(uri); err == nil {
+	case config.FolderAdapterS3:
+		uri, err := s3uri.ParseString(folder.Location)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error parsing S3 URI", uri)
+		}
 
 		// Read session configuration
 		config := aws.Config{Region: uri.Region}
@@ -106,27 +110,27 @@ func (filesystem *Filesystem) GetAfero(uri string) (afero.Fs, error) {
 
 		// Create an S3 filesystem
 		return s3.NewFs(*uri.Bucket, session), nil
+
+		// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
+		// * Git? https://github.com/go-git/go-git
+		// * Dropbox?  https://github.com/fclairamb/afero-dropbox
+		// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
+		// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
+		// * Azure?
+		// * etc...
 	}
 
-	// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
-	// * Git? https://github.com/go-git/go-git
-	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
-	// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
-	// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
-	// * Azure?
-	// * etc...
-
-	return nil, derp.NewInternalError("service.filesystem.GetAfero", "Unsupported filesystem adapter", uri)
+	return nil, derp.NewInternalError("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
 }
 
 // GetAferos returns multiple afero filesystems
-func (filesystem *Filesystem) GetAferos(uris ...string) ([]afero.Fs, error) {
+func (filesystem *Filesystem) GetAferos(folders ...config.Folder) ([]afero.Fs, error) {
 
-	result := make([]afero.Fs, len(uris))
+	result := make([]afero.Fs, len(folders))
 	var errAcc error
 
-	for i, url := range uris {
-		item, err := filesystem.GetAfero(url)
+	for i, folder := range folders {
+		item, err := filesystem.GetAfero(folder)
 		result[i] = item
 		errAcc = derp.Append(errAcc, err)
 	}
@@ -138,14 +142,13 @@ func (filesystem *Filesystem) GetAferos(uris ...string) ([]afero.Fs, error) {
  * REAL TIME WATCHING
  *******************************************/
 
-func (filesystem *Filesystem) Watch(uri string, changed chan<- bool, closed <-chan bool) error {
+func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, closed <-chan bool) error {
 
-	if strings.HasPrefix(uri, "file://") {
-		uri = strings.TrimPrefix(uri, "file://")
-		return filesystem.watchOS(uri, changed, closed)
+	if folder.Adapter == config.FolderAdapterFile {
+		return filesystem.watchOS(folder.Location, changed, closed)
 	}
 
-	return derp.NewInternalError("service.Filesystem.Watch", "Unsupported filesystem adapter", uri)
+	return derp.NewInternalError("service.Filesystem.Watch", "Unsupported filesystem adapter", folder)
 }
 
 func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-chan bool) error {

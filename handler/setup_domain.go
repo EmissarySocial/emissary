@@ -2,10 +2,7 @@ package handler
 
 import (
 	_ "embed"
-	"html/template"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
@@ -17,70 +14,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// SetupGetPage returns the index page for the server
-func SetupGetPage(factory *server.Factory, templates *template.Template, templateID string) echo.HandlerFunc {
-
-	return func(ctx echo.Context) error {
-
-		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
-
-		renderer := render.NewSetup(factory.Config())
-
-		header := ctx.Response().Header()
-		header.Set("Content-Type", "text/html")
-		header.Set("Cache-Control", "no-cache")
-
-		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", renderer); err != nil {
-				derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
-			}
-		}
-
-		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, renderer); err != nil {
-			derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
-		}
-
-		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", renderer); err != nil {
-				derp.Report(derp.Wrap(err, "setup.getIndex", "Error rendering index page"))
-			}
-		}
-		return nil
-	}
-}
-
-func SetupPostServer(factory *server.Factory) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
-
-		body := maps.Map{}
-		c := factory.Config()
-		s := config.Schema()
-
-		// Try to get the FORM DATA ONLY
-		if err := (&echo.DefaultBinder{}).BindBody(ctx, &body); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input (BAD FORMAT)."))
-		}
-
-		// Split array values from the form
-		body["templates"] = strings.Split(body.GetString("templates"), "\n")
-		body["layouts"] = strings.Split(body.GetString("layouts"), "\n")
-
-		// Try to update the configuration with the form data
-		if err := s.SetAll(&c, body); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Invalid Input."))
-		}
-
-		// Try to save the configuration to the persistent storage
-		if err := factory.UpdateConfig(c); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
-		}
-
-		return render.WrapInlineSuccess(ctx, "Updated on "+time.Now().Format("3:04:05 PM"))
-	}
-}
-
-// SetupGetDomain displays the form for creating/editing a domain.
-func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupDomainGet displays the form for creating/editing a domain.
+func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var header string
@@ -139,8 +74,8 @@ func SetupGetDomain(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// SetupPostDomain updates/creates a domain
-func SetupPostDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupDomainPost updates/creates a domain
+func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
@@ -169,8 +104,8 @@ func SetupPostDomain(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// SetupDeleteDomain deletes a domain from the configuration
-func SetupDeleteDomain(factory *server.Factory) echo.HandlerFunc {
+// SetupDomainDelete deletes a domain from the configuration
+func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Get the domain ID

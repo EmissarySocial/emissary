@@ -15,7 +15,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
 	mw "github.com/EmissarySocial/emissary/middleware"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
@@ -81,20 +80,22 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	}
 
 	setupTemplates := template.Must(template.New("").
-		Funcs(render.FuncMap()).
+		Funcs(factory.FuncMap()).
 		ParseFS(setupFiles, "*.html"))
 
 	// Middleware for setup pages
 	e.Use(mw.Localhost())
 
 	// Setup Routes
-	e.GET("/", handler.SetupGetPage(factory, setupTemplates, "index.html"))
-	e.GET("/server", handler.SetupGetPage(factory, setupTemplates, "server.html"))
-	e.POST("/server", handler.SetupPostServer(factory))
-	e.GET("/domains", handler.SetupGetPage(factory, setupTemplates, "domains.html"))
-	e.GET("/domains/:domain", handler.SetupGetDomain(factory))
-	e.POST("/domains/:domain", handler.SetupPostDomain(factory))
-	e.DELETE("/domains/:domain", handler.SetupDeleteDomain(factory))
+	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "index.html"))
+	e.GET("/server", handler.SetupPageGet(factory, setupTemplates, "server.html"))
+	e.POST("/server", handler.SetupServerPost(factory))
+	e.GET("/server/:section", handler.SetupServerGet(factory))
+	e.POST("/server/:section", handler.SetupServerPost(factory))
+	e.GET("/domains", handler.SetupPageGet(factory, setupTemplates, "domains.html"))
+	e.GET("/domains/:domain", handler.SetupDomainGet(factory))
+	e.POST("/domains/:domain", handler.SetupDomainGet(factory))
+	e.DELETE("/domains/:domain", handler.SetupDomainDelete(factory))
 
 	// When running the setup tool, wait a second, then open a browser window to the correct URL
 	go func() {

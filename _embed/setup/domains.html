@@ -10,21 +10,21 @@
 
 			<!--  First row is "Add" link -->
 			<tr role="link" hx-get="/domains/new"><td colspan="3">
-				<i class="ti ti-circle-plus"></i> Add a Domain
+				{{icon "add"}} Add a Domain
 			</td></tr>
 
 			{{$empty := true}}
 			{{- range .Config.Domains -}}
 				<tr role="link">
 					<td hx-get="/domains/{{.DomainID}}">
-						<i class="ti ti-server"></i> {{ .Label }}
+						{{icon "server"}} {{ .Label }}
 					</td>
 					<td hx-get="/domains/{{.DomainID}}">
 						{{.Hostname}}
 					</td>
 					<td class="align-right">
 						&nbsp;&nbsp;
-						<button class="" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">Delete</button>
+						<button class="" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>
 					</td>
 				</tr>
 			{{- end -}}

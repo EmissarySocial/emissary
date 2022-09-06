@@ -2,15 +2,44 @@
 
 <main>
 	<div class="framed page">
-		<h1>Server Setup</h1>
-
-		<p>This page configures the file locations for important server resources.</p>
-		<p>All values should be populated before domains are added.</p>
+		<h1>File Locations</h1>
 
 		<form hx-post="/server">
 
-			{{.Server}}
+			<div class="tabs" data-script="install TabContainer">
 
+				<div role="tablist">
+					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">User Templates</button>
+					<button type="button" role="tab" id="tab-layouts" class="tab-label" aria-controls="panel-layouts">System Templates</button>
+					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
+					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
+				</div>
+
+				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
+					<p>User Templates define all of the different kinds of media that users can include on their sites.</p>
+					<div hx-get="/server/templates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-layouts" aria-labelledby="tab-layouts" hidden="true">
+					<p>System Templates define the administrative templates used to control site behavior.</p>
+					<div hx-get="/server/layouts" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">
+					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
+					<div hx-get="/server/attachments" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-certificates" aria-labelledby="tab-certificates" hidden="true">
+					<p>Emissary uses <a href="https://letsencrypt.org" target="_blank">Let's Encrypt</a> to 
+						automatically generate SSL certificates for all websites.
+						Choose a readable/writeable location where SSL certificates will be cached.</p>
+					<div hx-get="/server/certificates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+			</div>
+
+			<!--
 			<div class="space-above">
 				<button type="submit" class="primary htmx-request-hide">Save Changes</button>
 				<button type="button" disabled class="htmx-request-show"><i class="ti-spin ti-spinner"></i> Saving</button>
@@ -19,6 +48,7 @@
 			<div class="text-sm gray30">
 				Changes will be immediately applied to all servers in the cluster.
 			</div>
+			--->
 		</form>
 	</div>
 </main>
