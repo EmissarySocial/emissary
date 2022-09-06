@@ -4,7 +4,7 @@
 
 {{- if eq $apiKey "" -}}
 	<div class="info">
-		<i class="info-marker ti ti-info-circle text-2xl"></i>
+		<span class="info-marker text-2xl">{{icon "info"}}</span>
 		To connect to Stripe, sign in to your stripe account and generate an API key.  Then paste it here to get started.
 	</div>
 {{- end -}}

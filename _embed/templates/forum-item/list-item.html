@@ -8,7 +8,7 @@
 				<span class="bold">{{.AuthorName}}</span> &middot;
 				<span class="gray50" script="install PrettyDate(date:{{.CreateDate}})">&nbsp;</span>
 				{{- if .IsReply -}}
-					<span class="gray50">&nbsp;<i class="ti ti-arrow-big-left-lines"></i></span>
+					<span class="gray50">&nbsp;{{icon "reply"}}</span>
 				{{- end -}}
 			</div>
 			<div class="align-right text-xs">

@@ -1,6 +1,6 @@
 <div hx-get="/admin/users/{{.UserID}}/view" hx-trigger="refreshPage from:body" hx-push-url="false">
     <div class="space-below">
-        <a hx-get="/admin/users"><i class="ti ti-chevron-left"></i> All People</a>
+        <a hx-get="/admin/users">{{icon "chevron-left"}} All People</a>
     </div>
     <h1>{{.DisplayName}}</h1>
     {{.ImageURL}}

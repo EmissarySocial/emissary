@@ -2,7 +2,7 @@
 	"templateId": "product",
 	"label": "Product",
 	"description": "Sell products online",
-	"icon": "ti ti-shopping-cart",
+	"icon": "shopping-cart",
 	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",

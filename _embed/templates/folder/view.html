@@ -41,7 +41,7 @@
 				{{- range .Children.ByRank.View -}}
 					<tr class="draggable" hx-get="/{{.Token}}" role="link">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						<td><i class="ti ti-file-description"></i> {{.Label}}</td>
+						<td>{{icon "file"}} {{.Label}}</td>
 						<td>{{.Description}}</td>
 						<td></td>
 					</tr>

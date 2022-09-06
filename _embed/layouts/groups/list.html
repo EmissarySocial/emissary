@@ -5,10 +5,10 @@
     {{- range $groups -}}
         <tr class="clickable">
             <td role="link" hx-get="/admin/groups/{{.GroupID}}/edit" class="width-full">
-                <i class="ti ti-users"></i>&nbsp;{{.Label}}
+                {{icon "users"}}&nbsp;{{.Label}}
             </td>
             <td role="link" hx-get="/admin/groups/{{.GroupID}}/delete">
-                <i class="ti ti-trash"></i>
+                {{icon "delete"}}
             </td>
         </tr>
     {{- end -}}

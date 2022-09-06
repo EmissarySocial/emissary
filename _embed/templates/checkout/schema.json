@@ -2,7 +2,7 @@
 	"templateId": "checkout",
 	"label": "Checkout",
 	"description": "Add a 'buy now' option to this stream.",
-	"icon": "ti ti-shopping-cart",
+	"icon": "shopping-cart",
 	"asFeature": true,
 	"schema": {
 		"type": "object",

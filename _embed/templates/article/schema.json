@@ -2,7 +2,7 @@
 	"templateId": "article",
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
-	"icon": "ti ti-notes",
+	"icon": "article",
 	"containedBy": ["top", "folder", "article"],
 	"schema": {
 		"type": "object",

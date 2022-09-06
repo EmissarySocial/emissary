@@ -355,6 +355,10 @@ input.text-md {
 }
 
 
+.text-gray {
+    color: var(--gray60);
+}
+
 .text-green {
     color:var(--green70)!important;
 }
@@ -362,7 +366,6 @@ input.text-md {
 .text-green:hover {
     color:var(--green80)!important;
 }
-
 
 .text-red {
     color: var(--red50)!important;

@@ -11,7 +11,7 @@
 				<button hx-post="/{{$streamID}}/attachments-delete?attachmentId={{.AttachmentID.Hex}}" 
 					hx-confirm="Delete this Attachment?" 
 					class="hover-reveal text-xs" 
-					style="position:absolute; top:5px; right:15px;"><i class="ti ti-trash"></i></button>
+					style="position:absolute; top:5px; right:15px;">{{icon "delete"}}</button>
 				<img src="/{{$streamID}}/attachments/{{.AttachmentID.Hex}}?height=200&width=200" style="width:100%">
 			</div>
 		</div>
@@ -19,7 +19,7 @@
 
 	<div class="pure-u-1-3 htmx-request-show">
 		<div class="align-center" style="height:100%; color:var(--gray40); margin: 0px 10px 10px 0px; padding:20px;">
-			<i class="ti ti-spinner ti-spin-pulse"></i><br><br>
+			{{icon "loading"}}<br><br>
 			Uploading New Attachment
 		</div>
 	</div>

@@ -92,11 +92,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	// Controls
 	b.Div()
 	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML("Save Changes").Close()
-	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true")
-	b.I("ti", "ti-spinner", "ti-spin-pulse").Close()
-	b.Space()
-	b.Span().InnerHTML("Save Changes").Close()
-	b.Close()
+	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML("Saving...").Close()
 
 	if !slice.Contains(options, "cancel-button:hide") {
 		b.Space()

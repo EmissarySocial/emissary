@@ -11,7 +11,7 @@
 
     <table id="users" class="table">
         <tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
-            <i class="ti ti-circle-plus"></i>&nbsp;Invite a Person
+            {{icon "add"}}&nbsp;Invite a Person
         </td></tr>
 
         {{- .View "list" -}}

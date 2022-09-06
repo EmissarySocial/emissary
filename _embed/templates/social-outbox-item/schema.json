@@ -2,7 +2,7 @@
 	"templateId": "social-outbox-item",
 	"label": "Outbox Item",
 	"description": "Log of activities performed by a user",
-	"icon": "ti ti-user",
+	"icon": "user",
 	"containedBy": ["social-outbox"],
 	"schema": {
 		"type": "object",

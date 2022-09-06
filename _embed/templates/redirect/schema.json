@@ -2,7 +2,7 @@
 	"templateId": "redirect",
 	"label": "Redirect",
 	"description": "Forward your visitors to an external website",
-	"icon": "ti ti-rotate-rectangle",
+	"icon": "forward",
 	"containedBy": ["top", "folder"],
 	"childSortType": "label",
 	"childSortOrder": "ASC",

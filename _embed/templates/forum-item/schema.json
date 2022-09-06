@@ -2,7 +2,7 @@
 	"templateId": "forum-item",
 	"label": "Forum Item",
 	"description": "An individual post in a forum topic.",
-	"icon": "ti ti-message",
+	"icon": "message",
 	"containedBy": ["forum-topic"],
 	"schema": {
 		"type": "object",

@@ -79,7 +79,7 @@
 				{{- if .UserCan "checkout" -}}
 					<div id="idCheckout" class="space-below align-center">
 						<button class="block primary text-lg htmx-request-hide" hx-post="/{{.StreamID}}/checkout" hx-push-url="false" script="on click add .htmx-request to #idCheckout">{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
-						<button class="block primary text-lg htmx-request-show" disabled="true"><i class="ti ti-spinner ti-spin-pulse"></i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
+						<button class="block primary text-lg htmx-request-show" disabled="true">{{icon "loading"}}</i>&nbsp;{{.Data "buttonLabel"}}: {{.Data "decimalAmount" | dollarFormat}}</button>
 					</div>
 				
 				{{- else -}}
