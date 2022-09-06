@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -19,7 +19,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Read the request
-		body, err := ioutil.ReadAll(ctx.Request().Body)
+		body, err := io.ReadAll(ctx.Request().Body)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error reading request body")

@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/benpate/derp"
@@ -67,7 +67,7 @@ func (storage FileStorage) load() Config {
 	result := NewConfig()
 
 	// Try to load the configuration file from disk
-	data, err := ioutil.ReadFile(storage.location)
+	data, err := os.ReadFile(storage.location)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error reading configuration"))
@@ -96,7 +96,7 @@ func (storage FileStorage) Write(config Config) error {
 	}
 
 	// Try to write the configuration to disk
-	if err := ioutil.WriteFile(storage.location, data, 0777); err != nil {
+	if err := os.WriteFile(storage.location, data, 0777); err != nil {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error writing configuration")
 	}
 
