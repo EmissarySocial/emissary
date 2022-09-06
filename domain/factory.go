@@ -79,7 +79,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	// Start the Domain Service
 	factory.domainService = service.NewDomain(
 		factory.collection(CollectionDomain),
-		render.FuncMap(),
+		render.FuncMap(factory.Icons()),
 	)
 
 	// Start the Stream Service

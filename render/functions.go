@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"html/template"
 
+	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
 )
 
-func FuncMap() template.FuncMap {
+func FuncMap(icons icon.Provider) template.FuncMap {
 
 	return template.FuncMap{
+		"icon": func(name string) template.HTML {
+			return template.HTML(icons.Get(name))
+		},
 		"dollarFormat": func(value any) string {
 
 			var unitAmount int64
