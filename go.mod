@@ -36,7 +36,7 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
-	go.mongodb.org/mongo-driver v1.10.1
+	go.mongodb.org/mongo-driver v1.10.2
 	golang.org/x/exp v0.0.0-20220906200021-fcb1a314c389
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
