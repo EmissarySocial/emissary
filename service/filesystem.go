@@ -148,7 +148,8 @@ func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, c
 		return filesystem.watchOS(folder.Location, changed, closed)
 	}
 
-	return derp.NewInternalError("service.Filesystem.Watch", "Unsupported filesystem adapter", folder)
+	// Otherwise, this adapter doesn't support watching so just exit silently
+	return nil
 }
 
 func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-chan bool) error {
