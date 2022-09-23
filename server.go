@@ -237,7 +237,7 @@ func errorHandler(err error, ctx echo.Context) {
 
 	// On localhost, allow developers to see full error dump.
 	if !isRemoteDomain(ctx.Request().Host) {
-		ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+		ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}
 
