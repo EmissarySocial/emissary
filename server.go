@@ -225,7 +225,7 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	code := derp.ErrorCode(err)
 	switch code {
-	case http.StatusUnauthorized, http.StatusForbidden:
+	case http.StatusUnauthorized:
 
 		if ctx.Request().URL.Path != "/signin" {
 			ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
