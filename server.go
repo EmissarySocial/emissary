@@ -242,7 +242,8 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// Fall through to general error handler
-	ctx.String(derp.ErrorCode(err), spew.Sdump(err))
+	ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
+	// ctx.String(derp.ErrorCode(err), derp.Message(err))
 }
 
 // isRemoteDomain returns true if the domain is not localhost or a local IP address
