@@ -41,7 +41,7 @@ func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
 
 	// Detect embedded file system
 	case config.FolderAdapterEmbed:
-		result, err := fs.Sub(filesystem.system, "/_embed/"+folder.Location)
+		result, err := fs.Sub(filesystem.system, "_embed/"+folder.Location)
 		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", folder)
 
 	// Detect filesystem type

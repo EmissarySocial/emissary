@@ -25,6 +25,17 @@ func NewFileStorage(args CommandLineArgs) FileStorage {
 		location: strings.TrimPrefix(args.Location, "file://"),
 	}
 
+	if args.Initialize {
+		config := DefaultConfig()
+		config.Source = storage.source
+		config.Location = storage.location
+
+		if err := storage.Write(config); err != nil {
+			derp.Report(derp.Wrap(err, "config.FileStorage", "Error initializing MongoDB config"))
+			panic("Error initializing File config: " + err.Error())
+		}
+	}
+
 	// Listen for updates and post them to the update channel
 	return storage
 }

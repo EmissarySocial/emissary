@@ -18,6 +18,7 @@ type Config struct {
 	AdminEmail          string                    `path:"adminEmail"          json:"adminEmail"`          // Email address of the administrator
 	Source              string                    `path:"-"                   json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                    `path:"-"                   json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
+	MongoID             primitive.ObjectID        `path:"configId"            json:"_" bson:"_id"`        // Used as unique key for MongoDB
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -31,11 +32,7 @@ func NewConfig() Config {
 func DefaultConfig() Config {
 
 	return Config{
-		Domains: set.Slice[string, Domain]{{
-			DomainID: primitive.NewObjectID().Hex(),
-			Label:    "Administration Console",
-			Hostname: "localhost",
-		}},
+		Domains: set.Slice[string, Domain]{},
 
 		// File Locations
 		Layouts:             []Folder{{Adapter: "EMBED", Location: "layouts"}},

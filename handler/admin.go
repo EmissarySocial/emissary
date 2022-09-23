@@ -60,15 +60,6 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 		// Create the correct renderer for this controller
 		switch controller {
 
-		case "analytics":
-			layout := factory.Layout().Analytics()
-			service := factory.Domain()
-			object := model.NewDomain()
-			if err := service.Load(&object); err != nil {
-				return derp.Wrap(err, location, "Error loading Group", objectID)
-			}
-			renderer, err = render.NewDomain(factory, sterankoContext, layout, &object, actionID)
-
 		case "appearance":
 			layout := factory.Layout().Appearance()
 			service := factory.Domain()

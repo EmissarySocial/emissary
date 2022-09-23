@@ -14,7 +14,7 @@
 			</td></tr>
 
 			{{$empty := true}}
-			{{- range .Config.Domains -}}
+			{{- range .Domains -}}
 				<tr role="link">
 					<td hx-get="/domains/{{.DomainID}}">
 						{{icon "server"}} {{ .Label }}
@@ -24,7 +24,7 @@
 					</td>
 					<td class="align-right">
 						&nbsp;&nbsp;
-						<button class="" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>
+						<span role="button" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</span>
 					</td>
 				</tr>
 			{{- end -}}

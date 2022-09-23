@@ -17,7 +17,6 @@ type Layout struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
 	locations         []config.Folder
-	analytics         model.Layout
 	appearance        model.Layout
 	connections       model.Layout
 	domain            model.Layout
@@ -114,6 +113,7 @@ func (service *Layout) loadLayouts() error {
 		filesystem, err := service.filesystemService.GetFS(location)
 
 		if err != nil {
+			derp.Report(derp.Wrap(err, "service.layout.loadLayouts", "Unable to get filesystem adapter", location))
 			continue // If there's an error, it means that this location just doesn't define this part of the layout.  It's OK
 		}
 
@@ -148,40 +148,37 @@ func (service *Layout) loadLayouts() error {
 	}
 
 	// Validate required fields.
-	if service.analytics.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Analytics Template could not be loaded from any location", service.locations)
-	}
 
 	if service.appearance.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Appearance Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Appearance layout could not be loaded from any location", service.locations)
 	}
 
 	if service.connections.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Connections Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Connections layout could not be loaded from any location", service.locations)
 	}
 
 	if service.domain.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Domain Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Domain layout could not be loaded from any location", service.locations)
 	}
 
 	if service.global.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Global Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Global layout could not be loaded from any location", service.locations)
 	}
 
 	if service.group.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Group Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Group layout could not be loaded from any location", service.locations)
 	}
 
 	if service.profile.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Profile Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Profile layout could not be loaded from any location", service.locations)
 	}
 
 	if service.topLevel.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error Top Level Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "Top Level layout could not be loaded from any location", service.locations)
 	}
 
 	if service.user.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Error User Template could not be loaded from any location", service.locations)
+		return derp.NewInternalError("service.layout.loadFromFilesystem", "User layout could not be loaded from any location", service.locations)
 	}
 
 	return nil
@@ -190,10 +187,6 @@ func (service *Layout) loadLayouts() error {
 /*******************************************
  * LAYOUT ACCESSORS
  *******************************************/
-
-func (service *Layout) Analytics() *model.Layout {
-	return &service.analytics
-}
 
 func (service *Layout) Appearance() *model.Layout {
 	return &service.appearance
@@ -236,10 +229,6 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 	switch name {
 
-	case "analytics":
-		service.analytics = layout
-		return nil
-
 	case "appearance":
 		service.appearance = layout
 		return nil
@@ -278,5 +267,5 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"analytics", "appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
+	return []string{"appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
 }

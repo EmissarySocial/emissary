@@ -44,14 +44,32 @@ func NewMongoStorage(args CommandLineArgs) MongoStorage {
 		updateChannel: make(chan Config, 1),
 	}
 
+	if args.Initialize {
+
+		// Delete existing configuration so we don't have multiple records.
+		if _, err := storage.collection.DeleteMany(context.Background(), bson.M{}); err != nil {
+			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error deleting existing config"))
+		}
+
+		config := DefaultConfig()
+		config.Source = storage.source
+		config.Location = storage.location
+
+		if err := storage.Write(config); err != nil {
+			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error initializing MongoDB config"))
+			panic("Error initializing MongoDB config: " + err.Error())
+		}
+	}
+
 	// Listen for updates and post them to the update channel
 	go func() {
 
 		ctx := context.Background()
+
 		config, err := storage.load()
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading config from MongoDB"))
+			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading config from MongoDB, and unable to write default configuration."))
 			panic("Error loading config from MongoDB: " + err.Error())
 		}
 
@@ -98,7 +116,13 @@ func (storage MongoStorage) load() (Config, error) {
 // Write writes the configuration to the database
 func (storage MongoStorage) Write(config Config) error {
 
-	if _, err := storage.collection.InsertOne(context.Background(), config); err != nil {
+	upsert := true
+	criteria := bson.M{"_id": config.MongoID}
+	options := options.ReplaceOptions{
+		Upsert: &upsert,
+	}
+
+	if _, err := storage.collection.ReplaceOne(context.Background(), criteria, config, &options); err != nil {
 		return derp.Wrap(err, "config.MongoStorage", "Error writing config to MongoDB")
 	}
 

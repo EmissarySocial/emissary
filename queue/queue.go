@@ -1,6 +1,9 @@
 package queue
 
-import "github.com/benpate/derp"
+import (
+	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
+)
 
 type Queue struct {
 	tasks chan Task
@@ -19,6 +22,8 @@ func NewQueue(length int, workers int) *Queue {
 		go result.Worker()
 	}
 
+	spew.Dump("Creating queue with length/workers", length, workers)
+
 	return result
 }
 
@@ -27,6 +32,7 @@ func (q *Queue) Worker() {
 	for {
 		select {
 		case task := <-q.tasks:
+			spew.Dump("running task...", task)
 			if err := task.Run(); err != nil {
 				derp.Report(derp.Wrap(err, "queue.Queue.Worker", "Error running task", task))
 			}

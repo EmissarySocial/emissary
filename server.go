@@ -33,6 +33,7 @@ func main() {
 
 	// Set global configuration
 	spew.Config.DisableMethods = true
+	spew.Config.Indent = " "
 
 	// Locate the configuration file and populate the factory
 	commandLineArgs := config.GetCommandLineArgs()
@@ -94,7 +95,7 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/server/:section", handler.SetupServerPost(factory))
 	e.GET("/domains", handler.SetupPageGet(factory, setupTemplates, "domains.html"))
 	e.GET("/domains/:domain", handler.SetupDomainGet(factory))
-	e.POST("/domains/:domain", handler.SetupDomainGet(factory))
+	e.POST("/domains/:domain", handler.SetupDomainPost(factory))
 	e.DELETE("/domains/:domain", handler.SetupDomainDelete(factory))
 
 	// When running the setup tool, wait a second, then open a browser window to the correct URL

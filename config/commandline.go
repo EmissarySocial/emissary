@@ -10,10 +10,11 @@ import (
 
 // CommandLineArgs represents the command line arguments passed to the server
 type CommandLineArgs struct {
-	Source   string // Type of configuration file (Command Line | Enviornment Variable | Default)
-	Protocol string // Protocol to use when loading the configuration (MONGODB | FILE)
-	Location string // URI of the configuration file
-	Setup    bool   // If TRUE, then the server will run in setup mode
+	Source     string // Type of configuration file (Command Line | Enviornment Variable | Default)
+	Protocol   string // Protocol to use when loading the configuration (MONGODB | FILE)
+	Location   string // URI of the configuration file
+	Initialize bool   // If TRUE, the try to initialize the configuration database
+	Setup      bool   // If TRUE, then the server will run in setup mode
 }
 
 // GetCommandLineArgs returns the location of the configuration file
@@ -22,34 +23,38 @@ func GetCommandLineArgs() CommandLineArgs {
 	// Look for the configuration location in the command line arguments
 	location := pflag.String("config", "", "Path to configuration file")
 	setup := pflag.Bool("setup", false, "Run setup server")
+	initialize := pflag.Bool("init", false, "Initialize the database")
 
 	pflag.Parse()
 
 	if (location != nil) && (*location != "") {
 		return CommandLineArgs{
-			Source:   "Command Line",
-			Location: *location,
-			Protocol: getConfigProtocol(*location),
-			Setup:    *setup,
+			Source:     "Command Line",
+			Location:   *location,
+			Protocol:   getConfigProtocol(*location),
+			Initialize: *initialize,
+			Setup:      *setup,
 		}
 	}
 
 	// Look for the configuration location in the environment
 	if location := os.Getenv("EMISSARY_CONFIG"); location != "" {
 		return CommandLineArgs{
-			Source:   "Environment Variable",
-			Location: location,
-			Protocol: getConfigProtocol(location),
-			Setup:    *setup,
+			Source:     "Environment Variable",
+			Location:   location,
+			Protocol:   getConfigProtocol(location),
+			Initialize: *initialize,
+			Setup:      *setup,
 		}
 	}
 
 	// Use default location
 	return CommandLineArgs{
-		Source:   "Default",
-		Location: "file://./config.json",
-		Protocol: getConfigProtocol("file://"),
-		Setup:    *setup,
+		Source:     "Default",
+		Location:   "file://./config.json",
+		Protocol:   getConfigProtocol("file://"),
+		Initialize: *initialize,
+		Setup:      *setup,
 	}
 }
 

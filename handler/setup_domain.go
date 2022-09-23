@@ -31,7 +31,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.DomainByID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupGetDomain", "Error loading configuration")
+			return derp.Wrap(err, "handler.SetupDomainGet", "Error loading configuration")
 		}
 
 		domainEditForm := form.Element{
@@ -65,7 +65,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := form.Editor(s, domainEditForm, domain, nil)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupGetDomain", "Error generating form")
+			return derp.Wrap(err, "handler.SetupDomainGet", "Error generating form")
 		}
 
 		result := render.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)
@@ -86,17 +86,17 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 		input := maps.Map{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error binding form input"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
 		}
 
 		s := config.DomainSchema()
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error setting config values"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
 		}
 
 		if err := factory.PutDomain(domain); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.PostServerDomain", "Error saving domain"))
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
 		}
 
 		render.CloseModal(ctx, "")
@@ -113,7 +113,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 
 		// Delete the domain
 		if err := factory.DeleteDomain(domainID); err != nil {
-			return derp.Wrap(err, "handler.DeleteServerDomain", "Error deleting domain")
+			return derp.Wrap(err, "handler.SetupDomainDelete", "Error deleting domain")
 		}
 
 		// Close the modal and return OK
@@ -125,7 +125,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 // getSigninToDomain signs you in to the requested domain as an administrator
 func getSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.GetSigninToDomain"
+	const location = "handler.getSigninToDomain"
 
 	return func(ctx echo.Context) error {
 

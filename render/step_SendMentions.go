@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSendMentions represents an action-step that can update the custom data stored in a Stream
@@ -22,6 +23,8 @@ func (step StepSendMentions) UseGlobalWrapper() bool {
 func (step StepSendMentions) Post(renderer Renderer) error {
 
 	const location = "render.StepSendMentions.Post"
+
+	spew.Dump("SENDING MENTIONS...")
 
 	html, err := renderer.View("view")
 

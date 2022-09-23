@@ -335,7 +335,7 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	pageHeader(ctx, b, "You're All Clear, Kid.")
 
 	b.Div().Class("align-center")
-	b.Div().Class("space-below", "text-gray", "text-2xl")
+	b.Div().Class("space-below", "text-gray", "text-2xl").EndBracket()
 	icons.Write("check-circle", b)
 	b.Close()
 	b.H1().InnerHTML("Setup Is Complete").Close()
@@ -345,7 +345,7 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	b.Table().Class("table", "space-above")
 
 	b.TR().Role("link").Script("on click set window.location to '/home'")
-	b.TD().Class("align-center", "text-lg")
+	b.TD().Class("align-center", "text-lg").EndBracket()
 	icons.Write("home", b)
 	b.Close()
 	b.TD().Style("width:100%")
@@ -354,7 +354,7 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	b.Close()
 
 	b.TR().Role("link").Script("on click set window.location to '/admin/users'")
-	b.TD().Class("align-center", "text-lg")
+	b.TD().Class("align-center", "text-lg").EndBracket()
 	icons.Write("users", b)
 	b.Close()
 	b.TD().Style("width:100%")
