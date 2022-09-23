@@ -35,29 +35,54 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		}
 
 		domainEditForm := form.Element{
-			Type:  "layout-vertical",
+			Type:  "layout-tabs",
 			Label: header,
 			Children: []form.Element{{
-				Type:        "text",
-				Path:        "label",
-				Label:       "Label",
-				Description: "Admin-friendly label for this domain",
+				Label: "Domain",
+				Type:  "layout-vertical",
+				Children: []form.Element{{
+					Type:        "text",
+					Path:        "label",
+					Label:       "Label",
+					Description: "Admin-friendly label for this domain",
+				}, {
+					Type:        "text",
+					Path:        "hostname",
+					Label:       "Hostname",
+					Description: "Complete domain name (but no https:// or trailing slashes)",
+				}, {
+					Type:        "text",
+					Path:        "connectString",
+					Label:       "MongoDB Connection String",
+					Description: "Should look like mongodb://host:port/database",
+				}, {
+					Type:        "text",
+					Path:        "databaseName",
+					Label:       "MongoDB Database Name",
+					Description: "Name of the database to use on the server",
+				}},
 			}, {
-				Type:        "text",
-				Path:        "hostname",
-				Label:       "Hostname",
-				Description: "Complete domain name (but no https:// or trailing slashes)",
-			}, {
-				Type:        "text",
-				Path:        "connectString",
-				Label:       "MongoDB Connection String",
-				Description: "Should look like mongodb://host:port/database",
-			}, {
-				Type:        "text",
-				Path:        "databaseName",
-				Label:       "MongoDB Database Name",
-				Description: "Name of the database to use on the server",
-			}},
+				Label: "SMTP Setup",
+				Type:  "layout-vertical",
+				Children: []form.Element{{
+					Type:  "text",
+					Path:  "smtpHost",
+					Label: "Hostname",
+				}, {
+					Type:  "text",
+					Path:  "smtpPort",
+					Label: "Port",
+				}, {
+					Type:  "text",
+					Path:  "smtpUsername",
+					Label: "Username",
+				}, {
+					Type:  "text",
+					Path:  "smtpPassword",
+					Label: "Password",
+				},
+				}},
+			},
 		}
 
 		s := config.DomainSchema()
