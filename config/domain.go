@@ -40,11 +40,20 @@ func DomainSchema() schema.Schema {
 		ID:      "emissary.Domain",
 		Comment: "Validating schema for a domain configuration",
 		Element: schema.Object{
-			Properties: map[string]schema.Element{
+			Properties: schema.ElementMap{
 				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
 				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
 				"connectString": schema.String{MaxLength: null.NewInt(1000)},
 				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
+				"smtp": schema.Object{
+					Properties: schema.ElementMap{
+						"hostname": schema.String{MaxLength: null.NewInt(255), Required: true},
+						"username": schema.String{MaxLength: null.NewInt(255), Required: true},
+						"password": schema.String{MaxLength: null.NewInt(255), Required: true},
+						"port":     schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(65535), Required: true},
+						"tls":      schema.Boolean{},
+					},
+				},
 			},
 		},
 	}

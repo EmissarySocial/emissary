@@ -66,20 +66,24 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 				Type:  "layout-vertical",
 				Children: []form.Element{{
 					Type:  "text",
-					Path:  "smtpHost",
+					Path:  "smtp.hostname",
 					Label: "Hostname",
 				}, {
 					Type:  "text",
-					Path:  "smtpPort",
-					Label: "Port",
-				}, {
-					Type:  "text",
-					Path:  "smtpUsername",
+					Path:  "smtp.username",
 					Label: "Username",
 				}, {
 					Type:  "text",
-					Path:  "smtpPassword",
+					Path:  "smtp.password",
 					Label: "Password",
+				}, {
+					Type:  "text",
+					Path:  "smtp.port",
+					Label: "Port",
+				}, {
+					Type:  "toggle",
+					Path:  "smtp.tls",
+					Label: "Use TLS?",
 				},
 				}},
 			},
@@ -118,6 +122,10 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 
 		if err := s.SetAll(&domain, input); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
+		}
+
+		if err := s.Validate(&domain); err != nil {
+			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
 		}
 
 		if err := factory.PutDomain(domain); err != nil {
