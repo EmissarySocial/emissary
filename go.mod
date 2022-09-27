@@ -8,7 +8,7 @@ require (
 	github.com/benpate/activitystream v0.6.0
 	github.com/benpate/data v0.19.0
 	github.com/benpate/data-mongo v0.5.0
-	github.com/benpate/derp v0.24.0
+	github.com/benpate/derp v0.25.0
 	github.com/benpate/digit v0.5.0
 	github.com/benpate/exp v0.5.0
 	github.com/benpate/exp-builder v0.3.0
