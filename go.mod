@@ -14,7 +14,7 @@ require (
 	github.com/benpate/exp-builder v0.3.0
 	github.com/benpate/form v0.10.1
 	github.com/benpate/html v0.14.1
-	github.com/benpate/icon v0.2.0
+	github.com/benpate/icon v0.3.0
 	github.com/benpate/mediaserver v0.6.0
 	github.com/benpate/nebula v0.6.2
 	github.com/benpate/remote v0.8.0
