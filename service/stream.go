@@ -30,11 +30,10 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, contentLibrary *nebula.Library, hostName string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, contentLibrary *nebula.Library, hostName string, streamUpdateChannel chan model.Stream) Stream {
 
 	service := Stream{
 		templateService:     templateService,
-		draftService:        draftService,
 		attachmentService:   attachmentService,
 		contentLibrary:      contentLibrary,
 		hostName:            hostName,
@@ -49,6 +48,11 @@ func NewStream(collection data.Collection, templateService *Template, draftServi
 /*******************************************
  * LIFECYCLE METHODS
  *******************************************/
+
+// Updates the StreamDraft service after creation (to work around circular dependencies)
+func (service *Stream) SetDraftService(draftService *StreamDraft) {
+	service.draftService = draftService
+}
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Stream) Refresh(collection data.Collection) {

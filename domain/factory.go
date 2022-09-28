@@ -45,6 +45,7 @@ type Factory struct {
 	domainService       service.Domain
 	mentionService      service.Mention
 	streamService       service.Stream
+	streamDraftService  service.StreamDraft
 	subscriptionService service.Subscription
 	realtimeBroker      RealtimeBroker
 	userService         service.User
@@ -86,12 +87,21 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	factory.streamService = service.NewStream(
 		factory.collection(CollectionStream),
 		factory.Template(),
-		factory.StreamDraft(),
 		factory.Attachment(),
 		factory.ContentLibrary(),
 		factory.Host(),
 		factory.StreamUpdateChannel(),
 	)
+
+	// Start the StreamDraft Service
+	factory.streamDraftService = service.NewStreamDraft(
+		factory.collection(CollectionStreamDraft),
+		factory.Stream(),
+		factory.ContentLibrary(),
+	)
+
+	// Update the circular depencency between the Stream and StreamDraft services
+	factory.streamService.SetDraftService(&factory.streamDraftService)
 
 	// Start the User Service
 	factory.userService = service.NewUser(
@@ -170,6 +180,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(factory.collection(CollectionStream))
+		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
 		factory.userService.Refresh(factory.collection(CollectionUser))
 
@@ -254,14 +265,7 @@ func (factory *Factory) Stream() *service.Stream {
 
 // StreamDraft returns a fully populated StreamDraft service.
 func (factory *Factory) StreamDraft() *service.StreamDraft {
-
-	result := service.NewStreamDraft(
-		factory.collection(CollectionStreamDraft),
-		factory.Stream(),
-		factory.ContentLibrary(),
-	)
-
-	return &result
+	return &factory.streamDraftService
 }
 
 // StreamSource returns a fully populated StreamSource service
