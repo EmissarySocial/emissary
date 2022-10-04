@@ -15,16 +15,19 @@
 
 			{{$empty := true}}
 			{{- range .Domains -}}
-				<tr role="link">
-					<td hx-get="/domains/{{.DomainID}}">
-						{{icon "server"}} {{ .Label }}
+				<tr>
+					<td>
+						<a hx-get="/domains/{{.DomainID}}">{{icon "server"}} {{ .Label }}</a>
 					</td>
-					<td hx-get="/domains/{{.DomainID}}">
+					<td>
 						{{.Hostname}}
 					</td>
 					<td class="align-right">
-						&nbsp;&nbsp;
-						<span role="button" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</span>
+						<button hx-get="/domains/{{.DomainID}}">Edit Domain</button>
+						<button hx-get="/domains/{{.DomainID}}/users">Admin Accounts</button>
+						<!--button hx-post="/domains/{{.DomainID}}/signin">Sign In {{icon "login"}}</button-->
+						<span style="min-width:20px">&nbsp;&nbsp;</span>
+						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>
 					</td>
 				</tr>
 			{{- end -}}

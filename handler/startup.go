@@ -35,7 +35,7 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 
 		// Only domain owners can access admin pages
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError(location, "Unauthorized")
+			return derp.NewUnauthorizedError(location, "Unauthorized")
 		}
 
 		// Find/Create new database record for the domain.

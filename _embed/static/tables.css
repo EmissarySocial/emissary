@@ -22,6 +22,13 @@ table.table td {
 	border-top: solid 1px var(--gray20);
 }
 
+table.table thead th,
+table.table thead td
+{
+	font-weight:700;
+	border-top: none;
+}
+
 table.table tr.edit td {
 	background-color: var(--blue10);
 	border: solid 1px var(--blue20);
@@ -39,6 +46,13 @@ table.table .clickable:focus td {
 	cursor:pointer;
 }
 
+table.table input,
+table.table button,
+table.table select {
+	margin: 0px;
+	padding: 5px 10px;
+}
+
 /** DIV "TABLES" ****************/
 
 div.table {
@@ -53,7 +67,7 @@ div.table > [role=button]:focus {
 	cursor:pointer;
 }
 
-/** GRIDS ***********************/
+/** EDITABLE GRIDS ***********************/
 
 table.grid {
 	width:100%;
@@ -124,22 +138,3 @@ td.grid-controls > button {
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);
 }
-
-/*
-td.grid-cell.grid-controls {
-	text-align:right;
-	padding: var(--rhythm) var(--rhythm);
-	white-space: nowrap;
-}
-
-.grid button, 
-td.grid-controls > button {
-	background-color: var(--gray20);
-	border-radius: calc(var(--rhythm) / 2);
-	margin: 0px 0px;
-
-	font-size: calc(var(--rhythm) * 1.5);
-	line-height: calc(var(--rhythm) * 1.5);
-	padding: var(--rhythm) calc(var(--rhythm) * 2);
-}
-*/

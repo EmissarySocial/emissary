@@ -43,6 +43,7 @@ type Factory struct {
 	attachmentService   service.Attachment
 	groupService        service.Group
 	domainService       service.Domain
+	emailService        service.DomainEmail
 	mentionService      service.Mention
 	streamService       service.Stream
 	streamDraftService  service.StreamDraft
@@ -57,7 +58,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -76,6 +77,8 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
 	factory.mentionService = service.NewMention(factory.collection(CollectionMention))
+
+	factory.emailService = service.NewDomainEmail(serverEmail, domain)
 
 	// Start the Domain Service
 	factory.domainService = service.NewDomain(
@@ -107,6 +110,7 @@ func NewFactory(domain config.Domain, layoutService *service.Layout, templateSer
 	factory.userService = service.NewUser(
 		factory.collection(CollectionUser),
 		factory.Stream(),
+		factory.Email(),
 	)
 
 	// Start the Subscription Service
@@ -176,6 +180,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain))
+		factory.emailService.Refresh(domain)
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
@@ -356,6 +361,10 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 /*******************************************
  * OTHER NON-MODEL SERVICES
  *******************************************/
+
+func (factory *Factory) Email() *service.DomainEmail {
+	return &factory.emailService
+}
 
 func (factory *Factory) Queue() *queue.Queue {
 	return factory.taskQueue

@@ -51,7 +51,11 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 	authorization := getAuthorization(ctx)
 
 	if !action.UserCan(stream, &authorization) {
-		return Stream{}, derp.NewForbiddenError(location, "Forbidden")
+		if authorization.IsAuthenticated() {
+			return Stream{}, derp.NewForbiddenError(location, "Forbidden")
+		} else {
+			return Stream{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+		}
 	}
 
 	// Success.  Populate Stream

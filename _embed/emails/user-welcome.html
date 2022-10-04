@@ -1,0 +1,4 @@
+<!-- This email uses the DOMAIN object.  It is sent to account owners when their database is created.  -->
+<p>Hello {{.OwnerAccount.DisplayName}},</p>
+<p>Welcome to you new Emissary website at <b>https://{{.Hostname}}</b>.</p>
+<p><a href="https://{{.Hostname}}/signin/reset?email={{.User.Username}}">Set Up My Password</a></p>

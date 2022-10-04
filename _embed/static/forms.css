@@ -357,3 +357,16 @@ button[disabled].barberpole
 	opacity:1;
 	position:initial;
 }
+
+
+/***************************
+ * SPINNER
+ ***************************/
+
+.spin {
+	display:inline-block;
+	animation-name: spin;
+	animation-duration: 800ms;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}

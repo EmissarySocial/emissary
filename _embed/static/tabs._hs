@@ -12,7 +12,7 @@ behavior TabContainer
 			set target to first <[role=tab]/> in me
 		end
 
-		send select to target
+		send selectTab to target
 	end
 
 	-- select highlighted tab on ENTER (additional key to select tabs)
@@ -22,21 +22,21 @@ behavior TabContainer
 
 	-- handle mouse clicks directly on tabs
 	on mousedown(target)[button==0] from <[role=tablist] [role=tab] />
-		send select to target
+		send selectTab to target
 		halt the event
 	end
 
 	on click from <[role=tablist] [role=tab] />
-		send select to target
+		send selectTab to target
 		halt the event
 
 	-- handle touch events for phones and tablets
 	on touchstart(target) from <[role=tablist] [role=tab] />
-		send select to target
+		send selectTab to target
 		halt the event
 	end
 
-	on select(target)
+	on selectTab(target)
 
 		if target [@disabled] is not null then 
 			exit

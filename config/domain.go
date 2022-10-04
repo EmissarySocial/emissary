@@ -15,6 +15,7 @@ type Domain struct {
 	DatabaseName   string         `path:"databaseName"  json:"databaseName"  bson:"databaseName"`  // Name of the MongoDB Database (can be empty string to use default db for the connect string)
 	ForwardTo      string         `path:"forwardTo"     json:"forwardTo"     bson:"forwardTo"`     // Forwarding information for a domain that has moved servers
 	SMTPConnection SMTPConnection `path:"smtp"          json:"smtp"          bson:"smtp"`          // Information for connecting to an SMTP server to send email on behalf of the domain.
+	Owner          Owner          `path:"owner"         json:"owner"         bson:"owner"`         // Information about the owner of this domain
 }
 
 // NewDomain returns a fully initialized Domain object.
@@ -45,15 +46,8 @@ func DomainSchema() schema.Schema {
 				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
 				"connectString": schema.String{MaxLength: null.NewInt(1000)},
 				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
-				"smtp": schema.Object{
-					Properties: schema.ElementMap{
-						"hostname": schema.String{MaxLength: null.NewInt(255), Required: true},
-						"username": schema.String{MaxLength: null.NewInt(255), Required: true},
-						"password": schema.String{MaxLength: null.NewInt(255), Required: true},
-						"port":     schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(65535), Required: true},
-						"tls":      schema.Boolean{},
-					},
-				},
+				"smtp":          SMTPConnectionSchema(),
+				"owner":         OwnerSchema(),
 			},
 		},
 	}

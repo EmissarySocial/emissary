@@ -10,8 +10,9 @@ import (
 // Config defines all of the domains available on this server
 type Config struct {
 	Domains             set.Slice[string, Domain] `path:"domains"             json:"domains"`             // Slice of one or more domain configurations
-	Layouts             []Folder                  `path:"layouts"             json:"layouts"`             // Folder containing all system layouts
-	Templates           []Folder                  `path:"templates"           json:"templates"`           // Folder containing all stream templates
+	Layouts             []Folder                  `path:"layouts"             json:"layouts"`             // Folders containing all system layouts
+	Templates           []Folder                  `path:"templates"           json:"templates"`           // Folders containing all stream templates
+	Emails              []Folder                  `path:"emails"              json:"emails"`              // Folders containing email templates
 	AttachmentOriginals Folder                    `path:"attachmentOriginals" json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     Folder                    `path:"attachmentCache"     json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 	Certificates        Folder                    `path:"certificates"        json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
@@ -37,6 +38,7 @@ func DefaultConfig() Config {
 		// File Locations
 		Layouts:             []Folder{{Adapter: "EMBED", Location: "layouts"}},
 		Templates:           []Folder{{Adapter: "EMBED", Location: "templates"}},
+		Emails:              []Folder{{Adapter: "EMBED", Location: "emails"}},
 		AttachmentOriginals: Folder{Adapter: "FILE", Location: ".emissary/attachments"},
 		AttachmentCache:     Folder{Adapter: "FILE", Location: ".emissary/cache"},
 		Certificates:        Folder{Adapter: "FILE", Location: ".emissary/certificates"},
@@ -92,6 +94,7 @@ func Schema() schema.Schema {
 				"domains":             schema.Array{Items: DomainSchema().Element},
 				"templates":           schema.Array{Items: readableFileElement, MinLength: null.NewInt(1)},
 				"layouts":             schema.Array{Items: readableFileElement, MinLength: null.NewInt(1)},
+				"emails":              schema.Array{Items: readableFileElement, MinLength: null.NewInt(1)},
 				"attachmentOriginals": writableFileElement,
 				"attachmentCache":     writableFileElement,
 				"certificates":        writableFileElement,

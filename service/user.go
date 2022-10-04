@@ -17,12 +17,14 @@ import (
 type User struct {
 	collection    data.Collection
 	streamService *Stream
+	emailService  *DomainEmail
 }
 
 // NewUser returns a fully populated User service
-func NewUser(collection data.Collection, streamService *Stream) User {
+func NewUser(collection data.Collection, streamService *Stream, emailService *DomainEmail) User {
 	service := User{
 		streamService: streamService,
+		emailService:  emailService,
 	}
 
 	service.Refresh(collection)
@@ -79,9 +81,15 @@ func (service *User) Save(user *model.User, note string) error {
 		}
 	}
 
+	wasNew := user.IsNew()
+
 	// Save User
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User", "Error saving User", user, note)
+	}
+
+	if wasNew {
+		go service.emailService.SendWelcome(user)
 	}
 
 	// Success!
@@ -135,6 +143,28 @@ func (service *User) Debug() maps.Map {
 /*******************************************
  * CUSTOM QUERIES
  *******************************************/
+
+func (service *User) asSlice(iterator data.Iterator, err error) []model.UserSummary {
+	result := []model.UserSummary{}
+	if err == nil {
+		user := model.NewUser()
+
+		for iterator.Next(&user) {
+			result = append(result, user.Summary())
+			user = model.NewUser()
+		}
+	}
+
+	return result
+}
+
+func (service *User) ListOwners() (data.Iterator, error) {
+	return service.List(exp.Equal("isOwner", true))
+}
+
+func (service *User) ListOwnersAsSlice() []model.UserSummary {
+	return service.asSlice(service.ListOwners())
+}
 
 // ListByIdentities returns all users that appear in the list of identities
 func (service *User) ListByIdentities(identities []string) (data.Iterator, error) {

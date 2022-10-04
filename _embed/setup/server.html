@@ -2,7 +2,7 @@
 
 <main>
 	<div class="framed page">
-		<h1>File Locations</h1>
+		<h1>Server Settings</h1>
 
 		<form hx-post="/server">
 
@@ -10,6 +10,7 @@
 
 				<div role="tablist">
 					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">User Templates</button>
+					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Email Templates</button>
 					<button type="button" role="tab" id="tab-layouts" class="tab-label" aria-controls="panel-layouts">System Templates</button>
 					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
 					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
@@ -18,6 +19,11 @@
 				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
 					<p>User Templates define all of the different kinds of media that users can include on their sites.</p>
 					<div hx-get="/server/templates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-emails" aria-labelledby="tab-emails" hidden="true">
+					<p>Email Templates contain all of the emails that are sent by websites.</p>
+					<div hx-get="/server/emails" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 				<div role="tabpanel" id="panel-layouts" aria-labelledby="tab-layouts" hidden="true">

@@ -1,0 +1,47 @@
+{{$domainID := .DomainID}}
+
+<div id="userAccountModal">
+	<h3 class="bold">{{.Domain}}</h3>
+	<h2>{{icon "people"}} Admin Accounts</h2>
+
+	<form hx-post="/domains/{{$domainID}}/users" hx-push-url="false" hx-target="#userAccountModal" hx-swap="outerHTML">
+
+		<table class="table">
+
+			<thead>
+				<tr>
+					<td>&nbsp;</td>
+					<td>Full Name</td>
+					<td>Email</td>
+					<td>&nbsp;</td>
+				</tr>
+			</thead>
+
+			{{- range .Users -}}
+				<tr>
+					<td class="text-lg">{{icon "person"}}</td>
+					<td>{{.DisplayName}}</td>
+					<td>{{.Username}}</td>
+					<td nowrap>
+						<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" script="on htmx:afterRequest wait 5s then log 'next??'">
+							<span class="htmx-request-hide">{{icon "loading"}}</span>
+							<span class="htmx-request-show spin">{{icon "loading"}}</span>
+						</button>
+						<button type="button" class="text-red" hx-delete="/domains/{{$domainID}}/users/{{.UserID.Hex}}" hx-confirm="Are you sure you want to DELETE this user?  There is NO UNDO.">{{icon "delete"}}</button>
+					</td>
+				</tr>
+			{{- end -}}
+
+			<tr>
+				<td class="text-lg">{{icon "add"}}</td>
+				<td><input type="text" name="displayName" placeholder="Full Name" tabIndex="0" autocomplete="off"></td>
+				<td><input type="text" name="username" placeholder="Email" tabIndex="0" autocomplete="off"></td>
+				<td nowrap><button type="submit">{{icon "email"}} Invite</button></td>
+			</tr>
+
+		</table>
+
+	</form>
+
+	<button data-script="on click send closeModal">Close Window</button>
+</div>

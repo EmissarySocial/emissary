@@ -147,14 +147,6 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 func getSetupForm(name string) (form.Element, bool, error) {
 
 	switch name {
-	case "layouts":
-		return form.Element{
-			Type: "layout-vertical",
-			Children: []form.Element{
-				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100&"}},
-			},
-		}, true, nil
 
 	case "templates":
 		return form.Element{
@@ -162,6 +154,24 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "adapter"},
 				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100%"}},
+			},
+		}, true, nil
+
+	case "emails":
+		return form.Element{
+			Type: "layout-vertical",
+			Children: []form.Element{
+				{Type: "select", Label: "Adapter", Path: "adapter"},
+				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100%"}},
+			},
+		}, true, nil
+
+	case "layouts":
+		return form.Element{
+			Type: "layout-vertical",
+			Children: []form.Element{
+				{Type: "select", Label: "Adapter", Path: "adapter"},
+				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100&"}},
 			},
 		}, true, nil
 

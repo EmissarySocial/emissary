@@ -31,6 +31,7 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
+	emailService    service.ServerEmail
 	taskQueue       *queue.Queue
 	embeddedFiles   embed.FS
 
@@ -67,6 +68,12 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
 		factory.Layout(),
+		factory.Filesystem(),
+		factory.FuncMap(),
+		[]config.Folder{},
+	)
+
+	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
 		factory.FuncMap(),
 		[]config.Folder{},
@@ -110,6 +117,7 @@ func (factory *Factory) start() {
 		// Refresh cached values in global services
 		factory.layoutService.Refresh(config.Layouts)
 		factory.templateService.Refresh(config.Templates)
+		factory.emailService.Refresh(config.Emails)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -127,7 +135,7 @@ func (factory *Factory) start() {
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			newDomain, err := domain.NewFactory(domainConfig, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.taskQueue, factory.attachmentOriginals, factory.attachmentCache)
+			newDomain, err := domain.NewFactory(domainConfig, &factory.emailService, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.taskQueue, factory.attachmentOriginals, factory.attachmentCache)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))
@@ -255,6 +263,26 @@ func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
 	return factory.ByDomainName(host)
 }
 
+// ByDomainID retrieves a domain using a DomainID
+func (factory *Factory) ByDomainID(domainID string) (config.Domain, *domain.Factory, error) {
+
+	// Look up the domain name for this domainID
+	domainConfig, err := factory.DomainByID(domainID)
+
+	if err != nil {
+		return config.Domain{}, nil, derp.Wrap(err, "server.Factory.ByDomainID", "Error finding domain configuration", domainID)
+	}
+
+	// Return the domain
+	result, err := factory.ByDomainName(domainConfig.Hostname)
+
+	if err != nil {
+		return config.Domain{}, nil, derp.Wrap(err, "server.Factory.ByDomainID", "Error finding domain", domainConfig.Hostname)
+	}
+
+	return domainConfig, result, nil
+}
+
 // ByDomainName retrieves a domain using a Domain Name
 func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 
@@ -287,21 +315,29 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
  * Other Global Services
  ****************************/
 
-func (factory *Factory) FuncMap() template.FuncMap {
-	return render.FuncMap(factory.Icons())
-}
-
-func (factory *Factory) Icons() icon.Provider {
-	return bootstrap.Provider{}
-}
-
 // Layout returns the global layout service
 func (factory *Factory) Layout() *service.Layout {
 	return &factory.layoutService
 }
 
+// FuncMap returns the global funcMap (used by all templates)
+func (factory *Factory) FuncMap() template.FuncMap {
+	return render.FuncMap(factory.Icons())
+}
+
+// Icons returns the global icon collection
+func (factory *Factory) Icons() icon.Provider {
+	return bootstrap.Provider{}
+}
+
+// Filesystem returns the global filesystem service
 func (factory *Factory) Filesystem() service.Filesystem {
 	return service.NewFilesystem(factory.embeddedFiles)
+}
+
+// Email returns the global email service
+func (factory *Factory) Email() *service.ServerEmail {
+	return &factory.emailService
 }
 
 // Steranko implements the steranko.Factory method, used for locating the specific

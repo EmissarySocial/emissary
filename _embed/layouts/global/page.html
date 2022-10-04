@@ -2,38 +2,9 @@
 <html>
 <head>
 	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
-
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="generator" content="Emissary_0.1.0">
-
 	<link rel="webmention" href="/.well-known/webmentions"/>
-
-	<link rel="stylesheet" href="/static/purecss/pure-min.css">
-	<link rel="stylesheet" href="/static/purecss/pure-grids-responsive-min.css">
-	<link rel="stylesheet" href="/static/colors.css">
-
-	<link rel="stylesheet" href="/static/layout.css">
-	<link rel="stylesheet" href="/static/page.css">
-
-	<link rel="stylesheet" href="/static/accessibility.css">
-	<link rel="stylesheet" href="/static/animations.css">
-	<link rel="stylesheet" href="/static/content.css">
-	<link rel="stylesheet" href="/static/forms.css">	
-	<link rel="stylesheet" href="/static/modal.css">
-	<link rel="stylesheet" href="/static/tabs.css">	
-	<link rel="stylesheet" href="/static/tables.css">	
-	<link rel="stylesheet" href="/static/typography.css">	
-	<link rel="stylesheet" href="/static/widgets.css">
-
-	<link rel="stylesheet" href="/static/nebula/nebula.css">	
-	<link rel="stylesheet" href="/static/responsive.css">	
-
-	<!-- This must be in the header to support streams that invoke htmx directly. -->
-	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
-
+	{{template "includes-head" .}}
 	<style>{{.DomainCustomCSS | css}}</style>
-
 </head>
 
 <body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
@@ -73,19 +44,6 @@
 	
 	<aside></aside>
 
-	<script type="text/hyperscript" src="/static/date._hs"></script>
-	<script type="text/hyperscript" src="/static/forms._hs"></script>
-	<script type="text/hyperscript" src="/static/modal._hs"></script>
-	<script type="text/hyperscript" src="/static/tabs._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
-	<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
-
-	<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js"></script>
-	<script type="text/javascript" src="/static/a11y.js"></script>
-	<script type="text/javascript" src="/static/extensions.js"></script>
-		
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
-	<!-- https://tabler-icons.io 
-	<link rel="stylesheet" href="/static/tabler/tabler-icons.css"-->
+	{{template "includes-foot" .}}
 </body>
 </html>

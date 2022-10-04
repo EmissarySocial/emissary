@@ -54,6 +54,17 @@ func (user *User) ID() string {
 	return user.UserID.Hex()
 }
 
+// Summary generates a lightweight summary of this user record.
+func (user *User) Summary() UserSummary {
+	return UserSummary{
+		UserID:      user.UserID,
+		DisplayName: user.DisplayName,
+		Username:    user.Username,
+		ImageURL:    user.ImageURL,
+		ProfileURL:  user.ProfileURL,
+	}
+}
+
 // Copy returns a duplicate copy of this User
 // NOTE: This must NOT be a pointer receiver, so that a true COPY
 // of this record is returned.

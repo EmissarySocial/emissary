@@ -62,3 +62,15 @@ func PostSignOut(factoryManager *server.Factory) echo.HandlerFunc {
 		return ctx.NoContent(http.StatusNoContent)
 	}
 }
+
+func GetResetPassword(factoryManager *server.Factory) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		return executeDomainTemplate(factoryManager, ctx, "reset-password")
+	}
+}
+
+func PostResetPassword(factoryManager *server.Factory) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		return executeDomainTemplate(factoryManager, ctx, "reset-password")
+	}
+}

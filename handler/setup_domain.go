@@ -34,60 +34,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Error loading configuration")
 		}
 
-		domainEditForm := form.Element{
-			Type:  "layout-tabs",
-			Label: header,
-			Children: []form.Element{{
-				Label: "Domain",
-				Type:  "layout-vertical",
-				Children: []form.Element{{
-					Type:        "text",
-					Path:        "label",
-					Label:       "Label",
-					Description: "Admin-friendly label for this domain",
-				}, {
-					Type:        "text",
-					Path:        "hostname",
-					Label:       "Hostname",
-					Description: "Complete domain name (but no https:// or trailing slashes)",
-				}, {
-					Type:        "text",
-					Path:        "connectString",
-					Label:       "MongoDB Connection String",
-					Description: "Should look like mongodb://host:port/database",
-				}, {
-					Type:        "text",
-					Path:        "databaseName",
-					Label:       "MongoDB Database Name",
-					Description: "Name of the database to use on the server",
-				}},
-			}, {
-				Label: "SMTP Setup",
-				Type:  "layout-vertical",
-				Children: []form.Element{{
-					Type:  "text",
-					Path:  "smtp.hostname",
-					Label: "Hostname",
-				}, {
-					Type:  "text",
-					Path:  "smtp.username",
-					Label: "Username",
-				}, {
-					Type:  "text",
-					Path:  "smtp.password",
-					Label: "Password",
-				}, {
-					Type:  "text",
-					Path:  "smtp.port",
-					Label: "Port",
-				}, {
-					Type:  "toggle",
-					Path:  "smtp.tls",
-					Label: "Use TLS?",
-				},
-				}},
-			},
-		}
+		domainEditForm := setupDomainForm(header)
 
 		s := config.DomainSchema()
 
@@ -105,6 +52,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 
 // SetupDomainPost updates/creates a domain
 func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
+
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
@@ -155,10 +103,10 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// getSigninToDomain signs you in to the requested domain as an administrator
-func getSigninToDomain(fm *server.Factory) echo.HandlerFunc {
+// SetupDomainSigninPost signs you in to the requested domain as an administrator
+func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.getSigninToDomain"
+	const location = "handler.SetupDomainSigninPost"
 
 	return func(ctx echo.Context) error {
 
@@ -180,7 +128,7 @@ func getSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 		s := factory.Steranko()
 
 		administrator := model.NewUser()
-		administrator.DisplayName = "System Administrator"
+		administrator.DisplayName = "Server Administrator"
 		administrator.IsOwner = true
 
 		if err := s.CreateCertificate(ctx, &administrator); err != nil {
@@ -189,5 +137,91 @@ func getSigninToDomain(fm *server.Factory) echo.HandlerFunc {
 
 		// Redirect to the admin page of this domain
 		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/startup")
+	}
+}
+
+func setupDomainForm(header string) form.Element {
+	return form.Element{
+		Type:  "layout-tabs",
+		Label: header,
+		Children: []form.Element{{
+			Label: "Domain",
+			Type:  "layout-vertical",
+			Children: []form.Element{{
+				Type:        "text",
+				Path:        "label",
+				Label:       "Label",
+				Description: "Admin-friendly label for this domain",
+			}, {
+				Type:        "text",
+				Path:        "hostname",
+				Label:       "Hostname",
+				Description: "Complete domain name (but no https:// or trailing slashes)",
+			}, {
+				Type:        "text",
+				Path:        "connectString",
+				Label:       "MongoDB Connection String",
+				Description: "Should look like mongodb://host:port/database",
+			}, {
+				Type:        "text",
+				Path:        "databaseName",
+				Label:       "MongoDB Database Name",
+				Description: "Name of the database to use on the server",
+			}},
+		}, {
+			Label: "SMTP Setup",
+			Type:  "layout-vertical",
+			Children: []form.Element{{
+				Type:  "text",
+				Path:  "smtp.hostname",
+				Label: "Hostname",
+			}, {
+				Type:  "text",
+				Path:  "smtp.username",
+				Label: "Username",
+			}, {
+				Type:  "text",
+				Path:  "smtp.password",
+				Label: "Password",
+			}, {
+				Type:  "text",
+				Path:  "smtp.port",
+				Label: "Port",
+			}, {
+				Type:  "toggle",
+				Path:  "smtp.tls",
+				Label: "Use TLS?",
+			},
+			},
+		}, {
+			Label: "Account Owner",
+			Type:  "layout-vertical",
+			Children: []form.Element{
+				{
+					Type:  "text",
+					Path:  "owner.displayName",
+					Label: "Name",
+				},
+				{
+					Type:        "text",
+					Path:        "owner.emailAddress",
+					Label:       "Email Address",
+					Description: "A welcome email will be sent to this address",
+				},
+				{
+					Type:  "text",
+					Path:  "owner.phoneNumber",
+					Label: "Phone Number",
+				},
+				{
+					Type:  "textarea",
+					Path:  "owner.mailingAddress",
+					Label: "Mailing Address",
+					Options: maps.Map{
+						"rows": "3",
+					},
+				},
+			},
+		}},
 	}
 }

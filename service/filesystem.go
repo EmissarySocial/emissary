@@ -2,31 +2,34 @@ package service
 
 import (
 	"io/fs"
+	"net/url"
 	"os"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/hairyhenderson/go-fsimpl/gitfs"
 
 	s3 "github.com/fclairamb/afero-s3"
 )
 
 // Filesystem is a service that multiplexes between different filesystems.  Currently works with embedded filesystems and file:// URIs
 type Filesystem struct {
-	system fs.FS
+	embedded fs.FS
 }
 
 // NewFilesytem returns a fully initialized Filesystem service
-func NewFilesystem(system fs.FS) Filesystem {
+func NewFilesystem(embedded fs.FS) Filesystem {
 
 	return Filesystem{
-		system: system,
+		embedded: embedded,
 	}
 }
 
@@ -41,12 +44,21 @@ func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
 
 	// Detect embedded file system
 	case config.FolderAdapterEmbed:
-		result, err := fs.Sub(filesystem.system, "_embed/"+folder.Location)
+		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder.Location)
 		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", folder)
 
 	// Detect filesystem type
 	case config.FolderAdapterFile:
 		return os.DirFS(folder.Location), nil
+
+	case config.FolderAdapterGit:
+		locationURL, err := url.Parse(folder.Location)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "service.Filesystem.GetFS", "Error parsing Git URL", folder)
+		}
+
+		return gitfs.New(locationURL)
 	}
 
 	// Otherwise, pass through to afero (create a read-only filesystem)
@@ -154,6 +166,8 @@ func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, c
 
 func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-chan bool) error {
 
+	spew.Dump("Watching", uri)
+
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
 
@@ -167,17 +181,20 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 		return derp.Wrap(err, "service.Filesystem.watchFile", "Error reading directory", uri)
 	}
 
+	watcher.Add(uri)
+
 	for _, entry := range entries {
-		watcher.Add(uri + "/" + entry.Name())
+		if entry.IsDir() {
+			watcher.Add(uri + "/" + entry.Name())
+		}
 	}
 
 	// Watch for events
 	for {
 		select {
-		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				changed <- true
-			}
+		case <-watcher.Events:
+			changed <- true
+
 		case err := <-watcher.Errors:
 			return derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri)
 

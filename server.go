@@ -97,6 +97,11 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/domains/:domain", handler.SetupDomainGet(factory))
 	e.POST("/domains/:domain", handler.SetupDomainPost(factory))
 	e.DELETE("/domains/:domain", handler.SetupDomainDelete(factory))
+	e.POST("/domains/:domain/signin", handler.SetupDomainSigninPost(factory))
+	e.GET("/domains/:domain/users", handler.SetupDomainUsersGet(factory, setupTemplates))
+	e.POST("/domains/:domain/users", handler.SetupDomainUserPost(factory, setupTemplates))
+	e.POST("/domains/:domain/users/:user/invite", handler.SetupDomainUserInvite(factory, setupTemplates))
+	e.DELETE("/domains/:domain/users/:user", handler.SetupDomainUserDelete(factory, setupTemplates))
 
 	// When running the setup tool, wait a second, then open a browser window to the correct URL
 	go func() {
@@ -134,6 +139,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signout", handler.PostSignOut(factory))
 	e.GET("/register", handler.GetRegister(factory))
 	e.POST("/register", handler.PostRegister(factory))
+	e.GET("/signin/reset", handler.GetResetPassword(factory))
+	e.POST("/signin/reset", handler.PostResetPassword(factory))
 
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factory))
