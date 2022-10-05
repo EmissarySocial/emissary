@@ -163,7 +163,5 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 		return derp.Wrap(err, location, "Error sending email", templateName, from, to, subject, data)
 	}
 
-	spew.Dump("EMAIL SENT", message)
-
 	return nil
 }
