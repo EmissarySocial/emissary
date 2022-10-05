@@ -21,7 +21,7 @@ func TestFunctions_DollarFormat(t *testing.T) {
 
 	f := FuncMap(bootstrap.Provider{})
 
-	dollarFormat := f["dollarFormat"].(func(int64) string)
+	dollarFormat := f["dollarFormat"].(func(any) string)
 
 	require.Equal(t, "$12.34", dollarFormat(1234))
 }
