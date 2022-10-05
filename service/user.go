@@ -144,26 +144,13 @@ func (service *User) Debug() maps.Map {
  * CUSTOM QUERIES
  *******************************************/
 
-func (service *User) asSlice(iterator data.Iterator, err error) []model.UserSummary {
-	result := []model.UserSummary{}
-	if err == nil {
-		user := model.NewUser()
-
-		for iterator.Next(&user) {
-			result = append(result, user.Summary())
-			user = model.NewUser()
-		}
-	}
-
-	return result
-}
-
 func (service *User) ListOwners() (data.Iterator, error) {
 	return service.List(exp.Equal("isOwner", true))
 }
 
 func (service *User) ListOwnersAsSlice() []model.UserSummary {
-	return service.asSlice(service.ListOwners())
+	it, _ := service.ListOwners()
+	return data.Slice(it, model.NewUserSummary)
 }
 
 // ListByIdentities returns all users that appear in the list of identities

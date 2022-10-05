@@ -12,7 +12,6 @@ import (
 
 // StepQRCode represents an action-step that returns a QR Code for the current stream URL.
 type StepQRCode struct {
-	size int
 }
 
 // Get renders the Stream HTML to the context

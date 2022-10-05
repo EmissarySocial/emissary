@@ -7,7 +7,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
-	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
@@ -128,19 +127,6 @@ func RefreshPage(ctx echo.Context) {
 	header := ctx.Response().Header()
 	header.Set("HX-Trigger", "refreshPage")
 	header.Set("HX-Reswap", "none")
-}
-
-func IteratorToSlice[T any](iterator data.Iterator, newFunc func() T) []T {
-
-	result := make([]T, 0, iterator.Count())
-
-	value := newFunc()
-
-	for iterator.Next(&value) {
-		result = append(result, value)
-	}
-
-	return result
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
