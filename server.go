@@ -141,6 +141,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/register", handler.PostRegister(factory))
 	e.GET("/signin/reset", handler.GetResetPassword(factory))
 	e.POST("/signin/reset", handler.PostResetPassword(factory))
+	e.GET("/signin/reset-code", handler.GetResetCode(factory))
+	e.POST("/signin/reset-code", handler.PostResetCode(factory))
 
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factory))

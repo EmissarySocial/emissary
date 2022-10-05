@@ -1,8 +1,7 @@
 {{$domainID := .DomainID}}
 
 <div id="userAccountModal">
-	<h3 class="bold">{{.Domain}}</h3>
-	<h2>{{icon "people"}} Admin Accounts</h2>
+	<h2>{{.Domain}}: Admin Accounts</h2>
 
 	<form hx-post="/domains/{{$domainID}}/users" hx-push-url="false" hx-target="#userAccountModal" hx-swap="outerHTML">
 
@@ -10,7 +9,7 @@
 
 			<thead>
 				<tr>
-					<td>&nbsp;</td>
+					<td class="text-lg">{{icon "person"}}</td>
 					<td>Full Name</td>
 					<td>Email</td>
 					<td>&nbsp;</td>

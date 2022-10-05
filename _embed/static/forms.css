@@ -334,6 +334,24 @@ button[disabled].barberpole
 	vertical-align: middle;
 }
 
+.layout-horizontal > .layout-horizontal-elements {
+	display:flex;
+	flex-direction: row;
+	flex-wrap:nowrap;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 24px;
+	width:100%;
+}
+
+.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element {
+	display:block;
+}
+
+.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element > label {
+	margin-bottom:8px;
+	display:block;
+}
 
 /***************************
  * FORM LAYOUTS

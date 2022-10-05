@@ -74,3 +74,15 @@ func PostResetPassword(factoryManager *server.Factory) echo.HandlerFunc {
 		return executeDomainTemplate(factoryManager, ctx, "reset-password")
 	}
 }
+
+func GetResetCode(factoryManager *server.Factory) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		return executeDomainTemplate(factoryManager, ctx, "reset-code")
+	}
+}
+
+func PostResetCode(factoryManager *server.Factory) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		return executeDomainTemplate(factoryManager, ctx, "reset-code")
+	}
+}

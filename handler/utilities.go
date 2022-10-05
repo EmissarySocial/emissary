@@ -4,11 +4,9 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // getActionID returns the :action token from the Request (or a default)
@@ -38,6 +36,21 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 	return model.NewAuthorization()
 }
 
+// isOnwer returns TRUE if the JWT Claim is from a domain owner.
+func isOwner(claims jwt.Claims, err error) bool {
+
+	if err == nil {
+		if claims.Valid() == nil {
+			if authorization, ok := claims.(*model.Authorization); ok {
+				return authorization.DomainOwner
+			}
+		}
+	}
+
+	return false
+}
+
+/*
 // getSignedInUserID returns the UserID for the current request.
 // If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
 func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
@@ -68,16 +81,4 @@ func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 
 }
 
-// isOnwer returns TRUE if the JWT Claim is from a domain owner.
-func isOwner(claims jwt.Claims, err error) bool {
-
-	if err == nil {
-		if claims.Valid() == nil {
-			if authorization, ok := claims.(*model.Authorization); ok {
-				return authorization.DomainOwner
-			}
-		}
-	}
-
-	return false
-}
+*/
