@@ -2,13 +2,18 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
+- table
 - steranko 
 - nebula
 - mediaserver
-- form
 - exp-builder
 - digit
 - activitystream
+
+FEW DEPENDENTS
+
+- icon
+- form
 
 SOME DEPENDENTS
 
