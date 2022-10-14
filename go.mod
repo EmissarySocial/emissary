@@ -23,7 +23,7 @@ require (
 	github.com/benpate/table v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fclairamb/afero-s3 v0.3.1
-	github.com/fsnotify/fsnotify v1.5.4
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20221001180718-4a9895871b6b
