@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.111
+	github.com/aws/aws-sdk-go v1.44.115
 	github.com/benpate/activitystream v0.7.0
 	github.com/benpate/data v0.20.0
 	github.com/benpate/data-mongo v0.20.0
