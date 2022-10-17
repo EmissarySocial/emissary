@@ -1,8 +1,11 @@
 package external
 
 import (
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/stripe/stripe-go/v72"
 )
 
 const ProviderTypeStripe = "STRIPE"
@@ -47,11 +50,6 @@ func (adapter Stripe) ManualConfig() form.Form {
 					Label: "API Key",
 				},
 				{
-					Type:  "text",
-					Path:  "data.webhookSecret",
-					Label: "Webhook Secret",
-				},
-				{
 					Type:  "toggle",
 					Path:  "active",
 					Label: "Enable?",
@@ -59,6 +57,53 @@ func (adapter Stripe) ManualConfig() form.Form {
 			},
 		},
 	}
+}
+
+// Install applies any extra changes to the database after this Adapter is activated.
+func (adapter Stripe) Install(factory Factory, client *model.Client) error {
+
+	const location = "service.external.Stripe.Install"
+
+	// Verify that webhooks have been set up on this domain
+	if client.GetString(StripeData_WebhookSecret) == "" {
+
+		api, err := factory.StripeClient()
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error getting Stripe client")
+		}
+
+		// Configure webhook
+		params := stripe.WebhookEndpointParams{
+			URL: stripe.String("https://" + factory.Hostname() + "/webhooks/stripe"),
+			EnabledEvents: []*string{
+				stripe.String("checkout.session.completed"),
+			},
+		}
+
+		// Create webhook
+		webhook, err := api.WebhookEndpoints.New(&params)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error creating endpoint")
+		}
+
+		// Mark webhook as installed
+		client.SetString(StripeData_WebhookSecret, webhook.Secret)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Adapter Methods
+ ******************************************/
+
+func (adapter Stripe) PollStreams() {
+}
+
+func (adapter Stripe) PostStream() {
+
 }
 
 /* OAuth (removed)
@@ -76,20 +121,4 @@ func (adapter Stripe) OAuthConfig() oauth2.Config {
 		Scopes: []string{},
 	}
 }
-
-******************************************/
-
-/******************************************
- * Adapter Methods
- ******************************************/
-
-func (adapter Stripe) Install() {
-
-}
-
-func (adapter Stripe) PollStreams() {
-}
-
-func (adapter Stripe) PostStream() {
-
-}
+*/

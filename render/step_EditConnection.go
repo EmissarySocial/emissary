@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/service/external"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type StepEditConnection struct{}
@@ -79,11 +78,16 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	// Retrieve the custom form for this Manual Adapter
 	form := manualAdapter.ManualConfig()
 
-	spew.Dump(postData, client)
-
 	// Apply the form data to the domain object
 	if err := form.Do(postData, &client); err != nil {
 		return derp.Wrap(err, location, "Error updating domain object form")
+	}
+
+	// Run post-configuration scripts, if any
+	if installer, ok := adapter.(external.Installer); ok {
+		if err := installer.Install(renderer.factory(), &client); err != nil {
+			return derp.Wrap(err, location, "Error installing client")
+		}
 	}
 
 	domainRenderer.domain.Clients.Put(client)
@@ -94,8 +98,6 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	if err := domainService.Save(domainRenderer.domain, "Updated connection"); err != nil {
 		return derp.Wrap(err, location, "Error saving domain object")
 	}
-
-	// TODO: Call the "INSTALL" feature of the adapter
 
 	CloseModal(context, "")
 	return nil
