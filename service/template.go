@@ -19,12 +19,12 @@ import (
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates         set.Map[string, model.Template] // map of all templates available within this domain
-	locations         []config.Folder                 // Configuration for template directory
-	funcMap           template.FuncMap                // Map of functions to use in golang templates
-	mutex             sync.RWMutex                    // Mutext that locks access to the templates structure
-	templateService   *Layout                         // Pointer to the Layout service
-	filesystemService Filesystem                      // Filesystem service
+	templates         set.Map[model.Template] // map of all templates available within this domain
+	locations         []config.Folder         // Configuration for template directory
+	funcMap           template.FuncMap        // Map of functions to use in golang templates
+	mutex             sync.RWMutex            // Mutext that locks access to the templates structure
+	templateService   *Layout                 // Pointer to the Layout service
+	filesystemService Filesystem              // Filesystem service
 
 	changed chan bool // Channel that is used to signal that a template has changed
 	closed  chan bool // Channel to notify the watcher to close/reset
@@ -34,7 +34,7 @@ type Template struct {
 func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
 
 	service := Template{
-		templates:         make(set.Map[string, model.Template]),
+		templates:         make(set.Map[model.Template]),
 		funcMap:           funcMap,
 		locations:         make([]config.Folder, 0),
 		templateService:   templateService,
@@ -116,7 +116,7 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
-	result := make(set.Map[string, model.Template])
+	result := make(set.Map[model.Template])
 
 	// For each configured location...
 	for _, location := range service.locations {
