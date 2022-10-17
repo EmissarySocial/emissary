@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,12 +19,7 @@ func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 		request := context.Request()
 
 		// Do not HTTPS for localhost
-		if request.Host == "localhost" {
-			return handler(context)
-		}
-
-		// Do not use HTTPS for *.local
-		if strings.HasSuffix(request.Host, ".local") {
+		if domain.IsLocalhost(request.Host) {
 			return handler(context)
 		}
 
