@@ -7,6 +7,9 @@ import (
 
 const ProviderTypeStripe = "STRIPE"
 
+const StripeData_APIKey = "apiKey"
+const StripeData_WebhookSecret = "webhookSecret"
+
 type Stripe struct{}
 
 func NewStripe() Stripe {
@@ -26,7 +29,8 @@ func (adapter Stripe) ManualConfig() form.Form {
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
-							"apiKey": schema.String{Required: true},
+							"apiKey":        schema.String{Required: true},
+							"webhookSecret": schema.String{Required: true},
 						},
 					},
 				},
@@ -41,6 +45,11 @@ func (adapter Stripe) ManualConfig() form.Form {
 					Type:  "text",
 					Path:  "data.apiKey",
 					Label: "API Key",
+				},
+				{
+					Type:  "text",
+					Path:  "data.webhookSecret",
+					Label: "Webhook Secret",
 				},
 				{
 					Type:  "toggle",

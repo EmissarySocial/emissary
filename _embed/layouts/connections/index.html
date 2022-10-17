@@ -47,20 +47,5 @@
 			{{- end -}}
 		{{- end -}}
 
-		<!-- LEGACY STRIPE CONNECTION TO MIGRATE -->
-		<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
-			<div hx-get="/admin/connections/stripe" class="card align-center" role="link">
-				<div class="text-3xl">{{icon "credit-card"}}</div>
-				<div class="space-below text-lg bold">Stripe</div>
-				<div class="space-below">
-					{{- if eq "true" (.Connections "stripe_isActive") -}}
-						<div class="button text-green">{{icon "check"}} Enabled</div>
-					{{- else -}}
-						<div class="button text-gray">Click to activate</div>
-					{{- end -}}
-				</div>
-			</div>
-		</div>
 	</div>
-
 </div>

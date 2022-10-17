@@ -128,11 +128,6 @@ func (w Domain) PageTitle() string {
  * OTHER DATA ACCESSORS
  *******************************************/
 
-// Connections returns the data associated with a particular connection
-func (w Domain) Connections(name string) string {
-	return w.domain.Connections.GetString(name)
-}
-
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w.domain.SignupForm

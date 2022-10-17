@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/service/external"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -421,13 +422,15 @@ func (factory *Factory) StripeClient() (client.API, error) {
 		return client.API{}, derp.Wrap(err, location, "Error loading domain record")
 	}
 
+	stripeClient, _ := domain.Clients.Get(external.ProviderTypeStripe)
+
 	// Confirm that stripe is active
-	if !domain.Connections.GetBool("stripe_isActive") {
+	if !stripeClient.Active {
 		return client.API{}, derp.NewBadRequestError(location, "Stripe is not active")
 	}
 
 	// Validate the stripe API key exists
-	stripeKey := domain.Connections.GetString("stripe_apiKey")
+	stripeKey := stripeClient.Data.GetString(external.StripeData_APIKey)
 
 	if stripeKey == "" {
 		return client.API{}, derp.NewInternalError(location, "Stripe key must not be empty")

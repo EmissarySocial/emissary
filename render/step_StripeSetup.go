@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/service/external"
 	"github.com/benpate/derp"
 	"github.com/stripe/stripe-go/v72"
 )
@@ -33,8 +34,10 @@ func (step StepStripeSetup) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error getting Stripe client")
 	}
 
+	stripeClient, _ := domain.Clients.Get(external.ProviderTypeStripe)
+
 	// Verify that webhooks have been set up on this domain
-	if domain.Connections.GetString("stripe_webhook_secret") == "" {
+	if stripeClient.GetString(external.StripeData_WebhookSecret) == "" {
 
 		// Configure webhook
 		params := stripe.WebhookEndpointParams{
@@ -52,7 +55,7 @@ func (step StepStripeSetup) Post(renderer Renderer) error {
 		}
 
 		// Mark webhook as installed
-		domain.Connections.SetString("stripe_webhook_secret", webhook.Secret)
+		stripeClient.SetString(external.StripeData_WebhookSecret, webhook.Secret)
 	}
 
 	return nil

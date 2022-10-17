@@ -21,3 +21,12 @@ func NewClient(providerID string) Client {
 func (client Client) ID() string {
 	return client.ProviderID
 }
+
+// GetString is a shortcut to the Data.GetString() method
+func (client Client) GetString(key string) string {
+	return client.Data.GetString(key)
+}
+
+func (client *Client) SetString(key string, value string) {
+	client.Data.SetString(key, value)
+}
