@@ -239,13 +239,13 @@ button:hover,
 button:focus,
 .button:hover,
 .button:focus {
-	color:var(--black);
 	background-color: var(--gray30);
+	color:var(--black);
 }
 
 button.primary,
 .button.primary {
-	background-image: linear-gradient(var(--button-primary-background))!important;
+	background-color: var(--button-primary-background)!important;
 	color: var(--button-primary-color)!important;
 }
 
@@ -253,13 +253,13 @@ button.primary:hover,
 button.primary:focus,
 .button.primary:hover,
 .button.primary:focus {
-	background-image: linear-gradient(var(--button-primary-background-hover))!important;
+	background-color: var(--button-primary-background-hover)!important;
 	color: var(--button-primary-color-hover)!important;
 }
 
 button.warning,
 .button.warning {
-	background:linear-gradient(var(--red60), var(--red70));
+	background-color:var(--red70)!important;
 	color: white;
 }
 
@@ -267,8 +267,22 @@ button.warning:hover,
 button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
-	background:linear-gradient(var(--red50), var(--red60));
+	background-color:var(--red60)!important;
 	color: white;
+}
+
+button.success,
+.button.success {
+	background-color:var(--green70)!important;
+	color: white;
+}
+
+button.success:hover,
+button.success:focus,
+.button.success:hover,
+.button.success:focus {
+	background-color:var(--green60)!important;
+	color: white!important;
 }
 
 input[disabled],
@@ -277,7 +291,7 @@ button[disabled],
 input[disabled]:hover,
 button[disabled]:hover,
 .button[disabled]:hover {
-	background:var(--gray10)!important;
+	background-color:var(--gray10)!important;
 	color: var(--gray50)!important;
 	cursor: not-allowed;
 }
@@ -314,6 +328,19 @@ button[disabled].barberpole
     margin-top:var(--rhythm);
     margin-bottom:calc(var(--rhythm) * 2);
     color: var(--heading-color);
+}
+
+#modal .layout-title {
+    font-weight:calc(var(--weight) + 100);
+    font-size: calc(var(--rhythm) * 4);
+    line-height:calc(var(--rhythm) * 6);
+    margin-top:0px;
+    margin-bottom:calc(var(--rhythm) * 2);
+}
+
+
+.layout-description {
+	margin-bottom: calc(var(--rhythm) * 4);
 }
 
 .layout-vertical > .layout-vertical-elements > .layout-vertical-element {

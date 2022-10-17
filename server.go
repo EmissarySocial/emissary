@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -102,6 +102,9 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/domains/:domain/users", handler.SetupDomainUserPost(factory, setupTemplates))
 	e.POST("/domains/:domain/users/:user/invite", handler.SetupDomainUserInvite(factory, setupTemplates))
 	e.DELETE("/domains/:domain/users/:user", handler.SetupDomainUserDelete(factory, setupTemplates))
+	e.GET("/oauth", handler.SetupOAuthList(factory, setupTemplates))
+	e.GET("/oauth/:provider", handler.SetupOAuthGet(factory, setupTemplates))
+	e.POST("/oauth/:provider", handler.SetupOAuthPost(factory, setupTemplates))
 
 	// When running the setup tool, wait a second, then open a browser window to the correct URL
 	go func() {
@@ -169,24 +172,28 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/users/:user/:action", handler.GetProfile(factory))
 	e.POST("/users/:user/:action", handler.PostProfile(factory))
 
-	// DOMAIN ADMIN PAGES
-	e.GET("/admin", handler.GetAdmin(factory))
-	e.GET("/admin/:param1", handler.GetAdmin(factory))
-	e.POST("/admin/:param1", handler.PostAdmin(factory))
-	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory))
-	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory))
-	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory))
-	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory))
-
 	// SUBSCRIPTION PAGES
 	e.GET("/subscriptions", handler.ListSubscriptions(factory))
 	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
 	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
 	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
 
+	// DOMAIN ADMIN PAGES
+	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
+	e.GET("/admin/:param1", handler.GetAdmin(factory), mw.Owner)
+	e.POST("/admin/:param1", handler.PostAdmin(factory), mw.Owner)
+	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory), mw.Owner)
+	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory), mw.Owner)
+	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), mw.Owner)
+	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), mw.Owner)
+
+	// OAUTH Connections
+	e.GET("/oauth/:provider", handler.GetOAuth(factory), mw.Owner)
+	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)
+
 	// Startup Wizard
-	e.GET("/startup", handler.Startup(factory))
-	e.POST("/startup", handler.Startup(factory))
+	e.GET("/startup", handler.Startup(factory), mw.Owner)
+	e.POST("/startup", handler.Startup(factory), mw.Owner)
 
 	// EXTERNAL SERVICES (WEBHOOKS)
 	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
@@ -245,7 +252,7 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// On localhost, allow developers to see full error dump.
-	if !isRemoteDomain(ctx.Request().Host) {
+	if domain.IsLocalhost(ctx.Request().Host) {
 		ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}
@@ -253,33 +260,6 @@ func errorHandler(err error, ctx echo.Context) {
 	// Fall through to general error handler
 	ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 	// ctx.String(derp.ErrorCode(err), derp.Message(err))
-}
-
-// isRemoteDomain returns true if the domain is not localhost or a local IP address
-func isRemoteDomain(hostname string) bool {
-
-	// Nornalize the hostname
-	hostname = strings.ToLower(hostname)
-	hostname = strings.TrimPrefix(hostname, "http://")
-	hostname = strings.TrimPrefix(hostname, "https://")
-
-	if hostname == "localhost" {
-		return false
-	}
-
-	if strings.HasSuffix(hostname, ".local") {
-		return false
-	}
-
-	if strings.HasPrefix(hostname, "10.") {
-		return false
-	}
-
-	if strings.HasPrefix(hostname, "192.168") {
-		return false
-	}
-
-	return true
 }
 
 /** AUTOCERT HOST POLICY

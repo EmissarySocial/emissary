@@ -13,6 +13,8 @@
 
 .card {
 	border: solid 1px var(--gray20);
+	border-right-width:2px;
+	border-bottom-width:2px; ;
 	background-color: var(--gray00);
 	position:relative;
 	text-overflow: ellipsis;
@@ -39,7 +41,6 @@
 	}
 
 	.card {
-		border:none;
 		margin:0px 5px 5px 0px;
 	}
 

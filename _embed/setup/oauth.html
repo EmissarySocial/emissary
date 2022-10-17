@@ -1,0 +1,21 @@
+{{template "_navigation.html" "oauth"}}
+
+<main>
+	<div class="framed page">
+		<h1>OAuth Providers</h1>
+		<p>Register this server as an OAuth consumer of external services.</p>
+
+		<!-- List existing domains -->
+		<table class="table">
+
+			<!--  First row is "Add" link -->
+			{{- range .OAuthProviders -}}
+				<tr hx-get="/oauth/{{.Value}}" role="button">
+					<td nowrap>{{icon .Icon}} &nbsp;</td>
+					<td class="bold" nowrap>{{.Label}}</td>
+					<td style="width:100%">{{.Description}}</td>
+				</tr>
+			{{- end -}}
+		</table>
+	</div>
+</main>
