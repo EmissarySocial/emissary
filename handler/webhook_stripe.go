@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
 	"github.com/stripe/stripe-go/v72"
@@ -36,7 +37,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 		event := stripe.Event{}
 
 		// If we're in test mode, then don't validate Webhook signatures
-		if true || factory.Hostname() == "localhost" {
+		if domain.IsLocalhost(factory.Hostname()) {
 
 			if err := json.Unmarshal(body, &event); err != nil {
 				return derp.Wrap(err, location, "Error binding request body")
