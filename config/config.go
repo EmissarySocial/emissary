@@ -85,7 +85,7 @@ func Schema() schema.Schema {
 		Element: schema.Object{
 			Properties: schema.ElementMap{
 				"domains":             schema.Array{Items: DomainSchema().Element},
-				"connections":         schema.Array{Items: ConnectionSchema().Element},
+				"providers":           schema.Array{Items: ProviderSchema().Element},
 				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},
 				"layouts":             schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},
 				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},

@@ -8,10 +8,18 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
+// Provider represents a single external service provider (typically OAuth2)
 type Provider struct {
 	ProviderID   string `path:"provider"`
 	ClientID     string `path:"clientId"`
 	ClientSecret string `path:"clientSecret"`
+}
+
+// NewProvider returns a fully initialized Provider object
+func NewProvider(providerID string) Provider {
+	return Provider{
+		ProviderID: providerID,
+	}
 }
 
 // ID implements the set.Value interface
@@ -19,11 +27,13 @@ func (provider Provider) ID() string {
 	return provider.ProviderID
 }
 
+// IsEmpty returns TRUE if the provider is empty
 func (provider Provider) IsEmpty() bool {
 	return (provider.ClientID == "") && (provider.ClientSecret == "")
 }
 
-func ConnectionSchema() schema.Schema {
+// ProviderSchema returns a schema that validates the Provider object
+func ProviderSchema() schema.Schema {
 
 	validProviders := slice.Map(dataset.Providers(), func(provider form.LookupCode) string {
 		return provider.Value

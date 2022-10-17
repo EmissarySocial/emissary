@@ -109,7 +109,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 func setupOAuthForm(title string) form.Form {
 
 	return form.Form{
-		Schema: config.ConnectionSchema(),
+		Schema: config.ProviderSchema(),
 		Element: form.Element{
 			Type:        "layout-vertical",
 			Label:       title,

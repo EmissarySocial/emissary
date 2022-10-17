@@ -20,6 +20,17 @@ func (service *External) Refresh(clients []config.Provider) {
 	service.clients = clients
 }
 
+func (service *External) Provider(providerID string) config.Provider {
+
+	// If the provider exists in the configuration, then return it
+	if provider, ok := service.clients.Get(providerID); ok {
+		return provider
+	}
+
+	// Otherwise, make a new provider with default values
+	return config.NewProvider(providerID)
+}
+
 func (service *External) GetAdapter(providerID string) (external.Adapter, bool) {
 
 	// Create an adapter for known providers
@@ -33,4 +44,8 @@ func (service *External) GetAdapter(providerID string) (external.Adapter, bool) 
 	}
 
 	return external.Null{}, false
+}
+
+func (service *External) GetStripeAdapter() external.Stripe {
+
 }
