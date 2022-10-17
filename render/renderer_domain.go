@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -138,7 +139,17 @@ func (w Domain) SignupForm() model.SignupForm {
  *******************************************/
 
 func (w Domain) Providers() []form.LookupCode {
-	return dataset.Providers()
+
+	providers := w.factory().Providers()
+
+	return slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
+		if lookupCode.Group == "MANUAL" {
+			return true
+		}
+
+		provider, _ := providers.Get(lookupCode.Value)
+		return !provider.IsEmpty()
+	})
 }
 
 func (w Domain) Client(providerID string) model.Client {

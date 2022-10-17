@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/service/external"
 	"github.com/EmissarySocial/emissary/tools/domain"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -27,8 +28,9 @@ import (
 
 // Factory knows how to create an populate all services
 type Factory struct {
-	Session data.Session
-	config  config.Domain
+	Session   data.Session
+	config    config.Domain
+	providers []config.Provider
 
 	// services (from server)
 	layoutService   *service.Layout
@@ -60,7 +62,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -137,7 +139,7 @@ func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutSe
 	)
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
-	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
+	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
 		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
 	}
 
@@ -145,7 +147,7 @@ func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutSe
 	return &factory, nil
 }
 
-func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+func (factory *Factory) Refresh(domain config.Domain, providers []config.Provider, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
 
 	// Update global pointers
 	factory.attachmentOriginals = attachmentOriginals
@@ -203,6 +205,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 	}
 
 	factory.config = domain
+	factory.providers = providers
 	return nil
 }
 
@@ -241,6 +244,10 @@ func (factory *Factory) Hostname() string {
 
 func (factory *Factory) Config() config.Domain {
 	return factory.config
+}
+
+func (factory *Factory) Providers() set.Slice[config.Provider] {
+	return factory.providers
 }
 
 /*******************************************

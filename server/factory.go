@@ -128,7 +128,7 @@ func (factory *Factory) start() {
 			// Try to find the domain
 			if existing := factory.domains[domainConfig.Hostname]; existing != nil {
 
-				if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+				if err := existing.Refresh(domainConfig, config.Providers, factory.attachmentOriginals, factory.attachmentCache); err != nil {
 					derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname))
 				}
 
@@ -140,6 +140,7 @@ func (factory *Factory) start() {
 			// Fall through means that the domain does not exist, so we need to create it
 			newDomain, err := domain.NewFactory(
 				domainConfig,
+				config.Providers,
 				&factory.emailService,
 				&factory.layoutService,
 				&factory.templateService,

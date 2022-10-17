@@ -1,9 +1,11 @@
 package render
 
 import (
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
@@ -30,6 +32,8 @@ type Factory interface {
 	User() *service.User
 
 	// Other data services
+	Config() config.Domain
+	Providers() set.Slice[config.Provider]
 	LookupProvider() form.LookupProvider
 	Host() string
 	Hostname() string

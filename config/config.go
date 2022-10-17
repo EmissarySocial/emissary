@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -69,7 +70,24 @@ func (config Config) DomainNames() []string {
 }
 
 func (config Config) AllProviders() []form.LookupCode {
-	return dataset.Providers()
+
+	// Just locate the providers that require configuration
+	allProviders := slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
+		return (lookupCode.Group != "MANUAL")
+	})
+
+	// Use the Group field to show if the provider is active or not.
+	allProviders = slice.Map(allProviders, func(lookupCode form.LookupCode) form.LookupCode {
+		provider, _ := config.Providers.Get(lookupCode.Value)
+		if provider.IsEmpty() {
+			lookupCode.Group = ""
+		} else {
+			lookupCode.Group = "ACTIVE"
+		}
+		return lookupCode
+	})
+
+	return allProviders
 }
 
 /************************
