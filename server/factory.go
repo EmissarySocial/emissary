@@ -14,7 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/icon"
-	"github.com/benpate/icon/bootstrap"
 	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -31,6 +30,7 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
+	externalService service.External
 	emailService    service.ServerEmail
 	taskQueue       *queue.Queue
 	embeddedFiles   embed.FS
@@ -72,6 +72,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		factory.FuncMap(),
 		[]config.Folder{},
 	)
+
+	factory.externalService = service.NewExternal(factory.config.Providers)
 
 	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
@@ -118,6 +120,7 @@ func (factory *Factory) start() {
 		factory.layoutService.Refresh(config.Layouts)
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
+		factory.externalService.Refresh(config.Providers)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -135,7 +138,17 @@ func (factory *Factory) start() {
 			}
 
 			// Fall through means that the domain does not exist, so we need to create it
-			newDomain, err := domain.NewFactory(domainConfig, &factory.emailService, &factory.layoutService, &factory.templateService, &factory.contentLibrary, factory.taskQueue, factory.attachmentOriginals, factory.attachmentCache)
+			newDomain, err := domain.NewFactory(
+				domainConfig,
+				&factory.emailService,
+				&factory.layoutService,
+				&factory.templateService,
+				&factory.externalService,
+				&factory.contentLibrary,
+				factory.taskQueue,
+				factory.attachmentOriginals,
+				factory.attachmentCache,
+			)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))
@@ -227,7 +240,7 @@ func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
 	}
 
 	// Search for the domain in the configuration
-	if domain, err := factory.config.Domains.Get(domainID); err == nil {
+	if domain, ok := factory.config.Domains.Get(domainID); ok {
 		return domain, nil
 	}
 
@@ -243,6 +256,46 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 
 	// Delete the domain from the collection
 	factory.config.Domains.Delete(domainID)
+
+	// Write changes to the storage engine.
+	if err := factory.storage.Write(factory.config); err != nil {
+		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
+	}
+
+	return nil
+}
+
+/****************************
+ * OAuth Connection Methods
+ ****************************/
+
+// PutConnection adds a domain to the Factory
+func (factory *Factory) PutProvider(oauthClient config.Provider) error {
+
+	factory.mutex.Lock()
+	defer factory.mutex.Unlock()
+
+	// Add the domain to the collection
+	factory.config.Providers.Put(oauthClient)
+
+	// Try to write the configuration to the storage service
+	if err := factory.storage.Write(factory.config); err != nil {
+		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
+	}
+
+	// The storage service will trigger a new configuration via the Subscrbe() channel
+
+	return nil
+}
+
+// DeleteConnection removes a domain from the Factory
+func (factory *Factory) DeleteProvider(providerID string) error {
+
+	factory.mutex.Lock()
+	defer factory.mutex.Unlock()
+
+	// Delete the connection from the collection
+	factory.config.Providers.Delete(providerID)
 
 	// Write changes to the storage engine.
 	if err := factory.storage.Write(factory.config); err != nil {
@@ -327,7 +380,7 @@ func (factory *Factory) FuncMap() template.FuncMap {
 
 // Icons returns the global icon collection
 func (factory *Factory) Icons() icon.Provider {
-	return bootstrap.Provider{}
+	return service.Icons{}
 }
 
 // Filesystem returns the global filesystem service

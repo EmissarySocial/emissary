@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,6 +18,7 @@ type Domain struct {
 	Forward     string             `path:"forward"      bson:"forward"`     // If present, then all requests for this domain should be forwarded to the designated new domain.
 	SignupForm  SignupForm         `path:"signupForm"   bson:"signupForm"`  // Valid signup forms to make new accounts.
 	Connections maps.Map           `path:"connections"  bson:"connections"` // Configuration information for connections.
+	Clients     set.Map[Client]    `path:"clients"      bson:"clients"`     // External connections (e.g. Facebook, Twitter, etc.)
 	journal.Journal
 }
 
@@ -24,6 +26,7 @@ type Domain struct {
 func NewDomain() Domain {
 	return Domain{
 		Connections: maps.New(),
+		Clients:     make(set.Map[Client]),
 	}
 }
 

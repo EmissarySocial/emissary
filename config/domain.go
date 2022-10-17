@@ -38,8 +38,6 @@ func (domain Domain) ID() string {
 func DomainSchema() schema.Schema {
 
 	return schema.Schema{
-		ID:      "emissary.Domain",
-		Comment: "Validating schema for a domain configuration",
 		Element: schema.Object{
 			Properties: schema.ElementMap{
 				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},

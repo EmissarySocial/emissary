@@ -9,12 +9,12 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
-	"github.com/benpate/icon/bootstrap"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/schema"
@@ -32,6 +32,7 @@ type Factory struct {
 	// services (from server)
 	layoutService   *service.Layout
 	templateService *service.Template
+	oAuthService    *service.External
 	contentLibrary  *nebula.Library
 	taskQueue       *queue.Queue
 
@@ -58,7 +59,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -66,6 +67,7 @@ func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutSe
 	factory := Factory{
 		layoutService:   layoutService,
 		templateService: templateService,
+		oAuthService:    oAuthService,
 		contentLibrary:  contentLibrary,
 		taskQueue:       taskQueue,
 
@@ -83,6 +85,8 @@ func NewFactory(domain config.Domain, serverEmail *service.ServerEmail, layoutSe
 	// Start the Domain Service
 	factory.domainService = service.NewDomain(
 		factory.collection(CollectionDomain),
+		domain,
+		factory.External(),
 		render.FuncMap(factory.Icons()),
 	)
 
@@ -179,7 +183,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Refresh cached services
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.domainService.Refresh(factory.collection(CollectionDomain))
+		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
@@ -227,12 +231,7 @@ func (factory *Factory) ID() string {
 }
 
 func (factory *Factory) Host() string {
-
-	if factory.config.Hostname == "localhost" {
-		return "http://localhost"
-	}
-
-	return "https://" + factory.config.Hostname
+	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname
 }
 
 func (factory *Factory) Hostname() string {
@@ -371,7 +370,7 @@ func (factory *Factory) Queue() *queue.Queue {
 }
 
 func (factory *Factory) Icons() icon.Provider {
-	return bootstrap.Provider{}
+	return service.Icons{}
 }
 
 // Key returns an instance of the Key Manager Service (KMS)
@@ -391,6 +390,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	)
 }
 
+// LookupProvider returns a fully populated LookupProvider service
 func (factory *Factory) LookupProvider() form.LookupProvider {
 	return service.NewLookupProvider(factory.Group(), factory.User())
 }
@@ -398,6 +398,11 @@ func (factory *Factory) LookupProvider() form.LookupProvider {
 /*******************************************
  * EXTERNAL APIs
  *******************************************/
+
+// OAuth returns a fully populated OAuth service
+func (factory *Factory) External() *service.External {
+	return factory.oAuthService
+}
 
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *service.RSS {
