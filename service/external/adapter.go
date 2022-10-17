@@ -7,8 +7,8 @@ import (
 )
 
 type Adapter interface {
-	PollStreams()
-	PostStream()
+	PollStreams(model.Client) error
+	PostStream(model.Client) error
 }
 
 type Installer interface {

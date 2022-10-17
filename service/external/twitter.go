@@ -1,6 +1,7 @@
 package external
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -83,13 +84,10 @@ func (adapter Twitter) OAuthConfig() oauth2.Config {
  * Adapter Methods
  ******************************************/
 
-func (adapter Twitter) Install() {
-
+func (adapter Twitter) PollStreams(client model.Client) error {
+	return nil
 }
 
-func (adapter Twitter) PollStreams() {
-}
-
-func (adapter Twitter) PostStream() {
-
+func (adapter Twitter) PostStream(client model.Client) error {
+	return nil
 }

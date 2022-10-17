@@ -2,6 +2,7 @@ package external
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
@@ -33,7 +34,7 @@ func (adapter Stripe) ManualConfig() form.Form {
 					"data": schema.Object{
 						Properties: schema.ElementMap{
 							"apiKey":        schema.String{Required: true},
-							"webhookSecret": schema.String{Required: true},
+							"webhookSecret": schema.String{Required: false},
 						},
 					},
 				},
@@ -64,6 +65,13 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
 
 	const location = "service.external.Stripe.Install"
 
+	hostname := factory.Hostname()
+
+	// Can't set up WebHooks on localhost
+	if domain.IsLocalhost(hostname) {
+		return nil
+	}
+
 	// Verify that webhooks have been set up on this domain
 	if client.GetString(StripeData_WebhookSecret) == "" {
 
@@ -74,8 +82,9 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
 		}
 
 		// Configure webhook
+		webhookURL := "https://" + hostname + "/webhooks/stripe"
 		params := stripe.WebhookEndpointParams{
-			URL: stripe.String("https://" + factory.Hostname() + "/webhooks/stripe"),
+			URL: stripe.String(webhookURL),
 			EnabledEvents: []*string{
 				stripe.String("checkout.session.completed"),
 			},
@@ -99,11 +108,12 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
  * Adapter Methods
  ******************************************/
 
-func (adapter Stripe) PollStreams() {
+func (adapter Stripe) PollStreams(client model.Client) error {
+	return nil
 }
 
-func (adapter Stripe) PostStream() {
-
+func (adapter Stripe) PostStream(client model.Client) error {
+	return nil
 }
 
 /* OAuth (removed)
