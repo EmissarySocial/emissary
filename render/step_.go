@@ -47,6 +47,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteOutboxItem:
 		return StepDeleteOutboxItem(s)
 
+	case step.EditConnection:
+		return StepEditConnection(s)
+
 	case step.EditContent:
 		return StepEditContent(s)
 

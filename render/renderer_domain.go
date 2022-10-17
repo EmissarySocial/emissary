@@ -6,20 +6,25 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Domain struct {
-	layout *model.Layout
-	domain *model.Domain
+	externalService *service.External
+	layout          *model.Layout
+	domain          *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.External, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -38,8 +43,9 @@ func NewDomain(factory Factory, ctx *steranko.Context, layout *model.Layout, dom
 	}
 
 	result := Domain{
-		layout: layout,
-		Common: NewCommon(factory, ctx, action, actionID),
+		externalService: externalService,
+		layout:          layout,
+		Common:          NewCommon(factory, ctx, action, actionID),
 	}
 
 	result.domain = domain
@@ -69,7 +75,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Domain.View"
 
-	renderer, err := NewDomain(w.factory(), w.context(), w.layout, w.domain, actionID)
+	renderer, err := NewDomain(w.factory(), w.context(), w.externalService, w.layout, w.domain, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -95,6 +101,10 @@ func (w Domain) schema() schema.Schema {
 }
 
 func (w Domain) service() ModelService {
+	return w.f.Domain()
+}
+
+func (w Domain) domainService() *service.Domain {
 	return w.f.Domain()
 }
 
@@ -126,4 +136,26 @@ func (w Domain) Connections(name string) string {
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w.domain.SignupForm
+}
+
+/*******************************************
+ * OTHER METHODS
+ *******************************************/
+
+func (w Domain) Providers() []form.LookupCode {
+	return dataset.Providers()
+}
+
+func (w Domain) Client(providerID string) model.Client {
+
+	if connection, ok := w.domain.Clients.Get(providerID); ok {
+		return connection
+	}
+
+	return model.NewClient(providerID)
+}
+
+func (w Domain) Adapter(providerID string) external.Adapter {
+	result, _ := w.externalService.GetAdapter(providerID)
+	return result
 }
