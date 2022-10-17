@@ -6,20 +6,32 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 )
 
+// External service manages all access to external services
 type External struct {
 	clients set.Slice[config.Provider]
 }
 
+// NewExternal returns a fully initialized External service
 func NewExternal(clients []config.Provider) External {
 	result := External{}
 	result.Refresh(clients)
 	return result
 }
 
+/*******************************************
+ * Lifecycle Methods
+ *******************************************/
+
+// Refresh updates the list of clients
 func (service *External) Refresh(clients []config.Provider) {
 	service.clients = clients
 }
 
+/*******************************************
+ * Other Methods
+ *******************************************/
+
+// Provider returns the provider for the given ID
 func (service *External) Provider(providerID string) config.Provider {
 
 	// If the provider exists in the configuration, then return it
@@ -31,6 +43,7 @@ func (service *External) Provider(providerID string) config.Provider {
 	return config.NewProvider(providerID)
 }
 
+// GetAdapter returns a populated adapter for the given provider
 func (service *External) GetAdapter(providerID string) (external.Adapter, bool) {
 
 	// Create an adapter for known providers
@@ -46,6 +59,12 @@ func (service *External) GetAdapter(providerID string) (external.Adapter, bool) 
 	return external.Null{}, false
 }
 
+// GetStripeAdapter returns a populated Stripe adapter
 func (service *External) GetStripeAdapter() external.Stripe {
+	return external.NewStripe()
+}
 
+// GetTwitterAdapter returns a populated Twitter adapter
+func (service *External) GetTwitterAdapter() external.Twitter {
+	return external.NewTwitter()
 }
