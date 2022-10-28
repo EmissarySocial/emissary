@@ -41,7 +41,8 @@
 
 	<div class="flex-row space-below">
 		<div class="width-60 align-center">
-			{{.Avatar .AuthorImage 60}}
+			<!--{{.Avatar .AuthorImage 60}}-->
+			{{.Avatar "https://avatars.githubusercontent.com/u/4381040?v=4" 60}}
 		</div>
 		<div>
 			<div>
@@ -68,7 +69,8 @@
 	{{- if .UserCan "comment" -}}
 		<div class="flex-row space-above" style="position:-webkit-skicky; position:sticky; bottom:0px; padding:20px; margin:-20px; background-color:var(--gray10);">
 			<div class="width-60 align-center">
-				{{.Avatar .UserImage 60}}
+				<!-- {{.Avatar .UserImage 60}} -->
+				{{.Avatar "https://avatars.githubusercontent.com/u/4381040?v=4" 60}}
 			</div>
 			<form hx-post="/{{.Token}}/comment" hx-swap="none" hx-push-url="false" hx-trigger="autosubmit">
 				<input type="hidden" name="description">

@@ -52,13 +52,21 @@
 
 	{{- if eq (.Data "format") "CARDS" -}}
 
-		<div script="install sortContainer">
+		<div class="pure-g" script="install sortContainer">
 
 			{{- range .Children.ByRank.View -}}
-				<article class="draggable clickable" hx-get="/{{.Token}}">
-					<input type="hidden" name="keys" value="{{.StreamID}}"/>
-					<h2 role="link">{{.Label}} [{{.ThumbnailImage}}]</h2>
-					<p>{{.Description}}</p>
+				<article class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5">
+					<div class="draggable clickable card" hx-get="/{{.Token}}">
+						<input type="hidden" name="keys" value="{{.StreamID}}"/>
+						{{- if ne .ThumbnailImage "" -}}
+							<picture loading="lazy" style="aspect-ratio: 4 / 3;">
+								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=400&height=300"/>
+								<img src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=400&height=300"/>
+							</picture>
+						{{- end -}}
+						<h3 role="link">{{.Label}} {{.ThumbnailImage}}</h3>
+						<p>{{.Description}}</p>
+					</div>
 				</article>
 			{{- end -}}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/compare"
 	"github.com/labstack/echo/v4"
 )
@@ -26,6 +27,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 
 	// This can only be used on a Stream Renderer
 	streamRenderer := renderer.(*Stream)
+	factory := streamRenderer.factory()
 
 	// If a view has been specified, then use it to render a "create" page
 	if step.View != "" {
@@ -38,7 +40,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), renderer.factory().Template(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
 
 	return nil
 }
@@ -92,7 +94,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *service.Template, title string, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
 
 	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
 
@@ -108,8 +110,9 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 	for _, template := range templates {
 		b.TR().Role("link").Data("hx-post", url+"?templateId="+template.Value)
 		{
-			b.TD()
-			b.I(template.Icon, "text-3xl", "gray80").Close()
+			b.TD().Class("text-3xl").Style("vertical-align:top").EndBracket()
+			iconProvider.Write(template.Icon, b)
+			// b.I(template.Icon, "text-3xl", "gray80").Close()
 			b.Close()
 
 			b.TD().Style("width:100%")

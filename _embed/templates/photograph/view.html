@@ -10,22 +10,26 @@
 	{{- end -}}
 
 	<div id="menu-bar">
-		{{- if .HasParent -}}
-			{{- $parent := .Parent "view" -}}
-			<a hx-get="/{{$parent.Token}}" hx-push-url="true" class="link">&laquo; {{$parent.Label}}</a>
-		{{- end -}}
+		<div class="left">
+			{{- if .HasParent -}}
+				{{- $parent := .Parent "view" -}}
+				<a hx-get="/{{$parent.Token}}" hx-push-url="true" class="link">&laquo; {{$parent.Label}}</a>
+			{{- end -}}
 
-		{{- if .UserCan "edit" -}}
-			<a hx-get="/{{.Token}}/edit">Info</a>
-		{{- end -}}
+			{{- if .UserCan "edit" -}}
+				<a hx-get="/{{.Token}}/edit">Info</a>
+			{{- end -}}
 
-		{{- if .UserCan "add-child" -}}
-			<a hx-get="/{{.Token}}/add-child">Features</a>
-		{{- end -}}
+			{{- if .UserCan "add-child" -}}
+				<a hx-get="/{{.Token}}/add-child">Features</a>
+			{{- end -}}
+		</div>
 
-		{{- if .UserCan "delete" -}}
-			<a hx-get="/{{.Token}}/delete">Delete</a>
-		{{- end -}}
+		<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a class="text-red" hx-get="/{{.Token}}/delete">Delete</a>
+			{{- end -}}
+		</div>
 	</div>
 
 	{{- $children := .Children.All.View -}}

@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davidscottmills/goeditorjs"
 	"github.com/spf13/afero"
 
 	"github.com/stripe/stripe-go/v72/client"
@@ -368,6 +369,26 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 /*******************************************
  * OTHER NON-MODEL SERVICES
  *******************************************/
+
+// Content returns the Content transformation service
+func (factory *Factory) Content() service.Content {
+	return service.NewContent(factory.EditorJS())
+}
+
+// EditorJS returns the EditorJS adapter for the Content service
+func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
+	result := goeditorjs.NewHTMLEngine()
+
+	result.RegisterBlockHandlers(
+		&goeditorjs.HeaderHandler{},
+		&goeditorjs.ParagraphHandler{},
+		&goeditorjs.ListHandler{},
+		&goeditorjs.ImageHandler{},
+		&goeditorjs.RawHTMLHandler{},
+	)
+
+	return result
+}
 
 func (factory *Factory) Email() *service.DomainEmail {
 	return &factory.emailService

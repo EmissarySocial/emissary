@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
-	"github.com/benpate/nebula"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/path"
@@ -222,18 +221,25 @@ func (w Stream) AuthorImage() string {
 }
 
 // Returns the body content as an HTML template
-func (w Stream) Content() template.HTML {
-	library := w.factory().ContentLibrary()
-	result := nebula.View(library, &w.stream.Content)
-	return template.HTML(result)
+func (w Stream) ContentHTML() template.HTML {
+	return template.HTML(w.stream.Content.HTML)
 }
 
-// Returns the body content as an HTML template
+func (w Stream) ContentRaw() string {
+
+	if w.stream.Content.Raw == "" {
+		return "{}"
+	}
+
+	return w.stream.Content.Raw
+}
+
+/*/ Returns the body content as an HTML template
 func (w Stream) ContentEditor() template.HTML {
 	library := w.factory().ContentLibrary()
 	result := nebula.Edit(library, &w.stream.Content, w.URL())
 	return template.HTML(result)
-}
+}*/
 
 // CreateDate returns the CreateDate of the stream being rendered
 func (w Stream) CreateDate() int64 {

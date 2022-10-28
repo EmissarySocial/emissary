@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -24,7 +23,7 @@ type Stream struct {
 	AuthorName      string               `path:"authorName"     json:"authorName"          bson:"authorName,omitempty"`    // Full name of the person who created this stream
 	AuthorImage     string               `path:"authorImage"    json:"authorImage"         bson:"authorImage,omitempty"`   // URL of an image to use for the person who created this stream
 	AuthorURL       string               `path:"authorUrl"      json:"authorUrl"           bson:"authorUrl,omitempty"`     // URL address of the person who created this stream
-	Content         nebula.Container     `path:"content"        json:"content"             bson:"content,omitempty"`       // Content objects for this stream.
+	Content         Content              `path:"content"        json:"content"             bson:"content,omitempty"`       // Content objects for this stream.
 	Data            maps.Map             `path:"data"           json:"data"                bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Tags            []string             `path:"tags"           json:"tags"                bson:"tags,omitempty"`          // Organizational Tags
 	ThumbnailImage  string               `path:"thumbnailImage" json:"thumbnailImage"      bson:"thumbnailImage"`          // Image to display next to the stream in lists.
@@ -52,7 +51,6 @@ func NewStream() Stream {
 		Permissions: NewPermissions(),
 		Tags:        make([]string, 0),
 		Data:        make(maps.Map),
-		Content:     make(nebula.Container, 0),
 	}
 }
 
@@ -68,19 +66,6 @@ func (stream *Stream) ID() string {
 /*******************************************
  * OTHER DATA ACCESSORS
  *******************************************/
-
-// GetContainer satisfies the content.Getter interface
-func (stream *Stream) GetContainer() nebula.Container {
-	if stream.Content == nil {
-		stream.Content = nebula.Container{}
-	}
-	return stream.Content
-}
-
-// SetContainer satisfies the content.Setter interface
-func (stream *Stream) SetContainer(value nebula.Container) {
-	stream.Content = value
-}
 
 // SetAuthor populates the denormalized author information into this stream.
 func (stream *Stream) SetAuthor(author *User) {

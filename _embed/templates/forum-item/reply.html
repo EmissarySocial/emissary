@@ -4,7 +4,8 @@
 
 <div class="flex-row space-below">
 	<div class="width-40 align-center">
-		{{.Avatar .AuthorImage 40}}
+		<!-- {{.Avatar .AuthorImage 40}} -->
+		{{.Avatar "https://avatars.githubusercontent.com/u/4381040?v=4" 40}}
 	</div>
 	<div>
 		<div>{{.DescriptionHTML}}</div>
@@ -20,7 +21,8 @@
 {{- range $replies -}}
 	<div class="flex-row space-below">
 		<div class="width-40 align-center">
-			{{.Avatar .AuthorImage 40}}
+			<!--{{.Avatar .AuthorImage 40}}-->
+			{{.Avatar "https://avatars.githubusercontent.com/u/4381040?v=4" 40}}
 		</div>
 		<div>
 			<div>{{.DescriptionHTML}}</div>
@@ -34,7 +36,8 @@
 
 <div class="flex-row space-above"  style="padding:20px; margin:-20px; background-color:var(--gray10);">
 	<div class="width-40 align-center">
-		{{.Avatar .UserImage 40}}
+		<!-- {{.Avatar .UserImage 40}} -->
+		{{.Avatar "https://avatars.githubusercontent.com/u/4381040?v=4" 40}}
 	</div>
 	<form hx-post="/{{.Token}}/reply" hx-swap="none" hx-push-url="false" hx-trigger="autosubmit">
 		<input type="hidden" name="description">

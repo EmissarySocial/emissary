@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/nebula"
+	"github.com/davidscottmills/goeditorjs"
 	"github.com/stripe/stripe-go/v72/client"
 )
 
@@ -33,6 +34,7 @@ type Factory interface {
 
 	// Other data services
 	Config() config.Domain
+	EditorJS() *goeditorjs.HTMLEngine
 	Providers() set.Slice[config.Provider]
 	LookupProvider() form.LookupProvider
 	Host() string

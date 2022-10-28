@@ -84,6 +84,8 @@ func (service Icons) Get(name string) string {
 		return service.get("forward")
 	case "inbox":
 		return service.get("inbox")
+	case "markdown":
+		return service.get("markdown")
 	case "message":
 		return service.get("chat-left-text")
 	case "picture":

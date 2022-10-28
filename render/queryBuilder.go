@@ -130,7 +130,7 @@ func (qb QueryBuilder) Action(action string) (List, error) {
 		return nil, derp.Wrap(err, "renderer.QueryBuilder.makeSlice", "Error loading streams from database")
 	}
 
-	return qb.iteratorToSlice(iterator, qb.MaxRows, action), nil
+	return qb.iteratorToSlice(iterator, qb.MaxRows, action)
 }
 
 /********************************
@@ -156,10 +156,15 @@ func (qb QueryBuilder) makeSortOption() option.Option {
  * MISC HELPERS
  ********************************/
 
+type Errorer interface {
+	Error() error
+}
+
 // iteratorToSlice consumes a data.Iterator and generates a slice of Renderer objects.
-func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, action string) List {
+func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, action string) (List, error) {
 
 	var index uint
+	var errorGroup error
 
 	result := make(List, 0)
 	object := qb.service.ObjectNew()
@@ -168,6 +173,7 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 
 		// Create a new renderer
 		renderer, err := NewRenderer(qb.factory, qb.ctx, object, action)
+		errorGroup = derp.Append(errorGroup, err)
 
 		// If this renderer is allowed, then add it to the result set
 		if err == nil {
@@ -187,7 +193,15 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 		object = qb.service.ObjectNew()
 	}
 
-	return result
+	if err := iterator.Error(); err != nil {
+		return result, derp.Wrap(err, "renderer.QueryBuilder.iteratorToSlice", "Error iterating through database results")
+	}
+
+	if errorGroup != nil {
+		return result, errorGroup
+	}
+
+	return result, nil
 }
 
 /*

@@ -9,7 +9,13 @@
 		"properties": {
 			"label": {"type": "string"},
 			"description": {"type": "string"},
-			"stateId": {"type": "string", "enum": ["unpublished", "published"]}
+			"stateId": {"type": "string", "enum": ["unpublished", "published"]},
+			"data": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "string"}
+				}
+			}
 		}
 	},
 	"states": {
@@ -59,6 +65,14 @@
 			"steps": [
 				{"step": "with-draft", "steps": [
 					{"step": "edit-content", "file":"edit"}
+				]}
+			]
+		},
+		"upload-image": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "with-draft", "steps": [
+					{"step": "upload-attachments"}
 				]}
 			]
 		},

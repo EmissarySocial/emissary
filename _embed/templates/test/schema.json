@@ -1,8 +1,8 @@
 {
 	"templateId": "test",
-	"label": "Test Item",
-	"description": "Test Item.",
-	"icon": "article",
+	"label": "TEST: Table Widget",
+	"description": "This content type is just a test of the table widget.  Please remove.",
+	"icon": "bug",
 	"containedBy": ["top", "folder", "article"],
 	"schema": {
 		"type": "object",
@@ -45,7 +45,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"label": "New Article"}},
+				{"step": "set-data", "values": {"label": "New Table Test Case"}},
 				{"step": "set-state", "state": "unpublished"}
 			]
 		},

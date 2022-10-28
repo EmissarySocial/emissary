@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -92,7 +93,9 @@ func (service *Stream) New(parent *model.Stream, templateID string) (model.Strea
 
 // List returns an iterator containing all of the Streams who match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	criteria = notDeleted(criteria)
+	spew.Dump(criteria, options)
+	return service.collection.List(criteria, options...)
 }
 
 // Load retrieves an Stream from the database
@@ -137,9 +140,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	if stream.Token == "" {
 		stream.Token = stream.StreamID.Hex()
 	}
-
-	// RULE: Sanitize Content
-	service.contentLibrary.Validate(&stream.Content)
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)

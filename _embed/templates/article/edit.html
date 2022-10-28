@@ -1,13 +1,5 @@
+
 <link rel="stylesheet" href="/static/nebula/nebula.css">
-
-<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
-
-<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
 
 <div class="page">
 
@@ -17,8 +9,8 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<button hx-get="/{{.Token}}/promote-draft" class="button primary">Promote</button>
-			<button hx-get="/{{.Token}}">Save Draft</button>
+			<button script="on click saveDraft(true)" class="button primary">Promote</button>
+			<button script="on click saveDraft(false)">Save Draft</button>
 			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
 		</div>
 
@@ -42,10 +34,97 @@
 
 	</div>
 
-	<article id="content-editor">
-		{{.ContentEditor}}
-	</article>
+	<article id="content-editor" data-content="{{.ContentRaw}}"></article>
 
 	<div class="text-sm gray50">This draft is automatically saved to the server, but will not be visible publicly until you click the "Promote" button.</div>
 	
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/paragraph@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/link@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/attaches@latest"></script>
+
+<script>
+	
+	var editor = new EditorJS({
+		holder: "content-editor",
+		data: JSON.parse(document.getElementById("content-editor").getAttribute("data-content")),
+		tools: {
+			paragraph: {
+				class: Paragraph,
+				inlineToolbar: true,
+			},
+			header: {
+				class: Header,
+				inlineToolbar: ['link'],
+				config: {
+					placeholder: 'Header',
+					levels: [1, 2, 3],
+					defaultLevel: 2,
+				},
+			},
+			list: {
+				class: List,
+				inlineToolbar: true,
+				config: {
+					placeholder: 'List',
+				},
+			},
+			linkTool: {
+				class: LinkTool,
+				config: {
+				// endpoint: 'http://localhost:8008/fetchUrl', // Your backend endpoint for url data fetching,
+				}
+			},
+			embed: {
+				class: Embed,
+				config: {
+				}
+			},
+			image: {
+				class: ImageTool,
+				config: {
+					endpoints: {
+						byFile: '/{{.Token}}/upload-image', // Your backend file uploader endpoint
+						byUrl: '/{{.Token}}/upload-image', // Your endpoint that provides uploading by Url
+					}
+				}
+			},
+			attaches: {
+				class: AttachesTool,
+				config: {
+					endpoint: 'http://localhost:8008/uploadFile'
+				}
+			}
+		},
+	})
+
+	async function saveDraft(promote) {
+		// Get the content from the editor
+		content = await editor.save()
+
+		// POST the content to the server
+		await fetch("{{.URL}}", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(content),
+		})
+
+		// Maybe Promote the draft
+		if (promote) {
+			await fetch("/{{.Token}}/promote-draft", {
+				method: "POST"
+			})
+		}
+
+		// Redirect to the top of the page.
+		window.location = "/{{.StreamID}}"
+	}
+</script>

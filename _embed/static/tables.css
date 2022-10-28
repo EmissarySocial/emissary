@@ -59,6 +59,11 @@ div.table {
 	border-top: solid 1px var(--gray20);
 }
 
+div.table > * {
+	border-bottom: solid 1px var(--gray20);
+	padding: 10px 0px;
+}
+
 div.table > [role=link]:hover,
 div.table > [role=link]:focus, 
 div.table > [role=button]:hover,

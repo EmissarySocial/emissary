@@ -19,7 +19,7 @@ type StepAddTopStream struct {
 
 func (step StepAddTopStream) Get(renderer Renderer, buffer io.Writer) error {
 	factory := renderer.factory()
-	modalAddStream(renderer.context().Response(), factory.Template(), step.Title, buffer, renderer.URL(), "top", step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, renderer.URL(), "top", step.TemplateIDs)
 	return nil
 }
 

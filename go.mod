@@ -2,6 +2,9 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
+replace github.com/benpate/data => ../../benpate/data
+replace github.com/benpate/data-mongo => ../../benpate/data-mongo
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.117
@@ -22,6 +25,7 @@ require (
 	github.com/benpate/steranko v0.11.0
 	github.com/benpate/table v0.3.0
 	github.com/davecgh/go-spew v1.1.1
+	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.2

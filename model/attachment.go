@@ -42,6 +42,10 @@ func (attachment *Attachment) ID() string {
  * OTHER FUNCTIONS
  *******************************************/
 
+func (attachment *Attachment) URL() string {
+	return "/" + attachment.StreamID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+}
+
 func (attachment *Attachment) DownloadExtension() string {
 
 	ext := strings.ToLower(attachment.OriginalExtension())
