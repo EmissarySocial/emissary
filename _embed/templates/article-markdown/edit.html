@@ -1,0 +1,51 @@
+<link rel="stylesheet" href="/static/nebula/nebula.css">
+
+<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
+
+<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
+<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
+
+<div class="page">
+
+	<div hx-get="/{{.Token}}/heading" hx-trigger="refreshPage">
+		{{.View "heading"}}
+	</div>
+
+	<div id="menu-bar">
+		<div class="left">
+			<button hx-get="/{{.Token}}/promote-draft" class="button primary">Promote</button>
+			<button hx-get="/{{.Token}}">Save Draft</button>
+			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
+		</div>
+
+		<div class="right">
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties">Info</a>
+			{{- end -}}
+
+			{{- if .UserCan "features" -}}
+				<a hx-get="/{{.Token}}/features">Features</a>
+			{{- end -}}
+
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+		</div>
+
+	</div>
+
+	<article id="content-editor">
+		{{.ContentEditor}}
+	</article>
+
+	<div class="text-sm gray50">This draft is automatically saved to the server, but will not be visible publicly until you click the "Promote" button.</div>
+	
+</div>
