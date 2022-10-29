@@ -115,20 +115,3 @@ func (adapter Stripe) PollStreams(client model.Client) error {
 func (adapter Stripe) PostStream(client model.Client) error {
 	return nil
 }
-
-/* OAuth (removed)
-
-func (adapter Stripe) OAuthConfig() oauth2.Config {
-
-	return oauth2.Config{
-		ClientID:     adapter.configuration.ClientID,
-		ClientSecret: adapter.configuration.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://connect.stripe.com/oauth/authorize",
-			TokenURL:  "https://connect.stripe.com/oauth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes: []string{},
-	}
-}
-*/

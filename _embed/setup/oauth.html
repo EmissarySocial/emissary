@@ -7,8 +7,6 @@
 
 		<!-- List existing domains -->
 		<table class="table">
-
-			<!--  First row is "Add" link -->
 			{{- range .AllProviders -}}
 				<tr hx-get="/oauth/{{.Value}}" role="button">
 					<td nowrap>{{icon .Icon}} &nbsp;</td>

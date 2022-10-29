@@ -36,6 +36,26 @@ func GetOAuth(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
+func OAuthCallback(fm *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.OAuthCallback"
+
+	return func(ctx echo.Context) error {
+
+		// Try to look up the factory for this domain
+		factory, err := fm.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Could not get factory", ctx.Request().URL.String())
+		}
+
+		// Get domain service and redirect URL
+		providerID := ctx.Param("provider")
+		domainService := factory.Domain()
+
+	}
+}
+
 func OAuthRedirect(factory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {

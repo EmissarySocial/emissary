@@ -1,25 +1,56 @@
 package external
 
 import (
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/form"
-	"github.com/benpate/rosetta/null"
-	"github.com/benpate/rosetta/schema"
+	"golang.org/x/oauth2"
 )
 
 // https://golangexample.com/go-twitter-rest-and-streaming-api/
 
 const ProviderTypeTwitter = "TWITTER"
 
-type Twitter struct{}
+type Twitter struct {
+	provider config.Provider
+}
 
-func NewTwitter() Twitter {
-	return Twitter{}
+func NewTwitter(provider config.Provider) Twitter {
+	return Twitter{
+		provider: provider,
+	}
 }
 
 /******************************************
  * Manual Adapter Methods
  ******************************************/
+
+func (adapter Twitter) OAuthConfig() oauth2.Config {
+
+	return oauth2.Config{
+		ClientID:     adapter.provider.ClientID,
+		ClientSecret: adapter.provider.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://twitter.com/i/oauth2/authorize",
+			TokenURL:  "https://twitter.com/i/oauth2/access_token",
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+		Scopes: []string{"tweet.read", "follows.read", "mute.read", "like.read", "block.read", "offline.access"},
+	}
+}
+
+/******************************************
+ * Adapter Methods
+ ******************************************/
+
+func (adapter Twitter) PollStreams(client model.Client) error {
+	return nil
+}
+
+func (adapter Twitter) PostStream(client model.Client) error {
+	return nil
+}
+
+/* Archived..
 
 func (adapter Twitter) ManualConfig() form.Form {
 
@@ -61,33 +92,4 @@ func (adapter Twitter) ManualConfig() form.Form {
 		},
 	}
 }
-
-/* OAuth Methods
-
-func (adapter Twitter) OAuthConfig() oauth2.Config {
-
-	return oauth2.Config{
-		ClientID:     adapter.configuration.ClientID,
-		ClientSecret: adapter.configuration.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://twitter.com/i/oauth2/authorize",
-			TokenURL:  "https://twitter.com/i/oauth2/access_token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes: []string{"tweet.read", "follows.read", "mute.read", "like.read", "block.read", "offline.access"},
-	}
-}
-
 */
-
-/******************************************
- * Adapter Methods
- ******************************************/
-
-func (adapter Twitter) PollStreams(client model.Client) error {
-	return nil
-}
-
-func (adapter Twitter) PostStream(client model.Client) error {
-	return nil
-}

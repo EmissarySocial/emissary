@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -341,7 +340,6 @@ func (w *Common) getDomain() (*model.Domain, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
-	spew.Dump(criteria)
 	builder := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
 
 	result, err := builder.Top60().ByRank().View()

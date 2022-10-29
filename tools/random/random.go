@@ -3,6 +3,7 @@ package random
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"strings"
 )
 
 /*******************************************
@@ -32,5 +33,15 @@ func GenerateBytes(n int) ([]byte, error) {
 // case the caller should not continue.
 func GenerateString(s int) (string, error) {
 	b, err := GenerateBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
+	return Base64URLEncode(b), err
+}
+
+// Base64URLEncode base64 encodes the given bytes in a URL-safe way
+func Base64URLEncode(b []byte) string {
+	result := base64.URLEncoding.EncodeToString(b)
+	result = strings.ReplaceAll(result, "+", "-")
+	result = strings.ReplaceAll(result, "/", "_")
+	result = strings.ReplaceAll(result, "=", "")
+
+	return result
 }

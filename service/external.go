@@ -50,10 +50,10 @@ func (service *External) GetAdapter(providerID string) (external.Adapter, bool) 
 	switch providerID {
 
 	case external.ProviderTypeStripe:
-		return external.NewStripe(), true
+		return service.GetStripeAdapter(), true
 
 	case external.ProviderTypeTwitter:
-		return external.NewTwitter(), true
+		return service.GetTwitterAdapter(), true
 	}
 
 	return external.Null{}, false
@@ -66,5 +66,6 @@ func (service *External) GetStripeAdapter() external.Stripe {
 
 // GetTwitterAdapter returns a populated Twitter adapter
 func (service *External) GetTwitterAdapter() external.Twitter {
-	return external.NewTwitter()
+	provider, _ := service.clients.Get(external.ProviderTypeTwitter)
+	return external.NewTwitter(provider)
 }

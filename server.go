@@ -189,6 +189,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// OAUTH Connections
 	e.GET("/oauth/:provider", handler.GetOAuth(factory), mw.Owner)
+	e.GET("/oauth/:provider/callback", handler.GetOAuthCallback(factory), mw.Owner)
 	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)
 
 	// Startup Wizard

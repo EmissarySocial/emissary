@@ -39,8 +39,8 @@ func Providers() []form.LookupCode {
 			Value:       "TWITTER",
 			Label:       "Twitter",
 			Icon:        "twitter",
-			Description: "Import your Twitter tweets and followers",
-			Group:       "MANUAL",
+			Description: "Link to Twitter data feeds",
+			Group:       "OAUTH",
 		},
 	}
 }

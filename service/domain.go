@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/sha256"
 	"html/template"
 	"sync"
 
@@ -9,12 +10,14 @@ import (
 	"github.com/EmissarySocial/emissary/service/external"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
 	"github.com/davecgh/go-spew/spew"
+	"golang.org/x/oauth2"
 )
 
 // Domain service manages all access to the singleton model.Domain in the database
@@ -192,16 +195,20 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	}
 
 	// Set a new "state" for this provider
-	state, err := service.NewOAuthState(providerID)
+	client, err := service.NewOAuthClient(providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth state")
+		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth client")
 	}
 
 	// Generate and return the AuthCodeURL
+
 	config := adapter.OAuthConfig()
 	config.RedirectURL = service.OAuthCallbackURL()
-	authCodeURL := config.AuthCodeURL(state)
+	codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
+	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
+	authCodeURL := config.AuthCodeURL(client.GetString("state"), codeChallenge, codeChallengeMethod)
 
 	spew.Dump(config, authCodeURL)
 
@@ -214,58 +221,71 @@ func (service *Domain) OAuthCallbackURL() string {
 }
 
 // NewOAuthState generates and returns a new OAuth state for the specified provider
-func (service *Domain) NewOAuthState(providerID string) (string, error) {
+func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 
 	const location = "service.Domain.NewOAuthState"
 
-	var domain model.Domain
+	domain := model.NewDomain()
 
 	if err := service.Load(&domain); err != nil {
-		return "", derp.Wrap(err, location, "Error loading domain")
+		return model.Client{}, derp.Wrap(err, location, "Error loading domain")
+	}
+
+	if domain.Clients == nil {
+		domain.Clients = make(set.Map[model.Client])
 	}
 
 	// Try to find a matching client
 	client, ok := domain.Clients[providerID]
 
 	if !ok {
-		client.ProviderID = providerID
+		client = model.NewClient(providerID)
 	}
 
 	// Try to generate a new state
 	newState, err := random.GenerateString(32)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error generating random string")
+		return model.Client{}, derp.Wrap(err, location, "Error generating random string")
+	}
+
+	codeChallenge, err := random.GenerateString(64)
+
+	if err != nil {
+		return model.Client{}, derp.Wrap(err, location, "Error generating random string")
 	}
 
 	// Assign the state to the client and save the domain
 	client.Data["state"] = newState
+	client.Data["code_challenge"] = codeChallenge
+
+	spew.Dump("oAuth Client::", client)
 	domain.Clients[providerID] = client
 
 	if err := service.Save(&domain, "New OAuth State"); err != nil {
-		return "", derp.Wrap(err, location, "Error saving domain")
+		return model.Client{}, derp.Wrap(err, location, "Error saving domain")
 	}
 
-	return newState, nil
+	return client, nil
 }
 
 // ReadOAuthState returns the OAuth state for the specified provider WITHOUT changing the current value
-func (service *Domain) ReadOAuthState(providerID string) (string, error) {
+func (service *Domain) ReadOAuthClient(providerID string) (model.Client, error) {
 
 	const location = "service.Domain.NewOAuthState"
 
 	var domain model.Domain
 
 	if err := service.Load(&domain); err != nil {
-		return "", derp.Wrap(err, location, "Error loading domain")
+		return model.Client{}, derp.Wrap(err, location, "Error loading domain")
 	}
 
 	// Try to find a matching client
 	client, ok := domain.Clients[providerID]
 
 	if !ok {
-		return "", derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
+		return model.Client{}, derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
-	return client.Data.GetString("state"), nil
+	return client, nil
 }
