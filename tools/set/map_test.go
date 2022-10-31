@@ -26,7 +26,7 @@ func Test_Map(t *testing.T) {
 	require.Equal(t, "john@sky.net", two.email)
 
 	three, ok := s.Get("3")
-	require.True(t, ok)
+	require.False(t, ok) // key "3" does not exist
 	require.Equal(t, "", three.name)
 	require.Equal(t, "", three.email)
 }
