@@ -1,33 +1,37 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-	{{- if .UserCan "edit" -}}
-		<div id="menu-bar">
-			<a href="/{{.Token}}/edit">Edit Content</a>
+	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.Token}}/sharing">Sharing</a>
-			{{- end -}}
+		<h1 class="p-name">{{.Title}}</h1>
+		<div class="p-summary">{{.Description}}</div>
+	
+		{{- if .UserCan "edit" -}}
+			<div id="menu-bar">
+				<a href="/{{.Token}}/edit">Edit Content</a>
 
-			<div class="right">
-				{{- if .UserCan "publish" -}}
-					<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+				{{- if .UserCan "sharing" -}}
+					<a hx-get="/{{.Token}}/sharing">Sharing</a>
 				{{- end -}}
 
-				{{- if .UserCan "unpublish" -}}
-					<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
-				{{- end -}}
+				<div class="right">
+					{{- if .UserCan "publish" -}}
+						<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+					{{- end -}}
+
+					{{- if .UserCan "unpublish" -}}
+						<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
+					{{- end -}}
+				</div>
+
 			</div>
+		{{- end -}}
 
-		</div>
-	{{- end -}}
+		<article class="e-content content space-after">
+			{{- .ContentHTML -}}
+		</article>
 
-	<article class="content space-after">
-		{{- .ContentHTML -}}
-	</article>
-
-	<article>
-		{{- .Features -}}
-	</article>
-</div>
+		<article>
+			{{- .Features -}}
+		</article>
+	</div>
 </div>
