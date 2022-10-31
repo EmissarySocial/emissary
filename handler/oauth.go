@@ -36,12 +36,13 @@ func GetOAuth(fm *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func OAuthCallback(fm *server.Factory) echo.HandlerFunc {
+func GetOAuthCallback(fm *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.OAuthCallback"
 
 	return func(ctx echo.Context) error {
 
+		/* TODO: Write this function.
 		// Try to look up the factory for this domain
 		factory, err := fm.ByContext(ctx)
 
@@ -52,7 +53,9 @@ func OAuthCallback(fm *server.Factory) echo.HandlerFunc {
 		// Get domain service and redirect URL
 		providerID := ctx.Param("provider")
 		domainService := factory.Domain()
+		*/
 
+		return nil
 	}
 }
 
