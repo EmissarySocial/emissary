@@ -9,35 +9,35 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/benpate/nebula"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/stripe/stripe-go/v72/client"
 )
 
 // Factory is used to locate all necessary services
 type Factory interface {
+	// Model Services
 	Attachment() *service.Attachment
-	ContentLibrary() *nebula.Library
-	Domain() *service.Domain
 	Group() *service.Group
 	Layout() *service.Layout
-	MediaServer() mediaserver.MediaServer
 	Mention() *service.Mention
-	Queue() *queue.Queue
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
-	StreamUpdateChannel() chan model.Stream
-	StripeClient() (client.API, error)
 	Subscription() *service.Subscription
 	Template() *service.Template
 	User() *service.User
 
 	// Other data services
 	Config() config.Domain
+	Content() service.Content
+	Domain() *service.Domain
 	EditorJS() *goeditorjs.HTMLEngine
-	Providers() set.Slice[config.Provider]
-	LookupProvider() form.LookupProvider
 	Host() string
 	Hostname() string
 	Icons() icon.Provider
+	MediaServer() mediaserver.MediaServer
+	LookupProvider() form.LookupProvider
+	Providers() set.Slice[config.Provider]
+	Queue() *queue.Queue
+	StreamUpdateChannel() chan model.Stream
+	StripeClient() (client.API, error)
 }
