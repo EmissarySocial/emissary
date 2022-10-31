@@ -2,7 +2,7 @@
 
 	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-		<h1 class="p-name">{{.Title}}</h1>
+		<h1 class="p-name">{{.Label}}</h1>
 		<div class="p-summary">{{.Description}}</div>
 	
 		{{- if .UserCan "edit" -}}
@@ -26,7 +26,7 @@
 			</div>
 		{{- end -}}
 
-		<article class="e-content content space-after">
+		<article class="content space-after e-content">
 			{{- .ContentHTML -}}
 		</article>
 

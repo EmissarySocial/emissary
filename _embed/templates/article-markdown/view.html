@@ -1,5 +1,8 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-<div class="page" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+
+	<h1 class="p-name">{{.Label}}</h1>
+	<div class="p-summary">{{.Description}}</div>
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
@@ -22,7 +25,7 @@
 		</div>
 	{{- end -}}
 
-	<article class="content space-after">
+	<article class="content space-after e-content">
 		{{- .ContentHTML -}}
 	</article>
 
