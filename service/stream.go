@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -93,9 +92,7 @@ func (service *Stream) New(parent *model.Stream, templateID string) (model.Strea
 
 // List returns an iterator containing all of the Streams who match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	criteria = notDeleted(criteria)
-	spew.Dump(criteria, options)
-	return service.collection.List(criteria, options...)
+	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Stream from the database

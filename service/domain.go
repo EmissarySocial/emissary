@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/oauth2"
 )
 
@@ -202,15 +201,12 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	}
 
 	// Generate and return the AuthCodeURL
-
 	config := adapter.OAuthConfig()
 	config.RedirectURL = service.OAuthCallbackURL()
 	codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	authCodeURL := config.AuthCodeURL(client.GetString("state"), codeChallenge, codeChallengeMethod)
-
-	spew.Dump(config, authCodeURL)
 
 	return authCodeURL, nil
 }
@@ -255,13 +251,12 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 		return model.Client{}, derp.Wrap(err, location, "Error generating random string")
 	}
 
-	// Assign the state to the client and save the domain
+	// Assign the state to the client and put into the domain
 	client.Data["state"] = newState
 	client.Data["code_challenge"] = codeChallenge
-
-	spew.Dump("oAuth Client::", client)
 	domain.Clients[providerID] = client
 
+	// Save the domain
 	if err := service.Save(&domain, "New OAuth State"); err != nil {
 		return model.Client{}, derp.Wrap(err, location, "Error saving domain")
 	}

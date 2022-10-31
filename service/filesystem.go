@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 
@@ -154,6 +153,7 @@ func (filesystem *Filesystem) GetAferos(folders ...config.Folder) ([]afero.Fs, e
  * REAL TIME WATCHING
  *******************************************/
 
+// Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
 func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, closed <-chan bool) error {
 
 	if folder.Adapter == config.FolderAdapterFile {
@@ -164,9 +164,15 @@ func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, c
 	return nil
 }
 
+// watchOS watches a folder on the local filesystem for changes
 func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-chan bool) error {
 
-	spew.Dump("Watching", uri)
+	// Get all entries in the directory
+	entries, err := os.ReadDir(uri)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Filesystem.watchFile", "Error reading directory", uri)
+	}
 
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -175,32 +181,33 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 		return derp.Wrap(err, "service.Filesystem.watchFile", "Error creating watcher", uri)
 	}
 
-	entries, err := os.ReadDir(uri)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Filesystem.watchFile", "Error reading directory", uri)
-	}
-
+	// Watch the top-level director
 	watcher.Add(uri)
 
+	// Watch all sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
 			watcher.Add(uri + "/" + entry.Name())
 		}
 	}
 
-	// Watch for events
-	for {
-		select {
-		case <-watcher.Events:
-			changed <- true
+	// Background: listen for changes and pass them to the "changed" channel
+	go func() {
+		for {
+			select {
+			case <-watcher.Events:
+				changed <- true
 
-		case err := <-watcher.Errors:
-			return derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri)
+			case err := <-watcher.Errors:
+				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri))
 
-		case <-closed:
-			close(changed)
-			return nil
+			case <-closed:
+				close(changed)
+				return
+			}
 		}
-	}
+	}()
+
+	// Success!
+	return nil
 }
