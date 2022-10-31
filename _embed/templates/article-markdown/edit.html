@@ -1,13 +1,19 @@
-<link rel="stylesheet" href="/static/nebula/nebula.css">
+<script type="text/hyperscript">
+	def saveDraft(promote)
+		log "saveDraft"
+		send save to #markdownForm
+		log "sent"
+		wait for htmx:afterOnLoad from #markdownForm
+		log "waited"
+		if promote then
+			log "promote"
+			fetch /{{.Token}}/promote-draft with method:"POST"
+		end
 
-<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
-
-<script type="text/hyperscript" src="/static/nebula/autosize._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/autosave._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/sortable._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/hotkey._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/uploader._hs"></script>
-<script type="text/hyperscript" src="/static/nebula/wysiwyg._hs"></script>
+		log "done"
+		set window.location to "/{{.Token}}"
+	end
+</script>
 
 <div class="page">
 
@@ -17,8 +23,8 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<button hx-get="/{{.Token}}/promote-draft" class="button primary">Promote</button>
-			<button hx-get="/{{.Token}}">Save Draft</button>
+			<button script="on click saveDraft(true)" class="button primary">Promote</button>
+			<button script="on click saveDraft(false)">Save Draft</button>
 			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
 		</div>
 
@@ -42,10 +48,10 @@
 
 	</div>
 
-	<article id="content-editor">
-		{{.ContentEditor}}
+	<article>
+		<form id="markdownForm" hx-post="/{{.Token}}/edit" hx-trigger="save" hx-swap="none">
+			<textarea name="content" style="width:100%; min-height:600px;">{{.ContentRaw}}</textarea>
+		</form>
 	</article>
-
-	<div class="text-sm gray50">This draft is automatically saved to the server, but will not be visible publicly until you click the "Promote" button.</div>
 	
 </div>

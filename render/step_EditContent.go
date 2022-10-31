@@ -6,11 +6,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 )
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
 	Filename string
+	Format   string
 }
 
 func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
@@ -29,28 +31,41 @@ func (step StepEditContent) UseGlobalWrapper() bool {
 func (step StepEditContent) Post(renderer Renderer) error {
 
 	context := renderer.context()
+
+	var rawContent string
+
+	// Try to read the content from the request body
+	switch step.Format {
+
+	// EditorJS writes directly to the request body
+	case "EDITORJS":
+		var buffer bytes.Buffer
+
+		if _, err := io.Copy(&buffer, context.Request().Body); err != nil {
+			return derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data")
+		}
+
+		rawContent = buffer.String()
+
+	// All other types are a Form post
+	default:
+
+		body := maps.New()
+		if err := context.Bind(&body); err != nil {
+			return derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data")
+		}
+
+		rawContent = body.GetString("content")
+	}
+
+	// Create a new Content object from the request body
 	factory := renderer.factory()
+	contentService := factory.Content()
+	content := contentService.New(step.Format, rawContent)
+
+	// Put the content into the stream
 	stream := renderer.object().(*model.Stream)
-
-	// Try to read the request body
-	var content bytes.Buffer
-
-	if _, err := io.Copy(&content, context.Request().Body); err != nil {
-		return derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data")
-	}
-
-	// Try to generate HTML from the EditorJS JSON
-	editorjs := factory.EditorJS()
-	html, err := editorjs.GenerateHTML(content.String())
-
-	if err != nil {
-		return derp.Wrap(err, "render.StepEditContent.Post", "Error converting EditorJS to HTML")
-	}
-
-	stream.Content = model.Content{
-		Raw:  content.String(),
-		HTML: html,
-	}
+	stream.Content = content
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(stream, "Content edited"); err != nil {

@@ -1,7 +1,7 @@
 {
 	"templateId": "article-markdown",
 	"label": "Article (Markdown)",
-	"description": "Article formatted in Markdown.  Best for technical writing.",
+	"description": "Simple Markdown editor",
 	"icon": "markdown",
 	"containedBy": ["top", "folder"],
 	"schema": {
@@ -9,7 +9,13 @@
 		"properties": {
 			"label": {"type": "string"},
 			"description": {"type": "string"},
-			"stateId": {"type": "string", "enum": ["unpublished", "published"]}
+			"stateId": {"type": "string", "enum": ["unpublished", "published"]},
+			"data": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "string"}
+				}
+			}
 		}
 	},
 	"states": {
@@ -58,7 +64,16 @@
 			"roles": ["owner", "editor"],
 			"steps": [
 				{"step": "with-draft", "steps": [
-					{"step": "edit-content", "file":"edit"}
+					{"step": "edit-content", "file":"edit", "format": "MARKDOWN"},
+					{"step": "send-mentions"}
+				]}
+			]
+		},
+		"upload-image": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step": "with-draft", "steps": [
+					{"step": "upload-attachments"}
 				]}
 			]
 		},
