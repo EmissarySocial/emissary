@@ -111,9 +111,6 @@
 		// POST the content to the server
 		await fetch("{{.URL}}", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: JSON.stringify(content),
 		})
 

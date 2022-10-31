@@ -64,8 +64,8 @@
 			"roles": ["owner", "editor"],
 			"steps": [
 				{"step": "with-draft", "steps": [
-					{"step": "edit-content", "file":"edit"},
-					{"step": "send-mentions", "change": false}
+					{"step": "edit-content", "file":"edit", "format":"EDITORJS"},
+					{"step": "send-mentions"}
 				]}
 			]
 		},
