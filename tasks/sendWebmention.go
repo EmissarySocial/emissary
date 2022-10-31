@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/webmention"
@@ -26,7 +27,6 @@ func NewSendWebMention(mentionService *service.Mention, source string, html stri
 
 func (task SendWebMention) Run() error {
 
-	spew.Dump("tasks.SendWebMention.Run", task.source, task.html)
 	reader := strings.NewReader(task.html)
 	links, err := webmention.DiscoverLinksFromReader(reader, task.source, "")
 
@@ -41,33 +41,28 @@ func (task SendWebMention) Run() error {
 	// Create a new HTTP client to send the webmentions
 	client := webmention.New(nil)
 
-	spew.Dump("found links", links)
-
 	// Send webmentions
 	for _, target := range links {
 
-		// TODO: Add filter for local domains...
-
-		spew.Dump("processing link", target)
+		// RULE: No need to send web mentions to local domains
+		if domain.IsLocalhost(target) {
+			continue
+		}
 
 		// Try to find endpont
 		if endpoint, err := client.DiscoverEndpoint(target); err == nil {
 
-			spew.Dump("endpoint found", endpoint, "")
-
-			response, err := client.SendWebmention(endpoint, task.source, target)
-
-			if err != nil {
-				spew.Dump(err)
-				derp.Report(derp.Wrap(err, "mention.SendWebMention.Run", "Error sending webmention", task, response))
+			// RULE: Do not allow remote servers to send webmentions to local domain either
+			if domain.IsLocalhost(endpoint) {
+				continue
 			}
 
-			var buffer []byte
-			response.Body.Read(buffer)
-			spew.Dump(response.StatusCode, response.Status, string(buffer))
+			if response, err := client.SendWebmention(endpoint, task.source, target); err != nil {
+				derp.Report(derp.Wrap(err, "mention.SendWebMention.Run", "Error sending webmention", task, response))
+				continue
+			}
 
-		} else {
-			spew.Dump(err)
+			spew.Dump("Sent Webmention for link: " + target)
 		}
 
 		// TODO: how to handle errors?  Retry the task later?  How many times?

@@ -5,7 +5,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSendMentions represents an action-step that can update the custom data stored in a Stream
@@ -24,20 +23,19 @@ func (step StepSendMentions) Post(renderer Renderer) error {
 
 	const location = "render.StepSendMentions.Post"
 
-	spew.Dump("SENDING MENTIONS...")
-
+	// Get full HTML for this Stream
 	html, err := renderer.View("view")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error rendering HTML", html)
 	}
 
-	// Push the "send" task onto the queue
+	// Push the "send webmention" task onto the queue
 	mentionService := renderer.factory().Mention()
 	queue := renderer.factory().Queue()
 	task := tasks.NewSendWebMention(mentionService, renderer.Permalink(), string(html))
 	queue.Run(task)
 
-	// Silence is Awesome
+	// Hello darkness, my old friend...
 	return nil
 }
