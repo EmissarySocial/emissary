@@ -3,8 +3,10 @@ package service
 import (
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
+	"willnorris.com/go/microformats"
 )
 
 func TestWebMentionVerify(t *testing.T) {
@@ -32,4 +34,22 @@ func TestWebMentionDiscover_Wikipedia(t *testing.T) {
 	endpoint, err := service.DiscoverEndpoint("https://www.wikipedia.org")
 	require.Empty(t, endpoint)
 	require.Equal(t, 400, derp.ErrorCode(err))
+}
+
+func TestPopulateMention(t *testing.T) {
+
+	mf := microformats.Data{
+		Items: []*microformats.Microformat{
+			{
+				Type: []string{"h-entry"},
+				Properties: map[string][]any{
+					"name": {"Hello World"},
+				},
+			},
+		},
+	}
+	mention := model.NewMention()
+
+	populateMention(&mf, &mention)
+
 }

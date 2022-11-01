@@ -134,7 +134,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
-	e.GET("/.well-known/webmention", handler.PostWebMention(factory))
+	e.POST("/.well-known/webmention", handler.PostWebMention(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))

@@ -139,6 +139,12 @@ func (w Common) UseGlobalWrapper() bool {
 	return useGlobalWrapper(w.action.Steps)
 }
 
+// UserCan returns TRUE if the current user has the specified permission.
+// Default implementation returns FALSE for all requests.
+func (w Common) UserCan(_ string) bool {
+	return false
+}
+
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().UnixMilli()

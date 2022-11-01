@@ -8,26 +8,23 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/nebula"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Subscription manages all interactions with the Subscription collection
 type Subscription struct {
-	collection     data.Collection
-	streamService  *Stream
-	contentLibrary *nebula.Library
-	closed         chan bool
+	collection    data.Collection
+	streamService *Stream
+	closed        chan bool
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) Subscription {
+func NewSubscription(collection data.Collection, streamService *Stream) Subscription {
 
 	service := Subscription{
-		collection:     collection,
-		streamService:  streamService,
-		contentLibrary: contentLibrary,
-		closed:         make(chan bool),
+		collection:    collection,
+		streamService: streamService,
+		closed:        make(chan bool),
 	}
 
 	service.Refresh(collection)

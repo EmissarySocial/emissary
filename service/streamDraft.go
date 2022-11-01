@@ -7,23 +7,20 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StreamDraft manages all interactions with the StreamDraft collection
 type StreamDraft struct {
-	collection     data.Collection
-	streamService  *Stream
-	contentLibrary *nebula.Library
+	collection    data.Collection
+	streamService *Stream
 }
 
 // NewStreamDraft returns a fully populated StreamDraft service.
-func NewStreamDraft(collection data.Collection, streamService *Stream, contentLibrary *nebula.Library) StreamDraft {
+func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDraft {
 	service := StreamDraft{
-		streamService:  streamService,
-		contentLibrary: contentLibrary,
+		streamService: streamService,
 	}
 
 	service.Refresh(collection)
@@ -74,12 +71,6 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 
 	// Reset the journal so that this item can be saved in the new collection.
 	result.Journal = journal.Journal{}
-
-	/*/ Add default content if the content is empty.
-	if result.Content.Len() == 0 {
-		result.Content = nebula.NewContainer()
-		result.Content.NewItemWithInit(service.contentLibrary, nebula.ItemTypeLayout, nil)
-	}*/
 
 	// Save a draft copy of the original stream
 	if err := service.Save(result, "create draft record"); err != nil {

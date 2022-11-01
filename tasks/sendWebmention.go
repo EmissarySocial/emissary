@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/webmention"
 )
 
@@ -61,8 +60,6 @@ func (task SendWebMention) Run() error {
 				derp.Report(derp.Wrap(err, "mention.SendWebMention.Run", "Error sending webmention", task, response))
 				continue
 			}
-
-			spew.Dump("Sent Webmention for link: " + target)
 		}
 
 		// TODO: how to handle errors?  Retry the task later?  How many times?

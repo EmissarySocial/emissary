@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
@@ -37,7 +36,6 @@ type Factory struct {
 	layoutService   *service.Layout
 	templateService *service.Template
 	oAuthService    *service.External
-	contentLibrary  *nebula.Library
 	taskQueue       *queue.Queue
 
 	// Upload Directories (from server)
@@ -63,7 +61,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, contentLibrary *nebula.Library, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -72,7 +70,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		layoutService:   layoutService,
 		templateService: templateService,
 		oAuthService:    oAuthService,
-		contentLibrary:  contentLibrary,
 		taskQueue:       taskQueue,
 
 		attachmentOriginals: attachmentOriginals,
@@ -99,8 +96,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionStream),
 		factory.Template(),
 		factory.Attachment(),
-		factory.ContentLibrary(),
-		factory.Host(),
+		domain.Hostname,
 		factory.StreamUpdateChannel(),
 	)
 
@@ -108,7 +104,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.streamDraftService = service.NewStreamDraft(
 		factory.collection(CollectionStreamDraft),
 		factory.Stream(),
-		factory.ContentLibrary(),
 	)
 
 	// Update the circular depencency between the Stream and StreamDraft services
@@ -125,7 +120,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
 		factory.Stream(),
-		factory.ContentLibrary(),
 	)
 
 	// Start the Group Service
@@ -192,7 +186,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.streamService.Refresh(factory.collection(CollectionStream))
+		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream))
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
 		factory.userService.Refresh(factory.collection(CollectionUser))
@@ -313,11 +307,6 @@ func (factory *Factory) Layout() *service.Layout {
 // Template returns a fully populated Template service (managed globally by the server.Factory)
 func (factory *Factory) Template() *service.Template {
 	return factory.templateService
-}
-
-// Content returns a content.Widget that can view content
-func (factory *Factory) ContentLibrary() *nebula.Library {
-	return factory.contentLibrary
 }
 
 /*******************************************

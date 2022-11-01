@@ -60,6 +60,12 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 			return derp.Wrap(err, location, "Error creating Renderer")
 		}
 
+		// Add webmention link header per:
+		// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
+		if actionMethod == render.ActionMethodGet {
+			ctx.Response().Header().Set("Link", "/.well-known/webmention; rel=\"webmention\"")
+		}
+
 		if err := renderPage(factory, sterankoContext, &renderer, actionMethod); err != nil {
 			return derp.Wrap(err, location, "Error rendering page")
 		}

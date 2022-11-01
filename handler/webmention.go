@@ -33,8 +33,9 @@ func PostWebMention(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Run the rest of the process asynchronously
-		queue := factory.Queue()
 		task := tasks.NewReceiveWebMention(factory.Stream(), factory.Mention(), body.Source, body.Target)
+
+		queue := factory.Queue()
 		queue.Run(task)
 
 		// Success!  Return 201/Accepted to indicate that this request has been queued (which is true)

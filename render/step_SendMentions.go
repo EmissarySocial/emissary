@@ -1,9 +1,12 @@
 package render
 
 import (
+	"fmt"
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 )
 
@@ -22,6 +25,18 @@ func (step StepSendMentions) UseGlobalWrapper() bool {
 func (step StepSendMentions) Post(renderer Renderer) error {
 
 	const location = "render.StepSendMentions.Post"
+
+	// RULE: Don't send mentions if the server is local
+	if domain.IsLocalhost(renderer.Hostname()) {
+		fmt.Println("Skipping mentions because hostname is localhost")
+		return nil
+	}
+
+	// RULE: Don't send mentions on items that require login
+	if !renderer.UserCan(model.MagicRoleAnonymous) {
+		fmt.Println("Skipping mentions because user is not anonymous")
+		return nil
+	}
 
 	// Get full HTML for this Stream
 	html, err := renderer.View("view")

@@ -234,13 +234,6 @@ func (w Stream) ContentRaw() string {
 	return w.stream.Content.Raw
 }
 
-/*/ Returns the body content as an HTML template
-func (w Stream) ContentEditor() template.HTML {
-	library := w.factory().ContentLibrary()
-	result := nebula.Edit(library, &w.stream.Content, w.URL())
-	return template.HTML(result)
-}*/
-
 // CreateDate returns the CreateDate of the stream being rendered
 func (w Stream) CreateDate() int64 {
 	return w.stream.CreateDate

@@ -14,7 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/icon"
-	"github.com/benpate/nebula"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
@@ -38,9 +37,6 @@ type Factory struct {
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
-	// Widget Libraries
-	contentLibrary nebula.Library
-
 	domains map[string]*domain.Factory
 }
 
@@ -50,12 +46,11 @@ type Factory struct {
 func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	factory := Factory{
-		storage:        storage,
-		mutex:          sync.RWMutex{},
-		domains:        make(map[string]*domain.Factory, 0),
-		embeddedFiles:  embeddedFiles,
-		contentLibrary: nebula.NewLibrary(),
-		taskQueue:      queue.NewQueue(128, 16),
+		storage:       storage,
+		mutex:         sync.RWMutex{},
+		domains:       make(map[string]*domain.Factory, 0),
+		embeddedFiles: embeddedFiles,
+		taskQueue:     queue.NewQueue(128, 16),
 	}
 
 	// Global Layout service
@@ -145,7 +140,6 @@ func (factory *Factory) start() {
 				&factory.layoutService,
 				&factory.templateService,
 				&factory.externalService,
-				&factory.contentLibrary,
 				factory.taskQueue,
 				factory.attachmentOriginals,
 				factory.attachmentCache,

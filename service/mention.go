@@ -19,7 +19,7 @@ import (
 )
 
 /*********************
- * Mentions are a W3C standard for connection conversations across the web.
+ * Mentions are a W3C standard for connecting conversations across the web.
  *
  * https://indieweb.org/Webmention
  * https://www.w3.org/TR/mention/
@@ -238,78 +238,82 @@ func (service *Mention) ParseMicroformats(source io.Reader, sourceURL string) mo
 
 	// Try to parse microformats in the source document...
 	if mf := microformats.Parse(source, parsedURL); mf != nil {
-
-		for _, item := range mf.Items {
-
-			for _, itemType := range item.Type {
-
-				switch itemType {
-
-				// Parse author information [https://microformats.org/wiki/h-card]
-				case "h-card":
-
-					if mention.AuthorName == "" {
-						mention.AuthorName = convert.String(item.Properties["p-name"])
-					}
-
-					if mention.AuthorName == "" {
-						mention.AuthorPhotoURL = convert.String(item.Properties["p-given-name"])
-					}
-
-					if mention.AuthorName == "" {
-						mention.AuthorPhotoURL = convert.String(item.Properties["p-nickname"])
-					}
-
-					if mention.AuthorWebsiteURL == "" {
-						mention.AuthorWebsiteURL = convert.String(item.Properties["u-url"])
-					}
-
-					if mention.AuthorEmail == "" {
-						mention.AuthorEmail = convert.String(item.Properties["u-email"])
-					}
-
-					if mention.AuthorPhotoURL == "" {
-						mention.AuthorPhotoURL = convert.String(item.Properties["u-photo"])
-					}
-
-					if mention.AuthorPhotoURL == "" {
-						mention.AuthorPhotoURL = convert.String(item.Properties["u-logo"])
-					}
-
-					if mention.AuthorStatus == "" {
-						mention.AuthorStatus = convert.String(item.Properties["p-note"])
-					}
-
-					continue
-
-				// Parse entry data
-				case "h-entry": // [https://microformats.org/wiki/h-entry]
-
-					if mention.EntryName == "" {
-						mention.EntryName = convert.String(item.Properties["p-name"])
-					}
-
-					if mention.EntrySummary == "" {
-						mention.EntrySummary = convert.String(item.Properties["p-summary"])
-					}
-
-					if mention.EntryPhotoURL == "" {
-						mention.EntryPhotoURL = convert.String(item.Properties["u-photo"])
-					}
-				}
-			}
-		}
-
-		// Last, scan global values for data that may not have been found in the h-entry
-		if mention.AuthorWebsiteURL == "" {
-			if me, ok := mf.Rels["me"]; ok {
-				mention.AuthorWebsiteURL = convert.String(me)
-			}
-		}
+		populateMention(mf, &mention)
 	}
 
 	// No errors
 	return mention
+}
+
+func populateMention(mf *microformats.Data, mention *model.Mention) {
+
+	for _, item := range mf.Items {
+
+		for _, itemType := range item.Type {
+
+			switch itemType {
+
+			// Parse author information [https://microformats.org/wiki/h-card]
+			case "h-card":
+
+				if mention.AuthorName == "" {
+					mention.AuthorName = convert.String(item.Properties["name"])
+				}
+
+				if mention.AuthorName == "" {
+					mention.AuthorPhotoURL = convert.String(item.Properties["given-name"])
+				}
+
+				if mention.AuthorName == "" {
+					mention.AuthorPhotoURL = convert.String(item.Properties["nickname"])
+				}
+
+				if mention.AuthorWebsiteURL == "" {
+					mention.AuthorWebsiteURL = convert.String(item.Properties["url"])
+				}
+
+				if mention.AuthorEmail == "" {
+					mention.AuthorEmail = convert.String(item.Properties["email"])
+				}
+
+				if mention.AuthorPhotoURL == "" {
+					mention.AuthorPhotoURL = convert.String(item.Properties["photo"])
+				}
+
+				if mention.AuthorPhotoURL == "" {
+					mention.AuthorPhotoURL = convert.String(item.Properties["logo"])
+				}
+
+				if mention.AuthorStatus == "" {
+					mention.AuthorStatus = convert.String(item.Properties["note"])
+				}
+
+				continue
+
+			// Parse entry data
+			case "h-entry": // [https://microformats.org/wiki/h-entry]
+
+				if mention.EntryName == "" {
+					mention.EntryName = convert.String(item.Properties["name"])
+				}
+
+				if mention.EntrySummary == "" {
+					mention.EntrySummary = convert.String(item.Properties["summary"])
+				}
+
+				if mention.EntryPhotoURL == "" {
+					mention.EntryPhotoURL = convert.String(item.Properties["photo"])
+				}
+			}
+		}
+	}
+
+	// Last, scan global values for data that may not have been found in the h-entry
+	if mention.AuthorWebsiteURL == "" {
+		if me, ok := mf.Rels["me"]; ok {
+			mention.AuthorWebsiteURL = convert.String(me)
+		}
+	}
 }
 
 // getHrefFromNode returns the [href] value for a given goquery selection

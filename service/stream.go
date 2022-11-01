@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
-	"github.com/benpate/nebula"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -24,23 +23,21 @@ type Stream struct {
 	templateService     *Template
 	draftService        *StreamDraft
 	attachmentService   *Attachment
-	contentLibrary      *nebula.Library
 	hostName            string
 	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, contentLibrary *nebula.Library, hostName string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, hostName string, streamUpdateChannel chan model.Stream) Stream {
 
 	service := Stream{
 		templateService:     templateService,
 		attachmentService:   attachmentService,
-		contentLibrary:      contentLibrary,
 		hostName:            hostName,
 		streamUpdateChannel: streamUpdateChannel,
 	}
 
-	service.Refresh(collection)
+	service.Refresh(hostName, collection)
 
 	return service
 }
@@ -55,7 +52,8 @@ func (service *Stream) SetDraftService(draftService *StreamDraft) {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection) {
+func (service *Stream) Refresh(hostName string, collection data.Collection) {
+	service.hostName = hostName
 	service.collection = collection
 }
 

@@ -18,7 +18,7 @@ require (
 	github.com/benpate/mediaserver v0.7.0
 	github.com/benpate/nebula v0.7.0
 	github.com/benpate/remote v0.8.0
-	github.com/benpate/rosetta v0.6.2
+	github.com/benpate/rosetta v0.6.3
 	github.com/benpate/steranko v0.11.0
 	github.com/benpate/table v0.3.0
 	github.com/davecgh/go-spew v1.1.1

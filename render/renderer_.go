@@ -33,6 +33,7 @@ type Renderer interface {
 	IsAuthenticated() bool    // Returns TRUE if the user is signed in
 	IsPartialRequest() bool   // Returns TRUE if this is an HTMX request for a page fragment
 	UseGlobalWrapper() bool   // Returns TRUE if this renderer uses the common site chrome.
+	UserCan(string) bool      // Returns TRUE if the signed-in user has access to the named action
 
 	GetBool(name string) bool
 	GetFloat(name string) float64
