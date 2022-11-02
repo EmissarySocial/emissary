@@ -16,7 +16,6 @@ require (
 	github.com/benpate/html v0.14.1
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.7.0
-	github.com/benpate/nebula v0.7.0
 	github.com/benpate/remote v0.8.0
 	github.com/benpate/rosetta v0.6.3
 	github.com/benpate/steranko v0.11.0

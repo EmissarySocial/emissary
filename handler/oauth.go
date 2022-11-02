@@ -42,7 +42,6 @@ func GetOAuthCallback(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		/* TODO: Write this function.
 		// Try to look up the factory for this domain
 		factory, err := fm.ByContext(ctx)
 
@@ -50,12 +49,18 @@ func GetOAuthCallback(fm *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Could not get factory", ctx.Request().URL.String())
 		}
 
-		// Get domain service and redirect URL
-		providerID := ctx.Param("provider")
+		// Try to ge the current domain
 		domainService := factory.Domain()
-		*/
 
-		return nil
+		providerID := ctx.Param("provider")
+		code := ctx.QueryParam("code")
+		state := ctx.QueryParam("state")
+
+		if err := domainService.OAuthExchange(providerID, state, code); err != nil {
+			return derp.Wrap(err, location, "Error exchanging code for token", providerID, code)
+		}
+
+		return ctx.Redirect(http.StatusTemporaryRedirect, "/admin/connections")
 	}
 }
 

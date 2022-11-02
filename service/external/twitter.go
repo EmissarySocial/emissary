@@ -3,6 +3,7 @@ package external
 import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/form"
 	"golang.org/x/oauth2"
 )
 
@@ -31,11 +32,19 @@ func (adapter Twitter) OAuthConfig() oauth2.Config {
 		ClientSecret: adapter.provider.ClientSecret,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   "https://twitter.com/i/oauth2/authorize",
-			TokenURL:  "https://twitter.com/i/oauth2/access_token",
+			TokenURL:  "https://api.twitter.com/2/oauth2/token",
 			AuthStyle: oauth2.AuthStyleInParams,
 		},
-		Scopes: []string{"tweet.read", "follows.read", "mute.read", "like.read", "block.read", "offline.access"},
+		Scopes: []string{"tweet.read", "users.read", "follows.read", "mute.read", "like.read", "block.read", "bookmark.read", "offline.access"},
 	}
+}
+
+func (adapter Twitter) SettingsForm() form.Form {
+	return form.Form{}
+}
+
+func (adapter Twitter) ClientUpdate(client *model.Client) error {
+	return nil
 }
 
 /******************************************

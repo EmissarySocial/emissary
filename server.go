@@ -134,7 +134,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
-	e.POST("/.well-known/webmention", handler.PostWebMention(factory))
+	e.POST("/.webmention", handler.PostWebMention(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
@@ -189,7 +189,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// OAUTH Connections
 	e.GET("/oauth/:provider", handler.GetOAuth(factory), mw.Owner)
-	e.GET("/oauth/:provider/callback", handler.GetOAuthCallback(factory), mw.Owner)
+	e.GET("/oauth/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
 	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)
 
 	// Startup Wizard
@@ -198,6 +198,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// EXTERNAL SERVICES (WEBHOOKS)
 	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
+
+	// TEST ROUTES
+	e.GET("/test/twitter", handler.TestTwitter(factory))
 
 	// Prepare HTTP and HTTPS servers using the new configuration
 	go startHttps(e)
