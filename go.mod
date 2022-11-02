@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.120
+	github.com/aws/aws-sdk-go v1.44.129
 	github.com/benpate/activitystream v0.7.0
 	github.com/benpate/data v0.21.0
 	github.com/benpate/data-mongo v0.21.0
@@ -16,7 +16,6 @@ require (
 	github.com/benpate/html v0.14.1
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.7.0
-	github.com/benpate/nebula v0.7.0
 	github.com/benpate/remote v0.8.0
 	github.com/benpate/rosetta v0.6.3
 	github.com/benpate/steranko v0.11.0
