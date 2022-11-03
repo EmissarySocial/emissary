@@ -43,7 +43,7 @@ func DomainSchema() schema.Schema {
 				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
 				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
 				"connectString": schema.String{MaxLength: null.NewInt(1000)},
-				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9]+`},
+				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9-_]+`},
 				"smtp":          SMTPConnectionSchema(),
 				"owner":         OwnerSchema(),
 			},
