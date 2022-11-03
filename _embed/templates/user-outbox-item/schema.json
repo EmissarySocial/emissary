@@ -1,9 +1,9 @@
 {
-	"templateId": "social-outbox-item",
+	"templateId": "user-outbox-item",
+	"containedBy": ["user-outbox"],
 	"label": "Outbox Item",
 	"description": "Log of activities performed by a user",
 	"icon": "user",
-	"containedBy": ["social-outbox"],
 	"schema": {
 		"type": "object",
 		"properties": {

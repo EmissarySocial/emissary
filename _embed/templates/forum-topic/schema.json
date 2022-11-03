@@ -1,9 +1,10 @@
 {
 	"templateId": "forum-topic",
+	"role": "forum-topic",
+	"containedBy": ["forum"],
 	"label": "Forum Topic",
 	"description": "Discussion topic in a forum.",
 	"icon": "message",
-	"containedBy": ["forum"],
 	"schema": {
 		"type": "object",
 		"properties": {

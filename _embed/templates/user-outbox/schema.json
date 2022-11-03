@@ -1,5 +1,6 @@
 {
-	"templateId": "social-outbox",
+	"templateId": "user-outbox",
+	"role": "user-outbox",
 	"icon": "user",
 	"roles": {
 		"myself": {

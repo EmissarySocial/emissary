@@ -1,9 +1,9 @@
 {
 	"templateId": "checkout",
+	"role": "feature",
 	"label": "Checkout",
 	"description": "Add a 'buy now' option to this stream.",
 	"icon": "shopping-cart",
-	"asFeature": true,
 	"schema": {
 		"type": "object",
 		"properties": {

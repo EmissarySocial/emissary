@@ -1,9 +1,10 @@
 {
 	"templateId": "forum",
+	"role": "forum",
+	"containedBy": ["top", "folder"],
 	"label": "Forum",
 	"description": "Discussion area containing several discussion topics.",
 	"icon": "message",
-	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",
 		"properties": {

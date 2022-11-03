@@ -202,7 +202,7 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 // CreateInbox creates a personal "inbox" stream for a user
 func (service *User) CreateInbox(user *model.User) error {
 
-	streamID, err := service.streamService.CreatePersonalStream(user, "social-inbox")
+	streamID, err := service.streamService.CreatePersonalStream(user, "user-inbox")
 
 	if err == nil {
 		user.InboxID = streamID
@@ -214,7 +214,7 @@ func (service *User) CreateInbox(user *model.User) error {
 // CreateOutbox creates a personal "outbox" stream for a user
 func (service *User) CreateOutbox(user *model.User) error {
 
-	streamID, err := service.streamService.CreatePersonalStream(user, "social-outbox")
+	streamID, err := service.streamService.CreatePersonalStream(user, "user-outbox")
 
 	if err == nil {
 		user.OutboxID = streamID

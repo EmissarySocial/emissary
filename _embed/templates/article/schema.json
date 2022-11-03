@@ -1,9 +1,10 @@
 {
-	"templateId": "article",
+	"templateId": "article-editorjs",
+	"role": "article",
+	"containedBy": ["top", "folder", "article"],
 	"label": "Article",
 	"description": "For regular use. Contains text, images, and more.",
 	"icon": "article",
-	"containedBy": ["top", "folder", "article"],
 	"schema": {
 		"type": "object",
 		"properties": {

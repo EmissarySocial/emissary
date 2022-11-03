@@ -1,9 +1,9 @@
 {
 	"templateId": "comment-group",
+	"role": "feature",
 	"label": "Comment Section",
 	"description": "Allow visitors to comment on this stream.",
 	"icon": "message",
-	"asFeature": true,
 	"schema": {
 		"type": "object",
 		"properties": {

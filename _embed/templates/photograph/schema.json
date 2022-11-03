@@ -1,9 +1,9 @@
 {
 	"templateId": "photograph",
 	"label": "Photograph",
+	"containedBy": ["photo-album"],
 	"description": "Individual photograph or slideshow to include in your photo album.",
 	"icon": "picture",
-	"containedBy": ["photo-album"],
 	"schema": {
 		"type": "object",
 		"properties": {

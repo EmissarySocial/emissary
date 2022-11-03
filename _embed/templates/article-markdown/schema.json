@@ -1,9 +1,10 @@
 {
 	"templateId": "article-markdown",
+	"role": "article",
+	"containedBy": ["top", "folder"],
 	"label": "Article (Markdown)",
 	"description": "Simple Markdown editor",
 	"icon": "markdown",
-	"containedBy": ["top", "folder"],
 	"schema": {
 		"type": "object",
 		"properties": {

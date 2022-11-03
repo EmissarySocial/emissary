@@ -1,9 +1,9 @@
 {
 	"templateId": "forum-item",
+	"containedBy": ["forum-topic"],
 	"label": "Forum Item",
 	"description": "An individual post in a forum topic.",
 	"icon": "message",
-	"containedBy": ["forum-topic"],
 	"schema": {
 		"type": "object",
 		"properties": {

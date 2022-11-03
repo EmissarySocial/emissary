@@ -1,5 +1,6 @@
 {
-	"templateId": "social-inbox",
+	"templateId": "user-inbox",
+	"role": "user-inbox",
 	"label": "Inbox",
 	"description": "Inbox Collects federated/syndicated content from external websites",
 	"icon": "inbox",

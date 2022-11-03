@@ -1,9 +1,9 @@
 {
 	"templateId": "redirect",
 	"label": "Redirect",
+	"containedBy": ["top", "folder"],
 	"description": "Forward your visitors to an external website",
 	"icon": "forward",
-	"containedBy": ["top", "folder"],
 	"childSortType": "label",
 	"childSortOrder": "ASC",
 	"schema": {

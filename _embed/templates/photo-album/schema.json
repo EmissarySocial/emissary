@@ -1,9 +1,10 @@
 {
 	"templateId": "photo-album",
+	"role": "photo-album",
+	"containedBy": ["top", "folder"],
 	"label": "Photo Album",
 	"description": "A collection of photographs",
 	"icon": "pictures",
-	"containedBy": ["top", "folder"],
 	"childSortType": "journal.createDate",
 	"childSortDirection": "DESC",
 	"schema": {

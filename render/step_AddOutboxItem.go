@@ -42,7 +42,7 @@ func (step StepAddOutboxItem) Post(renderer Renderer) error {
 	// Verify that this system uses outbox items.
 	factory := renderer.factory()
 	templateService := factory.Template()
-	if _, err := templateService.Load("social-outbox-item"); err != nil {
+	if _, err := templateService.Load("user-outbox-item"); err != nil {
 		// Non-standard error handling here.  If there is no outbox item template,
 		// then exit without error.
 		return nil
@@ -66,7 +66,7 @@ func (step StepAddOutboxItem) Post(renderer Renderer) error {
 
 	// Create the new outbox item
 	stream := model.NewStream()
-	stream.TemplateID = "social-outbox-item"
+	stream.TemplateID = "user-outbox-item"
 	stream.ParentID = user.OutboxID
 	stream.ParentIDs = []primitive.ObjectID{user.OutboxID}
 	stream.Label = execTemplate(step.Label, renderer)

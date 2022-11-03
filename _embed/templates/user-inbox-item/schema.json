@@ -1,11 +1,9 @@
 {
-	"templateId": "social-inbox-item",
+	"templateId": "user-inbox-item",
+	"containedBy": ["user-inbox"],
 	"label": "Inbox Item",
 	"description": "Message in a social inbox, possibly a link to an external URL",
 	"icon": "inbox",
-	"containedBy": [
-		"social-inbox"
-	],
 	"schema": {
 		"type": "object",
 		"properties": {}
