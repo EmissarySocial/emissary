@@ -193,7 +193,8 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	}
 
 	// Assign the current user as the author (with silent failure)
-	renderer.setAuthor()
+	user, _ := renderer.getUser()
+	renderer.stream.SetAuthor(user)
 
 	// TODO: Sort order??
 

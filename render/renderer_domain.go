@@ -7,7 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -19,13 +19,13 @@ import (
 )
 
 type Domain struct {
-	externalService *service.External
+	externalService *service.Provider
 	layout          *model.Layout
 	domain          *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.External, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -161,7 +161,7 @@ func (w Domain) Client(providerID string) model.Client {
 	return model.NewClient(providerID)
 }
 
-func (w Domain) Adapter(providerID string) external.Adapter {
-	result, _ := w.externalService.GetAdapter(providerID)
+func (w Domain) Provider(providerID string) providers.Provider {
+	result, _ := w.externalService.GetProvider(providerID)
 	return result
 }

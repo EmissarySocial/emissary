@@ -331,12 +331,12 @@ func (service *Stream) LoadByProductID(productID string, result *model.Stream) e
 	return service.Load(exp.Equal("data.productId", productID), result)
 }
 
-// LoadBySource locates a single stream that matches the provided SourceURL
-func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, sourceURL string, result *model.Stream) error {
+// LoadBySource locates a single stream that matches the provided OriginURL
+func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, originURL string, result *model.Stream) error {
 
 	criteria := exp.
 		Equal("parentId", parentStreamID).
-		AndEqual("sourceUrl", sourceURL)
+		AndEqual("sourceUrl", originURL)
 
 	return service.Load(criteria, result)
 }
@@ -635,7 +635,7 @@ func (service *Stream) CreatePersonalStream(user *model.User, templateID string)
 	stream := model.NewStream()
 	stream.TemplateID = templateID
 	stream.ParentID = user.UserID
-	stream.AuthorID = user.UserID
+	stream.Author = user.AuthorLink()
 	stream.Permissions = model.NewPermissions()
 	stream.Permissions.Assign("myself", user.UserID)
 

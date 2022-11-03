@@ -3,7 +3,7 @@ package render
 import (
 	"io"
 
-	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
 )
@@ -22,17 +22,17 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) error {
 	providerID := context.Request().URL.Query().Get("provider")
 
 	client := domainRenderer.Client(providerID)
-	adapter := domainRenderer.Adapter(providerID)
+	adapter := domainRenderer.Provider(providerID)
 
-	// Try to find a Manual Adapter for this Provider
-	manualAdapter, ok := adapter.(external.ManualAdapter)
+	// Try to find a Manual Provider for this Provider
+	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return derp.NewInternalError(location, "Adapter does not implement ManualAdapter interface", adapter)
+		return derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter)
 	}
 
-	// Retrieve the custom form for this Manual Adapter
-	form := manualAdapter.ManualConfig()
+	// Retrieve the custom form for this Manual Provider
+	form := manualProvider.ManualConfig()
 
 	// Write the form data
 	result, err := form.Editor(client, nil)
@@ -66,17 +66,17 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	providerID := context.Request().URL.Query().Get("provider")
 
 	client := domainRenderer.Client(providerID)
-	adapter := domainRenderer.Adapter(providerID)
+	adapter := domainRenderer.Provider(providerID)
 
-	// Try to find a Manual Adapter for this Provider
-	manualAdapter, ok := adapter.(external.ManualAdapter)
+	// Try to find a Manual Provider for this Provider
+	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return derp.NewInternalError(location, "Adapter does not implement ManualAdapter interface", adapter)
+		return derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter)
 	}
 
-	// Retrieve the custom form for this Manual Adapter
-	form := manualAdapter.ManualConfig()
+	// Retrieve the custom form for this Manual Provider
+	form := manualProvider.ManualConfig()
 
 	// Apply the form data to the domain object
 	if err := form.Do(postData, &client); err != nil {
@@ -84,10 +84,8 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	}
 
 	// Run post-configuration scripts, if any
-	if installer, ok := adapter.(external.Installer); ok {
-		if err := installer.Install(renderer.factory(), &client); err != nil {
-			return derp.Wrap(err, location, "Error installing client")
-		}
+	if err := adapter.AfterConnect(renderer.factory(), &client); err != nil {
+		return derp.Wrap(err, location, "Error installing client")
 	}
 
 	domainRenderer.domain.Clients.Put(client)

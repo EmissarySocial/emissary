@@ -210,14 +210,18 @@ func (w Stream) DescriptionSummary() string {
 	return htmlconv.Summary(w.stream.Description)
 }
 
+func (w Stream) Author() model.AuthorLink {
+	return w.stream.Author
+}
+
 // Name of the person who created this Stream
 func (w Stream) AuthorName() string {
-	return w.stream.AuthorName
+	return w.stream.Author.Name
 }
 
 // PhotoURL of the person who created this Stream
 func (w Stream) AuthorImage() string {
-	return w.stream.AuthorImage
+	return w.stream.Author.ImageURL
 }
 
 // Returns the body content as an HTML template
@@ -259,9 +263,9 @@ func (w Stream) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
 }
 
-// SourceURL returns the thumbnail image URL of the stream being rendered
-func (w Stream) SourceURL() string {
-	return w.stream.SourceURL
+// OriginURL returns the thumbnail image URL of the stream being rendered
+func (w Stream) OriginURL() string {
+	return w.stream.Origin.URL
 }
 
 // Permalink returns a complete URL for this stream
@@ -610,23 +614,4 @@ func (w Stream) draftRenderer() (Stream, error) {
 		template:     w.template,
 		Common:       NewCommon(w.factory(), w.ctx, w.action, w.actionID),
 	}, nil
-}
-
-/*******************************************
- * MISC HELPER FUNCTIONS
- *******************************************/
-
-func (w Stream) setAuthor() error {
-
-	user, err := w.getUser()
-
-	if err != nil {
-		return derp.Wrap(err, "render.Stream.setAuthor", "Error loading User")
-	}
-
-	w.stream.AuthorID = user.UserID
-	w.stream.AuthorName = user.DisplayName
-	w.stream.AuthorImage = user.ImageURL
-
-	return nil
 }

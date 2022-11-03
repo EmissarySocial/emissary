@@ -1,4 +1,4 @@
-package external
+package providers
 
 import (
 	"github.com/EmissarySocial/emissary/model"
@@ -11,8 +11,8 @@ import (
 
 const ProviderTypeStripe = "STRIPE"
 
-const StripeData_APIKey = "apiKey"
-const StripeData_WebhookSecret = "webhookSecret"
+const Stripe_APIKey = "apiKey"
+const Stripe_WebhookSecret = "webhookSecret"
 
 type Stripe struct{}
 
@@ -21,7 +21,7 @@ func NewStripe() Stripe {
 }
 
 /******************************************
- * Manual API Methods
+ * Setup / Configuration Methods
  ******************************************/
 
 func (adapter Stripe) ManualConfig() form.Form {
@@ -60,8 +60,12 @@ func (adapter Stripe) ManualConfig() form.Form {
 	}
 }
 
-// Install applies any extra changes to the database after this Adapter is activated.
-func (adapter Stripe) Install(factory Factory, client *model.Client) error {
+/******************************************
+ * Lifecycle Methods
+ ******************************************/
+
+// AfterCoonnect applies any extra changes to the database after this Adapter is activated.
+func (adapter Stripe) AfterConnect(factory Factory, client *model.Client) error {
 
 	const location = "service.external.Stripe.Install"
 
@@ -73,7 +77,7 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
 	}
 
 	// Verify that webhooks have been set up on this domain
-	if client.GetString(StripeData_WebhookSecret) == "" {
+	if client.GetString(Stripe_WebhookSecret) == "" {
 
 		api, err := factory.StripeClient()
 
@@ -98,9 +102,14 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
 		}
 
 		// Mark webhook as installed
-		client.SetString(StripeData_WebhookSecret, webhook.Secret)
+		client.SetString(Stripe_WebhookSecret, webhook.Secret)
 	}
 
+	return nil
+}
+
+// AfterUpdate is called after a user has successfully updated their Twitter connection
+func (adapter Stripe) AfterUpdate(factory Factory, client *model.Client) error {
 	return nil
 }
 
@@ -108,10 +117,6 @@ func (adapter Stripe) Install(factory Factory, client *model.Client) error {
  * Adapter Methods
  ******************************************/
 
-func (adapter Stripe) PollStreams(client model.Client) error {
-	return nil
-}
-
-func (adapter Stripe) PostStream(client model.Client) error {
+func (adapter Stripe) PollStreams(client *model.Client) <-chan model.Stream {
 	return nil
 }

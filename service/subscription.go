@@ -115,7 +115,7 @@ func (service *Subscription) updateStream(sub *model.Subscription, item *gofeed.
 		stream = model.NewStream()
 		stream.TemplateID = "rss-article"
 		stream.ParentID = sub.ParentStreamID
-		stream.SourceURL = item.Link
+		stream.OriginURL = item.Link
 		stream.StateID = "unread"
 	}
 

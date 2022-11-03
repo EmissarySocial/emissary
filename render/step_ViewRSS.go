@@ -52,7 +52,8 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 				Href: permalink,
 			},
 			Author: &feeds.Author{
-				Name: stream.AuthorName,
+				Name:  stream.Author.Name,
+				Email: stream.Author.EmailAddress,
 			},
 			Created: time.UnixMilli(stream.PublishDate),
 		})

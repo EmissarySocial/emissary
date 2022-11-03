@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
@@ -54,10 +54,10 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 				return derp.Wrap(err, location, "Error loading domain")
 			}
 
-			stripeClient, _ := domain.Clients.Get(external.ProviderTypeStripe)
+			stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 
 			// Validate the webhook signature
-			secret := stripeClient.Data.GetString(external.StripeData_WebhookSecret) // domain.Connections.GetString("stripe_webhook_secret")
+			secret := stripeClient.Data.GetString(providers.Stripe_WebhookSecret) // domain.Connections.GetString("stripe_webhook_secret")
 
 			if secret == "" {
 				return derp.NewBadRequestError(location, "Webhooks are not configured on this domain")

@@ -225,12 +225,12 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 	return derp.NewNotFoundError(location, "Target link not found", source, target)
 }
 
-func (service *Mention) ParseMicroformats(source io.Reader, sourceURL string) model.Mention {
+func (service *Mention) ParseMicroformats(source io.Reader, originURL string) model.Mention {
 
 	mention := model.NewMention()
-	mention.SourceURL = sourceURL
+	mention.OriginURL = originURL
 
-	parsedURL, err := url.Parse(sourceURL)
+	parsedURL, err := url.Parse(originURL)
 
 	if err != nil {
 		return mention

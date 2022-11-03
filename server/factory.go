@@ -29,7 +29,7 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
-	externalService service.External
+	providerService service.Provider
 	emailService    service.ServerEmail
 	taskQueue       *queue.Queue
 	embeddedFiles   embed.FS
@@ -68,7 +68,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		[]config.Folder{},
 	)
 
-	factory.externalService = service.NewExternal(factory.config.Providers)
+	factory.providerService = service.NewProvider(factory.config.Providers)
 
 	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
@@ -115,7 +115,7 @@ func (factory *Factory) start() {
 		factory.layoutService.Refresh(config.Layouts)
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
-		factory.externalService.Refresh(config.Providers)
+		factory.providerService.Refresh(config.Providers)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -139,7 +139,7 @@ func (factory *Factory) start() {
 				&factory.emailService,
 				&factory.layoutService,
 				&factory.templateService,
-				&factory.externalService,
+				&factory.providerService,
 				factory.taskQueue,
 				factory.attachmentOriginals,
 				factory.attachmentCache,

@@ -9,7 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
@@ -35,7 +35,7 @@ type Factory struct {
 	// services (from server)
 	layoutService   *service.Layout
 	templateService *service.Template
-	oAuthService    *service.External
+	providerService *service.Provider
 	taskQueue       *queue.Queue
 
 	// Upload Directories (from server)
@@ -61,7 +61,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, oAuthService *service.External, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -69,7 +69,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory := Factory{
 		layoutService:   layoutService,
 		templateService: templateService,
-		oAuthService:    oAuthService,
+		providerService: providerService,
 		taskQueue:       taskQueue,
 
 		attachmentOriginals: attachmentOriginals,
@@ -418,15 +418,16 @@ func (factory *Factory) LookupProvider() form.LookupProvider {
  *******************************************/
 
 // OAuth returns a fully populated OAuth service
-func (factory *Factory) External() *service.External {
-	return factory.oAuthService
+func (factory *Factory) External() *service.Provider {
+	return factory.providerService
 }
 
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *service.RSS {
-	return service.NewRSS(factory.Stream())
+	return service.NewRSS(factory.Stream(), factory.Host())
 }
 
+// TODO: Move this to providers.Stripe
 func (factory *Factory) StripeClient() (client.API, error) {
 
 	const location = "domain.factory.StripeClient"
@@ -439,7 +440,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 		return client.API{}, derp.Wrap(err, location, "Error loading domain record")
 	}
 
-	stripeClient, _ := domain.Clients.Get(external.ProviderTypeStripe)
+	stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 
 	// Confirm that stripe is active
 	if !stripeClient.Active {
@@ -447,7 +448,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 	}
 
 	// Validate the stripe API key exists
-	stripeKey := stripeClient.Data.GetString(external.StripeData_APIKey)
+	stripeKey := stripeClient.Data.GetString(providers.Stripe_APIKey)
 
 	if stripeKey == "" {
 		return client.API{}, derp.NewInternalError(location, "Stripe key must not be empty")

@@ -7,7 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service/external"
+	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -23,16 +23,16 @@ import (
 type Domain struct {
 	collection      data.Collection
 	configuration   config.Domain
-	externalService *External
+	providerService *Provider
 	funcMap         template.FuncMap
 	model           model.Domain
 	lock            *sync.Mutex
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, configuration config.Domain, externalService *External, funcMap template.FuncMap) Domain {
+func NewDomain(collection data.Collection, configuration config.Domain, providerService *Provider, funcMap template.FuncMap) Domain {
 	service := Domain{
-		externalService: externalService,
+		providerService: providerService,
 		funcMap:         funcMap,
 		lock:            &sync.Mutex{},
 	}
@@ -152,31 +152,31 @@ func (service *Domain) Debug() maps.Map {
  * OAuth Methods
  *******************************************/
 
-// Adapter returns the external Adapter that matches the given providerID
-func (service *Domain) Adapter(providerID string) (external.Adapter, bool) {
-	return service.externalService.GetAdapter(providerID)
+// Provider returns the external Provider that matches the given providerID
+func (service *Domain) Provider(providerID string) (providers.Provider, bool) {
+	return service.providerService.GetProvider(providerID)
 }
 
-// ManualAdapter returns the external.ManualAdapter that matches the given providerID
-func (service *Domain) ManualAdapter(providerID string) (external.ManualAdapter, bool) {
+// ManualProvider returns the external.ManualProvider that matches the given providerID
+func (service *Domain) ManualProvider(providerID string) (providers.ManualProvider, bool) {
 
-	if adapter, ok := service.Adapter(providerID); ok {
+	if provider, ok := service.Provider(providerID); ok {
 
-		if manualAdapter, ok := adapter.(external.ManualAdapter); ok {
-			return manualAdapter, true
+		if manualProvider, ok := provider.(providers.ManualProvider); ok {
+			return manualProvider, true
 		}
 	}
 
 	return nil, false
 }
 
-// OAuthAdapter returns the external.OAuthAdapter that matches the given providerID
-func (service *Domain) OAuthAdapter(providerID string) (external.OAuthAdapter, bool) {
+// OAuthProvider returns the external.OAuthProvider that matches the given providerID
+func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider, bool) {
 
-	if adapter, ok := service.Adapter(providerID); ok {
+	if provider, ok := service.Provider(providerID); ok {
 
-		if oAuthAdapter, ok := adapter.(external.OAuthAdapter); ok {
-			return oAuthAdapter, true
+		if oAuthProvider, ok := provider.(providers.OAuthProvider); ok {
+			return oAuthProvider, true
 		}
 	}
 
@@ -186,8 +186,8 @@ func (service *Domain) OAuthAdapter(providerID string) (external.OAuthAdapter, b
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
 func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
-	// Get the adapter for this provider
-	adapter, ok := service.OAuthAdapter(providerID)
+	// Get the provider for this provider
+	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
 		return "", derp.NewBadRequestError("service.Domain.OAuthCodeURL", "Unknown OAuth Provider", providerID)
@@ -201,7 +201,7 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	}
 
 	// Generate and return the AuthCodeURL
-	config := adapter.OAuthConfig()
+	config := provider.OAuthConfig()
 
 	config.RedirectURL = service.OAuthCallbackURL(providerID)
 	/*
@@ -222,8 +222,8 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 
 	const location = "service.Domain.OAuthExchange"
 
-	// Get the adapter for this provider
-	adapter, ok := service.OAuthAdapter(providerID)
+	// Get the provider for this provider
+	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
 		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
@@ -248,7 +248,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	}
 
 	// Try to generate the OAuth token
-	config := adapter.OAuthConfig()
+	config := provider.OAuthConfig()
 
 	token, err := config.Exchange(context.Background(), code,
 		oauth2.SetAuthURLParam("code_verifier", client.GetString("code_challenge")),
@@ -325,7 +325,8 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 	return client, nil
 }
 
-// ReadOAuthState returns the OAuth state for the specified provider WITHOUT changing the current value
+// ReadOAuthState returns the OAuth state for the specified provider WITHOUT changing the current value.
+// THIS SHOULD NOT BE USED TO ACCESS OAUTH TOKENS because they may be expired.  Use GetOAuthToken for that.
 func (service *Domain) ReadOAuthClient(providerID string) (model.Domain, model.Client, error) {
 
 	const location = "service.Domain.NewOAuthState"
@@ -343,7 +344,53 @@ func (service *Domain) ReadOAuthClient(providerID string) (model.Domain, model.C
 		return model.Domain{}, model.Client{}, derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
-	// TODO: Renew client if the token has expired
-
 	return domain, client, nil
+}
+
+// GetAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
+// then it is refreshed (and saved) automatically before returning.
+func (service *Domain) GetOAuthToken(providerID string) (model.Domain, model.Client, *oauth2.Token, error) {
+
+	// Get the provider for this OAuth provider
+	provider, ok := service.OAuthProvider(providerID)
+
+	if !ok {
+		return model.Domain{}, model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
+	}
+
+	// Try to load the Domain and Client data
+	domain, client, err := service.ReadOAuthClient(providerID)
+
+	if err != nil {
+		return model.Domain{}, model.Client{}, nil, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error reading OAuth client")
+	}
+
+	// Retrieve the Token from the client
+	token := client.Token
+
+	if token == nil {
+		return model.Domain{}, model.Client{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
+	}
+
+	// Use TokenSource to update tokens when they expire.
+	config := provider.OAuthConfig()
+	source := config.TokenSource(context.Background(), token)
+
+	newToken, err := source.Token()
+
+	if err != nil {
+		return model.Domain{}, model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
+	}
+
+	// If the token has changed, save it
+	if token.AccessToken != newToken.AccessToken {
+		client.Token = newToken
+		domain.Clients[providerID] = client
+		if err := service.Save(&domain, "Refresh OAuth Token"); err != nil {
+			return model.Domain{}, model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
+		}
+	}
+
+	// Success!
+	return domain, client, newToken, nil
 }

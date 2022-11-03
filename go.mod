@@ -22,6 +22,7 @@ require (
 	github.com/benpate/table v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
+	github.com/dghubble/go-twitter v0.0.0-20221024160433-0cc1e72ed6d8
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
@@ -32,7 +33,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
@@ -53,8 +54,10 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/cloudflare/circl v1.2.0 // indirect
+	github.com/dghubble/sling v1.4.0 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
@@ -66,6 +69,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect

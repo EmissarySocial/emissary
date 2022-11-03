@@ -13,12 +13,14 @@ import (
 // RSS service generates RSS feeds of the available streams in the database
 type RSS struct {
 	streamService *Stream
+	host          string
 }
 
 // NewRSS returns a fully initialized RSS service
-func NewRSS(streamService *Stream) *RSS {
+func NewRSS(streamService *Stream, host string) *RSS {
 	return &RSS{
 		streamService: streamService,
+		host:          host,
 	}
 }
 
@@ -54,10 +56,12 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 	publishDate := time.Unix(stream.PublishDate, 0)
 	modifiedDate := time.Unix(stream.Journal.UpdateDate, 0)
 
+	url := rss.host + "/" + stream.StreamID.Hex()
+
 	return &feeds.JSONItem{
-		Id: "",
-		// Url:           stream.URL,
-		ExternalUrl:   stream.SourceURL,
+		Id:            url,
+		Url:           url,
+		ExternalUrl:   stream.Origin.URL,
 		Title:         stream.Label,
 		Summary:       stream.Description,
 		Image:         stream.ThumbnailImage,
@@ -65,8 +69,9 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		ModifiedDate:  &modifiedDate,
 
 		Author: &feeds.JSONAuthor{
-			Name: stream.AuthorName,
-			Url:  stream.AuthorURL,
+			Name:   stream.Author.Name,
+			Url:    stream.Author.ProfileURL,
+			Avatar: stream.Author.ImageURL,
 		},
 	}
 }

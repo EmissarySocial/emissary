@@ -1,4 +1,4 @@
-package external
+package providers
 
 import "github.com/stripe/stripe-go/v72/client"
 

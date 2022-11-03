@@ -8,7 +8,7 @@ import (
 type Mention struct {
 	MentionID        primitive.ObjectID `json:"mentionId"        bson:"_id"`
 	StreamID         primitive.ObjectID `json:"streamId"         bson:"streamId"`
-	SourceURL        string             `json:"sourceUrl"        bson:"sourceUrl"`
+	OriginURL        string             `json:"sourceUrl"        bson:"sourceUrl"`
 	AuthorName       string             `json:"authorName"       bson:"authorName"`
 	AuthorEmail      string             `json:"authorEmail"      bson:"authorEmail"`
 	AuthorWebsiteURL string             `json:"authorWebsiteUrl" bson:"authorWebsiteUrl"`

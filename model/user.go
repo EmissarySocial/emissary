@@ -45,6 +45,17 @@ func (user *User) ID() string {
 	return user.UserID.Hex()
 }
 
+func (user *User) AuthorLink() AuthorLink {
+	return AuthorLink{
+		InternalID:   user.UserID,
+		Name:         user.DisplayName,
+		EmailAddress: user.Username,
+		ProfileURL:   user.ProfileURL,
+		ImageURL:     user.ImageURL,
+		UpdateDate:   time.Now().Unix(),
+	}
+}
+
 // Summary generates a lightweight summary of this user record.
 func (user *User) Summary() UserSummary {
 	return UserSummary{
