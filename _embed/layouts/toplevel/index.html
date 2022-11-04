@@ -1,3 +1,6 @@
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
+
 <div class="page">
 
     <h1>Settings</h1>
@@ -46,19 +49,15 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <script>
-    htmx.onLoad(function(content) {
-        var sortables = content.querySelectorAll(".sortable");
-        for (var i = 0; i < sortables.length; i++) {
-        var sortable = sortables[i];
-        new Sortable(sortable, {
+    var sortables = document.querySelectorAll(".sortable");
+    for (var node of sortables) {
+        new Sortable(node, {
             animation: 150,
             whisperClass: 'draggable-whisper'
         });
-        }
-    })
+    }
 </script>
 
 <style>
