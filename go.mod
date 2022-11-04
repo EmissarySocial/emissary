@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.120
+	github.com/aws/aws-sdk-go v1.44.129
 	github.com/benpate/activitystream v0.7.0
 	github.com/benpate/data v0.21.0
 	github.com/benpate/data-mongo v0.21.0
@@ -41,7 +41,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.2
-	go.mongodb.org/mongo-driver v1.10.3
+	go.mongodb.org/mongo-driver v1.11.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
