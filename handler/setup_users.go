@@ -106,9 +106,9 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Error loading user")
 		}
 
-		// Try to (re)send the email invitation
+		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
-		domainEmailService.SendWelcome(&user)
+		domainEmailService.SendWelcome(user)
 
 		return nil
 	}

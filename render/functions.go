@@ -3,6 +3,7 @@ package render
 import (
 	"encoding/json"
 	"html/template"
+	"time"
 
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
@@ -92,6 +93,17 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		"json": func(value any) string {
 			result, _ := json.MarshalIndent(value, "", "  ")
 			return string(result)
+		},
+
+		"isoDate": func(value any) string {
+
+			valueInt := convert.Int64(value)
+
+			if valueInt == 0 {
+				return ""
+			}
+
+			return time.Unix(valueInt, 0).Format(time.RFC3339)
 		},
 	}
 }

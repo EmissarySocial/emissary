@@ -37,7 +37,7 @@ func NewStream(collection data.Collection, templateService *Template, attachment
 		streamUpdateChannel: streamUpdateChannel,
 	}
 
-	service.Refresh(hostName, collection)
+	service.Refresh(hostName, collection, nil)
 
 	return service
 }
@@ -46,15 +46,11 @@ func NewStream(collection data.Collection, templateService *Template, attachment
  * LIFECYCLE METHODS
  *******************************************/
 
-// Updates the StreamDraft service after creation (to work around circular dependencies)
-func (service *Stream) SetDraftService(draftService *StreamDraft) {
-	service.draftService = draftService
-}
-
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(hostName string, collection data.Collection) {
+func (service *Stream) Refresh(hostName string, collection data.Collection, draftService *StreamDraft) {
 	service.hostName = hostName
 	service.collection = collection
+	service.draftService = draftService
 }
 
 // Close stops any background processes controlled by this service
@@ -81,7 +77,7 @@ func (service *Stream) New(parent *model.Stream, templateID string) (model.Strea
 	result.TemplateID = templateID
 	result.ParentID = parent.StreamID
 	result.ParentIDs = append(parent.ParentIDs, parent.StreamID)
-	result.AsFeature = template.AsFeature
+	result.AsFeature = template.IsFeature()
 
 	// TODO: User template schema to set default values in the new stream.
 
@@ -119,7 +115,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	stream.DefaultAllow = stream.Permissions.Groups(defaultRoles...)
 
 	// RULE: Copy AsFeature flag from Template into Stream
-	stream.AsFeature = template.AsFeature
+	stream.AsFeature = template.IsFeature()
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {

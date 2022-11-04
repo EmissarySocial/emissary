@@ -23,6 +23,7 @@ import (
 type Domain struct {
 	collection      data.Collection
 	configuration   config.Domain
+	userService     *User
 	providerService *Provider
 	funcMap         template.FuncMap
 	model           model.Domain
@@ -30,9 +31,10 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, configuration config.Domain, providerService *Provider, funcMap template.FuncMap) Domain {
+func NewDomain(collection data.Collection, configuration config.Domain, userService *User, providerService *Provider, funcMap template.FuncMap) Domain {
 	service := Domain{
 		providerService: providerService,
+		userService:     userService,
 		funcMap:         funcMap,
 		lock:            &sync.Mutex{},
 	}

@@ -15,19 +15,19 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID      primitive.ObjectID   `path:"userId"      json:"userId"      bson:"_id"`         // Unique identifier for this user.
-	GroupIDs    []primitive.ObjectID `path:"groupIds"    json:"groupIds"    bson:"groupIds"`    // Slice of IDs for the groups that this user belongs to.
-	Identities  []string             `path:"identities"  json:"identities"  bson:"identities"`  // Slice of globally unique identities for contacting this user.
-	DisplayName string               `path:"displayName" json:"displayName" bson:"displayName"` // Name to be displayed for this user
-	Description string               `path:"description" json:"description" bson:"description"` // Status summary for this user (used by ActivityPub)
-	Username    string               `path:"username"    json:"username"    bson:"username"`    // This is the primary public identifier for the user.
-	Password    string               `path:"password"    json:"password"    bson:"password"`    // This password should be encrypted with BCrypt.
-	IsOwner     bool                 `path:"isOwner"     json:"isOwner"     bson:"isOwner"`     // If TRUE, then this user is a website owner with FULL privileges.
-	ProfileURL  string               `path:"profileUrl"  json:"profileUrl"  bson:"profileUrl"`  // URL for the primary profile URL for this user.
-	ImageURL    string               `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl"`    // Avatar image of this user.
-	InboxID     primitive.ObjectID   `path:"inboxId"     json:"inboxId"     bson:"inboxId"`     // ID of the parent stream for storing this user's social inbox.
-	OutboxID    primitive.ObjectID   `path:"outboxId"    json:"outboxId"    bson:"outboxId"`    // ID of the parent stream for storing this user's social outbox.
-
+	UserID          primitive.ObjectID   `path:"userId"       json:"userId"        bson:"_id"`           // Unique identifier for this user.
+	GroupIDs        []primitive.ObjectID `path:"groupIds"     json:"groupIds"      bson:"groupIds"`      // Slice of IDs for the groups that this user belongs to.
+	Identities      []string             `path:"identities"   json:"identities"    bson:"identities"`    // Slice of globally unique identities for contacting this user.
+	DisplayName     string               `path:"displayName"  json:"displayName"   bson:"displayName"`   // Name to be displayed for this user
+	Description     string               `path:"description"  json:"description"   bson:"description"`   // Status summary for this user (used by ActivityPub)
+	Username        string               `path:"username"     json:"username"      bson:"username"`      // This is the primary public identifier for the user.
+	Password        string               `path:"password"     json:"password"      bson:"password"`      // This password should be encrypted with BCrypt.
+	IsOwner         bool                 `path:"isOwner"      json:"isOwner"       bson:"isOwner"`       // If TRUE, then this user is a website owner with FULL privileges.
+	ProfileURL      string               `path:"profileUrl"   json:"profileUrl"    bson:"profileUrl"`    // URL for the primary profile URL for this user.
+	ImageURL        string               `path:"imageUrl"     json:"imageUrl"      bson:"imageUrl"`      // Avatar image of this user.
+	InboxID         primitive.ObjectID   `                    json:"inboxId"       bson:"inboxId"`       // ID of the parent stream for storing this user's social inbox.
+	OutboxID        primitive.ObjectID   `                    json:"outboxId"      bson:"outboxId"`      // ID of the parent stream for storing this user's social outbox.
+	PasswordReset   PasswordReset        `                    json:"passwordReset" bson:"passwordReset"` // Most recent password reset information.
 	journal.Journal `json:"journal" bson:"journal"`
 }
 

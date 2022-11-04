@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"time"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
@@ -67,29 +69,33 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
 
-	// Guarantee Inbox location
+	// RULE: Guarantee Inbox location
 	if user.InboxID == primitive.NilObjectID {
 		if err := service.CreateInbox(user); err != nil {
 			return derp.Wrap(err, "service.User", "Error creating inbox")
 		}
 	}
 
-	// Guarantee Outbox location
+	// RULE: Guarantee Outbox location
 	if user.OutboxID == primitive.NilObjectID {
 		if err := service.CreateOutbox(user); err != nil {
 			return derp.Wrap(err, "service.User", "Error creating inbox")
 		}
 	}
 
-	wasNew := user.IsNew()
+	// RULE: If password reset has already expired, then clear the reset code
+	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
+		user.PasswordReset.AuthCode = ""
+	}
 
-	// Save User
+	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User", "Error saving User", user, note)
 	}
 
-	if wasNew {
-		go service.emailService.SendWelcome(user)
+	// RULE: If the user has not yet been sent their password, then try to send it now.
+	if user.PasswordReset.CreateDate == 0 {
+		service.SendWelcomeEmail(user)
 	}
 
 	// Success!
@@ -186,8 +192,23 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 	}
 
 	// Otherwise, use the token as a username
-	criteria := exp.Equal("username", token)
-	return service.Load(criteria, result)
+	return service.LoadByUsername(token, result)
+}
+
+func (service *User) LoadByResetCode(userID string, code string, user *model.User) error {
+
+	// Try to find the user by ID
+	if err := service.LoadByToken(userID, user); err != nil {
+		return derp.Wrap(err, "service.User", "Error loading User by ID", userID)
+	}
+
+	// If the password reset is not valid, then return an "Unauthorized" error
+	if !user.PasswordReset.IsValid(code) {
+		return derp.NewUnauthorizedError("service.User", "Invalid password reset code", userID, code)
+	}
+
+	// No Error means success
+	return nil
 }
 
 // Count returns the number of (non-deleted) records in the User collection
@@ -198,6 +219,48 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 /*******************************************
  * CUSTOM ACTIONS
  *******************************************/
+
+func (service *User) SetOwner(owner config.Owner) error {
+
+	// Try to read the owner from the database
+	users, err := service.ListOwners()
+
+	if err != nil {
+		return derp.Wrap(err, "service.User", "Error loading owners")
+	}
+
+	user := model.NewUser()
+	found := false
+
+	for users.Next(&user) {
+
+		// If this user is already an owner, then we may be able to skip some work...
+		if user.Username == owner.EmailAddress {
+			found = true
+		}
+
+		// Update the user record and try to save it
+		user.IsOwner = (user.Username == owner.EmailAddress)
+
+		if err := service.Save(&user, "AssertOwner"); err != nil {
+			return derp.Wrap(err, "service.User", "Error saving user", user)
+		}
+	}
+
+	// If we didn't find an owner above, then we need to create one.
+	if !found {
+		user := model.NewUser()
+		user.DisplayName = owner.DisplayName
+		user.Username = owner.EmailAddress
+		user.IsOwner = true
+
+		if err := service.Save(&user, "CreateOwner"); err != nil {
+			return derp.Wrap(err, "service.User", "Error saving user", user)
+		}
+	}
+
+	return nil
+}
 
 // CreateInbox creates a personal "inbox" stream for a user
 func (service *User) CreateInbox(user *model.User) error {
@@ -221,4 +284,23 @@ func (service *User) CreateOutbox(user *model.User) error {
 	}
 
 	return err
+}
+
+// SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
+// If there is a problem sending the email, then the new code is not saved.
+func (service *User) SendWelcomeEmail(user *model.User) {
+
+	// Create a new password reset code for this user
+	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+
+	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
+	if err := service.emailService.SendWelcome(*user); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
+		return
+	}
+
+	// Try to save the user with the new password reset code.
+	if err := service.Save(user, "Send Welcome Email"); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
+	}
 }

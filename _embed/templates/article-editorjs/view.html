@@ -3,7 +3,9 @@
 	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 		<h1 class="p-name">{{.Label}}</h1>
-		<div class="p-summary">{{.Description}}</div>
+		{{- if ne "" .Description -}}
+			<div class="p-summary">{{.Description}}</div>
+		{{- end -}}
 	
 		{{- if .UserCan "edit" -}}
 			<div id="menu-bar">

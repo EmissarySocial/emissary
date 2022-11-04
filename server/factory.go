@@ -205,20 +205,41 @@ func (factory *Factory) ListDomains() []config.Domain {
 }
 
 // PutDomain adds a domain to the Factory
-func (factory *Factory) PutDomain(domain config.Domain) error {
+func (factory *Factory) PutDomain(configuration config.Domain) error {
 
 	factory.mutex.Lock()
 	defer factory.mutex.Unlock()
 
 	// Add the domain to the collection
-	factory.config.Domains.Put(domain)
+	factory.config.Domains.Put(configuration)
 
 	// Try to write the configuration to the storage service
 	if err := factory.storage.Write(factory.config); err != nil {
 		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
 	}
 
-	// The storage service will trigger a new configuration via the Subscrbe() channel
+	// Unlock here so that we can get the domain factory without blocking
+	// (ByDomainName will do its own locking)
+	factory.mutex.Unlock()
+
+	// The storage service will trigger a new configuration via the Subscrbe() channel,
+	// But we still want to call the owner update manually.
+
+	domainFactory, err := factory.ByDomainName(configuration.Hostname)
+
+	if err != nil {
+		return derp.Wrap(err, "server.Factory.PutDomain", "Error getting domain factory", configuration.Hostname)
+	}
+
+	userService := domainFactory.User()
+	if err := userService.SetOwner(configuration.Owner); err != nil {
+		return derp.Wrap(err, "server.Factory.PutDomain", "Error setting owner", configuration.Owner)
+	}
+
+	// This last bit is an ugly hack to get around the fact that the domain factory
+	// is going to Unlock the mutex before it returns, so we need to re-lock it.
+	// It's o, it could be worse.
+	factory.mutex.Lock()
 
 	return nil
 }

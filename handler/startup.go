@@ -231,7 +231,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		if body.GetBool("home") {
 			stream := model.NewStream()
 			stream.Label = "Welcome"
-			stream.TemplateID = "article"
+			stream.TemplateID = "article-editorjs"
 			stream.StateID = "published"
 			stream.Token = "home"
 			streams = append(streams, stream)
@@ -278,6 +278,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 	b := html.New()
 	pageHeader(ctx, b, "Let's Get Started")
 
+	b.Div().Class("card")
 	b.Div().Class("bold").InnerHTML("Step 2 of 3")
 	b.H1().InnerHTML("How Do You Want To Use This Server?").Close()
 

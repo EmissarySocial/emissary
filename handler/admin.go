@@ -67,7 +67,7 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if err := service.Load(&object); err != nil {
 				return derp.Wrap(err, location, "Error loading Group", objectID)
 			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.External(), layout, &object, actionID)
+			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
 
 		case "connections":
 			layout := factory.Layout().Connections()
@@ -76,7 +76,7 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if err := service.Load(&object); err != nil {
 				return derp.Wrap(err, location, "Error loading Group", objectID)
 			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.External(), layout, &object, actionID)
+			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
 
 		case "domain":
 			layout := factory.Layout().Domain()
@@ -85,7 +85,7 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			if err := service.Load(&object); err != nil {
 				return derp.Wrap(err, location, "Error loading Group", objectID)
 			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.External(), layout, &object, actionID)
+			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
 
 		case "groups":
 			group := model.NewGroup()

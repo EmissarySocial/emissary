@@ -83,12 +83,15 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 
 	factory.emailService = service.NewDomainEmail(serverEmail, domain)
 
-	// Start the Domain Service
-	factory.domainService = service.NewDomain(
-		factory.collection(CollectionDomain),
-		domain,
-		factory.External(),
-		render.FuncMap(factory.Icons()),
+	// Start the Group Service
+	factory.groupService = service.NewGroup(
+		factory.collection(CollectionGroup),
+	)
+
+	// Start the Attachment Service
+	factory.attachmentService = service.NewAttachment(
+		factory.collection(CollectionAttachment),
+		factory.MediaServer(),
 	)
 
 	// Start the Stream Service
@@ -106,9 +109,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.Stream(),
 	)
 
-	// Update the circular depencency between the Stream and StreamDraft services
-	factory.streamService.SetDraftService(&factory.streamDraftService)
-
 	// Start the User Service
 	factory.userService = service.NewUser(
 		factory.collection(CollectionUser),
@@ -116,21 +116,19 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.Email(),
 	)
 
+	// Start the Domain Service
+	factory.domainService = service.NewDomain(
+		factory.collection(CollectionDomain),
+		domain,
+		factory.User(),
+		factory.Provider(),
+		render.FuncMap(factory.Icons()),
+	)
+
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
 		factory.Stream(),
-	)
-
-	// Start the Group Service
-	factory.groupService = service.NewGroup(
-		factory.collection(CollectionGroup),
-	)
-
-	// Start the Attachment Service
-	factory.attachmentService = service.NewAttachment(
-		factory.collection(CollectionAttachment),
-		factory.MediaServer(),
 	)
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
@@ -186,7 +184,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream))
+		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
 		factory.userService.Refresh(factory.collection(CollectionUser))
@@ -418,7 +416,7 @@ func (factory *Factory) LookupProvider() form.LookupProvider {
  *******************************************/
 
 // OAuth returns a fully populated OAuth service
-func (factory *Factory) External() *service.Provider {
+func (factory *Factory) Provider() *service.Provider {
 	return factory.providerService
 }
 

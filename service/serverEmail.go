@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 
 	mail "github.com/xhit/go-simple-mail/v2"
 )
@@ -94,7 +93,6 @@ func (service *ServerEmail) watch() {
 		select {
 
 		case <-service.changed:
-			spew.Dump("EMAIL TEMPLATE CHANGED")
 			service.loadTemplates()
 
 		case <-service.closed:

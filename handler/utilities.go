@@ -2,8 +2,10 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -82,3 +84,20 @@ func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 }
 
 */
+
+// cleanQueryParams returns a "clean" version of a url.Values structure.
+// If there is only one value set for a key (most common) then it is stored in the map
+// as a string.  Otherwise, it is stored as a []string.
+func cleanQueryParams(values url.Values) maps.Map {
+	result := make(maps.Map)
+	for key, value := range values {
+
+		if len(value) == 1 {
+			result[key] = value[0]
+		} else {
+			result[key] = value
+		}
+	}
+
+	return result
+}

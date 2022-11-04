@@ -11,11 +11,11 @@ import (
 // Template represents an HTML template used for rendering Streams
 type Template struct {
 	TemplateID         string            `path:"templateId"         json:"templateId"         bson:"templateId"`         // Internal name/token other objects (like streams) will use to reference this Template.
+	Role               string            `path:"role"               json:"role"               bson:"role"`               // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
 	Label              string            `path:"label"              json:"label"              bson:"label"`              // Human-readable label used in management UI.
 	Description        string            `path:"description"        json:"description"        bson:"description"`        // Human-readable long-description text used in management UI.
 	Category           string            `path:"category"           json:"category"           bson:"category"`           // Human-readable category (grouping) used in management UI.
 	Icon               string            `path:"icon"               json:"icon"               bson:"icon"`               // Icon image used in management UI.
-	AsFeature          bool              `path:"asFeature"          json:"asFeature"          bson:"asFeature"`          // If TRUE, then this template is used as a "feature" template, to be optionally embedded in other streams
 	ContainedBy        []string          `path:"containedBy"        json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
 	ChildSortType      string            `path:"childSortType"      json:"childSortType"      bson:"childSortType"`      // SortType used to display children
 	ChildSortDirection string            `path:"childSortDirection" json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
@@ -51,8 +51,12 @@ func (template Template) ID() string {
 
 // CanBeContainedBy returns TRUE if this Streams using this Template can be nested inside of
 // Streams using the Template named in the parameters
-func (template *Template) CanBeContainedBy(templateName string) bool {
-	return compare.Contains(template.ContainedBy, templateName)
+func (template *Template) CanBeContainedBy(templateRole string) bool {
+	return compare.Contains(template.ContainedBy, templateRole)
+}
+
+func (template *Template) IsFeature() bool {
+	return template.Role == "feature"
 }
 
 // State searches for the State in this Template that matches the provided StateID
@@ -77,12 +81,3 @@ func (template *Template) Action(actionID string) *Action {
 func (template *Template) Default() *Action {
 	return template.Action(template.DefaultAction)
 }
-
-/*/ AllowedGroups returns the groups allowed to perform the requested Action on the Stream
-func (template *Template) AllowedGroups(stream *Stream, action *Action) []string {
-
-	roles := action.AllowedRoles(stream)
-
-
-}
-*/

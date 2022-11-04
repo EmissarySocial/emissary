@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
 	"golang.org/x/oauth2"
 )
@@ -87,29 +86,34 @@ func (provider Twitter) AfterUpdate(factory Factory, client *model.Client) error
 
 func (provider Twitter) PollStreams(client *model.Client) <-chan model.Stream {
 
-	twitterClient := provider.getTwitterClient(client.Token)
-
+	// Create a channel to return results
 	result := make(chan model.Stream)
+
+	// Connect to Twitter
+	twitterClient := provider.getTwitterClient(client.Token)
 
 	go func() {
 
+		// Get the Twitter User ID
 		userID := client.GetInt64("userId")
 
+		// Get all tweets from the user's timeline
 		tweets, _, err := twitterClient.Timelines.UserTimeline(&twitter.UserTimelineParams{
 			UserID: userID,
 		})
 
+		// Report errors (but we can't return them)
 		if err != nil {
 			derp.Report(derp.Wrap(err, "service.External.Twitter.PollStreams", "Error getting Twitter user timeline", userID))
 		}
 
-		spew.Dump(tweets)
-
+		// Pass each tweet into the channel
 		for _, tweet := range tweets {
 			result <- tweetAsStream(tweet)
 		}
 	}()
 
+	// Woot woot!
 	return result
 }
 

@@ -231,34 +231,34 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 // ListFeatures returns all templates that are used as "feature" templates
 func (service *Template) ListFeatures() []form.LookupCode {
 
-	filter := func(t *model.Template) bool {
-		return t.AsFeature
+	filter := func(template *model.Template) bool {
+		return template.IsFeature()
 	}
 
 	return service.List(filter)
 }
 
-// ListByContainer returns all model.Templates that match the provided "containedBy" value
-func (service *Template) ListByContainer(containedBy string) []form.LookupCode {
+// ListByContainer returns all model.Templates that match the provided "containedByRole" value
+func (service *Template) ListByContainer(containedByRole string) []form.LookupCode {
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedBy)
+		return compare.Contains(t.ContainedBy, containedByRole)
 	}
 
 	return service.List(filter)
 }
 
-// ListByContainerLimited returns all model.Templates that match the provided "containedBy" value AND
+// ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
 // are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
 // are returned.
-func (service *Template) ListByContainerLimited(containedBy string, limits []string) []form.LookupCode {
+func (service *Template) ListByContainerLimited(containedByRole string, limits []string) []form.LookupCode {
 
 	if len(limits) == 0 {
-		return service.ListByContainer(containedBy)
+		return service.ListByContainer(containedByRole)
 	}
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedBy) && compare.Contains(limits, t.TemplateID)
+		return compare.Contains(t.ContainedBy, containedByRole) && compare.Contains(limits, t.TemplateID)
 	}
 
 	return service.List(filter)
