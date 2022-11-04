@@ -54,6 +54,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	const location = "render.StepAddChildStream.Post"
 
 	// Collect prerequisites
+	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	context := streamRenderer.context()
 	parent := streamRenderer.stream
@@ -69,14 +70,20 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	}
 
 	// Try to load the template for the new stream
-	template, err := renderer.factory().Template().Load(templateID)
+	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Cannot find template")
+		return derp.Wrap(err, location, "Cannot find template", templateID)
 	}
 
-	// Verify that the new stream belongs in the parent stream
-	if !template.CanBeContainedBy(parent.TemplateID) {
+	parentTemplate, err := factory.Template().Load(parent.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Cannot find parent template", parent.TemplateID)
+	}
+
+	// Verify that the new stream can be put into the parent stream
+	if !template.CanBeContainedBy(parentTemplate.Role) {
 		return derp.NewInternalError(location, "Template cannot be placed at top level", templateID)
 	}
 
@@ -89,7 +96,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	// TODO: sort order?
 	// TODO: presets defined by templates?
 
-	return finalizeAddStream(renderer.factory(), context, &child, template, step.WithChild)
+	return finalizeAddStream(factory, context, &child, template, step.WithChild)
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create

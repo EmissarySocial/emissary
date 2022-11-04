@@ -63,21 +63,28 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 		}
 	}
 
-	// Try to load parent Stream to validate data
-	parent := model.NewStream()
-	if err := factory.Stream().LoadParent(sibling, &parent); err != nil {
-		return derp.Wrap(err, "service.Stream.NewSiblling", "Error loading parent Stream")
-	}
-
-	// Try to load parent's Template
+	// Try to load the requested Template
 	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Stream.NewTopLevel", "Cannot find template")
 	}
 
+	// Try to load the parent Stream
+	parent := model.NewStream()
+	if err := factory.Stream().LoadParent(sibling, &parent); err != nil {
+		return derp.Wrap(err, "service.Stream.NewSiblling", "Error loading parent Stream")
+	}
+
+	// Try to load te parent Template
+	parentTemplate, err := factory.Template().Load(parent.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Stream.NewSiblling", "Error loading parent Template", parent.TemplateID)
+	}
+
 	// Verify that the new child can be placed underneath the parent
-	if !template.CanBeContainedBy(parent.TemplateID) {
+	if !template.CanBeContainedBy(parentTemplate.Role) {
 		return derp.NewInternalError("service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 
