@@ -151,8 +151,47 @@ func (service *Domain) Debug() maps.Map {
 }
 
 /*******************************************
- * OAuth Methods
+ * Provider Methods
  *******************************************/
+
+// ActiveClients returns all active Clients for this domain
+func (service *Domain) ActiveClients() []model.Client {
+
+	// Try to load the domain from the database
+	domain := model.NewDomain()
+
+	if err := service.Load(&domain); err != nil {
+		return []model.Client{}
+	}
+
+	// List all clients, filtering by "active" ones.
+	result := make([]model.Client, len(domain.Clients))
+
+	for _, client := range domain.Clients {
+		if client.Active {
+			result = append(result, client)
+		}
+	}
+
+	// Success
+	return result
+}
+
+func (service *Domain) Client(providerID string) model.Client {
+
+	// Try to load the domain from the database
+	domain := model.NewDomain()
+
+	if err := service.Load(&domain); err != nil {
+		return model.NewClient(providerID)
+	}
+
+	if client, ok := domain.Clients[providerID]; ok {
+		return client
+	}
+
+	return model.NewClient(providerID)
+}
 
 // Provider returns the external Provider that matches the given providerID
 func (service *Domain) Provider(providerID string) (providers.Provider, bool) {
@@ -185,6 +224,10 @@ func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider
 	return nil, false
 }
 
+/*******************************************
+ * OAuth Handshake Methods
+ *******************************************/
+
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
 func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
@@ -206,10 +249,10 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	config := provider.OAuthConfig()
 
 	config.RedirectURL = service.OAuthCallbackURL(providerID)
-	/*
-		codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
-		codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
-		codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
+	/* TODO: add hash value for challenge_method...
+	codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
+	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	*/
 
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", client.GetString("code_challenge"))

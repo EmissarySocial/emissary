@@ -273,11 +273,6 @@ func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
 }
 
-// StreamSource returns a fully populated StreamSource service
-func (factory *Factory) StreamSource() *service.StreamSource {
-	return service.NewStreamSource(factory.collection(CollectionStreamSource))
-}
-
 // Subscription returns a fully populated Subscription service
 func (factory *Factory) Subscription() *service.Subscription {
 	return &factory.subscriptionService
