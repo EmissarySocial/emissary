@@ -255,14 +255,6 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if body.GetBool("forum") {
-			stream := model.NewStream()
-			stream.Label = "Forum"
-			stream.TemplateID = "forum"
-			stream.Token = "forum"
-			streams = append(streams, stream)
-		}
-
 		// Try to add each new stream to the database.
 		for index, stream := range streams {
 			stream.Rank = index
@@ -303,11 +295,6 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			Path:        "album",
 			Options:     maps.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
-		}, {
-			Type:        "toggle",
-			Path:        "forum",
-			Options:     maps.Map{"true-text": "Discussion Forum", "false-text": "Discussion Forum"},
-			Description: "Realtime chat, organized into topics and threads.",
 		}},
 	}
 
