@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/icon"
 	"github.com/benpate/steranko"
+	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
 )
@@ -29,6 +30,7 @@ type Factory struct {
 	// Server-level services
 	layoutService   service.Layout
 	templateService service.Template
+	contentService  service.Content
 	providerService service.Provider
 	emailService    service.ServerEmail
 	taskQueue       *queue.Queue
@@ -68,6 +70,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		[]config.Folder{},
 	)
 
+	factory.contentService = service.NewContent(factory.EditorJS())
 	factory.providerService = service.NewProvider(factory.config.Providers)
 
 	factory.emailService = service.NewServerEmail(
@@ -139,6 +142,7 @@ func (factory *Factory) start() {
 				&factory.emailService,
 				&factory.layoutService,
 				&factory.templateService,
+				&factory.contentService,
 				&factory.providerService,
 				factory.taskQueue,
 				factory.attachmentOriginals,
@@ -407,6 +411,21 @@ func (factory *Factory) Filesystem() service.Filesystem {
 // Email returns the global email service
 func (factory *Factory) Email() *service.ServerEmail {
 	return &factory.emailService
+}
+
+// EditorJS returns the EditorJS adapter for the Content service
+func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
+	result := goeditorjs.NewHTMLEngine()
+
+	result.RegisterBlockHandlers(
+		&goeditorjs.HeaderHandler{},
+		&goeditorjs.ParagraphHandler{},
+		&goeditorjs.ListHandler{},
+		&goeditorjs.ImageHandler{},
+		&goeditorjs.RawHTMLHandler{},
+	)
+
+	return result
 }
 
 // Steranko implements the steranko.Factory method, used for locating the specific

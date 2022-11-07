@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/davidscottmills/goeditorjs"
 	"github.com/stripe/stripe-go/v72/client"
 )
 
@@ -28,9 +27,8 @@ type Factory interface {
 
 	// Other data services
 	Config() config.Domain
-	Content() service.Content
+	Content() *service.Content
 	Domain() *service.Domain
-	EditorJS() *goeditorjs.HTMLEngine
 	Host() string
 	Hostname() string
 	Icons() icon.Provider

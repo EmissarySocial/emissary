@@ -328,11 +328,11 @@ func (service *Stream) LoadByProductID(productID string, result *model.Stream) e
 }
 
 // LoadBySource locates a single stream that matches the provided OriginURL
-func (service *Stream) LoadBySource(parentStreamID primitive.ObjectID, originURL string, result *model.Stream) error {
+func (service *Stream) LoadByOriginURL(parentStreamID primitive.ObjectID, originURL string, result *model.Stream) error {
 
 	criteria := exp.
 		Equal("parentId", parentStreamID).
-		AndEqual("sourceUrl", originURL)
+		AndEqual("origin.url", originURL)
 
 	return service.Load(criteria, result)
 }

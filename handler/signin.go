@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -182,8 +181,6 @@ func PostResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		if err := ctx.Bind(&txn); err != nil {
 			return derp.Wrap(err, "handler.PostResetCode", "Error binding form data")
 		}
-
-		spew.Dump(txn)
 
 		// RULE: Ensure that passwords match
 		if txn.Password != txn.Password2 {

@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
 	"golang.org/x/oauth2"
 )
@@ -109,6 +110,7 @@ func (provider Twitter) PollStreams(client *model.Client) <-chan model.Stream {
 
 		// Pass each tweet into the channel
 		for _, tweet := range tweets {
+			spew.Dump(tweet)
 			result <- tweetAsStream(tweet)
 		}
 	}()

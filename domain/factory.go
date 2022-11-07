@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davidscottmills/goeditorjs"
 	"github.com/spf13/afero"
 
 	"github.com/stripe/stripe-go/v72/client"
@@ -35,6 +34,7 @@ type Factory struct {
 	// services (from server)
 	layoutService   *service.Layout
 	templateService *service.Template
+	contentService  *service.Content
 	providerService *service.Provider
 	taskQueue       *queue.Queue
 
@@ -61,7 +61,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -69,6 +69,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory := Factory{
 		layoutService:   layoutService,
 		templateService: templateService,
+		contentService:  contentService,
 		providerService: providerService,
 		taskQueue:       taskQueue,
 
@@ -129,7 +130,11 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
 		factory.Stream(),
+		factory.Content(),
+		factory.Queue(),
 	)
+
+	go factory.subscriptionService.Start()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
@@ -149,11 +154,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 	// If the database connect string has changed, then update the database connection
 	if (factory.config.ConnectString != domain.ConnectString) || (factory.config.DatabaseName != domain.DatabaseName) {
 
-		// If we already have a database connection, then close it
-		if factory.Session != nil {
-			factory.Session.Close()
-		}
-
 		// If the connect string is empty, then we don't need to (re-)connect to a database
 		if domain.ConnectString == "" {
 			factory.config = domain
@@ -164,16 +164,22 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 		if err != nil {
-			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
+			return derp.Report(derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain))
 		}
 
 		// Establish a connection
 		session, err := server.Session(context.Background())
 
 		if err != nil {
-			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain)
+			return derp.Report(derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain))
 		}
 
+		// If we already have a database connection, then close it
+		if factory.Session != nil {
+			factory.Session.Close()
+		}
+
+		// Save the new session into the factory.
 		factory.Session = session
 
 		// Refresh cached services
@@ -353,23 +359,8 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  *******************************************/
 
 // Content returns the Content transformation service
-func (factory *Factory) Content() service.Content {
-	return service.NewContent(factory.EditorJS())
-}
-
-// EditorJS returns the EditorJS adapter for the Content service
-func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
-	result := goeditorjs.NewHTMLEngine()
-
-	result.RegisterBlockHandlers(
-		&goeditorjs.HeaderHandler{},
-		&goeditorjs.ParagraphHandler{},
-		&goeditorjs.ListHandler{},
-		&goeditorjs.ImageHandler{},
-		&goeditorjs.RawHTMLHandler{},
-	)
-
-	return result
+func (factory *Factory) Content() *service.Content {
+	return factory.contentService
 }
 
 func (factory *Factory) Email() *service.DomainEmail {
@@ -454,7 +445,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 	return result, nil
 }
 
-// Other libraries to make it her, eventually...
+// Other libraries to make it here eventually...
 // ActivityPub
 // Service APIs (like Twitter? Slack? Discord?, The FB?)
 

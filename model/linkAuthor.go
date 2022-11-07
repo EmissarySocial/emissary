@@ -11,6 +11,10 @@ type AuthorLink struct {
 	UpdateDate   int64              `path:"updateDate"   json:"updateDate"   bson:"updateDate,omitempty"`   // Unix timestamp of the date/time when this author was last updated.
 }
 
+func NewAuthorLink() AuthorLink {
+	return AuthorLink{}
+}
+
 // Link returns a Link to this author
 func (author AuthorLink) Link() Link {
 
