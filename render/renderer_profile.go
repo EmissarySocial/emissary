@@ -183,16 +183,31 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 
 	factory := w.factory()
 
-	query := builder.NewBuilder().
+	expBuilder := builder.NewBuilder().
 		Int("publishDate").
 		ObjectID("inboxFolderId")
 
 	criteria := exp.And(
-		query.Evaluate(w.ctx.Request().URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
+		expBuilder.Evaluate(w.ctx.Request().URL.Query()),
 	)
 
-	return factory.Inbox().Query(criteria, option.MaxRows(60), option.SortAsc("publishDate"))
+	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
+
+}
+
+// IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
+// This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
+func (w Profile) IsInboxEmpty(inbox []model.InboxItem) bool {
+	if len(inbox) > 0 {
+		return false
+	}
+
+	if w.ctx.Request().URL.Query().Get("publishDate") != "" {
+		return false
+	}
+
+	return true
 }
 
 func (w Profile) InboxItem() (model.InboxItem, error) {

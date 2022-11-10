@@ -259,7 +259,7 @@ func (service *Subscription) LoadRSSFeed(subscription *model.Subscription, url s
 
 	// Update each inboxItem in the RSS feed
 	for _, item := range feed.Items {
-		if err := service.updateInboxItem(subscription, item); err != nil {
+		if err := service.updateInboxItem(subscription, feed, item); err != nil {
 			return derp.Wrap(err, location, "Error updating local inboxItem")
 		}
 	}
@@ -276,7 +276,7 @@ func (service *Subscription) LoadRSSFeed(subscription *model.Subscription, url s
 }
 
 // updateStream adds/updates an individual InboxItem based on an RSS item
-func (service *Subscription) updateInboxItem(subscription *model.Subscription, rssItem *gofeed.Item) error {
+func (service *Subscription) updateInboxItem(subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
 
 	const location = "service.Subscription.updateStream"
 
@@ -314,6 +314,7 @@ func (service *Subscription) updateInboxItem(subscription *model.Subscription, r
 		inboxItem.Summary = rssItem.Description
 		inboxItem.Content = rssItem.Content
 		inboxItem.PublishDate = rssItem.PublishedParsed.Unix()
+		inboxItem.Origin.Label = rssFeed.Title
 		inboxItem.Origin.UpdateDate = updateDate
 		inboxItem.InboxFolderID = subscription.InboxFolderID
 		inboxItem.Author = service.rssAuthor(rssItem)

@@ -33,3 +33,17 @@ func (origin OriginLink) Link() Link {
 		UpdateDate: origin.UpdateDate,
 	}
 }
+
+func (origin OriginLink) Icon() string {
+	switch origin.Source {
+	case "ACTIVITYPUB":
+		return "code-slash"
+	case "INTERNAL":
+		return "star"
+	case "RSS":
+		return "rss"
+	case "TWITTER":
+		return "twitter"
+	}
+	return "question-square"
+}
