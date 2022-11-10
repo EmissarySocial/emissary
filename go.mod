@@ -23,6 +23,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dghubble/go-twitter v0.0.0-20221024160433-0cc1e72ed6d8
+	github.com/dustin/go-humanize v1.0.0
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.2

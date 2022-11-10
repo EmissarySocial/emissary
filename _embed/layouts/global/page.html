@@ -22,8 +22,8 @@
 			</div>
 			<div class="right">
 				{{- if .IsAuthenticated -}}
-				<a href="/profile/inbox" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
-				<a href="/profile" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+					<a href="/people/me" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+					<a href="/people/me/inbox" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
 					{{- if .IsOwner -}}<a href="/admin/domain"  class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
 					<!--button hx-post="/signout" hx-target="body">Sign Out</button-->
 				{{- else -}}

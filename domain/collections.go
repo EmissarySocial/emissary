@@ -13,13 +13,16 @@ const CollectionDomain = "Domain"
 const CollectionGroup = "Group"
 
 // CollectionInbox is the database collection where Inbox records are stored
-const CollectionInbox = "Inbox"
+const CollectionInbox = "InboxItem"
+
+// CollectionInboxFolder is the database collection where InboxFolder records are stored
+const CollectionInboxFolder = "InboxFolder"
 
 // CollectionMention is the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
 // CollectionOutbox is the database collection where Outbox records are stored
-const CollectionOutbox = "Outbox"
+const CollectionOutbox = "OutboxItem"
 
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"

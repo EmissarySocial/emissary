@@ -1,0 +1,8 @@
+{{$inboxItem := .InboxItem}}
+
+<div class="float-right">
+<button script="on click send closeModal" class="text-sm">Close</button>
+</div>
+<h1>{{$inboxItem.Label}}</h1>
+<div>{{$inboxItem.Summary}}</div>
+<div>{{$inboxItem.ContentHTML}}</div>

@@ -246,8 +246,8 @@ func (w Common) IsOwner() bool {
 	return authorization.DomainOwner
 }
 
-// UserID returns the unique ID of the currently logged in user (may be nil).
-func (w Common) UserID() primitive.ObjectID {
+// AuthenticatedID returns the unique ID of the currently logged in user (may be nil).
+func (w Common) AuthenticatedID() primitive.ObjectID {
 	authorization := w.authorization()
 	return authorization.UserID
 }

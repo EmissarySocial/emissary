@@ -161,16 +161,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
 
 	// Profile Pages / ActivityPub
-	e.GET("/profile", handler.GetProfile(factory))
-	e.POST("/profile", handler.PostProfile(factory))
-	e.GET("/profile/:action", handler.GetProfile(factory))
-	e.POST("/profile/:action", handler.PostProfile(factory))
-
-	e.GET("/users", handler.TBD)
-	e.GET("/users/:user", handler.GetProfile(factory))
-	e.POST("/users/:user", handler.PostProfile(factory))
-	e.GET("/users/:user/:action", handler.GetProfile(factory))
-	e.POST("/users/:user/:action", handler.PostProfile(factory))
+	e.GET("/people", handler.TBD)
+	e.GET("/people/:userId", handler.GetProfile(factory))
+	e.POST("/people/:userId", handler.PostProfile(factory))
+	e.GET("/people/:userId/:action", handler.GetProfile(factory))
+	e.POST("/people/:userId/:action", handler.PostProfile(factory))
 
 	// SUBSCRIPTION PAGES
 	e.GET("/subscriptions", handler.ListSubscriptions(factory))

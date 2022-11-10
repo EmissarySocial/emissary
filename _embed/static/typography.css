@@ -314,7 +314,7 @@ input.text-xl {
     font-size: calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 4.5);
     margin-top: var(--rhythm);
-    margin-bottom: calc(var(--rhythm) * 2);
+    margin-bottom: calc(var(--rhythm) * 3);
 }
 
 .text-lg,
@@ -323,30 +323,31 @@ input.text-lg {
     font-size: calc(var(--rhythm) * 2.5);
     line-height:calc(var(--rhythm) * 3.75);
     margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    margin-bottom:calc(var(--rhythm) * 3);
 }
 
 .text-md,
+p,
 .text-md input,
 input.text-md {
     font-size: calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
-    /* margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2); */
+    margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 3);
 }
 
 .text-sm {
-    font-size: calc(var(--rhythm) * 1.5);
-    line-height:calc(var(--rhythm) * 2.25);
-    /* margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2); */
+    font-size: calc(var(--rhythm) * 1.75);
+    line-height:calc(var(--rhythm) * 2.625);
+    margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2);
 }
 
 .text-xs {
-    font-size: calc(var(--rhythm));
-    line-height:calc(var(--rhythm) * 1.5);
-    /* margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2); */
+    font-size: calc(var(--rhythm) * 1.5);
+    line-height:calc(var(--rhythm) * 2.25);
+    margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm));
 }
 
 
@@ -375,7 +376,7 @@ input.text-md {
  ****************************/
 
 b, strong, .bold {
-	font-weight: calc(var(--weight) + 100);
+	font-weight: calc(var(--weight) + 200);
 }
 
 a, .link {
@@ -392,10 +393,6 @@ a:hover,
 
 .clickable, [role="link"], [role="button"] {
 	cursor:pointer;
-}
-
-p {
-    margin:0px 0px 32px 0px;
 }
 
 p:last-child {

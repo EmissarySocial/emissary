@@ -1,0 +1,123 @@
+package service
+
+import (
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
+	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/microcosm-cc/bluemonday"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// Inbox manages all interactions with a user's Inbox
+type Inbox struct {
+	collection data.Collection
+}
+
+// NewInbox returns a fully populated Inbox service
+func NewInbox(collection data.Collection) Inbox {
+	service := Inbox{
+		collection: collection,
+	}
+
+	service.Refresh(collection)
+	return service
+}
+
+/*******************************************
+ * LIFECYCLE METHODS
+ *******************************************/
+
+// Refresh updates any stateful data that is cached inside this service.
+func (service *Inbox) Refresh(collection data.Collection) {
+	service.collection = collection
+}
+
+// Close stops any background processes controlled by this service
+func (service *Inbox) Close() {
+
+}
+
+/*******************************************
+ * COMMON DATA METHODS
+ *******************************************/
+
+// New creates a newly initialized Inbox that is ready to use
+func (service *Inbox) New() model.InboxItem {
+	return model.NewInboxItem()
+}
+
+// Query returns a slice of InboxItems that math the provided criteria
+func (service *Inbox) Query(criteria exp.Expression, options ...option.Option) ([]model.InboxItem, error) {
+	result := []model.InboxItem{}
+	err := service.collection.Query(&result, criteria, options...)
+	return result, err
+}
+
+// List returns an iterator containing all of the Inboxs that match the provided criteria
+func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection.List(notDeleted(criteria), options...)
+}
+
+// Load retrieves an Inbox from the database
+func (service *Inbox) Load(criteria exp.Expression, result *model.InboxItem) error {
+
+	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+		return derp.Report(derp.Wrap(err, "service.Inbox", "Error loading Inbox", criteria))
+	}
+
+	return nil
+}
+
+// Save adds/updates an Inbox in the database
+func (service *Inbox) Save(inboxItem *model.InboxItem, note string) error {
+
+	// Sanitize the input
+	strictPolicy := bluemonday.StrictPolicy()
+	inboxItem.Label = strictPolicy.Sanitize(inboxItem.Label)
+	inboxItem.Summary = strictPolicy.Sanitize(inboxItem.Summary)
+	inboxItem.Content = bluemonday.UGCPolicy().Sanitize(inboxItem.Content)
+
+	if err := service.collection.Save(inboxItem, note); err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error saving Inbox", inboxItem, note)
+	}
+
+	return nil
+}
+
+// Delete removes an Inbox from the database (virtual delete)
+func (service *Inbox) Delete(inboxItem *model.InboxItem, note string) error {
+
+	// Delete Inbox record last.
+	if err := service.collection.Delete(inboxItem, note); err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error deleting Inbox", inboxItem, note)
+	}
+
+	return nil
+}
+
+/*******************************************
+ * CUSTOM QUERIES
+ *******************************************/
+
+func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.InboxItem) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("_id", inboxItemID)
+
+	spew.Dump(criteria)
+	return service.Load(criteria, result)
+}
+
+// LoadBySource locates a single stream that matches the provided OriginURL
+func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL string, result *model.InboxItem) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("origin.url", originURL)
+
+	return service.Load(criteria, result)
+}

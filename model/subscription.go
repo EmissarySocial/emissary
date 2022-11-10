@@ -14,20 +14,23 @@ const SubscriptionMethodRSS = "RSS"
 const SubscriptionMethodWebSub = "WEBSUB"
 
 type Subscription struct {
-	SubscriptionID  primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`            // Unique Identifier of this record
-	ParentStreamID  primitive.ObjectID `path:"parentStreamId" json:"parentStreamId" bson:"parentStreamId"` // ID of the stream that owns this subscription
-	Method          string             `path:"method"         json:"method"         bson:"method"`         // Method used to subscribe to remote streams (RSS, etc)
-	Tags            []string           `path:"tags"           json:"tags"           bson:"tags"`           // Tags to apply to all items from this subscription
-	URL             string             `path:"url"            json:"url"            bson:"url"`            // Connection URL for obtaining new sub-streams.
-	LastPolled      int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`     // Unix Timestamp of the last date that this resource was retrieved.
-	PollDuration    int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`   // Time (in hours) to wait between polling this resource.
-	NextPoll        int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`       // Unix Timestamp of the next time that this resource should be polled.
+	SubscriptionID  primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`           // Unique Identifier of this record
+	UserID          primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this subscription
+	InboxFolderID   primitive.ObjectID `path:"inboxFolderId"  json:"inboxFolderId"  bson:"inboxFolderId"` // ID of the inbox folder to put messages into
+	Label           string             `path:"label"          json:"label"          bson:"label"`         // Label of this subscription
+	URL             string             `path:"url"            json:"url"            bson:"url"`           // Connection URL for obtaining new sub-streams.
+	Method          string             `path:"method"         json:"method"         bson:"method"`        // Method used to subscribe to remote streams (RSS, etc)
+	Status          string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Subscription (NEW, WAITING, SUCCESS, FAILURE)
+	LastPolled      int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
+	PollDuration    int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
+	NextPoll        int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
 	journal.Journal `json:"-" bson:"journal"`
 }
 
 func NewSubscription() Subscription {
 	return Subscription{
-		PollDuration: 24, // default poll interval is 24 hours
+		SubscriptionID: primitive.NewObjectID(),
+		PollDuration:   24, // default poll interval is 24 hours
 	}
 }
 

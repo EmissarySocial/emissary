@@ -46,19 +46,17 @@ func (service *Attachment) Close() {
  *******************************************/
 
 // New creates a newly initialized Attachment that is ready to use
-func (service Attachment) New() model.Attachment {
-	return model.Attachment{
-		AttachmentID: primitive.NewObjectID(),
-	}
+func (service *Attachment) New() model.Attachment {
+	return model.NewAttachment(primitive.NilObjectID)
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
-func (service Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Attachment from the database
-func (service Attachment) Load(criteria exp.Expression, result *model.Attachment) error {
+func (service *Attachment) Load(criteria exp.Expression, result *model.Attachment) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
@@ -68,7 +66,7 @@ func (service Attachment) Load(criteria exp.Expression, result *model.Attachment
 }
 
 // Save adds/updates an Attachment in the database
-func (service Attachment) Save(attachment *model.Attachment, note string) error {
+func (service *Attachment) Save(attachment *model.Attachment, note string) error {
 
 	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
@@ -78,7 +76,7 @@ func (service Attachment) Save(attachment *model.Attachment, note string) error 
 }
 
 // Delete removes an Attachment from the database (virtual delete)
-func (service Attachment) Delete(attachment *model.Attachment, note string) error {
+func (service *Attachment) Delete(attachment *model.Attachment, note string) error {
 
 	// Delete uploaded files from MediaServer
 	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
@@ -95,7 +93,7 @@ func (service Attachment) Delete(attachment *model.Attachment, note string) erro
 }
 
 // DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
+func (service *Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
 
 	var attachment model.Attachment
 	it, err := service.ListByObjectID(streamID)
@@ -118,25 +116,22 @@ func (service Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note 
  * CUSTOM QUERIES
  *******************************************/
 
-func (service Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
+func (service *Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
-		exp.Equal("streamId", objectID).
-			AndEqual("journal.deleteDate", 0),
+		exp.Equal("streamId", objectID),
 		option.SortAsc("rank"))
 }
 
-func (service Attachment) ListFirstByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
+func (service *Attachment) ListFirstByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(
-		exp.Equal("streamId", objectID).
-			AndEqual("journal.deleteDate", 0),
+		exp.Equal("streamId", objectID),
 		option.SortAsc("rank"), option.FirstRow())
 }
 
-func (service Attachment) LoadByID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
+func (service *Attachment) LoadByID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
 	var result model.Attachment
 	criteria := exp.Equal("_id", attachmentID).
-		AndEqual("streamId", streamID).
-		AndEqual("journal.deleteDate", 0)
+		AndEqual("streamId", streamID)
 	err := service.Load(criteria, &result)
 	return result, err
 }

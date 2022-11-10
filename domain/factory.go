@@ -47,7 +47,10 @@ type Factory struct {
 	groupService        service.Group
 	domainService       service.Domain
 	emailService        service.DomainEmail
+	inboxService        service.Inbox
+	inboxFolderService  service.InboxFolder
 	mentionService      service.Mention
+	outboxService       service.Outbox
 	streamService       service.Stream
 	streamDraftService  service.StreamDraft
 	subscriptionService service.Subscription
@@ -126,11 +129,18 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		render.FuncMap(factory.Icons()),
 	)
 
+	factory.inboxService = service.NewInbox(
+		factory.collection(CollectionInbox),
+	)
+
+	factory.outboxService = service.NewOutbox(
+		factory.collection(CollectionOutbox),
+	)
+
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
-		factory.Stream(),
-		factory.Content(),
+		factory.Inbox(),
 		factory.Queue(),
 	)
 
@@ -188,8 +198,11 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
+		factory.inboxService.Refresh(factory.collection(CollectionInbox))
+		factory.inboxFolderService.Refresh(factory.collection(CollectionInboxFolder))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
+		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
@@ -263,10 +276,25 @@ func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
 }
 
+// Inbox returns a fully populated Inbox service
+func (factory *Factory) Inbox() *service.Inbox {
+	return &factory.inboxService
+}
+
+// InboxFolder returns a fully populated InboxFolder service
+func (factory *Factory) InboxFolder() *service.InboxFolder {
+	return &factory.inboxFolderService
+}
+
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	result := service.NewMention(factory.collection(CollectionMention))
 	return &result
+}
+
+// Outbox returns a fully populated Outbox service
+func (factory *Factory) Outbox() *service.Outbox {
+	return &factory.outboxService
 }
 
 // Stream returns a fully populated Stream service
@@ -455,6 +483,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 
 // collection returns a data.Collection that matches the requested name.
 func (factory *Factory) collection(name string) data.Collection {
+
 	if factory.Session == nil {
 		return nil
 	}

@@ -210,6 +210,22 @@ func (w Stream) DescriptionSummary() string {
 	return htmlconv.Summary(w.stream.Description)
 }
 
+func (w Stream) Origin() model.OriginLink {
+	return w.stream.Origin
+}
+
+func (w Stream) OriginURL() string {
+	if w.stream.Origin.URL != "" {
+		return w.stream.Origin.URL
+	}
+
+	if !w.stream.Origin.InternalID.IsZero() {
+		return "/" + w.stream.Origin.InternalID.Hex()
+	}
+
+	return "/"
+}
+
 func (w Stream) Author() model.AuthorLink {
 	return w.stream.Author
 }
@@ -222,6 +238,10 @@ func (w Stream) AuthorName() string {
 // PhotoURL of the person who created this Stream
 func (w Stream) AuthorImage() string {
 	return w.stream.Author.ImageURL
+}
+
+func (w Stream) AuthorEmail() string {
+	return w.stream.Author.EmailAddress
 }
 
 // Returns the body content as an HTML template
@@ -245,7 +265,12 @@ func (w Stream) CreateDate() int64 {
 
 // PublishDate returns the PublishDate of the stream being rendered
 func (w Stream) PublishDate() int64 {
-	return w.stream.PublishDate
+
+	if w.stream.PublishDate > 0 {
+		return w.stream.PublishDate
+	}
+
+	return w.stream.CreateDate
 }
 
 // UpdateDate returns the UpdateDate of the stream being rendered
@@ -261,11 +286,6 @@ func (w Stream) Rank() int {
 // ThumbnailImage returns the thumbnail image URL of the stream being rendered
 func (w Stream) ThumbnailImage() string {
 	return w.stream.ThumbnailImage
-}
-
-// OriginURL returns the thumbnail image URL of the stream being rendered
-func (w Stream) OriginURL() string {
-	return w.stream.Origin.URL
 }
 
 // Permalink returns a complete URL for this stream
@@ -553,7 +573,7 @@ func (w Stream) Subscriptions() ([]model.Subscription, error) {
 	result := []model.Subscription{}
 	subscriptionService := w.factory().Subscription()
 
-	iterator, err := subscriptionService.ListByUserID(w.UserID())
+	iterator, err := subscriptionService.ListByUserID(w.AuthenticatedID())
 
 	if err != nil {
 		return result, derp.Wrap(err, "renderer.Stream.Subscriptions", "Error listing subscriptions")

@@ -1,96 +1,88 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetProfile handles GET requests
-func GetProfile(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "", render.ActionMethodGet)
+func GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderProfile(serverFactory, render.ActionMethodGet)
 }
 
 // PostProfile handles POST/DELETE requests
-func PostProfile(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "", render.ActionMethodPost)
-}
-
-// GetInbox handles GET requests
-func GetInbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "inbox", render.ActionMethodGet)
-}
-
-// PostInbox handles POST/DELETE requests
-func PostInbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "inbox", render.ActionMethodPost)
-}
-
-// GetOutbox handles GET requests
-func GetOutbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "outbox", render.ActionMethodGet)
-}
-
-// PostOutbox handles POST/DELETE requests
-func PostOutbox(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderProfile(factoryManager, "outbox", render.ActionMethodPost)
+func PostProfile(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderProfile(serverFactory, render.ActionMethodPost)
 }
 
 // renderProfile is the common Profile handler for both GET and POST requests
-func renderProfile(fm *server.Factory, actionID string, actionMethod render.ActionMethod) echo.HandlerFunc {
+func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.renderProfile"
 
-	return func(ctx echo.Context) error {
+	return func(context echo.Context) error {
 
-		// Guarantee that the user is signed in to view this page.
-		sterankoContext := ctx.(*steranko.Context)
-		authorization := getAuthorization(sterankoContext)
+		// Cast the context into a steranko context (which includes authentication data)
+		sterankoContext := context.(*steranko.Context)
 
-		if !authorization.IsAuthenticated() {
-			return ctx.NoContent(http.StatusUnauthorized)
-		}
-
-		// Get the user token from a) the URL, or b) the authentication cookie
-		userToken := ctx.Param("user")
-
-		if userToken == "" {
-			userToken = authorization.UserID.Hex()
-		}
-
-		// If actionID has not been set for us, then get it from the context
-		if actionID == "" {
-			actionID = getActionID(ctx)
-		}
-
-		// Try to locate the domain from the Context
-		factory, err := fm.ByContext(ctx)
+		// Get the domain factory from the context
+		factory, err := serverFactory.ByContext(sterankoContext)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
+			return derp.Wrap(err, location, "Error loading domain factory")
 		}
 
-		// Try to load the user profile by userId or username.
+		// Get the UserID from the URL (could be "me")
+		userID, err := profileUserID(sterankoContext)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading user ID")
+		}
+
+		// Try to load the user from the database
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByToken(userToken, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading User", userToken)
+		if err := userService.LoadByID(userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", userID)
 		}
 
-		// Create a profile renderer
+		// Try to load the User's Outbox
+		actionID := first.String(context.Param("action"), "view")
 		renderer, err := render.NewProfile(factory, sterankoContext, &user, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating renderer", userToken, actionID)
+			return derp.Wrap(err, location, "Error creating renderer")
 		}
 
-		// Render the resulting page.
+		// Forward to the standard page renderer to complete the job
 		return renderPage(factory, sterankoContext, renderer, actionMethod)
 	}
+}
+
+func profileUserID(context *steranko.Context) (primitive.ObjectID, error) {
+
+	userIDString := context.Param("userId")
+
+	if objectID, err := primitive.ObjectIDFromHex(userIDString); err == nil {
+		return objectID, nil
+	}
+
+	if userIDString == "me" {
+		authorization := getAuthorization(context)
+
+		if authorization.IsAuthenticated() {
+			return authorization.UserID, nil
+		}
+
+		return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "Cannot use 'me' when user is not authenticated")
+	}
+
+	return primitive.ObjectIDFromHex(userIDString)
 }

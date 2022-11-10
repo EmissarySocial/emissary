@@ -1,0 +1,24 @@
+{{$subscriptions := .Subscriptions}}
+
+<div class="page">
+
+	<a href="/people/me/inbox">Inbox</a>
+	<h1>Subscriptions</h1>
+
+	<table class="table">
+		<tr hx-get="/people/me/add-subscription" role="button"><td colspan="2">
+			Add Subscription
+		</td></tr>
+		{{ range $subscriptions }}
+			<tr hx-get="/people/me/edit-subscription?subscriptionId={{.SubscriptionID.Hex}}" role="button">
+				<td>{{.Label}}</td>
+				<td>{{.URL}}</td>
+				<td>{{.Status}}</td>
+				<td class="align-right">
+					<button hx-get="/people/me/delete-subscription?subscriptionId={{.SubscriptionID.Hex}}" class="text-red">Delete</button>
+				</td>
+			</tr>
+		{{ end }}
+	</table>
+
+</div>	

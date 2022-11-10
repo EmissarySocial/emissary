@@ -1,0 +1,79 @@
+{
+	"templateId": "user-profile",
+	"role": "user-profile",
+	"label": "Inbox",
+	"description": "Profile displays everything about a user, including their inbox and outbox information",
+	"icon": "inbox",
+	"containedBy": [],
+	"schema": {
+		"title": "User Profiler",
+		"type": "object",
+		"properties": {
+			"feeds": {
+				"description": "Array of people to render on the page",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"url": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	},
+	"states": {
+		"default": {
+			"label": "Inbox only has default state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label": "Inbox Owner",
+			"decription": "Full control"
+		}
+	},
+	"actions": {
+		"view": {
+			"step": "view-html"
+		},
+		"inbox": {
+			"roles": ["myself"],
+			"step": "view-html"
+		},
+		"inbox-list": {
+			"roles": ["myself"],
+			"step": "view-html"
+		},
+		"inbox-item": {
+			"roles": ["myself"],
+			"steps": [{"step": "as-modal", "class":"huge", "steps": [
+				{"step":"view-html"}
+			]}]
+		},
+		"outbox-list": {
+			"roles": ["myself"],
+			"step": "view-html"
+		},
+		"subscriptions": {
+			"roles": ["myself"],
+			"step": "view-html"
+		},
+		"add-subscription": {
+			"roles": ["myself"],
+			"step": "add-subscription"
+		},
+		"edit-subscription": {
+			"roles": ["myself"],
+			"step": "edit-subscription"
+		},
+		"delete-subscription": {
+			"roles": ["myself"],
+			"step": "delete-subscription"
+		}
+	}
+}	

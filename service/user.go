@@ -109,6 +109,8 @@ func (service *User) Delete(user *model.User, note string) error {
 		return derp.Wrap(err, "service.User", "Error deleting User", user, note)
 	}
 
+	// TODO: Clean up related records (like InboxItem and OutboxItem)
+
 	return nil
 }
 

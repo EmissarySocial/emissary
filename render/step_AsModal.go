@@ -11,6 +11,7 @@ import (
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
 	SubSteps []step.Step
+	Class    string
 }
 
 // Get displays a form where users can update stream data
@@ -27,7 +28,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 	// Modal Wrapper
 	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
 	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").EndBracket()
+	b.Div().ID("modal-window").Class(step.Class).EndBracket()
 
 	// Write inner items
 	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {

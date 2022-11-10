@@ -147,6 +147,17 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "with-parent":
 		return NewWithParent(stepInfo)
 
+	// RSS SUBSCRIPTIONS
+
+	case "add-subscription":
+		return NewAddSubscription(stepInfo)
+
+	case "edit-subscription":
+		return NewEditSubscription(stepInfo)
+
+	case "delete-subscription":
+		return NewDeleteSubscription(stepInfo)
+
 	// EXTERNAL CONNECTIONS
 
 	case "edit-connection":

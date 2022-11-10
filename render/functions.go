@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
+	humanize "github.com/dustin/go-humanize"
 )
 
 func FuncMap(icons icon.Provider) template.FuncMap {
@@ -104,6 +105,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 
 			return time.Unix(valueInt, 0).Format(time.RFC3339)
+		},
+
+		"humanizeTime": func(value any) string {
+			valueInt := convert.Int64(value)
+			return humanize.Time(time.UnixMilli(valueInt))
 		},
 	}
 }

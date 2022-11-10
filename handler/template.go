@@ -54,5 +54,4 @@ func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory
 	}
 
 	return factory, domain, nil
-
 }

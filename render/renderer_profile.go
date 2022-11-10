@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
@@ -16,26 +17,33 @@ import (
 )
 
 type Profile struct {
-	layout *model.Layout
-	user   *model.User
+	template *model.Template
+	user     *model.User
 	Common
 }
 
 func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Profile, error) {
 
-	layout := factory.Layout().Profile()
+	// Load the Template
+	templateService := factory.Template()
 
-	// Verify the requested action
-	action := layout.Action(actionID)
+	template, err := templateService.Load("user-profile")
+
+	if err != nil {
+		return Profile{}, derp.Wrap(err, "render.NewProfile", "Error loading template")
+	}
+
+	// Verify the requested action is valid for this template
+	action := template.Action(actionID)
 
 	if action == nil {
 		return Profile{}, derp.NewBadRequestError("render.NewProfile", "Invalid action", actionID)
 	}
 
 	return Profile{
-		layout: layout,
-		user:   user,
-		Common: NewCommon(factory, ctx, action, actionID),
+		template: template,
+		user:     user,
+		Common:   NewCommon(factory, ctx, action, actionID),
 	}, nil
 }
 
@@ -70,14 +78,16 @@ func (w Profile) View(actionID string) (template.HTML, error) {
 	return renderer.Render()
 }
 
+// TopLevelID returns the ID to use for highlighing navigation menus
 func (w Profile) TopLevelID() string {
 
-	if w.UserID() == w.Common.UserID().Hex() {
+	// If the user is viewing their own profile, then the top-level ID is the user's own ID
+	if w.UserID() == w.Common.AuthenticatedID().Hex() {
 
-		if w.actionID == "inbox" {
-			return "inbox"
+		if w.ActionID() == "view" {
+			return "profile"
 		}
-		return "profile"
+		return "inbox"
 	}
 
 	return ""
@@ -85,12 +95,11 @@ func (w Profile) TopLevelID() string {
 
 func (w Profile) PageTitle() string {
 
-	if w.UserID() == w.Common.UserID().Hex() {
-
-		if w.actionID == "inbox" {
-			return "Inbox"
+	if w.ActionID() == "view" {
+		if w.template.TemplateID == "user-outbox" {
+			return "Profile"
 		}
-		return "Profile"
+		return "Inbox"
 	}
 
 	return ""
@@ -121,13 +130,13 @@ func (w Profile) service() ModelService {
 }
 
 func (w Profile) executeTemplate(writer io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+	return w.template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Profile) UserCan(actionID string) bool {
 
-	action := w.layout.Action(actionID)
+	action := w.template.Action(actionID)
 
 	if action == nil {
 		return false
@@ -146,6 +155,10 @@ func (w Profile) UserID() string {
 	return w.user.UserID.Hex()
 }
 
+func (w Profile) InboxFolderID() string {
+	return w.context().QueryParam("inboxFolderId")
+}
+
 func (w Profile) DisplayName() string {
 	return w.user.DisplayName
 }
@@ -158,40 +171,93 @@ func (w Profile) ImageURL() string {
 	return w.user.ImageURL
 }
 
-func (w Profile) Inbox() QueryBuilder {
-	factory := w.factory()
-	context := w.context()
-	streamService := w.factory().Stream()
-	criteria := exp.Equal("parentId", w.user.InboxID)
-
-	return NewQueryBuilder(factory, context, streamService, criteria)
-}
-
-func (w Profile) Outbox() QueryBuilder {
-	factory := w.factory()
-	context := w.context()
-	streamService := w.factory().Stream()
-	criteria := exp.Equal("parentId", w.user.OutboxID)
-
-	return NewQueryBuilder(factory, context, streamService, criteria)
-}
-
 /*******************************************
  * QUERY BUILDERS
  *******************************************/
 
-func (w Profile) Profiles() *QueryBuilder {
+func (w Profile) Inbox() ([]model.InboxItem, error) {
+
+	if !w.IsAuthenticated() {
+		return []model.InboxItem{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
+	}
+
+	factory := w.factory()
 
 	query := builder.NewBuilder().
-		String("displayName").
-		ObjectID("groupId")
+		Int("publishDate").
+		ObjectID("inboxFolderId")
 
 	criteria := exp.And(
 		query.Evaluate(w.ctx.Request().URL.Query()),
-		exp.Equal("journal.deleteDate", 0),
+		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder(w.factory(), w.ctx, w.factory().User(), criteria)
+	return factory.Inbox().Query(criteria, option.MaxRows(60), option.SortAsc("publishDate"))
+}
 
+func (w Profile) InboxItem() (model.InboxItem, error) {
+
+	// Guarantee that the user is signed in
+	if !w.IsAuthenticated() {
+		return model.InboxItem{}, derp.NewForbiddenError("render.Profile.InboxItem", "Not authenticated")
+	}
+
+	// Convert the inboxItemID QueryParam to an ObjectID
+	inboxItemID, err := primitive.ObjectIDFromHex(w.ctx.QueryParam("inboxItemId"))
+
+	if err != nil {
+		return model.InboxItem{}, derp.New(derp.CodeBadRequestError, "render.Profile.InboxItem", "Invalid inboxItemID", err)
+	}
+
+	// Try to load the record from the database
+	result := model.NewInboxItem()
+	inboxService := w.factory().Inbox()
+	err = inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result)
+
+	// Success!
+	return result, err
+}
+
+func (w Profile) InboxFolders() ([]model.InboxFolder, error) {
+
+	if !w.IsAuthenticated() {
+		return []model.InboxFolder{}, derp.NewForbiddenError("render.Profile.InboxFolders", "Not authenticated")
+	}
+
+	inboxFolderService := w.factory().InboxFolder()
+	return inboxFolderService.QueryByUserID(w.AuthenticatedID())
+}
+
+func (w Profile) Outbox() *QueryBuilder {
+
+	if !w.IsAuthenticated() {
+		return nil
+	}
+
+	factory := w.factory()
+	context := w.context()
+
+	query := builder.NewBuilder().
+		Int("publishDate")
+
+	criteria := exp.And(
+		query.Evaluate(w.ctx.Request().URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	result := NewQueryBuilder(factory, context, factory.Stream(), criteria)
 	return &result
+}
+
+func (w Profile) Subscriptions() ([]model.SubscriptionSummary, error) {
+
+	userID := w.AuthenticatedID()
+
+	if userID.IsZero() {
+		return nil, derp.NewUnauthorizedError("render.Profile.Subscriptions", "Must be signed in to view subscriptions")
+	}
+
+	subscriptionService := w.factory().Subscription()
+
+	return subscriptionService.QueryByUserID(userID)
 }

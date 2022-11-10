@@ -17,6 +17,8 @@ type Factory interface {
 	// Model Services
 	Attachment() *service.Attachment
 	Group() *service.Group
+	Inbox() *service.Inbox
+	InboxFolder() *service.InboxFolder
 	Layout() *service.Layout
 	Mention() *service.Mention
 	Stream() *service.Stream
