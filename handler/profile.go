@@ -66,7 +66,7 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 	}
 }
 
-func profileUserID(context *steranko.Context) (primitive.ObjectID, error) {
+func profileUserID(context echo.Context) (primitive.ObjectID, error) {
 
 	userIDString := context.Param("userId")
 
@@ -75,14 +75,20 @@ func profileUserID(context *steranko.Context) (primitive.ObjectID, error) {
 	}
 
 	if userIDString == "me" {
-		authorization := getAuthorization(context)
-
-		if authorization.IsAuthenticated() {
-			return authorization.UserID, nil
-		}
-
-		return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "Cannot use 'me' when user is not authenticated")
+		return authenticatedID(context)
 	}
 
 	return primitive.ObjectIDFromHex(userIDString)
+}
+
+func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
+
+	sterankoContext := context.(*steranko.Context)
+	authorization := getAuthorization(sterankoContext)
+
+	if authorization.IsAuthenticated() {
+		return authorization.UserID, nil
+	}
+
+	return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "User is not authenticated")
 }

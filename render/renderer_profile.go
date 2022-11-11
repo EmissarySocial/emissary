@@ -3,9 +3,9 @@ package render
 import (
 	"bytes"
 	"html/template"
-	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -17,8 +17,7 @@ import (
 )
 
 type Profile struct {
-	template *model.Template
-	user     *model.User
+	user *model.User
 	Common
 }
 
@@ -41,9 +40,8 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
 	}
 
 	return Profile{
-		template: template,
-		user:     user,
-		Common:   NewCommon(factory, ctx, action, actionID),
+		user:   user,
+		Common: NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -57,7 +55,7 @@ func (w Profile) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "render.Profile.Render", "Error generating HTML"))
 
 	}
@@ -69,7 +67,7 @@ func (w Profile) Render() (template.HTML, error) {
 // View executes a separate view for this Profile
 func (w Profile) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewProfile(w.factory(), w.ctx, w.user, actionID)
+	renderer, err := NewProfile(w._factory, w._context, w.user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.Profile.View", "Error creating Profile renderer")
@@ -96,7 +94,7 @@ func (w Profile) TopLevelID() string {
 func (w Profile) PageTitle() string {
 
 	if w.ActionID() == "view" {
-		if w.template.TemplateID == "user-outbox" {
+		if w.template().TemplateID == "user-outbox" {
 			return "Profile"
 		}
 		return "Inbox"
@@ -122,21 +120,17 @@ func (w Profile) objectID() primitive.ObjectID {
 }
 
 func (w Profile) schema() schema.Schema {
-	return w.user.Schema()
+	return schema.New(model.UserSchema())
 }
 
-func (w Profile) service() ModelService {
-	return w.f.User()
-}
-
-func (w Profile) executeTemplate(writer io.Writer, name string, data any) error {
-	return w.template.HTMLTemplate.ExecuteTemplate(writer, name, data)
+func (w Profile) service() service.ModelService {
+	return w._factory.User()
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Profile) UserCan(actionID string) bool {
 
-	action := w.template.Action(actionID)
+	action := w.template().Action(actionID)
 
 	if action == nil {
 		return false
@@ -181,15 +175,16 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 		return []model.InboxItem{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
 	}
 
-	factory := w.factory()
+	factory := w._factory
 
 	expBuilder := builder.NewBuilder().
-		Int("publishDate").
-		ObjectID("inboxFolderId")
+		ObjectID("inboxFolderId").
+		Int("readDate").
+		Int("publishDate")
 
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
-		expBuilder.Evaluate(w.ctx.Request().URL.Query()),
+		expBuilder.Evaluate(w._context.Request().URL.Query()),
 	)
 
 	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
@@ -203,7 +198,7 @@ func (w Profile) IsInboxEmpty(inbox []model.InboxItem) bool {
 		return false
 	}
 
-	if w.ctx.Request().URL.Query().Get("publishDate") != "" {
+	if w._context.Request().URL.Query().Get("publishDate") != "" {
 		return false
 	}
 
@@ -217,17 +212,10 @@ func (w Profile) InboxItem() (model.InboxItem, error) {
 		return model.InboxItem{}, derp.NewForbiddenError("render.Profile.InboxItem", "Not authenticated")
 	}
 
-	// Convert the inboxItemID QueryParam to an ObjectID
-	inboxItemID, err := primitive.ObjectIDFromHex(w.ctx.QueryParam("inboxItemId"))
-
-	if err != nil {
-		return model.InboxItem{}, derp.New(derp.CodeBadRequestError, "render.Profile.InboxItem", "Invalid inboxItemID", err)
-	}
-
 	// Try to load the record from the database
 	result := model.NewInboxItem()
-	inboxService := w.factory().Inbox()
-	err = inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result)
+	inboxService := w._factory.Inbox()
+	err := inboxService.LoadItemByID(w.AuthenticatedID(), w._context.QueryParam("inboxItemId"), &result)
 
 	// Success!
 	return result, err
@@ -239,8 +227,24 @@ func (w Profile) InboxFolders() ([]model.InboxFolder, error) {
 		return []model.InboxFolder{}, derp.NewForbiddenError("render.Profile.InboxFolders", "Not authenticated")
 	}
 
-	inboxFolderService := w.factory().InboxFolder()
+	inboxFolderService := w._factory.InboxFolder()
 	return inboxFolderService.QueryByUserID(w.AuthenticatedID())
+}
+
+func (w Profile) InboxFolder() (model.InboxFolder, error) {
+
+	// Guarantee that the user is signed in
+	if !w.IsAuthenticated() {
+		return model.InboxFolder{}, derp.NewForbiddenError("render.Profile.InboxFolders", "Not authenticated")
+	}
+
+	// Try to load the record from the database
+	inboxFolder := model.NewInboxFolder()
+	inboxFolderID := w._context.QueryParam("inboxFolderId")
+	inboxFolderService := w._factory.InboxFolder()
+
+	err := inboxFolderService.LoadByToken(w.AuthenticatedID(), inboxFolderID, &inboxFolder)
+	return inboxFolder, err
 }
 
 func (w Profile) Outbox() *QueryBuilder {
@@ -249,14 +253,14 @@ func (w Profile) Outbox() *QueryBuilder {
 		return nil
 	}
 
-	factory := w.factory()
+	factory := w._factory
 	context := w.context()
 
 	query := builder.NewBuilder().
 		Int("publishDate")
 
 	criteria := exp.And(
-		query.Evaluate(w.ctx.Request().URL.Query()),
+		query.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
@@ -272,7 +276,7 @@ func (w Profile) Subscriptions() ([]model.SubscriptionSummary, error) {
 		return nil, derp.NewUnauthorizedError("render.Profile.Subscriptions", "Must be signed in to view subscriptions")
 	}
 
-	subscriptionService := w.factory().Subscription()
+	subscriptionService := w._factory.Subscription()
 
 	return subscriptionService.QueryByUserID(userID)
 }

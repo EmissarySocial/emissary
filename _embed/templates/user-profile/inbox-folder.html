@@ -1,6 +1,12 @@
+{{$inboxFolder := .InboxFolder}}
+
 <div class="page" hx-push-url="true">
 
-	<h1>My Inbox</h1>
+	<div class="float-right text-sm">
+		<button hx-get="/people/me/inbox/folders/{{$inboxFolder.InboxFolderID}}/edit">Edit</button>
+	</div>
+
+	<h1>{{$inboxFolder.Label}}</h1>
 
 	<div class="pure-g">
 

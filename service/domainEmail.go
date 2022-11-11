@@ -32,7 +32,7 @@ func NewDomainEmail(serverEmail *ServerEmail, configuration config.Domain) Domai
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 func (service *DomainEmail) Refresh(configuration config.Domain) {

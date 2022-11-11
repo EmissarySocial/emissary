@@ -58,7 +58,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
 	context := streamRenderer.context()
 	parent := streamRenderer.stream
-	templateID := streamRenderer.ctx.QueryParam("templateId")
+	templateID := context.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
 	if len(step.TemplateIDs) > 0 {

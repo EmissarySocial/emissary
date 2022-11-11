@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -106,7 +105,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Properties: map[string]schema.Element{
 				"displayname": schema.String{Format: "no-html"},
 				"username":    schema.String{Format: "no-html"},
-				"password":    schema.String{MinLength: null.NewInt(12)},
+				"password":    schema.String{MinLength: 12},
 			},
 		},
 	}

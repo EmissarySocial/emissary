@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,7 +28,7 @@ func NewGroup(collection data.Collection) Group {
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -41,7 +42,7 @@ func (service *Group) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // List returns an iterator containing all of the Groups who match the provided criteria
@@ -82,13 +83,22 @@ func (service *Group) Delete(user *model.Group, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA FUNCTIONS
+ * Model Service Methods
  *******************************************/
 
 // New returns a fully initialized model.Group as a data.Object.
 func (service *Group) ObjectNew() data.Object {
 	result := model.NewGroup()
 	return &result
+}
+
+func (service *Group) ObjectID(object data.Object) primitive.ObjectID {
+
+	if group, ok := object.(*model.Group); ok {
+		return group.GroupID
+	}
+
+	return primitive.NilObjectID
 }
 
 func (service *Group) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -109,6 +119,14 @@ func (service *Group) ObjectDelete(object data.Object, comment string) error {
 	return service.Delete(object.(*model.Group), comment)
 }
 
+func (service *Group) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Group", "Not Authorized")
+}
+
+func (service *Group) Schema() schema.Element {
+	return model.GroupSchema()
+}
+
 func (service *Group) Debug() maps.Map {
 	return maps.Map{
 		"service": "Group",
@@ -116,7 +134,7 @@ func (service *Group) Debug() maps.Map {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
 // LoadByID loads a single model.Group object that matches the provided userID

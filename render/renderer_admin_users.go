@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -44,7 +45,7 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
 	return User{
 		layout: layout,
 		user:   user,
-		Common: NewCommon(factory, ctx, action, actionID),
+		Common: NewCommon(factory, ctx, nil, action, actionID),
 	}, nil
 }
 
@@ -70,7 +71,7 @@ func (w User) Render() (template.HTML, error) {
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewUser(w.factory(), w.ctx, w.user, actionID)
+	renderer, err := NewUser(w.factory(), w._context, w.user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.User.View", "Error creating renderer")
@@ -104,11 +105,11 @@ func (w User) objectID() primitive.ObjectID {
 }
 
 func (w User) schema() schema.Schema {
-	return w.user.Schema()
+	return schema.New(model.UserSchema())
 }
 
-func (w User) service() ModelService {
-	return w.f.User()
+func (w User) service() service.ModelService {
+	return w._factory.User()
 }
 
 func (w User) executeTemplate(writer io.Writer, name string, data any) error {
@@ -142,11 +143,11 @@ func (w User) Users() *QueryBuilder {
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(w.ctx.Request().URL.Query()),
+		query.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w.factory(), w.ctx, w.factory().User(), criteria)
+	result := NewQueryBuilder(w._factory, w._context, w._factory.User(), criteria)
 
 	return &result
 }

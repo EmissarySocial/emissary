@@ -3,10 +3,10 @@ package render
 import (
 	"bytes"
 	"html/template"
-	"io"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -23,9 +23,8 @@ import (
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
 type Stream struct {
-	modelService ModelService    // Service to use to access streams (could be Stream or StreamDraft)
-	template     *model.Template // Template that the Stream uses
-	stream       *model.Stream   // The Stream to be displayed
+	modelService service.ModelService // Service to use to access streams (could be Stream or StreamDraft)
+	stream       *model.Stream        // The Stream to be displayed
 
 	Common
 }
@@ -61,8 +60,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template *model.Template,
 	return Stream{
 		modelService: factory.Stream(),
 		stream:       stream,
-		template:     template,
-		Common:       NewCommon(factory, ctx, action, actionID),
+		Common:       NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -107,10 +105,6 @@ func (w Stream) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-func (w Stream) executeTemplate(wr io.Writer, name string, data any) error {
-	return w.template.HTMLTemplate.ExecuteTemplate(wr, name, data)
-}
-
 // object returns the model object associated with this renderer
 func (w Stream) object() data.Object {
 	return w.stream
@@ -122,10 +116,10 @@ func (w Stream) objectID() primitive.ObjectID {
 
 // schema returns the validation schema associated with this renderer
 func (w Stream) schema() schema.Schema {
-	return w.template.Schema
+	return w.template().Schema
 }
 
-func (w Stream) service() ModelService {
+func (w Stream) service() service.ModelService {
 	return w.modelService
 }
 
@@ -139,7 +133,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	const location = "render.Stream.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewStream(w.factory(), w.context(), w.template, w.stream, actionID)
+	subStream, err := NewStream(w.factory(), w.context(), w.template(), w.stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
@@ -516,8 +510,8 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 	)
 
 	result := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
-	result.SortField = w.template.ChildSortType
-	result.SortDirection = w.template.ChildSortDirection
+	result.SortField = w.template().ChildSortType
+	result.SortDirection = w.template().ChildSortDirection
 
 	return result
 }
@@ -596,7 +590,7 @@ func (w Stream) Subscriptions() ([]model.Subscription, error) {
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {
 
-	action := w.template.Action(actionID)
+	action := w.template().Action(actionID)
 
 	if action == nil {
 		return false
@@ -612,7 +606,7 @@ func (w Stream) UserCan(actionID string) bool {
 func (w Stream) CanCreate() []form.LookupCode {
 
 	templateService := w.factory().Template()
-	return templateService.ListByContainer(w.template.TemplateID)
+	return templateService.ListByContainer(w.template().TemplateID)
 }
 
 // draftRenderer returns a new render.Stream that is bound to the
@@ -631,7 +625,6 @@ func (w Stream) draftRenderer() (Stream, error) {
 	return Stream{
 		stream:       &draft,
 		modelService: draftService,
-		template:     w.template,
-		Common:       NewCommon(w.factory(), w.ctx, w.action, w.actionID),
+		Common:       NewCommon(w._factory, w._context, w._template, w.action, w.actionID),
 	}, nil
 }

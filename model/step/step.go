@@ -138,6 +138,9 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
+	case "with-inbox-folder":
+		return NewWithInboxFolder(stepInfo)
+
 	case "with-prev-sibling":
 		return NewWithPrevSibling(stepInfo)
 

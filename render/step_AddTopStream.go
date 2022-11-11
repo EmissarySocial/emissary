@@ -33,8 +33,8 @@ func (step StepAddTopStream) Post(renderer Renderer) error {
 
 	// Collect prerequisites
 	factory := renderer.factory()
-	topLevelRenderer := renderer.(TopLevel)
-	templateID := topLevelRenderer.ctx.QueryParam("templateId")
+	context := renderer.context()
+	templateID := context.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
 	if len(step.TemplateIDs) > 0 {

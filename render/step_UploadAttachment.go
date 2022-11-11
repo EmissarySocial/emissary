@@ -22,8 +22,9 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 
 	// TODO: could this be generalized to work with more than just streams???
 	factory := renderer.factory()
+	context := renderer.context()
 	streamRenderer := renderer.(*Stream)
-	form, err := streamRenderer.ctx.MultipartForm()
+	form, err := context.MultipartForm()
 
 	if err != nil {
 		return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading multipart form.")

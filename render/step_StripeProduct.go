@@ -295,8 +295,8 @@ func (txn stepStripeProductTransaction) schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: schema.ElementMap{
-				"buttonLabel":    schema.String{MaxLength: null.NewInt(50), Default: "Buy Now", Required: true},
-				"productName":    schema.String{MaxLength: null.NewInt(50), Required: true},
+				"buttonLabel":    schema.String{MaxLength: 50, Default: "Buy Now", Required: true},
+				"productName":    schema.String{MaxLength: 50, Required: true},
 				"decimalAmount":  schema.Number{Minimum: null.NewFloat(0), Required: true},
 				"trackInventory": schema.Boolean{},
 				"quantityOnHand": schema.Integer{Minimum: null.NewInt64(0)},

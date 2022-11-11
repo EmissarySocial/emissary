@@ -49,7 +49,7 @@ func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap 
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 func (service *Template) Refresh(locations []config.Folder) {
@@ -173,7 +173,7 @@ func (service *Template) loadTemplates() error {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // List returns all templates that match the provided criteria
@@ -225,7 +225,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
 // ListFeatures returns all templates that are used as "feature" templates

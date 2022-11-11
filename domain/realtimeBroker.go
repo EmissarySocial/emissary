@@ -47,7 +47,7 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBrok
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh

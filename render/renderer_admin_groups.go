@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -44,7 +45,7 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
 	return Group{
 		group:  group,
 		layout: layout,
-		Common: NewCommon(factory, ctx, action, actionID),
+		Common: NewCommon(factory, ctx, nil, action, actionID),
 	}, nil
 }
 
@@ -58,7 +59,7 @@ func (w Group) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "render.Group.Render", "Error generating HTML"))
 	}
 
@@ -71,7 +72,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Group.View"
 
-	renderer, err := NewGroup(w.factory(), w.context(), w.group, actionID)
+	renderer, err := NewGroup(w._factory, w.context(), w.group, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -105,11 +106,11 @@ func (w Group) objectID() primitive.ObjectID {
 }
 
 func (w Group) schema() schema.Schema {
-	return w.group.Schema()
+	return schema.New(model.GroupSchema())
 }
 
-func (w Group) service() ModelService {
-	return w.f.Group()
+func (w Group) service() service.ModelService {
+	return w._factory.Group()
 }
 
 func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
@@ -143,7 +144,7 @@ func (w Group) Groups() *QueryBuilder {
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w.factory(), w.context(), w.factory().Group(), criteria)
+	result := NewQueryBuilder(w._factory, w.context(), w._factory.Group(), criteria)
 
 	return &result
 }

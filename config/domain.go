@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -40,9 +39,9 @@ func DomainSchema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: schema.ElementMap{
-				"label":         schema.String{MaxLength: null.NewInt(100), Required: true},
-				"hostname":      schema.String{MaxLength: null.NewInt(255), Required: true},
-				"connectString": schema.String{MaxLength: null.NewInt(1000)},
+				"label":         schema.String{MaxLength: 100, Required: true},
+				"hostname":      schema.String{MaxLength: 255, Required: true},
+				"connectString": schema.String{MaxLength: 1000},
 				"databaseName":  schema.String{Pattern: `[a-zA-Z0-9-_]+`},
 				"smtp":          SMTPConnectionSchema(),
 				"owner":         OwnerSchema(),

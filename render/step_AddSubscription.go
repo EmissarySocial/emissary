@@ -92,7 +92,7 @@ func (step StepAddSubscription) form() form.Form {
 	return form.Form{
 		Schema: schema.New(schema.Object{
 			Properties: schema.ElementMap{
-				"url":          schema.String{MaxLength: null.NewInt(512), Required: true},
+				"url":          schema.String{MaxLength: 512, Required: true},
 				"pollDuration": schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
 			},
 		}),

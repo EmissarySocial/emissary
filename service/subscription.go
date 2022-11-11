@@ -14,6 +14,8 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"github.com/mmcdole/gofeed"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/html"
@@ -148,6 +150,57 @@ func (service *Subscription) Delete(subscription *model.Subscription, note strin
 	}
 
 	return nil
+}
+
+/*******************************************
+ * Model Service Methods
+ *******************************************/
+
+// New returns a fully initialized model.Stream as a data.Object.
+func (service *Subscription) ObjectNew() data.Object {
+	result := model.NewSubscription()
+	return &result
+}
+
+func (service *Subscription) ObjectID(object data.Object) primitive.ObjectID {
+
+	if subscription, ok := object.(*model.Subscription); ok {
+		return subscription.SubscriptionID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *Subscription) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Subscription) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewSubscription()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Subscription) ObjectSave(object data.Object, note string) error {
+	return service.Save(object.(*model.Subscription), note)
+}
+
+func (service *Subscription) ObjectDelete(object data.Object, note string) error {
+	return service.Delete(object.(*model.Subscription), note)
+}
+
+func (service *Subscription) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Subscription", "Not Authorized")
+}
+
+func (service *Subscription) Schema() schema.Element {
+	return model.SubscriptionSchema()
+}
+
+func (service *Subscription) Debug() maps.Map {
+	return maps.Map{
+		"service": "Subscription",
+	}
 }
 
 /*******************************************

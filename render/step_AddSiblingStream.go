@@ -52,11 +52,11 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 	sibling := streamRenderer.stream
 
 	// New Stream is assumed to use the same Template as the current Stream
-	templateID := streamRenderer.template.TemplateID
+	templateID := streamRenderer.template().TemplateID
 
 	// But if there is a list of eligible templates, then guarantee that the new template is in the list.
 	if len(step.TemplateIDs) > 0 {
-		if paramTemplateID := streamRenderer.ctx.QueryParam("templateId"); paramTemplateID != "" {
+		if paramTemplateID := context.QueryParam("templateId"); paramTemplateID != "" {
 			if compare.Contains(step.TemplateIDs, paramTemplateID) {
 				templateID = paramTemplateID
 			}

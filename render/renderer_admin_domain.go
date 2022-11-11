@@ -46,7 +46,7 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 	result := Domain{
 		externalService: externalService,
 		layout:          layout,
-		Common:          NewCommon(factory, ctx, action, actionID),
+		Common:          NewCommon(factory, ctx, nil, action, actionID),
 	}
 
 	result.domain = domain
@@ -63,7 +63,7 @@ func (w Domain) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
+	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
 		return "", derp.Report(derp.Wrap(err, "render.Stream.Render", "Error generating HTML"))
 	}
 
@@ -76,7 +76,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Domain.View"
 
-	renderer, err := NewDomain(w.factory(), w.context(), w.externalService, w.layout, w.domain, actionID)
+	renderer, err := NewDomain(w._factory, w._context, w.externalService, w.layout, w.domain, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -101,12 +101,12 @@ func (w Domain) schema() schema.Schema {
 	return w.layout.Schema
 }
 
-func (w Domain) service() ModelService {
-	return w.f.Domain()
+func (w Domain) service() service.ModelService {
+	return w._factory.Domain()
 }
 
 func (w Domain) domainService() *service.Domain {
-	return w.f.Domain()
+	return w._factory.Domain()
 }
 
 func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
@@ -126,7 +126,7 @@ func (w Domain) PageTitle() string {
 }
 
 /*******************************************
- * OTHER DATA ACCESSORS
+ * Other Data Accessors
  *******************************************/
 
 // SignupForm returns the SignupForm associated with this Domain.
@@ -140,7 +140,7 @@ func (w Domain) SignupForm() model.SignupForm {
 
 func (w Domain) Providers() []form.LookupCode {
 
-	providers := w.factory().Providers()
+	providers := w._factory.Providers()
 
 	return slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
 		if lookupCode.Group == "MANUAL" {

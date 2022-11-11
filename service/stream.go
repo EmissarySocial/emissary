@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -43,7 +44,7 @@ func NewStream(collection data.Collection, templateService *Template, attachment
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -59,7 +60,7 @@ func (service *Stream) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // New returns a new stream that uses the named template.
@@ -190,6 +191,14 @@ func (service *Stream) ObjectNew() data.Object {
 	return &result
 }
 
+func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
+
+	if stream, ok := object.(*model.Stream); ok {
+		return stream.StreamID
+	}
+
+	return primitive.NilObjectID
+}
 func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
@@ -208,6 +217,14 @@ func (service *Stream) ObjectDelete(object data.Object, note string) error {
 	return service.Delete(object.(*model.Stream), note)
 }
 
+func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Stream", "Not Authorized")
+}
+
+func (service *Stream) Schema() schema.Element {
+	return nil
+}
+
 func (service *Stream) Debug() maps.Map {
 	return maps.Map{
 		"service": "Stream",
@@ -215,7 +232,7 @@ func (service *Stream) Debug() maps.Map {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
 // ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy

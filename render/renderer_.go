@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
@@ -49,7 +50,8 @@ type Renderer interface {
 
 	factory() Factory                   // The service factory
 	context() *steranko.Context         // The request context embedded in the Renderer
-	service() ModelService              // The abstracted ModelService the backs this Renderer
+	service() service.ModelService      // The abstracted ModelService the backs this Renderer
+	template() *model.Template          // The template used for this renderer (if any)
 	authorization() model.Authorization // retrieves the user's authorization data from the context
 	schema() schema.Schema              // Schema to use to validate this Object
 	object() data.Object                // Model Object being rendered

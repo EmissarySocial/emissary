@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 )
@@ -42,9 +41,9 @@ func ProviderSchema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: schema.ElementMap{
-				"provider":     schema.String{Required: true, Enum: validProviders, MaxLength: null.NewInt(20)},
-				"clientId":     schema.String{Required: false, MaxLength: null.NewInt(255)},
-				"clientSecret": schema.String{Required: false, MaxLength: null.NewInt(255)},
+				"provider":     schema.String{Required: true, Enum: validProviders, MaxLength: 20},
+				"clientId":     schema.String{Required: false, MaxLength: 255},
+				"clientSecret": schema.String{Required: false, MaxLength: 255},
 			},
 		},
 	}

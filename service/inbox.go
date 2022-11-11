@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/microcosm-cc/bluemonday"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,7 +26,7 @@ func NewInbox(collection data.Collection) Inbox {
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -41,7 +40,7 @@ func (service *Inbox) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // New creates a newly initialized Inbox that is ready to use
@@ -99,16 +98,24 @@ func (service *Inbox) Delete(inboxItem *model.InboxItem, note string) error {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
-func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.InboxItem) error {
+func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemString string, result *model.InboxItem) error {
+
+	const location = "service.Inbox.LoadItemByID"
+
+	// Convert the string to an ObjectID
+	inboxItemID, err := primitive.ObjectIDFromHex(inboxItemString)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Cannot parse inboxItemID", inboxItemString)
+	}
 
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("_id", inboxItemID)
 
-	spew.Dump(criteria)
 	return service.Load(criteria, result)
 }
 
@@ -120,4 +127,23 @@ func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL strin
 		AndEqual("origin.url", originURL)
 
 	return service.Load(criteria, result)
+}
+
+func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
+
+	const location = "service.Inbox.SetReadDate"
+
+	inboxItem := model.NewInboxItem()
+
+	if err := service.LoadItemByID(userID, token, &inboxItem); err != nil {
+		return derp.Wrap(err, location, "Cannot load InboxItem", userID, token)
+	}
+
+	inboxItem.ReadDate = readDate
+
+	if err := service.Save(&inboxItem, "Mark Read"); err != nil {
+		return derp.Wrap(err, location, "Cannot save InboxItem", inboxItem)
+	}
+
+	return nil
 }

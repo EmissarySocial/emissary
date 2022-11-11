@@ -16,7 +16,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 
 	header := renderer.context().Response().Header()
 
-	header.Set("Vary", "Cookie, HX-Request, User-Agent")
+	header.Set("Vary", "Cookie, HX-Request")
 	header.Set("Cache-Control", "private")
 
 	var filename string
@@ -27,6 +27,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 		filename = renderer.ActionID()
 	}
 
+	// TODO: Re-implement caching
 	// object := renderer.object()
 	// header.Set("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339))
 	// header.Set("ETag", object.ETag())

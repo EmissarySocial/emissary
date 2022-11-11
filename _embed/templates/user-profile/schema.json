@@ -41,6 +41,9 @@
 		"view": {
 			"step": "view-html"
 		},
+		"sidebar": {
+			"step": "view-html"
+		},
 		"inbox": {
 			"roles": ["myself"],
 			"step": "view-html"
@@ -54,6 +57,17 @@
 			"steps": [{"step": "as-modal", "class":"huge", "steps": [
 				{"step":"view-html"}
 			]}]
+		},
+		"inbox-folder": {
+			"roles":["myself"],
+			"steps": [
+				{"step": "with-inbox-folder", "steps": [
+					{"step": "form-html", "form": {
+
+					}},
+					{"step": "save"}
+				]}
+			]
 		},
 		"outbox-list": {
 			"roles": ["myself"],

@@ -1,8 +1,8 @@
 package render
 
 import (
-	"fmt"
 	"html/template"
+	"io"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,10 +18,11 @@ import (
 
 // Common provides common rendering functions that are needed by ALL renderers
 type Common struct {
-	f        Factory           // Factory interface is required for locating other services.
-	ctx      *steranko.Context // Contains request context and authentication data.
-	action   *model.Action     // Action to be performed on the (template or layout)
-	actionID string            // Token that identifies the action requested in the URL
+	_factory  Factory           // Factory interface is required for locating other services.
+	_context  *steranko.Context // Contains request context and authentication data.
+	_template *model.Template   // Template to use for this renderer
+	action    *model.Action     // Action to be performed on the (template or layout)
+	actionID  string            // Token that identifies the action requested in the URL
 
 	requestData maps.Map // Temporary data scope for this request
 
@@ -30,10 +31,11 @@ type Common struct {
 	user   *model.User  // This is a pointer because it may not be used in every request.
 }
 
-func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, actionID string) Common {
+func NewCommon(factory Factory, context *steranko.Context, template *model.Template, action *model.Action, actionID string) Common {
 	return Common{
-		f:           factory,
-		ctx:         ctx,
+		_factory:    factory,
+		_context:    context,
+		_template:   template,
 		action:      action,
 		actionID:    actionID,
 		requestData: maps.New(),
@@ -46,12 +48,12 @@ func NewCommon(factory Factory, ctx *steranko.Context, action *model.Action, act
 
 // context returns request context embedded in this renderer.
 func (w Common) factory() Factory {
-	return w.f
+	return w._factory
 }
 
 // context returns request context embedded in this renderer.
 func (w Common) context() *steranko.Context {
-	return w.ctx
+	return w._context
 }
 
 // Action returns the model.Action configured into this renderer
@@ -81,7 +83,7 @@ func (w Common) Host() string {
 
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
-	if w.ctx.Request().TLS == nil {
+	if w._context.Request().TLS == nil {
 		return "http://"
 	}
 
@@ -90,7 +92,7 @@ func (w Common) Protocol() string {
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return w.ctx.Request().Host
+	return w._context.Request().Host
 }
 
 // URL returns the originally requested URL
@@ -115,14 +117,8 @@ func (w Common) IsPartialRequest() bool {
 		if request := context.Request(); request != nil {
 			if header := request.Header; header != nil {
 				return header.Get("HX-Request") != ""
-			} else {
-				fmt.Println("header is nil")
 			}
-		} else {
-			fmt.Println("request is nil")
 		}
-	} else {
-		fmt.Println("context is nil")
 	}
 	return false
 }
@@ -281,12 +277,20 @@ func (w Common) UserImage() (string, error) {
 }
 
 func (w Common) authorization() model.Authorization {
-	return getAuthorization(w.ctx)
+	return getAuthorization(w._context)
 }
 
 /*******************************************
  * MISC HELPER FUNCTIONS
  *******************************************/
+
+func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
+	if w._template == nil {
+		return derp.NewBadRequestError("render.Common.executeTemplate", "No template specified")
+	}
+
+	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
+}
 
 // withViewPermission augments a query criteria to include the
 // group authorizations of the currently signed in user.
@@ -305,6 +309,10 @@ func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
 	}
 
 	return result
+}
+
+func (w Common) template() *model.Template {
+	return w._template
 }
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
@@ -346,7 +354,7 @@ func (w *Common) getDomain() (*model.Domain, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
-	builder := NewQueryBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
+	builder := NewQueryBuilder(w.factory(), w.context(), w._factory.Stream(), criteria)
 
 	result, err := builder.Top60().ByRank().View()
 	return result, err

@@ -3,6 +3,8 @@ module github.com/EmissarySocial/emissary
 go 1.19
 
 replace github.com/benpate/exp-builder => ../../benpate/exp-builder
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+replace github.com/benpate/form => ../../benpate/form
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0

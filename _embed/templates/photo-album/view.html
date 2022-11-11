@@ -1,39 +1,42 @@
 <div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
 <div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
 
-	<h1>{{.Label}}</h1>
+	<div class="page">
+		{{ if .UserCan "edit" }}
+			<div id="menu-bar">
+				<div class="left">
+				<a href="/{{.Token}}/edit">Upload Photos</a>
 
-	{{- if ne .Description "" -}}
-		<article class="space-after">
-			{{.Description}}
-		</article>
-	{{- end -}}
+				{{- if .UserCan "properties" -}}
+					<a hx-get="/{{.Token}}/properties">Edit Info</a>
+				{{- end -}}
 
-	{{ if .UserCan "edit" }}
-		<div id="menu-bar">
-			<div class="left">
-			<a href="/{{.Token}}/edit">Upload Photos</a>
+				{{- if .UserCan "sharing" -}}
+					<a hx-get="/{{.Token}}/sharing">Sharing</a>
+				{{- end -}}
+				</div>
 
-			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.Token}}/properties">Edit Info</a>
-			{{- end -}}
-
-			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.Token}}/sharing">Sharing</a>
-			{{- end -}}
+				<div class="right">
+				{{- if .UserCan "delete" -}}
+					<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+				{{- end -}}
+				</div>
 			</div>
+		{{ end }}
 
-			<div class="right">
-			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-			{{- end -}}
-			</div>
+		<h1>{{.Label}}</h1>
+
+		{{- if ne .Description "" -}}
+			<article class="space-after">
+				{{.Description}}
+			</article>
+		{{- end -}}
+
+		<div id="children" class="pure-g card-group">
+			{{- .View "children" -}}
 		</div>
-	{{ end }}
 
-	<div id="children" class="pure-g card-group">
-		{{- .View "children" -}}
 	</div>
-
+	
 </div>
 </div>

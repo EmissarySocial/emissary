@@ -24,7 +24,7 @@ func NewOutbox(collection data.Collection) Outbox {
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -38,7 +38,7 @@ func (service *Outbox) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // New creates a newly initialized Outbox that is ready to use

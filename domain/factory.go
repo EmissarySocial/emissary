@@ -266,6 +266,16 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
  * DOMAIN MODEL SERVICES
  *******************************************/
 
+func (factory *Factory) Model(name string) service.ModelService {
+
+	switch name {
+	case "InboxFolder":
+		return factory.InboxFolder()
+	}
+
+	return nil
+}
+
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService

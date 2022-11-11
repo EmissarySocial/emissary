@@ -13,8 +13,11 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/tomnomnom/linkheader"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/microformats"
 )
 
@@ -43,7 +46,7 @@ func NewMention(collection data.Collection) Mention {
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -57,7 +60,7 @@ func (service *Mention) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // List returns an iterator containing all of the Mentions who match the provided criteria
@@ -96,6 +99,57 @@ func (service *Mention) Delete(stream *model.Mention, note string) error {
 	}
 
 	return nil
+}
+
+/*******************************************
+ * Model Service Methods
+ *******************************************/
+
+// New returns a fully initialized model.Group as a data.Object.
+func (service *Mention) ObjectNew() data.Object {
+	result := model.NewMention()
+	return &result
+}
+
+func (service *Mention) ObjectID(object data.Object) primitive.ObjectID {
+
+	if mention, ok := object.(*model.Mention); ok {
+		return mention.MentionID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *Mention) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Mention) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewMention()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Mention) ObjectSave(object data.Object, comment string) error {
+	return service.Save(object.(*model.Mention), comment)
+}
+
+func (service *Mention) ObjectDelete(object data.Object, comment string) error {
+	return service.Delete(object.(*model.Mention), comment)
+}
+
+func (service *Mention) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Mention", "Not Authorized")
+}
+
+func (service *Mention) Schema() schema.Element {
+	return model.MentionSchema()
+}
+
+func (service *Mention) Debug() maps.Map {
+	return maps.Map{
+		"service": "Mention",
+	}
 }
 
 /*******************************************

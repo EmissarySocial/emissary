@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,7 +36,7 @@ func NewUser(collection data.Collection, streamService *Stream, emailService *Do
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -49,7 +50,7 @@ func (service *User) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // List returns an iterator containing all of the Users who match the provided criteria
@@ -115,13 +116,22 @@ func (service *User) Delete(user *model.User, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA METHODS
+ * GENERIC DATA FUNCTIONS
  *******************************************/
 
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *User) ObjectNew() data.Object {
 	result := model.NewUser()
 	return &result
+}
+
+func (service *User) ObjectID(object data.Object) primitive.ObjectID {
+
+	if user, ok := object.(*model.User); ok {
+		return user.UserID
+	}
+
+	return primitive.NilObjectID
 }
 
 func (service *User) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -134,12 +144,20 @@ func (service *User) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	return &result, err
 }
 
-func (service *User) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.User), comment)
+func (service *User) ObjectSave(object data.Object, note string) error {
+	return service.Save(object.(*model.User), note)
 }
 
-func (service *User) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.User), comment)
+func (service *User) ObjectDelete(object data.Object, note string) error {
+	return service.Delete(object.(*model.User), note)
+}
+
+func (service *User) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.User", "Not Authorized")
+}
+
+func (service *User) Schema() schema.Element {
+	return model.UserSchema()
 }
 
 func (service *User) Debug() maps.Map {
@@ -149,7 +167,7 @@ func (service *User) Debug() maps.Map {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
 func (service *User) ListOwners() (data.Iterator, error) {

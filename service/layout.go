@@ -46,7 +46,7 @@ func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 func (service *Layout) Refresh(locations []config.Folder) {

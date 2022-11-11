@@ -167,11 +167,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/people/:userId/:action", handler.GetProfile(factory))
 	e.POST("/people/:userId/:action", handler.PostProfile(factory))
 
-	// SUBSCRIPTION PAGES
-	e.GET("/subscriptions", handler.ListSubscriptions(factory))
-	e.GET("/subscriptions/:subscriptionId", handler.GetSubscription(factory))
-	e.POST("/subscriptions/:subscriptionId", handler.PostSubscription(factory))
-	e.DELETE("/subscriptions/:subscriptionId", handler.DeleteSubscription(factory))
+	// ME-ONLY PAGES
+	e.POST("/people/me/inbox/:item/mark-read", handler.InboxItem_MarkRead(factory))
+	e.POST("/people/me/inbox/:item/mark-unread", handler.InboxItem_MarkUnRead(factory))
+
+	e.GET("/people/me/subscriptions/:subscription", handler.GetSubscription(factory))
+	e.POST("/people/me/subscriptions/:subscription", handler.PostSubscription(factory))
+	e.GET("/people/me/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))
+	e.POST("/people/me/subscriptions/:subscription/delete", handler.PostDeleteSubscription(factory))
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

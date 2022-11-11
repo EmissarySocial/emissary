@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/benpate/rosetta/schema"
 	"github.com/labstack/gommon/random"
 )
 
@@ -20,6 +21,16 @@ func NewPasswordReset(duration time.Duration) PasswordReset {
 		AuthCode:   random.String(64),
 		CreateDate: time.Now().Unix(),
 		ExpireDate: time.Now().Add(duration).Unix(),
+	}
+}
+
+func PasswordResetSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"authCode":   schema.String{},
+			"createDate": schema.Integer{},
+			"expireDate": schema.Integer{},
+		},
 	}
 }
 

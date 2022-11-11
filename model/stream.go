@@ -51,7 +51,7 @@ func NewStream() Stream {
 }
 
 /*******************************************
- * DATA.OBJECT INTERFACE
+ * data.Object Interface
  *******************************************/
 
 // ID returns the primary key of this object
@@ -60,7 +60,7 @@ func (stream *Stream) ID() string {
 }
 
 /*******************************************
- * OTHER DATA ACCESSORS
+ * Other Data Accessors
  *******************************************/
 
 // Links returns all resources linked to this Stream.  Some links may be empty.

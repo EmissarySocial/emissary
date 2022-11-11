@@ -16,6 +16,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
 
@@ -126,6 +128,15 @@ func (service *Domain) ObjectNew() data.Object {
 	return &result
 }
 
+func (service *Domain) ObjectID(object data.Object) primitive.ObjectID {
+
+	if domain, ok := object.(*model.Domain); ok {
+		return domain.DomainID
+	}
+
+	return primitive.NilObjectID
+}
+
 func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return nil, derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
 }
@@ -142,6 +153,14 @@ func (service *Domain) ObjectSave(object data.Object, note string) error {
 
 func (service *Domain) ObjectDelete(object data.Object, note string) error {
 	return derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
+}
+
+func (service *Domain) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Domain", "Not Authorized")
+}
+
+func (service *Domain) Schema() schema.Element {
+	return model.DomainSchema()
 }
 
 func (service *Domain) Debug() maps.Map {

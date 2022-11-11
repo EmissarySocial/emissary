@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 )
 
@@ -15,10 +14,10 @@ type Owner struct {
 func OwnerSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"displayName":    schema.String{MaxLength: null.NewInt(100), Required: true},
-			"emailAddress":   schema.String{MaxLength: null.NewInt(255), Format: "email", Required: true},
-			"phoneNumber":    schema.String{MaxLength: null.NewInt(20)},
-			"mailingAddress": schema.String{MaxLength: null.NewInt(1000)},
+			"displayName":    schema.String{MaxLength: 100, Required: true},
+			"emailAddress":   schema.String{MaxLength: 255, Format: "email", Required: true},
+			"phoneNumber":    schema.String{MaxLength: 20},
+			"mailingAddress": schema.String{MaxLength: 1000},
 		},
 	}
 }

@@ -1,6 +1,7 @@
 package render
 
 import (
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -11,14 +12,14 @@ import (
 type QueryBuilder struct {
 	factory       Factory
 	ctx           *steranko.Context
-	service       ModelService
+	service       service.ModelService
 	Criteria      exp.Expression
 	SortField     string
 	SortDirection string
 	MaxRows       uint
 }
 
-func NewQueryBuilder(factory Factory, ctx *steranko.Context, service ModelService, criteria exp.Expression) QueryBuilder {
+func NewQueryBuilder(factory Factory, ctx *steranko.Context, service service.ModelService, criteria exp.Expression) QueryBuilder {
 
 	return QueryBuilder{
 		factory:       factory,

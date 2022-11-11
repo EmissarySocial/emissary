@@ -30,7 +30,7 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 }
 
 /*******************************************
- * DATA.OBJECT INTERFACE
+ * data.Object Interface
  *******************************************/
 
 // ID returns the primary key of this object

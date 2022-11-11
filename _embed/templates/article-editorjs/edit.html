@@ -3,10 +3,6 @@
 
 <div class="page">
 
-	<div hx-get="/{{.Token}}/heading" hx-trigger="refreshPage">
-		{{.View "heading"}}
-	</div>
-
 	<div id="menu-bar">
 		<div class="left">
 			<button script="on click saveDraft(true)" class="button primary">Promote</button>
@@ -32,6 +28,10 @@
 			{{- end -}}
 		</div>
 
+	</div>
+
+	<div hx-get="/{{.Token}}/heading" hx-trigger="refreshPage">
+		{{.View "heading"}}
 	</div>
 
 	<article id="content-editor" data-content="{{.ContentRaw}}"></article>

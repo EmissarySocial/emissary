@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -39,6 +38,30 @@ func NewUser() User {
 		Identities: make([]string, 0),
 	}
 }
+
+func UserSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"userId":        schema.String{Format: "objectId"},
+			"groupIds":      schema.Array{Items: schema.String{Format: "objectId"}},
+			"identities":    schema.Array{Items: schema.String{}},
+			"displayName":   schema.String{MaxLength: 50},
+			"description":   schema.String{MaxLength: 100},
+			"username":      schema.String{MaxLength: 50},
+			"password":      schema.String{MaxLength: 255},
+			"isOwner":       schema.Boolean{},
+			"profileUrl":    schema.String{Format: "uri"},
+			"imageUrl":      schema.String{Format: "uri"},
+			"inboxId":       schema.String{Format: "objectId"},
+			"outboxId":      schema.String{Format: "objectId"},
+			"passwordReset": PasswordResetSchema(),
+		},
+	}
+}
+
+/*******************************************
+ * data.Object Interface
+ *******************************************/
 
 // ID returns the primary key for this record
 func (user *User) ID() string {
@@ -72,20 +95,6 @@ func (user *User) Summary() UserSummary {
 // of this record is returned.
 func (user User) Copy() User {
 	return user
-}
-
-func (user *User) Schema() schema.Schema {
-	return schema.Schema{
-		Element: schema.Object{
-			Properties: schema.ElementMap{
-				"userId":      schema.String{Format: "objectId"},
-				"groupIds":    schema.Array{Items: schema.String{Format: "objectId"}},
-				"displayName": schema.String{MaxLength: null.NewInt(50)},
-				"username":    schema.String{MaxLength: null.NewInt(50)},
-				"imageUrl":    schema.String{MaxLength: null.NewInt(100)},
-			},
-		},
-	}
 }
 
 func (user *User) GetPath(path string) (any, error) {

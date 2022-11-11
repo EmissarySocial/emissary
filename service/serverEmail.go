@@ -37,7 +37,7 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 func (service *ServerEmail) Refresh(locations []config.Folder) {

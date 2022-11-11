@@ -6,6 +6,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,7 +28,7 @@ func NewInboxFolder(collection data.Collection) InboxFolder {
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -39,7 +42,7 @@ func (service *InboxFolder) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // New creates a newly initialized InboxFolder that is ready to use
@@ -63,7 +66,7 @@ func (service *InboxFolder) List(criteria exp.Expression, options ...option.Opti
 func (service *InboxFolder) Load(criteria exp.Expression, result *model.InboxFolder) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.InboxFolder", "Error loading InboxFolder", criteria)
+		return derp.Report(derp.Wrap(err, "service.InboxFolder", "Error loading InboxFolder", criteria))
 	}
 
 	return nil
@@ -91,11 +94,78 @@ func (service *InboxFolder) Delete(inboxItem *model.InboxFolder, note string) er
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Model Service Methods
+ *******************************************/
+
+// New returns a fully initialized model.Group as a data.Object.
+func (service *InboxFolder) ObjectNew() data.Object {
+	result := model.NewInboxFolder()
+	return &result
+}
+
+func (service *InboxFolder) ObjectID(object data.Object) primitive.ObjectID {
+
+	if inboxFolder, ok := object.(*model.InboxFolder); ok {
+		return inboxFolder.InboxFolderID
+	}
+
+	return primitive.NilObjectID
+}
+func (service *InboxFolder) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *InboxFolder) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewInboxFolder()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *InboxFolder) ObjectSave(object data.Object, comment string) error {
+	return service.Save(object.(*model.InboxFolder), comment)
+}
+
+func (service *InboxFolder) ObjectDelete(object data.Object, comment string) error {
+	return service.Delete(object.(*model.InboxFolder), comment)
+}
+
+func (service *InboxFolder) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.InboxFolder", "Not Authorized")
+}
+
+func (service *InboxFolder) Schema() schema.Element {
+	return model.InboxFolderSchema()
+}
+
+func (service *InboxFolder) Debug() maps.Map {
+	return maps.Map{
+		"service": "InboxFolder",
+	}
+}
+
+/*******************************************
+ * Custom Queries
  *******************************************/
 
 func (service *InboxFolder) QueryByUserID(userID primitive.ObjectID) ([]model.InboxFolder, error) {
 	return service.Query(exp.Equal("userId", userID))
+}
+
+// LoadByToken locates a single stream that matches the provided token
+func (service *InboxFolder) LoadByToken(userID primitive.ObjectID, token string, result *model.InboxFolder) error {
+
+	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
+
+		criteria := exp.And(
+			exp.Equal("_id", folderID),
+			exp.Equal("userId", userID),
+		)
+
+		spew.Dump(criteria)
+		return service.Load(criteria, result)
+	}
+
+	return derp.NewBadRequestError("service.InboxFolder", "Invalid token", token)
 }
 
 // LoadBySource locates a single stream that matches the provided OriginURL

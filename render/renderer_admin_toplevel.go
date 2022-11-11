@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
@@ -42,7 +43,7 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, a
 	return TopLevel{
 		layout: layout,
 		stream: stream,
-		Common: NewCommon(factory, ctx, action, actionID),
+		Common: NewCommon(factory, ctx, nil, action, actionID),
 	}, nil
 }
 
@@ -79,7 +80,7 @@ func (w TopLevel) View(actionID string) (template.HTML, error) {
 }
 
 func (w TopLevel) Token() string {
-	return w.ctx.Param("param1")
+	return w._context.Param("param1")
 }
 
 func (w TopLevel) TopLevelID() string {
@@ -106,8 +107,8 @@ func (w TopLevel) schema() schema.Schema {
 	return w.layout.Schema
 }
 
-func (w TopLevel) service() ModelService {
-	return w.f.Stream()
+func (w TopLevel) service() service.ModelService {
+	return w._factory.Stream()
 }
 
 func (w TopLevel) executeTemplate(wr io.Writer, name string, data any) error {

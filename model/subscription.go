@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,6 +14,14 @@ const SubscriptionMethodRSS = "RSS"
 
 // SubscriptionMethodWebSub represents a WebSub subscription
 const SubscriptionMethodWebSub = "WEBSUB"
+
+const SubscriptionStatusNew = "NEW"
+
+const SubscriptionStatusWaiting = "WAITING"
+
+const SubscriptionStatusSuccess = "SUCCESS"
+
+const SubscriptionStatusFailure = "FAILURE"
 
 type Subscription struct {
 	SubscriptionID  primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`           // Unique Identifier of this record
@@ -34,8 +44,25 @@ func NewSubscription() Subscription {
 	}
 }
 
+func SubscriptionSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"subscriptionId": schema.String{Format: "objectId"},
+			"userId":         schema.String{Format: "objectId"},
+			"inboxFolderId":  schema.String{Format: "objectId"},
+			"label":          schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"url":            schema.String{Format: "url", Required: true, MinLength: 1, MaxLength: 1000},
+			"method":         schema.String{Required: true, Enum: []string{SubscriptionMethodRSS, SubscriptionMethodWebSub}},
+			"status":         schema.String{Enum: []string{SubscriptionStatusNew, SubscriptionStatusWaiting, SubscriptionStatusSuccess, SubscriptionStatusFailure}},
+			"lastPolled":     schema.Integer{Minimum: null.NewInt64(0)},
+			"pollDuration":   schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 7)},
+			"nextPoll":       schema.Integer{Minimum: null.NewInt64(0)},
+		},
+	}
+}
+
 /*******************************************
- * DATA.OBJECT INTERFACE
+ * data.Object Interface
  *******************************************/
 
 // ID returns the primary key of this object

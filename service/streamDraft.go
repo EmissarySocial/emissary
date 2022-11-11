@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,7 +29,7 @@ func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDra
 }
 
 /*******************************************
- * LIFECYCLE METHODS
+ * Lifecycle Methods
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
@@ -42,7 +43,7 @@ func (service *StreamDraft) Close() {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 /*******************************************
@@ -114,6 +115,15 @@ func (service *StreamDraft) ObjectNew() data.Object {
 	return &result
 }
 
+func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
+
+	if streamDraft, ok := object.(*model.Stream); ok {
+		return streamDraft.StreamID
+	}
+
+	return primitive.NilObjectID
+}
+
 func (service *StreamDraft) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return nil, derp.NewInternalError("service.StreamDraft.ObjectList", "Unsupported")
 }
@@ -132,6 +142,14 @@ func (service *StreamDraft) ObjectDelete(object data.Object, comment string) err
 	return service.Delete(object.(*model.Stream), comment)
 }
 
+func (service *StreamDraft) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.StreamDraft", "Not Authorized")
+}
+
+func (service *StreamDraft) Schema() schema.Element {
+	return nil
+}
+
 func (service *StreamDraft) Debug() maps.Map {
 	return maps.Map{
 		"service": "StreamDraft",
@@ -139,7 +157,7 @@ func (service *StreamDraft) Debug() maps.Map {
 }
 
 /*******************************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************************/
 
 // LoadByID returns a single Stream that matches a particular StreamID

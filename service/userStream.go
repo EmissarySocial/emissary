@@ -27,7 +27,7 @@ func NewUserStream(collection data.Collection, ctx context.Context) UserStream {
 }
 
 /*******************************************
- * COMMON DATA METHODS
+ * Common Data Methods
  *******************************************/
 
 // List returns an iterator containing all of the UserStreams who match the provided criteria
@@ -67,7 +67,7 @@ func (service *UserStream) Delete(stream *model.UserStream, note string) error {
 }
 
 /*******************************
- * CUSTOM QUERIES
+ * Custom Queries
  *******************************/
 
 func (service UserStream) LoadByUserAndStream(userID primitive.ObjectID, streamID primitive.ObjectID) (model.UserStream, error) {
