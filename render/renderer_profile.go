@@ -178,15 +178,6 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 
 	factory := w._factory
 
-	switch w.QueryParam("filter") {
-	case "all":
-	case "read":
-		w.setQuery("readDate", "GT:0")
-	default:
-		w.setQuery("filter", "unread")
-		w.setQuery("readDate", "0")
-	}
-
 	spew.Dump(w._context.Request().URL.Query())
 
 	expBuilder := builder.NewBuilder().

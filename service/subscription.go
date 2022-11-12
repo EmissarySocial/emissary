@@ -15,10 +15,12 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
+	htmlTools "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/html"
@@ -471,12 +473,12 @@ func (service *Subscription) saveInboxItem(subscription *model.Subscription, rss
 	if inboxItem.Origin.UpdateDate > updateDate {
 
 		// Populate inboxItem header and content
-		inboxItem.Label = rssItem.Title
 		inboxItem.SubscriptionID = subscription.SubscriptionID
-		inboxItem.Summary = rssItem.Description
-		inboxItem.Content = rssItem.Content
+		inboxItem.Label = htmlTools.ToText(rssItem.Title)
+		inboxItem.Summary = htmlTools.ToText(rssItem.Description)
+		inboxItem.Content = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 		inboxItem.PublishDate = rssItem.PublishedParsed.Unix()
-		inboxItem.Origin.Label = rssFeed.Title
+		inboxItem.Origin.Label = htmlTools.ToText(rssFeed.Title)
 		inboxItem.Origin.UpdateDate = updateDate
 		inboxItem.InboxFolderID = subscription.InboxFolderID
 		inboxItem.Author = service.rssAuthor(rssItem)
@@ -500,8 +502,8 @@ func (service *Subscription) rssOrigin(item *gofeed.Item) model.OriginLink {
 		return result
 	}
 
-	result.Source = "RSS"
-	result.Label = item.Title
+	result.Source = model.LinkSourceRSS
+	result.Label = htmlTools.ToText(item.Title)
 	result.URL = item.Link
 	result.UpdateDate = time.Now().Unix()
 
@@ -518,14 +520,14 @@ func (service *Subscription) rssAuthor(item *gofeed.Item) model.AuthorLink {
 	}
 
 	if item.Author != nil {
-		result.Name = item.Author.Name
-		result.EmailAddress = item.Author.Email
+		result.Name = htmlTools.ToText(item.Author.Name)
+		result.EmailAddress = htmlTools.ToText(item.Author.Email)
 		return result
 	}
 
 	if len(item.Authors) > 0 {
-		result.Name = item.Authors[0].Name
-		result.EmailAddress = item.Authors[0].Email
+		result.Name = htmlTools.ToText(item.Authors[0].Name)
+		result.EmailAddress = htmlTools.ToText(item.Authors[0].Email)
 		return result
 	}
 
@@ -574,6 +576,11 @@ func getRelativeURL(baseURL string, relativeURL string) string {
 	// If the relative URL is already absolute, then just return it
 	if strings.HasPrefix(relativeURL, "http://") || strings.HasPrefix(relativeURL, "https://") {
 		return relativeURL
+	}
+
+	// If the relative URL is a root-relative URL, then assume HTTPS (it's 2022, for crying out loud)
+	if strings.HasPrefix(relativeURL, "//") {
+		return "https:" + relativeURL
 	}
 
 	if result, err := url.JoinPath(baseURL, relativeURL); err == nil {

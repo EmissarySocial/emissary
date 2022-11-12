@@ -8,47 +8,56 @@
 
 {{- else -}}
 
-	{{- range $inbox -}}
-		<div id="item_{{.InboxItemID.Hex}}" script="on click go to url '{{.Origin.URL}}' in new window" style="cursor:pointer;">
+	{{- if eq 0 (len $inbox) -}}
+		<div>The end.</div>
 
-			{{- if eq .ReadDate 0 -}}
-				<span hx-post="/people/me/inbox/{{.InboxItemID.Hex}}/mark-read"
-					hx-trigger="revealed"
-					hx-swap="outerHTML"
-					hx-target="this"
-					hx-push-url="false"></span>
-			{{- end -}}
+	{{- else -}}
 
-			<div class="flex-row" hx-push-url="true">
-				<div style="width:160px;">
-					<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-						{{- if ne .ImageURL "" -}}
-							<img src="{{.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
-						{{- end -}}
+		{{- $lastIndex := subtract (len $inbox) 1 -}}
+		{{- $last := index $inbox $lastIndex -}}
+		<div hx-get="/people/me/inbox-list?publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
+
+		{{- range $inbox -}}
+			<div id="item_{{.InboxItemID.Hex}}" script="on click go to url '{{.Origin.URL}}' in new window" style="cursor:pointer;">
+
+				{{- if eq .ReadDate 0 -}}
+					<span hx-post="/people/me/inbox/{{.InboxItemID.Hex}}/mark-read"
+						hx-trigger="revealed"
+						hx-swap="outerHTML"
+						hx-target="this"
+						hx-push-url="false"></span>
+				{{- end -}}
+
+				<div class="flex-row" hx-push-url="true">
+					<div style="width:160px;">
+						<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+							{{- if ne .ImageURL "" -}}
+								<img src="{{.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+							{{- end -}}
+						</div>
 					</div>
+
+					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
+						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Label}}</div>
+						<div class="text-gray text-sm space-below" style="line-height:1em;">
+							{{icon .Origin.Icon}}
+							{{.Origin.Label}}
+							&middot;
+							{{.PublishDate | tinyDate}}
+						</div>
+						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Summary}}</div>
+					</div>
+				
 				</div>
 
-				<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-					<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Label}}</div>
-					<div class="text-gray text-sm space-below" style="line-height:1em;">
-						{{icon .Origin.Icon}}
-						{{.Origin.Label}}
-						&middot;
-						{{.PublishDate | tinyDate}}
-					</div>
-					<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Summary}}</div>
-				</div>
-			
+				<hr style="height:0px; border:none; border-top:solid 1px var(--gray20);"></hr>
+				<div style="height:30px;"></div>
 			</div>
+		{{- end -}}
 
-			<hr style="height:0px; border:none; border-top:solid 1px var(--gray20);"></hr>
-			<div style="height:30px;"></div>
-		</div>
+		<!-- Trigger to load more records at the end of this-->
+		<div id="loading">Just a sec.  Loading more...</div>
+	
 	{{- end -}}
-
-	<!-- Trigger to load more records at the end of this-->
-	{{- $lastIndex := subtract (len $inbox) 1 -}}
-	{{- $last := index $inbox $lastIndex -}}
-	<div hx-get="/people/me/inbox-list?publishDate=>{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">&nbsp;</div>
 
 {{- end -}}

@@ -2,7 +2,7 @@
 {{- $selectedfolder := .InboxFolderID -}}
 {{$subscriptions := .Subscriptions}}
 
-<div class="page" hx-get="{{.URL}}" hx-trigger="refreshPage">
+<div class="page" hx-get="{{.URL}}" hx-trigger="refreshPage from:body">
 
 	<h1>My Inbox</h1>
 
