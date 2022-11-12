@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -148,7 +147,7 @@ func (service *InboxFolder) Debug() maps.Map {
  *******************************************/
 
 func (service *InboxFolder) QueryByUserID(userID primitive.ObjectID) ([]model.InboxFolder, error) {
-	return service.Query(exp.Equal("userId", userID))
+	return service.Query(exp.Equal("userId", userID), option.SortAsc("rank"))
 }
 
 // LoadByToken locates a single stream that matches the provided token
@@ -161,7 +160,6 @@ func (service *InboxFolder) LoadByToken(userID primitive.ObjectID, token string,
 			exp.Equal("userId", userID),
 		)
 
-		spew.Dump(criteria)
 		return service.Load(criteria, result)
 	}
 

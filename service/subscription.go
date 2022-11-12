@@ -364,6 +364,7 @@ func (service *Subscription) updateInboxItem(subscription *model.Subscription, r
 
 		// Populate inboxItem header and content
 		inboxItem.Label = rssItem.Title
+		inboxItem.SubscriptionID = subscription.SubscriptionID
 		inboxItem.Summary = rssItem.Description
 		inboxItem.Content = rssItem.Content
 		inboxItem.PublishDate = rssItem.PublishedParsed.Unix()

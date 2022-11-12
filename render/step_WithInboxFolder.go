@@ -42,11 +42,16 @@ func (step StepWithInboxFolder) doStep(renderer Renderer, buffer io.Writer, acti
 
 	// If we have a real ID, then try to load the folder from the database
 	if inboxFolderToken != "new" {
-
 		if err := inboxFolderService.LoadByToken(renderer.AuthenticatedID(), inboxFolderToken, &inboxFolder); err != nil {
-			return derp.Wrap(err, location, "Unable to load InboxFolder", inboxFolderToken)
+			if actionMethod == ActionMethodGet {
+				return derp.Wrap(err, location, "Unable to load InboxFolder", inboxFolderToken)
+			}
+			// Fall through for POSTS..  we're just creating a new folder.
 		}
 	}
+
+	// For new folders, set the owner to the authenticated user
+	inboxFolder.UserID = renderer.AuthenticatedID()
 
 	// Create a new renderer tied to the InboxFolder record
 	subRenderer, err := NewModel(factory, renderer.context(), inboxFolderService, &inboxFolder, renderer.template(), "view")

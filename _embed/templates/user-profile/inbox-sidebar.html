@@ -1,14 +1,16 @@
 {{- $selectedfolder := .InboxFolderID -}}
 
-<div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5">
-
+<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 	<div role="link" hx-get="/people/me/inbox">{{icon "folder"}} Unread Items</div>
 	<div role="link" hx-get="/people/me/inbox?readDate=GE:0&sort=" class="{{if eq 0 (len $selectedfolder)}}bold{{end}}">{{icon "folder"}} All Items</div>
 	<div role="link" hx-get="/people/me/subscriptions">{{icon "rss"}} Subscriptions</div>
 	<br>
 
-	<div role="button" hx-get="/.inboxFolder/new">{{icon "add"}} New Folder</div>
+	<div role="button" hx-get="/people/me/inbox-folder?inboxFolderId=new">{{icon "add"}} New Folder</div>
 	{{- range .InboxFolders -}}
 		<div role="link" hx-get="/people/me/inbox-folder?inboxFolderId={{ .InboxFolderID.Hex }}" class="{{if eq .InboxFolderID.Hex $selectedfolder}}bold{{end}}">{{icon "folder"}} {{ .Label }}</div>
 	{{- end -}}
+
 </div>
+
+<div hx-get="/people/me/inbox-sidebar" hx-swap="outerHTML" hx-trigger="refresh-sidebar from:body" hx-push-url="false" hx-target="#inbox-sidebar"></div>

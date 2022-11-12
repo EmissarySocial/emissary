@@ -41,10 +41,11 @@
 		"view": {
 			"step": "view-html"
 		},
-		"sidebar": {
+		"inbox": {
+			"roles": ["myself"],
 			"step": "view-html"
 		},
-		"inbox": {
+		"inbox-sidebar": {
 			"roles": ["myself"],
 			"step": "view-html"
 		},
@@ -62,10 +63,26 @@
 			"roles":["myself"],
 			"steps": [
 				{"step": "with-inbox-folder", "steps": [
-					{"step": "form-html", "form": {
-
-					}},
-					{"step": "save"}
+					{"step": "as-modal", "steps": [
+						{"step": "form-html", "form": {
+							"type": "layout-vertical",
+							"label": "Folder Info",
+							"children": [
+								{"type": "text", "path": "label", "label": "Name"},
+								{"type": "select", "path":"purgeDuration", "label": "Keep Messages", "description":"Messages will be archived after reading", "options": {"provider":"purgeDurations"}}
+							]}
+						},
+						{"step": "save"}
+					]},
+					{"step": "trigger-event", "event":{"closeModal":true, "refresh-sidebar":true}}
+				]}
+			]
+		},
+		"inbox-folder-delete": {
+			"roles":["myself"],
+			"steps": [
+				{"step": "with-inbox-folder", "steps": [
+					{"step": "delete"}
 				]}
 			]
 		},
