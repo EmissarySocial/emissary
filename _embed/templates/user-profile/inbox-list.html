@@ -18,6 +18,7 @@
 					hx-target="this"
 					hx-push-url="false"></span>
 			{{- end -}}
+
 			<div class="flex-row" hx-push-url="true">
 				<div style="width:160px;">
 					<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
@@ -32,6 +33,8 @@
 					<div class="text-gray text-sm space-below" style="line-height:1em;">
 						{{icon .Origin.Icon}}
 						{{.Origin.Label}}
+						&middot;
+						{{.PublishDate | tinyDate}}
 					</div>
 					<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Summary}}</div>
 				</div>

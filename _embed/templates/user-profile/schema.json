@@ -43,6 +43,27 @@
 		},
 		"inbox": {
 			"roles": ["myself"],
+			"steps": [
+				{"step": "set-query-param", "selected":"inbox", "readDate": "0"},
+				{"step": "view-html", "file": "inbox"}
+			]
+		},
+		"inbox-all": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "set-query-param", "selected":"inbox-all"},
+				{"step": "view-html", "file": "inbox"}
+			]
+		},
+		"inbox-folder": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "set-query-param", "selected":"inbox-folder"},
+				{"step": "view-html", "file": "inbox"}
+			]
+		},
+		"subscriptions": {
+			"roles": ["myself"],
 			"step": "view-html"
 		},
 		"inbox-sidebar": {
@@ -59,7 +80,7 @@
 				{"step":"view-html"}
 			]}]
 		},
-		"inbox-folder": {
+		"inbox-folder-edit": {
 			"roles":["myself"],
 			"steps": [
 				{"step": "with-inbox-folder", "steps": [
@@ -87,10 +108,6 @@
 			]
 		},
 		"outbox-list": {
-			"roles": ["myself"],
-			"step": "view-html"
-		},
-		"subscriptions": {
 			"roles": ["myself"],
 			"step": "view-html"
 		},

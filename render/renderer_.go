@@ -56,6 +56,7 @@ type Renderer interface {
 	schema() schema.Schema              // Schema to use to validate this Object
 	object() data.Object                // Model Object being rendered
 	objectID() primitive.ObjectID       // MongoDB ObjectID of the Object being rendered
+	setQuery(string, string)            // Sets a queryString parameter
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }

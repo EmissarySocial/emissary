@@ -44,6 +44,9 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "set-data":
 		return NewSetData(stepInfo)
 
+	case "set-query-param":
+		return NewSetQueryParam(stepInfo)
+
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 

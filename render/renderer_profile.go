@@ -13,6 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -177,14 +178,28 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 
 	factory := w._factory
 
+	switch w.QueryParam("filter") {
+	case "all":
+	case "read":
+		w.setQuery("readDate", "GT:0")
+	default:
+		w.setQuery("filter", "unread")
+		w.setQuery("readDate", "0")
+	}
+
+	spew.Dump(w._context.Request().URL.Query())
+
 	expBuilder := builder.NewBuilder().
 		ObjectID("inboxFolderId").
 		Int("readDate").
 		Int("publishDate")
 
-	criteria := exp.And(
+	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
+
+	spew.Dump(criteria)
+
+	criteria = criteria.And(
 		exp.Equal("userId", w.AuthenticatedID()),
-		expBuilder.Evaluate(w._context.Request().URL.Query()),
 	)
 
 	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))

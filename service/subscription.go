@@ -3,6 +3,8 @@ package service
 import (
 	"bytes"
 	"math/rand"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -16,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mmcdole/gofeed"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/html"
@@ -64,6 +67,8 @@ func (service *Subscription) Close() {
 // clusters can work together without hammering the Subscription collection.
 func (service *Subscription) Start() {
 
+	const location = "service.Subscription.Start"
+
 	rand.Seed(time.Now().UnixNano())
 
 	// query the database every minute, looking for subscriptions that should be loaded from the web.
@@ -83,7 +88,7 @@ func (service *Subscription) Start() {
 		it, err := service.ListPollable()
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Subscription.Run", "Error listing pollable subscriptions"))
+			derp.Report(derp.Wrap(err, location, "Error listing pollable subscriptions"))
 			continue
 		}
 
@@ -98,7 +103,9 @@ func (service *Subscription) Start() {
 
 			// Check each subscription one at a time (this may be slow but its okay)
 			default:
-				derp.Report(service.CheckSubscription(&subscription))
+				if err := service.PollSubscription(&subscription); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error polling subscription", subscription))
+				}
 				subscription = model.NewSubscription()
 			}
 		}
@@ -135,8 +142,16 @@ func (service *Subscription) Load(criteria exp.Expression, result *model.Subscri
 // Save adds/updates an Subscription in the database
 func (service *Subscription) Save(subscription *model.Subscription, note string) error {
 
+	subscription.ErrorCount = 0
+	subscription.StatusMessage = ""
+	subscription.Status = model.SubscriptionStatusNew
+
 	if err := service.collection.Save(subscription, note); err != nil {
 		return derp.Wrap(err, "service.Subscription", "Error saving Subscription", subscription, note)
+	}
+
+	if err := service.PollSubscription(subscription); err != nil {
+		return derp.Wrap(err, "service.Subscription", "Error polling Subscription", subscription, note)
 	}
 
 	return nil
@@ -258,80 +273,173 @@ func (service *Subscription) LoadByToken(userID primitive.ObjectID, token string
  * Subscription Methods
  *******************************************/
 
-// CheckSubscriptions parses the RSS feed and adds/updates a new inboxItem for each item in it.
-func (service *Subscription) CheckSubscription(subscription *model.Subscription) error {
+// PollSubscriptions tries to import an RSS feed and adds/updates inboxItems for each item in it.
+func (service *Subscription) PollSubscription(subscription *model.Subscription) error {
 
 	const location = "service.Subscription.PollSubscription"
 
+	// Update the subscription status
+	if err := service.SetStatus(subscription, model.SubscriptionStatusLoading, ""); err != nil {
+		return derp.Wrap(err, location, "Error updating subscription status", subscription)
+	}
+
+	// Find the RSS feed associated with this subscription
+	rssFeed, err := service.GetRSSFeed(subscription)
+
+	if err != nil {
+		// If we can't find the RSS feed URL, then mark the subscription as an error.
+		if err := service.SetStatus(subscription, model.SubscriptionStatusFailure, err.Error()); err != nil {
+			return derp.Wrap(err, location, "Error updating subscription status", subscription)
+		}
+		return nil // Error has been logged, so don't break the request.
+	}
+
+	// If we have a feed, then import all of the items from it.
+
+	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
+	var errorCollection error
+
+	for _, item := range rssFeed.Items {
+		if err := service.saveInboxItem(subscription, rssFeed, item); err != nil {
+			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local inboxItem"))
+		}
+	}
+
+	// If there were errors parsing the feed, then mark the subscription as an error.
+	if errorCollection != nil {
+
+		// Try to update the subscription status
+		if err := service.SetStatus(subscription, model.SubscriptionStatusFailure, errorCollection.Error()); err != nil {
+			return derp.Wrap(err, location, "Error updating subscription status", subscription)
+		}
+
+		// There were errors, but they're noted in the subscription status, so THIS step is successful
+		return nil
+	}
+
+	// If we're here, then we have successfully imported the RSS feed.
+	// Mark the subscription as having been polled
+	if err := service.SetStatus(subscription, model.SubscriptionStatusSuccess, ""); err != nil {
+		return derp.Wrap(err, location, "Error updating subscription status", subscription)
+	}
+
+	return nil
+}
+
+// SetStatus updates the status (and statusMessage) of a Subscription
+func (service *Subscription) SetStatus(subscription *model.Subscription, status string, statusMessage string) error {
+
+	// RULE: Default Poll Duration is 24 hours
+	if subscription.PollDuration == 0 {
+		subscription.PollDuration = 24
+	}
+
+	// RULE: Require that poll duration is at least 1 hour
+	if subscription.PollDuration < 1 {
+		subscription.PollDuration = 1
+	}
+
+	// Update properties of the Subscription
+	subscription.Status = status
+	subscription.StatusMessage = statusMessage
+
+	// Recalculate the next poll time
+	switch subscription.Status {
+	case model.SubscriptionStatusSuccess:
+
+		// On success, "LastPolled" is only updated when we're successful.  Reset other times.
+		subscription.LastPolled = time.Now().Unix()
+		subscription.NextPoll = subscription.LastPolled + int64(subscription.PollDuration*60)
+		subscription.ErrorCount = 0
+
+	case model.SubscriptionStatusFailure:
+
+		// On failure, compute exponential backoff
+		// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m
+		// But do not change "LastPolled" because that is the last time we were successful
+		errorBackoff := subscription.ErrorCount
+
+		if errorBackoff > 8 {
+			errorBackoff = 8
+		}
+
+		errorBackoff = 2 ^ errorBackoff
+
+		subscription.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+		subscription.ErrorCount++
+
+	default:
+		// On all other statuse, the error counters are not touched
+		// because "New" and "Loading" are going to be overwritten very soon.
+	}
+
+	// Try to save the Subscription to the database
+	if err := service.collection.Save(subscription, "Updating status to loading"); err != nil {
+		return derp.Wrap(err, "service.Subscription", "Error updating subscription status", subscription)
+	}
+
+	// Success!!
+	return nil
+}
+
+func (service *Subscription) GetRSSFeed(subscription *model.Subscription) (*gofeed.Feed, error) {
+
+	const location = "service.Subscription.GetRSSFeed"
+
 	var body bytes.Buffer
 
-	// Try to load the document from the remote site
+	// Try to load the URL from the subscription
 	transaction := remote.Get(subscription.URL).Response(&body, nil)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error fetching URL")
+		return nil, derp.Wrap(err, location, "Error fetching URL")
 	}
+
+	// If it is a valid RSS feed, then we have won.  NOTE: We're not checking the
+	// document mime type becuase that's confusing and not reliable.
+	if rssFeed, err := gofeed.NewParser().ParseString(body.String()); err == nil {
+		return rssFeed, nil
+	}
+
+	// TODO: Maybe implement h-feed in here?
+	// https://indieweb.org/h-feed
+
+	// Fall through means that it was not a valid feed.  Maybe it's a HTML document that
+	// LINKS to a feed.  Let's try that...
 
 	// Try to parse the document as an HTML document
-	// TODO: if we have a direct URL for an RSS feed, then we should just use it straight up.
-	document, err := goquery.NewDocumentFromReader(&body)
+	htmlDocument, err := goquery.NewDocumentFromReader(&body)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing HTML")
+		return nil, derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
 	}
+
+	links := htmlDocument.Find("link").Nodes
 
 	// Look through RSS links for a valid feed
-	for _, node := range document.Find("link[type='application/rss+xml']").Nodes {
+	for _, link := range links {
 
-		url := nodeAttribute(node, "href")
-		err := service.LoadRSSFeed(subscription, url)
+		// Only follow links that say they are some kind of "RSS" feed
+		switch nodeAttribute(link, "type") {
+		case "application/rss+xml", "application/atom+xml", "application/json+feed":
 
-		if err == nil {
-			break
-		}
+			href := getRelativeURL(subscription.URL, nodeAttribute(link, "href"))
 
-		derp.Report(err)
-	}
-
-	return nil
-}
-
-func (service *Subscription) LoadRSSFeed(subscription *model.Subscription, url string) error {
-
-	const location = "service.Subscription.LoadRSSFeed"
-
-	// Try to load the feed from the URL
-	fp := gofeed.NewParser()
-	feed, err := fp.ParseURL(url)
-
-	// TODO: Limit retries on failed subscription URLs
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error Parsing Feed URL")
-	}
-
-	// Update each inboxItem in the RSS feed
-	for _, item := range feed.Items {
-		if err := service.updateInboxItem(subscription, feed, item); err != nil {
-			return derp.Wrap(err, location, "Error updating local inboxItem")
+			spew.Dump(href)
+			if rssFeed, err := gofeed.NewParser().ParseURL(href); err == nil {
+				return rssFeed, nil
+			}
 		}
 	}
 
-	// Mark the subscription as having been polled
-	subscription.MarkPolled()
-
-	// Try to save the updated subscription to the database
-	if err := service.Save(subscription, "Polling Subscription"); err != nil {
-		return derp.Wrap(err, location, "Error saving subscription")
-	}
-
-	return nil
+	// Fall through means that we couldn't find a valid feed ANYWHERE.
+	return nil, derp.NewBadRequestError(location, "RSS Feed Not Found", subscription.URL)
 }
 
-// updateStream adds/updates an individual InboxItem based on an RSS item
-func (service *Subscription) updateInboxItem(subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
+// saveInboxItem adds/updates an individual InboxItem based on an RSS item
+func (service *Subscription) saveInboxItem(subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
 
-	const location = "service.Subscription.updateStream"
+	const location = "service.Subscription.saveInboxItem"
 
 	inboxItem := model.NewInboxItem()
 
@@ -459,4 +567,18 @@ func nodeAttribute(node *html.Node, name string) string {
 	}
 
 	return ""
+}
+
+func getRelativeURL(baseURL string, relativeURL string) string {
+
+	// If the relative URL is already absolute, then just return it
+	if strings.HasPrefix(relativeURL, "http://") || strings.HasPrefix(relativeURL, "https://") {
+		return relativeURL
+	}
+
+	if result, err := url.JoinPath(baseURL, relativeURL); err == nil {
+		return result
+	}
+
+	return relativeURL
 }

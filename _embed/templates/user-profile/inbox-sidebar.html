@@ -1,15 +1,39 @@
-{{- $selectedfolder := .InboxFolderID -}}
+{{- $selected := .QueryParam "selected" -}}
+{{- $inboxFolderID := .QueryParam "inboxFolderId" -}}
 
 <div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
-	<div role="link" hx-get="/people/me/inbox">{{icon "folder"}} Unread Items</div>
-	<div role="link" hx-get="/people/me/inbox?readDate=GE:0&sort=" class="{{if eq 0 (len $selectedfolder)}}bold{{end}}">{{icon "folder"}} All Items</div>
-	<div role="link" hx-get="/people/me/subscriptions">{{icon "rss"}} Subscriptions</div>
+	{{.ActionID}}
+
+	{{- if eq $selected "inbox" -}}
+		<div role="link" hx-get="/people/me/inbox" class="bold">{{icon "folder"}} Unread Items</div>
+	{{- else -}}
+		<div role="link" hx-get="/people/me/inbox">{{icon "folder"}} Unread Items</div>
+	{{- end -}}
+
+	{{- if eq $selected "inbox-all" -}}
+		<div role="link" hx-get="/people/me/inbox-all" class="bold">{{icon "folder"}} All Items</div>
+	{{- else -}}
+		<div role="link" hx-get="/people/me/inbox-all">{{icon "folder"}} All Items</div>
+	{{- end -}}
+
+	{{- if eq .ActionID "subscriptions" -}}
+		<div role="link" hx-get="/people/me/subscriptions" class="bold">{{icon "rss"}} Subscriptions</div>
+	{{- else -}}
+		<div role="link" hx-get="/people/me/subscriptions">{{icon "rss"}} Subscriptions</div>
+	{{- end -}}
+
 	<br>
 
-	<div role="button" hx-get="/people/me/inbox-folder?inboxFolderId=new">{{icon "add"}} New Folder</div>
 	{{- range .InboxFolders -}}
-		<div role="link" hx-get="/people/me/inbox-folder?inboxFolderId={{ .InboxFolderID.Hex }}" class="{{if eq .InboxFolderID.Hex $selectedfolder}}bold{{end}}">{{icon "folder"}} {{ .Label }}</div>
+
+		{{- if and (eq $selected "inbox-folder")  (eq .InboxFolderID.Hex $inboxFolderID) -}}
+			<div role="link" hx-get="/people/me/inbox-folder?inboxFolderId={{.InboxFolderID.Hex}}" class="bold">{{icon "folder"}} {{.Label}}</div>
+		{{- else -}}
+			<div role="link" hx-get="/people/me/inbox-folder?inboxFolderId={{.InboxFolderID.Hex}}">{{icon "folder"}} {{.Label}}</div>
+		{{- end -}}
+
 	{{- end -}}
+	<div role="button" hx-get="/people/me/inbox-folder-edit?inboxFolderId=new">{{icon "add"}} Add Folder</div>
 
 </div>
 

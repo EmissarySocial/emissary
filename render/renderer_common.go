@@ -315,6 +315,12 @@ func (w Common) template() *model.Template {
 	return w._template
 }
 
+func (w Common) setQuery(name string, value string) {
+	query := w.context().Request().URL.Query()
+	query.Set(name, value)
+	w.context().Request().URL.RawQuery = query.Encode()
+}
+
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
 func (w *Common) getUser() (*model.User, error) {
 

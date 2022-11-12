@@ -98,6 +98,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetPublishDate:
 		return StepSetPublishDate(s)
 
+	case step.SetQueryParam:
+		return StepSetQueryParam(s)
+
 	case step.SetSimpleSharing:
 		return StepSetSimpleSharing(s)
 
