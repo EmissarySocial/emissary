@@ -38,6 +38,8 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/Jeffail/gabs v1.4.0 h1://5fYRRTq1edjfIrQGvdkcd22pkYUrHZ5YC/H2GJVAo=
+github.com/Jeffail/gabs v1.4.0/go.mod h1:6xMvQMK4k33lb7GUUpaAPh6nKMmemQeg5d4gn7/bOXc=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/Microsoft/go-winio v0.4.16/go.mod h1:XB6nPKklQyQ7GC9LdcBEcBl8PF76WugXOPRXwdLnMv0=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
@@ -80,10 +82,6 @@ github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.5.0 h1:sG0VFAgABmu7vPxQAWs4eh2W2l/94he6NYwNilaYFDU=
 github.com/benpate/exp v0.5.0/go.mod h1:dkgacHTFcOeo0yeRR4yWfzx14PBDDpS8/e388t61ols=
-github.com/benpate/exp-builder v0.4.0 h1:gVfmgYo/ry+3MA4qV+HsgpGgIdeAy/bglvRxtCfM5dg=
-github.com/benpate/exp-builder v0.4.0/go.mod h1:zWEgV7M9XJ6rPHnntv1hmNowsjdt+ZD4+6Xd4yvlTgs=
-github.com/benpate/form v0.12.0 h1:FgLv5na02ieiur0VX5fSdeitV/ulGguQx+nkI6kdii0=
-github.com/benpate/form v0.12.0/go.mod h1:1iF+zttguOrDyQYNri4saHwILnJJirw1H2ME+WsCvp4=
 github.com/benpate/html v0.14.1 h1:U2x0zsbk/Xj+H48cB6tMSKvAAO4mJ1pkTGJ9dwBQlzw=
 github.com/benpate/html v0.14.1/go.mod h1:o8tH+QD5I4XSMlFUsHCqrapBcxloIDuG1VT2kb1lQiw=
 github.com/benpate/icon v0.4.0 h1:HWOMaYwxPsLb3OPX02+j05FwCq376rcAfeGG1kfDXyc=
@@ -92,8 +90,6 @@ github.com/benpate/mediaserver v0.7.0 h1:y6mja6TloNSS4lUzSs0s3dLF9tipJKXXZN0jOLS
 github.com/benpate/mediaserver v0.7.0/go.mod h1:M+49bd/gY+YbYwcBrk/r/axhx555v5w4c+1joLxJ88g=
 github.com/benpate/remote v0.8.0 h1:h/xMHtKOyuS5lejwOpqvWzm1t7qaQEXBNrfoNCYBxi0=
 github.com/benpate/remote v0.8.0/go.mod h1:m4btkSd+P0beWcuj444c098EKPi/B85eus/LCsNfdrg=
-github.com/benpate/rosetta v0.6.3 h1:VxJjzu1K3tqLJ58TM+0JfSY+tFUSUWGeyC3mjoY8o2U=
-github.com/benpate/rosetta v0.6.3/go.mod h1:KrP/jJ6/KrSVu07XrCQVtLTUfcxisXerWmxUHAwMPEU=
 github.com/benpate/steranko v0.11.0 h1:U9ar2VQBpRws+r0ck91w1cVi498MftzUh5M204+4QLE=
 github.com/benpate/steranko v0.11.0/go.mod h1:mFVh6Hc/Ho1pxLSCRV+hJrWqGztdjl8mPnqCe5uTaVw=
 github.com/benpate/table v0.3.0 h1:mlRLFA8yMr6nmRrwpDq1iqXqgys+HVz8O5gxBvi5quc=
@@ -130,6 +126,14 @@ github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1
 github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
+github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65 h1:WfjVLSpoK/4Yu7aMv9+CuMH/TRqvWt7LWj8HJTSLrqY=
+github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65/go.mod h1:DwtDzuGvUJmwvhPZsGE6BzMCmiG9mL4pF5CujWCrO80=
+github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c h1:MEV1LrQtCBGacXajlT4CSuYWbZuLl/qaZVqwoOmwAbU=
+github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c/go.mod h1:DjlDZiZGRRKbiJZmiEiiXozsBQAQzHmxwHKFeXifL2g=
+github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a h1:etIrTD8BQqzColk9nKRusM9um5+1q0iOEJLqfBMIK64=
+github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a/go.mod h1:emQhSYTXqB0xxjLITTw4EaWZ+8IIQYw+kx9GqNUKdLg=
+github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd h1:cK+NoQQBs7HwUHJzN5XSLjTHbu3q2aGim70Hhj8OVmQ=
+github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd/go.mod h1:vvHYzM3Pw1OQCMjtkxmQXYW+b1i8D7MnGUQwD5EcBK4=
 github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3ymbK86o=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
@@ -498,6 +502,7 @@ golang.org/x/net v0.0.0-20210916014120-12bc252f5db8/go.mod h1:9nx3DQGgdP8bBQD5qx
 golang.org/x/net v0.0.0-20211020060615-d418f374d309/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
+golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
 golang.org/x/net v0.0.0-20221004154528-8021a29435af h1:wv66FM3rLZGPdxpYL+ApnDe2HzHcTFta3z5nsc13wI4=
 golang.org/x/net v0.0.0-20221004154528-8021a29435af/go.mod h1:YDH+HFinaLZZlnHAfSS6ZXJJ9M9t4Dl22yv3iI2vPwk=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=

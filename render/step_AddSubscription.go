@@ -5,11 +5,13 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepAddSubscription is an action that can add a subscription for the current user.
@@ -27,8 +29,8 @@ func (step StepAddSubscription) Get(renderer Renderer, buffer io.Writer) error {
 	context := renderer.context()
 
 	// Create a new form
-	f := step.form()
-	html, err := f.Editor(nil, nil)
+	form := step.getForm(renderer)
+	html, err := form.Editor(nil, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepAddSubscription", "Error creating form editor", nil)
@@ -47,10 +49,7 @@ func (step StepAddSubscription) UseGlobalWrapper() bool {
 
 func (step StepAddSubscription) Post(renderer Renderer) error {
 
-	var transaction struct {
-		URL          string `form:"url"          path:"url"`
-		PollDuration int    `form:"pollDuration" path:"pollDuration"`
-	}
+	var transaction subscription_transaction
 
 	// Guarantee that the user is signed in.
 	if !renderer.IsAuthenticated() {
@@ -64,7 +63,7 @@ func (step StepAddSubscription) Post(renderer Renderer) error {
 		return derp.Wrap(err, "render.StepAddSubscription", "Error reading form data", nil)
 	}
 
-	if err := step.form().Schema.Validate(transaction); err != nil {
+	if err := step.getForm(renderer).Schema.Validate(transaction); err != nil {
 		return derp.Wrap(err, "render.StepAddSubscription", "Subscription Data is invalid", transaction)
 	}
 
@@ -74,6 +73,8 @@ func (step StepAddSubscription) Post(renderer Renderer) error {
 	subscription.Method = model.SubscriptionMethodRSS
 	subscription.URL = transaction.URL
 	subscription.PollDuration = transaction.PollDuration
+	subscription.PurgeDuration = transaction.PurgeDuration
+	subscription.InboxFolderID = transaction.InboxFolderID
 
 	// Save the subscription to the database
 	factory := renderer.factory()
@@ -88,17 +89,31 @@ func (step StepAddSubscription) Post(renderer Renderer) error {
 	return context.NoContent(http.StatusOK)
 }
 
-func (step StepAddSubscription) form() form.Form {
+func (step StepAddSubscription) getForm(renderer Renderer) form.Form {
+	result := subscription_getForm(renderer)
+	result.Element.Label = "Add a New Subscription"
+	return result
+}
+
+type subscription_transaction struct {
+	URL           string             `form:"url"           path:"url"`
+	InboxFolderID primitive.ObjectID `form:"inboxFolderId" path:"inboxFolderId"`
+	PollDuration  int                `form:"pollDuration"  path:"pollDuration"`
+	PurgeDuration int                `form:"purgeDuration" path:"purgeDuration"`
+}
+
+func subscription_getForm(renderer Renderer) form.Form {
 	return form.Form{
 		Schema: schema.New(schema.Object{
 			Properties: schema.ElementMap{
-				"url":          schema.String{MaxLength: 512, Required: true},
-				"pollDuration": schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
+				"url":           schema.String{MaxLength: 512, Required: true},
+				"inboxFolderId": schema.String{Format: "objectId", Required: true},
+				"pollDuration":  schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
+				"purgeDuration": schema.Integer{Default: null.NewInt64(14), Minimum: null.NewInt64(1), Maximum: null.NewInt64(365), Required: true},
 			},
 		}),
 		Element: form.Element{
-			Type:  "layout-vertical",
-			Label: "Add a New Subscription",
+			Type: "layout-vertical",
 			Children: []form.Element{
 				{
 					Type:        "text",
@@ -108,8 +123,18 @@ func (step StepAddSubscription) form() form.Form {
 				},
 				{
 					Type:  "select",
-					Label: "Frequency",
-					Path:  "pollDuration",
+					Label: "Folder",
+					Path:  "inboxFolderId",
+					Options: maps.Map{
+						"enum": subscription_folderOptions(renderer.factory().InboxFolder(), renderer.AuthenticatedID()),
+					},
+					Description: "Automatically add items to this folder.",
+				},
+				{
+					Type:        "select",
+					Label:       "Poll Frequency",
+					Description: "How often should this site be checked for new articles?",
+					Path:        "pollDuration",
 					Options: maps.Map{
 						"enum": []form.LookupCode{
 							{Value: "1", Label: "Hourly"},
@@ -121,7 +146,47 @@ func (step StepAddSubscription) form() form.Form {
 						},
 					},
 				},
+				{
+					Type:        "select",
+					Label:       "Remove After",
+					Description: "Read items will be automatically deleted after this amount of time.",
+					Path:        "purgeDuration",
+					Options: maps.Map{
+						"enum": []form.LookupCode{
+							{Value: "1", Label: "1 Day"},
+							{Value: "7", Label: "1 Week"},
+							{Value: "14", Label: "2 Weeks"},
+							{Value: "30", Label: "1 Month"},
+							{Value: "60", Label: "2 Months"},
+							{Value: "90", Label: "3 Months"},
+							{Value: "180", Label: "6 Months"},
+							{Value: "365", Label: "1 Year"},
+						},
+					},
+				},
 			},
 		},
 	}
+}
+
+// subscription_folderOptions returns an array of form.LookupCodes that represents all of the folders
+// that belong to the currently logged in user.
+func subscription_folderOptions(inboxFolderService *service.InboxFolder, authenticatedID primitive.ObjectID) []form.LookupCode {
+
+	inboxFolders, err := inboxFolderService.QueryByUserID(authenticatedID)
+
+	if err != nil {
+		return make([]form.LookupCode, 0)
+	}
+
+	result := make([]form.LookupCode, len(inboxFolders))
+
+	for index, inboxFolder := range inboxFolders {
+		result[index] = form.LookupCode{
+			Value: inboxFolder.InboxFolderID.Hex(),
+			Label: inboxFolder.Label,
+		}
+	}
+
+	return result
 }

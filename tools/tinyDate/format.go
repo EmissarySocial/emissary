@@ -3,8 +3,6 @@ package tinyDate
 import (
 	"strconv"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // FormaDiff returns a string representation of the duration since this date in as little space as possible.
@@ -35,13 +33,13 @@ func FormatDiff(firstTime time.Time, secondTime time.Time) string {
 		return strconv.Itoa(int(days)) + "d"
 	}
 
+	// If months, say "1mo"
 	months := ((secondTime.Year() - firstTime.Year()) * 12) + (int(secondTime.Month()) - int(firstTime.Month()))
-	spew.Dump(months)
 	if months < 12 {
 		return strconv.Itoa(int(months)) + "mo"
 	}
 
+	// Otherwise, it's years.  Say "1y"
 	years := months / 12
-	spew.Dump(years)
 	return strconv.Itoa(int(years)) + "y"
 }

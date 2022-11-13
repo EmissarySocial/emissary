@@ -65,7 +65,7 @@ func (service *InboxFolder) List(criteria exp.Expression, options ...option.Opti
 func (service *InboxFolder) Load(criteria exp.Expression, result *model.InboxFolder) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Report(derp.Wrap(err, "service.InboxFolder", "Error loading InboxFolder", criteria))
+		return derp.Report(derp.Wrap(err, "service.InboxFolder.Load", "Error loading InboxFolder", criteria))
 	}
 
 	return nil

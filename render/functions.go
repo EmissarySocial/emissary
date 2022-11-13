@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
-	"github.com/davecgh/go-spew/spew"
 	humanize "github.com/dustin/go-humanize"
 )
 
@@ -125,7 +124,6 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			if valueInt == 0 {
 				return ""
 			}
-			spew.Dump(valueInt, time.UnixMilli(valueInt).Format(time.RFC3339), "------------")
 			return tinyDate.FormatDiff(time.Unix(valueInt, 0), time.Now())
 		},
 	}

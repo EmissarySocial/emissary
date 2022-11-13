@@ -64,7 +64,10 @@
 		},
 		"subscriptions": {
 			"roles": ["myself"],
-			"step": "view-html"
+			"steps": [
+				{"step": "set-query-param", "selected":"subscriptions"},
+				{"step": "view-html", "file": "subscriptions"}
+			]
 		},
 		"inbox-sidebar": {
 			"roles": ["myself"],
@@ -89,8 +92,7 @@
 							"type": "layout-vertical",
 							"label": "Folder Info",
 							"children": [
-								{"type": "text", "path": "label", "label": "Name"},
-								{"type": "select", "path":"purgeDuration", "label": "Keep Messages", "description":"Messages will be archived after reading", "options": {"provider":"purgeDurations"}}
+								{"type": "text", "path": "label", "label": "Name"}
 							]}
 						},
 						{"step": "save"}

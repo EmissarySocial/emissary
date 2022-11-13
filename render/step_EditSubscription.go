@@ -7,9 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/null"
-	"github.com/benpate/rosetta/schema"
 )
 
 // StepEditSubscription is an action that can edit a subscription for the current user.
@@ -35,8 +32,8 @@ func (step StepEditSubscription) Get(renderer Renderer, buffer io.Writer) error 
 	}
 
 	// Create a new form
-	f := step.form()
-	html, err := f.Editor(&subscription, nil)
+	form := step.getForm(renderer)
+	html, err := form.Editor(&subscription, nil)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepAddSubscription", "Error creating form editor", nil)
@@ -56,10 +53,7 @@ func (step StepEditSubscription) UseGlobalWrapper() bool {
 
 func (step StepEditSubscription) Post(renderer Renderer) error {
 
-	var transaction struct {
-		URL          string `form:"url"          path:"url"`
-		PollDuration int    `form:"pollDuration" path:"pollDuration"`
-	}
+	var transaction subscription_transaction
 
 	// Requre that users are signed in to use this modal
 	if !renderer.IsAuthenticated() {
@@ -73,7 +67,7 @@ func (step StepEditSubscription) Post(renderer Renderer) error {
 		return derp.Wrap(err, "render.StepAddSubscription", "Error reading form data", nil)
 	}
 
-	if err := step.form().Schema.Validate(transaction); err != nil {
+	if err := step.getForm(renderer).Schema.Validate(transaction); err != nil {
 		return derp.Wrap(err, "render.StepAddSubscription", "Subscription Data is invalid", transaction)
 	}
 
@@ -87,6 +81,8 @@ func (step StepEditSubscription) Post(renderer Renderer) error {
 
 	subscription.URL = transaction.URL
 	subscription.PollDuration = transaction.PollDuration
+	subscription.PurgeDuration = transaction.PurgeDuration
+	subscription.InboxFolderID = transaction.InboxFolderID
 
 	// Save the subscription to the database
 	if err := subscriptionService.Save(&subscription, "Updated by User"); err != nil {
@@ -98,40 +94,9 @@ func (step StepEditSubscription) Post(renderer Renderer) error {
 	return context.NoContent(http.StatusOK)
 }
 
-func (step StepEditSubscription) form() form.Form {
-	return form.Form{
-		Schema: schema.New(schema.Object{
-			Properties: schema.ElementMap{
-				"url":          schema.String{Format: "uri", MaxLength: 512, Required: true},
-				"pollDuration": schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
-			},
-		}),
-		Element: form.Element{
-			Type:  "layout-vertical",
-			Label: "Edit Subscription Details",
-			Children: []form.Element{
-				{
-					Type:        "text",
-					Label:       "Website URL",
-					Path:        "url",
-					Description: "Enter the URL of the website you want to subscribe to.",
-				},
-				{
-					Type:  "select",
-					Label: "Frequency",
-					Path:  "pollDuration",
-					Options: maps.Map{
-						"enum": []form.LookupCode{
-							{Value: "1", Label: "Hourly"},
-							{Value: "6", Label: "Every 6 Hours"},
-							{Value: "12", Label: "Every 12 Hours"},
-							{Value: "24", Label: "Once per Day"},
-							{Value: "168", Label: "Once per Week"},
-							{Value: "720", Label: "Once per Month"},
-						},
-					},
-				},
-			},
-		},
-	}
+func (step StepEditSubscription) getForm(renderer Renderer) form.Form {
+
+	result := subscription_getForm(renderer)
+	result.Element.Label = "Edit Subscription"
+	return result
 }

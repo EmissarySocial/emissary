@@ -13,7 +13,6 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -178,17 +177,12 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 
 	factory := w._factory
 
-	spew.Dump(w._context.Request().URL.Query())
-
 	expBuilder := builder.NewBuilder().
 		ObjectID("inboxFolderId").
 		Int("readDate").
 		Int("publishDate")
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
-
-	spew.Dump(criteria)
-
 	criteria = criteria.And(
 		exp.Equal("userId", w.AuthenticatedID()),
 	)

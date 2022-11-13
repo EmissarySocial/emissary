@@ -16,7 +16,7 @@
 			<div role="link" hx-get="/people/me/inbox-all">{{icon "folder"}} All Items</div>
 		{{- end -}}
 
-		{{- if eq .ActionID "subscriptions" -}}
+		{{- if eq $selected "subscriptions" -}}
 			<div role="link" hx-get="/people/me/subscriptions" class="bold">{{icon "rss"}} Subscriptions</div>
 		{{- else -}}
 			<div role="link" hx-get="/people/me/subscriptions">{{icon "rss"}} Subscriptions</div>

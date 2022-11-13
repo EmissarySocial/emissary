@@ -44,6 +44,10 @@ func (item InboxItem) ContentHTML() template.HTML {
 	return template.HTML(item.Content)
 }
 
+func (item InboxItem) IsIncomplete() bool {
+	return true
+}
+
 func InboxItemSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{

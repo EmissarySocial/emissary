@@ -39,6 +39,7 @@ type Subscription struct {
 	LastPolled     int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
 	PollDuration   int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
 	NextPoll       int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
+	PurgeDuration  int                `path:"purgeDuration"  json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
 	ErrorCount     int                `path:"errorCount"     json:"errorCount"     bson:"errorCount"`    // Number of times that this subscription has failed to load (for exponential backoff)
 
 	journal.Journal `path:"journal" json:"-" bson:"journal"`
@@ -49,6 +50,7 @@ func NewSubscription() Subscription {
 	return Subscription{
 		SubscriptionID: primitive.NewObjectID(),
 		PollDuration:   24, // default poll interval is 24 hours
+		PurgeDuration:  14, // default purge interval is 14 days
 	}
 }
 

@@ -3,7 +3,9 @@ module github.com/EmissarySocial/emissary
 go 1.19
 
 replace github.com/benpate/exp-builder => ../../benpate/exp-builder
+
 replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 replace github.com/benpate/form => ../../benpate/form
 
 require (
@@ -28,6 +30,7 @@ require (
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dghubble/go-twitter v0.0.0-20221024160433-0cc1e72ed6d8
 	github.com/dustin/go-humanize v1.0.0
+	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
@@ -49,12 +52,14 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.2
 	go.mongodb.org/mongo-driver v1.11.0
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
 
 require (
+	github.com/Jeffail/gabs v1.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220930113650-c6815a8c17ad // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
@@ -66,6 +71,9 @@ require (
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/dghubble/sling v1.4.0 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
+	github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c // indirect
+	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
+	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
@@ -112,7 +120,6 @@ require (
 	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/text v0.3.7 // indirect

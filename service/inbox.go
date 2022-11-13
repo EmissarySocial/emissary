@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -64,7 +66,7 @@ func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (d
 func (service *Inbox) Load(criteria exp.Expression, result *model.InboxItem) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Report(derp.Wrap(err, "service.Inbox", "Error loading Inbox", criteria))
+		return derp.Wrap(err, "service.Inbox.Load", "Error loading Inbox", criteria)
 	}
 
 	return nil
@@ -129,21 +131,42 @@ func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL strin
 	return service.Load(criteria, result)
 }
 
+// SetReadDate updates the readDate for a single InboxItem IF it is not already read
 func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
 
 	const location = "service.Inbox.SetReadDate"
 
+	// Try to load the InboxItem from the database
 	inboxItem := model.NewInboxItem()
 
 	if err := service.LoadItemByID(userID, token, &inboxItem); err != nil {
 		return derp.Wrap(err, location, "Cannot load InboxItem", userID, token)
 	}
 
+	// RULE: If the InboxItem is already marked as read, then we don't need to update it.  Return success.
+	if inboxItem.ReadDate > 0 {
+		return nil
+	}
+
+	// Update the readDate and save the InboxItem
 	inboxItem.ReadDate = readDate
 
 	if err := service.Save(&inboxItem, "Mark Read"); err != nil {
 		return derp.Wrap(err, location, "Cannot save InboxItem", inboxItem)
 	}
 
+	// Actual success here.
 	return nil
+}
+
+// QueryPurgeable returns a list of InboxItems that are older than the purge date for this subscription
+func (service *Inbox) QueryPurgeable(subscription *model.Subscription) ([]model.InboxItem, error) {
+
+	// Purge date is X days before the current date
+	purgeDuration := time.Duration(subscription.PurgeDuration) * 24 * time.Hour
+	purgeDate := time.Now().Add(0 - purgeDuration).Unix()
+
+	// InboxItems can be purged if they are READ and older than the purge date
+	criteria := exp.GreaterThan("readDate", 0).AndLessThan("readDate", purgeDate)
+	return service.Query(criteria)
 }
