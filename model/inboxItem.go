@@ -36,6 +36,14 @@ func (item InboxItem) ID() string {
 	return item.InboxItemID.Hex()
 }
 
+func (item InboxItem) Status() string {
+	if item.ReadDate == 0 {
+		return "unread"
+	} else {
+		return "read"
+	}
+}
+
 func (item InboxItem) IsUnread() bool {
 	return item.ReadDate == 0
 }

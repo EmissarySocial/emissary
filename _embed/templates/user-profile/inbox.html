@@ -12,3 +12,19 @@
 	</div>
 
 </div>
+
+<script type="text/hyperscript">
+	on scroll from window debounced at 500ms
+		tell <div.inbox-item[data-status=unread] /> in me
+			set offsetBottom to your offsetTop
+			increment offsetBottom by your offsetHeight
+			if (offsetBottom) - (window.scrollY) > 0 then
+				exit
+			end
+
+			set url to "/people/me/inbox/" + [@data-inboxItemId] + "/mark-read"
+			fetch `${url}` with method:"POST"
+			add .read to yourself
+		end
+	end
+</script>
