@@ -120,11 +120,17 @@ func (service *InboxFolder) ObjectLoad(criteria exp.Expression) (data.Object, er
 }
 
 func (service *InboxFolder) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.InboxFolder), comment)
+	if inboxFolder, ok := object.(*model.InboxFolder); ok {
+		return service.Save(inboxFolder, comment)
+	}
+	return derp.NewInternalError("service.InboxFolder.ObjectSave", "Invalid object type", object)
 }
 
 func (service *InboxFolder) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.InboxFolder), comment)
+	if inboxFolder, ok := object.(*model.InboxFolder); ok {
+		return service.Delete(inboxFolder, comment)
+	}
+	return derp.NewInternalError("service.InboxFolder.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *InboxFolder) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {

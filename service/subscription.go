@@ -199,11 +199,17 @@ func (service *Subscription) ObjectLoad(criteria exp.Expression) (data.Object, e
 }
 
 func (service *Subscription) ObjectSave(object data.Object, note string) error {
-	return service.Save(object.(*model.Subscription), note)
+	if subscription, ok := object.(*model.Subscription); ok {
+		return service.Save(subscription, note)
+	}
+	return derp.NewInternalError("service.Subscription", "ObjectSave", "Invalid object type", object)
 }
 
 func (service *Subscription) ObjectDelete(object data.Object, note string) error {
-	return service.Delete(object.(*model.Subscription), note)
+	if subscription, ok := object.(*model.Subscription); ok {
+		return service.Delete(subscription, note)
+	}
+	return derp.NewInternalError("service.Subscription", "ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Subscription) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {

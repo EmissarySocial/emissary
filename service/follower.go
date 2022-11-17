@@ -106,11 +106,17 @@ func (service *Follower) ObjectLoad(criteria exp.Expression) (data.Object, error
 }
 
 func (service *Follower) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.Follower), comment)
+	if follower, ok := object.(*model.Follower); ok {
+		return service.Save(follower, comment)
+	}
+	return derp.NewInternalError("service.Follower.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Follower) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.Follower), comment)
+	if follower, ok := object.(*model.Follower); ok {
+		return service.Delete(follower, comment)
+	}
+	return derp.NewInternalError("service.Follower.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Follower) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {

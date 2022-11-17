@@ -130,11 +130,17 @@ func (service *Mention) ObjectLoad(criteria exp.Expression) (data.Object, error)
 }
 
 func (service *Mention) ObjectSave(object data.Object, comment string) error {
-	return service.Save(object.(*model.Mention), comment)
+	if mention, ok := object.(*model.Mention); ok {
+		return service.Save(mention, comment)
+	}
+	return derp.NewInternalError("service.Mention.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Mention) ObjectDelete(object data.Object, comment string) error {
-	return service.Delete(object.(*model.Mention), comment)
+	if mention, ok := object.(*model.Mention); ok {
+		return service.Delete(mention, comment)
+	}
+	return derp.NewInternalError("service.Mention.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Mention) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {

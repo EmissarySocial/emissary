@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -182,7 +181,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA FUNCTIONS
+ * Generic Data Methods
  *******************************************/
 
 // New returns a fully initialized model.Stream as a data.Object.
@@ -210,11 +209,17 @@ func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) 
 }
 
 func (service *Stream) ObjectSave(object data.Object, note string) error {
-	return service.Save(object.(*model.Stream), note)
+	if stream, ok := object.(*model.Stream); ok {
+		return service.Save(stream, note)
+	}
+	return derp.NewInternalError("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectDelete(object data.Object, note string) error {
-	return service.Delete(object.(*model.Stream), note)
+	if stream, ok := object.(*model.Stream); ok {
+		return service.Delete(stream, note)
+	}
+	return derp.NewInternalError("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
@@ -223,12 +228,6 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 
 func (service *Stream) Schema() schema.Element {
 	return nil
-}
-
-func (service *Stream) Debug() maps.Map {
-	return maps.Map{
-		"service": "Stream",
-	}
 }
 
 /*******************************************

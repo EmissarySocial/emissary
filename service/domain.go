@@ -148,7 +148,11 @@ func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
 }
 
 func (service *Domain) ObjectSave(object data.Object, note string) error {
-	return service.Save(object.(*model.Domain), note)
+	if domain, ok := object.(*model.Domain); ok {
+		return service.Save(domain, note)
+	}
+
+	return derp.NewInternalError("service.Domain.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Domain) ObjectDelete(object data.Object, note string) error {

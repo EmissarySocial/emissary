@@ -144,11 +144,17 @@ func (service *User) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 }
 
 func (service *User) ObjectSave(object data.Object, note string) error {
-	return service.Save(object.(*model.User), note)
+	if user, ok := object.(*model.User); ok {
+		return service.Save(user, note)
+	}
+	return derp.NewInternalError("service.User.ObjectSave", "Invalid object type", object)
 }
 
 func (service *User) ObjectDelete(object data.Object, note string) error {
-	return service.Delete(object.(*model.User), note)
+	if user, ok := object.(*model.User); ok {
+		return service.Delete(user, note)
+	}
+	return derp.NewInternalError("service.User.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *User) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
