@@ -9,6 +9,12 @@ const CollectionAttachment = "Attachment"
 // CollectionGroup is the database collection where the singleton Domain record is stored
 const CollectionDomain = "Domain"
 
+// CollectionFollower is the database collection where Follower records are stored
+const CollectionFollower = "Follower"
+
+// CollectionFollowing is the database collection where Following records are stored
+const CollectionFollowing = "Following"
+
 // CollectionGroup is the database collection where Group records are stored
 const CollectionGroup = "Group"
 
