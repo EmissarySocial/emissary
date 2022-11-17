@@ -50,9 +50,6 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 
-	case "set-publishdate":
-		return NewSetPublishDate(stepInfo)
-
 	case "set-simple-sharing":
 		return NewSetSimpleSharing(stepInfo)
 
@@ -93,6 +90,14 @@ func New(stepInfo maps.Map) (Step, error) {
 
 	case "view-rss":
 		return NewViewRSS(stepInfo)
+
+	// SOCIAL / ACTIVITYPUB STEPS
+
+	case "publish":
+		return NewPublish(stepInfo)
+
+	case "unpublish":
+		return NewUnPublish(stepInfo)
 
 	// DRAFTS
 

@@ -80,6 +80,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.IfCondition:
 		return StepIfCondition(s)
 
+	case step.Publish:
+		return StepPublish(s)
+
 	case step.RedirectTo:
 		return StepRedirectTo(s)
 
@@ -94,9 +97,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SetData:
 		return StepSetData(s)
-
-	case step.SetPublishDate:
-		return StepSetPublishDate(s)
 
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
@@ -136,6 +136,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.TriggerEvent:
 		return StepTriggerEvent(s)
+
+	case step.UnPublish:
+		return StepUnPublish(s)
 
 	case step.UploadAttachment:
 		return StepUploadAttachment(s)
