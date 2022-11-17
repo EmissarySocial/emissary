@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/tomnomnom/linkheader"
@@ -69,9 +68,9 @@ func (service *Mention) List(criteria exp.Expression, options ...option.Option) 
 }
 
 // Load retrieves an Mention from the database
-func (service *Mention) Load(criteria exp.Expression, stream *model.Mention) error {
+func (service *Mention) Load(criteria exp.Expression, mention *model.Mention) error {
 
-	if err := service.collection.Load(notDeleted(criteria), stream); err != nil {
+	if err := service.collection.Load(notDeleted(criteria), mention); err != nil {
 		return derp.Wrap(err, "service.Mention.Load", "Error loading Mention", criteria)
 	}
 
@@ -79,19 +78,19 @@ func (service *Mention) Load(criteria exp.Expression, stream *model.Mention) err
 }
 
 // Save adds/updates an Mention in the database
-func (service *Mention) Save(stream *model.Mention, note string) error {
+func (service *Mention) Save(mention *model.Mention, note string) error {
 
-	if err := service.collection.Save(stream, note); err != nil {
-		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", stream, note)
+	if err := service.collection.Save(mention, note); err != nil {
+		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", mention, note)
 	}
 
 	return nil
 }
 
 // Delete removes an Mention from the database (virtual delete)
-func (service *Mention) Delete(stream *model.Mention, note string) error {
+func (service *Mention) Delete(mention *model.Mention, note string) error {
 
-	criteria := exp.Equal("_id", stream.StreamID)
+	criteria := exp.Equal("_id", mention.StreamID)
 
 	// Delete this Mention
 	if err := service.collection.HardDelete(criteria); err != nil {
@@ -144,12 +143,6 @@ func (service *Mention) ObjectUserCan(object data.Object, authorization model.Au
 
 func (service *Mention) Schema() schema.Element {
 	return model.MentionSchema()
-}
-
-func (service *Mention) Debug() maps.Map {
-	return maps.Map{
-		"service": "Mention",
-	}
 }
 
 /*******************************************
