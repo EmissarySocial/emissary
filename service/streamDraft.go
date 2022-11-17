@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -148,12 +147,6 @@ func (service *StreamDraft) ObjectUserCan(object data.Object, authorization mode
 
 func (service *StreamDraft) Schema() schema.Element {
 	return nil
-}
-
-func (service *StreamDraft) Debug() maps.Map {
-	return maps.Map{
-		"service": "StreamDraft",
-	}
 }
 
 /*******************************************

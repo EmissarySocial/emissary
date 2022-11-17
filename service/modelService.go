@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,5 +19,4 @@ type ModelService interface {
 	ObjectDelete(data.Object, string) error
 	ObjectUserCan(data.Object, model.Authorization, string) error
 	Schema() schema.Element
-	Debug() maps.Map
 }

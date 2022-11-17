@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -158,12 +157,6 @@ func (service *User) ObjectUserCan(object data.Object, authorization model.Autho
 
 func (service *User) Schema() schema.Element {
 	return model.UserSchema()
-}
-
-func (service *User) Debug() maps.Map {
-	return maps.Map{
-		"service": "User",
-	}
 }
 
 /*******************************************

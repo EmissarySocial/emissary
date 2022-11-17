@@ -20,7 +20,6 @@ import (
 	"github.com/dyatlov/go-htmlinfo/htmlinfo"
 
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
@@ -213,12 +212,6 @@ func (service *Subscription) ObjectUserCan(object data.Object, authorization mod
 
 func (service *Subscription) Schema() schema.Element {
 	return model.SubscriptionSchema()
-}
-
-func (service *Subscription) Debug() maps.Map {
-	return maps.Map{
-		"service": "Subscription",
-	}
 }
 
 /*******************************************

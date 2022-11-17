@@ -163,12 +163,6 @@ func (service *Domain) Schema() schema.Element {
 	return model.DomainSchema()
 }
 
-func (service *Domain) Debug() maps.Map {
-	return maps.Map{
-		"service": "Domain",
-	}
-}
-
 /*******************************************
  * Provider Methods
  *******************************************/
