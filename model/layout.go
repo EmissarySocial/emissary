@@ -3,7 +3,6 @@ package model
 import (
 	"html/template"
 
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 )
 
@@ -36,13 +35,4 @@ func (layout *Layout) Action(actionID string) *Action {
 	result := NewAction()
 
 	return &result
-}
-
-func (layout *Layout) Debug() maps.Map {
-	return maps.Map{
-		"LayoutID":  layout.LayoutID,
-		"Schema":    layout.Schema,
-		"Actions":   layout.Actions,
-		"Templates": layout.HTMLTemplate.DefinedTemplates(),
-	}
 }

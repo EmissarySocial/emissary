@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -38,6 +39,40 @@ func InboxFolderSchema() schema.Element {
 
 func (folder InboxFolder) ID() string {
 	return folder.InboxFolderID.Hex()
+}
+
+func (folder *InboxFolder) GetObjectID(name string) (primitive.ObjectID, error) {
+	switch name {
+	case "inboxFolderId":
+		return folder.InboxFolderID, nil
+	case "userId":
+		return folder.UserID, nil
+	}
+	return primitive.NilObjectID, derp.NewInternalError("model.InboxFolder.GetObjectID", "Invalid property", name)
+}
+
+func (folder *InboxFolder) GetString(name string) (string, error) {
+	switch name {
+	case "label":
+		return folder.Label, nil
+	}
+	return "", derp.NewInternalError("model.InboxFolder.GetString", "Invalid property", name)
+}
+
+func (folder *InboxFolder) GetInt(name string) (int, error) {
+	switch name {
+	case "rank":
+		return folder.Rank, nil
+	}
+	return 0, derp.NewInternalError("model.InboxFolder.GetInt", "Invalid property", name)
+}
+
+func (folder *InboxFolder) GetInt64(name string) (int64, error) {
+	return 0, derp.NewInternalError("model.InboxFolder.GetInt64", "Invalid property", name)
+}
+
+func (folder *InboxFolder) GetBool(name string) (bool, error) {
+	return false, derp.NewInternalError("model.InboxFolder.GetBool", "Invalid property", name)
 }
 
 /*******************************************

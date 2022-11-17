@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -37,6 +38,42 @@ func FollowingSchema() schema.Element {
 	}
 }
 
+/*******************************************
+ * data.Object Interface
+ *******************************************/
+
 func (following *Following) ID() string {
 	return following.FollowingID.Hex()
+}
+
+func (following *Following) GetObjectID(name string) (primitive.ObjectID, error) {
+	switch name {
+	case "followingId":
+		return following.FollowingID, nil
+	case "userId":
+		return following.UserID, nil
+	}
+
+	return primitive.NilObjectID, derp.NewInternalError("model.following.GetObjectID", "Invalid property", name)
+}
+
+func (following *Following) GetString(name string) (string, error) {
+	switch name {
+	case "method":
+		return following.Method, nil
+	}
+
+	return "", derp.NewInternalError("model.following.GetString", "Invalid property", name)
+}
+
+func (following *Following) GetInt(name string) (int, error) {
+	return 0, derp.New(500, "model.following.GetInt", "Invalid property", name)
+}
+
+func (following *Following) GetInt64(name string) (int64, error) {
+	return 0, derp.New(500, "model.following.GetInt64", "Invalid property", name)
+}
+
+func (following *Following) GetBool(name string) (bool, error) {
+	return false, derp.New(500, "model.following.GetBool", "Invalid property", name)
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -81,4 +82,24 @@ func SubscriptionSchema() schema.Element {
 // ID returns the primary key of this object
 func (sub *Subscription) ID() string {
 	return sub.SubscriptionID.Hex()
+}
+
+func (sub *Subscription) GetObjectID(name string) (primitive.ObjectID, error) {
+	return primitive.NilObjectID, derp.NewInternalError("model.Subscription.GetObjectID", "Invalid property", name)
+}
+
+func (sub *Subscription) GetString(name string) (string, error) {
+	return "", derp.NewInternalError("model.Subscription.GetString", "Invalid property", name)
+}
+
+func (sub *Subscription) GetInt(name string) (int, error) {
+	return 0, derp.NewInternalError("model.Subscription.GetInt", "Invalid property", name)
+}
+
+func (sub *Subscription) GetInt64(name string) (int64, error) {
+	return 0, derp.NewInternalError("model.Subscription.GetInt64", "Invalid property", name)
+}
+
+func (sub *Subscription) GetBool(name string) (bool, error) {
+	return false, derp.NewInternalError("model.Subscription.GetBool", "Invalid property", name)
 }

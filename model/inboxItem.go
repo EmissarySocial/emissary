@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -32,8 +33,56 @@ func NewInboxItem() InboxItem {
 	}
 }
 
-func (item InboxItem) ID() string {
+/*******************************************
+ * data.Object Interface
+ *******************************************/
+
+func (item *InboxItem) ID() string {
 	return item.InboxItemID.Hex()
+}
+
+func (inboxItem *InboxItem) GetObjectID(name string) (primitive.ObjectID, error) {
+	switch name {
+	case "inboxItemId":
+		return inboxItem.InboxItemID, nil
+	case "inboxFolderId":
+		return inboxItem.InboxFolderID, nil
+	case "subscriptionId":
+		return inboxItem.SubscriptionID, nil
+	case "userId":
+		return inboxItem.UserID, nil
+	default:
+		return primitive.NilObjectID, derp.NewInternalError("model.InboxItem.GetObjectID", "Unknown ObjectID", name)
+	}
+}
+
+func (inboxItem *InboxItem) GetString(name string) (string, error) {
+	switch name {
+	case "label":
+		return inboxItem.Label, nil
+	case "summary":
+		return inboxItem.Summary, nil
+	case "content":
+		return inboxItem.Content, nil
+	case "imageUrl":
+		return inboxItem.ImageURL, nil
+	default:
+		return "", derp.NewInternalError("model.InboxItem.GetString", "Unknown String", name)
+	}
+}
+
+func (inboxItem *InboxItem) GetInt(name string) (int, error) {
+	return 0, derp.NewInternalError("model.InboxItem.GetInt", "Unknown Int", name)
+}
+func (inboxItem *InboxItem) GetInt64(name string) (int64, error) {
+	switch name {
+	case "publishDate":
+		return inboxItem.PublishDate, nil
+	case "readDate":
+		return inboxItem.ReadDate, nil
+	default:
+		return 0, derp.NewInternalError("model.InboxItem.GetInt64", "Unknown Int64", name)
+	}
 }
 
 func (item InboxItem) Status() string {

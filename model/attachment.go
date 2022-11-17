@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -36,6 +37,48 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 // ID returns the primary key of this object
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
+}
+
+func (attachment *Attachment) GetObjectID(name string) (primitive.ObjectID, error) {
+
+	switch name {
+	case "attachmentId":
+		return attachment.AttachmentID, nil
+	case "streamId":
+		return attachment.StreamID, nil
+	}
+	return primitive.NilObjectID, derp.NewInternalError("model.Attachment.GetObjectID", "Invalid property", name)
+}
+
+func (attachment *Attachment) GetString(name string) (string, error) {
+
+	switch name {
+	case "original":
+		return attachment.Original, nil
+	}
+	return "", derp.NewInternalError("model.Attachment.GetString", "Invalid property", name)
+}
+
+func (attachment *Attachment) GetInt(name string) (int, error) {
+
+	switch name {
+	case "rank":
+		return attachment.Rank, nil
+	case "height":
+		return attachment.Height, nil
+	case "width":
+		return attachment.Width, nil
+	}
+
+	return 0, derp.NewInternalError("model.Attachment.GetInt", "Invalid property", name)
+}
+
+func (attachment *Attachment) GetInt64(name string) (int64, error) {
+	return 0, derp.NewInternalError("model.Attachment.GetInt64", "Invalid property", name)
+}
+
+func (attachment *Attachment) GetBool(name string) (bool, error) {
+	return false, derp.NewInternalError("model.Attachment.GetBool", "Invalid property", name)
 }
 
 /*******************************************
