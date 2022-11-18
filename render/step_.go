@@ -155,8 +155,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithDraft:
 		return StepWithDraft(s)
 
-	case step.WithInboxFolder:
-		return StepWithInboxFolder(s)
+	case step.WithFolder:
+		return StepWithFolder(s)
 
 	case step.WithParent:
 		return StepWithParent(s)

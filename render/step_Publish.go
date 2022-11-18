@@ -2,7 +2,6 @@ package render
 
 import (
 	"io"
-	"time"
 
 	"github.com/benpate/derp"
 )
@@ -28,12 +27,5 @@ func (step StepPublish) Post(renderer Renderer) error {
 		return derp.NewUnauthorizedError("render.StepPublish", "User is not authenticated", nil)
 	}
 
-	factory := renderer.factory()
-	activityPub := factory.ActivityPub()
-
-	actor, err := activityPub.LoadActor(renderer.AuthenticatedID())
-
-	streamRenderer := renderer.(*Stream)
-	streamRenderer.stream.PublishDate = time.Now().UnixMilli()
 	return nil
 }

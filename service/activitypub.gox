@@ -1,0 +1,132 @@
+package service
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
+	"github.com/go-fed/activity/pub"
+	"github.com/go-fed/activity/streams"
+	"github.com/go-fed/activity/streams/vocab"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type ActivityPub struct {
+	host          string
+	userService   *User
+	streamService *Stream
+}
+
+/*******************************************
+ * Action Methods
+ *******************************************/
+
+func (service *ActivityPub) Send(actor pub.Actor, document vocab.ActivityStreamsDocument) error {
+
+	outboxIRI := ActorOutbox(service.host, actor)
+	background := context.Background()
+
+	sendActivity, err := actor.Send(background, outboxIRI, document)
+}
+
+/*******************************************
+ * Actor Methods
+ *******************************************/
+
+func (service *ActivityPub) LoadActor(userID primitive.ObjectID) (vocab.ActivityStreamsPerson, error) {
+
+	const location = "service.ActivityPub.LoadActor"
+
+	user := model.NewUser()
+
+	if err := service.userService.LoadByID(userID, &user); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading user", userID)
+	}
+
+	return service.Actor(&user)
+}
+
+func (service *ActivityPub) Actor(user *model.User) (vocab.ActivityStreamsPerson, error) {
+
+	const location = "service.ActivityPub.Actor"
+
+	person := streams.NewActivityStreamsPerson()
+
+	// Set ID
+	idProperty := streams.NewJSONLDIdProperty()
+	idProperty.SetIRI(ActorID(service.host, user.UserID))
+	person.SetJSONLDId(idProperty)
+
+	// Set Inbox Property
+	inboxProperty := streams.NewActivityStreamsInboxProperty()
+	inboxProperty.SetIRI(ActorInbox(service.host, user.UserID))
+	person.SetActivityStreamsInbox(inboxProperty)
+
+	// Set Outbox Property
+	outboxProperty := streams.NewActivityStreamsOutboxProperty()
+	outboxProperty.SetIRI(ActorOutbox(service.host, user.UserID))
+	person.SetActivityStreamsOutbox(outboxProperty)
+
+	// Set Preferred Name
+	nameProperty := streams.NewActivityStreamsNameProperty()
+	nameProperty.AppendXMLSchemaString(user.DisplayName)
+
+	return person, nil
+}
+
+/*******************************************
+ * Stream Functions
+ *******************************************/
+
+func (service *ActivityPub) LoadStream(streamID primitive.ObjectID) (vocab.ActivityStreamsDocument, error) {
+
+	const location = "service.ActivityPub.LoadStream"
+
+	stream := model.NewStream()
+
+	if err := service.streamService.LoadByID(streamID, &stream); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading stream", streamID)
+	}
+
+	return service.Stream(&stream)
+}
+
+func (service *ActivityPub) Stream(stream *model.Stream) (vocab.ActivityStreamsDocument, error) {
+
+	const location = "service.ActivityPub.Stream"
+
+	document := streams.NewActivityStreamsDocument()
+
+	// Set ID
+	idProperty := streams.NewJSONLDIdProperty()
+	idProperty.SetIRI(asURL(service.StreamID(stream.StreamID)))
+	document.SetJSONLDId(idProperty)
+
+	return document, nil
+}
+
+func (service *ActivityPub) StreamID(streamID primitive.ObjectID) string {
+	return service.host + "/.activitypub/stream/" + streamID.Hex()
+}
+
+/*******************************************
+ * Helper Functions
+ *******************************************/
+
+func ActorID(host string, userID primitive.ObjectID) *url.URL {
+	return asURL(host + "/.activitypub/actor/" + userID.Hex())
+}
+
+func ActorInbox(host string, userID primitive.ObjectID) *url.URL {
+	return asURL(host + "/.activitypub/inbox/" + userID.Hex())
+}
+
+func ActorOutbox(host string, userID primitive.ObjectID) *url.URL {
+	return asURL(host + "/.activitypub/outbox/" + userID.Hex())
+}
+
+func asURL(value string) *url.URL {
+	result, _ := url.Parse(value)
+	return result
+}

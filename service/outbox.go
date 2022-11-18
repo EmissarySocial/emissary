@@ -130,8 +130,8 @@ func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Aut
 	return derp.NewUnauthorizedError("service.Inbox", "Not Authorized")
 }
 
-func (service *Outbox) Schema() schema.Element {
-	return model.OutboxItemSchema()
+func (service *Outbox) Schema() schema.Schema {
+	return schema.New(model.OutboxItemSchema())
 }
 
 /*******************************************

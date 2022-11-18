@@ -8,27 +8,27 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithInboxFolder represents an action-step that can update the data.DataMap custom data stored in a Stream
-type StepWithInboxFolder struct {
+// StepWithFolder represents an action-step that can update the data.DataMap custom data stored in a Stream
+type StepWithFolder struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithInboxFolder) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepWithFolder) Get(renderer Renderer, buffer io.Writer) error {
 	return step.doStep(renderer, buffer, ActionMethodGet)
 }
 
-func (step StepWithInboxFolder) UseGlobalWrapper() bool {
+func (step StepWithFolder) UseGlobalWrapper() bool {
 	return useGlobalWrapper(step.SubSteps)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithInboxFolder) Post(renderer Renderer) error {
+func (step StepWithFolder) Post(renderer Renderer) error {
 	return step.doStep(renderer, nil, ActionMethodPost)
 }
 
-func (step StepWithInboxFolder) doStep(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
+func (step StepWithFolder) doStep(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
 
-	const location = "render.StepWithInboxFolder.doStep"
+	const location = "render.StepWithFolder.doStep"
 
 	if !renderer.IsAuthenticated() {
 		return derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action")
@@ -36,15 +36,15 @@ func (step StepWithInboxFolder) doStep(renderer Renderer, buffer io.Writer, acti
 
 	// Collect required services and values
 	factory := renderer.factory()
-	inboxFolderService := factory.InboxFolder()
+	inboxFolderService := factory.Folder()
 	inboxFolderToken := renderer.context().QueryParam("inboxFolderId")
-	inboxFolder := model.NewInboxFolder()
+	inboxFolder := model.NewFolder()
 
 	// If we have a real ID, then try to load the folder from the database
 	if inboxFolderToken != "new" {
 		if err := inboxFolderService.LoadByToken(renderer.AuthenticatedID(), inboxFolderToken, &inboxFolder); err != nil {
 			if actionMethod == ActionMethodGet {
-				return derp.Wrap(err, location, "Unable to load InboxFolder", inboxFolderToken)
+				return derp.Wrap(err, location, "Unable to load Folder", inboxFolderToken)
 			}
 			// Fall through for POSTS..  we're just creating a new folder.
 		}
@@ -53,7 +53,7 @@ func (step StepWithInboxFolder) doStep(renderer Renderer, buffer io.Writer, acti
 	// For new folders, set the owner to the authenticated user
 	inboxFolder.UserID = renderer.AuthenticatedID()
 
-	// Create a new renderer tied to the InboxFolder record
+	// Create a new renderer tied to the Folder record
 	subRenderer, err := NewModel(factory, renderer.context(), inboxFolderService, &inboxFolder, renderer.template(), "view")
 
 	if err != nil {
@@ -70,7 +70,7 @@ func (step StepWithInboxFolder) doStep(renderer Renderer, buffer io.Writer, acti
 
 /*
 
-const location = "render.StepWithInboxFolder.Post"
+const location = "render.StepWithFolder.Post"
 
 factory := renderer.factory()
 streamRenderer := renderer.(*Stream)

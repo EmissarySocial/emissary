@@ -57,7 +57,7 @@ func (w Model) objectID() primitive.ObjectID {
 }
 
 func (w Model) schema() schema.Schema {
-	return schema.New(w._service.Schema())
+	return w._service.Schema()
 }
 
 func (w Model) service() service.ModelService {

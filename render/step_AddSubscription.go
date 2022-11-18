@@ -97,7 +97,7 @@ func (step StepAddSubscription) getForm(renderer Renderer) form.Form {
 
 type subscription_transaction struct {
 	URL           string             `form:"url"           path:"url"`
-	InboxFolderID primitive.ObjectID `form:"inboxFolderId" path:"inboxFolderId"`
+	InboxFolderID primitive.ObjectID `form:"folderId" path:"folderId"`
 	PollDuration  int                `form:"pollDuration"  path:"pollDuration"`
 	PurgeDuration int                `form:"purgeDuration" path:"purgeDuration"`
 }
@@ -107,7 +107,7 @@ func subscription_getForm(renderer Renderer) form.Form {
 		Schema: schema.New(schema.Object{
 			Properties: schema.ElementMap{
 				"url":           schema.String{MaxLength: 512, Required: true},
-				"inboxFolderId": schema.String{Format: "objectId", Required: true},
+				"folderId":      schema.String{Format: "objectId", Required: true},
 				"pollDuration":  schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
 				"purgeDuration": schema.Integer{Default: null.NewInt64(14), Minimum: null.NewInt64(1), Maximum: null.NewInt64(365), Required: true},
 			},
@@ -124,9 +124,9 @@ func subscription_getForm(renderer Renderer) form.Form {
 				{
 					Type:  "select",
 					Label: "Folder",
-					Path:  "inboxFolderId",
+					Path:  "folderId",
 					Options: maps.Map{
-						"enum": subscription_folderOptions(renderer.factory().InboxFolder(), renderer.AuthenticatedID()),
+						"enum": subscription_folderOptions(renderer.factory().Folder(), renderer.AuthenticatedID()),
 					},
 					Description: "Automatically add items to this folder.",
 				},
@@ -171,20 +171,20 @@ func subscription_getForm(renderer Renderer) form.Form {
 
 // subscription_folderOptions returns an array of form.LookupCodes that represents all of the folders
 // that belong to the currently logged in user.
-func subscription_folderOptions(inboxFolderService *service.InboxFolder, authenticatedID primitive.ObjectID) []form.LookupCode {
+func subscription_folderOptions(folderService *service.Folder, authenticatedID primitive.ObjectID) []form.LookupCode {
 
-	inboxFolders, err := inboxFolderService.QueryByUserID(authenticatedID)
+	folders, err := folderService.QueryByUserID(authenticatedID)
 
 	if err != nil {
 		return make([]form.LookupCode, 0)
 	}
 
-	result := make([]form.LookupCode, len(inboxFolders))
+	result := make([]form.LookupCode, len(folders))
 
-	for index, inboxFolder := range inboxFolders {
+	for index, folder := range folders {
 		result[index] = form.LookupCode{
-			Value: inboxFolder.InboxFolderID.Hex(),
-			Label: inboxFolder.Label,
+			Value: folder.FolderID.Hex(),
+			Label: folder.Label,
 		}
 	}
 

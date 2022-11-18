@@ -20,7 +20,7 @@ type Stream struct {
 	Token           string               `path:"token"          json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
 	Label           string               `path:"label"          json:"label"               bson:"label"`               // Text to display in lists of streams, probably displayed at top of stream page, too.
 	Description     string               `path:"description"    json:"description"         bson:"description"`         // Brief summary of this stream, used in lists of streams
-	Author          AuthorLink           `path:"author"         json:"author"              bson:"author"`              // Author information for this stream
+	Author          PersonLink           `path:"author"         json:"author"              bson:"author"`              // Author information for this stream
 	Origin          OriginLink           `path:"origin"         json:"origin,omitempty"    bson:"origin"`              // If imported, the external document where this stream came from
 	ReplyTo         ReplyToLink          `path:"replyTo"        json:"replyTo,omitempty"   bson:"replyTo,omitempty"`   // If this stream is a reply to another stream or web page, then this links to the original document.
 	Content         Content              `path:"content"        json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
@@ -33,6 +33,10 @@ type Stream struct {
 	UnPublishDate   int64                `path:"unpublishDate " json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `path:"journal" json:"journal" bson:"journal"`
 }
+
+// TODO: Lots of cleanup needed here.  InReplyTo should be migrated -> ReplyTo.
+// TODO: Is Origin even needed anymore, now that the Activity object will live in inboxes/outboxes?
+// TODO: Built-in fields should be migrated to a DocumentLink structure.
 
 // NewStream returns a fully initialized Stream object.
 func NewStream() Stream {
@@ -95,7 +99,7 @@ func (stream *Stream) Links() []Link {
 
 // SetAuthor populates the denormalized author information into this stream.
 func (stream *Stream) SetAuthor(user *User) {
-	stream.Author = user.AuthorLink()
+	stream.Author = user.PersonLink(LinkRelationAuthor)
 }
 
 /*******************************************

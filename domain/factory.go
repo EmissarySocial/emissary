@@ -45,14 +45,13 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
+	activityService     service.Activity
 	attachmentService   service.Attachment
 	groupService        service.Group
 	domainService       service.Domain
 	emailService        service.DomainEmail
-	inboxService        service.Inbox
-	inboxFolderService  service.InboxFolder
+	folderService       service.Folder
 	mentionService      service.Mention
-	outboxService       service.Outbox
 	streamService       service.Stream
 	streamDraftService  service.StreamDraft
 	subscriptionService service.Subscription
@@ -131,18 +130,14 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		render.FuncMap(factory.Icons()),
 	)
 
-	factory.inboxService = service.NewInbox(
-		factory.collection(CollectionInbox),
-	)
-
-	factory.outboxService = service.NewOutbox(
-		factory.collection(CollectionOutbox),
+	factory.activityService = service.NewActivity(
+		factory.collection(CollectionActivity),
 	)
 
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
-		factory.Inbox(),
+		factory.Activity(),
 		factory.Queue(),
 	)
 
@@ -195,16 +190,15 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// Refresh cached services
+		factory.activityService.Refresh(factory.collection(CollectionActivity))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.inboxService.Refresh(factory.collection(CollectionInbox))
-		factory.inboxFolderService.Refresh(factory.collection(CollectionInboxFolder))
+		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
@@ -248,7 +242,7 @@ func (factory *Factory) ID() string {
 	return factory.config.Hostname
 }
 
-// Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
+// Host returns the domain name AND protocol (probably HTTPS) => "https://example.com")
 func (factory *Factory) Host() string {
 	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname
 }
@@ -280,11 +274,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "Following", "following":
 		return factory.Following(), nil
 
-	case "Inbox", "inbox":
-		return factory.Inbox(), nil
+	case "Activity", "inbox":
+		return factory.Activity(), nil
 
-	case "InboxFolder", "inboxfolder":
-		return factory.InboxFolder(), nil
+	case "Folder", "inboxfolder":
+		return factory.Folder(), nil
 
 	}
 
@@ -313,25 +307,20 @@ func (factory *Factory) Following() *service.Following {
 	return &service
 }
 
-// Inbox returns a fully populated Inbox service
-func (factory *Factory) Inbox() *service.Inbox {
-	return &factory.inboxService
+// Activity returns a fully populated Activity service
+func (factory *Factory) Activity() *service.Activity {
+	return &factory.activityService
 }
 
-// InboxFolder returns a fully populated InboxFolder service
-func (factory *Factory) InboxFolder() *service.InboxFolder {
-	return &factory.inboxFolderService
+// Folder returns a fully populated Folder service
+func (factory *Factory) Folder() *service.Folder {
+	return &factory.folderService
 }
 
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	result := service.NewMention(factory.collection(CollectionMention))
 	return &result
-}
-
-// Outbox returns a fully populated Outbox service
-func (factory *Factory) Outbox() *service.Outbox {
-	return &factory.outboxService
 }
 
 // Stream returns a fully populated Stream service
@@ -387,7 +376,7 @@ func (factory *Factory) ActivityPub_Actor() pub.Actor {
 }
 
 func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
-	return activitypub.NewCommonBehavior()
+	return activitypub.NewCommonBehavior(factory.ActivityPub_Database())
 	// TODO: Figure this out.
 }
 
@@ -396,14 +385,14 @@ func (factory *Factory) ActivityPub_SocialProtocol() pub.SocialProtocol {
 }
 
 func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol {
-	return activitypub.NewFederatingProtocol()
+	return activitypub.NewFederatingProtocol(factory.ActivityPub_Database())
 }
 
-func (factory *Factory) ActivityPub_Database() pub.Database {
-	return activitypub.NewDatabase(factory, factory.Outbox(), factory.Hostname())
+func (factory *Factory) ActivityPub_Database() *activitypub.Database {
+	return activitypub.NewDatabase(factory, factory.Activity(), factory.Hostname())
 }
 
-func (factory *Factory) ActivityPub_Clock() pub.Clock {
+func (factory *Factory) ActivityPub_Clock() activitypub.Clock {
 	return activitypub.Clock{}
 }
 

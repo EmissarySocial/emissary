@@ -10,6 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func asUserURL(userID primitive.ObjectID) string {
+	return "/.activitypub/" + userID.Hex()
+}
+
 // asActivityStreamsLink converts a URL into an ActivityStreamsLink
 func asActivityStreamsLink(urlString string) (vocab.ActivityStreamsLink, error) {
 

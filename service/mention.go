@@ -147,8 +147,8 @@ func (service *Mention) ObjectUserCan(object data.Object, authorization model.Au
 	return derp.NewUnauthorizedError("service.Mention", "Not Authorized")
 }
 
-func (service *Mention) Schema() schema.Element {
-	return model.MentionSchema()
+func (service *Mention) Schema() schema.Schema {
+	return schema.New(model.MentionSchema())
 }
 
 /*******************************************

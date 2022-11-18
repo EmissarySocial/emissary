@@ -29,20 +29,20 @@ import (
 
 // Subscription manages all interactions with the Subscription collection
 type Subscription struct {
-	collection   data.Collection
-	inboxService *Inbox
-	queue        *queue.Queue
-	closed       chan bool
+	collection      data.Collection
+	activityService *Activity
+	queue           *queue.Queue
+	closed          chan bool
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, inboxService *Inbox, queue *queue.Queue) Subscription {
+func NewSubscription(collection data.Collection, activityService *Activity, queue *queue.Queue) Subscription {
 
 	service := Subscription{
-		collection:   collection,
-		inboxService: inboxService,
-		queue:        queue,
-		closed:       make(chan bool),
+		collection:      collection,
+		activityService: activityService,
+		queue:           queue,
+		closed:          make(chan bool),
 	}
 
 	service.Refresh(collection)
@@ -216,8 +216,8 @@ func (service *Subscription) ObjectUserCan(object data.Object, authorization mod
 	return derp.NewUnauthorizedError("service.Subscription", "Not Authorized")
 }
 
-func (service *Subscription) Schema() schema.Element {
-	return model.SubscriptionSchema()
+func (service *Subscription) Schema() schema.Schema {
+	return schema.New(model.SubscriptionSchema())
 }
 
 /*******************************************
@@ -280,7 +280,7 @@ func (service *Subscription) PurgeSubscriptions(subscription model.Subscription)
 	const location = "service.Subscription.PurgeSubscriptions"
 
 	// Check each subscription for expired items.
-	items, err := service.inboxService.QueryPurgeable(&subscription)
+	items, err := service.activityService.QueryPurgeable(&subscription)
 
 	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
@@ -289,7 +289,7 @@ func (service *Subscription) PurgeSubscriptions(subscription model.Subscription)
 
 	// Purge each item that has expired
 	for _, item := range items {
-		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
+		if err := service.activityService.Delete(&item, "Purged"); err != nil {
 			return derp.Wrap(err, location, "Error purging item", item)
 		}
 	}
@@ -297,7 +297,7 @@ func (service *Subscription) PurgeSubscriptions(subscription model.Subscription)
 	return nil
 }
 
-// PollSubscriptions tries to import an RSS feed and adds/updates inboxItems for each item in it.
+// PollSubscriptions tries to import an RSS feed and adds/updates activitys for each item in it.
 func (service *Subscription) PollSubscription(subscription model.Subscription) error {
 
 	const location = "service.Subscription.PollSubscription"
@@ -324,8 +324,8 @@ func (service *Subscription) PollSubscription(subscription model.Subscription) e
 	var errorCollection error
 
 	for _, item := range rssFeed.Items {
-		if err := service.saveInboxItem(&subscription, rssFeed, item); err != nil {
-			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local inboxItem"))
+		if err := service.saveActivity(&subscription, rssFeed, item); err != nil {
+			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
 		}
 	}
 
@@ -455,39 +455,40 @@ func (service *Subscription) GetRSSFeed(subscription *model.Subscription) (*gofe
 	return nil, derp.NewBadRequestError(location, "RSS Feed Not Found", subscription.URL)
 }
 
-// saveInboxItem adds/updates an individual InboxItem based on an RSS item
-func (service *Subscription) saveInboxItem(subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
+// saveActivity adds/updates an individual Activity based on an RSS item
+func (service *Subscription) saveActivity(subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
 
-	const location = "service.Subscription.saveInboxItem"
+	const location = "service.Subscription.saveActivity"
 
-	inboxItem := model.NewInboxItem()
+	activity := model.NewActivity()
 
-	if err := service.inboxService.LoadByOriginURL(subscription.UserID, rssItem.Link, &inboxItem); err != nil {
+	if err := service.activityService.LoadByOriginURL(subscription.UserID, rssItem.Link, &activity); err != nil {
 
 		// Anything but a "not found" error is a real error
 		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error loading local inboxItem")
+			return derp.Wrap(err, location, "Error loading local activity")
 		}
 
-		// Fall through means "not found" which means "make a new inboxItem"
-		inboxItem = model.NewInboxItem()
-		inboxItem.UserID = subscription.UserID
-		inboxItem.Origin = rssOrigin(rssItem)
-		inboxItem.PublishDate = rssDate(rssItem.PublishedParsed)
+		// Fall through means "not found" which means "make a new activity"
+		activity = model.NewActivity()
+		activity.OwnerID = subscription.UserID
+		activity.Origin = rssOrigin(rssItem)
 
-		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > inboxItem.PublishDate {
-			inboxItem.PublishDate = updateDate
+		activity.PublishDate = rssDate(rssItem.PublishedParsed)
+
+		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > activity.PublishDate {
+			activity.PublishDate = updateDate
 		}
 	}
 
-	// If the RSS entry has been updated since the InboxItem was last touched, then refresh it.
-	if rssDate(rssItem.PublishedParsed) >= inboxItem.Journal.UpdateDate {
+	// If the RSS entry has been updated since the Activity was last touched, then refresh it.
+	if rssDate(rssItem.PublishedParsed) >= activity.Journal.UpdateDate {
 
-		populateInboxItem(&inboxItem, subscription, rssFeed, rssItem)
+		populateActivity(&activity, subscription, rssFeed, rssItem)
 
-		// Try to save the new/updated inboxItem
-		if err := service.inboxService.Save(&inboxItem, "Imported from RSS feed"); err != nil {
-			return derp.Wrap(err, "service.Subscription.Poll", "Error saving inboxItem")
+		// Try to save the new/updated activity
+		if err := service.activityService.Save(&activity, "Imported from RSS feed"); err != nil {
+			return derp.Wrap(err, "service.Subscription.Poll", "Error saving activity")
 		}
 	}
 
@@ -498,48 +499,48 @@ func (service *Subscription) saveInboxItem(subscription *model.Subscription, rss
  * Helper Functions
  *******************************************/
 
-func populateInboxItem(inboxItem *model.InboxItem, subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
+func populateActivity(activity *model.Activity, subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
 
-	// Populate inboxItem from the rssItem
-	inboxItem.SubscriptionID = subscription.SubscriptionID
-	inboxItem.Label = htmlTools.ToText(rssItem.Title)
-	inboxItem.Summary = htmlTools.ToText(rssItem.Description)
-	inboxItem.Content = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
-	inboxItem.PublishDate = rssDate(rssItem.PublishedParsed)
-	inboxItem.Origin = rssOrigin(rssItem)
-	inboxItem.InboxFolderID = subscription.InboxFolderID
-	inboxItem.Author = rssAuthor(rssFeed)
-	inboxItem.ImageURL = rssImageURL(rssItem)
+	// Populate activity from the rssItem
+	activity.SubscriptionID = subscription.SubscriptionID
+	activity.Label = htmlTools.ToText(rssItem.Title)
+	activity.Summary = htmlTools.ToText(rssItem.Description)
+	activity.Content = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
+	activity.PublishDate = rssDate(rssItem.PublishedParsed)
+	activity.Origin = rssOrigin(rssItem)
+	activity.ActivityFolderID = subscription.ActivityFolderID
+	activity.Author = rssAuthor(rssFeed)
+	activity.ImageURL = rssImageURL(rssItem)
 
 	// Fill in additional properties from the web page, if necessary
-	if inboxItem.IsIncomplete() {
+	if activity.IsIncomplete() {
 
 		var body bytes.Buffer
 
 		// Try to load the URL from the RSS feed
-		txn := remote.Get(inboxItem.Origin.URL).Response(&body, nil)
+		txn := remote.Get(activity.Origin.URL).Response(&body, nil)
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, "service.Subscription.populateInboxItem", "Error fetching URL", inboxItem.Origin.URL)
+			return derp.Wrap(err, "service.Subscription.populateActivity", "Error fetching URL", activity.Origin.URL)
 		}
 
 		// Parse the response into an HTMLInfo object
 		contentType := txn.ResponseObject.Header.Get("Content-Type")
 		info := htmlinfo.NewHTMLInfo()
 
-		if err := info.Parse(&body, &inboxItem.Origin.URL, &contentType); err != nil {
-			return derp.Wrap(err, "service.Subscription.populateInboxItem", "Error parsing HTML", inboxItem.Origin.URL)
+		if err := info.Parse(&body, &activity.Origin.URL, &contentType); err != nil {
+			return derp.Wrap(err, "service.Subscription.populateActivity", "Error parsing HTML", activity.Origin.URL)
 		}
 
-		// Update the inboxItem with data missing from the RSS feed
-		inboxItem.Origin.Label = first.String(inboxItem.Origin.Label, info.OGInfo.SiteName)
-		inboxItem.Label = first.String(inboxItem.Label, info.Title)
-		inboxItem.Summary = first.String(inboxItem.Summary, info.Description)
+		// Update the activity with data missing from the RSS feed
+		activity.Origin.Label = first.String(activity.Origin.Label, info.OGInfo.SiteName)
+		activity.Label = first.String(activity.Label, info.Title)
+		activity.Summary = first.String(activity.Summary, info.Description)
 
-		if inboxItem.ImageURL == "" {
+		if activity.ImageURL == "" {
 			if info.ImageSrcURL != "" {
-				inboxItem.ImageURL = info.ImageSrcURL
+				activity.ImageURL = info.ImageSrcURL
 			} else if len(info.OGInfo.Images) > 0 {
-				inboxItem.ImageURL = info.OGInfo.Images[0].URL
+				activity.ImageURL = info.OGInfo.Images[0].URL
 			}
 		}
 
@@ -577,9 +578,9 @@ func rssOrigin(item *gofeed.Item) model.OriginLink {
 }
 
 // rssAuthor returns all information about the author of an RSS item
-func rssAuthor(feed *gofeed.Feed) model.AuthorLink {
+func rssAuthor(feed *gofeed.Feed) model.PersonLink {
 
-	result := model.NewAuthorLink()
+	result := model.NewPersonLink()
 
 	if feed == nil {
 		return result

@@ -14,7 +14,7 @@ type InboxItem struct {
 	InboxFolderID  primitive.ObjectID `json:"inboxFolderId" bson:"inboxFolderId"`   // ID of the Inbox folder the contains this message
 	SubscriptionID primitive.ObjectID `json:"subscriptionId" bson:"subscriptionId"` // ID of the subscription that generated this message
 	UserID         primitive.ObjectID `json:"userId"        bson:"userId"`          // ID of the User who received this message
-	Author         AuthorLink         `json:"author"        bson:"author"`          // Link to the Author of this InboxItem
+	Author         PersonLink         `json:"author"        bson:"author"`          // Link to the Author of this InboxItem
 	Origin         OriginLink         `json:"origin"        bson:"origin"`          // Link to the origin of this InboxItem
 	ReplyTo        ReplyToLink        `json:"replyTo"       bson:"replyTo"`         // Link to the message that this InboxItem is a reply to
 	Label          string             `json:"label"         bson:"label"`           // Label/Name/Subject of the message
@@ -40,6 +40,10 @@ func NewInboxItem() InboxItem {
 func (item *InboxItem) ID() string {
 	return item.InboxItemID.Hex()
 }
+
+/*******************************************
+ * schema.DataObject Interface
+ *******************************************/
 
 func (inboxItem *InboxItem) GetObjectID(name string) (primitive.ObjectID, error) {
 	switch name {

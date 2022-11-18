@@ -92,19 +92,9 @@ func (user *User) GetBool(name string) (bool, error) {
  * Conversion Methods
  *******************************************/
 
-func (user *User) AuthorLink() AuthorLink {
-	return AuthorLink{
-		InternalID:   user.UserID,
-		Name:         user.DisplayName,
-		EmailAddress: user.Username,
-		ProfileURL:   user.ProfileURL,
-		ImageURL:     user.ImageURL,
-		UpdateDate:   time.Now().Unix(),
-	}
-}
-
-func (user *User) PersonLink() PersonLink {
+func (user *User) PersonLink(relation string) PersonLink {
 	return PersonLink{
+		Relation:     relation,
 		InternalID:   user.UserID,
 		Name:         user.DisplayName,
 		EmailAddress: user.Username,

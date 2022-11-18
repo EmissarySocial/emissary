@@ -185,8 +185,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/people/:userId/:action", handler.PostProfile(factory))
 
 	// ME-ONLY PAGES
-	e.POST("/people/me/inbox/:item/mark-read", handler.InboxItem_MarkRead(factory))
-	e.POST("/people/me/inbox/:item/mark-unread", handler.InboxItem_MarkUnRead(factory))
+	e.POST("/people/me/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
+	e.POST("/people/me/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
 
 	e.GET("/people/me/subscriptions/:subscription", handler.GetSubscription(factory))
 	e.POST("/people/me/subscriptions/:subscription", handler.PostSubscription(factory))

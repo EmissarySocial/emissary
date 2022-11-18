@@ -149,7 +149,7 @@ func (w Profile) UserID() string {
 	return w.user.UserID.Hex()
 }
 
-func (w Profile) InboxFolderID() string {
+func (w Profile) FolderID() string {
 	return w.context().QueryParam("inboxFolderId")
 }
 
@@ -169,10 +169,10 @@ func (w Profile) ImageURL() string {
  * QUERY BUILDERS
  *******************************************/
 
-func (w Profile) Inbox() ([]model.InboxItem, error) {
+func (w Profile) Inbox() ([]model.Activity, error) {
 
 	if !w.IsAuthenticated() {
-		return []model.InboxItem{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
+		return []model.Activity{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
 	}
 
 	factory := w._factory
@@ -187,13 +187,13 @@ func (w Profile) Inbox() ([]model.InboxItem, error) {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
+	return factory.Activity().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
 
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
-func (w Profile) IsInboxEmpty(inbox []model.InboxItem) bool {
+func (w Profile) IsInboxEmpty(inbox []model.Activity) bool {
 	if len(inbox) > 0 {
 		return false
 	}
@@ -205,53 +205,53 @@ func (w Profile) IsInboxEmpty(inbox []model.InboxItem) bool {
 	return true
 }
 
-func (w Profile) InboxItem() (model.InboxItem, error) {
+func (w Profile) Activity() (model.Activity, error) {
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {
-		return model.InboxItem{}, derp.NewForbiddenError("render.Profile.InboxItem", "Not authenticated")
+		return model.Activity{}, derp.NewForbiddenError("render.Profile.Activity", "Not authenticated")
 	}
 
 	// Try to parse the inboxItemID from the URL
 	inboxItemID, err := primitive.ObjectIDFromHex(w._context.QueryParam("inboxItemId"))
 
 	if err != nil {
-		return model.InboxItem{}, derp.NewBadRequestError("render.Profile.InboxItem", "Invalid inboxItemId", w._context.QueryParam("inboxItemId"))
+		return model.Activity{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid inboxItemId", w._context.QueryParam("inboxItemId"))
 	}
 
 	// Try to load the record from the database
-	result := model.NewInboxItem()
-	inboxService := w._factory.Inbox()
+	result := model.NewActivity()
+	activityService := w._factory.Activity()
 
-	if err := inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
-		return model.InboxItem{}, derp.Wrap(err, "render.Profile.InboxItem", "Error loading inbox item")
+	if err := activityService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
+		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 
 	// Success!
 	return result, nil
 }
 
-func (w Profile) InboxFolders() ([]model.InboxFolder, error) {
+func (w Profile) Folders() ([]model.Folder, error) {
 
 	if !w.IsAuthenticated() {
-		return []model.InboxFolder{}, derp.NewForbiddenError("render.Profile.InboxFolders", "Not authenticated")
+		return []model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
 	}
 
-	inboxFolderService := w._factory.InboxFolder()
+	inboxFolderService := w._factory.Folder()
 	return inboxFolderService.QueryByUserID(w.AuthenticatedID())
 }
 
-func (w Profile) InboxFolder() (model.InboxFolder, error) {
+func (w Profile) Folder() (model.Folder, error) {
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {
-		return model.InboxFolder{}, derp.NewForbiddenError("render.Profile.InboxFolders", "Not authenticated")
+		return model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
 	}
 
 	// Try to load the record from the database
-	inboxFolder := model.NewInboxFolder()
+	inboxFolder := model.NewFolder()
 	inboxFolderID := w._context.QueryParam("inboxFolderId")
-	inboxFolderService := w._factory.InboxFolder()
+	inboxFolderService := w._factory.Folder()
 
 	err := inboxFolderService.LoadByToken(w.AuthenticatedID(), inboxFolderID, &inboxFolder)
 	return inboxFolder, err

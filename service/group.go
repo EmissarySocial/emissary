@@ -128,8 +128,8 @@ func (service *Group) ObjectUserCan(object data.Object, authorization model.Auth
 	return derp.NewUnauthorizedError("service.Group", "Not Authorized")
 }
 
-func (service *Group) Schema() schema.Element {
-	return model.GroupSchema()
+func (service *Group) Schema() schema.Schema {
+	return schema.New(model.GroupSchema())
 }
 
 /*******************************************

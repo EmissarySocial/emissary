@@ -15,10 +15,10 @@ import (
 // Factory is used to locate all necessary services
 type Factory interface {
 	// Model Services
+	Activity() *service.Activity
 	Attachment() *service.Attachment
+	Folder() *service.Folder
 	Group() *service.Group
-	Inbox() *service.Inbox
-	InboxFolder() *service.InboxFolder
 	Layout() *service.Layout
 	Mention() *service.Mention
 	Stream() *service.Stream

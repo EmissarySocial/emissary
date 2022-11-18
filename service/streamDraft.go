@@ -151,8 +151,9 @@ func (service *StreamDraft) ObjectUserCan(object data.Object, authorization mode
 	return derp.NewUnauthorizedError("service.StreamDraft", "Not Authorized")
 }
 
-func (service *StreamDraft) Schema() schema.Element {
-	return nil
+func (service *StreamDraft) Schema() schema.Schema {
+	// TODO: Implement this
+	return schema.New(nil)
 }
 
 /*******************************************

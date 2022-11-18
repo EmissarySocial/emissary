@@ -226,8 +226,9 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 	return derp.NewUnauthorizedError("service.Stream", "Not Authorized")
 }
 
-func (service *Stream) Schema() schema.Element {
-	return nil
+func (service *Stream) Schema() schema.Schema {
+	// TODO: Implement
+	return schema.New(nil)
 }
 
 /*******************************************
@@ -637,7 +638,7 @@ func (service *Stream) CreatePersonalStream(user *model.User, templateID string)
 	stream := model.NewStream()
 	stream.TemplateID = templateID
 	stream.ParentID = user.UserID
-	stream.Author = user.AuthorLink()
+	stream.Author = user.PersonLink(model.LinkRelationAuthor)
 	stream.Permissions = model.NewPermissions()
 	stream.Permissions.Assign("myself", user.UserID)
 

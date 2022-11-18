@@ -220,7 +220,7 @@ func (w Stream) OriginURL() string {
 	return "/"
 }
 
-func (w Stream) Author() model.AuthorLink {
+func (w Stream) Author() model.PersonLink {
 	return w.stream.Author
 }
 

@@ -123,8 +123,8 @@ func (service *Following) ObjectUserCan(object data.Object, authorization model.
 	return derp.NewUnauthorizedError("service.Following", "Not Authorized")
 }
 
-func (service *Following) Schema() schema.Element {
-	return model.FollowingSchema()
+func (service *Following) Schema() schema.Schema {
+	return schema.New(model.FollowingSchema())
 }
 
 /*******************************************
