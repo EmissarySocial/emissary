@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/service/activitypub"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -20,6 +21,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/go-fed/activity/pub"
 	"github.com/spf13/afero"
 
 	"github.com/stripe/stripe-go/v72/client"
@@ -238,7 +240,7 @@ func (factory *Factory) Close() {
 }
 
 /*******************************************
- * DOMAIN DATA ACCESSORS
+ * Domain Data Accessors
  *******************************************/
 
 // ID implements the set.Set interface.  (Domains are indexed by their hostname)
@@ -246,10 +248,12 @@ func (factory *Factory) ID() string {
 	return factory.config.Hostname
 }
 
+// Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
 	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname
 }
 
+// Hostname returns the domain name (without anything else) that this factory is responsible for
 func (factory *Factory) Hostname() string {
 	return factory.config.Hostname
 }
@@ -263,17 +267,28 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
 }
 
 /*******************************************
- * DOMAIN MODEL SERVICES
+ * Domain Model Services
  *******************************************/
 
-func (factory *Factory) Model(name string) service.ModelService {
+func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 	switch name {
-	case "InboxFolder":
-		return factory.InboxFolder()
+
+	case "Follower", "follower":
+		return factory.Follower(), nil
+
+	case "Following", "following":
+		return factory.Following(), nil
+
+	case "Inbox", "inbox":
+		return factory.Inbox(), nil
+
+	case "InboxFolder", "inboxfolder":
+		return factory.InboxFolder(), nil
+
 	}
 
-	return nil
+	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
 }
 
 // Attachment returns a fully populated Attachment service
@@ -284,6 +299,18 @@ func (factory *Factory) Attachment() *service.Attachment {
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
+}
+
+// Follower returns a fully populated Follower service
+func (factory *Factory) Follower() *service.Follower {
+	service := service.NewFollower(factory.collection(CollectionFollower))
+	return &service
+}
+
+// Following returns a fully populated Following service
+func (factory *Factory) Following() *service.Following {
+	service := service.NewFollowing(factory.collection(CollectionFollowing))
+	return &service
 }
 
 // Inbox returns a fully populated Inbox service
@@ -333,7 +360,7 @@ func (factory *Factory) Group() *service.Group {
 }
 
 /*******************************************
- * RENDER OBJECTS
+ * Render Objects
  *******************************************/
 
 // Layout service manages global website layouts (managed globally by the server.Factory)
@@ -347,7 +374,41 @@ func (factory *Factory) Template() *service.Template {
 }
 
 /*******************************************
- * REAL-TIME UPDATE CHANNELS
+ * ActivityPub
+ *******************************************/
+
+func (factory *Factory) ActivityPub_Actor() pub.Actor {
+	return pub.NewActor(
+		factory.ActivityPub_CommonBehavior(),
+		factory.ActivityPub_SocialProtocol(),
+		factory.ActivityPub_FederatingProtocol(),
+		factory.ActivityPub_Database(),
+		factory.ActivityPub_Clock())
+}
+
+func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
+	return activitypub.NewCommonBehavior()
+	// TODO: Figure this out.
+}
+
+func (factory *Factory) ActivityPub_SocialProtocol() pub.SocialProtocol {
+	return activitypub.NewSocialProtocol()
+}
+
+func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol {
+	return activitypub.NewFederatingProtocol()
+}
+
+func (factory *Factory) ActivityPub_Database() pub.Database {
+	return activitypub.NewDatabase(factory, factory.Outbox(), factory.Hostname())
+}
+
+func (factory *Factory) ActivityPub_Clock() pub.Clock {
+	return activitypub.Clock{}
+}
+
+/*******************************************
+ * Real-Time Update Channels
  *******************************************/
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
@@ -361,7 +422,7 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 }
 
 /*******************************************
- * MEDIA SERVER
+ * Media Server
  *******************************************/
 
 // MediaServer manages all file uploads
@@ -393,7 +454,7 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 }
 
 /*******************************************
- * OTHER NON-MODEL SERVICES
+ * Other Non-Model Services
  *******************************************/
 
 // Content returns the Content transformation service
@@ -436,7 +497,7 @@ func (factory *Factory) LookupProvider() form.LookupProvider {
 }
 
 /*******************************************
- * EXTERNAL APIs
+ * External APIs
  *******************************************/
 
 // OAuth returns a fully populated OAuth service
@@ -484,11 +545,10 @@ func (factory *Factory) StripeClient() (client.API, error) {
 }
 
 // Other libraries to make it here eventually...
-// ActivityPub
 // Service APIs (like Twitter? Slack? Discord?, The FB?)
 
 /*******************************************
- * HELPER UTILITIES
+ * Helper Utilities
  *******************************************/
 
 // collection returns a data.Collection that matches the requested name.
