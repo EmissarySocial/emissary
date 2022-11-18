@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/null"
@@ -8,8 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SubscriptionMethodActivityPub represents the ActivityPub subscription (follow)
+const SubscriptionMethodActivityPub = "ACTIVITYPUB"
+
 // SubscriptionMethodRSS represents an RSS subscription
 const SubscriptionMethodRSS = "RSS"
+
+// SubscriptionMethodRSSCloud represents an RSS-Cloud subscription
+const SubscriptionMethodRSSCloud = "RSS-CLOUD"
 
 // SubscriptionMethodWebSub represents a WebSub subscription
 const SubscriptionMethodWebSub = "WEBSUB"
@@ -31,7 +39,7 @@ const SubscriptionStatusFailure = "FAILURE"
 type Subscription struct {
 	SubscriptionID primitive.ObjectID `path:"subscriptionId" json:"subscriptionId" bson:"_id"`           // Unique Identifier of this record
 	UserID         primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this subscription
-	InboxFolderID  primitive.ObjectID `path:"inboxFolderId"  json:"inboxFolderId"  bson:"inboxFolderId"` // ID of the inbox folder to put messages into
+	FolderID       primitive.ObjectID `path:"folderId"       json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
 	Label          string             `path:"label"          json:"label"          bson:"label"`         // Label of this subscription
 	URL            string             `path:"url"            json:"url"            bson:"url"`           // Connection URL for obtaining new sub-streams.
 	Method         string             `path:"method"         json:"method"         bson:"method"`        // Method used to subscribe to remote streams (RSS, etc)
@@ -61,7 +69,7 @@ func SubscriptionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"subscriptionId": schema.String{Format: "objectId"},
 			"userId":         schema.String{Format: "objectId"},
-			"inboxFolderId":  schema.String{Format: "objectId"},
+			"folderId":       schema.String{Format: "objectId"},
 			"label":          schema.String{Required: true, MinLength: 1, MaxLength: 100},
 			"url":            schema.String{Format: "url", Required: true, MinLength: 1, MaxLength: 1000},
 			"method":         schema.String{Required: true, Enum: []string{SubscriptionMethodRSS, SubscriptionMethodWebSub}},
@@ -102,4 +110,18 @@ func (sub *Subscription) GetInt64(name string) (int64, error) {
 
 func (sub *Subscription) GetBool(name string) (bool, error) {
 	return false, derp.NewInternalError("model.Subscription.GetBool", "Invalid property", name)
+}
+
+/*******************************************
+ * data.Object Interface
+ *******************************************/
+
+func (sub *Subscription) Origin() OriginLink {
+	return OriginLink{
+		InternalID: sub.SubscriptionID,
+		Label:      sub.Label,
+		Source:     sub.Method,
+		URL:        sub.URL,
+		UpdateDate: time.Now().Unix(),
+	}
 }

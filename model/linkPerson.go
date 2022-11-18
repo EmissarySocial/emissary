@@ -9,6 +9,7 @@ type PersonLink struct {
 	InternalID   primitive.ObjectID `path:"internalId"   json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
 	Source       string             `path:"source"       json:"source"       bson:"source"`                 // The source that generated this document
 	Relation     string             `path:"relation"     json:"relation"     bson:"relation,omitempty"`     // Relation to the person (e.g. "author", "contributor", "editor", "owner", "publisher", "webmaster")
+	Organization string             `path:"organization" json:"organization" bson:"organization,omitempty"` // Organization that this person is associated with
 	Name         string             `path:"name"         json:"name"         bson:"name,omitempty"`         // Name of the person
 	ProfileURL   string             `path:"profileUrl"   json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
 	EmailAddress string             `path:"emailAddress" json:"emailAddress" bson:"emailAddress,omitempty"` // Email address of the person
@@ -27,10 +28,11 @@ func PersonLinkSchema() schema.Element {
 			"internalId":   schema.String{Format: "objectId"},
 			"source":       schema.String{Enum: []string{LinkSourceActivityPub, LinkSourceInternal, LinkSourceRSS, LinkSourceTwitter}},
 			"relation":     schema.String{Enum: []string{LinkRelationAuthor, LinkRelationProfile}},
+			"organization": schema.String{},
 			"name":         schema.String{},
 			"profileUrl":   schema.String{Format: "url"},
-			"emailAddress": schema.String{Format: "email"},
 			"imageUrl":     schema.String{Format: "url"},
+			"emailAddress": schema.String{Format: "email"},
 			"updateDate":   schema.Integer{},
 		},
 	}

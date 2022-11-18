@@ -80,9 +80,9 @@ func (step StepEditSubscription) Post(renderer Renderer) error {
 	}
 
 	subscription.URL = transaction.URL
+	subscription.FolderID = transaction.FolderID
 	subscription.PollDuration = transaction.PollDuration
 	subscription.PurgeDuration = transaction.PurgeDuration
-	subscription.InboxFolderID = transaction.InboxFolderID
 
 	// Save the subscription to the database
 	if err := subscriptionService.Save(&subscription, "Updated by User"); err != nil {

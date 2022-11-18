@@ -74,7 +74,7 @@ func (step StepAddSubscription) Post(renderer Renderer) error {
 	subscription.URL = transaction.URL
 	subscription.PollDuration = transaction.PollDuration
 	subscription.PurgeDuration = transaction.PurgeDuration
-	subscription.InboxFolderID = transaction.InboxFolderID
+	subscription.FolderID = transaction.FolderID
 
 	// Save the subscription to the database
 	factory := renderer.factory()
@@ -97,7 +97,7 @@ func (step StepAddSubscription) getForm(renderer Renderer) form.Form {
 
 type subscription_transaction struct {
 	URL           string             `form:"url"           path:"url"`
-	InboxFolderID primitive.ObjectID `form:"folderId" path:"folderId"`
+	FolderID      primitive.ObjectID `form:"folderId"      path:"folderId"`
 	PollDuration  int                `form:"pollDuration"  path:"pollDuration"`
 	PurgeDuration int                `form:"purgeDuration" path:"purgeDuration"`
 }

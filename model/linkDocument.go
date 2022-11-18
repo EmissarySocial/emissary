@@ -34,3 +34,24 @@ func DocumentLinkSchema() schema.Element {
 		},
 	}
 }
+
+func (doc *DocumentLink) IsComplete() bool {
+
+	if doc.URL == "" {
+		return false
+	}
+
+	if doc.Label == "" {
+		return false
+	}
+
+	if doc.Summary == "" {
+		return false
+	}
+
+	if doc.ImageURL == "" {
+		return false
+	}
+
+	return true
+}

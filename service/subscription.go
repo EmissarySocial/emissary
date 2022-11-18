@@ -472,7 +472,7 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 		// Fall through means "not found" which means "make a new activity"
 		activity = model.NewActivity()
 		activity.OwnerID = subscription.UserID
-		activity.Origin = rssOrigin(rssItem)
+		activity.Origin = subscription.Origin()
 
 		activity.PublishDate = rssDate(rssItem.PublishedParsed)
 
@@ -502,18 +502,14 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 func populateActivity(activity *model.Activity, subscription *model.Subscription, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
 
 	// Populate activity from the rssItem
-	activity.SubscriptionID = subscription.SubscriptionID
-	activity.Label = htmlTools.ToText(rssItem.Title)
-	activity.Summary = htmlTools.ToText(rssItem.Description)
-	activity.Content = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 	activity.PublishDate = rssDate(rssItem.PublishedParsed)
-	activity.Origin = rssOrigin(rssItem)
-	activity.ActivityFolderID = subscription.ActivityFolderID
-	activity.Author = rssAuthor(rssFeed)
-	activity.ImageURL = rssImageURL(rssItem)
+	activity.Origin = subscription.Origin()
+	activity.FolderID = subscription.FolderID
+	activity.Actor = rssAuthor(rssFeed)
+	activity.Object = rssDocument(rssItem)
 
 	// Fill in additional properties from the web page, if necessary
-	if activity.IsIncomplete() {
+	if !activity.Object.IsComplete() {
 
 		var body bytes.Buffer
 
@@ -532,15 +528,14 @@ func populateActivity(activity *model.Activity, subscription *model.Subscription
 		}
 
 		// Update the activity with data missing from the RSS feed
-		activity.Origin.Label = first.String(activity.Origin.Label, info.OGInfo.SiteName)
-		activity.Label = first.String(activity.Label, info.Title)
-		activity.Summary = first.String(activity.Summary, info.Description)
+		activity.Object.Label = first.String(activity.Object.Label, info.Title)
+		activity.Object.Summary = first.String(activity.Object.Summary, info.Description)
 
-		if activity.ImageURL == "" {
+		if activity.Object.ImageURL == "" {
 			if info.ImageSrcURL != "" {
-				activity.ImageURL = info.ImageSrcURL
+				activity.Object.ImageURL = info.ImageSrcURL
 			} else if len(info.OGInfo.Images) > 0 {
-				activity.ImageURL = info.OGInfo.Images[0].URL
+				activity.Object.ImageURL = info.OGInfo.Images[0].URL
 			}
 		}
 
@@ -551,44 +546,32 @@ func populateActivity(activity *model.Activity, subscription *model.Subscription
 	return nil
 }
 
-func rssDate(date *time.Time) int64 {
-
-	if date == nil {
-		return 0
-	}
-
-	return date.Unix()
-}
-
-// rssOrigin returns a popluated OriginLink for an RSS item
-func rssOrigin(item *gofeed.Item) model.OriginLink {
-
-	result := model.NewOriginLink()
-
-	if item == nil {
-		return result
-	}
-
-	result.Source = model.LinkSourceRSS
-	result.Label = htmlTools.ToText(item.Title)
-	result.URL = item.Link
-	result.UpdateDate = time.Now().Unix()
-
-	return result
-}
-
 // rssAuthor returns all information about the author of an RSS item
 func rssAuthor(feed *gofeed.Feed) model.PersonLink {
 
-	result := model.NewPersonLink()
-
 	if feed == nil {
-		return result
+		return model.NewPersonLink()
 	}
 
-	result.Name = htmlTools.ToText(feed.Title)
+	return model.PersonLink{
+		Name:       htmlTools.ToText(feed.Title),
+		ProfileURL: feed.Link,
+		ImageURL:   feed.Image.URL,
+	}
 
-	return result
+}
+
+func rssDocument(item *gofeed.Item) model.DocumentLink {
+
+	return model.DocumentLink{
+		URL:         item.Link,
+		Label:       htmlTools.ToText(item.Title),
+		Summary:     htmlTools.ToText(item.Description),
+		ContentHTML: bluemonday.UGCPolicy().Sanitize(item.Content),
+		ImageURL:    rssImageURL(item),
+		PublishDate: rssDate(item.PublishedParsed),
+		UpdateDate:  time.Now().Unix(),
+	}
 }
 
 // rssImageURL returns the URL of the first image in the item's enclosure list.
@@ -610,6 +593,15 @@ func rssImageURL(item *gofeed.Item) string {
 	}
 
 	return ""
+}
+
+func rssDate(date *time.Time) int64 {
+
+	if date == nil {
+		return 0
+	}
+
+	return date.Unix()
 }
 
 // nodeAttribute searches for a specific attribute in a node and returns its value
