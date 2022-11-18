@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/EmissarySocial/emissary/gofed/federatingdb"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-fed/activity/pub"
 	"github.com/go-fed/activity/streams/vocab"
@@ -13,10 +14,10 @@ import (
 // https://go-fed.org/ref/activity/pub#The-FederatingProtocol-Interface
 
 type FederatingProtocol struct {
-	db *Database
+	db *federatingdb.Database
 }
 
-func NewFederatingProtocol(db *Database) *FederatingProtocol {
+func NewFederatingProtocol(db *federatingdb.Database) *FederatingProtocol {
 	return &FederatingProtocol{
 		db: db,
 	}

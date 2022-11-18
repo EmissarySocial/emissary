@@ -1,4 +1,4 @@
-package activitystreams
+package activityStreams
 
 import "github.com/go-fed/activity/streams/vocab"
 

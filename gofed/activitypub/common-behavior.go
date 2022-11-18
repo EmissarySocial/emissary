@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/EmissarySocial/emissary/gofed/db"
 	"github.com/go-fed/activity/pub"
 	"github.com/go-fed/activity/streams/vocab"
 	"github.com/go-fed/httpsig"
@@ -14,10 +15,10 @@ import (
 // https://go-fed.org/ref/activity/pub#The-CommonBehavior-Interface
 
 type CommonBehavior struct {
-	db *Database
+	db *db.Database
 }
 
-func NewCommonBehavior(db *Database) CommonBehavior {
+func NewCommonBehavior(db *db.Database) CommonBehavior {
 	return CommonBehavior{
 		db: db,
 	}
@@ -36,6 +37,8 @@ func (service CommonBehavior) GetOutbox(ctx context.Context, r *http.Request) (v
 }
 
 func (service CommonBehavior) NewTransport(ctx context.Context, actorBoxIRI *url.URL, gofedAgent string) (t pub.Transport, err error) {
+
+	// TODO: Implement HTTPSIG
 
 	prefs := []httpsig.Algorithm{httpsig.RSA_SHA256}
 	digestPref := httpsig.DigestSha256

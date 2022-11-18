@@ -1,4 +1,4 @@
-package activitypub
+package common
 
 import (
 	"github.com/benpate/derp"
