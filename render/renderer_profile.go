@@ -212,13 +212,23 @@ func (w Profile) InboxItem() (model.InboxItem, error) {
 		return model.InboxItem{}, derp.NewForbiddenError("render.Profile.InboxItem", "Not authenticated")
 	}
 
+	// Try to parse the inboxItemID from the URL
+	inboxItemID, err := primitive.ObjectIDFromHex(w._context.QueryParam("inboxItemId"))
+
+	if err != nil {
+		return model.InboxItem{}, derp.NewBadRequestError("render.Profile.InboxItem", "Invalid inboxItemId", w._context.QueryParam("inboxItemId"))
+	}
+
 	// Try to load the record from the database
 	result := model.NewInboxItem()
 	inboxService := w._factory.Inbox()
-	err := inboxService.LoadItemByID(w.AuthenticatedID(), w._context.QueryParam("inboxItemId"), &result)
+
+	if err := inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
+		return model.InboxItem{}, derp.Wrap(err, "render.Profile.InboxItem", "Error loading inbox item")
+	}
 
 	// Success!
-	return result, err
+	return result, nil
 }
 
 func (w Profile) InboxFolders() ([]model.InboxFolder, error) {
