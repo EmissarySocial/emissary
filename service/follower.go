@@ -10,7 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Follower defines a service that can send and receive mention data
+// Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
+
 type Follower struct {
 	collection data.Collection
 }
@@ -125,4 +126,20 @@ func (service *Follower) ObjectUserCan(object data.Object, authorization model.A
 
 func (service *Follower) Schema() schema.Element {
 	return model.FollowerSchema()
+}
+
+/*******************************************
+ * Custom Queries
+ *******************************************/
+
+func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error) {
+
+	result := make([]string, 0)
+	fields := option.Fields("actor.profileUrl")
+
+	if err := service.collection.Query(&result, notDeleted(criteria), fields); err != nil {
+		return result, derp.Wrap(err, "service.Follower.QueryFollowerURLs", "Error querying follower URLs", criteria)
+	}
+
+	return result, nil
 }
