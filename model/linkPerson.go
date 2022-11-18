@@ -7,6 +7,7 @@ import (
 
 type PersonLink struct {
 	InternalID   primitive.ObjectID `path:"internalId"   json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
+	Source       string             `path:"source"       json:"source"       bson:"source"`                 // The source that generated this document
 	Relation     string             `path:"relation"     json:"relation"     bson:"relation,omitempty"`     // Relation to the person (e.g. "author", "contributor", "editor", "owner", "publisher", "webmaster")
 	Name         string             `path:"name"         json:"name"         bson:"name,omitempty"`         // Name of the person
 	ProfileURL   string             `path:"profileUrl"   json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
@@ -24,7 +25,8 @@ func PersonLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId":   schema.String{Format: "objectId"},
-			"relation":     schema.String{},
+			"source":       schema.String{Enum: []string{LinkSourceActivityPub, LinkSourceInternal, LinkSourceRSS, LinkSourceTwitter}},
+			"relation":     schema.String{Enum: []string{LinkRelationAuthor, LinkRelationProfile}},
 			"name":         schema.String{},
 			"profileUrl":   schema.String{Format: "url"},
 			"emailAddress": schema.String{Format: "email"},

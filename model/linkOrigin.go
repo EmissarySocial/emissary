@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,6 +20,18 @@ type OriginLink struct {
 func NewOriginLink() OriginLink {
 	return OriginLink{
 		UpdateDate: time.Now().Unix(),
+	}
+}
+
+func OriginLinkSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"internalId": schema.String{Format: "objectId"},
+			"source":     schema.String{},
+			"label":      schema.String{},
+			"url":        schema.String{Format: "url"},
+			"updateDate": schema.Integer{},
+		},
 	}
 }
 
