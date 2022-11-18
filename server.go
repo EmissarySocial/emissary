@@ -131,9 +131,26 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.GET("/favicon.ico", handler.GetFavicon(factory))
+	e.GET("/.well-known/change-password", handler.TBD)
+	e.GET("/.well-known/host-meta", handler.TBD)
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
+
+	// ActivityPub Routes
+	e.GET("/.activitypub/:user/inbox", handler.ActivityPub_GetInbox(factory))
+	e.GET("/.activitypub/:user/inbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/.activitypub/:user/inbox", handler.ActivityPub_PostInbox(factory))
+
+	e.GET("/.activitypub/:user/outbox", handler.ActivityPub_GetOutbox(factory))
+	e.GET("/.activitypub/:user/outbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/.activitypub/:user/outbox", handler.ActivityPub_PostOutbox(factory))
+
+	e.GET("/.activitypub/:user/followers", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/.activitypub/:user/following", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/.activitypub/:user/likes", handler.ActivityPub_GenericHandler(factory))
+
+	// IndieWeb Routes
 	e.POST("/.webmention", handler.PostWebMention(factory))
 
 	// Authentication Pages
