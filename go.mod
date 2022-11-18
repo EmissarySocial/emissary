@@ -8,6 +8,8 @@ replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 replace github.com/benpate/form => ../../benpate/form
 
+replace github.com/benpate/data => ../../benpate/data
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.129
@@ -33,6 +35,7 @@ require (
 	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
+	github.com/go-fed/activity v1.0.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20221001180718-4a9895871b6b
@@ -76,6 +79,7 @@ require (
 	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
+	github.com/go-fed/httpsig v0.1.1-0.20190914113940-c2de3672e5b5 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
