@@ -6,6 +6,8 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Outbox manages all interactions with a user's Outbox
@@ -77,6 +79,71 @@ func (service *Outbox) Delete(inboxItem *model.OutboxItem, note string) error {
 	// Delete Outbox record last.
 	if err := service.collection.Delete(inboxItem, note); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", inboxItem, note)
+	}
+
+	return nil
+}
+
+/*******************************************
+ * Generic Data Methods
+ *******************************************/
+
+// New returns a fully initialized model.Stream as a data.Object.
+func (service *Outbox) ObjectNew() data.Object {
+	result := model.NewOutboxItem()
+	return &result
+}
+
+func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
+
+	if inboxItem, ok := object.(*model.OutboxItem); ok {
+		return inboxItem.OutboxItemID
+	}
+
+	return primitive.NilObjectID
+}
+func (service *Outbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Outbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewOutboxItem()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Outbox) ObjectSave(object data.Object, note string) error {
+	if inboxItem, ok := object.(*model.OutboxItem); ok {
+		return service.Save(inboxItem, note)
+	}
+	return derp.NewInternalError("service.Inbox.ObjectSave", "Invalid Object Type", object)
+}
+
+func (service *Outbox) ObjectDelete(object data.Object, note string) error {
+	if inboxItem, ok := object.(*model.OutboxItem); ok {
+		return service.Delete(inboxItem, note)
+	}
+	return derp.NewInternalError("service.Inbox.ObjectDelete", "Invalid Object Type", object)
+}
+
+func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Inbox", "Not Authorized")
+}
+
+func (service *Outbox) Schema() schema.Element {
+	return model.OutboxItemSchema()
+}
+
+/*******************************************
+ * Custom Query Methods
+ *******************************************/
+
+func (service *Outbox) LoadItemByID(userID primitive.ObjectID, outboxItemID primitive.ObjectID, result *model.OutboxItem) error {
+
+	criteria := exp.Equal("_id", outboxItemID).AndEqual("userId", userID)
+
+	if err := service.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "service.Outbox", "Error loading OutboxItem", criteria)
 	}
 
 	return nil

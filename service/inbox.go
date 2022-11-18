@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/schema"
 	"github.com/microcosm-cc/bluemonday"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -100,19 +101,62 @@ func (service *Inbox) Delete(inboxItem *model.InboxItem, note string) error {
 }
 
 /*******************************************
+ * Generic Data Methods
+ *******************************************/
+
+// New returns a fully initialized model.Stream as a data.Object.
+func (service *Inbox) ObjectNew() data.Object {
+	result := model.NewInboxItem()
+	return &result
+}
+
+func (service *Inbox) ObjectID(object data.Object) primitive.ObjectID {
+
+	if inboxItem, ok := object.(*model.InboxItem); ok {
+		return inboxItem.InboxItemID
+	}
+
+	return primitive.NilObjectID
+}
+func (service *Inbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Inbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewInboxItem()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Inbox) ObjectSave(object data.Object, note string) error {
+	if inboxItem, ok := object.(*model.InboxItem); ok {
+		return service.Save(inboxItem, note)
+	}
+	return derp.NewInternalError("service.Inbox.ObjectSave", "Invalid Object Type", object)
+}
+
+func (service *Inbox) ObjectDelete(object data.Object, note string) error {
+	if inboxItem, ok := object.(*model.InboxItem); ok {
+		return service.Delete(inboxItem, note)
+	}
+	return derp.NewInternalError("service.Inbox.ObjectDelete", "Invalid Object Type", object)
+}
+
+func (service *Inbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Inbox", "Not Authorized")
+}
+
+func (service *Inbox) Schema() schema.Element {
+	return model.InboxItemSchema()
+}
+
+/*******************************************
  * Custom Queries
  *******************************************/
 
-func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemString string, result *model.InboxItem) error {
+func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.InboxItem) error {
 
 	const location = "service.Inbox.LoadItemByID"
-
-	// Convert the string to an ObjectID
-	inboxItemID, err := primitive.ObjectIDFromHex(inboxItemString)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Cannot parse inboxItemID", inboxItemString)
-	}
 
 	criteria := exp.
 		Equal("userId", userID).
@@ -139,7 +183,14 @@ func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readD
 	// Try to load the InboxItem from the database
 	inboxItem := model.NewInboxItem()
 
-	if err := service.LoadItemByID(userID, token, &inboxItem); err != nil {
+	// Convert the string to an ObjectID
+	inboxItemID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Cannot parse inboxItemID", token)
+	}
+
+	if err := service.LoadItemByID(userID, inboxItemID, &inboxItem); err != nil {
 		return derp.Wrap(err, location, "Cannot load InboxItem", userID, token)
 	}
 
