@@ -86,7 +86,7 @@
 		"inbox-folder-edit": {
 			"roles":["myself"],
 			"steps": [
-				{"step": "with-inbox-folder", "steps": [
+				{"step": "with-folder", "steps": [
 					{"step": "as-modal", "steps": [
 						{"step": "form-html", "form": {
 							"type": "layout-vertical",
@@ -104,7 +104,7 @@
 		"inbox-folder-delete": {
 			"roles":["myself"],
 			"steps": [
-				{"step": "with-inbox-folder", "steps": [
+				{"step": "with-folder", "steps": [
 					{"step": "delete"}
 				]}
 			]

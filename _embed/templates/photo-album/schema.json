@@ -92,12 +92,12 @@
 				"template": "photograph",
 				"with-child": [
 					{"step": "upload-attachments"},
-					{"step": "set-publishdate"},
 					{"step": "set-thumbnail"},
 					{"step": "save", "comment": "Created by {{.Author}}"},
 					{"step": "add-child", "template": "comment-group", "with-child":[
 						{"step": "save", "comment": "Created by {{.Author}}"}
-					]}
+					]},
+					{"step": "publish"}
 				]},
 				{"step": "refresh-page"}
 			]
