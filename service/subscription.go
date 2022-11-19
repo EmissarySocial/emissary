@@ -553,12 +553,16 @@ func rssAuthor(feed *gofeed.Feed) model.PersonLink {
 		return model.NewPersonLink()
 	}
 
-	return model.PersonLink{
+	result := model.PersonLink{
 		Name:       htmlTools.ToText(feed.Title),
 		ProfileURL: feed.Link,
-		ImageURL:   feed.Image.URL,
 	}
 
+	if feed.Image != nil {
+		result.ImageURL = feed.Image.URL
+	}
+
+	return result
 }
 
 func rssDocument(item *gofeed.Item) model.DocumentLink {
