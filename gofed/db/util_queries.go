@@ -18,7 +18,7 @@ func (db *Database) load(id *url.URL) (data.Object, string, error) {
 
 	const location = "activitypub.Database.load"
 
-	userID, itemType, itemID, err := parseURL(id)
+	userID, itemType, itemID, err := common.ParseURL(id)
 
 	if err != nil {
 		return nil, itemType, derp.Wrap(err, location, "Error parsing URL", id)
@@ -60,7 +60,7 @@ func (db *Database) save(item vocab.Type, comment string) error {
 	}
 
 	// Convert the ActivityStream object to a model object
-	object, err := ToModelObject(item)
+	object, err := common.ToModelObject(item)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error converting item to model object", item)

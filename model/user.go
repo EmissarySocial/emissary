@@ -247,3 +247,23 @@ func (user *User) Roles(authorization *Authorization) []string {
 
 	return result
 }
+
+/*******************************************
+ * URLs
+ *******************************************/
+
+func (user *User) ActivityPubProfileURL(host string) string {
+	return host + "/.activitypub/user" + user.UserID.Hex()
+}
+
+func (user *User) ActivityPubInboxURL(host string) string {
+	return host + "/.activitypub/user/" + user.UserID.Hex() + "/inbox"
+}
+
+func (user *User) ActivityPubOutboxURL(host string) string {
+	return host + "/.activitypub/user/" + user.UserID.Hex() + "/outbox"
+}
+
+func (user *User) ActivityPubPublicKeyURL(host string) string {
+	return host + "/.activitypub/user/" + user.UserID.Hex() + "/publickey"
+}

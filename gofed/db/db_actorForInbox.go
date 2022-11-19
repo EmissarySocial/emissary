@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/gofed/common"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
@@ -12,17 +13,26 @@ func (db *Database) ActorForInbox(ctx context.Context, outboxURL *url.URL) (acto
 
 	const location = "gofed.db.ActorForInbox"
 
+	// Get the userID from the outbox URL
 	userID, _, _, err := common.ParseURL(outboxURL)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing inbox URL", outboxURL)
 	}
 
-	actorURL, err = url.Parse(common.ActorURL(db.hostname, userID))
+	// Load the user from the database
+	user := model.NewUser()
+	if err := db.userService.LoadByID(userID, &user); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading user", userID)
+	}
+
+	// Get the Profile URL for the User
+	actorURL, err = url.Parse(user.ActivityPubProfileURL(db.hostname))
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing actor URL", actorURL)
 	}
 
+	// Success!
 	return actorURL, nil
 }

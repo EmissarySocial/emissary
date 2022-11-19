@@ -6,6 +6,8 @@ type Key struct {
 }
 
 func (service Key) NewJWTKey() (string, any) {
+
+	// TODO: CRITICAL: Implement a real key generator service here.
 	return "k1", []byte("secret")
 }
 

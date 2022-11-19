@@ -7,8 +7,8 @@ import (
 )
 
 type Database struct {
-	factory Factory
-
+	factory         Factory
+	userService     *service.User
 	activityService *service.Activity
 
 	// Enables mutations. A sync.Mutex per ActivityPub ID.
@@ -18,9 +18,10 @@ type Database struct {
 	hostname string
 }
 
-func NewDatabase(factory Factory, activityService *service.Activity, hostname string) *Database {
+func NewDatabase(factory Factory, userService *service.User, activityService *service.Activity, hostname string) *Database {
 	return &Database{
 		factory:         factory,
+		userService:     userService,
 		activityService: activityService,
 		locks:           &sync.Map{},
 		hostname:        hostname,

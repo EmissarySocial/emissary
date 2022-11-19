@@ -154,8 +154,6 @@ func (service *Activity) Schema() schema.Schema {
 
 func (service *Activity) LoadItemByID(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
 
-	const location = "service.Activity.LoadItemByID"
-
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("_id", activityID)

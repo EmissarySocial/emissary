@@ -14,7 +14,7 @@ func ParseItem(item vocab.Type) (userID primitive.ObjectID, itemType string, ite
 	return ParseURL(item.GetJSONLDId().GetIRI())
 }
 
-// ParseURL splits a URL into a list of arguments.
+// ParseURL splits a URL into its component parts: userID, itemType, itemID.
 func ParseURL(url *url.URL) (userID primitive.ObjectID, itemType string, itemID primitive.ObjectID, err error) {
 
 	const location = "service.activitypub.Database.parseURL"

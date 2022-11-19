@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/EmissarySocial/emissary/gofed/common"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -41,7 +42,7 @@ func (db *Database) getOrderedCollectionPage(ctx context.Context, collectionURL 
 	const location = "service.activitypub.Database.getOrderedCollectionPage"
 
 	// Parse the collection URL
-	userID, itemType, _, err := parseURL(collectionURL)
+	userID, itemType, _, err := common.ParseURL(collectionURL)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing URL", collectionURL)
@@ -87,14 +88,14 @@ func (db *Database) getOrderedCollectionPage(ctx context.Context, collectionURL 
 
 		// Store first and last publish dates in the collection
 		// so we can make prev/next links after the loop
-		lastPublishDate = getPublishDate(object)
+		lastPublishDate = common.GetPublishDate(object)
 
 		if firstPublishDate == 0 {
 			firstPublishDate = lastPublishDate
 		}
 
 		// Convert the model object to an ActivityStreams object
-		item, err := ToActivityStream(object, itemType)
+		item, err := common.ToActivityStream(object, itemType)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error converting object to ActivityStreams object", object)

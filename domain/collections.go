@@ -6,6 +6,9 @@ const CollectionActivity = "Activity"
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
+// CollectionEncryptionKey is the database collection where EncryptionKey records are stored
+const CollectionEncryptionKey = "EncryptionKey"
+
 // CollectionGroup is the database collection where the singleton Domain record is stored
 const CollectionDomain = "Domain"
 

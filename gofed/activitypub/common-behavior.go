@@ -6,7 +6,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/EmissarySocial/emissary/gofed/common"
 	"github.com/EmissarySocial/emissary/gofed/db"
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/derp"
 	"github.com/go-fed/activity/pub"
 	"github.com/go-fed/activity/streams/vocab"
 	"github.com/go-fed/httpsig"
@@ -15,12 +19,18 @@ import (
 // https://go-fed.org/ref/activity/pub#The-CommonBehavior-Interface
 
 type CommonBehavior struct {
-	db *db.Database
+	db                   *db.Database
+	userService          *service.User
+	encryptionKeyService *service.EncryptionKey
+	host                 string
 }
 
-func NewCommonBehavior(db *db.Database) CommonBehavior {
+func NewCommonBehavior(db *db.Database, userService *service.User, encryptionKeyService *service.EncryptionKey, host string) CommonBehavior {
 	return CommonBehavior{
-		db: db,
+		db:                   db,
+		userService:          userService,
+		encryptionKeyService: encryptionKeyService,
+		host:                 host,
 	}
 }
 
@@ -38,29 +48,42 @@ func (service CommonBehavior) GetOutbox(ctx context.Context, r *http.Request) (v
 
 func (service CommonBehavior) NewTransport(ctx context.Context, actorBoxIRI *url.URL, gofedAgent string) (t pub.Transport, err error) {
 
-	// TODO: Implement HTTPSIG
+	// Get the userID from the actorBoxIRI
+	userID, _, _, err := common.ParseURL(actorBoxIRI)
 
+	if err != nil {
+		return nil, derp.Wrap(err, "gofed.activitypub.CommonBehavior.NewTransport", "Error parsing actor URL", actorBoxIRI)
+	}
+
+	// Load the user from the database
+	user := model.NewUser()
+	if err := service.userService.LoadByID(userID, &user); err != nil {
+		return nil, derp.Wrap(err, "gofed.activitypub.CommonBehavior.NewTransport", "Error loading user", userID)
+	}
+
+	// Build the Transport interface
 	prefs := []httpsig.Algorithm{httpsig.RSA_SHA256}
 	digestPref := httpsig.DigestSha256
 	getHeadersToSign := []string{httpsig.RequestTarget, "Date"}
 	postHeadersToSign := []string{httpsig.RequestTarget, "Date", "Digest"}
 
-	// Using github.com/go-fed/httpsig for HTTP Signatures:
 	getSigner, _, err := httpsig.NewSigner(prefs, digestPref, getHeadersToSign, httpsig.Signature)
 	postSigner, _, err := httpsig.NewSigner(prefs, digestPref, postHeadersToSign, httpsig.Signature)
-	pubKeyId, privKey, err := s.getKeysForActorBoxIRI(actorBoxIRI)
+	privateKey, err := service.encryptionKeyService.GetPrivateKey(userID)
 
 	client := &http.Client{
 		Timeout: time.Second * 30,
 	}
+
 	t = pub.NewHttpSigTransport(
 		client,
 		"emissary.social",
 		NewClock(),
 		getSigner,
 		postSigner,
-		pubKeyId,
-		privKey)
+		user.ActivityPubPublicKeyURL(service.host),
+		privateKey,
+	)
 
 	return
 }

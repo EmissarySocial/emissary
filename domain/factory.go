@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/gofed/activitypub"
+	federatingdb "github.com/EmissarySocial/emissary/gofed/db"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/service/activitypub"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -285,6 +286,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
 }
 
+// Activity returns a fully populated Activity service
+func (factory *Factory) Activity() *service.Activity {
+	return &factory.activityService
+}
+
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService
@@ -293,6 +299,12 @@ func (factory *Factory) Attachment() *service.Attachment {
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
+}
+
+// EncryptionKey returns a fully populated EncryptionKey service
+func (factory *Factory) EncryptionKey() *service.EncryptionKey {
+	service := service.NewEncryptionKey(factory.collection(CollectionEncryptionKey))
+	return &service
 }
 
 // Follower returns a fully populated Follower service
@@ -305,11 +317,6 @@ func (factory *Factory) Follower() *service.Follower {
 func (factory *Factory) Following() *service.Following {
 	service := service.NewFollowing(factory.collection(CollectionFollowing))
 	return &service
-}
-
-// Activity returns a fully populated Activity service
-func (factory *Factory) Activity() *service.Activity {
-	return &factory.activityService
 }
 
 // Folder returns a fully populated Folder service
@@ -376,7 +383,7 @@ func (factory *Factory) ActivityPub_Actor() pub.Actor {
 }
 
 func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
-	return activitypub.NewCommonBehavior(factory.ActivityPub_Database())
+	return activitypub.NewCommonBehavior(factory.ActivityPub_Database(), factory.User(), factory.EncryptionKey(), factory.Host())
 	// TODO: Figure this out.
 }
 
@@ -388,8 +395,8 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 	return activitypub.NewFederatingProtocol(factory.ActivityPub_Database())
 }
 
-func (factory *Factory) ActivityPub_Database() *activitypub.Database {
-	return activitypub.NewDatabase(factory, factory.Activity(), factory.Hostname())
+func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
+	return federatingdb.NewDatabase(factory, factory.User(), factory.Activity(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() activitypub.Clock {

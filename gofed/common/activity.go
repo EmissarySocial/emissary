@@ -16,12 +16,16 @@ func ToActivityStream(item data.Object, documentType string) (vocab.Type, error)
 		return result, derp.Wrap(err, "activitypub.ToActivityStream", "Error creating ActivityStream document", documentType)
 	}
 
+	// TODO: CRITICAL: Implement this function
+
 	return result, nil
 }
 
-func ToModelObject(item vocab.Type) (model.InboxItem, error) {
+func ToModelObject(item vocab.Type) (data.Object, error) {
 
 	result := model.NewInboxItem()
 
-	return result, nil
+	// TODO: CRITICAL: Implement this function
+
+	return &result, nil
 }
