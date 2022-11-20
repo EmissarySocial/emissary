@@ -67,38 +67,3 @@ func (step StepWithFolder) doStep(renderer Renderer, buffer io.Writer, actionMet
 
 	return nil
 }
-
-/*
-
-const location = "render.StepWithFolder.Post"
-
-factory := renderer.factory()
-streamRenderer := renderer.(*Stream)
-
-children, err := factory.Stream().ListByParent(streamRenderer.stream.ParentID)
-
-if err != nil {
-	return derp.Wrap(err, location, "Error listing children")
-}
-
-child := model.NewStream()
-
-for children.Next(&child) {
-
-	// Make a renderer with the new child stream
-	// TODO: Is "view" really the best action to use here??
-	childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, "")
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating renderer for child")
-	}
-
-	// Execute the POST render pipeline on the child
-	if err := Pipeline(step.SubSteps).Post(factory, &childStream); err != nil {
-		return derp.Wrap(err, location, "Error executing steps for child")
-	}
-
-	// Reset the child object so that old records don't bleed into new ones.
-	child = model.NewStream()
-}
-*/

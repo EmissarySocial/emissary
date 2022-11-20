@@ -94,7 +94,7 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 	stream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	stream.TemplateID = templateID
 
-	// TODO: sort order?
+	// TODO: MEDIUM: sort order?
 
 	return finalizeAddStream(renderer.factory(), context, &stream, template, step.WithSibling)
 }

@@ -65,7 +65,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Label: "Inventory",
 				Children: []form.Element{
 					{Type: "toggle", Label: "", Path: "data.trackInventory", Options: maps.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
-					{Type: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero."}, // TODO: , Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}
+					{Type: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero."}, // TODO: MEDIUM: Restore conditional rules to forms, Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}
 				},
 			},
 			{
@@ -181,7 +181,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 			Product:     stripe.String(transaction.ProductID),
 			UnitAmount:  stripe.Int64(transaction.unitAmount()),
 			Currency:    stripe.String(string(stripe.CurrencyUSD)),
-			TaxBehavior: stripe.String("exclusive"), // TODO: should this be a parameter in setup?
+			TaxBehavior: stripe.String("exclusive"), // TODO: LOW: should this be a parameter in setup?
 		})
 
 		if err != nil {

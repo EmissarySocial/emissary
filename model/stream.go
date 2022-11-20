@@ -34,9 +34,9 @@ type Stream struct {
 	journal.Journal `path:"journal" json:"journal" bson:"journal"`
 }
 
-// TODO: Lots of cleanup needed here.  InReplyTo should be migrated -> ReplyTo.
-// TODO: Is Origin even needed anymore, now that the Activity object will live in inboxes/outboxes?
-// TODO: Built-in fields should be migrated to a DocumentLink structure.
+// TODO: MEDIUM: Lots of cleanup needed here.  InReplyTo should be migrated -> ReplyTo.
+// TODO: MEDIUM: Is Origin even needed anymore, now that the Activity object will live in inboxes/outboxes?
+// TODO: MEDIUM: Built-in fields should be migrated to a DocumentLink structure.
 
 // NewStream returns a fully initialized Stream object.
 func NewStream() Stream {

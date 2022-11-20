@@ -34,7 +34,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// Load the attachment in order to verify that it is valid for this stream
-		// TODO: This might be more efficient as a single query...
+		// TODO: LOW: This might be more efficient as a single query...
 		attachmentService := factory.Attachment()
 		attachmentIDString := list.Dot(ctx.Param("attachment")).Head()
 		attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)

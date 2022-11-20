@@ -63,7 +63,7 @@ func (step StepAddTopStream) Post(renderer Renderer) error {
 	stream.ParentIDs = make([]primitive.ObjectID, 0)
 	stream.TemplateID = templateID
 
-	// TODO: sort order?
+	// TODO: MEDIUM: sort order?
 
 	return finalizeAddStream(renderer.factory(), renderer.context(), &stream, template, step.WithNewStream)
 }

@@ -36,7 +36,7 @@ func (step StepWithParent) Post(renderer Renderer) error {
 	}
 
 	// Make a renderer with the new parent stream
-	// TODO: Is "view" really the best action to use here??
+	// TODO: LOW: Is "view" really the best action to use here??
 	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &parent, "")
 
 	if err != nil {

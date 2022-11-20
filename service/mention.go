@@ -80,6 +80,8 @@ func (service *Mention) Load(criteria exp.Expression, mention *model.Mention) er
 // Save adds/updates an Mention in the database
 func (service *Mention) Save(mention *model.Mention, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(mention, note); err != nil {
 		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", mention, note)
 	}

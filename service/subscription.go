@@ -66,7 +66,7 @@ func (service *Subscription) Close() {
 
 // Start begins the background scheduler that checks each subscription
 // according to its own polling frequency
-// TODO: Need to make this configurable on a per-metal basis so that
+// TODO: HIGH: Need to make this configurable on a per-physical-server basis so that
 // clusters can work together without hammering the Subscription collection.
 func (service *Subscription) Start() {
 
@@ -149,6 +149,8 @@ func (service *Subscription) Save(subscription *model.Subscription, note string)
 	subscription.ErrorCount = 0
 	subscription.StatusMessage = ""
 	subscription.Status = model.SubscriptionStatusNew
+
+	// TODO: HIGH: Use schema to clean the model object before saving
 
 	if err := service.collection.Save(subscription, note); err != nil {
 		return derp.Wrap(err, "service.Subscription", "Error saving Subscription", subscription, note)
@@ -545,7 +547,7 @@ func populateActivity(activity *model.Activity, subscription *model.Subscription
 			}
 		}
 
-		// TODO: Maybe implement h-feed in here?
+		// TODO: MEDIUM: Maybe implement h-feed in here?
 		// https://indieweb.org/h-feed
 	}
 

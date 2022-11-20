@@ -22,7 +22,7 @@ func (p *SocialProtocol) PostOutboxRequestBodyHook(c context.Context, r *http.Re
 }
 
 func (p *SocialProtocol) AuthenticatePostOutbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
-	// TODO: Need real authentication here.
+	//  CRITICAL: Need real authentication here.
 	return c, true, nil
 }
 

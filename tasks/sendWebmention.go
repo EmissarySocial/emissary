@@ -62,7 +62,7 @@ func (task SendWebMention) Run() error {
 			}
 		}
 
-		// TODO: how to handle errors?  Retry the task later?  How many times?
+		// TODO: MEDIUM: how to handle errors?  Retry the task later?  How many times?
 	}
 
 	return nil

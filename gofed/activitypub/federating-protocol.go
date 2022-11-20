@@ -28,12 +28,12 @@ func (p *FederatingProtocol) PostInboxRequestBodyHook(ctx context.Context, r *ht
 }
 
 func (p *FederatingProtocol) AuthenticatePostInbox(ctx context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
-	// TODO: Need real authentication here.
+	// TODO: CRITICAL: Need real authentication here.
 	return ctx, true, nil
 }
 
 func (p *FederatingProtocol) Blocked(ctx context.Context, actorIRIs []*url.URL) (blocked bool, err error) {
-	// TODO: Need real "block" lookups here.
+	// TODO: CRITICAL: Need real "block" lookups here.
 	return false, nil
 }
 

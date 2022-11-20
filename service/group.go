@@ -61,6 +61,8 @@ func (service *Group) Load(criteria exp.Expression, result *model.Group) error {
 // Save adds/updates an Group in the database
 func (service *Group) Save(user *model.Group, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.Group", "Error saving Group", user, note)
 	}
@@ -75,8 +77,8 @@ func (service *Group) Delete(user *model.Group, note string) error {
 		return derp.Wrap(err, "service.Group", "Error deleting Group", user, note)
 	}
 
-	// TODO: Also remove connections to Users that still use this Group
-	// TODO: Also remove connections to Streams that still use this Group
+	// TODO: HIGH: Also remove connections to Users that still use this Group
+	// TODO: HIGH: Also remove connections to Streams that still use this Group
 
 	return nil
 }

@@ -59,6 +59,8 @@ func (service *Follower) Load(criteria exp.Expression, follower *model.Follower)
 // Save adds/updates an Follower in the database
 func (service *Follower) Save(follower *model.Follower, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(follower, note); err != nil {
 		return derp.Wrap(err, "service.Follower.Save", "Error saving Follower", follower, note)
 	}

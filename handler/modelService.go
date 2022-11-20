@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// TODO: Remove?
 func ModelService_RenderTemplate(serverFactory *server.Factory, ctx echo.Context, serviceName string, builder builder.Builder, templateName string) (string, error) {
 
 	const location = "handler.ModelService_RenderTemplate"

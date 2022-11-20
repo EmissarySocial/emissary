@@ -27,7 +27,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 		filename = renderer.ActionID()
 	}
 
-	// TODO: Re-implement caching
+	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
 	// object := renderer.object()
 	// header.Set("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339))
 	// header.Set("ETag", object.ETag())

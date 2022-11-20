@@ -1,5 +1,5 @@
-{{$inboxFolders := .InboxFolders}}
-{{- $selectedfolder := .InboxFolderID -}}
+{{$inboxFolders := .Folders}}
+{{- $selectedfolder := .FolderID -}}
 {{$subscriptions := .Subscriptions}}
 
 <div class="page" hx-get="{{.URL}}" hx-trigger="refreshPage from:body">

@@ -238,7 +238,7 @@ func (user *User) Roles(authorization *Authorization) []string {
 		result = append(result, MagicRoleMyself)
 	}
 
-	// TODO: special roles for follower/following...
+	// TODO: LOW: Add special roles for follower/following?
 
 	return result
 }
@@ -284,5 +284,6 @@ func (user *User) ActivityPubPublicKeyURL(host string) string {
 }
 
 func (user *User) ActivityPubSubscribeRequestURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/authorize" // TODO: WTF is this?? "http://ostatus.org/schema/1.0/subscribe"
+	// TODO: HIGH: WTF is this?? "http://ostatus.org/schema/1.0/subscribe"
+	return host + "/@" + user.UserID.Hex() + "/pub/authorize"
 }

@@ -22,7 +22,7 @@ func (step StepDeleteAttachment) Post(renderer Renderer) error {
 
 	const location = "renderer.StepDeleteAttachment.Post"
 
-	// TODO: could this be generalized to work with more than just streams???
+	// TODO: LOW: could this be generalized to work with more than just streams? Would that even be helpful?
 	factory := renderer.factory()
 
 	attachmentService := factory.Attachment()

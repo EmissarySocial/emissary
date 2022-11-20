@@ -48,7 +48,7 @@ func main() {
 
 	// Global middleware
 	e.Use(middleware.Recover())
-	// TODO: implement echo.Security middleware
+	// TODO: HIGH: implement echo.Security middleware
 
 	// Static Content MUST come from static files, because we're not re-linking all those files at runtime
 	if staticFiles, err := fs.Sub(embeddedFiles, "_embed"); err == nil {
@@ -163,12 +163,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStream(factory))
 
 	// Hard-coded routes for additional stream services
-	// TODO: Can Attachments and SSE be moved into a custom render step?
+	// TODO: LOW: Can Attachments and SSE be moved into a custom render step?
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
 
 	// Profile Pages
+	// NOTE: these are rewritten from /@:userId by the rewrite middleware
 	e.GET("/@", handler.TBD)
 	e.GET("/@/:userId", handler.GetProfile(factory))
 	e.POST("/@/:userId", handler.PostProfile(factory))
@@ -188,10 +189,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@/:userId/pub/following", handler.ActivityPub_GenericHandler(factory))
 	e.GET("/@/:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
 
-	// ME-ONLY PAGES // TODO: These need to be updated
+	// ME-ONLY PAGES
 	e.POST("/@/me/pub/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
 	e.POST("/@/me/pub/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
-
 	e.GET("/@/me/pub/subscriptions/:subscription", handler.GetSubscription(factory))
 	e.POST("/@/me/pub/subscriptions/:subscription", handler.PostSubscription(factory))
 	e.GET("/@/me/pub/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))

@@ -58,6 +58,8 @@ func (service *Following) Load(criteria exp.Expression, following *model.Followi
 // Save adds/updates an Following in the database
 func (service *Following) Save(following *model.Following, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
 	}

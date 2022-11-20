@@ -80,7 +80,7 @@ func (service *Stream) New(parent *model.Stream, templateID string) (model.Strea
 	result.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	result.AsFeature = template.IsFeature()
 
-	// TODO: User template schema to set default values in the new stream.
+	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
 
 	return result, nil
 }
@@ -132,6 +132,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	if stream.Token == "" {
 		stream.Token = stream.StreamID.Hex()
 	}
+
+	// TODO: HIGH: Use schema to clean the model object before saving
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
@@ -228,7 +230,7 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 }
 
 func (service *Stream) Schema() schema.Schema {
-	// TODO: Implement
+	// TODO: HIGH: Implement
 	return schema.New(nil)
 }
 

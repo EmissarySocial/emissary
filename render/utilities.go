@@ -196,7 +196,7 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	user, _ := renderer.getUser()
 	renderer.stream.SetAuthor(user)
 
-	// TODO: Sort order??
+	// TODO: MEDIUM: Sort order??
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {

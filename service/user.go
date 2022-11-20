@@ -79,6 +79,8 @@ func (service *User) Save(user *model.User, note string) error {
 		user.PasswordReset.AuthCode = ""
 	}
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User", "Error saving User", user, note)
@@ -100,7 +102,7 @@ func (service *User) Delete(user *model.User, note string) error {
 		return derp.Wrap(err, "service.User", "Error deleting User", user, note)
 	}
 
-	// TODO: Clean up related records (like InboxItem and OutboxItem)
+	// TODO: HIGH: Clean up related records (like InboxItem and OutboxItem)
 
 	return nil
 }

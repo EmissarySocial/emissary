@@ -93,8 +93,8 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	child.TemplateID = templateID
 
-	// TODO: sort order?
-	// TODO: presets defined by templates?
+	// TODO: MEDIUM: sort order?
+	// TODO: MEDIUM: presets defined by templates?
 
 	return finalizeAddStream(factory, context, &child, template, step.WithChild)
 }

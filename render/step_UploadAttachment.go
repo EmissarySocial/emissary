@@ -20,7 +20,7 @@ func (step StepUploadAttachment) UseGlobalWrapper() bool {
 
 func (step StepUploadAttachment) Post(renderer Renderer) error {
 
-	// TODO: could this be generalized to work with more than just streams???
+	// TODO: LOW: could this be generalized to work with more than just streams???
 	factory := renderer.factory()
 	context := renderer.context()
 	streamRenderer := renderer.(*Stream)

@@ -173,7 +173,7 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 	// Create new model object
 	encryptionKey := model.NewEncryptionKey()
 	encryptionKey.UserID = userID
-	encryptionKey.Encoding = model.EncryptionKeyEncodingPlaintext // TODO: add key encryption encoding
+	encryptionKey.Encoding = model.EncryptionKeyEncodingPlaintext // TODO: MEDIUM: add key encryption encoding
 
 	// Create an actual encryption key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)

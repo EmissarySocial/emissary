@@ -34,7 +34,7 @@ table.table tr.edit td {
 	border: solid 1px var(--blue20);
 }
 
-/* TODO:  Remove "clickable" class in favor of roles */
+/* TODO: LOW:  Remove "clickable" class in favor of roles */
 
 table.table [role=link]:hover td,
 table.table [role=link]:focus td,

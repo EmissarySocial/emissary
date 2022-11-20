@@ -73,6 +73,8 @@ func (service *Folder) Load(criteria exp.Expression, result *model.Folder) error
 // Save adds/updates an Folder in the database
 func (service *Folder) Save(inboxFolder *model.Folder, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(inboxFolder, note); err != nil {
 		return derp.Wrap(err, "service.Folder", "Error saving Folder", inboxFolder, note)
 	}

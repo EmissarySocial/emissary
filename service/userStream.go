@@ -48,6 +48,8 @@ func (service *UserStream) Load(criteria exp.Expression, stream *model.UserStrea
 // Save adds/updates an UserStream in the database
 func (service *UserStream) Save(stream *model.UserStream, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, "service.UserStream", "Error saving UserStream", stream, note)
 	}

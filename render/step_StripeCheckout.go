@@ -58,7 +58,7 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		}
 	} else {
 		// Otherwise, use automatic tax calculation
-		// TODO: This could be a parameter :)
+		// TODO: LOW: This could be a parameter :)
 		params.AutomaticTax = &stripe.CheckoutSessionAutomaticTaxParams{Enabled: stripe.Bool(true)}
 	}
 

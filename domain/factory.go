@@ -387,7 +387,6 @@ func (factory *Factory) ActivityPub_Actor() pub.Actor {
 
 func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
 	return activitypub.NewCommonBehavior(factory.ActivityPub_Database(), factory.User(), factory.EncryptionKey(), factory.Host())
-	// TODO: Figure this out.
 }
 
 func (factory *Factory) ActivityPub_SocialProtocol() pub.SocialProtocol {
@@ -509,7 +508,7 @@ func (factory *Factory) RSS() *service.RSS {
 	return service.NewRSS(factory.Stream(), factory.Host())
 }
 
-// TODO: Move this to providers.Stripe
+// TODO: LOW: Move this to providers.Stripe
 func (factory *Factory) StripeClient() (client.API, error) {
 
 	const location = "domain.factory.StripeClient"

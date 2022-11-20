@@ -107,6 +107,8 @@ func (service *Domain) Load(domain *model.Domain) error {
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain *model.Domain, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	// Try to save the value to the database
 	if err := service.collection.Save(domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
@@ -266,7 +268,7 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	config := provider.OAuthConfig()
 
 	config.RedirectURL = service.OAuthCallbackURL(providerID)
-	/* TODO: add hash value for challenge_method...
+	/* TODO: MEDIUM: add hash value for challenge_method...
 	codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")

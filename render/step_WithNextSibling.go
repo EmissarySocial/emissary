@@ -44,7 +44,7 @@ func (step StepWithNextSibling) Execute(renderer Renderer, buffer io.Writer, act
 	}
 
 	// Make a renderer with the new parent stream
-	// TODO: Is "view" really the best action to use here??
+	// TODO: LOW: Is "view" really the best action to use here??
 	siblingRenderer, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &sibling, "view")
 
 	if err != nil {

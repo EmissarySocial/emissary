@@ -90,7 +90,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		// Otherwise, we got a 404 error, which is actually what we want here.
 		// It means that the username is unique.
 
-		// TODO: Other validations here? Password quality?
+		// TODO: MEDIUM: Other validations here? Password quality?
 
 		// Report errors
 		if len(errorMessages) > 0 {

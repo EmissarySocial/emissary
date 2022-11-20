@@ -129,7 +129,7 @@ func (db *Database) getOrderedCollectionPage(ctx context.Context, collectionURL 
 	nextPageProperty.SetIRI(nextPageURL)
 	result.SetActivityStreamsPrev(nextPageProperty)
 
-	// TODO:  What else should we set on the collection?
+	// TODO: LOW: What else should we set on the collection?
 
 	// Success?!?
 	return result, nil

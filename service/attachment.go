@@ -68,6 +68,8 @@ func (service *Attachment) Load(criteria exp.Expression, result *model.Attachmen
 // Save adds/updates an Attachment in the database
 func (service *Attachment) Save(attachment *model.Attachment, note string) error {
 
+	// TODO: HIGH: Use schema to clean the model object before saving
+
 	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
 	}
