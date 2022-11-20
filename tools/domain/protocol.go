@@ -2,8 +2,9 @@ package domain
 
 import "strings"
 
+// Protocol returns the appropriate protocol for a givin hostname.
+// Local domains return `http://`, while all other domains return `https://`
 func Protocol(hostname string) string {
-
 	if IsLocalhost(hostname) {
 		return "http://"
 	}
