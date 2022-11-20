@@ -93,7 +93,7 @@
 				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step": "set-state", "state": "published"},
 				{"step": "save", "message": "Published by {{.Author}}"},
-				{"step": "add-outbox", "link": "self"},
+				{"step": "publish", "role":"article"},
 				{"step": "send-mentions"},
 				{"step": "refresh-page"}
 			]
@@ -105,7 +105,7 @@
 				{"step": "as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
 				{"step": "set-state", "state": "unpublished"},
 				{"step": "save", "message": "Un-Published by {{.Author}}"},
-				{"step": "delete-outbox"},
+				{"step": "unpublish"},
 				{"step": "refresh-page"}
 			]
 		},
@@ -114,7 +114,7 @@
 			"steps": [
 				{"step": "as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step": "promote-draft"},
-				{"step": "add-outbox"},
+				{"step": "publish", "role":"article"},
 				{"step": "send-mentions"},
 				{"step": "forward-to", "url": "/{{.Token}}"}
 			]
@@ -167,7 +167,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
-				{"step": "delete-outbox"},
+				{"step": "unpublish"},
 				{"step": "forward-to", "url":"/{{.ParentID}}"}
 			]
 		}

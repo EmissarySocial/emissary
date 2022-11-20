@@ -95,7 +95,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
-				{"step": "delete-outbox"},
+				{"step": "unpublish"},
 				{"step": "forward-to", "url":"/{{.ParentID}}"}
 			]
 		}

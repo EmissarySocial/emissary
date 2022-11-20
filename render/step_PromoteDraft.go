@@ -34,7 +34,7 @@ func (step StepStreamPromoteDraft) Post(renderer Renderer) error {
 	}
 
 	// Push the newly updated stream back to the renderer so that subsequent
-	// steps (e.g. add-outbox) can use the correct data.
+	// steps (e.g. publish) can use the correct data.
 	streamRenderer.stream = &stream
 
 	return nil
