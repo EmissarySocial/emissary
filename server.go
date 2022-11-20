@@ -122,9 +122,13 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 // makeStandardRoutes generates a new Echo instance the primary server behavior
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
+	e.Pre(mw.HttpsRedirect)
+	e.Pre(middleware.Rewrite(map[string]string{
+		"/@*": "/@/$1",
+	}))
+
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
-	e.Use(mw.HttpsRedirect)
 	e.Use(steranko.Middleware(factory))
 
 	// Well-Known API calls
@@ -136,19 +140,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
-
-	// ActivityPub Routes
-	e.GET("/.activitypub/:user/inbox", handler.ActivityPub_GetInbox(factory))
-	e.GET("/.activitypub/:user/inbox/:item", handler.ActivityPub_GenericHandler(factory))
-	e.POST("/.activitypub/:user/inbox", handler.ActivityPub_PostInbox(factory))
-
-	e.GET("/.activitypub/:user/outbox", handler.ActivityPub_GetOutbox(factory))
-	e.GET("/.activitypub/:user/outbox/:item", handler.ActivityPub_GenericHandler(factory))
-	e.POST("/.activitypub/:user/outbox", handler.ActivityPub_PostOutbox(factory))
-
-	e.GET("/.activitypub/:user/followers", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/.activitypub/:user/following", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/.activitypub/:user/likes", handler.ActivityPub_GenericHandler(factory))
 
 	// IndieWeb Routes
 	e.POST("/.webmention", handler.PostWebMention(factory))
@@ -177,21 +168,34 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
 
-	// Profile Pages / ActivityPub
-	e.GET("/people", handler.TBD)
-	e.GET("/people/:userId", handler.GetProfile(factory))
-	e.POST("/people/:userId", handler.PostProfile(factory))
-	e.GET("/people/:userId/:action", handler.GetProfile(factory))
-	e.POST("/people/:userId/:action", handler.PostProfile(factory))
+	// Profile Pages
+	e.GET("/@", handler.TBD)
+	e.GET("/@/:userId", handler.GetProfile(factory))
+	e.POST("/@/:userId", handler.PostProfile(factory))
+	e.GET("/@/:userId/:action", handler.GetProfile(factory))
+	e.POST("/@/:userId/:action", handler.PostProfile(factory))
 
-	// ME-ONLY PAGES
-	e.POST("/people/me/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
-	e.POST("/people/me/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
+	// ActivityPub Routes
+	e.GET("/@/:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
+	e.GET("/@/:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/@/:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 
-	e.GET("/people/me/subscriptions/:subscription", handler.GetSubscription(factory))
-	e.POST("/people/me/subscriptions/:subscription", handler.PostSubscription(factory))
-	e.GET("/people/me/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))
-	e.POST("/people/me/subscriptions/:subscription/delete", handler.PostDeleteSubscription(factory))
+	e.GET("/@/:userId/pub/outbox", handler.ActivityPub_GetOutbox(factory))
+	e.GET("/@/:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/@/:userId/pub/outbox", handler.ActivityPub_PostOutbox(factory))
+	e.GET("/@/:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
+	e.GET("/@/:userId/pub/followers", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@/:userId/pub/following", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@/:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
+
+	// ME-ONLY PAGES // TODO: These need to be updated
+	e.POST("/@/me/pub/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
+	e.POST("/@/me/pub/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
+
+	e.GET("/@/me/pub/subscriptions/:subscription", handler.GetSubscription(factory))
+	e.POST("/@/me/pub/subscriptions/:subscription", handler.PostSubscription(factory))
+	e.GET("/@/me/pub/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))
+	e.POST("/@/me/pub/subscriptions/:subscription/delete", handler.PostDeleteSubscription(factory))
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

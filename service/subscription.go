@@ -262,10 +262,16 @@ func (service *Subscription) LoadByID(userID primitive.ObjectID, subscriptionID 
 // LoadByToken loads an individual subscription using a string version of the subscription ID
 func (service *Subscription) LoadByToken(userID primitive.ObjectID, token string, result *model.Subscription) error {
 
+	if token == "new" {
+		*result = model.NewSubscription()
+		result.UserID = userID
+		return nil
+	}
+
 	subscriptionID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "render.StepEditSubscription", "Error parsing subscriptionId", token)
+		return derp.Wrap(err, "service.Subscription.LoadByToken", "Error parsing subscriptionId", token)
 	}
 
 	return service.LoadByID(userID, subscriptionID, result)

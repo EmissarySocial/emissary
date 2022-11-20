@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,9 +15,12 @@ import (
 // WebFinger data based on https://docs.joinmastodon.org/spec/webfinger/
 func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
-	location := "whispervers.handler.GetWebFinger"
+	location := "handler.GetWebFinger"
 
 	return func(ctx echo.Context) error {
+
+		var resource digit.Resource
+		var err error
 
 		// Validate Domain and Get Factory Object
 		factory, err := fm.ByContext(ctx)
@@ -26,32 +29,29 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		resource := ctx.QueryParam("resource")
+		resourceID := ctx.QueryParam("resource")
 
 		// Handle User Requests
-		if strings.HasPrefix(resource, "acct:") {
-
+		if strings.HasPrefix(resourceID, "acct:") {
 			userService := factory.User()
-			user := model.NewUser()
-			username := strings.TrimPrefix(resource, "acct:")
-
-			// Try to load the User from the database
-			if err := userService.LoadByUsername(username, &user); err != nil {
-				return derp.Wrap(err, location, "Error loading User", username)
-			}
-
-			// Profile URL for this user
-			profile := "https://" + factory.Hostname() + "/people/" + user.UserID.Hex()
-
-			// Generate a WebFinger response
-			result := digit.NewResource(resource).
-				Link(digit.RelationTypeSelf, "application/activity+json", profile).
-				Link(digit.RelationTypeProfile, "text/html", profile)
-
-			return ctx.JSON(http.StatusOK, result)
+			username := strings.TrimPrefix(resourceID, "acct:")
+			resource, err = userService.LoadWebFinger(username)
+		} else {
+			streamService := factory.User()
+			resource, err = streamService.LoadWebFinger(resourceID)
 		}
 
-		// TODO: Handle Page Requests
-		return derp.NewBadRequestError(location, "Resource Type Not Implemented", resource)
+		// Handle Errors
+		if err != nil {
+			return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
+		}
+
+		spew.Dump(resource)
+
+		// If relation is specified, then limit links to that type only
+		resource.FilterLinks(ctx.QueryParam("rel"))
+
+		// Return the Response as a JSON object
+		return ctx.JSON(http.StatusOK, resource)
 	}
 }

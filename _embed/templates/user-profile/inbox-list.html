@@ -4,7 +4,7 @@
 {{- if $isReallyEmpty -}}
 
 	<h2>There are no posts in this inbox.</h2>
-	<button hx-get="/people/me/add-subscription">Add a new subscription</button>
+	<button hx-get="/@me/pub/subscriptions/new">Add a new subscription</button>
 
 {{- else -}}
 
@@ -15,7 +15,7 @@
 
 		{{- $lastIndex := subtract (len $inbox) 1 -}}
 		{{- $last := index $inbox $lastIndex -}}
-		<div hx-get="/people/me/inbox-list?publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
+		<div hx-get="/@me/inbox-list?publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
 		{{- range $inbox -}}
 			<div id="item_{{.InboxItemID.Hex}}" class="inbox-item" data-status="{{.Status}}" data-inboxItemId="{{.InboxItemID.Hex}}" style="max-width:640px; cursor:pointer;" data-script="on click go to url '{{.Origin.URL}}' in new window">

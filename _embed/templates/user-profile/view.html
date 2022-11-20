@@ -4,8 +4,8 @@
 	<div class="page h-card">
 		<div class="pure-g">
 			<div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5 align-center">
-				<link rel="canonical" class="u-url" href="{{.Host}}/people/{{.UserID}}"></link>
-				<div class="inline-block circle-200 placeholder-gray"><img class="u-photo circle-200 space-below" src="{{.Host}}/people/{{.UserID}}/photo"></div>
+				<link rel="canonical" class="u-url" href="{{.ActivityPubProfileURL}}"></link>
+				<div class="inline-block circle-200 placeholder-gray"><img class="u-photo circle-200 space-below" src="{{.ActivityPubAvatarURL}}"></div>
 				<h1 class="p-name">{{.DisplayName}}</h1>
 				{{- if ne "" .Description -}}
 					<div class="block align-left">{{.Description}}</div>

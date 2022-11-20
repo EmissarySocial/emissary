@@ -2,13 +2,16 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/exp-builder => ../../benpate/exp-builder
+replace github.com/benpate/data => ../../benpate/data
 
-replace github.com/benpate/rosetta => ../../benpate/rosetta
+replace github.com/benpate/digit => ../../benpate/digit
+
+replace github.com/benpate/exp-builder => ../../benpate/exp-builder
 
 replace github.com/benpate/form => ../../benpate/form
 
-replace github.com/benpate/data => ../../benpate/data
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0

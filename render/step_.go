@@ -23,14 +23,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.AddModelObject:
 		return StepAddModelObject(s)
 
-	case step.AddOutboxItem:
-		return StepAddOutboxItem(s)
-
 	case step.AddSiblingStream:
 		return StepAddSiblingStream(s)
-
-	case step.AddSubscription:
-		return StepAddSubscription(s)
 
 	case step.AddTopStream:
 		return StepAddTopStream(s)
@@ -47,12 +41,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteAttachment:
 		return StepDeleteAttachment(s)
 
-	case step.DeleteOutboxItem:
-		return StepDeleteOutboxItem(s)
-
-	case step.DeleteSubscription:
-		return StepDeleteSubscription(s)
-
 	case step.EditConnection:
 		return StepEditConnection(s)
 
@@ -67,9 +55,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.EditModelObject:
 		return StepEditModelObject(s)
-
-	case step.EditSubscription:
-		return StepEditSubscription(s)
 
 	case step.Form:
 		return StepForm(s)

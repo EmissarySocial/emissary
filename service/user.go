@@ -2,14 +2,17 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,13 +23,15 @@ type User struct {
 	collection    data.Collection
 	streamService *Stream
 	emailService  *DomainEmail
+	host          string
 }
 
 // NewUser returns a fully populated User service
-func NewUser(collection data.Collection, streamService *Stream, emailService *DomainEmail) User {
+func NewUser(collection data.Collection, streamService *Stream, emailService *DomainEmail, host string) User {
 	service := User{
 		streamService: streamService,
 		emailService:  emailService,
+		host:          host,
 	}
 
 	service.Refresh(collection)
@@ -68,20 +73,6 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
-
-	// RULE: Guarantee Inbox location
-	if user.InboxID == primitive.NilObjectID {
-		if err := service.CreateInbox(user); err != nil {
-			return derp.Wrap(err, "service.User", "Error creating inbox")
-		}
-	}
-
-	// RULE: Guarantee Outbox location
-	if user.OutboxID == primitive.NilObjectID {
-		if err := service.CreateOutbox(user); err != nil {
-			return derp.Wrap(err, "service.User", "Error creating inbox")
-		}
-	}
 
 	// RULE: If password reset has already expired, then clear the reset code
 	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
@@ -281,30 +272,6 @@ func (service *User) SetOwner(owner config.Owner) error {
 	return nil
 }
 
-// CreateInbox creates a personal "inbox" stream for a user
-func (service *User) CreateInbox(user *model.User) error {
-
-	streamID, err := service.streamService.CreatePersonalStream(user, "user-inbox")
-
-	if err == nil {
-		user.InboxID = streamID
-	}
-
-	return err
-}
-
-// CreateOutbox creates a personal "outbox" stream for a user
-func (service *User) CreateOutbox(user *model.User) error {
-
-	streamID, err := service.streamService.CreatePersonalStream(user, "user-outbox")
-
-	if err == nil {
-		user.OutboxID = streamID
-	}
-
-	return err
-}
-
 // SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.
 func (service *User) SendWelcomeEmail(user *model.User) {
@@ -322,4 +289,34 @@ func (service *User) SendWelcomeEmail(user *model.User) {
 	if err := service.Save(user, "Send Welcome Email"); err != nil {
 		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
 	}
+}
+
+/*******************************************
+ * WebFinger Behavior
+ *******************************************/
+
+func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
+
+	// Trim prefixes "acct:" and "@"
+	username = strings.TrimPrefix(username, "acct:")
+	username = strings.TrimPrefix(username, "@")
+
+	// Trim @domain.name suffix if present
+	username = strings.TrimSuffix(username, "@"+domain.NameOnly(service.host))
+
+	// Try to load the user from the database
+	user := model.NewUser()
+	if err := service.LoadByUsername(username, &user); err != nil {
+		return digit.Resource{}, derp.Wrap(err, "service.Stream.LoadWebFinger", "Error loading user", username)
+	}
+
+	// Make a WebFinger resource for this user.
+	result := digit.NewResource("acct:"+username).
+		Alias(user.ActivityPubProfileURL(service.host)).
+		Link(digit.RelationTypeProfile, "text/html", user.ActivityPubProfileURL(service.host)).
+		Link(digit.RelationTypeSelf, "application/activity+json", user.ActivityPubURL(service.host)).
+		Link(digit.RelationTypeAvatar, "image/*", user.ActivityPubAvatarURL(service.host)).
+		Link(digit.RelationTypeSubscribeRequest, "", user.ActivityPubSubscribeRequestURL(service.host))
+
+	return result, nil
 }

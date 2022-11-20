@@ -112,18 +112,6 @@
 		"outbox-list": {
 			"roles": ["myself"],
 			"step": "view-html"
-		},
-		"add-subscription": {
-			"roles": ["myself"],
-			"step": "add-subscription"
-		},
-		"edit-subscription": {
-			"roles": ["myself"],
-			"step": "edit-subscription"
-		},
-		"delete-subscription": {
-			"roles": ["myself"],
-			"step": "delete-subscription"
 		}
 	}
 }	

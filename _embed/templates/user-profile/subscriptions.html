@@ -12,16 +12,16 @@
 		<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4 pure-u-xl-4-5">
 
 			<table class="table">
-				<tr hx-get="/people/me/add-subscription" role="button">
+				<tr hx-get="/@me/pub/subscriptions/new" role="button">
 					<td colspan="4">{{icon "add"}} Add Subscription</td>
 				</tr>
 				{{ range $subscriptions }}
-					<tr hx-get="/people/me/edit-subscription?subscriptionId={{.SubscriptionID.Hex}}" role="button">
+					<tr hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}" role="button">
 						<td>{{icon "rss"}} {{.URL}} {{.Label}}</td>
 						<td><!--{{if ne .URL .Label}}{{.URL}}{{end}}--></td>
 						<td>{{.Status}}</td>
 						<td class="align-right">
-							<button hx-get="/people/me/delete-subscription?subscriptionId={{.SubscriptionID.Hex}}" class="text-red">Delete</button>
+							<button hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}/delete" class="text-red">Delete</button>
 						</td>
 					</tr>
 				{{ end }}

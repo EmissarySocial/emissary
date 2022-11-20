@@ -165,6 +165,38 @@ func (w Profile) ImageURL() string {
 	return w.user.ImageURL
 }
 
+func (w Profile) ActivityPubProfileURL() string {
+	return w.user.ActivityPubProfileURL(w.Host())
+}
+
+func (w Profile) ActivityPubAvatarURL() string {
+	return w.user.ActivityPubAvatarURL(w.Host())
+}
+
+func (w Profile) ActivityPubInboxURL() string {
+	return w.user.ActivityPubInboxURL(w.Host())
+}
+
+func (w Profile) ActivityPubOutboxURL() string {
+	return w.user.ActivityPubOutboxURL(w.Host())
+}
+
+func (w Profile) ActivityPubFollowersURL() string {
+	return w.user.ActivityPubFollowersURL(w.Host())
+}
+
+func (w Profile) ActivityPubFollowingURL() string {
+	return w.user.ActivityPubFollowingURL(w.Host())
+}
+
+func (w Profile) ActivityPubLikedURL() string {
+	return w.user.ActivityPubLikedURL(w.Host())
+}
+
+func (w Profile) ActivityPubPublicKeyURL() string {
+	return w.user.ActivityPubPublicKeyURL(w.Host())
+}
+
 /*******************************************
  * QUERY BUILDERS
  *******************************************/

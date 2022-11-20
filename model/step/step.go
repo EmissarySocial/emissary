@@ -67,17 +67,11 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "add-child":
 		return NewAddChildStream(stepInfo)
 
-	case "add-outbox":
-		return NewAddOutboxItem(stepInfo)
-
 	case "add-sibling":
 		return NewAddSiblingStream(stepInfo)
 
 	case "add-top-level":
 		return NewAddTopStream(stepInfo)
-
-	case "delete-outbox":
-		return NewDeleteOutboxItem(stepInfo)
 
 	case "edit-content":
 		return NewEditContent(stepInfo)
@@ -157,17 +151,6 @@ func New(stepInfo maps.Map) (Step, error) {
 
 	case "with-parent":
 		return NewWithParent(stepInfo)
-
-	// RSS SUBSCRIPTIONS
-
-	case "add-subscription":
-		return NewAddSubscription(stepInfo)
-
-	case "edit-subscription":
-		return NewEditSubscription(stepInfo)
-
-	case "delete-subscription":
-		return NewDeleteSubscription(stepInfo)
 
 	// EXTERNAL CONNECTIONS
 

@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -82,6 +83,17 @@ func (folder *Folder) GetInt64(name string) (int64, error) {
 
 func (folder *Folder) GetBool(name string) (bool, error) {
 	return false, derp.NewInternalError("model.Folder.GetBool", "Invalid property", name)
+}
+
+/*******************************************
+ * Other Data Accessors
+ *******************************************/
+
+func (folder *Folder) LookupCode() form.LookupCode {
+	return form.LookupCode{
+		Value: folder.FolderID.Hex(),
+		Label: folder.Label,
+	}
 }
 
 /*******************************************

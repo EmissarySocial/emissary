@@ -83,6 +83,8 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		streamUpdateChannel: make(chan model.Stream),
 	}
 
+	factory.config.Hostname = domain.Hostname
+
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
 	factory.mentionService = service.NewMention(factory.collection(CollectionMention))
@@ -120,6 +122,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionUser),
 		factory.Stream(),
 		factory.Email(),
+		factory.Host(),
 	)
 
 	// Start the Domain Service

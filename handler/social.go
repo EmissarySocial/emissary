@@ -34,17 +34,18 @@ func GetSocialProfile(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Generate a profile page
-		profile := "https://" + factory.Hostname() + "/people/" + user.UserID.Hex()
+		host := factory.Host()
+		profile := user.ActivityPubURL(host)
 
 		result := writer.Person(user.DisplayName, "en").
 			ID(profile).
 			Summary(user.Description, "en").
-			Icon(user.ImageURL).
-			Property("inbox", profile+"/inbox").
-			Property("outbox", profile+"/outbox").
-			Property("following", profile+"/following").
-			Property("followers", profile+"/followers").
-			Property("liked", profile+"/liked").
+			Icon(user.ActivityPubAvatarURL(host)).
+			Property("inbox", user.ActivityPubInboxURL(host)).
+			Property("outbox", user.ActivityPubOutboxURL(host)).
+			Property("following", user.ActivityPubFollowingURL(host)).
+			Property("followers", user.ActivityPubFollowersURL(host)).
+			Property("liked", user.ActivityPubLikedURL(host)).
 			Property("preferredUsername", user.Username)
 
 		return ctx.JSON(http.StatusOK, result)

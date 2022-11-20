@@ -39,7 +39,7 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 		}
 
 		// Get the UserID from the URL (could be "me")
-		userID, err := profileUserID(sterankoContext)
+		username, err := profileUsername(sterankoContext)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading user ID")
@@ -49,8 +49,8 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user", userID)
+		if err := userService.LoadByToken(username, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", username)
 		}
 
 		// Try to load the User's Outbox
@@ -66,19 +66,16 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 	}
 }
 
-func profileUserID(context echo.Context) (primitive.ObjectID, error) {
+func profileUsername(context echo.Context) (string, error) {
 
 	userIDString := context.Param("userId")
 
-	if objectID, err := primitive.ObjectIDFromHex(userIDString); err == nil {
-		return objectID, nil
-	}
-
 	if userIDString == "me" {
-		return authenticatedID(context)
+		userID, err := authenticatedID(context)
+		return userID.Hex(), err
 	}
 
-	return primitive.ObjectIDFromHex(userIDString)
+	return userIDString, nil
 }
 
 func authenticatedID(context echo.Context) (primitive.ObjectID, error) {

@@ -155,3 +155,10 @@ func ActivityPub_GenericHandler(serverFactory *server.Factory) echo.HandlerFunc 
 		return nil
 	}
 }
+
+func ActivityPub_GetPublicKey(serverFactory *server.Factory) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		// TODO: CRITICAL: Implement this
+		return nil
+	}
+}

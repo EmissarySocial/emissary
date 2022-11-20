@@ -22,7 +22,7 @@
 				exit
 			end
 
-			set url to "/people/me/inbox/" + [@data-inboxItemId] + "/mark-read"
+			set url to "/@me/pub/inbox/" + [@data-inboxItemId] + "/mark-read"
 			fetch `${url}` with method:"POST"
 			add .read to yourself
 		end

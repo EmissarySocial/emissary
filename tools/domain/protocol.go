@@ -10,6 +10,15 @@ func Protocol(hostname string) string {
 	return "https://"
 }
 
+// NameOnly removes the protocol and port from a hostname
+func NameOnly(host string) string {
+	host = strings.TrimPrefix(host, "http://")
+	host = strings.TrimPrefix(host, "https://")
+	host = strings.Split(host, ":")[0]
+
+	return host
+}
+
 func IsLocalhost(hostname string) bool {
 
 	// Nornalize the hostname

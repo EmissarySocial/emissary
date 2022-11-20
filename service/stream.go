@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
@@ -485,7 +486,7 @@ func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID)
 }
 
 /*******************************************
- * CUSTOM ACTIONS
+ * Custom Actions
  *******************************************/
 
 // DeleteChildren removes all child streams from the provided stream (virtual delete)
@@ -688,4 +689,12 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 	}
 
 	return nil
+}
+
+/*******************************************
+ * WebFinger Behavior
+ *******************************************/
+
+func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
+	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")
 }
