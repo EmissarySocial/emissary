@@ -133,7 +133,15 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		stream.Token = stream.StreamID.Hex()
 	}
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(stream); err != nil {
+		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using StreamSchema", stream)
+	}
+
+	// Clean the value before saving
+	if err := template.Schema.Clean(stream); err != nil {
+		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using TemplateSchema", stream)
+	}
 
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
@@ -231,7 +239,7 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 
 func (service *Stream) Schema() schema.Schema {
 	// TODO: HIGH: Implement
-	return schema.New(nil)
+	return schema.New(model.StreamSchema())
 }
 
 /*******************************************

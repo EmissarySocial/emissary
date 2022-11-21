@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,6 +31,19 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 	}
 }
 
+func AttachmentSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"attachmentId": schema.String{Format: "objectId"},
+			"streamId":     schema.String{Format: "objectId"},
+			"original":     schema.String{},
+			"rank":         schema.Integer{},
+			"height":       schema.Integer{},
+			"width":        schema.Integer{},
+		},
+	}
+}
+
 /*******************************************
  * data.Object Interface
  *******************************************/
@@ -38,6 +52,10 @@ func NewAttachment(streamID primitive.ObjectID) Attachment {
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
 }
+
+/*******************************************
+ * Data Accessors
+ *******************************************/
 
 func (attachment *Attachment) GetObjectID(name string) (primitive.ObjectID, error) {
 

@@ -107,7 +107,10 @@ func (service *Domain) Load(domain *model.Domain) error {
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain *model.Domain, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(domain); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Error cleaning Domain", domain)
+	}
 
 	// Try to save the value to the database
 	if err := service.collection.Save(domain, note); err != nil {

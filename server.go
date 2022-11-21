@@ -85,6 +85,9 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 		ParseFS(setupFiles, "*.html"))
 
 	// Middleware for setup pages
+	// TODO: LOW: Security
+	// TODO: LOW: Rate Limiter
+	// TODO: HIGH: CSRF
 	e.Use(mw.Localhost())
 
 	// Setup Routes
@@ -128,6 +131,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	}))
 
 	// Middleware for standard pages
+	// TODO: MEDIUM: Rate Limiter
+	// TODO: MEDIUM: Security Middleware
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
 

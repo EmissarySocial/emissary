@@ -52,29 +52,33 @@ func (service *Group) List(criteria exp.Expression, options ...option.Option) (d
 // Load retrieves an Group from the database
 func (service *Group) Load(criteria exp.Expression, result *model.Group) error {
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Group", "Error loading Group", criteria)
+		return derp.Wrap(err, "service.Group.Load", "Error loading Group", criteria)
 	}
 
 	return nil
 }
 
 // Save adds/updates an Group in the database
-func (service *Group) Save(user *model.Group, note string) error {
+func (service *Group) Save(group *model.Group, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(group); err != nil {
+		return derp.Wrap(err, "service.Group.Save", "Error cleaning Group", group)
+	}
 
-	if err := service.collection.Save(user, note); err != nil {
-		return derp.Wrap(err, "service.Group", "Error saving Group", user, note)
+	// Save the value to the database
+	if err := service.collection.Save(group, note); err != nil {
+		return derp.Wrap(err, "service.Group.Save", "Error saving Group", group, note)
 	}
 
 	return nil
 }
 
 // Delete removes an Group from the database (virtual delete)
-func (service *Group) Delete(user *model.Group, note string) error {
+func (service *Group) Delete(group *model.Group, note string) error {
 
-	if err := service.collection.Delete(user, note); err != nil {
-		return derp.Wrap(err, "service.Group", "Error deleting Group", user, note)
+	if err := service.collection.Delete(group, note); err != nil {
+		return derp.Wrap(err, "service.Group.Delete", "Error deleting Group", group, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Users that still use this Group
@@ -138,7 +142,7 @@ func (service *Group) Schema() schema.Schema {
  * Custom Queries
  *******************************************/
 
-// LoadByID loads a single model.Group object that matches the provided userID
+// LoadByID loads a single model.Group object that matches the provided groupID
 func (service *Group) LoadByID(groupID primitive.ObjectID, result *model.Group) error {
 	criteria := exp.Equal("_id", groupID)
 	return service.Load(criteria, result)
@@ -180,22 +184,22 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 	return result, nil
 }
 
-// LoadByGroupname loads a single model.Group object that matches the provided token
+// LoadByGroupname loads a single Group object that matches the provided token
 func (service *Group) LoadByToken(token string, result *model.Group) error {
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
-	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(userID, result); err == nil {
+	if groupID, err := primitive.ObjectIDFromHex(token); err == nil {
+		if err := service.LoadByID(groupID, result); err == nil {
 			return nil
 		}
 	}
 
-	// Otherwise, use the token as a username
+	// Otherwise, use the token as a groupID
 	criteria := exp.Equal("token", token)
 	return service.Load(criteria, result)
 }
 
-// ListByGroup returns all users that match a provided group name
+// ListByGroup returns all groups that match a provided group name
 func (service *Group) ListByGroup(group string) (data.Iterator, error) {
 	return service.List(exp.Equal("groupId", group))
 }

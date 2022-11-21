@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -52,6 +53,36 @@ func NewStream() Stream {
 		Permissions: NewPermissions(),
 		Tags:        make([]string, 0),
 		Data:        make(maps.Map),
+	}
+}
+
+func StreamSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"streamId":       schema.String{Format: "objectId"},
+			"parentId":       schema.String{Format: "objectId"},
+			"parentIds":      schema.Array{Items: schema.String{Format: "objectId"}},
+			"templateId":     schema.String{},
+			"inReplyTo":      schema.String{},
+			"stateId":        schema.String{},
+			"defaultAllow":   schema.Array{Items: schema.String{Format: "objectId"}},
+			"token":          schema.String{Format: "token"},
+			"label":          schema.String{},
+			"description":    schema.String{},
+			"author":         PersonLinkSchema(),
+			"origin":         OriginLinkSchema(),
+			"replyTo":        ReplyToLinkSchema(),
+			"content":        ContentSchema(),
+			"tags":           schema.Array{Items: schema.String{}},
+			"thumbnailImage": schema.String{Format: "url"},
+			"rank":           schema.Integer{},
+			"asFeature":      schema.Boolean{},
+			"publishDate":    schema.Integer{BitSize: 64},
+			"unpublishDate":  schema.Integer{BitSize: 64},
+			// TODO: Figure out validators for these.
+			// "permissions":  schema.Object{Properties: PermissionsSchema().Properties},
+			// "data":           schema.Object{},
+		},
 	}
 }
 

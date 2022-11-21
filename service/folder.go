@@ -71,12 +71,16 @@ func (service *Folder) Load(criteria exp.Expression, result *model.Folder) error
 }
 
 // Save adds/updates an Folder in the database
-func (service *Folder) Save(inboxFolder *model.Folder, note string) error {
+func (service *Folder) Save(folder *model.Folder, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(folder); err != nil {
+		return derp.Wrap(err, "service.Folder.Save", "Error cleaning Activity", folder)
+	}
 
-	if err := service.collection.Save(inboxFolder, note); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error saving Folder", inboxFolder, note)
+	// Save the value to the database
+	if err := service.collection.Save(folder, note); err != nil {
+		return derp.Wrap(err, "service.Folder", "Error saving Folder", folder, note)
 	}
 
 	return nil
@@ -105,8 +109,8 @@ func (service *Folder) ObjectNew() data.Object {
 
 func (service *Folder) ObjectID(object data.Object) primitive.ObjectID {
 
-	if inboxFolder, ok := object.(*model.Folder); ok {
-		return inboxFolder.FolderID
+	if folder, ok := object.(*model.Folder); ok {
+		return folder.FolderID
 	}
 
 	return primitive.NilObjectID
@@ -122,15 +126,15 @@ func (service *Folder) ObjectLoad(criteria exp.Expression) (data.Object, error) 
 }
 
 func (service *Folder) ObjectSave(object data.Object, comment string) error {
-	if inboxFolder, ok := object.(*model.Folder); ok {
-		return service.Save(inboxFolder, comment)
+	if folder, ok := object.(*model.Folder); ok {
+		return service.Save(folder, comment)
 	}
 	return derp.NewInternalError("service.Folder.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Folder) ObjectDelete(object data.Object, comment string) error {
-	if inboxFolder, ok := object.(*model.Folder); ok {
-		return service.Delete(inboxFolder, comment)
+	if folder, ok := object.(*model.Folder); ok {
+		return service.Delete(folder, comment)
 	}
 	return derp.NewInternalError("service.Folder.ObjectDelete", "Invalid object type", object)
 }

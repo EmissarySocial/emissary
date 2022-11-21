@@ -75,11 +75,12 @@ func (service *Activity) Load(criteria exp.Expression, result *model.Activity) e
 // Save adds/updates an Activity in the database
 func (service *Activity) Save(activity *model.Activity, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
-	// if err := service.Schema().Clean(activity); err != nil {
-	// 	return derp.Wrap(err, "service.Activity.Save", "Error cleaning Activity", activity)
-	// }
+	// Clean the value before saving
+	if err := service.Schema().Clean(activity); err != nil {
+		return derp.Wrap(err, "service.Activity.Save", "Error cleaning Activity", activity)
+	}
 
+	// Save to the database
 	if err := service.collection.Save(activity, note); err != nil {
 		return derp.Wrap(err, "service.Activity", "Error saving Activity", activity, note)
 	}

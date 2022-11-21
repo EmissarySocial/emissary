@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/mediaserver"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -68,7 +69,10 @@ func (service *Attachment) Load(criteria exp.Expression, result *model.Attachmen
 // Save adds/updates an Attachment in the database
 func (service *Attachment) Save(attachment *model.Attachment, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(attachment); err != nil {
+		return derp.Wrap(err, "service.Attachment.Save", "Error cleaning Attachment", attachment)
+	}
 
 	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
@@ -94,24 +98,8 @@ func (service *Attachment) Delete(attachment *model.Attachment, note string) err
 	return nil
 }
 
-// DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service *Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
-
-	var attachment model.Attachment
-	it, err := service.ListByObjectID(streamID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", streamID)
-	}
-
-	for it.Next(&attachment) {
-		if err := service.Delete(&attachment, note); err != nil {
-			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
-			// Fail loudly, but do not stop.
-		}
-	}
-
-	return nil
+func (service *Attachment) Schema() schema.Schema {
+	return schema.New(model.AttachmentSchema())
 }
 
 /*******************************************
@@ -136,4 +124,24 @@ func (service *Attachment) LoadByID(streamID primitive.ObjectID, attachmentID pr
 		AndEqual("streamId", streamID)
 	err := service.Load(criteria, &result)
 	return result, err
+}
+
+// DeleteByStream removes all attachments from the provided stream (virtual delete)
+func (service *Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
+
+	var attachment model.Attachment
+	it, err := service.ListByObjectID(streamID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", streamID)
+	}
+
+	for it.Next(&attachment) {
+		if err := service.Delete(&attachment, note); err != nil {
+			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
+			// Fail loudly, but do not stop.
+		}
+	}
+
+	return nil
 }

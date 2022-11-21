@@ -79,7 +79,10 @@ func (service *User) Save(user *model.User, note string) error {
 		user.PasswordReset.AuthCode = ""
 	}
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	// Clean the value before saving
+	if err := service.Schema().Clean(user); err != nil {
+		return derp.Wrap(err, "service.User.Save", "Error cleaning User", user)
+	}
 
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
