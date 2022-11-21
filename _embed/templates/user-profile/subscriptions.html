@@ -16,10 +16,10 @@
 					<td colspan="4">{{icon "add"}} Add Subscription</td>
 				</tr>
 				{{ range $subscriptions }}
-					<tr hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}" role="button">
-						<td>{{icon "rss"}} {{.URL}} {{.Label}}</td>
-						<td><!--{{if ne .URL .Label}}{{.URL}}{{end}}--></td>
-						<td>{{.Status}}</td>
+					<tr role="button">
+						<td hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}">{{icon "rss"}} {{.URL}} {{.Label}}</td>
+						<td hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}"><!--{{if ne .URL .Label}}{{.URL}}{{end}}--></td>
+						<td hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}">{{.Status}}</td>
 						<td class="align-right">
 							<button hx-get="/@me/pub/subscriptions/{{.SubscriptionID.Hex}}/delete" class="text-red">Delete</button>
 						</td>

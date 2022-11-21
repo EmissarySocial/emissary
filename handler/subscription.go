@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
@@ -10,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/html"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -110,11 +112,35 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func GetDeleteSubscription(fm *server.Factory) echo.HandlerFunc {
+func GetDeleteSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 
-	// const location = "handler.DeleteSubscription"
+	const location = "handler.DeleteSubscription"
 
 	return func(ctx echo.Context) error {
+
+		_, subscription, userID, subscriptionID, err := subscription_common(serverFactory, ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
+		}
+
+		b := html.New()
+
+		b.H2().InnerHTML("Delete This Subscription?").Close()
+		b.Div().Class("space-below").InnerHTML(subscription.Label).Close()
+		b.Div().Class("space-below").InnerHTML(subscription.URL).Close()
+
+		b.Button().Class("warning").
+			Attr("hx-post", "/@me/pub/subscriptions/"+subscription.SubscriptionID.Hex()+"/delete").
+			Attr("hx-swap", "none").
+			InnerHTML("Delete Subscription").
+			Close()
+
+		b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+		b.CloseAll()
+
+		result := render.WrapModal(ctx.Response(), b.String())
+		io.WriteString(ctx.Response(), result)
 		return nil
 	}
 }
