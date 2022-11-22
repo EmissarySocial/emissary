@@ -29,20 +29,20 @@ import (
 
 // Subscription manages all interactions with the Subscription collection
 type Subscription struct {
-	collection      data.Collection
-	activityService *Activity
-	queue           *queue.Queue
-	closed          chan bool
+	collection   data.Collection
+	inboxService *Inbox
+	queue        *queue.Queue
+	closed       chan bool
 }
 
 // NewSubscription returns a fully populated Subscription service.
-func NewSubscription(collection data.Collection, activityService *Activity, queue *queue.Queue) Subscription {
+func NewSubscription(collection data.Collection, inboxService *Inbox, queue *queue.Queue) Subscription {
 
 	service := Subscription{
-		collection:      collection,
-		activityService: activityService,
-		queue:           queue,
-		closed:          make(chan bool),
+		collection:   collection,
+		inboxService: inboxService,
+		queue:        queue,
+		closed:       make(chan bool),
 	}
 
 	service.Refresh(collection)
@@ -126,6 +126,13 @@ func (service *Subscription) Start() {
 // New creates a newly initialized Subscription that is ready to use
 func (service *Subscription) New() model.Subscription {
 	return model.NewSubscription()
+}
+
+// Query returns an iterator containing all of the Subscriptions who match the provided criteria
+func (service *Subscription) Query(criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
+	result := make([]model.Activity, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
 }
 
 // List returns an iterator containing all of the Subscriptions who match the provided criteria
@@ -235,8 +242,7 @@ func (service *Subscription) Schema() schema.Schema {
 func (service *Subscription) QueryByUserID(userID primitive.ObjectID) ([]model.SubscriptionSummary, error) {
 	result := make([]model.SubscriptionSummary, 0)
 	criteria := exp.Equal("userId", userID)
-	err := service.collection.Query(&result, criteria)
-
+	err := service.collection.Query(&result, notDeleted(criteria))
 	return result, err
 }
 
@@ -293,7 +299,7 @@ func (service *Subscription) PurgeSubscriptions(subscription model.Subscription)
 	const location = "service.Subscription.PurgeSubscriptions"
 
 	// Check each subscription for expired items.
-	items, err := service.activityService.QueryPurgeable(&subscription)
+	items, err := service.inboxService.QueryPurgeable(&subscription)
 
 	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
@@ -302,7 +308,7 @@ func (service *Subscription) PurgeSubscriptions(subscription model.Subscription)
 
 	// Purge each item that has expired
 	for _, item := range items {
-		if err := service.activityService.Delete(&item, "Purged"); err != nil {
+		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
 			return derp.Wrap(err, location, "Error purging item", item)
 		}
 	}
@@ -475,7 +481,7 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 
 	activity := model.NewActivity()
 
-	if err := service.activityService.LoadByOriginURL(subscription.UserID, rssItem.Link, &activity); err != nil {
+	if err := service.inboxService.LoadByOriginURL(subscription.UserID, rssItem.Link, &activity); err != nil {
 
 		// Anything but a "not found" error is a real error
 		if !derp.NotFound(err) {
@@ -500,7 +506,7 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 		populateActivity(&activity, subscription, rssFeed, rssItem)
 
 		// Try to save the new/updated activity
-		if err := service.activityService.Save(&activity, "Imported from RSS feed"); err != nil {
+		if err := service.inboxService.Save(&activity, "Imported from RSS feed"); err != nil {
 			return derp.Wrap(err, "service.Subscription.Poll", "Error saving activity")
 		}
 	}

@@ -1,8 +1,5 @@
 package domain
 
-// CollectionActivity is the database collection where Activities are stored
-const CollectionActivity = "Activity"
-
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
@@ -21,11 +18,17 @@ const CollectionFollowing = "Following"
 // CollectionGroup is the database collection where Group records are stored
 const CollectionGroup = "Group"
 
+// CollectionInbox is the database collection where Inbox/Activity records are stored
+const CollectionInbox = "Inbox"
+
 // CollectionFolder is the database collection where Folder records are stored
 const CollectionFolder = "Folder"
 
 // CollectionMention is the database collection where Mention records are stored
 const CollectionMention = "Mention"
+
+// CollectionOutbox is the database collection where Outbox records are stored
+const CollectionOutbox = "Outbox"
 
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"

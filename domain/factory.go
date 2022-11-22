@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/gofed/activitypub"
@@ -46,13 +47,14 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	activityService     service.Activity
 	attachmentService   service.Attachment
 	groupService        service.Group
 	domainService       service.Domain
 	emailService        service.DomainEmail
 	folderService       service.Folder
+	inboxService        service.Inbox
 	mentionService      service.Mention
+	outboxService       service.Outbox
 	streamService       service.Stream
 	streamDraftService  service.StreamDraft
 	subscriptionService service.Subscription
@@ -134,14 +136,14 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		render.FuncMap(factory.Icons()),
 	)
 
-	factory.activityService = service.NewActivity(
-		factory.collection(CollectionActivity),
+	factory.inboxService = service.NewInbox(
+		factory.collection(CollectionInbox),
 	)
 
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
-		factory.Activity(),
+		factory.Inbox(),
 		factory.Queue(),
 	)
 
@@ -194,7 +196,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// Refresh cached services
-		factory.activityService.Refresh(factory.collection(CollectionActivity))
+		factory.inboxService.Refresh(factory.collection(CollectionInbox))
+		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
@@ -270,28 +273,26 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
 
 func (factory *Factory) Model(name string) (service.ModelService, error) {
 
-	switch name {
+	switch strings.ToLower(name) {
 
-	case "Follower", "follower":
+	case "folder":
+		return factory.Folder(), nil
+
+	case "follower":
 		return factory.Follower(), nil
 
-	case "Following", "following":
+	case "following":
 		return factory.Following(), nil
 
-	case "Activity", "inbox":
-		return factory.Activity(), nil
+	case "inbox":
+		return factory.Inbox(), nil
 
-	case "Folder", "inboxfolder":
-		return factory.Folder(), nil
+	case "outbox":
+		return factory.Inbox(), nil
 
 	}
 
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
-}
-
-// Activity returns a fully populated Activity service
-func (factory *Factory) Activity() *service.Activity {
-	return &factory.activityService
 }
 
 // Attachment returns a fully populated Attachment service
@@ -327,10 +328,20 @@ func (factory *Factory) Folder() *service.Folder {
 	return &factory.folderService
 }
 
+// Inbox returns a fully populated Inbox service
+func (factory *Factory) Inbox() *service.Inbox {
+	return &factory.inboxService
+}
+
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	result := service.NewMention(factory.collection(CollectionMention))
 	return &result
+}
+
+// Outbox returns a fully populated Outbox service
+func (factory *Factory) Outbox() *service.Outbox {
+	return &factory.outboxService
 }
 
 // Stream returns a fully populated Stream service
@@ -398,7 +409,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
-	return federatingdb.NewDatabase(factory, factory.User(), factory.Activity(), factory.Hostname())
+	return federatingdb.NewDatabase(factory, factory.User(), factory.Inbox(), factory.Outbox(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() activitypub.Clock {

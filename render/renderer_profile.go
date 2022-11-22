@@ -218,7 +218,7 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 	factory := w._factory
 
 	expBuilder := builder.NewBuilder().
-		ObjectID("inboxFolderId").
+		ObjectID("folderId").
 		Int("readDate").
 		Int("publishDate")
 
@@ -227,7 +227,7 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	return factory.Activity().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
+	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
 
 }
 
@@ -261,9 +261,9 @@ func (w Profile) Activity() (model.Activity, error) {
 
 	// Try to load the record from the database
 	result := model.NewActivity()
-	activityService := w._factory.Activity()
+	inboxService := w._factory.Inbox()
 
-	if err := activityService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
+	if err := inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
 		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 

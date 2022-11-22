@@ -23,7 +23,7 @@ func ToActivityStream(item data.Object, documentType string) (vocab.Type, error)
 
 func ToModelObject(item vocab.Type) (data.Object, error) {
 
-	result := model.NewInboxItem()
+	result := model.NewActivity()
 
 	// TODO: CRITICAL: Implement this function
 

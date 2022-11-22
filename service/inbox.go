@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -48,7 +50,15 @@ func (service *Inbox) New() model.Activity {
 	return model.NewActivity()
 }
 
-// List returns an iterator containing all of the Inboxs who match the provided criteria
+// Query returns a slice containing all of the Activities that match the provided criteria
+func (service *Inbox) Query(criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
+	result := []model.Activity{}
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+
+	return result, err
+}
+
+// List returns an iterator containing all of the Activities that match the provided criteria
 func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
 }
@@ -149,13 +159,68 @@ func (service *Inbox) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
-func (service *Inbox) LoadItemByID(userID primitive.ObjectID, outboxItemID primitive.ObjectID, result *model.Activity) error {
+func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.Activity) error {
 
-	criteria := exp.Equal("_id", outboxItemID).AndEqual("userId", userID)
+	criteria := exp.
+		Equal("_id", inboxItemID).
+		AndEqual("userId", userID)
 
-	if err := service.Load(criteria, result); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error loading Activity", criteria)
+	return service.Load(criteria, result)
+}
+
+// LoadBySource locates a single stream that matches the provided OriginURL
+func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL string, result *model.Activity) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("origin.url", originURL)
+
+	return service.Load(criteria, result)
+}
+
+// SetReadDate updates the readDate for a single Activity IF it is not already read
+func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
+
+	const location = "service.Activity.SetReadDate"
+
+	// Try to load the Activity from the database
+	activity := model.NewActivity()
+
+	// Convert the string to an ObjectID
+	activityID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Cannot parse activityID", token)
 	}
 
+	if err := service.LoadItemByID(userID, activityID, &activity); err != nil {
+		return derp.Wrap(err, location, "Cannot load Activity", userID, token)
+	}
+
+	// RULE: If the Activity is already marked as read, then we don't need to update it.  Return success.
+	if activity.ReadDate > 0 {
+		return nil
+	}
+
+	// Update the readDate and save the Activity
+	activity.ReadDate = readDate
+
+	if err := service.Save(&activity, "Mark Read"); err != nil {
+		return derp.Wrap(err, location, "Cannot save Activity", activity)
+	}
+
+	// Actual success here.
 	return nil
+}
+
+// QueryPurgeable returns a list of Activitys that are older than the purge date for this subscription
+func (service *Inbox) QueryPurgeable(subscription *model.Subscription) ([]model.Activity, error) {
+
+	// Purge date is X days before the current date
+	purgeDuration := time.Duration(subscription.PurgeDuration) * 24 * time.Hour
+	purgeDate := time.Now().Add(0 - purgeDuration).Unix()
+
+	// Activitys can be purged if they are READ and older than the purge date
+	criteria := exp.GreaterThan("readDate", 0).AndLessThan("readDate", purgeDate)
+	return service.Query(criteria)
 }
