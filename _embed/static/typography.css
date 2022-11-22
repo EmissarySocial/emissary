@@ -242,6 +242,12 @@ h3.space-below {
 	border-radius: 100px;
 }
 
+.circle-300 {
+	height: 300px;
+	width: 300px;
+	border-radius: 150px;
+}
+
 /****************************
  * MISC WIDGETS
  ****************************/

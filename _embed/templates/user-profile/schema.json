@@ -113,6 +113,34 @@
 				{"step": "view-html", "file": "subscriptions"}
 			]
 		},
+		"edit-profile": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "as-modal", "steps":[
+					{"step": "form-html", "form": {
+						"type": "layout-vertical",
+						"label": "Edit Profile Info",
+						"children": [
+							{"type": "text", "path": "displayName", "label": "Name"},
+							{"type": "textarea", "path": "description", "label": "Message"}
+						]
+					}},
+					{"step": "save", "comment": "Profile updated by {{.Author}}"}
+				]}
+			]
+		},
+		"edit-photo": {
+			"roles": ["myself"],
+			"steps":[
+				{"step": "as-modal", "steps":[
+					{"step": "view-html"},
+					{"step": "delete-attachments", "all":true},
+					{"step": "upload-attachments", "maximum":1},
+					{"step": "set-thumbnail", "path":"imageUrl"},
+					{"step": "save", "comment": "Profile photo updated by {{.Author}}"}
+				]}
+			]
+		},
 		"edit-links": {
 			"roles": ["myself"],
 			"steps": [
@@ -132,18 +160,6 @@
 					]
 				}},
 				{"step": "save", "comment": "Links updated by {{.Author}}"}
-			]
-		},
-		"edit-photo": {
-			"roles": ["myself"],
-			"steps":[
-				{"step": "as-modal", "steps":[
-					{"step": "view-html"},
-					{"step": "delete-attachments", "all":true},
-					{"step": "upload-attachments", "maximum":1},
-					{"step": "set-thumbnail", "path":"imageUrl"},
-					{"step": "save", "comment": "Profile photo updated by {{.Author}}"}
-				]}
 			]
 		},
 		"preview-photo": {

@@ -10,16 +10,16 @@
 					<link rel="stylesheet" href="/static/nebula/uploader.css"/>
 					<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
-					<div class="circle-200 placeholder-gray space-below hover-trigger" style="position:relative" role="button" hx-get="/@me/edit-photo">
+					<div class="circle-300 placeholder-gray space-below hover-trigger" style="position:relative" role="button" hx-get="/@me/edit-photo">
 						{{- if ne "" .ActivityPubAvatarURL -}}
-							<img class="u-photo circle-200" src="{{.ActivityPubAvatarURL}}">
+							<img class="u-photo circle-300" src="{{.ActivityPubAvatarURL}}">
 						{{- end -}}
 						<div class="text-sm align-center hover-reveal" style="position:absolute; bottom:0px; margin:0px; width:100%; color:white; background-color:rgba(0,0,0,0.5); padding:5px;">Edit Profile Photo</div>
 					</div>
 				{{- else -}}
-					<div class="circle-200 placeholder-gray space-below">
+					<div class="circle-300 placeholder-gray space-below">
 						{{- if ne "" .ActivityPubAvatarURL -}}
-							<img class="u-photo circle-200" src="{{.ActivityPubAvatarURL}}"></div>
+							<img class="u-photo circle-300" src="{{.ActivityPubAvatarURL}}"></div>
 						{{- end -}}
 				{{- end -}}
 
@@ -27,8 +27,9 @@
 					<h1 class="p-name" style="margin-bottom:0px;">{{.DisplayName}}</h1>
 					<div class="gray50">{{.Username}}</div>
 					{{- if ne "" .Description -}}
-						<div class="block align-left">{{.Description}}</div>
+						<div class="space-above">{{.Description}}</div>
 					{{- end -}}
+					<div class="text-xs"><a hx-get="/@me/edit-profile" role="button">Edit</a></div>
 				</div>
 
 				{{- $links := .Links -}}
@@ -52,7 +53,7 @@
 				{{- end -}}
 			</div>
 
-			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4">
+			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4" style="border-left: solid 1px var(--gray20); padding-left:20px;">
 				<h3>Activity Feed</h3>
 				{{ .View "outbox-list"}}
 			</div>

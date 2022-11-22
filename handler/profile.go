@@ -76,8 +76,8 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 			Filename:  attachment.AttachmentID.Hex(),
 			Extension: ".webp",
 			MimeType:  "image/webp",
-			Height:    200,
-			Width:     200,
+			Height:    300,
+			Width:     300,
 		}
 
 		header := ctx.Response().Header()

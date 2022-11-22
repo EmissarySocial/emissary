@@ -13,7 +13,7 @@ type PersonLink struct {
 	Name         string             `path:"name"         json:"name"         bson:"name,omitempty"`         // Name of the person
 	ProfileURL   string             `path:"profileUrl"   json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
 	EmailAddress string             `path:"emailAddress" json:"emailAddress" bson:"emailAddress,omitempty"` // Email address of the person
-	ImageURL     string             `path:"photoUrl"     json:"photoUrl"     bson:"photoUrl,omitempty"`     // URL of the person's profile photo
+	ImageURL     string             `path:"imageUrl"     json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the person's avatar image
 	UpdateDate   int64              `path:"updateDate"   json:"updateDate"   bson:"updateDate,omitempty"`   // Unix timestamp of the date/time when this person was last updated.
 }
 
