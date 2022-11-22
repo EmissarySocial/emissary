@@ -22,7 +22,6 @@ type Layout struct {
 	domain            model.Layout
 	global            model.Layout
 	group             model.Layout
-	profile           model.Layout
 	topLevel          model.Layout
 	user              model.Layout
 
@@ -169,10 +168,6 @@ func (service *Layout) loadLayouts() error {
 		return derp.NewInternalError("service.layout.loadFromFilesystem", "Group layout could not be loaded from any location", service.locations)
 	}
 
-	if service.profile.HTMLTemplate == nil {
-		return derp.NewInternalError("service.layout.loadFromFilesystem", "Profile layout could not be loaded from any location", service.locations)
-	}
-
 	if service.topLevel.HTMLTemplate == nil {
 		return derp.NewInternalError("service.layout.loadFromFilesystem", "Top Level layout could not be loaded from any location", service.locations)
 	}
@@ -206,10 +201,6 @@ func (service *Layout) Global() *model.Layout {
 
 func (service *Layout) Group() *model.Layout {
 	return &service.group
-}
-
-func (service *Layout) Profile() *model.Layout {
-	return &service.profile
 }
 
 func (service *Layout) TopLevel() *model.Layout {
@@ -247,10 +238,6 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 	case "groups":
 		service.group = layout
-		return nil
-
-	case "profiles":
-		service.profile = layout
 		return nil
 
 	case "toplevel":
