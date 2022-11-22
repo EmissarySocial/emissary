@@ -48,12 +48,23 @@ func (service *Attachment) Close() {
 
 // New creates a newly initialized Attachment that is ready to use
 func (service *Attachment) New() model.Attachment {
-	return model.NewAttachment(primitive.NilObjectID)
+	return model.NewAttachment("", primitive.NilObjectID)
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service *Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
+}
+
+func (service *Attachment) Query(criteria exp.Expression, options ...option.Option) ([]model.Attachment, error) {
+
+	result := make([]model.Attachment, 0)
+
+	if err := service.collection.Query(&result, notDeleted(criteria), options...); err != nil {
+		return result, derp.Wrap(err, "service.Attachment", "Error querying Attachments", criteria, options)
+	}
+
+	return result, nil
 }
 
 // Load retrieves an Attachment from the database
@@ -106,37 +117,68 @@ func (service *Attachment) Schema() schema.Schema {
  * Custom Queries
  *******************************************/
 
-func (service *Attachment) ListByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(
-		exp.Equal("streamId", objectID),
+func (service *Attachment) QueryByObjectID(objectType string, objectID primitive.ObjectID) ([]model.Attachment, error) {
+	return service.Query(
+		exp.Equal("objectType", objectType).
+			AndEqual("objectId", objectID),
 		option.SortAsc("rank"))
 }
 
-func (service *Attachment) ListFirstByObjectID(objectID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(
-		exp.Equal("streamId", objectID),
+func (service *Attachment) LoadFirstByObjectID(objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
+
+	attachments, err := service.Query(
+		exp.Equal("objectType", objectType).
+			AndEqual("objectId", objectID),
 		option.SortAsc("rank"), option.FirstRow())
+
+	if err != nil {
+		return model.Attachment{}, derp.Wrap(err, "service.Attachment.LoadFirstByObjectID", "Error loading first attachment", objectType, objectID)
+	}
+
+	for _, attachment := range attachments {
+		return attachment, err
+	}
+
+	return model.Attachment{}, derp.Wrap(err, "service.Attachment", "No attachments found", objectType, objectID)
 }
 
-func (service *Attachment) LoadByID(streamID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
+func (service *Attachment) LoadByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
 	var result model.Attachment
 	criteria := exp.Equal("_id", attachmentID).
-		AndEqual("streamId", streamID)
+		AndEqual("objectType", objectType).
+		AndEqual("objectId", objectID)
 	err := service.Load(criteria, &result)
 	return result, err
 }
 
-// DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service *Attachment) DeleteAllFromStream(streamID primitive.ObjectID, note string) error {
+func (service *Attachment) DeleteByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID) error {
 
-	var attachment model.Attachment
-	it, err := service.ListByObjectID(streamID)
+	const location = "service.Attachment.DeleteByID"
+
+	attachment, err := service.LoadByID(objectType, objectID, attachmentID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", streamID)
+		return derp.Wrap(err, location, "Error loading attachment")
 	}
 
-	for it.Next(&attachment) {
+	// Delete the attachment
+	if err := service.Delete(&attachment, "Deleted"); err != nil {
+		return derp.Wrap(err, location, "Error deleting attachment")
+	}
+
+	return nil
+}
+
+// DeleteByStream removes all attachments from the provided stream (virtual delete)
+func (service *Attachment) DeleteAll(objectType string, objectID primitive.ObjectID, note string) error {
+
+	attachments, err := service.QueryByObjectID(objectType, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", objectID)
+	}
+
+	for _, attachment := range attachments {
 		if err := service.Delete(&attachment, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
 			// Fail loudly, but do not stop.

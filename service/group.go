@@ -91,6 +91,11 @@ func (service *Group) Delete(group *model.Group, note string) error {
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Group) ObjectType() string {
+	return "Group"
+}
+
 // New returns a fully initialized model.Group as a data.Object.
 func (service *Group) ObjectNew() data.Object {
 	result := model.NewGroup()

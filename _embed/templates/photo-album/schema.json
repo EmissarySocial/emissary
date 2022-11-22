@@ -92,7 +92,7 @@
 				"template": "photograph",
 				"with-child": [
 					{"step": "upload-attachments"},
-					{"step": "set-thumbnail"},
+					{"step": "set-thumbnail", "path":"thumbnailImage"},
 					{"step": "save", "comment": "Created by {{.Author}}"},
 					{"step": "add-child", "template": "comment-group", "with-child":[
 						{"step": "save", "comment": "Created by {{.Author}}"}

@@ -110,6 +110,11 @@ func (service *StreamDraft) Delete(draft *model.Stream, _note string) error {
  * GENERIC DATA FUNCTIONS
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *StreamDraft) ObjectType() string {
+	return "StreamDraft"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *StreamDraft) ObjectNew() data.Object {
 	result := model.NewStream()

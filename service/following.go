@@ -82,6 +82,11 @@ func (service *Following) Delete(following *model.Following, note string) error 
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Following) ObjectType() string {
+	return "Follow"
+}
+
 // New returns a fully initialized model.Group as a data.Object.
 func (service *Following) ObjectNew() data.Object {
 	result := model.NewFollowing()

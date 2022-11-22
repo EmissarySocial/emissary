@@ -12,6 +12,8 @@ replace github.com/benpate/form => ../../benpate/form
 
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
+replace github.com/benpate/table => ../../benpate/table
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.129

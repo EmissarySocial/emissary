@@ -11,6 +11,7 @@ import (
 
 // ModelService interface wraps the generic Object-* functions that standard services provide
 type ModelService interface {
+	ObjectType() string
 	ObjectID(data.Object) primitive.ObjectID
 	ObjectNew() data.Object
 	ObjectList(exp.Expression, ...option.Option) (data.Iterator, error)

@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -45,8 +44,6 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 		if err != nil {
 			return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
 		}
-
-		spew.Dump(resource)
 
 		// If relation is specified, then limit links to that type only
 		resource.FilterLinks(ctx.QueryParam("rel"))

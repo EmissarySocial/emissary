@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -19,6 +22,76 @@ func GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
 // PostProfile handles POST/DELETE requests
 func PostProfile(serverFactory *server.Factory) echo.HandlerFunc {
 	return renderProfile(serverFactory, render.ActionMethodPost)
+}
+
+func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.GetProfileAvatar"
+
+	return func(ctx echo.Context) error {
+
+		// Cast the context into a steranko context (which includes authentication data)
+		sterankoContext := ctx.(*steranko.Context)
+
+		// Get the domain factory from the context
+		factory, err := serverFactory.ByContext(sterankoContext)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading domain factory")
+		}
+
+		// Get the UserID from the URL
+		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error parsing user ID")
+		}
+
+		// Get the attachmentID from the URL
+		attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error parsing attachment ID")
+		}
+
+		// Try to load the attachment from the database
+		attachmentService := factory.Attachment()
+		attachment, err := attachmentService.LoadByID(model.AttachmentTypeUser, userID, attachmentID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading attachment")
+		}
+
+		// Check ETags to see if the browser already has a copy of this
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader != "" {
+
+			if attachment.ETag() == matchHeader {
+				return ctx.NoContent(http.StatusNotModified)
+			}
+		}
+
+		// Retrieve the file from the mediaserver
+		ms := factory.MediaServer()
+		filespec := mediaserver.FileSpec{
+			Filename:  attachment.AttachmentID.Hex(),
+			Extension: ".webp",
+			MimeType:  "image/webp",
+			Height:    200,
+			Width:     200,
+		}
+
+		header := ctx.Response().Header()
+
+		header.Set("Mime-Type", attachment.DownloadMimeType())
+		header.Set("ETag", attachment.ETag())
+		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
+
+		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+			return derp.Wrap(err, location, "Error accessing attachment file")
+		}
+
+		return nil
+	}
 }
 
 // renderProfile is the common Profile handler for both GET and POST requests
@@ -70,7 +143,7 @@ func profileUsername(context echo.Context) (string, error) {
 
 	userIDString := context.Param("userId")
 
-	if userIDString == "me" {
+	if (userIDString == "me") || (userIDString == "") {
 		userID, err := authenticatedID(context)
 		return userID.Hex(), err
 	}

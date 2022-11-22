@@ -3,12 +3,15 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
 )
 
 // StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
-type StepUploadAttachment struct{}
+type StepUploadAttachment struct {
+	Maximum int
+}
 
 func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) error {
 	return nil
@@ -20,10 +23,9 @@ func (step StepUploadAttachment) UseGlobalWrapper() bool {
 
 func (step StepUploadAttachment) Post(renderer Renderer) error {
 
-	// TODO: LOW: could this be generalized to work with more than just streams???
 	factory := renderer.factory()
 	context := renderer.context()
-	streamRenderer := renderer.(*Stream)
+
 	form, err := context.MultipartForm()
 
 	if err != nil {
@@ -37,12 +39,18 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 	if len(files) == 0 {
 		files = form.File["image"]
 		isEditorJS = true
+		step.Maximum = 1
 	}
 
-	for _, fileHeader := range files {
+	attachmentService := factory.Attachment()
 
-		// Each attachment is tracked separately, so make a new attachment for each file in the upload.
-		attachment := streamRenderer.stream.NewAttachment(fileHeader.Filename)
+	objectType := renderer.service().ObjectType()
+	objectID := renderer.objectID()
+
+	for index, fileHeader := range files {
+
+		attachment := model.NewAttachment(objectType, objectID)
+		attachment.Original = fileHeader.Filename
 
 		// Open the source (from the POST request)
 		source, err := fileHeader.Open()
@@ -65,7 +73,7 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 		attachment.Height = height
 
 		// Try to save
-		if err := factory.Attachment().Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
+		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment)
 		}
 
@@ -81,6 +89,12 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 			}
 
 			return renderer.context().JSON(200, response)
+		}
+
+		// If we have reached the maximum configured number of attachments,
+		// then stop processing here.
+		if (step.Maximum > 0) && index >= step.Maximum {
+			break
 		}
 	}
 

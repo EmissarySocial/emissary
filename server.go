@@ -126,9 +126,6 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	e.Pre(mw.HttpsRedirect)
-	e.Pre(middleware.Rewrite(map[string]string{
-		"/@*": "/@/$1",
-	}))
 
 	// Middleware for standard pages
 	// TODO: MEDIUM: Rate Limiter
@@ -168,7 +165,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStream(factory))
 
 	// Hard-coded routes for additional stream services
-	// TODO: LOW: Can Attachments and SSE be moved into a custom render step?
+	// TODO: LOW: Can Stream Attachments and SSE be moved into a custom render step?
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory))
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
@@ -176,31 +173,32 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
 	e.GET("/@", handler.TBD)
-	e.GET("/@/:userId", handler.GetProfile(factory))
-	e.POST("/@/:userId", handler.PostProfile(factory))
-	e.GET("/@/:userId/:action", handler.GetProfile(factory))
-	e.POST("/@/:userId/:action", handler.PostProfile(factory))
+	e.GET("/@:userId", handler.GetProfile(factory))
+	e.POST("/@:userId", handler.PostProfile(factory))
+	e.GET("/@:userId/:action", handler.GetProfile(factory))
+	e.POST("/@:userId/:action", handler.PostProfile(factory))
+	e.GET("/@:userId/avatar/:attachmentId", handler.GetProfileAvatar(factory))
 
 	// ActivityPub Routes
-	e.GET("/@/:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
-	e.GET("/@/:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
-	e.POST("/@/:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
+	e.GET("/@:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
+	e.GET("/@:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 
-	e.GET("/@/:userId/pub/outbox", handler.ActivityPub_GetOutbox(factory))
-	e.GET("/@/:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
-	e.POST("/@/:userId/pub/outbox", handler.ActivityPub_PostOutbox(factory))
-	e.GET("/@/:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
-	e.GET("/@/:userId/pub/followers", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/@/:userId/pub/following", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/@/:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutbox(factory))
+	e.GET("/@:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.POST("/@:userId/pub/outbox", handler.ActivityPub_PostOutbox(factory))
+	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
+	e.GET("/@:userId/pub/followers", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@:userId/pub/following", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
 
 	// ME-ONLY PAGES
-	e.POST("/@/me/pub/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
-	e.POST("/@/me/pub/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
-	e.GET("/@/me/pub/subscriptions/:subscription", handler.GetSubscription(factory))
-	e.POST("/@/me/pub/subscriptions/:subscription", handler.PostSubscription(factory))
-	e.GET("/@/me/pub/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))
-	e.POST("/@/me/pub/subscriptions/:subscription/delete", handler.PostDeleteSubscription(factory))
+	e.POST("/@me/pub/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
+	e.POST("/@me/pub/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
+	e.GET("/@me/pub/subscriptions/:subscription", handler.GetSubscription(factory))
+	e.POST("/@me/pub/subscriptions/:subscription", handler.PostSubscription(factory))
+	e.GET("/@me/pub/subscriptions/:subscription/delete", handler.GetDeleteSubscription(factory))
+	e.POST("/@me/pub/subscriptions/:subscription/delete", handler.PostDeleteSubscription(factory))
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

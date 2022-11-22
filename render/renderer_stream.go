@@ -522,40 +522,12 @@ func (w Stream) makeQueryBuilder(criteria exp.Expression) QueryBuilder {
 
 // Reference to the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
-
-	var attachment model.Attachment
-
-	attachmentService := w.factory().Attachment()
-	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
-
-	if err != nil {
-		return attachment, derp.Wrap(err, "renderer.Stream.Attachments", "Error listing attachments")
-	}
-
-	// Just get a single attachment from the Iterator
-	iterator.Next(&attachment)
-
-	return attachment, nil
+	return w.factory().Attachment().LoadFirstByObjectID(model.AttachmentTypeStream, w.stream.StreamID)
 }
 
 // Attachments lists all attachments for this stream.
 func (w Stream) Attachments() ([]model.Attachment, error) {
-
-	result := []model.Attachment{}
-	attachmentService := w.factory().Attachment()
-	iterator, err := attachmentService.ListByObjectID(w.stream.StreamID)
-
-	if err != nil {
-		return result, derp.Wrap(err, "renderer.Stream.Attachments", "Error listing attachments")
-	}
-
-	attachment := new(model.Attachment)
-	for iterator.Next(attachment) {
-		result = append(result, *attachment)
-		attachment = new(model.Attachment)
-	}
-
-	return result, nil
+	return w.factory().Attachment().QueryByObjectID(model.AttachmentTypeStream, w.stream.StreamID)
 }
 
 /*******************************************

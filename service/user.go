@@ -114,6 +114,11 @@ func (service *User) Delete(user *model.User, note string) error {
  * GENERIC DATA FUNCTIONS
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *User) ObjectType() string {
+	return "User"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *User) ObjectNew() data.Object {
 	result := model.NewUser()

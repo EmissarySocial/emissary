@@ -17,8 +17,9 @@ type User struct {
 	UserID          primitive.ObjectID   `path:"userId"       json:"userId"        bson:"_id"`           // Unique identifier for this user.
 	GroupIDs        []primitive.ObjectID `path:"groupIds"     json:"groupIds"      bson:"groupIds"`      // Slice of IDs for the groups that this user belongs to.
 	DisplayName     string               `path:"displayName"  json:"displayName"   bson:"displayName"`   // Name to be displayed for this user
-	Description     string               `path:"description"  json:"description"   bson:"description"`   // Status summary for this user (used by ActivityPub)
-	EmailAddress    string               `path:"emailAddress" json:"emailAddress" bson:"emailAddress"`   // Email address for this user
+	Description     string               `path:"description"  json:"description"   bson:"description"`   // Status summary for this user
+	Links           []PersonLink         `path:"links"        json:"links"         bson:"links"`         // Slice of links to profiles on other web services.
+	EmailAddress    string               `path:"emailAddress" json:"emailAddress"  bson:"emailAddress"`  // Email address for this user
 	Username        string               `path:"username"     json:"username"      bson:"username"`      // This is the primary public identifier for the user.
 	Password        string               `path:"password"     json:"password"      bson:"password"`      // This password should be encrypted with BCrypt.
 	IsOwner         bool                 `path:"isOwner"      json:"isOwner"       bson:"isOwner"`       // If TRUE, then this user is a website owner with FULL privileges.
@@ -33,6 +34,7 @@ func NewUser() User {
 	return User{
 		UserID:   primitive.NewObjectID(),
 		GroupIDs: make([]primitive.ObjectID, 0),
+		Links:    make([]PersonLink, 0),
 	}
 }
 
@@ -43,6 +45,7 @@ func UserSchema() schema.Element {
 			"groupIds":      schema.Array{Items: schema.String{Format: "objectId"}},
 			"displayName":   schema.String{MaxLength: 50},
 			"description":   schema.String{MaxLength: 100},
+			"links":         schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
 			"emailAddress":  schema.String{Format: "email"},
 			"username":      schema.String{MaxLength: 50, Required: true},
 			"password":      schema.String{MaxLength: 255, Required: true},
@@ -256,7 +259,10 @@ func (user *User) ActivityPubURL(host string) string {
 }
 
 func (user *User) ActivityPubAvatarURL(host string) string {
-	return host + user.ImageURL
+	if user.ImageURL == "" {
+		return ""
+	}
+	return host + "/@" + user.UserID.Hex() + "/avatar/" + user.ImageURL
 }
 
 func (user *User) ActivityPubInboxURL(host string) string {

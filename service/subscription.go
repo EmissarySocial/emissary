@@ -175,6 +175,11 @@ func (service *Subscription) Delete(subscription *model.Subscription, note strin
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Subscription) ObjectType() string {
+	return "Subscription"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *Subscription) ObjectNew() data.Object {
 	result := model.NewSubscription()

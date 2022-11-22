@@ -197,7 +197,7 @@ func (stream *Stream) HasParent() bool {
 
 // NewAttachment creates a new file Attachment linked to this Stream.
 func (stream *Stream) NewAttachment(filename string) Attachment {
-	result := NewAttachment(stream.StreamID)
+	result := NewAttachment(AttachmentTypeStream, stream.StreamID)
 	result.Original = filename
 
 	return result

@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -22,9 +23,9 @@ func (step StepTableEditor) Get(renderer Renderer, buffer io.Writer) error {
 	var err error
 
 	s := renderer.schema()
-	targetURL := "/" + renderer.Token() + "/" + renderer.ActionID()
 	factory := renderer.factory()
 
+	targetURL := step.getTargetURL(renderer)
 	t := table.New(&s, &step.Form, renderer.object(), step.Path, factory.Icons(), targetURL)
 	t.UseLookupProvider(factory.LookupProvider())
 	t.AllowAll()
@@ -76,7 +77,7 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 			path := step.Path + "." + edit + "." + field.Path
 
 			if err := s.Set(object, path, body[field.Path]); err != nil {
-				return derp.Wrap(err, location, "Error setting value in table")
+				return derp.Wrap(err, location, "Error setting value in table", object, field.Path, path, body[field.Path])
 			}
 		}
 
@@ -107,7 +108,7 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 	}
 
 	// Once we're done, re-render the table and send it back to the client
-	targetURL := "/" + renderer.Token() + "/" + renderer.ActionID()
+	targetURL := step.getTargetURL(renderer)
 
 	factory := renderer.factory()
 	t := table.New(&s, &step.Form, renderer.object(), step.Path, factory.Icons(), targetURL)
@@ -119,4 +120,13 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 	}
 
 	return nil
+}
+
+// getTargetURL returns the URL that the table should use for all of its links
+func (step StepTableEditor) getTargetURL(renderer Renderer) string {
+	originalPath := renderer.context().Request().URL.Path
+	actionID := renderer.ActionID()
+	pathSlice := strings.Split(originalPath, "/")
+	pathSlice[len(pathSlice)-1] = actionID
+	return strings.Join(pathSlice, "/")
 }

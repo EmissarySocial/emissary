@@ -103,6 +103,10 @@ func (service *Activity) Delete(activity *model.Activity, note string) error {
  * Generic Data Methods
  *******************************************/
 
+func (service *Activity) ObjectType() string {
+	return "Activity"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *Activity) ObjectNew() data.Object {
 	result := model.NewActivity()

@@ -62,13 +62,6 @@
 				{"step": "view-html", "file": "inbox"}
 			]
 		},
-		"subscriptions": {
-			"roles": ["myself"],
-			"steps": [
-				{"step": "set-query-param", "selected":"subscriptions"},
-				{"step": "view-html", "file": "subscriptions"}
-			]
-		},
 		"inbox-sidebar": {
 			"roles": ["myself"],
 			"step": "view-html"
@@ -112,6 +105,59 @@
 		"outbox-list": {
 			"roles": ["myself"],
 			"step": "view-html"
+		},
+		"subscriptions": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "set-query-param", "selected":"subscriptions"},
+				{"step": "view-html", "file": "subscriptions"}
+			]
+		},
+		"edit-links": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "as-modal", "steps":[
+					{"step": "view-html"}
+				]}
+			]
+		},
+		"edit-links-table": {
+			"roles": ["myself"],
+			"steps": [
+				{"step": "edit-table", "path": "links", "form": {
+					"type": "layout-table",
+					"children": [
+						{"type": "text", "path": "organization", "label": "Label"},
+						{"type": "text", "path": "profileUrl", "label": "URL"}
+					]
+				}},
+				{"step": "save", "comment": "Links updated by {{.Author}}"}
+			]
+		},
+		"edit-photo": {
+			"roles": ["myself"],
+			"steps":[
+				{"step": "as-modal", "steps":[
+					{"step": "view-html"},
+					{"step": "delete-attachments", "all":true},
+					{"step": "upload-attachments", "maximum":1},
+					{"step": "set-thumbnail", "path":"imageUrl"},
+					{"step": "save", "comment": "Profile photo updated by {{.Author}}"}
+				]}
+			]
+		},
+		"preview-photo": {
+			"roles": ["myself"],
+			"step":"view-html"
+		},
+		"delete-photo": {
+			"roles":["myself"],
+			"steps":[
+				{"step": "delete-attachments", "all":true},
+				{"step": "set-thumbnail", "path":"imageUrl"},
+				{"step": "save", "comment": "Profile photo deleted by {{.Author}}"},
+				{"step": "trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+			]
 		}
 	}
 }	

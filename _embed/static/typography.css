@@ -267,7 +267,7 @@ h3.space-below {
  ****************************/
 
 .placeholder-gray {
-	background-color: gray50;
+	background-color: var(--gray30);
 }
 
 /****************************

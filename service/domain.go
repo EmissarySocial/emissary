@@ -127,6 +127,11 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
  * Generic Data Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Domain) ObjectType() string {
+	return "Domain"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *Domain) ObjectNew() data.Object {
 	result := model.NewDomain()

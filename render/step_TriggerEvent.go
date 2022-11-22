@@ -19,6 +19,7 @@ func (step StepTriggerEvent) UseGlobalWrapper() bool {
 
 // Post updates the stream with approved data from the request body.
 func (step StepTriggerEvent) Post(renderer Renderer) error {
+
 	renderer.context().Response().Header().Set("HX-Trigger", step.Event)
 	return nil
 }

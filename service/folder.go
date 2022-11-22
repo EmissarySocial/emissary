@@ -101,6 +101,11 @@ func (service *Folder) Delete(inboxItem *model.Folder, note string) error {
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Folder) ObjectType() string {
+	return "Folder"
+}
+
 // New returns a fully initialized model.Group as a data.Object.
 func (service *Folder) ObjectNew() data.Object {
 	result := model.NewFolder()

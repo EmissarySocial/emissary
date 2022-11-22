@@ -24,14 +24,9 @@ func (step StepSave) Post(renderer Renderer) error {
 
 	object := renderer.object()
 
-	// Validate the object against the schema
-	if err := renderer.schema().Validate(object); err != nil {
-		return derp.Wrap(err, "render.StepSave.Post", "Object has invalid data", object)
-	}
-
 	// Try to update the stream
 	if err := renderer.service().ObjectSave(object, step.Comment); err != nil {
-		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object", object)
+		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object")
 	}
 
 	return nil

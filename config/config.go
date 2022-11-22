@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -104,9 +103,9 @@ func Schema() schema.Schema {
 			Properties: schema.ElementMap{
 				"domains":             schema.Array{Items: DomainSchema().Element},
 				"providers":           schema.Array{Items: ProviderSchema().Element},
-				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},
-				"layouts":             schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},
-				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: null.NewInt(1)},
+				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
+				"layouts":             schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
+				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),
 				"certificates":        WritableFolderSchema(),

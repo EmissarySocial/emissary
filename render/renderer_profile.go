@@ -149,6 +149,10 @@ func (w Profile) UserID() string {
 	return w.user.UserID.Hex()
 }
 
+func (w Profile) Username() string {
+	return w.user.Username
+}
+
 func (w Profile) FolderID() string {
 	return w.context().QueryParam("inboxFolderId")
 }
@@ -163,6 +167,10 @@ func (w Profile) Description() string {
 
 func (w Profile) ImageURL() string {
 	return w.user.ImageURL
+}
+
+func (w Profile) Links() []model.PersonLink {
+	return w.user.Links
 }
 
 func (w Profile) ActivityPubProfileURL() string {

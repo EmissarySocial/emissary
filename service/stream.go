@@ -177,7 +177,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 
 		// RULE: Delete all related Attachments
-		if err := service.attachmentService.DeleteAllFromStream(stream.StreamID, note); err != nil {
+		if err := service.attachmentService.DeleteAll(model.AttachmentTypeStream, stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting attachments", stream, note))
 		}
 
@@ -194,6 +194,11 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 /*******************************************
  * Generic Data Methods
  *******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *Stream) ObjectType() string {
+	return "Stream"
+}
 
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *Stream) ObjectNew() data.Object {
@@ -468,21 +473,8 @@ func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *mode
 	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortDesc("rank"), result)
 }
 
-func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID, attachment *model.Attachment) error {
-
-	const location = "service.stream.LoadFirstAttachment"
-
-	attachments, err := service.attachmentService.ListFirstByObjectID(streamID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error listing attachments")
-	}
-
-	for attachments.Next(attachment) {
-		return nil
-	}
-
-	return derp.NewNotFoundError(location, "No attachments found")
+func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.Attachment, error) {
+	return service.attachmentService.LoadFirstByObjectID(model.AttachmentTypeStream, streamID)
 }
 
 // Count returns the number of (non-deleted) records in the Stream collection

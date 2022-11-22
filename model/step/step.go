@@ -104,7 +104,7 @@ func New(stepInfo maps.Map) (Step, error) {
 	// ATTACHMENTS
 
 	case "delete-attachments":
-		return NewDeleteAttachment(stepInfo)
+		return NewDeleteAttachments(stepInfo)
 
 	case "upload-attachments":
 		return NewUploadAttachment(stepInfo)

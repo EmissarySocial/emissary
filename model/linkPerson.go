@@ -7,8 +7,8 @@ import (
 
 type PersonLink struct {
 	InternalID   primitive.ObjectID `path:"internalId"   json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
-	Source       string             `path:"source"       json:"source"       bson:"source"`                 // The source that generated this document
-	Relation     string             `path:"relation"     json:"relation"     bson:"relation,omitempty"`     // Relation to the person (e.g. "author", "contributor", "editor", "owner", "publisher", "webmaster")
+	Source       string             `path:"source"       json:"source"       bson:"source,omitempty"`       // The source that generated this document
+	Relation     string             `path:"relation"     json:"relation"     bson:"relation,omitempty"`     // Relation to the person (e.g. "author", "contributor", "editor", "me", "owner", "publisher", "webmaster")
 	Organization string             `path:"organization" json:"organization" bson:"organization,omitempty"` // Organization that this person is associated with
 	Name         string             `path:"name"         json:"name"         bson:"name,omitempty"`         // Name of the person
 	ProfileURL   string             `path:"profileUrl"   json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile

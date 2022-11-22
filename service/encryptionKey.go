@@ -85,6 +85,11 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *EncryptionKey) ObjectType() string {
+	return "EncryptionKey"
+}
+
 // New returns a fully initialized model.Group as a data.Object.
 func (service *EncryptionKey) ObjectNew() data.Object {
 	result := model.NewEncryptionKey()

@@ -11,12 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const AttachmentTypeStream = "Stream"
+
+const AttachmentTypeUser = "User"
+
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `                bson:"_id"`      // ID of this Attachment
-	StreamID     primitive.ObjectID `                bson:"streamId"` // ID of the Stream that owns this Attachment
-	Original     string             `path:"original" bson:"original"` // Original filename uploaded by user
-	Rank         int                `path:"rank"     bson:"rank"`     // The sort order to display the attachments in.
+	AttachmentID primitive.ObjectID `                bson:"_id"`        // ID of this Attachment
+	ObjectID     primitive.ObjectID `                bson:"objectId"`   // ID of the Stream that owns this Attachment
+	ObjectType   string             `                bson:"objectType"` // Type of object that owns this Attachment
+	Original     string             `path:"original" bson:"original"`   // Original filename uploaded by user
+	Rank         int                `path:"rank"     bson:"rank"`       // The sort order to display the attachments in.
 	Height       int                `path:"height"   bson:"height"`
 	Width        int                `path:"width"    bson:"width"`
 
@@ -24,10 +29,11 @@ type Attachment struct {
 }
 
 // NewAttachment returns a fully initialized Attachment object.
-func NewAttachment(streamID primitive.ObjectID) Attachment {
+func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
 	return Attachment{
 		AttachmentID: primitive.NewObjectID(),
-		StreamID:     streamID,
+		ObjectType:   objectType,
+		ObjectID:     objectID,
 	}
 }
 
@@ -35,7 +41,8 @@ func AttachmentSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"attachmentId": schema.String{Format: "objectId"},
-			"streamId":     schema.String{Format: "objectId"},
+			"objectId":     schema.String{Format: "objectId"},
+			"objectType":   schema.String{Enum: []string{AttachmentTypeStream, AttachmentTypeUser}},
 			"original":     schema.String{},
 			"rank":         schema.Integer{},
 			"height":       schema.Integer{},
@@ -62,8 +69,8 @@ func (attachment *Attachment) GetObjectID(name string) (primitive.ObjectID, erro
 	switch name {
 	case "attachmentId":
 		return attachment.AttachmentID, nil
-	case "streamId":
-		return attachment.StreamID, nil
+	case "objectId":
+		return attachment.ObjectID, nil
 	}
 	return primitive.NilObjectID, derp.NewInternalError("model.Attachment.GetObjectID", "Invalid property", name)
 }
@@ -71,6 +78,8 @@ func (attachment *Attachment) GetObjectID(name string) (primitive.ObjectID, erro
 func (attachment *Attachment) GetString(name string) (string, error) {
 
 	switch name {
+	case "objectType":
+		return attachment.ObjectType, nil
 	case "original":
 		return attachment.Original, nil
 	}
@@ -104,7 +113,15 @@ func (attachment *Attachment) GetBool(name string) (bool, error) {
  *******************************************/
 
 func (attachment *Attachment) URL() string {
-	return "/" + attachment.StreamID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+	switch attachment.ObjectType {
+	case AttachmentTypeStream:
+		return "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+
+	case AttachmentTypeUser:
+		return "/@" + attachment.ObjectID.Hex() + "/pub/avatar/" + attachment.AttachmentID.Hex()
+	}
+
+	return ""
 }
 
 func (attachment *Attachment) DownloadExtension() string {

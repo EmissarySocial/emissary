@@ -94,6 +94,11 @@ func (service *Inbox) Delete(activity *model.Activity, note string) error {
  * Generic Data Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Inbox) ObjectType() string {
+	return "Activity"
+}
+
 // New returns a fully initialized model.Stream as a data.Object.
 func (service *Inbox) ObjectNew() data.Object {
 	result := model.NewActivity()

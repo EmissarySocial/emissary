@@ -1,0 +1,5 @@
+<div style="height:200px; width:200px; border-radius:100px; background-color:var(--gray30); margin:0px auto;">
+	{{- if ne .ActivityPubAvatarURL "" -}}
+		<img src="{{.ActivityPubAvatarURL}}" style="display:block; height:200px; width:200px; border-radius:100px"/>
+	{{- end -}}
+</div>

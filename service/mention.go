@@ -110,6 +110,11 @@ func (service *Mention) Delete(mention *model.Mention, note string) error {
  * Model Service Methods
  *******************************************/
 
+// ObjectType returns the type of object that this service manages
+func (service *Mention) ObjectType() string {
+	return "Mention"
+}
+
 // New returns a fully initialized model.Group as a data.Object.
 func (service *Mention) ObjectNew() data.Object {
 	result := model.NewMention()

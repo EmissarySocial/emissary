@@ -3,13 +3,14 @@ package render
 import (
 	"io"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/path"
 )
 
 // StepSetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
-type StepSetThumbnail struct{}
+type StepSetThumbnail struct {
+	Path string
+}
 
 func (step StepSetThumbnail) Get(renderer Renderer, _ io.Writer) error {
 	return nil
@@ -25,25 +26,25 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 	// Find best icon from attachments
 	factory := renderer.factory()
 
-	attachments, err := factory.Attachment().ListByObjectID(renderer.objectID())
+	objectType := renderer.service().ObjectType()
+	objectID := renderer.objectID()
+
+	attachments, err := factory.Attachment().QueryByObjectID(objectType, objectID)
 
 	if err != nil {
 		return derp.NewBadRequestError("render.StepSetThumbnail.Post", "Error listing attachments")
 	}
 
 	// Scan all attachments and use the first one that is an image.
-	attachment := model.NewAttachment(renderer.objectID())
-	for attachments.Next(&attachment) {
+	for _, attachment := range attachments {
 
 		if attachment.MimeCategory() == "image" {
-			err := path.Set(renderer.object(), "thumbnailImage", attachment.AttachmentID.Hex())
+			err := path.Set(renderer.object(), step.Path, attachment.AttachmentID.Hex())
 			return err
 		}
-		attachment = model.NewAttachment(renderer.objectID())
 	}
 
 	// Fall through to here means we should look at body content (but not now)
 	// So, for now, if there's no thumbnail, then set "" as default
-	return path.Set(renderer.object(), "thumbnailImage", "")
-
+	return path.Set(renderer.object(), step.Path, "")
 }
