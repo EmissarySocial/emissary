@@ -10,17 +10,20 @@
 					<link rel="stylesheet" href="/static/nebula/uploader.css"/>
 					<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
-					<div class="circle-300 placeholder-gray space-below hover-trigger" style="position:relative" role="button" hx-get="/@me/edit-photo">
+					<div role="button" hx-get="/@me/edit-photo">
 						{{- if ne "" .ActivityPubAvatarURL -}}
-							<img class="u-photo circle-300" src="{{.ActivityPubAvatarURL}}">
+							<img class="u-photo" src="{{.ActivityPubAvatarURL}}" style="aspect-ratio:1; width:80%; border-radius:300px;">
+						{{- else -}}
+							<div class="placeholder-gray space-below hover-trigger" style="position:relative; aspect-ratio:1; width:80%; border-radius:300px;"></div>
 						{{- end -}}
-						<div class="text-sm align-center hover-reveal" style="position:absolute; bottom:0px; margin:0px; width:100%; color:white; background-color:rgba(0,0,0,0.5); padding:5px;">Edit Profile Photo</div>
+						<div class="text-sm align-center hover-reveal" style="position:absolute; bottom:0px; margin:0px; color:white; background-color:rgba(0,0,0,0.5); padding:5px; margin:0px auto;">Edit Profile Photo</div>
 					</div>
 				{{- else -}}
-					<div class="circle-300 placeholder-gray space-below">
+					<div class="placeholder-gray space-below" style="aspect-ratio:1; width:80%; border-radius:300px;">
 						{{- if ne "" .ActivityPubAvatarURL -}}
-							<img class="u-photo circle-300" src="{{.ActivityPubAvatarURL}}"></div>
+							<img class="u-photo" src="{{.ActivityPubAvatarURL}}" style="aspect-ratio:1; width:100%; border-radius:300px;">
 						{{- end -}}
+					</div>
 				{{- end -}}
 
 				<div class="space-below">
@@ -39,11 +42,6 @@
 				{{- end -}}
 
 				<div class="space-below align-left">
-					<div>
-						{{- if .UserCan "edit-links" -}}
-							<a hx-get="/@me/edit-links" class="float-right" role="button">edit links</a>
-						{{- end -}}
-					</div>
 
 					{{- if ne "" .Location -}}
 						<div class="p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
@@ -53,6 +51,9 @@
 						<div><a rel="me" class="u-url" href="{{.ProfileURL}}">{{icon "globe"}} {{.Organization}}</a></div>
 					{{- end -}}
 
+					{{- if .UserCan "edit-links" -}}
+						<div><a hx-get="/@me/edit-links" role="button">{{icon "edit"}} Edit Links</a></div>
+					{{- end -}}
 				</div>
 
 			</div>

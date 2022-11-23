@@ -6,6 +6,16 @@
  
 		<!-- Content Section -->
 		<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4 pure-u-xl-4-5" style="min-height:400px;">
+
+			{{if eq "inbox-all" (.QueryParam "selected")}}
+				<h1>All Items</h1>
+			{{else if eq "inbox" (.QueryParam "selected")}}
+				<h1>Unread Items</h1>
+			{{else}}
+				{{$folder := .Folder}}
+				<h1>{{$folder.Label}}</h1>
+			{{end}}
+
 			{{ .View "inbox-list"}}
 		</div>
 	
@@ -15,7 +25,8 @@
 
 <script type="text/hyperscript">
 	on scroll from window debounced at 500ms
-		tell <div.inbox-item[data-status=unread] /> in me
+		tell <div.inbox-item[data-status=Unread] /> in me
+	
 			set offsetBottom to your offsetTop
 			increment offsetBottom by your offsetHeight
 			if (offsetBottom) - (window.scrollY) > 0 then
@@ -24,7 +35,7 @@
 
 			set url to "/@me/pub/inbox/" + [@data-inboxItemId] + "/mark-read"
 			fetch `${url}` with method:"POST"
-			set your data-status to "read"
+			set your [@data-status] to "Read"
 		end
 	end
 </script>

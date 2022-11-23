@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
 	htmlTools "github.com/benpate/rosetta/html"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dyatlov/go-htmlinfo/htmlinfo"
 
 	"github.com/benpate/rosetta/list"
@@ -345,7 +344,6 @@ func (service *Subscription) PollSubscription(subscription model.Subscription) e
 
 	for _, item := range rssFeed.Items {
 		if err := service.saveActivity(&subscription, rssFeed, item); err != nil {
-			spew.Dump(derp.Wrap(err, location, "Error updating local activity"))
 			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
 		}
 	}
@@ -494,6 +492,7 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 		activity.OwnerID = subscription.UserID
 		activity.Origin = subscription.Origin()
 		activity.PublishDate = rssDate(rssItem.PublishedParsed)
+		activity.FolderID = subscription.FolderID
 
 		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > activity.PublishDate {
 			activity.PublishDate = updateDate
@@ -523,8 +522,7 @@ func populateActivity(activity *model.Activity, subscription *model.Subscription
 	// Populate activity from the rssItem
 	activity.PublishDate = rssDate(rssItem.PublishedParsed)
 	activity.Origin = subscription.Origin()
-	activity.FolderID = subscription.FolderID
-	activity.Actor = rssAuthor(rssFeed)
+	activity.Actor = rssActor(rssFeed, rssItem)
 	activity.Object = rssDocument(rssItem)
 
 	// Fill in additional properties from the web page, if necessary
@@ -565,20 +563,21 @@ func populateActivity(activity *model.Activity, subscription *model.Subscription
 	return nil
 }
 
-// rssAuthor returns all information about the author of an RSS item
-func rssAuthor(feed *gofeed.Feed) model.PersonLink {
+// rssActor returns all information about the actor of an RSS item
+func rssActor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 
-	if feed == nil {
+	if rssFeed == nil {
 		return model.NewPersonLink()
 	}
 
 	result := model.PersonLink{
-		Name:       htmlTools.ToText(feed.Title),
-		ProfileURL: feed.Link,
+		Organization: htmlTools.ToText(rssFeed.Title),
+		Name:         htmlTools.ToText(rssItem.Author.Name),
+		ProfileURL:   rssFeed.Link,
 	}
 
-	if feed.Image != nil {
-		result.ImageURL = feed.Image.URL
+	if rssFeed.Image != nil {
+		result.ImageURL = rssFeed.Image.URL
 	}
 
 	return result

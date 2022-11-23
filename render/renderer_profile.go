@@ -154,7 +154,7 @@ func (w Profile) Username() string {
 }
 
 func (w Profile) FolderID() string {
-	return w.context().QueryParam("inboxFolderId")
+	return w.context().QueryParam("folderId")
 }
 
 func (w Profile) DisplayName() string {
@@ -255,18 +255,18 @@ func (w Profile) Activity() (model.Activity, error) {
 		return model.Activity{}, derp.NewForbiddenError("render.Profile.Activity", "Not authenticated")
 	}
 
-	// Try to parse the inboxItemID from the URL
-	inboxItemID, err := primitive.ObjectIDFromHex(w._context.QueryParam("inboxItemId"))
+	// Try to parse the activityID from the URL
+	activityID, err := primitive.ObjectIDFromHex(w._context.QueryParam("activityId"))
 
 	if err != nil {
-		return model.Activity{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid inboxItemId", w._context.QueryParam("inboxItemId"))
+		return model.Activity{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid activityId", w._context.QueryParam("activityId"))
 	}
 
 	// Try to load the record from the database
 	result := model.NewActivity()
 	inboxService := w._factory.Inbox()
 
-	if err := inboxService.LoadItemByID(w.AuthenticatedID(), inboxItemID, &result); err != nil {
+	if err := inboxService.LoadItemByID(w.AuthenticatedID(), activityID, &result); err != nil {
 		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 
@@ -280,8 +280,8 @@ func (w Profile) Folders() ([]model.Folder, error) {
 		return []model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
 	}
 
-	inboxFolderService := w._factory.Folder()
-	return inboxFolderService.QueryByUserID(w.AuthenticatedID())
+	folderService := w._factory.Folder()
+	return folderService.QueryByUserID(w.AuthenticatedID())
 }
 
 func (w Profile) Folder() (model.Folder, error) {
@@ -292,12 +292,12 @@ func (w Profile) Folder() (model.Folder, error) {
 	}
 
 	// Try to load the record from the database
-	inboxFolder := model.NewFolder()
-	inboxFolderID := w._context.QueryParam("inboxFolderId")
-	inboxFolderService := w._factory.Folder()
+	folder := model.NewFolder()
+	folderID := w._context.QueryParam("folderId")
+	folderService := w._factory.Folder()
 
-	err := inboxFolderService.LoadByToken(w.AuthenticatedID(), inboxFolderID, &inboxFolder)
-	return inboxFolder, err
+	err := folderService.LoadByToken(w.AuthenticatedID(), folderID, &folder)
+	return folder, err
 }
 
 func (w Profile) Outbox() *QueryBuilder {

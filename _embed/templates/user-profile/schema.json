@@ -70,7 +70,7 @@
 			"roles": ["myself"],
 			"step": "view-html"
 		},
-		"inbox-item": {
+		"activity": {
 			"roles": ["myself"],
 			"steps": [{"step": "as-modal", "class":"huge", "steps": [
 				{"step":"view-html"}

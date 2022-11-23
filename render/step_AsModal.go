@@ -22,6 +22,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 	header := renderer.context().Response().Header()
 	header.Set("HX-Retarget", "aside")
 	header.Set("HX-Push", "false")
+	header.Set("HX-Reswap", "innerHTML")
 
 	b := html.New()
 
