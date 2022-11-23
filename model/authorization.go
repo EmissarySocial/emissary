@@ -19,7 +19,7 @@ func NewAuthorization() Authorization {
 
 	result := Authorization{
 		UserID:      primitive.NilObjectID,
-		GroupIDs:    []primitive.ObjectID{},
+		GroupIDs:    make([]primitive.ObjectID, 0),
 		DomainOwner: false,
 	}
 

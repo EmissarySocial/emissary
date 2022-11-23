@@ -17,6 +17,7 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
 	htmlTools "github.com/benpate/rosetta/html"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dyatlov/go-htmlinfo/htmlinfo"
 
 	"github.com/benpate/rosetta/list"
@@ -344,6 +345,7 @@ func (service *Subscription) PollSubscription(subscription model.Subscription) e
 
 	for _, item := range rssFeed.Items {
 		if err := service.saveActivity(&subscription, rssFeed, item); err != nil {
+			spew.Dump(derp.Wrap(err, location, "Error updating local activity"))
 			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
 		}
 	}
@@ -489,10 +491,8 @@ func (service *Subscription) saveActivity(subscription *model.Subscription, rssF
 		}
 
 		// Fall through means "not found" which means "make a new activity"
-		activity = model.NewActivity()
 		activity.OwnerID = subscription.UserID
 		activity.Origin = subscription.Origin()
-
 		activity.PublishDate = rssDate(rssItem.PublishedParsed)
 
 		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > activity.PublishDate {
@@ -584,32 +584,32 @@ func rssAuthor(feed *gofeed.Feed) model.PersonLink {
 	return result
 }
 
-func rssDocument(item *gofeed.Item) model.DocumentLink {
+func rssDocument(rssItem *gofeed.Item) model.DocumentLink {
 
 	return model.DocumentLink{
-		URL:         item.Link,
-		Label:       htmlTools.ToText(item.Title),
-		Summary:     htmlTools.ToText(item.Description),
-		ContentHTML: bluemonday.UGCPolicy().Sanitize(item.Content),
-		ImageURL:    rssImageURL(item),
-		PublishDate: rssDate(item.PublishedParsed),
+		URL:         rssItem.Link,
+		Label:       htmlTools.ToText(rssItem.Title),
+		Summary:     htmlTools.ToText(rssItem.Description),
+		ContentHTML: bluemonday.UGCPolicy().Sanitize(rssItem.Content),
+		ImageURL:    rssImageURL(rssItem),
+		PublishDate: rssDate(rssItem.PublishedParsed),
 		UpdateDate:  time.Now().Unix(),
 	}
 }
 
 // rssImageURL returns the URL of the first image in the item's enclosure list.
-func rssImageURL(item *gofeed.Item) string {
+func rssImageURL(rssItem *gofeed.Item) string {
 
-	if item == nil {
+	if rssItem == nil {
 		return ""
 	}
 
-	if item.Image != nil {
-		return item.Image.URL
+	if rssItem.Image != nil {
+		return rssItem.Image.URL
 	}
 
 	// Search for an image in the enclosures
-	for _, enclosure := range item.Enclosures {
+	for _, enclosure := range rssItem.Enclosures {
 		if list.Slash(enclosure.Type).Head() == "image" {
 			return enclosure.URL
 		}

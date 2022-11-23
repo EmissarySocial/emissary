@@ -13,9 +13,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -67,10 +65,10 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var transaction struct {
-			URL           string             `form:"url"`
-			FolderID      primitive.ObjectID `form:"folderId"`
-			PollDuration  int                `form:"pollDuration"`
-			PurgeDuration int                `form:"purgeDuration"`
+			URL           string `form:"url"`
+			FolderID      string `form:"folderId"`
+			PollDuration  int    `form:"pollDuration"`
+			PurgeDuration int    `form:"purgeDuration"`
 		}
 
 		// Load all pre-requisites
@@ -80,25 +78,18 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
 		}
 
-		// Create a new form
-		folderService := factory.Folder()
-		folders := subscription_folderOptions(folderService, userID)
-		form := subscription_getForm(folders)
-
 		// Collect data from the form POST
-
 		if err := ctx.Bind(&transaction); err != nil {
 			return derp.Wrap(err, location, "Error reading form data", nil)
 		}
 
-		if err := form.Schema.Validate(transaction); err != nil {
-			return derp.Wrap(err, location, "Subscription Data is invalid", transaction)
-		}
-
 		subscription.URL = transaction.URL
-		subscription.FolderID = transaction.FolderID
 		subscription.PollDuration = transaction.PollDuration
 		subscription.PurgeDuration = transaction.PurgeDuration
+
+		if folderID, err := primitive.ObjectIDFromHex(transaction.FolderID); err == nil {
+			subscription.FolderID = folderID
+		}
 
 		// Save the subscription to the database
 		if err := factory.Subscription().Save(&subscription, "Updated by User"); err != nil {
@@ -205,66 +196,80 @@ func subscription_common(serverFactory *server.Factory, ctx echo.Context) (*doma
 // subscription_getForm returns a form for adding/editing subscriptions
 func subscription_getForm(folders []form.LookupCode) form.Form {
 
-	folderIDs := slice.Map(folders, func(folder form.LookupCode) string { return folder.Value })
-
 	return form.Form{
-		Schema: schema.New(schema.Object{
-			Properties: schema.ElementMap{
-				"url":           schema.String{MaxLength: 512, Required: true},
-				"folderId":      schema.String{Format: "objectId", Enum: folderIDs, Required: true},
-				"pollDuration":  schema.Integer{Default: null.NewInt64(24), Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 30), Required: true},
-				"purgeDuration": schema.Integer{Default: null.NewInt64(14), Minimum: null.NewInt64(1), Maximum: null.NewInt64(365), Required: true},
-			},
-		}),
+		Schema: schema.New(model.SubscriptionSchema()),
 		Element: form.Element{
-			Type: "layout-vertical",
+			Type: "layout-tabs",
 			Children: []form.Element{
 				{
-					Type:        "text",
-					Label:       "Website URL",
-					Path:        "url",
-					Description: "Enter the URL of the website you want to subscribe to.",
-				},
-				{
-					Type:  "select",
-					Label: "Folder",
-					Path:  "folderId",
-					Options: maps.Map{
-						"enum": folders,
-					},
-					Description: "Automatically add items to this folder.",
-				},
-				{
-					Type:        "select",
-					Label:       "Poll Frequency",
-					Description: "How often should this site be checked for new articles?",
-					Path:        "pollDuration",
-					Options: maps.Map{
-						"enum": []form.LookupCode{
-							{Value: "1", Label: "Hourly"},
-							{Value: "6", Label: "Every 6 Hours"},
-							{Value: "12", Label: "Every 12 Hours"},
-							{Value: "24", Label: "Once per Day"},
-							{Value: "168", Label: "Once per Week"},
-							{Value: "720", Label: "Once per Month"},
+					Type:  "layout-vertical",
+					Label: "Settings",
+					Children: []form.Element{
+						{
+							Type:        "text",
+							Label:       "Website URL",
+							Path:        "url",
+							Description: "Enter the URL of the website you want to subscribe to.",
+						},
+						{
+							Type:  "select",
+							Label: "Folder",
+							Path:  "folderId",
+							Options: maps.Map{
+								"enum": folders,
+							},
+							Description: "Automatically add items to this folder.",
+						},
+						{
+							Type:        "select",
+							Label:       "Poll Frequency",
+							Description: "How often should this site be checked for new articles?",
+							Path:        "pollDuration",
+							Options: maps.Map{
+								"enum": []form.LookupCode{
+									{Value: "1", Label: "Hourly"},
+									{Value: "6", Label: "Every 6 Hours"},
+									{Value: "12", Label: "Every 12 Hours"},
+									{Value: "24", Label: "Once per Day"},
+									{Value: "168", Label: "Once per Week"},
+									{Value: "720", Label: "Once per Month"},
+								},
+							},
+						},
+						{
+							Type:        "select",
+							Label:       "Remove After",
+							Description: "Read items will be automatically deleted after this amount of time.",
+							Path:        "purgeDuration",
+							Options: maps.Map{
+								"enum": []form.LookupCode{
+									{Value: "1", Label: "1 Day"},
+									{Value: "7", Label: "1 Week"},
+									{Value: "14", Label: "2 Weeks"},
+									{Value: "30", Label: "1 Month"},
+									{Value: "60", Label: "2 Months"},
+									{Value: "90", Label: "3 Months"},
+									{Value: "180", Label: "6 Months"},
+									{Value: "365", Label: "1 Year"},
+								},
+							},
 						},
 					},
 				},
 				{
-					Type:        "select",
-					Label:       "Remove After",
-					Description: "Read items will be automatically deleted after this amount of time.",
-					Path:        "purgeDuration",
-					Options: maps.Map{
-						"enum": []form.LookupCode{
-							{Value: "1", Label: "1 Day"},
-							{Value: "7", Label: "1 Week"},
-							{Value: "14", Label: "2 Weeks"},
-							{Value: "30", Label: "1 Month"},
-							{Value: "60", Label: "2 Months"},
-							{Value: "90", Label: "3 Months"},
-							{Value: "180", Label: "6 Months"},
-							{Value: "365", Label: "1 Year"},
+					Type:     "layout-vertical",
+					Label:    "Status",
+					ReadOnly: true,
+					Children: []form.Element{
+						{
+							Type:  "text",
+							Label: "Status",
+							Path:  "status",
+						},
+						{
+							Type:  "textarea",
+							Label: "Details",
+							Path:  "statusMessage",
 						},
 					},
 				},

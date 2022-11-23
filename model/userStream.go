@@ -18,7 +18,9 @@ type UserStream struct {
 
 // NewUserStream returns a fully initialized UserStream object
 func NewUserStream() UserStream {
-	return UserStream{}
+	return UserStream{
+		UserStreamID: primitive.NewObjectID(),
+	}
 }
 
 /*******************************************

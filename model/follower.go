@@ -17,7 +17,9 @@ type Follower struct {
 }
 
 func NewFollower() Follower {
-	return Follower{}
+	return Follower{
+		FollowerID: primitive.NewObjectID(),
+	}
 }
 
 func FollowerSchema() schema.Element {

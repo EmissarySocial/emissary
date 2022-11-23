@@ -159,27 +159,27 @@ func (service *Inbox) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
-func (service *Inbox) LoadItemByID(userID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.Activity) error {
+func (service *Inbox) LoadItemByID(ownerID primitive.ObjectID, inboxItemID primitive.ObjectID, result *model.Activity) error {
 
 	criteria := exp.
 		Equal("_id", inboxItemID).
-		AndEqual("userId", userID)
+		AndEqual("ownerId", ownerID)
 
 	return service.Load(criteria, result)
 }
 
 // LoadBySource locates a single stream that matches the provided OriginURL
-func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL string, result *model.Activity) error {
+func (service *Inbox) LoadByOriginURL(ownerID primitive.ObjectID, originURL string, result *model.Activity) error {
 
 	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("document.url", originURL)
+		Equal("ownerId", ownerID).
+		AndEqual("object.url", originURL)
 
 	return service.Load(criteria, result)
 }
 
 // SetReadDate updates the readDate for a single Activity IF it is not already read
-func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
+func (service *Inbox) SetReadDate(ownerID primitive.ObjectID, token string, readDate int64) error {
 
 	const location = "service.Activity.SetReadDate"
 
@@ -193,8 +193,8 @@ func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readD
 		return derp.Wrap(err, location, "Cannot parse activityID", token)
 	}
 
-	if err := service.LoadItemByID(userID, activityID, &activity); err != nil {
-		return derp.Wrap(err, location, "Cannot load Activity", userID, token)
+	if err := service.LoadItemByID(ownerID, activityID, &activity); err != nil {
+		return derp.Wrap(err, location, "Cannot load Activity", ownerID, token)
 	}
 
 	// RULE: If the Activity is already marked as read, then we don't need to update it.  Return success.

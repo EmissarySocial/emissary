@@ -25,7 +25,9 @@ type Reaction struct {
 }
 
 func NewReaction() Reaction {
-	return Reaction{}
+	return Reaction{
+		ReactionID: primitive.NewObjectID(),
+	}
 }
 
 func ReactionSchema() schema.Element {

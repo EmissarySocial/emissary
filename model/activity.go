@@ -24,7 +24,9 @@ type Activity struct {
 }
 
 func NewActivity() Activity {
-	return Activity{}
+	return Activity{
+		ActivityID: primitive.NewObjectID(),
+	}
 }
 
 func ActivitySchema() schema.Element {

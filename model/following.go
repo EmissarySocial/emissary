@@ -23,7 +23,9 @@ type Following struct {
 }
 
 func NewFollowing() Following {
-	return Following{}
+	return Following{
+		FollowingID: primitive.NewObjectID(),
+	}
 }
 
 func FollowingSchema() schema.Element {
