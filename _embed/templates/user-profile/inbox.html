@@ -24,7 +24,7 @@
 
 			set url to "/@me/pub/inbox/" + [@data-inboxItemId] + "/mark-read"
 			fetch `${url}` with method:"POST"
-			add .read to yourself
+			set your data-status to "read"
 		end
 	end
 </script>

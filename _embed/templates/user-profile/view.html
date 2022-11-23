@@ -26,31 +26,35 @@
 				<div class="space-below">
 					<h1 class="p-name" style="margin-bottom:0px;">{{.DisplayName}}</h1>
 					<div class="gray50">{{.Username}}</div>
-					{{- if ne "" .Description -}}
-						<div class="space-above">{{.Description}}</div>
-					{{- end -}}
-					<div class="text-xs"><a hx-get="/@me/edit-profile" role="button">Edit</a></div>
+					<div class="space-above">
+						<span class="p-note">{{.Description}}</span>
+						<a hx-get="/@me/edit-profile" role="button">Edit Profile</a>
+					</div>
 				</div>
 
-				{{- $links := .Links -}}
-					<div class="space-below align-left">
-						{{- if gt (len $links) 0 -}}
-						<div class="bold">Links</div>
-						{{- range $links -}}
-							<div><a rel="me" class="u-url" href="{{.ProfileURL}}">{{icon "globe"}} {{.Organization}}</a></div>
-						{{- end -}}
-					{{- end -}}
-
-					{{- if .UserCan "edit-links" -}}
-						<button hx-get="/@me/edit-links" class="text-sm">Edit Links</button>
-					{{- end -}}
-				</div>
-
-				{{- if .UserCan "edit" -}}
-				<div class="space-above">
-					<button hx-post="/signout" hx-target="body">Sign Out</button>
-				</div>
+				{{- if .UserCan "edit-profile" -}}
+					<div class="space-below">
+						<button hx-post="/signout" hx-target="body">Sign Out</button>
+					</div>
 				{{- end -}}
+
+				<div class="space-below align-left">
+					<div>
+						{{- if .UserCan "edit-links" -}}
+							<a hx-get="/@me/edit-links" class="float-right" role="button">edit links</a>
+						{{- end -}}
+					</div>
+
+					{{- if ne "" .Location -}}
+						<div class="p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+					{{- end -}}
+
+					{{- range .Links -}}
+						<div><a rel="me" class="u-url" href="{{.ProfileURL}}">{{icon "globe"}} {{.Organization}}</a></div>
+					{{- end -}}
+
+				</div>
+
 			</div>
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4" style="border-left: solid 1px var(--gray20); padding-left:20px;">

@@ -173,7 +173,7 @@ func (service *Inbox) LoadByOriginURL(userID primitive.ObjectID, originURL strin
 
 	criteria := exp.
 		Equal("userId", userID).
-		AndEqual("origin.url", originURL)
+		AndEqual("document.url", originURL)
 
 	return service.Load(criteria, result)
 }

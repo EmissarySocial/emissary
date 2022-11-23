@@ -254,5 +254,5 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"appearance", "connections", "domain", "global", "groups", "profiles", "toplevel", "users"}
+	return []string{"appearance", "connections", "domain", "global", "groups", "toplevel", "users"}
 }

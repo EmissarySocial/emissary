@@ -18,25 +18,27 @@
 		<div hx-get="/@me/inbox-list?publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
 		{{- range $inbox -}}
-			<div id="item_{{.InboxItemID.Hex}}" class="inbox-item" data-status="{{.Status}}" data-inboxItemId="{{.InboxItemID.Hex}}" style="max-width:640px; cursor:pointer;" data-script="on click go to url '{{.Origin.URL}}' in new window">
+			<div id="item_{{.ActivityID.Hex}}" class="inbox-item" data-status="{{.Status}}" data-inboxItemId="{{.ActivityID.Hex}}" style="max-width:640px; cursor:pointer;" data-script="on click halt the event then go to url '{{.Object.URL}}' in new window">
 
 				<div class="flex-row" hx-push-url="true">
 
 					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Label}}</div>
+						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Object.Label}}</div>
 						<div class="text-gray text-sm space-below" style="line-height:1em;">
-							{{icon .Origin.Icon}}
-							{{.Author.Name}}
+							{{- icon .Origin.Icon -}}
+							{{- .Actor.Name -}} 
+							&middot; 
+							{{- .Actor.Organization -}}
 							&middot;
-							{{.PublishDate | tinyDate}}
+							{{- .PublishDate | tinyDate -}}
 						</div>
-						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Summary}}</div>
+						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Object.Summary}}</div>
 					</div>
 				
-					{{- if ne .ImageURL "" -}}
+					{{- if ne .Object.ImageURL "" -}}
 						<div style="width:160px;">
 							<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-									<img src="{{.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+								<img src="{{.Object.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
 							</div>
 						</div>
 					{{- end -}}

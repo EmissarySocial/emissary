@@ -169,6 +169,10 @@ func (w Profile) ImageURL() string {
 	return w.user.ImageURL
 }
 
+func (w Profile) Location() string {
+	return w.user.Location
+}
+
 func (w Profile) Links() []model.PersonLink {
 	return w.user.Links
 }
@@ -224,11 +228,10 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 	criteria = criteria.And(
-		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("ownerId", w.AuthenticatedID()),
 	)
 
 	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
-
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied

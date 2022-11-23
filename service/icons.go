@@ -42,6 +42,8 @@ func (service Icons) Get(name string) string {
 		return service.get("info-circle")
 	case "link":
 		return service.get("link-45deg")
+	case "location":
+		return service.get("geo-alt")
 	case "loading":
 		return service.get("arrow-clockwise")
 	case "login":

@@ -122,6 +122,7 @@
 						"label": "Edit Profile Info",
 						"children": [
 							{"type": "text", "path": "displayName", "label": "Name"},
+							{"type": "text", "path": "location", "label": "Location"},
 							{"type": "textarea", "path": "description", "label": "Message"}
 						]
 					}},
