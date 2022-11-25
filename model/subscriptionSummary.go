@@ -10,3 +10,8 @@ type SubscriptionSummary struct {
 	LastPolled     int64              `bson:"lastPolled"`
 	NextPoll       int64              `bson:"nextPoll"`
 }
+
+// SubscriptionSummaryFields returns a slice of all BSON field names for a SubscriptionSummary
+func SubscriptionSummaryFields() []string {
+	return []string{"_id", "url", "label", "status", "lastPolled", "nextPoll"}
+}

@@ -140,6 +140,10 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionInbox),
 	)
 
+	factory.outboxService = service.NewInbox(
+		factory.collection(CollectionStream),
+	)
+
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
@@ -202,9 +206,11 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
-		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
+		factory.groupService.Refresh(factory.collection(CollectionGroup))
+		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.realtimeBroker.Refresh()
+		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
