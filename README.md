@@ -48,10 +48,10 @@ There's a lot of work to do.  Current builds are only beginning to deliver on th
 * **ALPHA** - Private sharing and group sites
 * **ALPHA** - Simple, powerful access controls
 * **ALPHA** - Media Server that hosts/transcodes images
-* **IN PROGRESS** - Customizable templates (blogs, photos, tweets, podcasts, etc)
-* **IN PROGRESS** - Popular storage services (Github, Dropbox, AWS, Azure, Google, etc)
-* **SOONER** - Automatically use IndieWeb APIs
-* **SOONER** - Automatically use Fediverse APIs 
+* **ALPHA** - Customizable templates (blogs, photos, tweets, podcasts, etc)
+* **ALPHA** - Popular storage services (Github, Dropbox, AWS, Azure, Google, etc)
+* **IN PROGRESS** - Automatically use IndieWeb APIs
+* **IN PROGRESS** - Automatically use Fediverse APIs 
 * **LATER** - Self-Hosted cryptographic identity
 * **LATER** - Video conferencing via WebRTC
 * **LATER** - Enhance Media Server to host/transcode audio and video 
