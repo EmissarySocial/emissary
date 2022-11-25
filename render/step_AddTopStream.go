@@ -60,7 +60,8 @@ func (step StepAddTopStream) Post(renderer Renderer) error {
 	// Create new top-level stream
 	stream := model.NewStream()
 	stream.ParentID = primitive.NilObjectID
-	stream.ParentIDs = make([]primitive.ObjectID, 0)
+	stream.TopLevelID = stream.StreamID.Hex()
+	// ParentIDs: stream.ParentIDs = make([]primitive.ObjectID, 0)
 	stream.TemplateID = templateID
 
 	// TODO: MEDIUM: sort order?

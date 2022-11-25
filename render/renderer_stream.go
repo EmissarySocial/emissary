@@ -123,6 +123,12 @@ func (w Stream) service() service.ModelService {
 	return w.modelService
 }
 
+// templateRole returns the role that this Stream's Template plays in the system.
+// This is used to determine what kinds of Streams can be added underneath this one as children.
+func (w Stream) templateRole() string {
+	return w.template().Role
+}
+
 /*******************************************
  * ACTION SHORTCUTS
  *******************************************/
@@ -158,10 +164,14 @@ func (w Stream) ParentID() string {
 }
 
 func (w Stream) TopLevelID() string {
-	if len(w.stream.ParentIDs) == 0 {
-		return w.stream.StreamID.Hex()
-	}
-	return w.stream.ParentIDs[0].Hex()
+	return w.stream.TopLevelID
+	/*
+		// ParentIDs
+		if len(w.stream.ParentIDs) == 0 {
+			return w.stream.StreamID.Hex()
+		}
+		return w.stream.ParentIDs[0].Hex()
+	*/
 }
 
 // PageTitle returns the Label for the stream being rendered

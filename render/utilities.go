@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -75,6 +77,8 @@ func WrapModalWithCloseButton(response *echo.Response, content string, options .
 
 func WrapForm(endpoint string, content string, options ...string) string {
 
+	optionMap := parseOptions(options...)
+
 	b := html.New()
 
 	// Form Wrapper
@@ -91,12 +95,15 @@ func WrapForm(endpoint string, content string, options ...string) string {
 
 	// Controls
 	b.Div()
-	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML("Save Changes").Close()
-	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML("Saving...").Close()
+	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
+	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
+	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML(submitLabel).Close()
+	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML(savingLabel).Close()
 
-	if !slice.Contains(options, "cancel-button:hide") {
+	if optionMap.GetString("cancel-button") != "hide" {
+		cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
 		b.Space()
-		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML(cancelLabel).Close()
 		b.Space()
 	}
 
@@ -196,7 +203,7 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	user, _ := renderer.getUser()
 	renderer.stream.SetAuthor(user)
 
-	// TODO: MEDIUM: Sort order??
+	// TODO: MEDIUM: Set Streamort order??
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
@@ -204,15 +211,6 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
 		}
 	}
-
-	/*/ If the stream was not saved by the "init" steps, then save it now
-	if stream.IsNew() {
-
-		streamService := factory.Stream()
-		if err := streamService.Save(stream, "Created"); err != nil {
-			return derp.Wrap(err, location, "Error saving stream stream to database")
-		}
-	}*/
 
 	// Execute additional "with-stream" steps
 	if !pipeline.IsEmpty() {
@@ -222,4 +220,17 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	}
 
 	return nil
+}
+
+// parseOptions parses a string of options into a map of key/value pairs
+func parseOptions(options ...string) maps.Map {
+
+	result := maps.New()
+
+	for _, item := range options {
+		parts := strings.Split(item, ":")
+		result.SetString(parts[0], parts[1])
+	}
+
+	return result
 }

@@ -1,0 +1,59 @@
+{
+	"templateId": "outbox-message",
+	"role": "outbox-item",
+	"icon": "message",
+	"label": "Short Post",
+	"description": "Single comment in the comments section of a page.",
+	"containedBy": ["outbox"],
+	"schema": {
+		"type": "object",
+		"properties": {
+			"description": {
+				"type": "string",
+				"description": "The raw contents of the comment (before any post-processing is performed)"
+			}
+		}
+	},
+	"states": {
+		"visible": {
+			"label": "Visible",
+			"description": "Comment is publicly visible"
+		}
+	},
+	"roles": {
+		"myself": {
+			"label": "Myself",
+			"decription": "Outbox messages can only be sent by the current user."
+		}
+	},
+	"actions": {
+		"view": {
+			"step": "view-html"
+		},
+		"create":{
+			"roles": ["myself"],
+			"steps": [
+				{
+					"step": "form-html",
+					"form": {
+						"type": "layout-vertical",
+						"children": [
+							{"type": "textarea", "path": "description"}
+						]
+					},
+					"options": ["cancel-button:hide", "submit-label:New Post", "saving-label:Posting..."]
+				},
+				{"step": "save"},
+				{"step": "publish"},
+				{"step": "trigger-event", "event":{"refreshPage":true}}
+			]
+		},
+		"delete": {
+			"roles":["myself"],
+			"steps": [
+				{"step": "delete"},
+				{"step": "publish"}
+			]
+		}
+	}
+}

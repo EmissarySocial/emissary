@@ -62,10 +62,13 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "view-html":
 		return NewViewHTML(stepInfo)
 
-	// STREAM-SPECIFIC STEPS
+		// STREAM-SPECIFIC STEPS
 
 	case "add-child":
 		return NewAddChildStream(stepInfo)
+
+	case "add-child-embed":
+		return NewAddChildEmbed(stepInfo)
 
 	case "add-sibling":
 		return NewAddSiblingStream(stepInfo)

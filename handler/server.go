@@ -42,6 +42,6 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 		b.Container("aside").Close()
 		b.Container("main")
 		b.Div().ID("main").Class("framed")
-		b.Div().ID("page").Data("hx-get", ctx.Request().URL.Path).Data("hx-trigger", "refreshPage from:window").Data("hx-target", "this").Data("hx-push-url", "false").EndBracket()
+		b.Div().ID("page").Data("hx-get", ctx.Request().URL.Path).Data("hx-trigger", "refreshPage from:body").Data("hx-target", "this").Data("hx-push-url", "false").EndBracket()
 	}
 }

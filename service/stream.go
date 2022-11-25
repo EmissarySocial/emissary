@@ -64,25 +64,25 @@ func (service *Stream) Close() {
  *******************************************/
 
 // New returns a new stream that uses the named template.
-func (service *Stream) New(parent *model.Stream, templateID string) (model.Stream, error) {
+func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
 
 	const location = "service.Stream.New"
 
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, derp.Wrap(err, location, "Invalid template", templateID)
+		return model.Stream{}, nil, derp.Wrap(err, location, "Invalid template", templateID)
 	}
 
 	result := model.NewStream()
 	result.TemplateID = templateID
-	result.ParentID = parent.StreamID
-	result.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	result.TopLevelID = topLevelID
+	result.ParentID = parentID
 	result.AsFeature = template.IsFeature()
 
 	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
 
-	return result, nil
+	return result, template, nil
 }
 
 // List returns an iterator containing all of the Streams who match the provided criteria
@@ -257,26 +257,6 @@ func (service *Stream) ListTopLevel() (data.Iterator, error) {
 		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
 	)
-}
-
-// ListAncestors returns all Streams that are ancestors of the provided stream.
-func (service *Stream) ListAncestors(stream *model.Stream) ([]model.Stream, error) {
-
-	result := make([]model.Stream, len(stream.ParentIDs))
-	it, err := service.List(exp.In("_id", stream.ParentIDs))
-
-	if err != nil {
-		return result, derp.Wrap(err, "service.Stream.ListAncestors", "Error accessing database", stream)
-	}
-
-	temp := model.NewStream()
-
-	for it.Next(&temp) {
-		result[len(temp.ParentIDs)] = temp
-		temp = model.NewStream()
-	}
-
-	return result, nil
 }
 
 // ListByParent returns all Streams that match a particular parentID
@@ -581,7 +561,7 @@ func (service *Stream) CreateAndSortFeatures(stream *model.Stream, templateIDs [
 
 		// If no matching streams were found, then let's create one now.
 		if !found {
-			newStream, err := service.New(stream, templateID)
+			newStream, _, err := service.New(stream.TopLevelID, stream.ParentID, templateID)
 
 			if err != nil {
 				return derp.Wrap(err, location, "Error creating new feature")

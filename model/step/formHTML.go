@@ -8,7 +8,8 @@ import (
 
 // Form represents an action-step that can update the data.DataMap custom data stored in a Stream
 type Form struct {
-	Form form.Element
+	Form    form.Element
+	Options []string
 }
 
 // NewForm returns a fully initialized Form object
@@ -21,7 +22,8 @@ func NewForm(stepInfo maps.Map) (Form, error) {
 	}
 
 	return Form{
-		Form: f,
+		Form:    f,
+		Options: stepInfo.GetSliceOfString("options"),
 	}, nil
 }
 

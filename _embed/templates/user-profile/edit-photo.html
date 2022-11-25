@@ -6,7 +6,7 @@
 		<input type="file" id="manual-upload" name="file" style="position:absolute; top:0px; left:0px; height:0.1px; width:0.1px; overflow:hidden; opacity:0;"/>
 	</form>
 
-	<div hx-get="/@me/preview-photo" hx-trigger="load, attachments-updated from:window" hx-target="this" hx-swap="innerHTML" hx-push-url="false" class="space-below"></div>
+	<div hx-get="/@me/preview-photo" hx-trigger="load, attachments-updated from:body" hx-target="this" hx-swap="innerHTML" hx-push-url="false" class="space-below"></div>
 	Drag an image file here to upload, or click to <label for="manual-upload" class="link" tabIndex="0">choose a file</label> from your device.
 	Size: 200x200 pixels, Formats: PNG, JPG, or WebP. 
 </div>

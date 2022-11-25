@@ -135,6 +135,12 @@ func (w Common) UseGlobalWrapper() bool {
 	return useGlobalWrapper(w.action.Steps)
 }
 
+// templateRole returns the the role that the current Template performs in the system.
+// Used for selecting eligible child templates.
+func (w Common) templateRole() string {
+	return ""
+}
+
 // UserCan returns TRUE if the current user has the specified permission.
 // Default implementation returns FALSE for all requests.
 func (w Common) UserCan(_ string) bool {
@@ -144,6 +150,10 @@ func (w Common) UserCan(_ string) bool {
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().UnixMilli()
+}
+
+func (w Common) TopLevelID() string {
+	return ""
 }
 
 /***************************

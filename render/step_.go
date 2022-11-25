@@ -17,6 +17,10 @@ type Step interface {
 func ExecutableStep(stepInfo step.Step) Step {
 
 	switch s := stepInfo.(type) {
+
+	case step.AddChildEmbed:
+		return StepAddChildEmbed(s)
+
 	case step.AddChildStream:
 		return StepAddChildStream(s)
 

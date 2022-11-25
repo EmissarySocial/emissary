@@ -26,8 +26,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 	const location = "render.StepAddChildStream.Get"
 
 	// This can only be used on a Stream Renderer
-	streamRenderer := renderer.(*Stream)
-	factory := streamRenderer.factory()
+	factory := renderer.factory()
 
 	// If a view has been specified, then use it to render a "create" page
 	if step.View != "" {
@@ -40,7 +39,7 @@ func (step StepAddChildStream) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, renderer.URL(), renderer.templateRole(), step.TemplateIDs)
 
 	return nil
 }
@@ -55,9 +54,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 
 	// Collect prerequisites
 	factory := renderer.factory()
-	streamRenderer := renderer.(*Stream)
-	context := streamRenderer.context()
-	parent := streamRenderer.stream
+	context := renderer.context()
 	templateID := context.QueryParam("templateId")
 
 	// If there is a list of eligible templates, then guarantee that the new template is in the list.
@@ -76,21 +73,16 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Cannot find template", templateID)
 	}
 
-	parentTemplate, err := factory.Template().Load(parent.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Cannot find parent template", parent.TemplateID)
-	}
-
 	// Verify that the new stream can be put into the parent stream
-	if !template.CanBeContainedBy(parentTemplate.Role) {
-		return derp.NewInternalError(location, "Template cannot be placed at top level", templateID)
+	if !template.CanBeContainedBy(renderer.templateRole()) {
+		return derp.NewInternalError(location, "Template cannot be placed here", templateID)
 	}
 
 	// Create the new child stream
 	child := model.NewStream()
-	child.ParentID = parent.StreamID
-	child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	child.ParentID = renderer.objectID()
+	child.TopLevelID = renderer.TopLevelID()
+	// ParentIDs: child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	child.TemplateID = templateID
 
 	// TODO: MEDIUM: sort order?
@@ -101,9 +93,9 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentTemplateID string, allowedTemplateIDs []string) {
+func modalAddStream(response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
 
-	templates := templateService.ListByContainerLimited(parentTemplateID, allowedTemplateIDs)
+	templates := templateService.ListByContainerLimited(parentRole, allowedTemplateIDs)
 
 	b := html.New()
 

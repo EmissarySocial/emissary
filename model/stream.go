@@ -10,9 +10,10 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID        primitive.ObjectID   `path:"streamId"       json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
-	ParentID        primitive.ObjectID   `path:"parentId"       json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	ParentIDs       []primitive.ObjectID `path:"parentIds"      json:"parentIds"           bson:"parentIds"`           // Slice of all parent IDs of this Stream
+	StreamID primitive.ObjectID `path:"streamId"       json:"streamId"            bson:"_id"`      // Unique identifier of this Stream.  (NOT USED PUBLICLY)
+	ParentID primitive.ObjectID `path:"parentId"       json:"parentId"            bson:"parentId"` // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	//	ParentIDs       []primitive.ObjectID `path:"parentIds"      json:"parentIds"           bson:"parentIds"`           // Slice of all parent IDs of this Stream
+	TopLevelID      string               `path:"topLevelId" json:"topLevelId" bson:"topLevelId"`                       // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
 	TemplateID      string               `path:"templateId"     json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	InReplyTo       string               `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this Stream is a reply to another Stream (or external document on the Interweb) then this field contains the ObjectID or URL of that other document.
 	StateID         string               `path:"stateId"        json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
@@ -45,10 +46,10 @@ func NewStream() Stream {
 	streamID := primitive.NewObjectID()
 
 	return Stream{
-		StreamID:    streamID,
-		Token:       streamID.Hex(),
-		ParentID:    primitive.NilObjectID,
-		ParentIDs:   make([]primitive.ObjectID, 0),
+		StreamID: streamID,
+		Token:    streamID.Hex(),
+		ParentID: primitive.NilObjectID,
+		// ParentIDS: ParentIDs:   make([]primitive.ObjectID, 0),
 		StateID:     "new",
 		Permissions: NewPermissions(),
 		Tags:        make([]string, 0),
@@ -59,9 +60,10 @@ func NewStream() Stream {
 func StreamSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"streamId":       schema.String{Format: "objectId"},
-			"parentId":       schema.String{Format: "objectId"},
-			"parentIds":      schema.Array{Items: schema.String{Format: "objectId"}},
+			"streamId":   schema.String{Format: "objectId"},
+			"parentId":   schema.String{Format: "objectId"},
+			"topLevelId": schema.String{Format: "objectId"},
+			// ParentIDs: "parentIds":      schema.Array{Items: schema.String{Format: "objectId"}},
 			"templateId":     schema.String{},
 			"inReplyTo":      schema.String{},
 			"stateId":        schema.String{},

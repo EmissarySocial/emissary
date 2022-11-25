@@ -41,6 +41,14 @@
 		"view": {
 			"step": "view-html"
 		},
+		"outbox-add": {
+			"roles": ["myself"],
+			"step": "add-child-embed"
+		},
+		"outbox-list": {
+			"roles": ["myself"],
+			"step": "view-html"
+		},
 		"inbox": {
 			"roles": ["myself"],
 			"steps": [
@@ -101,10 +109,6 @@
 					{"step": "delete"}
 				]}
 			]
-		},
-		"outbox-list": {
-			"roles": ["myself"],
-			"step": "view-html"
 		},
 		"subscriptions": {
 			"roles": ["myself"],

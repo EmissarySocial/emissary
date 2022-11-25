@@ -127,6 +127,10 @@ func (w Profile) service() service.ModelService {
 	return w._factory.User()
 }
 
+func (w Profile) templateRole() string {
+	return "outbox"
+}
+
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Profile) UserCan(actionID string) bool {
 

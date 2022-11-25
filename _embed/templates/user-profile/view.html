@@ -27,19 +27,13 @@
 				{{- end -}}
 
 				<div class="space-below">
-					<h1 class="p-name" style="margin-bottom:0px;">{{.DisplayName}}</h1>
-					<div class="gray50">{{.Username}}</div>
+					<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
+					<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
 					<div class="space-above">
 						<span class="p-note">{{.Description}}</span>
 						<a hx-get="/@me/edit-profile" role="button">Edit Profile</a>
 					</div>
 				</div>
-
-				{{- if .UserCan "edit-profile" -}}
-					<div class="space-below">
-						<button hx-post="/signout" hx-target="body">Sign Out</button>
-					</div>
-				{{- end -}}
 
 				<div class="space-below align-left">
 
@@ -56,10 +50,21 @@
 					{{- end -}}
 				</div>
 
+				{{- if .UserCan "edit-profile" -}}
+					<div class="space-below">
+						<button hx-post="/signout" hx-target="body">Sign Out</button>
+					</div>
+				{{- end -}}
+
 			</div>
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4" style="border-left: solid 1px var(--gray20); padding-left:20px;">
-				<h3>Activity Feed</h3>
+				<h2>My Timeline</h2>
+
+				{{if .UserCan "outbox-add" -}}
+					<div hx-get="/@me/outbox-add" hx-trigger="load" hx-target="this" hx-swap="innerHTML"></div>
+				{{- end -}}
+
 				{{ .View "outbox-list"}}
 			</div>
 		</div>

@@ -9,7 +9,8 @@ import (
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepForm struct {
-	Form form.Element
+	Form    form.Element
+	Options []string
 }
 
 // Get displays a form where users can update stream data
@@ -28,7 +29,7 @@ func (step StepForm) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Wrap result as a modal dialog and return to caller
-	io.WriteString(buffer, WrapForm(renderer.URL(), result))
+	io.WriteString(buffer, WrapForm(renderer.URL(), result, step.Options...))
 	return nil
 }
 

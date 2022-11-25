@@ -25,6 +25,7 @@ type Renderer interface {
 	Protocol() string                    // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
 	Hostname() string                    // Hostname for this server
 	Token() string                       // URL Token of the record being rendered
+	TopLevelID() string                  // ID of the Top-Level item to highlight in the navigation.
 	PageTitle() string                   // Human-friendly title to put at the top of the page.
 	Permalink() string                   // Permanent link to the stream being rendered
 	URL() string                         // Complete URL of the requested page
@@ -51,6 +52,7 @@ type Renderer interface {
 	factory() Factory                   // The service factory
 	context() *steranko.Context         // The request context embedded in the Renderer
 	service() service.ModelService      // The abstracted ModelService the backs this Renderer
+	templateRole() string               // Returns the role that the current template plays in the system. Used for choosing child template.
 	template() *model.Template          // The template used for this renderer (if any)
 	authorization() model.Authorization // retrieves the user's authorization data from the context
 	schema() schema.Schema              // Schema to use to validate this Object

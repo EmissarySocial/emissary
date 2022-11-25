@@ -91,7 +91,8 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 	// Create the new Stream
 	stream := model.NewStream()
 	stream.ParentID = parent.StreamID
-	stream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	stream.TopLevelID = parent.TopLevelID
+	// ParentIDs: stream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	stream.TemplateID = templateID
 
 	// TODO: MEDIUM: sort order?
