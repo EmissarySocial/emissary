@@ -141,7 +141,9 @@ func tweetAsStream(tweet twitter.Tweet) model.Stream {
 
 	// Return stream
 	stream := model.NewStream()
-	stream.Description = tweet.Text
+	stream.Document = model.DocumentLink{
+		Summary: tweet.Text,
+	}
 	stream.Origin = model.OriginLink{
 		Source:     model.LinkSourceTwitter,
 		URL:        twitterURL(tweet),

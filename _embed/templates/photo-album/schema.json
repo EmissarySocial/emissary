@@ -1,121 +1,109 @@
 {
-	"templateId": "photo-album",
-	"role": "photo-album",
+	"templateId":"photo-album",
+	"role":"photo-album",
 	"containedBy": ["top", "folder"],
-	"label": "Photo Album",
-	"description": "A collection of photographs",
-	"icon": "pictures",
-	"childSortType": "journal.createDate",
-	"childSortDirection": "DESC",
+	"label":"Photo Album",
+	"description":"A collection of photographs",
+	"icon":"pictures",
+	"childSortType":"journal.createDate",
+	"childSortDirection":"DESC",
 	"schema": {
-		"type": "object",
+		"type":"object",
 		"properties": {
-			"label": {
-				"type": "string",
-				"description": "The human-readable heading for this photo album"
-			},
-			"description": {
-				"type": "string",
-				"description": "Text description at top of page"
-			}
+			"label": {"type":"string", "description":"The human-readable heading for this photo album"},
+			"summary": {"type":"string","description":"Text description at top of page"}
 		},
 		"required": []
 	},
 	"states": {
 		"default": {
-			"label": "Default State",
-			"description": "Photo Albums only have one state"
+			"label":"Default State",
+			"description":"Photo Albums only have one state"
 		}
 	},
 	"roles": {
 		"owner": {
-			"label": "Domain Owner",
-			"decription": "Full control"
+			"label":"Domain Owner",
+			"decription":"Full control"
 			}, 
 		"editor": {
-			"label": "Editor",
-			"description": "Can make changes to this article."
+			"label":"Editor",
+			"description":"Can make changes to this article."
 		},
 		"readonly": {
-			"label": "Read Only Access",
-			"description": "Can read this article, but cannot make changes"
+			"label":"Read Only Access",
+			"description":"Can read this article, but cannot make changes"
 		}
 	},
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {
-					"label": "New Photo Album", 
-					"description": "Enter a brief description here. 🌈"
+				{"step":"set-data", "values": {
+					"label":"New Photo Album", 
+					"description":"Enter a brief description here. 🌈"
 				}}
 			]
 		},
 		"view": {
 			"roles": ["owner", "editor", "viewer"],
-			"step": "view-html"},
+			"step":"view-html"},
 		"children": {
 			"roles":["owner", "editor", "viewer"],
-			"step": "view-html"},
+			"step":"view-html"},
 		"edit": {
 			"roles": ["owner", "editor"],
-			"step": "view-html"
+			"step":"view-html"
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "as-modal", "steps": [
+				{"step":"as-modal", "steps": [
 					{
-					"step": "form-html",
+					"step":"form-html",
 					"form": {
-						"type": "layout-vertical",
-						"label": "Edit Photo Album",
-						"description": "",
-						"children": [{
-							"type": "text",
-							"label": "Label",
-							"path": "label"
-						},{
-							"type": "textarea",
-							"label": "Description",
-							"path": "description",
-							"cssClass": "height300"
-						}]
+						"type":"layout-vertical",
+						"label":"Edit Photo Album",
+						"description":"",
+						"children": [
+							{"type":"text", "path":"document.label", "label":"Label"},
+							{"type":"textarea", "path":"document.summary", "label":"Summary", "cssClass":"height300"}
+						]
 					}},
-					{"step": "save", "comment": "Updated by {{.Author}}"}
+					{"step":"save", "comment":"Updated by {{.Author}}"}
 				]}
 			]
 		},
 		"attachments": {
 			"roles": ["owner", "editor"],
 			"steps": [{
-				"step": "add-child",
-				"template": "photograph",
+				"step":"add-child",
+				"template":"photograph",
 				"with-child": [
-					{"step": "upload-attachments"},
-					{"step": "set-thumbnail", "path":"thumbnailImage"},
-					{"step": "save", "comment": "Created by {{.Author}}"},
-					{"step": "add-child", "template": "comment-group", "with-child":[
-						{"step": "save", "comment": "Created by {{.Author}}"}
+					{"step":"upload-attachments"},
+					{"step":"set-thumbnail", "path":"thumbnailImage"},
+					{"step":"save", "comment":"Created by {{.Author}}"},
+					{"step":"add-child", "template":"comment-group", "with-child":[
+						{"step":"save", "comment":"Created by {{.Author}}"}
 					]},
-					{"step": "publish"}
+					{"step":"publish"}
 				]},
-				{"step": "refresh-page"}
+				{"step":"refresh-page"}
 			]
 		},
 		"sharing": {
 			"roles": ["owner", "editor"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Album?", "message": "Select who can view and comment on these photos."},
-					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Album?", "message":"Select who can view and comment on these photos."},
+					{"step":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
 		},
 		"delete": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "delete", "title": "Delete this Photo Album?", "message": "This will PERMANENTLY DELETE everyting in this album."},
-				{"step": "forward-to", "url": "/{{.ParentID}}"}
+				{"step":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
+				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		}
 	}

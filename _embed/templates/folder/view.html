@@ -23,8 +23,8 @@
 	{{- end -}}
 
 	<h1 class="p-name">{{.Label}}</h1>
-	{{- if ne "" .Description -}}
-		<div class="space-below b-summary">{{.Description}}</div>
+	{{- if ne "" .Summary -}}
+		<div class="space-below b-summary">{{.Summary}}</div>
 	{{- end -}}
 
 	{{- if eq (.Data "format") "TABLE" -}}
@@ -32,7 +32,7 @@
 			<thead>
 				<tr>
 					<th>Name</th>
-					<th>Description</th>
+					<th>Summary</th>
 					<th>Date</th>
 				</tr>
 			</thead>
@@ -41,7 +41,7 @@
 					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
 						<td>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
-						<td class="h-summary">{{.Description}}</td>
+						<td class="h-summary">{{.Summary}}</td>
 						<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
 					</tr>
 				{{- end -}}
@@ -57,14 +57,14 @@
 				<article class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5 h-entry">
 					<div class="draggable clickable card" hx-get="/{{.Token}}" href="/{{.Token}}">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						{{- if ne .ThumbnailImage "" -}}
+						{{- if ne .ImageURL "" -}}
 							<picture loading="lazy" style="aspect-ratio: 4 / 3;">
-								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=400&height=300"/>
-								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=400&height=300"/>
+								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
+								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
 							</picture>
 						{{- end -}}
 						<h3 role="link p-name">{{.Label}}</h3>
-						<p class="p-summary">{{.Description}}</p>
+						<p class="p-summary">{{.Summary}}</p>
 					</div>
 				</article>
 			{{- end -}}
@@ -81,10 +81,10 @@
 				<article class="draggable pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4 h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">
 					<input type="hidden" name="keys" value="{{.StreamID}}"/>
 					<div class="card" role="link">
-						{{- if ne .ThumbnailImage "" -}}
+						{{- if ne .ImageURL "" -}}
 						<picture loading="lazy" style="aspect-ratio: 4 / 3;">
-							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.webp?width=400&height=300"/>
-							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ThumbnailImage}}.jpg?width=400&height=300"/>
+							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
+							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
 						</picture>
 						{{- end -}}
 						<div class="text text-lg align-center p-name">{{.Label}}</div>

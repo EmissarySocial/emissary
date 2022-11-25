@@ -165,8 +165,8 @@ func (w Profile) DisplayName() string {
 	return w.user.DisplayName
 }
 
-func (w Profile) Description() string {
-	return w.user.Description
+func (w Profile) StatusMessage() string {
+	return w.user.StatusMessage
 }
 
 func (w Profile) ImageURL() string {

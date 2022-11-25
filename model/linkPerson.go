@@ -38,6 +38,12 @@ func PersonLinkSchema() schema.Element {
 	}
 }
 
+// IsEmpty returns TRUE if this record does not link to an internal
+// or external person (if the InternalID, ProfileURL, and Name are all empty)
+func (person PersonLink) IsEmpty() bool {
+	return person.InternalID.IsZero() && (person.ProfileURL == "") && (person.Name == "")
+}
+
 // Link returns a Link to this person
 func (person PersonLink) Link() Link {
 

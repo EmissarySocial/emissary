@@ -8,7 +8,7 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"description": {
+			"summary": {
 				"type": "string",
 				"description": "The raw contents of the comment (before any post-processing is performed)"
 			}
@@ -38,7 +38,7 @@
 					"form": {
 						"type": "layout-vertical",
 						"children": [
-							{"type": "textarea", "path": "description"}
+							{"type": "textarea", "path": "document.summary"}
 						]
 					},
 					"options": ["cancel-button:hide", "submit-label:New Post", "saving-label:Posting..."]

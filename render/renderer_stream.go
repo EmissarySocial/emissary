@@ -165,18 +165,11 @@ func (w Stream) ParentID() string {
 
 func (w Stream) TopLevelID() string {
 	return w.stream.TopLevelID
-	/*
-		// ParentIDs
-		if len(w.stream.ParentIDs) == 0 {
-			return w.stream.StreamID.Hex()
-		}
-		return w.stream.ParentIDs[0].Hex()
-	*/
 }
 
 // PageTitle returns the Label for the stream being rendered
 func (w Stream) PageTitle() string {
-	return w.stream.Label
+	return w.stream.Document.Label
 }
 
 // StateID returns the current state of the stream being rendered
@@ -194,42 +187,42 @@ func (w Stream) Token() string {
 	return w.stream.Token
 }
 
+// Document returns the DocumentLink record for this stream
+func (w Stream) Document() model.DocumentLink {
+	return w.stream.Document
+}
+
 // Label returns the Label for the stream being rendered
 func (w Stream) Label() string {
-	return w.stream.Label
+	return w.stream.Document.Label
 }
 
-// Description returns the description of the stream being rendered
-func (w Stream) Description() string {
-	return w.stream.Description
+// Summary returns the description of the stream being rendered
+func (w Stream) Summary() string {
+	return w.stream.Document.Summary
 }
 
-// DescriptionHTML returns the description of the stream being rendered
-func (w Stream) DescriptionHTML() template.HTML {
-	return template.HTML(w.stream.Description)
+// SummaryHTML returns the description of the stream being rendered
+func (w Stream) SummaryHTML() template.HTML {
+	return template.HTML(w.stream.Document.Summary)
 }
 
-// DescriptionSummary returns a plaintext summary (<200 characters) of the stream's description
-func (w Stream) DescriptionSummary() string {
-	return htmlconv.Summary(w.stream.Description)
+// SummarySummary returns a plaintext summary (<200 characters) of the stream's description
+func (w Stream) ShortSummary() string {
+	return htmlconv.Summary(w.stream.Document.Summary)
 }
 
-func (w Stream) Origin() model.OriginLink {
-	return w.stream.Origin
+// ImageURL returns the thumbnail image URL of the stream being rendered
+func (w Stream) ImageURL() string {
+	return w.stream.Document.ImageURL
 }
 
-func (w Stream) OriginURL() string {
-	if w.stream.Origin.URL != "" {
-		return w.stream.Origin.URL
-	}
-
-	if !w.stream.Origin.InternalID.IsZero() {
-		return "/" + w.stream.Origin.InternalID.Hex()
-	}
-
-	return "/"
+// Permalink returns a complete URL for this stream
+func (w Stream) Permalink() string {
+	return w.Protocol() + w.Hostname() + "/" + w.stream.StreamID.Hex()
 }
 
+// Author returns the Author record for this stream
 func (w Stream) Author() model.PersonLink {
 	return w.stream.Author
 }
@@ -287,24 +280,9 @@ func (w Stream) Rank() int {
 	return w.stream.Rank
 }
 
-// ThumbnailImage returns the thumbnail image URL of the stream being rendered
-func (w Stream) ThumbnailImage() string {
-	return w.stream.ThumbnailImage
-}
-
-// Permalink returns a complete URL for this stream
-func (w Stream) Permalink() string {
-	return w.Protocol() + w.Hostname() + "/" + w.stream.StreamID.Hex()
-}
-
 // Data returns the custom data map of the stream being rendered
 func (w Stream) Data(value string) any {
 	return w.stream.Data[value]
-}
-
-// Tags returns the tags of the stream being rendered
-func (w Stream) Tags() []string {
-	return w.stream.Tags
 }
 
 // HasParent returns TRUE if the stream being rendered has a parend objec
@@ -314,17 +292,15 @@ func (w Stream) HasParent() bool {
 
 // IsReply returns TRUE if this stream is marked as a reply to another stream or resource
 func (w Stream) IsReply() bool {
-	return (w.stream.InReplyTo != "")
+	return (w.stream.ReplyTo.IsEmpty())
 }
 
-// ThreadID returns the unique ID of the parent thread for this stream.
-// If this stream is a reply to a previous stream, then that "in-reply-to"
-// ID is returned.  Otherwise, the StreamID of this Stream is returned.
-func (w Stream) ThreadID() string {
-	if replyID := w.stream.InReplyTo; replyID != "" {
-		return replyID
-	}
-	return w.stream.StreamID.Hex()
+func (w Stream) ReplyToURL() string {
+	return w.stream.ReplyTo.URL
+}
+
+func (w Stream) ReplyToID() primitive.ObjectID {
+	return w.stream.ReplyTo.InternalID
 }
 
 // IsEmpty returns TRUE if the stream is an empty placeholder.

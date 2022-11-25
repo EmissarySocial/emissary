@@ -54,7 +54,6 @@ type Factory struct {
 	folderService       service.Folder
 	inboxService        service.Inbox
 	mentionService      service.Mention
-	outboxService       service.Outbox
 	streamService       service.Stream
 	streamDraftService  service.StreamDraft
 	subscriptionService service.Subscription
@@ -140,10 +139,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionInbox),
 	)
 
-	factory.outboxService = service.NewInbox(
-		factory.collection(CollectionStream),
-	)
-
 	// Start the Subscription Service
 	factory.subscriptionService = service.NewSubscription(
 		factory.collection(CollectionSubscription),
@@ -201,7 +196,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Refresh cached services
 		factory.inboxService.Refresh(factory.collection(CollectionInbox))
-		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
@@ -210,7 +204,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.realtimeBroker.Refresh()
-		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
@@ -345,11 +338,6 @@ func (factory *Factory) Mention() *service.Mention {
 	return &result
 }
 
-// Outbox returns a fully populated Outbox service
-func (factory *Factory) Outbox() *service.Outbox {
-	return &factory.outboxService
-}
-
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
 	return &factory.streamService
@@ -415,7 +403,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
-	return federatingdb.NewDatabase(factory, factory.User(), factory.Inbox(), factory.Outbox(), factory.Hostname())
+	return federatingdb.NewDatabase(factory, factory.User(), factory.Inbox(), factory.Stream(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() activitypub.Clock {

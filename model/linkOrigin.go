@@ -50,6 +50,10 @@ func OriginLinkSchema() schema.Element {
 	}
 }
 
+func (origin OriginLink) IsEmpty() bool {
+	return origin.InternalID.IsZero() && (origin.URL == "")
+}
+
 // Link returns a Link to this origin
 func (origin OriginLink) Link() Link {
 	return Link{

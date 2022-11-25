@@ -131,7 +131,7 @@ func (service *Layout) loadLayouts() error {
 
 			// System locations (except for "static" and "global") have a schema.json file
 			if filename != "global" {
-				if err := loadModelFromFilesystem(subFilesystem, &layout); err != nil {
+				if err := loadModelFromFilesystem(subFilesystem, &layout, filename); err != nil {
 					return derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Schema", location, filename)
 				}
 			}

@@ -7,9 +7,11 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type": "string"},
-			"description": {"type": "string"},
-			"thumbnailImage": {"type": "string"}
+			"document": {"type":"object", "properties": {
+				"label": {"type": "string"},
+				"summary": {"type": "string"},
+				"imageUrl": {"type": "string"}
+			}}
 		},
 		"required": []
 	},
@@ -51,11 +53,11 @@
 						"children": [{
 							"type": "text",
 							"label": "Title",
-							"path": "label"
+							"path": "document.label"
 						},{
 							"type": "textarea",
-							"label": "Description",
-							"path": "description"
+							"label": "Summary",
+							"path": "document.summary"
 						}]
 					}},
 					{"step": "save", "comment": "Updated by {{.Author}}"}

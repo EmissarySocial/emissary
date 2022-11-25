@@ -9,19 +9,16 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type":"string"},
-			"description": {"type":"string"},
+			"document": {"type":"object", "properties": {
+				"label": {"type":"string"},
+				"summary": {"type":"string"}
+			}},
 			"data": {"type": "object", "properties": {
 				"url": {"type": "string", "format":"url"}
 			}}
 		}
 	},
-	"states": {
-		"default": {
-			"label": "Default",
-			"description": "Folders only have one state"
-		}
-	},
+	"states": {},
 	"roles": {
 		"owner": {},
 		"viewer":{}
@@ -39,8 +36,8 @@
 						"form": {
 							"type": "layout-vertical",
 							"children": [
-								{"type": "text", "label": "Label", "path": "label"},
-								{"type": "textarea", "label": "Description", "path": "description"},
+								{"type": "text", "label": "Label", "path": "document.label"},
+								{"type": "textarea", "label": "Summary", "path": "document.description"},
 								{"type": "text", "label": "URL", "path": "data.url"}
 							]
 						}

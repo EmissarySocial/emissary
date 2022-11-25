@@ -7,10 +7,12 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"description": {
-				"type": "string",
-				"description": "The raw contents of the comment (before any post-processing is performed)"
-			}
+			"document": {"type":"object", "properties":{
+				"summary": {
+					"type": "string",
+					"description": "The raw contents of the comment (before any post-processing is performed)"
+				}
+			}}
 		}
 	},
 	"states": {
@@ -65,7 +67,7 @@
 						"children": [{
 							"type": "text",
 							"label": "Edit this Comment",
-							"path": "description"
+							"path": "document.summary"
 						}]
 					}
 				}, 

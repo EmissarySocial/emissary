@@ -44,12 +44,11 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 	stream := model.NewStream()
 
 	for children.Next(&stream) {
-		permalink := renderer.Protocol() + renderer.Hostname() + "/" + stream.StreamID.Hex()
 		result.Items = append(result.Items, &feeds.Item{
-			Title:       stream.Label,
-			Description: stream.Description,
+			Title:       stream.Document.Label,
+			Description: stream.Document.Summary,
 			Link: &feeds.Link{
-				Href: permalink,
+				Href: stream.Document.URL,
 			},
 			Author: &feeds.Author{
 				Name:  stream.Author.Name,

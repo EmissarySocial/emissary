@@ -7,10 +7,10 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {
-				"type": "string",
-				"description": "The human-readable title for this article"
-			}
+			"document": {"type":"object", "properties": {
+				"label": {"type":"string", "description": "The human-readable title for this article"},
+				"summary": {"type":"string"}
+			}}
 		}
 	},
 	"states": {
@@ -39,7 +39,7 @@
 		"edit": {
 			"roles": ["owner", "author"],
 			"steps": [
-				{"step": "set-data", "paths": "label"},
+				{"step": "set-data", "paths": "document.label"},
 				{"step": "save", "message": "Updated by {{.Author}}"}
 			]
 		},
@@ -52,7 +52,7 @@
 				"step": "add-child", 
 				"template": "comment",
 				"with-child": [
-					{"step": "set-data", "paths":["description"]},
+					{"step": "set-data", "paths":["document.summary"]},
 					{"step": "save", "comment": "New Comment By"},
 					{"step": "publish"}
 				]

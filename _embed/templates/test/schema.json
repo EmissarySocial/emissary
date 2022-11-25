@@ -7,8 +7,10 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type": "string"},
-			"description": {"type": "string"},
+			"document": {"type":"object", "properties":{
+				"label": {"type": "string"},
+				"summary": {"type": "string"}
+			}},
 			"stateId": {"type": "string", "enum": ["unpublished", "published"]},
 			"data": {"type": "object", "properties":{
 				"table": {
@@ -45,7 +47,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"label": "New Table Test Case"}},
+				{"step": "set-data", "values": {"document.label": "New Table Test Case"}},
 				{"step": "set-state", "state": "unpublished"}
 			]
 		},
@@ -76,15 +78,10 @@
 							"type": "layout-vertical",
 							"label": "Article Properties",
 							"description": "This will update the object in this state",
-							"children": [{
-								"type": "text",
-								"label": "Label",
-								"path": "label"
-							},{
-								"type": "textarea",
-								"label": "Description",
-								"path": "description"
-							}]
+							"children": [
+								{"type": "text", "path": "document.label", "label": "Label"},
+								{"type": "textarea", "path": "document.summary", "label": "Summary"}
+							]
 						}
 					}]
 				},

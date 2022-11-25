@@ -10,7 +10,7 @@ type Database struct {
 	factory       Factory
 	userService   *service.User
 	inboxService  *service.Inbox
-	outboxService *service.Outbox
+	streamService *service.Stream
 
 	// Enables mutations. A sync.Mutex per ActivityPub ID.
 	locks *sync.Map
@@ -19,12 +19,12 @@ type Database struct {
 	hostname string
 }
 
-func NewDatabase(factory Factory, userService *service.User, inboxService *service.Inbox, outboxService *service.Outbox, hostname string) *Database {
+func NewDatabase(factory Factory, userService *service.User, inboxService *service.Inbox, streamService *service.Stream, hostname string) *Database {
 	return &Database{
 		factory:       factory,
 		userService:   userService,
 		inboxService:  inboxService,
-		outboxService: outboxService,
+		streamService: streamService,
 		locks:         &sync.Map{},
 		hostname:      hostname,
 	}

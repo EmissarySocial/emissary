@@ -7,8 +7,10 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"label": {"type": "string", "default": "Buy Now"},
-			"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
+			"document": {"type":"object", "properties":{
+				"label": {"type": "string", "default": "Buy Now"},
+				"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
+			}}
 		}
 	},
 	"states": {

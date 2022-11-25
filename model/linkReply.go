@@ -23,6 +23,17 @@ func ReplyToLinkSchema() schema.Element {
 	}
 }
 
+func (replyTo ReplyToLink) IsInternal() bool {
+	return !replyTo.InternalID.IsZero()
+
+}
+
+// IsEmpty returns TRUE if this record does not link to an internal
+// or external document (if both the InternalID and the URL are empty)
+func (replyTo ReplyToLink) IsEmpty() bool {
+	return replyTo.InternalID.IsZero() && (replyTo.URL == "")
+}
+
 // Link returns a Link to the document that is being replied to
 func (replyTo ReplyToLink) Link() Link {
 

@@ -126,47 +126,6 @@ func (step StepAddChildEmbed) Post(renderer Renderer) error {
 
 	// Done.
 	return nil
-
-	/*
-		// Collect prerequisites
-		factory := renderer.factory()
-		context := renderer.context()
-		templateID := context.QueryParam("templateId")
-
-		// If there is a list of eligible templates, then guarantee that the new template is in the list.
-		if len(step.TemplateIDs) > 0 {
-			if templateID == "" {
-				templateID = step.TemplateIDs[0]
-			} else if !compare.Contains(step.TemplateIDs, templateID) {
-				return derp.NewBadRequestError(location, "Cannot create new template of this kind", templateID)
-			}
-		}
-
-		// Try to load the template for the new stream
-		template, err := factory.Template().Load(templateID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Cannot find template", templateID)
-		}
-
-		// Verify that the new stream can be put into the parent stream
-		if !template.CanBeContainedBy(renderer.templateRole()) {
-			return derp.NewInternalError(location, "Template cannot be placed here", templateID)
-		}
-
-		// Create the new child stream
-		child := model.NewStream()
-		child.ParentID = renderer.objectID()
-		child.TopLevelID = renderer.TopLevelID()
-		// ParentIDs: child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
-		child.TemplateID = templateID
-
-		// TODO: MEDIUM: sort order?
-		// TODO: MEDIUM: presets defined by templates?
-
-		return finalizeAddStream(factory, context, &child, template, step.WithChild)
-	*/
-	return nil
 }
 
 func (step StepAddChildEmbed) getBestTemplate(templates []form.LookupCode, templateID string) string {

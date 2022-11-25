@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -85,7 +86,21 @@ func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templ
 	return result, template, nil
 }
 
-// List returns an iterator containing all of the Streams who match the provided criteria
+// Query returns an slice containing all of the Streams that match the provided criteria
+func (service *Stream) Query(criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
+	result := make([]model.Stream, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// QuerySummary returns an slice containing StreamSummaries for all of the Streams that match the provided criteria
+func (service *Stream) QuerySummary(criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
+	result := make([]model.StreamSummary, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// List returns an iterator containing all of the Streams that match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
 }
@@ -133,16 +148,20 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		stream.Token = stream.StreamID.Hex()
 	}
 
-	// Clean the value before saving
+	// RULE: Calculate the Permalink URL for this stream
+	stream.Document.URL = domain.Protocol(service.hostName) + service.hostName + "/" + stream.StreamID.Hex()
+
+	// Clean the value (using the global stream schema) before saving
 	if err := service.Schema().Clean(stream); err != nil {
 		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using StreamSchema", stream)
 	}
 
-	// Clean the value before saving
+	// Clean the value (using the template-specific schema) before saving
 	if err := template.Schema.Clean(stream); err != nil {
 		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using TemplateSchema", stream)
 	}
 
+	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
@@ -150,7 +169,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
 		service.streamUpdateChannel <- *stream
-		// fmt.Println("streamService.Save: sent update update to stream: " + stream.Label)
 	}()
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
@@ -465,6 +483,19 @@ func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int,
 // MaxRank returns the maximum rank of all children of a stream
 func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID) (int, error) {
 	return queries.MaxRank(ctx, service.collection, parentID)
+}
+
+/*******************************************
+ * Outbox Queries (may move to separate service later)
+ *******************************************/
+
+func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
+
+	const location = "service.Stream.Outbox"
+
+	criteria = criteria.AndEqual("ownerId", ownerID)
+
+	return service.QuerySummary(criteria, options...)
 }
 
 /*******************************************

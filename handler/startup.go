@@ -229,7 +229,9 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		if body.GetBool("home") {
 			stream := model.NewStream()
-			stream.Label = "Welcome"
+			stream.Document = model.DocumentLink{
+				Label: "Welcome",
+			}
 			stream.TemplateID = "article-editorjs"
 			stream.StateID = "published"
 			stream.Token = "home"
@@ -238,7 +240,9 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		if body.GetBool("blog") {
 			stream := model.NewStream()
-			stream.Label = "Blog"
+			stream.Document = model.DocumentLink{
+				Label: "Blog",
+			}
 			stream.TemplateID = "folder"
 			stream.Token = "blog"
 			stream.Data["format"] = "CARDS"
@@ -248,7 +252,9 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		if body.GetBool("album") {
 			stream := model.NewStream()
-			stream.Label = "Photo Album"
+			stream.Document = model.DocumentLink{
+				Label: "Photo Album",
+			}
 			stream.TemplateID = "photo-album"
 			stream.Token = "photos"
 			streams = append(streams, stream)

@@ -206,13 +206,10 @@ func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string)
 	}
 
 	// Copy data from draft to production
-	stream.Label = draft.Label
-	stream.Description = draft.Description
+	stream.Document = draft.Document
 	stream.Content = draft.Content
 	stream.Data = draft.Data
 	stream.StateID = stateID
-	stream.Tags = draft.Tags
-	stream.ThumbnailImage = draft.ThumbnailImage
 	stream.Token = draft.Token
 	stream.Journal.DeleteDate = 0 // just in case...
 

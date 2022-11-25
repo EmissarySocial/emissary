@@ -149,7 +149,7 @@ func (service *Template) loadTemplates() error {
 			template := model.NewTemplate(directory.Name(), service.funcMap)
 
 			// System locations (except for "static" and "global") have a schema.json file
-			if err := loadModelFromFilesystem(subdirectory, &template); err != nil {
+			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
 				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory)
 			}
 
