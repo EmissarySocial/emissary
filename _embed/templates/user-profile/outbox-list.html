@@ -1,21 +1,33 @@
-{{- $children := .Outbox.Top60.ByPublishDate.Reverse.Slice -}}
+{{- $outbox := .Outbox.Top60.ByPublishDate.Reverse.Slice -}}
 
-{{- range $children -}}
-	<hr style="border:none; border-bottom:solid 1px var(--gray20); margin:20px 0px;">
-	<a class="h-entry" target="_blank" style="display:grid; column-gap:20px; row-gap:20px; grid-template-columns: 60px 1fr; margin-bottom:20px;" href="{{.Origin.URL}}">
-		<div style="height:60px; width:60px; border:solid 1px var(--gray30); border-radius:5px;">
-			{{- if ne .Document.ImageURL ""}}
-				<img src="{{.Document.ImageURL}}" style="object-fit:cover;">
-			{{- end -}}
-		</div>
-		<div>
-			<div class="h-name bold black">{{.Document.Label}}</div>
-			<div class="h-summary black">{{.Document.Summary}}</div>
-			<div class="p-author h-card gray50">
-				<span class="p-name">{{.Author.Name}}</span>
-				&middot;
-				<span class="p-published">{{.PublishDate | humanizeTime}}</span>
+{{- if ne 0 (len $outbox) -}}
+
+	{{- $lastIndex := subtract (len $outbox) 1 -}}
+	{{- $last := index $outbox $lastIndex -}}
+	<div hx-get="{{.ActivityPubProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
+
+	{{- range $outbox -}}
+		<hr style="border:none; border-bottom:solid 1px var(--gray20); margin:20px 0px;">
+		<a class="h-entry" target="_blank" style="display:grid; column-gap:20px; row-gap:20px; grid-template-columns: 60px 1fr; margin-bottom:20px;" href="{{.Origin.URL}}">
+			<div style="height:60px; width:60px;">
+				{{- if ne .Document.ImageURL ""}}
+					<img src="{{.Document.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
+				{{- else if ne .Author.ImageURL ""}}
+					<img src="{{.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
+				{{- end -}}
 			</div>
-		</div>
-	</a>
+			<div>
+				<div class="p-author h-card text-sm gray50" style="margin:0px;">
+					<span class="p-name">{{.Author.Name}}</span>
+					&middot;
+					<span class="p-published">{{.PublishDate | humanizeTime}}</span>
+				</div>
+				<div class="h-name bold black">{{.Document.Label}}</div>
+				<div class="h-summary black">{{.Document.Summary}}</div>
+			</div>
+		</a>
+	{{- end -}}
+
+	<div id="loading">Just a sec...</div>
+
 {{- end -}}

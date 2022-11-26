@@ -44,8 +44,7 @@
 		"outbox-add": {
 			"roles": ["myself"],
 			"steps": [
-				{"step": "add-child-embed"},
-				{"step": "trigger-event", "event":{}}
+				{"step": "add-child-embed"}
 			]
 		},
 		"outbox-list": {

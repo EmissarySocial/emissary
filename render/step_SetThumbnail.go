@@ -39,7 +39,16 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 	for _, attachment := range attachments {
 
 		if attachment.MimeCategory() == "image" {
-			err := path.Set(renderer.object(), step.Path, attachment.AttachmentID.Hex())
+
+			imageURL := renderer.Permalink()
+
+			if objectType == "User" {
+				imageURL = imageURL + "/avatar/" + attachment.AttachmentID.Hex()
+			} else {
+				imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
+			}
+
+			err := path.Set(renderer.object(), step.Path, imageURL)
 			return err
 		}
 	}

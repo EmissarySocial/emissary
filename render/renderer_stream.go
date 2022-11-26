@@ -219,7 +219,7 @@ func (w Stream) ImageURL() string {
 
 // Permalink returns a complete URL for this stream
 func (w Stream) Permalink() string {
-	return w.Protocol() + w.Hostname() + "/" + w.stream.StreamID.Hex()
+	return w.Host() + "/" + w.stream.StreamID.Hex()
 }
 
 // Author returns the Author record for this stream

@@ -107,7 +107,7 @@ func (w Profile) PageTitle() string {
 }
 
 func (w Profile) Permalink() string {
-	return ""
+	return w.Host() + "/@" + w.user.UserID.Hex()
 }
 
 func (w Profile) Token() string {

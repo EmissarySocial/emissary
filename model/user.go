@@ -260,10 +260,13 @@ func (user *User) ActivityPubURL(host string) string {
 }
 
 func (user *User) ActivityPubAvatarURL(host string) string {
-	if user.ImageURL == "" {
-		return ""
-	}
-	return host + "/@" + user.UserID.Hex() + "/avatar/" + user.ImageURL
+	return user.ImageURL
+	/*
+		if user.ImageURL == "" {
+			return ""
+		}
+		return host + "/@" + user.UserID.Hex() + "/avatar/" + user.ImageURL
+	*/
 }
 
 func (user *User) ActivityPubInboxURL(host string) string {
