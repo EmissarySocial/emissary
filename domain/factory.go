@@ -469,17 +469,26 @@ func (factory *Factory) Email() *service.DomainEmail {
 	return &factory.emailService
 }
 
-func (factory *Factory) Queue() *queue.Queue {
-	return factory.taskQueue
+// Key returns an instance of the Key Manager Service (KMS)
+func (factory *Factory) Key() service.Key {
+	return service.Key{}
 }
 
+// Icons returns the icon manager service, which manages
+// aliases for icons in the UI
 func (factory *Factory) Icons() icon.Provider {
 	return service.Icons{}
 }
 
-// Key returns an instance of the Key Manager Service (KMS)
-func (factory *Factory) Key() service.Key {
-	return service.Key{}
+// Publisher returns the Publisher service, which contains
+// all of the business rules for publishing a stream to the federated Interwebs.
+func (factory *Factory) Publisher() service.Publisher {
+	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User())
+}
+
+// Queue returns the Queue service, which manages background jobs
+func (factory *Factory) Queue() *queue.Queue {
+	return factory.taskQueue
 }
 
 // Steranko returns a fully populated Steranko adapter for the User service.

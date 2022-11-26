@@ -79,6 +79,9 @@ func (w Profile) View(actionID string) (template.HTML, error) {
 // TopLevelID returns the ID to use for highlighing navigation menus
 func (w Profile) TopLevelID() string {
 
+	// TODO: This is returning incorrect values when we CREATE a new outbox item.
+	// Is there a better way to handle this that doesn't just HARDCODE stuff in here?
+
 	// If the user is viewing their own profile, then the top-level ID is the user's own ID
 	if w.UserID() == w.Common.AuthenticatedID().Hex() {
 
@@ -304,24 +307,22 @@ func (w Profile) Folder() (model.Folder, error) {
 	return folder, err
 }
 
-func (w Profile) Outbox() *QueryBuilder {
+func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
 
 	if !w.IsAuthenticated() {
 		return nil
 	}
 
-	factory := w._factory
-	context := w.context()
-
-	query := builder.NewBuilder().
+	queryBuilder := builder.NewBuilder().
 		Int("publishDate")
 
 	criteria := exp.And(
-		query.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
+		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder(factory, context, factory.Stream(), criteria)
+	result := NewSliceBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+
 	return &result
 }
 

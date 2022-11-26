@@ -6,7 +6,7 @@
 	"icon": "inbox",
 	"containedBy": [],
 	"schema": {
-		"title": "User Profiler",
+		"title": "User Profile",
 		"type": "object",
 		"properties": {
 			"feeds": {
@@ -43,7 +43,10 @@
 		},
 		"outbox-add": {
 			"roles": ["myself"],
-			"step": "add-child-embed"
+			"steps": [
+				{"step": "add-child-embed"},
+				{"step": "trigger-event", "event":{}}
+			]
 		},
 		"outbox-list": {
 			"roles": ["myself"],

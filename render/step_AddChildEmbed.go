@@ -2,7 +2,6 @@ package render
 
 import (
 	"io"
-	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -66,7 +65,11 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 	b := html.New()
 
 	path := renderer.context().Path()
+	path = replaceActionID(path, renderer.ActionID())
 	selectedTemplateID := childRenderer.template().TemplateID
+
+	// Build the HTML for the "embed" widget
+	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").EndBracket()
 
 	if len(templates) > 1 {
 		b.Div()
@@ -80,10 +83,12 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 			}
 
 			b.Close()
+			b.Space()
 		}
 		b.Close()
 	}
 
+	// Write the child widget into the string builder
 	widgetHTML, err := childRenderer.Render()
 
 	if err != nil {
@@ -91,12 +96,15 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	b.WriteString(string(widgetHTML))
+	b.Close()
 
-	return renderer.context().HTML(http.StatusOK, b.String())
+	// Write the whole widget back to the outpub buffer
+	buffer.Write(b.Bytes())
+	return nil
 }
 
 func (step StepAddChildEmbed) UseGlobalWrapper() bool {
-	return false
+	return true
 }
 
 func (step StepAddChildEmbed) Post(renderer Renderer) error {
@@ -125,7 +133,7 @@ func (step StepAddChildEmbed) Post(renderer Renderer) error {
 	}
 
 	// Done.
-	return nil
+	return step.Get(renderer, responseWriter)
 }
 
 func (step StepAddChildEmbed) getBestTemplate(templates []form.LookupCode, templateID string) string {
@@ -141,5 +149,4 @@ func (step StepAddChildEmbed) getBestTemplate(templates []form.LookupCode, templ
 	}
 
 	return templates[0].Value
-
 }

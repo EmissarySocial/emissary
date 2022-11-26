@@ -27,5 +27,12 @@ func (step StepPublish) Post(renderer Renderer) error {
 		return derp.NewUnauthorizedError("render.StepPublish", "User is not authenticated", nil)
 	}
 
+	// Use the publisher service to execute publishing rules
+	streamRenderer := renderer.(Stream)
+	stream := streamRenderer.stream
+
+	publisherService := renderer.factory().Publisher()
+	publisherService.Publish(stream, renderer.AuthenticatedID())
+
 	return nil
 }

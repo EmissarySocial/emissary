@@ -133,7 +133,7 @@ func (w Group) Label() string {
  * QUERY BUILDERS
  *******************************************/
 
-func (w Group) Groups() *QueryBuilder {
+func (w Group) Groups() *RenderBuilder {
 
 	query := builder.NewBuilder().
 		String("label").
@@ -144,7 +144,7 @@ func (w Group) Groups() *QueryBuilder {
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w._factory, w.context(), w._factory.Group(), criteria)
+	result := NewRenderBuilder(w._factory, w.context(), w._factory.Group(), criteria)
 
 	return &result
 }

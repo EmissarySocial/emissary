@@ -28,7 +28,6 @@ type Common struct {
 
 	// Cached values, do not populate unless needed
 	domain model.Domain // This is a value because we expect to use it in every request.
-	user   *model.User  // This is a pointer because it may not be used in every request.
 }
 
 func NewCommon(factory Factory, context *steranko.Context, template *model.Template, action *model.Action, actionID string) Common {
@@ -152,6 +151,9 @@ func (w Common) Now() int64 {
 	return time.Now().UnixMilli()
 }
 
+// TopLevelID returns the the identifier of the top-most stream in the
+// navigation.  The "common" renderer just returns a default value that
+// other renderers should override.
 func (w Common) TopLevelID() string {
 	return ""
 }
@@ -332,21 +334,19 @@ func (w Common) setQuery(name string, value string) {
 }
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
-func (w *Common) getUser() (*model.User, error) {
+func (w Common) getUser() (model.User, error) {
 
-	// If we haven't already loaded the user, then do it now.
-	if w.user == nil {
+	// TODO: LOW: Cache this if possible.  But without making the renderer a POINTER.
 
-		w.user = new(model.User)
-		userService := w.factory().User()
-		authorization := getAuthorization(w.context())
+	result := model.NewUser()
+	userService := w.factory().User()
+	authorization := getAuthorization(w.context())
 
-		if err := userService.LoadByID(authorization.UserID, w.user); err != nil {
-			return nil, derp.Wrap(err, "render.Common.getUser", "Error loading user from database", authorization.UserID)
-		}
+	if err := userService.LoadByID(authorization.UserID, &result); err != nil {
+		return model.User{}, derp.Wrap(err, "render.Common.getUser", "Error loading user from database", authorization.UserID)
 	}
 
-	return w.user, nil
+	return result, nil
 }
 
 // getDomain retrieves the current domain model object from the domain service cache
@@ -370,7 +370,7 @@ func (w *Common) getDomain() (*model.Domain, error) {
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (List, error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
-	builder := NewQueryBuilder(w.factory(), w.context(), w._factory.Stream(), criteria)
+	builder := NewRenderBuilder(w.factory(), w.context(), w._factory.Stream(), criteria)
 
 	result, err := builder.Top60().ByRank().View()
 	return result, err

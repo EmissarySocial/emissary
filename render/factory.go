@@ -37,6 +37,7 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	LookupProvider() form.LookupProvider
 	Providers() set.Slice[config.Provider]
+	Publisher() service.Publisher
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream
 	StripeClient() (client.API, error)

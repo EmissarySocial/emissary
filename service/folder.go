@@ -120,6 +120,11 @@ func (service *Folder) ObjectID(object data.Object) primitive.ObjectID {
 
 	return primitive.NilObjectID
 }
+
+func (service *Folder) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Folder) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }

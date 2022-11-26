@@ -123,6 +123,11 @@ func (service *Inbox) ObjectID(object data.Object) primitive.ObjectID {
 
 	return primitive.NilObjectID
 }
+
+func (service *Inbox) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Inbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }

@@ -111,6 +111,10 @@ func (service *Group) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+func (service *Group) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Group) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }

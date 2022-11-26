@@ -103,6 +103,10 @@ func (service *Follower) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+func (service *Follower) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Follower) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }

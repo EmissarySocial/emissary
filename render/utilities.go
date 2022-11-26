@@ -1,8 +1,6 @@
 package render
 
 import (
-	"bytes"
-	"io"
 	"net/http"
 	"strings"
 
@@ -162,27 +160,6 @@ func useGlobalWrapper(steps []step.Step) bool {
 	return true
 }
 
-// templateLike bridges the interfaces of html/template and text/template so that
-// either one can be used
-type templateLike interface {
-	Execute(io.Writer, any) error
-}
-
-// execTemplate provides a simplified interface for executing known/trusted
-// templaes. If there is an error during execution, it is reported via
-// derp.Report, but this function does not halt, instead returning an empty string
-func execTemplate(template templateLike, data any) string {
-
-	var buffer bytes.Buffer
-
-	if err := template.Execute(&buffer, data); err != nil {
-		derp.Report(err)
-		return ""
-	}
-
-	return buffer.String()
-}
-
 // finalizeAddStream takes all of the follow-on actions required to initialize a new stream.
 // - sets the author to the current user
 // - executes the correct "init" action for this template
@@ -201,9 +178,9 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 
 	// Assign the current user as the author (with silent failure)
 	user, _ := renderer.getUser()
-	renderer.stream.SetAuthor(user)
+	renderer.stream.SetAuthor(&user)
 
-	// TODO: MEDIUM: Set Streamort order??
+	// TODO: MEDIUM: Set Stream order??
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action := template.Action("init"); action != nil {
@@ -233,4 +210,13 @@ func parseOptions(options ...string) maps.Map {
 	}
 
 	return result
+}
+
+// replaceActionID replaces the actionID in the URL with the new value
+func replaceActionID(path string, newActionID string) string {
+
+	path = strings.TrimPrefix(path, "/")
+	parsedPath := strings.Split(path, "/")
+
+	return "/" + parsedPath[0] + "/" + newActionID
 }

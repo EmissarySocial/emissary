@@ -130,6 +130,10 @@ func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+func (service *StreamDraft) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *StreamDraft) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return nil, derp.NewInternalError("service.StreamDraft.ObjectList", "Unsupported")
 }

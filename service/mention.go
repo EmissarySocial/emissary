@@ -130,6 +130,10 @@ func (service *Mention) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+func (service *Mention) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Mention) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }

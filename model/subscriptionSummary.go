@@ -15,3 +15,7 @@ type SubscriptionSummary struct {
 func SubscriptionSummaryFields() []string {
 	return []string{"_id", "url", "label", "status", "lastPolled", "nextPoll"}
 }
+
+func (subscriptionSummary SubscriptionSummary) Fields() []string {
+	return SubscriptionSummaryFields()
+}

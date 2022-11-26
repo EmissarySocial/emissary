@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
@@ -121,9 +123,45 @@ func (stream *Stream) Links() []Link {
 	return result
 }
 
-// SetAuthor populates the denormalized author information into this stream.
+// SetAuthor populates the `Author` link of this `Stream`.
 func (stream *Stream) SetAuthor(user *User) {
 	stream.Author = user.PersonLink(LinkRelationAuthor)
+}
+
+// AsOriginLink returns an `OriginLink` for this `Stream`
+func (stream *Stream) AsOriginLink() OriginLink {
+
+	// If this `Stream` already has an `Origin`, then use it,
+	// but link the `InternalID` back to this stream.
+	if !stream.Origin.IsEmpty() {
+		return OriginLink{
+			InternalID: stream.StreamID,
+			URL:        stream.Origin.URL,
+			Source:     stream.Origin.Source,
+			Label:      stream.Origin.Label,
+			UpdateDate: time.Now().Unix(),
+		}
+	}
+
+	// Otherwise, create a new `OriginLink`
+	return OriginLink{
+		InternalID: stream.StreamID,
+		URL:        stream.Document.URL,
+		Source:     OriginSourceInternal,
+		UpdateDate: time.Now().Unix(),
+	}
+}
+
+// OutboxItem generates a new Stream that will sit in the author's Outbox
+func (stream *Stream) OutboxItem() Stream {
+	result := NewStream()
+	result.Document = stream.Document
+	result.Author = stream.Author
+	result.TopLevelID = "outbox"
+	result.TemplateID = "outbox-item"
+	result.ParentID = stream.Author.InternalID
+
+	return result
 }
 
 /*******************************************

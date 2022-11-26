@@ -46,7 +46,7 @@
 					{{- end -}}
 
 					{{- if .UserCan "edit-links" -}}
-						<div><a hx-get="/@me/edit-links" role="button">{{icon "edit"}} Edit Links</a></div>
+						<div><a hx-get="/@me/edit-links" role="button">Edit Links</a></div>
 					{{- end -}}
 				</div>
 
@@ -62,10 +62,12 @@
 				<h2>My Timeline</h2>
 
 				{{if .UserCan "outbox-add" -}}
-					<div hx-get="/@me/outbox-add" hx-trigger="load" hx-target="this" hx-swap="innerHTML"></div>
+					{{- .View "outbox-add" -}}
 				{{- end -}}
 
-				{{ .View "outbox-list"}}
+				<div class="h-feed">
+					{{ .View "outbox-list"}}
+				</div>
 			</div>
 		</div>
 	</div>

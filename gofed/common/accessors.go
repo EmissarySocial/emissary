@@ -9,23 +9,23 @@ import (
  * Getter Interfaces
  ***************************/
 
-type GetBooler interface {
+type BoolGetter interface {
 	GetBool(string) (bool, error)
 }
 
-type GetInter interface {
+type IntGetter interface {
 	GetInt(string) (int, error)
 }
 
-type GetInt64er interface {
+type Int64Getter interface {
 	GetInt64(string) (int64, error)
 }
 
-type GetObjectIDer interface {
+type ObjectIDGetter interface {
 	GetObjectID(string) (primitive.ObjectID, error)
 }
 
-type GetStringer interface {
+type StringGetter interface {
 	GetString(string) (string, error)
 }
 
@@ -33,23 +33,23 @@ type GetStringer interface {
  * Setter Interfaces
  ***************************/
 
-type SetBooler interface {
+type BoolSetter interface {
 	SetBool(string, bool) error
 }
 
-type SetInter interface {
+type IntSetter interface {
 	SetInt(string, int) error
 }
 
-type SetInt64er interface {
+type Int64Setter interface {
 	SetInt64(string, int64) error
 }
 
-type SetObjectIDer interface {
+type ObjectIDSetter interface {
 	SetObjectID(string, primitive.ObjectID) error
 }
 
-type SetStringer interface {
+type StringSetter interface {
 	SetString(string, string) error
 }
 
@@ -59,47 +59,47 @@ type SetStringer interface {
 
 func GetBool(object any, name string) (bool, error) {
 
-	if getter, ok := object.(GetBooler); ok {
+	if getter, ok := object.(BoolGetter); ok {
 		return getter.GetBool(name)
 	}
 
-	return false, derp.NewInternalError("activitypub.GetBool", "Object does not implement GetBooler interface", name)
+	return false, derp.NewInternalError("activitypub.GetBool", "Object does not implement BoolGetter interface", name)
 }
 
 func GetInt(object any, name string) (int, error) {
 
-	if getter, ok := object.(GetInter); ok {
+	if getter, ok := object.(IntGetter); ok {
 		return getter.GetInt(name)
 	}
 
-	return 0, derp.NewInternalError("activitypub.GetInt", "Object does not implement GetInter interface", name)
+	return 0, derp.NewInternalError("activitypub.GetInt", "Object does not implement IntGetter interface", name)
 }
 
 func GetInt64(object any, name string) (int64, error) {
 
-	if getter, ok := object.(GetInt64er); ok {
+	if getter, ok := object.(Int64Getter); ok {
 		return getter.GetInt64(name)
 	}
 
-	return 0, derp.NewInternalError("activitypub.GetInt64", "Object does not implement GetInt64er interface", name)
+	return 0, derp.NewInternalError("activitypub.GetInt64", "Object does not implement Int64Getter interface", name)
 }
 
 func GetObjectID(object any, name string) (primitive.ObjectID, error) {
 
-	if getter, ok := object.(GetObjectIDer); ok {
+	if getter, ok := object.(ObjectIDGetter); ok {
 		return getter.GetObjectID(name)
 	}
 
-	return primitive.NilObjectID, derp.NewInternalError("activitypub.GetObjectID", "Object does not implement GetObjectIDer interface", name)
+	return primitive.NilObjectID, derp.NewInternalError("activitypub.GetObjectID", "Object does not implement ObjectIDGetter interface", name)
 }
 
 func GetString(object any, name string) (string, error) {
 
-	if getter, ok := object.(GetStringer); ok {
+	if getter, ok := object.(StringGetter); ok {
 		return getter.GetString(name)
 	}
 
-	return "", derp.NewInternalError("activitypub.GetString", "Object does not implement GetStringer interface", name)
+	return "", derp.NewInternalError("activitypub.GetString", "Object does not implement StringGetter interface", name)
 }
 
 /***************************
@@ -108,45 +108,45 @@ func GetString(object any, name string) (string, error) {
 
 func SetBool(object any, name string, value bool) error {
 
-	if setter, ok := object.(SetBooler); ok {
+	if setter, ok := object.(BoolSetter); ok {
 		return setter.SetBool(name, value)
 	}
 
-	return derp.NewInternalError("activitypub.SetBool", "Object does not implement SetBooler interface", name)
+	return derp.NewInternalError("activitypub.SetBool", "Object does not implement BoolSetter interface", name)
 }
 
 func SetInt(object any, name string, value int) error {
 
-	if setter, ok := object.(SetInter); ok {
+	if setter, ok := object.(IntSetter); ok {
 		return setter.SetInt(name, value)
 	}
 
-	return derp.NewInternalError("activitypub.SetInt", "Object does not implement SetInter interface", name)
+	return derp.NewInternalError("activitypub.SetInt", "Object does not implement IntSetter interface", name)
 }
 
 func SetInt64(object any, name string, value int64) error {
 
-	if setter, ok := object.(SetInt64er); ok {
+	if setter, ok := object.(Int64Setter); ok {
 		return setter.SetInt64(name, value)
 	}
 
-	return derp.NewInternalError("activitypub.SetInt64", "Object does not implement SetInt64er interface", name)
+	return derp.NewInternalError("activitypub.SetInt64", "Object does not implement Int64Setter interface", name)
 }
 
 func SetObjectID(object any, name string, value primitive.ObjectID) error {
 
-	if setter, ok := object.(SetObjectIDer); ok {
+	if setter, ok := object.(ObjectIDSetter); ok {
 		return setter.SetObjectID(name, value)
 	}
 
-	return derp.NewInternalError("activitypub.SetObjectID", "Object does not implement SetObjectIDer interface", name)
+	return derp.NewInternalError("activitypub.SetObjectID", "Object does not implement ObjectIDSetter interface", name)
 }
 
 func SetString(object any, name string, value string) error {
 
-	if setter, ok := object.(SetStringer); ok {
+	if setter, ok := object.(StringSetter); ok {
 		return setter.SetString(name, value)
 	}
 
-	return derp.NewInternalError("activitypub.SetString", "Object does not implement SetStringer interface", name)
+	return derp.NewInternalError("activitypub.SetString", "Object does not implement StringSetter interface", name)
 }

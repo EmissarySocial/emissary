@@ -59,10 +59,12 @@ type Renderer interface {
 	object() data.Object                // Model Object being rendered
 	objectID() primitive.ObjectID       // MongoDB ObjectID of the Object being rendered
 	setQuery(string, string)            // Sets a queryString parameter
+	getUser() (model.User, error)       // Retrieves the currently-logged-in user
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
 
+// TODO: We don't want to return a pointer here unless we HAVE TO.
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
 
 	switch object := object.(type) {

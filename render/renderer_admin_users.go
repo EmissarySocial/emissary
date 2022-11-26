@@ -136,7 +136,7 @@ func (w User) ImageURL() string {
  * QUERY BUILDERS
  *******************************************/
 
-func (w User) Users() *QueryBuilder {
+func (w User) Users() *RenderBuilder {
 
 	query := builder.NewBuilder().
 		String("displayName").
@@ -147,7 +147,7 @@ func (w User) Users() *QueryBuilder {
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewQueryBuilder(w._factory, w._context, w._factory.User(), criteria)
+	result := NewRenderBuilder(w._factory, w._context, w._factory.User(), criteria)
 
 	return &result
 }

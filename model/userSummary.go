@@ -20,3 +20,11 @@ func NewUserSummary() UserSummary {
 		ProfileURL:  "",
 	}
 }
+
+func UserSummaryFields() []string {
+	return []string{"_id", "displayName", "username", "imageUrl", "profileUrl"}
+}
+
+func (userSummary UserSummary) Fields() []string {
+	return UserSummaryFields()
+}

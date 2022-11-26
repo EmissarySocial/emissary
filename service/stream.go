@@ -232,6 +232,11 @@ func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 
 	return primitive.NilObjectID
 }
+
+func (service *Stream) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, criteria, options...)
+}
+
 func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.List(criteria, options...)
 }
@@ -329,12 +334,12 @@ func (service *Stream) ListAllFeaturesBySelectionAndRank(streamID primitive.Obje
 	return selected, templateIDs, nil
 }
 
-// ListByTemplate returns all Streams that use a particular Template
+// ListByTemplate returns all `Streams` that use a particular `Template`
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(exp.Equal("templateId", template))
 }
 
-// LoadByToken returns a single Stream that matches a particular Token
+// LoadByToken returns a single `Stream` that matches a particular `Token`
 func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 
 	// If the token looks like an ObjectID, then try Load by ID first.
@@ -348,12 +353,17 @@ func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 	return service.Load(exp.Equal("token", token), result)
 }
 
-// LoadByID returns a single Stream that matches the provided streamID
+// LoadByID returns a single `Stream` that matches the provided streamID
 func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
 	return service.Load(exp.Equal("_id", streamID), result)
 }
 
-// LoadByProductID returns a single Stream with custom data matching the provided productID
+// LoadByOriginID returns a single `Stream` that matches the provided `Origin.InternalID`
+func (service *Stream) LoadByOriginID(originID primitive.ObjectID, result *model.Stream) error {
+	return service.Load(exp.Equal("origin.internalId", originID), result)
+}
+
+// LoadByProductID returns a single `Stream` with custom data matching the provided `Data.productId`
 func (service *Stream) LoadByProductID(productID string, result *model.Stream) error {
 	return service.Load(exp.Equal("data.productId", productID), result)
 }

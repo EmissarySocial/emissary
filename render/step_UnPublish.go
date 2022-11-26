@@ -20,5 +20,11 @@ func (step StepUnPublish) UseGlobalWrapper() bool {
 func (step StepUnPublish) Post(renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
 	streamRenderer.stream.PublishDate = time.Now().UnixMilli()
+
+	// TODO: CRITICAL: This is going to need a lot more than this.
+	// - Send "Delete" notifications
+	// - 'Tombstone' records??
+	// - WTF, OMG.
+
 	return nil
 }

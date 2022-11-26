@@ -8,10 +8,12 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"summary": {
-				"type": "string",
-				"description": "The raw contents of the comment (before any post-processing is performed)"
-			}
+			"document":{"type":"object", "properties":{
+				"summary": {
+					"type": "string",
+					"description": "The raw contents of the comment (before any post-processing is performed)"
+				}
+			}}
 		}
 	},
 	"states": {
@@ -35,6 +37,7 @@
 			"steps": [
 				{
 					"step": "form-html",
+					"target": "/@me/outbox-add",
 					"form": {
 						"type": "layout-vertical",
 						"children": [

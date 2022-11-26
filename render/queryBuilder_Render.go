@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-type QueryBuilder struct {
+type RenderBuilder struct {
 	factory       Factory
 	ctx           *steranko.Context
 	service       service.ModelService
@@ -19,9 +19,9 @@ type QueryBuilder struct {
 	MaxRows       uint
 }
 
-func NewQueryBuilder(factory Factory, ctx *steranko.Context, service service.ModelService, criteria exp.Expression) QueryBuilder {
+func NewRenderBuilder(factory Factory, ctx *steranko.Context, service service.ModelService, criteria exp.Expression) RenderBuilder {
 
-	return QueryBuilder{
+	return RenderBuilder{
 		factory:       factory,
 		ctx:           ctx,
 		service:       service,
@@ -36,81 +36,81 @@ func NewQueryBuilder(factory Factory, ctx *steranko.Context, service service.Mod
  * QUERY BUILDER
  ********************************/
 
-func (qb QueryBuilder) Top1() QueryBuilder {
+func (qb RenderBuilder) Top1() RenderBuilder {
 	qb.MaxRows = 1
 	return qb
 }
 
-func (qb QueryBuilder) Top6() QueryBuilder {
+func (qb RenderBuilder) Top6() RenderBuilder {
 	qb.MaxRows = 6
 	return qb
 }
 
-func (qb QueryBuilder) Top12() QueryBuilder {
+func (qb RenderBuilder) Top12() RenderBuilder {
 	qb.MaxRows = 12
 	return qb
 }
 
-func (qb QueryBuilder) Top30() QueryBuilder {
+func (qb RenderBuilder) Top30() RenderBuilder {
 	qb.MaxRows = 30
 	return qb
 }
 
-func (qb QueryBuilder) Top60() QueryBuilder {
+func (qb RenderBuilder) Top60() RenderBuilder {
 	qb.MaxRows = 60
 	return qb
 }
-func (qb QueryBuilder) Top120() QueryBuilder {
+func (qb RenderBuilder) Top120() RenderBuilder {
 	qb.MaxRows = 120
 	return qb
 }
 
-func (qb QueryBuilder) Top600() QueryBuilder {
+func (qb RenderBuilder) Top600() RenderBuilder {
 	qb.MaxRows = 600
 	return qb
 }
 
-func (qb QueryBuilder) All() QueryBuilder {
+func (qb RenderBuilder) All() RenderBuilder {
 	qb.MaxRows = 0
 	return qb
 }
 
-func (qb QueryBuilder) ByCreateDate() QueryBuilder {
+func (qb RenderBuilder) ByCreateDate() RenderBuilder {
 	qb.SortField = "journal.createDate"
 	return qb
 }
 
-func (qb QueryBuilder) ByDisplayName() QueryBuilder {
+func (qb RenderBuilder) ByDisplayName() RenderBuilder {
 	qb.SortField = "displayName"
 	return qb
 }
 
-func (qb QueryBuilder) ByExpirationDate() QueryBuilder {
+func (qb RenderBuilder) ByExpirationDate() RenderBuilder {
 	qb.SortField = "expirationDate"
 	return qb
 }
 
-func (qb QueryBuilder) ByLabel() QueryBuilder {
+func (qb RenderBuilder) ByLabel() RenderBuilder {
 	qb.SortField = "label"
 	return qb
 }
 
-func (qb QueryBuilder) ByPublishDate() QueryBuilder {
+func (qb RenderBuilder) ByPublishDate() RenderBuilder {
 	qb.SortField = "publishDate"
 	return qb
 }
 
-func (qb QueryBuilder) ByRank() QueryBuilder {
+func (qb RenderBuilder) ByRank() RenderBuilder {
 	qb.SortField = "rank"
 	return qb
 }
 
-func (qb QueryBuilder) ByUpdateDate() QueryBuilder {
+func (qb RenderBuilder) ByUpdateDate() RenderBuilder {
 	qb.SortField = "journal.updateDate"
 	return qb
 }
 
-func (qb QueryBuilder) Reverse() QueryBuilder {
+func (qb RenderBuilder) Reverse() RenderBuilder {
 	qb.SortDirection = option.SortDirectionDescending
 	return qb
 }
@@ -119,16 +119,16 @@ func (qb QueryBuilder) Reverse() QueryBuilder {
  * ACTIONS
  ********************************/
 
-func (qb QueryBuilder) View() (List, error) {
+func (qb RenderBuilder) View() (List, error) {
 	return qb.Action("view")
 }
 
-func (qb QueryBuilder) Action(action string) (List, error) {
+func (qb RenderBuilder) Action(action string) (List, error) {
 
 	iterator, err := qb.query()
 
 	if err != nil {
-		return nil, derp.Wrap(err, "renderer.QueryBuilder.makeSlice", "Error loading streams from database")
+		return nil, derp.Wrap(err, "renderer.RenderBuilder.makeSlice", "Error loading streams from database")
 	}
 
 	return qb.iteratorToSlice(iterator, qb.MaxRows, action)
@@ -139,12 +139,12 @@ func (qb QueryBuilder) Action(action string) (List, error) {
  ********************************/
 
 // query executes the query request on the database.
-func (qb QueryBuilder) query() (data.Iterator, error) {
+func (qb RenderBuilder) query() (data.Iterator, error) {
 	return qb.service.ObjectList(qb.Criteria, qb.makeSortOption())
 }
 
 // sortOption returns a finalized data.option for sorting the results
-func (qb QueryBuilder) makeSortOption() option.Option {
+func (qb RenderBuilder) makeSortOption() option.Option {
 
 	if qb.SortDirection == option.SortDirectionDescending {
 		return option.SortDesc(qb.SortField)
@@ -162,7 +162,7 @@ type Errorer interface {
 }
 
 // iteratorToSlice consumes a data.Iterator and generates a slice of Renderer objects.
-func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, action string) (List, error) {
+func (qb RenderBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, action string) (List, error) {
 
 	var index uint
 	var errorGroup error
@@ -195,7 +195,7 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 	}
 
 	if err := iterator.Error(); err != nil {
-		return result, derp.Wrap(err, "renderer.QueryBuilder.iteratorToSlice", "Error iterating through database results")
+		return result, derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error iterating through database results")
 	}
 
 	if errorGroup != nil {
@@ -204,15 +204,3 @@ func (qb QueryBuilder) iteratorToSlice(iterator data.Iterator, maxRows uint, act
 
 	return result, nil
 }
-
-/*
-func (qb QueryBuilder) debug() maps.Map {
-
-	return maps.Map{
-		"Criteria":      qb.Criteria,
-		"SortField":     qb.SortField,
-		"SortDirection": qb.SortDirection,
-		"MaxRows":       qb.MaxRows,
-	}
-}
-*/

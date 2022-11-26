@@ -14,6 +14,7 @@ type ModelService interface {
 	ObjectType() string
 	ObjectID(data.Object) primitive.ObjectID
 	ObjectNew() data.Object
+	ObjectQuery(any, exp.Expression, ...option.Option) error
 	ObjectList(exp.Expression, ...option.Option) (data.Iterator, error)
 	ObjectLoad(exp.Expression) (data.Object, error)
 	ObjectSave(data.Object, string) error
