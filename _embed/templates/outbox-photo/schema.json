@@ -4,6 +4,7 @@
 	"icon": "picture",
 	"label": "Photo",
 	"description": "Single comment in the comments section of a page.",
+	"sort": 1,
 	"containedBy": ["outbox"],
 	"schema": {
 		"type": "object",

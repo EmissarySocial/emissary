@@ -54,9 +54,10 @@
 	--green90: #045208;
 	--green100: #072d09;
 
-	--body-background: var(--gray05);
+	--body-background: var(--gray10);
 	--page-background: var(--white);
-	--input-border: var(--gray15);
+	--page-border: var(--gray15);
+	--input-border: var(--gray20);
 	--input-background: var(--gray03);
 	--input-color: var(--gray80);
 

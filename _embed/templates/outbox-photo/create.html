@@ -1,0 +1,14 @@
+<form hx-post="/@me/outbox-add?templateId=outbox-link">
+
+	<div script="install DropToUpload(url:'/@me/edit-photo', success:'/@me')" class="uploader">
+
+		<form hx-post="/@me/edit-photo" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" class="space-below">
+			<input type="file" id="manual-upload" name="file" style="position:absolute; top:0px; left:0px; height:0.1px; width:0.1px; overflow:hidden; opacity:0;"/>
+		</form>
+	
+		<div hx-get="/@me/preview-photo" hx-trigger="load, attachments-updated from:body" hx-target="this" hx-swap="innerHTML" hx-push-url="false" class="space-below"></div>
+		Drag an image file here to upload, or click to <label for="manual-upload" class="link" tabIndex="0">choose a file</label> from your device.
+		Size: 200x200 pixels, Formats: PNG, JPG, or WebP. 
+	</div>
+
+</form>

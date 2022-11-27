@@ -44,7 +44,7 @@
 		"outbox-add": {
 			"roles": ["myself"],
 			"steps": [
-				{"step": "add-child-embed"}
+				{"step": "add-child-embed", "templates":["outbox-message"], "showLabels":false}
 			]
 		},
 		"outbox-list": {

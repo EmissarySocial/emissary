@@ -28,7 +28,7 @@ func (step StepPublish) Post(renderer Renderer) error {
 	}
 
 	// Use the publisher service to execute publishing rules
-	streamRenderer := renderer.(Stream)
+	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
 
 	publisherService := renderer.factory().Publisher()

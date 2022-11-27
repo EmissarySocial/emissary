@@ -2,8 +2,9 @@
 	"templateId": "outbox-message",
 	"role": "outbox-item",
 	"icon": "message",
-	"label": "Short Post",
+	"label": "Post",
 	"description": "Single comment in the comments section of a page.",
+	"sort": 0,
 	"containedBy": ["outbox"],
 	"schema": {
 		"type": "object",
@@ -37,7 +38,7 @@
 			"steps": [
 				{
 					"step": "form-html",
-					"target": "/@me/outbox-ad?templateId=outbox-message",
+					"target": "/@me/outbox-add?templateId=outbox-message",
 					"form": {
 						"type": "layout-vertical",
 						"children": [

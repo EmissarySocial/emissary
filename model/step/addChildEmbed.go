@@ -7,6 +7,7 @@ import (
 // AddChildEmbed is an action that can add new sub-streams to the domain.
 type AddChildEmbed struct {
 	TemplateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	ShowLabels  bool
 }
 
 // NewAddChildEmbed returns a fully initialized AddChildEmbed record
@@ -14,6 +15,7 @@ func NewAddChildEmbed(stepInfo maps.Map) (AddChildEmbed, error) {
 
 	return AddChildEmbed{
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
+		ShowLabels:  stepInfo.GetBool("showLabels"),
 	}, nil
 }
 

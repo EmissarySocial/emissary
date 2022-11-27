@@ -25,11 +25,13 @@ const OriginSourceTwitter = "TWITTER"
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
-	InternalID primitive.ObjectID `path:"internalId" json:"internalId" bson:"internalId,omitempty"` // Unique ID of a document in this database
-	Source     string             `path:"source"     json:"source"     bson:"source"`               // The source that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
-	Label      string             `path:"label"      json:"label"      bson:"label,omitempty"`      // Label of the original document
-	URL        string             `path:"url"        json:"url"        bson:"url"`                  // Public URL of the original record
-	UpdateDate int64              `path:"updateDate" json:"updateDate" bson:"updateDate"`           // Unix timestamp of the date/time when this link was last updated.
+	InternalID primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"` // Unique ID of a document in this database
+	Source     string             `path:"source"      json:"source"      bson:"source"`               // The source that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
+	URL        string             `path:"url"         json:"url"         bson:"url"`                  // Public URL of the original record
+	Label      string             `path:"label"       json:"label"       bson:"label,omitempty"`      // Label of the original document
+	Summary    string             `path:"summary"     json:"summary"     bson:"summary,omitempty"`    // Description of the original document
+	ImageURL   string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`   // Image URL of the original document
+	UpdateDate int64              `path:"updateDate"  json:"updateDate"  bson:"updateDate"`           // Unix timestamp of the date/time when this link was last updated.
 }
 
 func NewOriginLink() OriginLink {
@@ -43,8 +45,10 @@ func OriginLinkSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"internalId": schema.String{Format: "objectId"},
 			"source":     schema.String{Enum: []string{OriginSourceActivityPub, OriginSourceInternal, OriginSourceRSS, OriginSourceRSSCloud, OriginSourceTwitter}},
-			"label":      schema.String{},
 			"url":        schema.String{Format: "url"},
+			"label":      schema.String{},
+			"summary":    schema.String{},
+			"imageUrl":   schema.String{Format: "url"},
 			"updateDate": schema.Integer{},
 		},
 	}

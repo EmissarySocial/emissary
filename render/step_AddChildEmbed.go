@@ -6,11 +6,13 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
+	"github.com/benpate/rosetta/slice"
 )
 
 // StepAddChildEmbed is an action that can add new sub-streams to the domain.
 type StepAddChildEmbed struct {
 	TemplateIDs []string // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	ShowLabels  bool     // If true, then the labels for each template will be displayed.  If false, then only the icons will be displayed.
 }
 
 func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
@@ -32,22 +34,27 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 	// Build the HTML for the "embed" widget
 	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").EndBracket()
 
-	if len(templates) > 0 {
-		b.Div().Class("text-lg")
+	if step.ShowLabels {
+		b.Div()
 		for _, template := range templates {
 
-			b.A("").Data("hx-get", path+"?templateId="+template.Value).EndBracket()
+			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "space-right").EndBracket()
 
+			b.Div().Class("text-lg", "vertical-space-none").EndBracket()
 			if selectedTemplateID == template.Value {
 				iconService.Write(template.Icon+"-fill", b)
 			} else {
 				iconService.Write(template.Icon, b)
 			}
+			b.Close() // DIV
 
-			b.Close()
+			b.Div().Class("vertical-space-none", "text-sm").InnerHTML(template.Label).Close()
+
+			b.Close() // A
+
 			b.WriteString("&nbsp;")
 		}
-		b.Close()
+		b.Close() // DIV
 	}
 
 	// If there is a child renderer, then render it here
@@ -122,6 +129,12 @@ func (step StepAddChildEmbed) common(renderer Renderer) ([]form.LookupCode, stri
 		return nil, "", nil, derp.NewBadRequestError(location, "No child templates available for this stream", renderer.templateRole())
 	}
 
+	if len(step.TemplateIDs) > 0 {
+		templates = slice.Filter(templates, func(template form.LookupCode) bool {
+			return slice.Contains(step.TemplateIDs, template.Value)
+		})
+	}
+
 	// Find the "selected" template
 	templateID := step.getBestTemplate(templates, context.QueryParam("templateId"))
 
@@ -146,7 +159,7 @@ func (step StepAddChildEmbed) common(renderer Renderer) ([]form.LookupCode, stri
 		return nil, "", nil, derp.Wrap(err, location, "Error creating new child stream renderer")
 	}
 
-	return templates, templateID, childRenderer, nil
+	return templates, templateID, &childRenderer, nil
 
 }
 
@@ -156,6 +169,10 @@ func (step StepAddChildEmbed) getBestTemplate(templates []form.LookupCode, templ
 		if template.Value == templateID {
 			return templateID
 		}
+	}
+
+	if len(templates) > 0 {
+		return templates[0].Value
 	}
 
 	return ""

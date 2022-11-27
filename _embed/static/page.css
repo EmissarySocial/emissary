@@ -8,7 +8,7 @@
     position:relative;
 	line-height:150%;
 	margin-bottom: 50px;
-	xborder: solid 1px var(--gray15);
+	border: solid 1px var(--page-border);
 }
 
 /************************

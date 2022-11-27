@@ -3,6 +3,7 @@
 	"role": "outbox-item",
 	"icon": "share",
 	"label": "Link",
+	"sort": 3,
 	"description": "Single comment in the comments section of a page.",
 	"containedBy": ["outbox"],
 	"schema": {
@@ -36,16 +37,19 @@
 			"roles": ["myself"],
 			"steps": [
 				{
-					"step": "form-html",
+					"step": "form-html", 
 					"target": "/@me/outbox-add?templateId=outbox-link",
 					"form": {
-						"type": "layout-vertical",
+						"type":"layout-vertical",
 						"children": [
-							{"type": "textarea", "path": "document.summary", "options":{"focus":true}}
+							{"type":"text", "path":"document.label", "label":"Title"},
+							{"type":"text", "path":"origin.url", "label":"URL"},
+							{"type":"textarea", "path":"document.summary", "label":"Comment"}
 						]
-					},
-					"options": ["cancel-button:hide", "submit-label:New Post", "saving-label:Posting..."]
+					}
 				},
+				{"step":"set-data", "values":{"origin.source":"SHARE"}},
+				{"step": "expand-url", "path":"origin"},
 				{"step": "save"},
 				{"step": "publish"},
 				{"step": "trigger-event", "event":{"refreshPage":true}}

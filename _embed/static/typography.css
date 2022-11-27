@@ -146,6 +146,16 @@ h3.space-below {
  * Block Spacing
  ****************************/
 
+.vertical-space-none {
+    margin-top:0px!important;
+    margin-bottom:0px!important;
+}
+
+.horizontal-space-none {
+    margin-left:0px!important;
+    margin-right:0px!important;
+}
+
 .space-above,
 .space-before {
     margin-top: 1.5em;
