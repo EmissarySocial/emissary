@@ -1,8 +1,17 @@
 <script src="/static/autolinker.min.js"></script>
+<script src="/static/vanillaCaret.min.js" id="vanillaCaretScript"></script>
 <script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
 <script type="text/hyperscript">
-	def preview()
+	init
+		set $autolinkerOptions to {
+			newWindow: false,
+			sanitizeHtml: true,
+			stripPrefix: false,
+			stripTrailingSlash: false
+		}
+
+	def previewUploads()
 		log #file-upload
 		log #file-upload.files
 		set #file-preview.innerHTML to ""
@@ -10,22 +19,39 @@
 			append '<div><img src="' + URL.createObjectURL(file) + '"></div>' to #file-preview.innerHTML
 		end
 	end
+
 </script>
 
-<form id="outbox-message" hx-post="/@me/outbox-add?templateId=outbox-message" hx-encoding="multipart/form-data">
+<form id="outbox-message" hx-post="/@me/outbox-add?templateId=outbox-message" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data"
+	data-script="
+		on htmx:configRequest(parameters)
+			set parameters['document.summary'] to Autolinker.link(#summaryHTML.innerText, $autolinkerOptions)">
+
 	<div style="margin-bottom:10px;">
-		<textarea 
-			name="document.summary" 
-			placeholder="Share something interesting..." 
-			autocomplete="false" 
-			autofocus="true"
-			script="on keypress debounced at 200ms log Autolinker.link(my value)"
-			class="block"></textarea>
+		<div id="summaryHTML"
+			class="input"
+			contenteditable="true"
+			data-script="
+				init
+					me.focus()
+					wait for load from #vanilaCaretScript then
+					make a VanillaCaret from me called :caret
+
+				on keydown[key=='Enter']
+					if event.target is not me then exit end
+					halt the event
+					send enterKey to #outbox-message
+
+				on keypress debounced at 500ms 
+					set oldPosition to :caret.getPos() then
+					set my innerHTML to Autolinker.link(my innerText, $autolinkerOptions) then
+					call :caret.setPos(oldPosition)"
+		></div>
 	</div>
 
 	<div id="file-preview"></div>
 	<input 
-		script="on change preview()" 
+		script="on change call previewUploads()" 
 		id="file-upload" 
 		type="file" 
 		accept="image"

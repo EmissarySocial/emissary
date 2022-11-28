@@ -10,10 +10,8 @@
 		"type":"object",
 		"properties": {
 			"document":{"type":"object", "properties":{
-				"summary": {
-					"type":"string",
-					"description":"The raw contents of the comment (before any post-processing is performed)"
-				}
+				"summary": {"type":"string", "format":"html"},
+				"imageUrl": {"type":"string", "format":"url"}
 			}}
 		}
 	},
