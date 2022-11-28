@@ -19,6 +19,11 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Check ETags to see if the browser already has a copy of this
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+			return ctx.NoContent(http.StatusNotModified)
+		}
+
 		// Get factory from the request
 		factory, err := factoryManager.ByContext(ctx)
 
@@ -47,14 +52,6 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading attachment")
-		}
-
-		// Check ETags to see if the browser already has a copy of this
-		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader != "" {
-
-			if attachment.ETag() == matchHeader {
-				return ctx.NoContent(http.StatusNotModified)
-			}
 		}
 
 		// Load Stream (to verify permissions?)
