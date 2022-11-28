@@ -387,6 +387,16 @@ input.text-md {
     color:var(--red60)!important;
 }
 
+hr {
+    border-top: 1px solid var(--gray20);
+    border-bottom:none;
+    border-left:none;
+    border-right:none;
+    height:0px;
+    margin-top: calc(var(--rhythm) * 3);
+    margin-bottom: calc(var(--rhythm) * 3);
+}
+
 /****************************
  * Element-Level classes
  ****************************/
