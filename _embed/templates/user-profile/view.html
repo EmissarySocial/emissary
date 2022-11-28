@@ -8,6 +8,7 @@
 
 				{{- if .UserCan "edit-photo" -}}
 					<link rel="stylesheet" href="/static/nebula/uploader.css"/>
+					<script src="/static/autolinker.min.js"></script>
 					<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
 					<div role="button" hx-get="/@me/edit-photo">
@@ -27,31 +28,43 @@
 				{{- end -}}
 
 				<div class="space-below">
+					<button hx-get="/@me/edit-profile" class="text-xs float-right">Edit</button>
+					
 					<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 					<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
 					<div class="space-above">
 						<span class="p-note">{{.StatusMessage}}</span>
-						<a hx-get="/@me/edit-profile" role="button">Edit Profile</a>
 					</div>
+					{{- if ne "" .Location -}}
+						<div class="space-above p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+					{{- end -}}
+
 				</div>
 
-				<div class="space-below align-left">
+				<hr>
 
-					{{- if ne "" .Location -}}
-						<div class="p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+				<div class="space-above align-left">
+
+					{{- $links := .Links -}}
+
+					{{- if or (gt 0 (len $links)) (.UserCan "edit-profile")  -}}
+						<p>
+							{{- if .UserCan "edit-links" -}}
+								<button hx-get="/@me/edit-links" role="button" class="float-right text-xs">Edit</button>
+							{{- end -}}
+							<div class="bold">Links</div>
+						</p>
 					{{- end -}}
 
-					{{- range .Links -}}
-						<div><a rel="me" class="u-url" href="{{.ProfileURL}}">{{icon "globe"}} {{.Organization}}</a></div>
+					{{- range $links -}}
+						<div><a rel="me" class="u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Organization}}</a></div>
 					{{- end -}}
 
-					{{- if .UserCan "edit-links" -}}
-						<div><a hx-get="/@me/edit-links" role="button">Edit Links</a></div>
-					{{- end -}}
 				</div>
 
 				{{- if .UserCan "edit-profile" -}}
-					<div class="space-below">
+					<hr>
+					<div>
 						<button hx-post="/signout" hx-target="body">Sign Out</button>
 					</div>
 				{{- end -}}
@@ -59,10 +72,12 @@
 			</div>
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4" style="border-left: solid 1px var(--gray20); padding-left:20px;">
-				<h2>My Timeline</h2>
+				<h1>My Timeline</h1>
 
 				{{if .UserCan "outbox-add" -}}
-					{{- .View "outbox-add" -}}
+					<div hx-target="this" hx-swap="outerHTML">
+						<button hx-get="/@me/outbox-add" class="text-sm primary">New Post</button>
+					</div>
 				{{- end -}}
 
 				<div class="h-feed">

@@ -7,16 +7,14 @@
 	<div hx-get="{{.ActivityPubProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
 	{{- range $outbox -}}
-		<hr style="border:none; border-bottom:solid 1px var(--gray20); margin:20px 0px;">
-		<a class="h-entry" target="_blank" style="display:grid; column-gap:20px; row-gap:20px; grid-template-columns: 60px 1fr; margin-bottom:20px;" href="{{.Origin.URL}}">
+		<hr style="border-color:var(--gray10);">
+		<div hx-get="/{{.StreamID.Hex}}" role="button" class="h-entry" style="display:grid; column-gap:16px; row-gap:16px; grid-template-columns: 60px 1fr; margin-bottom:20px;">
 			<div style="height:60px; width:60px;">
-				{{- if ne .Document.ImageURL ""}}
-					<img src="{{.Document.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
-				{{- else if ne .Author.ImageURL ""}}
+				{{- if ne .Author.ImageURL ""}}
 					<img src="{{.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
 				{{- end -}}
 			</div>
-			<div>
+			<div style="max-width:600px">
 				<div class="p-author h-card text-sm gray50" style="margin:0px;">
 					<span class="p-name">{{.Author.Name}}</span>
 					&middot;
@@ -24,8 +22,13 @@
 				</div>
 				<div class="h-name bold black">{{.Document.Label}}</div>
 				<div class="h-summary black">{{.Document.Summary}}</div>
+				{{- if ne .Document.ImageURL ""}}
+					<div style="margin-top:var(--rhythm);">
+						<img src="{{.Document.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+					</div>
+				{{- end -}}
 			</div>
-		</a>
+		</div>
 	{{- end -}}
 
 	<div id="loading">Just a sec...</div>

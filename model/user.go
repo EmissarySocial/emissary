@@ -42,18 +42,18 @@ func NewUser() User {
 func UserSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"userId":       schema.String{Format: "objectId"},
-			"groupIds":     schema.Array{Items: schema.String{Format: "objectId"}},
-			"displayName":  schema.String{MaxLength: 50},
-			"description":  schema.String{MaxLength: 100},
-			"location":     schema.String{MaxLength: 50},
-			"links":        schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"emailAddress": schema.String{Format: "email"},
-			"username":     schema.String{MaxLength: 50, Required: true},
-			"password":     schema.String{MaxLength: 255, Required: true},
-			"isOwner":      schema.Boolean{},
-			"profileUrl":   schema.String{Format: "url"},
-			"imageUrl":     schema.String{Format: "url"},
+			"userId":        schema.String{Format: "objectId"},
+			"groupIds":      schema.Array{Items: schema.String{Format: "objectId"}},
+			"displayName":   schema.String{MaxLength: 50},
+			"statusMessage": schema.String{MaxLength: 100},
+			"location":      schema.String{MaxLength: 50},
+			"links":         schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"emailAddress":  schema.String{Format: "email"},
+			"username":      schema.String{MaxLength: 50, Required: true},
+			"password":      schema.String{MaxLength: 255, Required: true},
+			"isOwner":       schema.Boolean{},
+			"profileUrl":    schema.String{Format: "url"},
+			"imageUrl":      schema.String{Format: "url"},
 		},
 	}
 }

@@ -89,9 +89,7 @@ func (service Icons) Get(name string) string {
 	case "unlink":
 		return service.get("link-45deg")
 	case "upload":
-		return service.get("cloud-arrow-up")
-	case "upload-fill":
-		return service.get("cloud-arrow-up-fill")
+		return service.get("upload")
 	case "user":
 		return service.get("person-circle")
 	case "user-fill":

@@ -2,7 +2,7 @@
  * INPUT ELEMENTS
  ***************************/
 
-input:not([type=submit], [type=checkbox], [type=radio]), textarea, select {
+input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input {
 	border: solid 1px var(--input-border);
 	background-color: var(--input-background);
 	color: var(--input-color);
@@ -34,18 +34,21 @@ select {
 
 input:focus,
 select:focus,
-textarea:focus {
+textarea:focus,
+.input:focus {
 	outline: unset;
 }
 
 input:invalid,
-input.invalid {
+input.invalid,
+.input.invalid {
 	border: solid 1px var(--input-border-invalid);
 	background-color: var(--input-background-invalid);
 }
 
 input:invalid:focus,
-input.invalid:focus {
+input.invalid:focus,
+.input.invalid:focus {
 	outline: unset;
 	--outline-color: var(--red70) ;
 }
@@ -204,6 +207,9 @@ button,
 .button {
 	font-size:12pt;
 	font-weight:400;
+	margin-top:0px;
+	margin-left:0px;
+	margin-bottom:0px;
 	margin-right:5px;
 	box-sizing:border-box;
 	width:auto;
@@ -223,16 +229,16 @@ button,
 .text-sm .button,
 button.text-sm,
 .button.text-sm {
-	font-size: calc(var(--rhythm) * 1.5);
-	padding: var(--rhythm) calc(var(--rhythm) * 2);
+	font-size: calc(var(--rhythm) * 1.75);
+	padding: var(--rhythm) calc(var(--rhythm) * 1.5);
 }
 
 .text-xs button,
 .text-xs .button,
 button.text-xs,
 .button.text-xs {
-	font-size: var(--rhythm);
-	padding: calc(var(--rhythm) * 3/4) calc(var(--rhythm) * 1.5);
+	font-size: calc(var(--rhythm) * 1.5);
+	padding: calc(var(--rhythm) * 0.5) calc(var(--rhythm) * 1);
 }
 
 button:hover,

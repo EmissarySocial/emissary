@@ -129,7 +129,7 @@
 						"children": [
 							{"type": "text", "path": "displayName", "label": "Name"},
 							{"type": "text", "path": "location", "label": "Location"},
-							{"type": "textarea", "path": "description", "label": "Message"}
+							{"type": "textarea", "path": "statusMessage", "label": "Message"}
 						]
 					}},
 					{"step": "save", "comment": "Profile updated by {{.Author}}"}

@@ -1,62 +1,59 @@
 {
-	"templateId": "outbox-message",
-	"role": "outbox-item",
-	"icon": "message",
-	"label": "Post",
-	"description": "Single comment in the comments section of a page.",
+	"templateId":"outbox-message",
+	"role":"outbox-item",
+	"icon":"message",
+	"label":"Post",
+	"description":"Single comment in the comments section of a page.",
 	"sort": 0,
 	"containedBy": ["outbox"],
 	"schema": {
-		"type": "object",
+		"type":"object",
 		"properties": {
 			"document":{"type":"object", "properties":{
 				"summary": {
-					"type": "string",
-					"description": "The raw contents of the comment (before any post-processing is performed)"
+					"type":"string",
+					"description":"The raw contents of the comment (before any post-processing is performed)"
 				}
 			}}
 		}
 	},
 	"states": {
 		"visible": {
-			"label": "Visible",
-			"description": "Comment is publicly visible"
+			"label":"Visible",
+			"description":"Comment is publicly visible"
 		}
 	},
 	"roles": {
 		"myself": {
-			"label": "Myself",
-			"decription": "Outbox messages can only be sent by the current user."
+			"label":"Myself",
+			"decription":"Outbox messages can only be sent by the current user."
 		}
 	},
 	"actions": {
 		"view": {
-			"step": "view-html"
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
 		},
 		"create":{
 			"roles": ["myself"],
 			"steps": [
-				{
-					"step": "form-html",
-					"target": "/@me/outbox-add?templateId=outbox-message",
-					"form": {
-						"type": "layout-vertical",
-						"children": [
-							{"type": "textarea", "path": "document.summary", "options":{"focus":true}}
-						]
-					},
-					"options": ["cancel-button:hide", "submit-label:New Post", "saving-label:Posting..."]
-				},
-				{"step": "save"},
-				{"step": "publish"},
-				{"step": "trigger-event", "event":{"refreshPage":true}}
+				{"step":"view-html"},
+				{"step":"set-data", "paths":["document.summary"]},
+				{"step":"save"},
+				{"step":"upload-attachments"},
+				{"step":"set-thumbnail", "path":"document.imageUrl"},
+				{"step":"publish"},
+				{"step":"trigger-event", "event":{"refreshPage":true}}
 			]
 		},
 		"delete": {
 			"roles":["myself"],
 			"steps": [
-				{"step": "delete"},
-				{"step": "publish"}
+				{"step":"delete"},
+				{"step":"publish"}
 			]
 		}
 	}
