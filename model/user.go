@@ -21,11 +21,11 @@ type User struct {
 	Location        string               `path:"location"       json:"location"        bson:"location"`      // Human-friendly description of this user's physical location.
 	Links           []PersonLink         `path:"links"          json:"links"           bson:"links"`         // Slice of links to profiles on other web services.
 	EmailAddress    string               `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`  // Email address for this user
+	ProfileURL      string               `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`    // Fully Qualified profile URL for this user (including domain name)
 	Username        string               `path:"username"       json:"username"        bson:"username"`      // This is the primary public identifier for the user.
 	Password        string               `path:"password"       json:"password"        bson:"password"`      // This password should be encrypted with BCrypt.
 	IsOwner         bool                 `path:"isOwner"        json:"isOwner"         bson:"isOwner"`       // If TRUE, then this user is a website owner with FULL privileges.
-	ProfileURL      string               `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`    // URL for the primary profile URL for this user.
-	ImageURL        string               `path:"imageUrl"       json:"imageUrl"        bson:"imageUrl"`      // Avatar image of this user.
+	ImageID         primitive.ObjectID   `path:"imageId"        json:"imageId"         bson:"imageId"`       // AttachmentID of this user's avatar image.
 	PasswordReset   PasswordReset        `                      json:"passwordReset"   bson:"passwordReset"` // Most recent password reset information.
 	journal.Journal `json:"journal" bson:"journal"`
 }
@@ -98,7 +98,7 @@ func (user *User) PersonLink(relation string) PersonLink {
 		Name:         user.DisplayName,
 		EmailAddress: user.Username,
 		ProfileURL:   user.ProfileURL,
-		ImageURL:     user.ImageURL,
+		ImageURL:     user.ActivityPubAvatarURL(),
 		UpdateDate:   time.Now().Unix(),
 	}
 }
@@ -109,7 +109,7 @@ func (user *User) Summary() UserSummary {
 		UserID:      user.UserID,
 		DisplayName: user.DisplayName,
 		Username:    user.Username,
-		ImageURL:    user.ImageURL,
+		ImageURL:    user.ActivityPubAvatarURL(),
 		ProfileURL:  user.ProfileURL,
 	}
 }
@@ -125,6 +125,9 @@ func (user *User) GetPath(path string) (any, error) {
 
 	switch path {
 
+	case "imageId":
+		return user.ImageID, nil
+
 	case "groupIds":
 		return id.SliceOfString(user.GroupIDs), nil
 
@@ -133,9 +136,6 @@ func (user *User) GetPath(path string) (any, error) {
 
 	case "username":
 		return user.Username, nil
-
-	case "imageUrl":
-		return user.ImageURL, nil
 
 	}
 
@@ -146,6 +146,9 @@ func (user *User) SetPath(path string, value any) error {
 
 	switch path {
 
+	case "imageId":
+		user.ImageID, _ = id.Convert(value)
+
 	case "groupIds":
 		user.GroupIDs = id.SliceOfID(value)
 
@@ -154,9 +157,6 @@ func (user *User) SetPath(path string, value any) error {
 
 	case "username":
 		user.Username = convert.String(value)
-
-	case "imageUrl":
-		user.ImageURL = convert.String(value)
 
 	default:
 		return derp.NewBadRequestError("model.User.SetPath", "Invalid Path", path, value)
@@ -251,49 +251,46 @@ func (user *User) Roles(authorization *Authorization) []string {
  * URLs
  *******************************************/
 
-func (user *User) ActivityPubProfileURL(host string) string {
-	return host + "/@" + user.UserID.Hex()
+func (user *User) ActivityPubProfileURL() string {
+	return user.ProfileURL
 }
 
-func (user *User) ActivityPubURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub"
+func (user *User) ActivityPubURL() string {
+	return user.ProfileURL + "/pub"
 }
 
-func (user *User) ActivityPubAvatarURL(host string) string {
-	return user.ImageURL
-	/*
-		if user.ImageURL == "" {
-			return ""
-		}
-		return host + "/@" + user.UserID.Hex() + "/avatar/" + user.ImageURL
-	*/
+func (user *User) ActivityPubAvatarURL() string {
+	if user.ImageID.IsZero() {
+		return ""
+	}
+	return user.ProfileURL + "/avatar"
 }
 
-func (user *User) ActivityPubInboxURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/inbox"
+func (user *User) ActivityPubInboxURL() string {
+	return user.ProfileURL + "/pub/inbox"
 }
 
-func (user *User) ActivityPubOutboxURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/outbox"
+func (user *User) ActivityPubOutboxURL() string {
+	return user.ProfileURL + "/pub/outbox"
 }
 
-func (user *User) ActivityPubFollowingURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/following"
+func (user *User) ActivityPubFollowingURL() string {
+	return user.ProfileURL + "/pub/following"
 }
 
-func (user *User) ActivityPubFollowersURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/followers"
+func (user *User) ActivityPubFollowersURL() string {
+	return user.ProfileURL + "/pub/followers"
 }
 
-func (user *User) ActivityPubLikedURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/liked"
+func (user *User) ActivityPubLikedURL() string {
+	return user.ProfileURL + "/pub/liked"
 }
 
-func (user *User) ActivityPubPublicKeyURL(host string) string {
-	return host + "/@" + user.UserID.Hex() + "/pub/key"
+func (user *User) ActivityPubPublicKeyURL() string {
+	return user.ProfileURL + "/pub/key"
 }
 
-func (user *User) ActivityPubSubscribeRequestURL(host string) string {
+func (user *User) ActivityPubSubscribeRequestURL() string {
 	// TODO: HIGH: WTF is this?? "http://ostatus.org/schema/1.0/subscribe"
-	return host + "/@" + user.UserID.Hex() + "/pub/authorize"
+	return user.ProfileURL + "/pub/authorize"
 }

@@ -500,11 +500,7 @@ func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID)
  *******************************************/
 
 func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
-
-	const location = "service.Stream.Outbox"
-
 	criteria = criteria.AndEqual("ownerId", ownerID)
-
 	return service.QuerySummary(criteria, options...)
 }
 

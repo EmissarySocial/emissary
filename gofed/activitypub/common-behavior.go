@@ -81,7 +81,7 @@ func (service CommonBehavior) NewTransport(ctx context.Context, actorBoxIRI *url
 		NewClock(),
 		getSigner,
 		postSigner,
-		user.ActivityPubPublicKeyURL(service.host),
+		user.ActivityPubPublicKeyURL(),
 		privateKey,
 	)
 

@@ -32,6 +32,5 @@ behavior NebulaLayout
             headers: {"content-type":"application/x-www-form-urlencoded"},
             body:body
 
-        log it
     end
 end

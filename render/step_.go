@@ -75,6 +75,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.RedirectTo:
 		return StepRedirectTo(s)
 
+	case step.ReloadPage:
+		return StepReloadPage(s)
+
 	case step.RefreshPage:
 		return StepRefreshPage(s)
 

@@ -28,10 +28,13 @@ func (step StepDeleteAttachments) Post(renderer Renderer) error {
 
 	attachmentService := factory.Attachment()
 
+	objectType := renderer.service().ObjectType()
+	objectID := renderer.objectID()
+
 	if step.All {
 
 		// Delete all attachments for this stream
-		if err := attachmentService.DeleteAll(renderer.service().ObjectType(), renderer.objectID(), "Deleted by {{.Author}}"); err != nil {
+		if err := attachmentService.DeleteAll(objectType, objectID, "Deleted by {{.Author}}"); err != nil {
 			return derp.Wrap(err, location, "Error deleting all attachments")
 		}
 
@@ -43,9 +46,6 @@ func (step StepDeleteAttachments) Post(renderer Renderer) error {
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid attachment ID", attachmentIDString)
 		}
-
-		objectType := renderer.service().ObjectType()
-		objectID := renderer.objectID()
 
 		if err := attachmentService.DeleteByID(objectType, objectID, attachmentID); err != nil {
 			return derp.Wrap(err, location, "Error deleting attachment", attachmentID)

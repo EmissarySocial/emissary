@@ -173,7 +173,7 @@ func (w Profile) StatusMessage() string {
 }
 
 func (w Profile) ImageURL() string {
-	return w.user.ImageURL
+	return w.user.ActivityPubAvatarURL()
 }
 
 func (w Profile) Location() string {
@@ -185,35 +185,35 @@ func (w Profile) Links() []model.PersonLink {
 }
 
 func (w Profile) ActivityPubProfileURL() string {
-	return w.user.ActivityPubProfileURL(w.Host())
+	return w.user.ActivityPubProfileURL()
 }
 
 func (w Profile) ActivityPubAvatarURL() string {
-	return w.user.ActivityPubAvatarURL(w.Host())
+	return w.user.ActivityPubAvatarURL()
 }
 
 func (w Profile) ActivityPubInboxURL() string {
-	return w.user.ActivityPubInboxURL(w.Host())
+	return w.user.ActivityPubInboxURL()
 }
 
 func (w Profile) ActivityPubOutboxURL() string {
-	return w.user.ActivityPubOutboxURL(w.Host())
+	return w.user.ActivityPubOutboxURL()
 }
 
 func (w Profile) ActivityPubFollowersURL() string {
-	return w.user.ActivityPubFollowersURL(w.Host())
+	return w.user.ActivityPubFollowersURL()
 }
 
 func (w Profile) ActivityPubFollowingURL() string {
-	return w.user.ActivityPubFollowingURL(w.Host())
+	return w.user.ActivityPubFollowingURL()
 }
 
 func (w Profile) ActivityPubLikedURL() string {
-	return w.user.ActivityPubLikedURL(w.Host())
+	return w.user.ActivityPubLikedURL()
 }
 
 func (w Profile) ActivityPubPublicKeyURL() string {
-	return w.user.ActivityPubPublicKeyURL(w.Host())
+	return w.user.ActivityPubPublicKeyURL()
 }
 
 /*******************************************

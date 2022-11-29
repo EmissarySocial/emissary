@@ -16,8 +16,6 @@
 		}
 
 	def previewUploads()
-		log #file-upload
-		log #file-upload.files
 		set #file-preview.innerHTML to ""
 		repeat for file in #file-upload.files
 			append '<div><img src="' + URL.createObjectURL(file) + '"></div>' to #file-preview.innerHTML

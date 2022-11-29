@@ -33,47 +33,31 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 		// Cast the context into a steranko context (which includes authentication data)
 		sterankoContext := ctx.(*steranko.Context)
 
-		// Get the domain factory from the context
+		// Get the Domain factory from the context
 		factory, err := serverFactory.ByContext(sterankoContext)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading domain factory")
 		}
 
-		// Get the UserID from the URL
-		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
+		// Load the User from the database
+		userService := factory.User()
+		username := ctx.Param("userId")
+		user := model.NewUser()
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error parsing user ID")
+		if err := userService.LoadByToken(username, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", username)
 		}
 
-		// Get the attachmentID from the URL
-		attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error parsing attachment ID")
-		}
-
-		// Try to load the attachment from the database
-		attachmentService := factory.Attachment()
-		attachment, err := attachmentService.LoadByID(model.AttachmentTypeUser, userID, attachmentID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading attachment")
-		}
-
-		// Check ETags to see if the browser already has a copy of this
-		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader != "" {
-
-			if attachment.ETag() == matchHeader {
-				return ctx.NoContent(http.StatusNotModified)
-			}
+		// Check ETags for the user's avatar
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == user.ImageID.Hex() {
+			return ctx.NoContent(http.StatusNotModified)
 		}
 
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
 		filespec := mediaserver.FileSpec{
-			Filename:  attachment.AttachmentID.Hex(),
+			Filename:  user.ImageID.Hex(),
 			Extension: ".webp",
 			MimeType:  "image/webp",
 			Height:    300,
@@ -82,8 +66,8 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 
 		header := ctx.Response().Header()
 
-		header.Set("Mime-Type", attachment.DownloadMimeType())
-		header.Set("ETag", attachment.ETag())
+		header.Set("Mime-Type", "image/webp")
+		header.Set("ETag", user.ImageID.Hex())
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {

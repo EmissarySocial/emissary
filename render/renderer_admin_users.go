@@ -129,7 +129,7 @@ func (w User) DisplayName() string {
 }
 
 func (w User) ImageURL() string {
-	return w.user.ImageURL
+	return w.user.ActivityPubAvatarURL()
 }
 
 /*******************************************

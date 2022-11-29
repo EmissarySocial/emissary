@@ -27,7 +27,7 @@ func (db *Database) OutboxForInbox(ctx context.Context, inboxURL *url.URL) (outb
 	}
 
 	// Get the OutboxURL for the User
-	outboxURL, err = url.Parse(user.ActivityPubOutboxURL(db.hostname))
+	outboxURL, err = url.Parse(user.ActivityPubOutboxURL())
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing outbox URL", outboxURL)

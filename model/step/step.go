@@ -135,6 +135,9 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "refresh-page":
 		return NewRefreshPage(stepInfo)
 
+	case "reload-page":
+		return NewReloadPage(stepInfo)
+
 	// SERVER-SIDE CONTROL LOGIC
 
 	case "if":

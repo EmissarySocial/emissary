@@ -7,6 +7,7 @@
 				<link rel="canonical" class="u-url" href="{{.ActivityPubProfileURL}}"></link>
 
 				{{- if .UserCan "edit-photo" -}}
+					<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 					<link rel="stylesheet" href="/static/nebula/uploader.css"/>
 
 					<div role="button" hx-get="/@me/edit-photo">

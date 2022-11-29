@@ -57,7 +57,7 @@ func (service *DomainEmail) SendWelcome(user model.User) error {
 		service.smtp,
 		"user-welcome",
 		service.owner.EmailAddress,
-		[]string{user.Username},
+		[]string{user.EmailAddress},
 		"Welcome to Emissary",
 		maps.Map{
 			// User info available to the template
@@ -74,7 +74,7 @@ func (service *DomainEmail) SendWelcome(user model.User) error {
 		},
 	)
 
-	return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", user.Username)
+	return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", user.EmailAddress)
 }
 
 // SendPasswordReset sends a passowrd reset email to the user.  This method
@@ -85,7 +85,7 @@ func (service *DomainEmail) SendPasswordReset(user model.User) {
 		service.smtp,
 		"user-password-reset",
 		service.owner.EmailAddress,
-		[]string{user.Username},
+		[]string{user.EmailAddress},
 		"Emissary Password Reset",
 		maps.Map{
 			// User info available to the template
@@ -102,7 +102,7 @@ func (service *DomainEmail) SendPasswordReset(user model.User) {
 		},
 	)
 
-	derp.Report(derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", user.Username))
+	derp.Report(derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending password reset email to user", user.Username))
 }
 
 func (service *DomainEmail) host() string {

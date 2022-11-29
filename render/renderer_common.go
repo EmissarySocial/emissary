@@ -286,7 +286,7 @@ func (w Common) UserImage() (string, error) {
 		return "", derp.Report(derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User"))
 	}
 
-	return user.ImageURL, nil
+	return user.ActivityPubAvatarURL(), nil
 }
 
 func (w Common) authorization() model.Authorization {

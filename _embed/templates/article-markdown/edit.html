@@ -1,16 +1,11 @@
 <script type="text/hyperscript">
 	def saveDraft(promote)
-		log "saveDraft"
 		send save to #markdownForm
-		log "sent"
 		wait for htmx:afterOnLoad from #markdownForm
-		log "waited"
 		if promote then
-			log "promote"
 			fetch /{{.Token}}/promote-draft with method:"POST"
 		end
 
-		log "done"
 		set window.location to "/{{.Token}}"
 	end
 </script>

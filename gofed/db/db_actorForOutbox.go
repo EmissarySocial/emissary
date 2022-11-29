@@ -26,7 +26,7 @@ func (db *Database) ActorForOutbox(ctx context.Context, outboxURL *url.URL) (act
 	}
 
 	// Get the Profile URL for the User
-	actorURL, err = url.Parse(user.ActivityPubProfileURL(db.hostname))
+	actorURL, err = url.Parse(user.ActivityPubProfileURL())
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing actor URL", actorURL)

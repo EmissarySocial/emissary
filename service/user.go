@@ -74,6 +74,9 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
 
+	// RULE: Set ProfileURL to the hostname + the username
+	user.ProfileURL = service.host + "/@" + user.Username
+
 	// RULE: If password reset has already expired, then clear the reset code
 	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
 		user.PasswordReset.AuthCode = ""
@@ -326,11 +329,11 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+username).
-		Alias(user.ActivityPubProfileURL(service.host)).
-		Link(digit.RelationTypeProfile, "text/html", user.ActivityPubProfileURL(service.host)).
-		Link(digit.RelationTypeSelf, "application/activity+json", user.ActivityPubURL(service.host)).
-		Link(digit.RelationTypeAvatar, "image/*", user.ActivityPubAvatarURL(service.host)).
-		Link(digit.RelationTypeSubscribeRequest, "", user.ActivityPubSubscribeRequestURL(service.host))
+		Alias(user.ActivityPubProfileURL()).
+		Link(digit.RelationTypeProfile, "text/html", user.ActivityPubProfileURL()).
+		Link(digit.RelationTypeSelf, "application/activity+json", user.ActivityPubURL()).
+		Link(digit.RelationTypeAvatar, "image/*", user.ActivityPubAvatarURL()).
+		Link(digit.RelationTypeSubscribeRequest, "", user.ActivityPubSubscribeRequestURL())
 
 	return result, nil
 }

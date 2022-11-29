@@ -143,9 +143,10 @@
 					{"step": "view-html"},
 					{"step": "delete-attachments", "all":true},
 					{"step": "upload-attachments", "maximum":1},
-					{"step": "set-thumbnail", "path":"imageUrl"},
+					{"step": "set-thumbnail", "path":"imageId"},
 					{"step": "save", "comment": "Profile photo updated by {{.Author}}"}
-				]}
+				]},
+				{"step":"reload-page"}
 			]
 		},
 		"edit-links": {
@@ -177,9 +178,9 @@
 			"roles":["myself"],
 			"steps":[
 				{"step": "delete-attachments", "all":true},
-				{"step": "set-thumbnail", "path":"imageUrl"},
+				{"step": "set-thumbnail", "path":"imageId"},
 				{"step": "save", "comment": "Profile photo deleted by {{.Author}}"},
-				{"step": "trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+				{"step": "reload-page"}
 			]
 		}
 	}

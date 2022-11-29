@@ -37,23 +37,19 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 
 	// Scan all attachments and use the first one that is an image.
 	for _, attachment := range attachments {
-
 		if attachment.MimeCategory() == "image" {
 
-			imageURL := renderer.Permalink()
-
+			// Special case for User objects (this should always be "imageId")
 			if objectType == "User" {
-				imageURL = imageURL + "/avatar/" + attachment.AttachmentID.Hex()
-			} else {
-				imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
+				return path.Set(renderer.object(), step.Path, attachment.AttachmentID)
 			}
 
-			err := path.Set(renderer.object(), step.Path, imageURL)
-			return err
+			// Standard path for all other records
+			imageURL := renderer.Permalink()
+			imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
+			return path.Set(renderer.object(), step.Path, imageURL)
 		}
 	}
 
-	// Fall through to here means we should look at body content (but not now)
-	// So, for now, if there's no thumbnail, then set "" as default
 	return path.Set(renderer.object(), step.Path, "")
 }
