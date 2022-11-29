@@ -70,6 +70,8 @@ func (service Icons) Get(name string) string {
 		return service.get("box-arrow-in-right")
 	case "save":
 		return service.get("check-lg")
+	case "search":
+		return service.get("search")
 	case "settings":
 		return service.get("gear")
 	case "settings-fill":
@@ -146,6 +148,10 @@ func (service Icons) Get(name string) string {
 		return service.get("cart")
 	case "shopping-cart-fill":
 		return service.get("cart-fill")
+	case "video":
+		return service.get("camera-video")
+	case "video-fill":
+		return service.get("camera-video-fill")
 	}
 
 	return service.get(name)

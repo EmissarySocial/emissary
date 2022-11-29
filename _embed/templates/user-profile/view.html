@@ -8,8 +8,6 @@
 
 				{{- if .UserCan "edit-photo" -}}
 					<link rel="stylesheet" href="/static/nebula/uploader.css"/>
-					<script src="/static/autolinker.min.js"></script>
-					<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
 					<div role="button" hx-get="/@me/edit-photo">
 						{{- if ne "" .ActivityPubAvatarURL -}}

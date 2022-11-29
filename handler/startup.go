@@ -39,7 +39,8 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 
 		// Find/Create new database record for the domain.
 		domainService := factory.Domain()
-		var domain model.Domain
+		domain := model.NewDomain()
+
 		if err := domainService.Load(&domain); err != nil {
 			if derp.NotFound(err) {
 				if err := domainService.Save(&domain, "Created by startup wizard"); err != nil {

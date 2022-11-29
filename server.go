@@ -143,8 +143,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 
-	// IndieWeb Routes
+	// Built-In Service  Routes
 	e.POST("/.webmention", handler.PostWebMention(factory))
+	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))

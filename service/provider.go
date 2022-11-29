@@ -37,6 +37,9 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	// Create an adapter for known providers
 	switch providerID {
 
+	case providers.ProviderTypeGiphy:
+		return service.GetGiphyProvider(), true
+
 	case providers.ProviderTypeStripe:
 		return service.GetStripeProvider(), true
 
@@ -45,6 +48,10 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	}
 
 	return providers.Null{}, false
+}
+
+func (service *Provider) GetGiphyProvider() providers.Giphy {
+	return providers.NewGiphy()
 }
 
 // GetStripeProvider returns a populated Stripe adapter

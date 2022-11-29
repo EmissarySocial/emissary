@@ -15,6 +15,13 @@ func Providers() []form.LookupCode {
 			Group:       "OAUTH",
 		},
 		{
+			Value:       "GIPHY",
+			Label:       "Giphy",
+			Icon:        "film",
+			Description: "TBD",
+			Group:       "MANUAL",
+		},
+		{
 			Value:       "INSTAGRAM",
 			Label:       "Instagram",
 			Icon:        "instagram",

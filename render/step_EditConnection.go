@@ -3,7 +3,9 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/providers"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
 )
@@ -86,6 +88,11 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	// Run post-configuration scripts, if any
 	if err := adapter.AfterConnect(renderer.factory(), &client); err != nil {
 		return derp.Wrap(err, location, "Error installing client")
+	}
+
+	// Prevent nil maps
+	if domainRenderer.domain.Clients == nil {
+		domainRenderer.domain.Clients = make(set.Map[model.Client])
 	}
 
 	domainRenderer.domain.Clients.Put(client)

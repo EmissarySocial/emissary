@@ -136,7 +136,7 @@ func ActivityPub_GenericHandler(serverFactory *server.Factory) echo.HandlerFunc 
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPubHandler", "Error creating ActivityStreamsHandler")
+			return derp.Wrap(err, location, "Error creating ActivityStreamsHandler")
 		}
 
 		handlerFunc := pub.NewActivityStreamsHandler(factory.ActivityPub_Database(), factory.ActivityPub_Clock())
@@ -144,11 +144,11 @@ func ActivityPub_GenericHandler(serverFactory *server.Factory) echo.HandlerFunc 
 		isActivityPubRequest, err := handlerFunc(ctx.Request().Context(), ctx.Response().Writer, ctx.Request())
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "gofed.OtherHandlerFunc", "Error creating ActivityStreamsHandler"))
+			return derp.Report(derp.Wrap(err, location, "Error creating ActivityStreamsHandler"))
 		}
 
 		if !isActivityPubRequest {
-			return derp.NewBadRequestError("gofed.OtherHandlerFunc", "Not an ActivityPub request")
+			return derp.NewBadRequestError(location, "Not an ActivityPub request")
 		}
 
 		// Otherwise, go-fed handled the ActivityPub request

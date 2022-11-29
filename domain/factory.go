@@ -527,7 +527,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 
 	const location = "domain.factory.StripeClient"
 
-	var domain model.Domain
+	domain := model.NewDomain()
 	domainService := factory.Domain()
 
 	// Load the domain from the database

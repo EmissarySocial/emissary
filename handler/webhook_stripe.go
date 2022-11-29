@@ -47,7 +47,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 		} else {
 
 			// Get the model.Domain for this domain
-			var domain model.Domain
+			domain := model.NewDomain()
 			domainService := factory.Domain()
 
 			if err := domainService.Load(&domain); err != nil {

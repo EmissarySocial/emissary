@@ -39,6 +39,7 @@ func NewDomain(collection data.Collection, configuration config.Domain, userServ
 		userService:     userService,
 		funcMap:         funcMap,
 		lock:            &sync.Mutex{},
+		model:           model.NewDomain(),
 	}
 
 	service.Refresh(collection, configuration)
@@ -407,7 +408,7 @@ func (service *Domain) ReadOAuthClient(providerID string) (model.Domain, model.C
 
 	const location = "service.Domain.NewOAuthState"
 
-	var domain model.Domain
+	domain := model.NewDomain()
 
 	if err := service.Load(&domain); err != nil {
 		return model.Domain{}, model.Client{}, derp.Wrap(err, location, "Error loading domain")

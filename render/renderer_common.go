@@ -38,6 +38,7 @@ func NewCommon(factory Factory, context *steranko.Context, template *model.Templ
 		action:      action,
 		actionID:    actionID,
 		requestData: maps.New(),
+		domain:      model.NewDomain(),
 	}
 }
 

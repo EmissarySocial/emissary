@@ -1,5 +1,9 @@
+<!-- https://github.com/gregjacobs/Autolinker.js -->
 <script src="/static/autolinker.min.js"></script>
+
+<!-- https://github.com/abhas9/vanilla-caret-js -->
 <script src="/static/vanillaCaret.min.js" id="vanillaCaretScript"></script>
+
 <script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 
 <script type="text/hyperscript">
@@ -58,11 +62,22 @@
 		name="file" 
 		class="hide">
 
-	<div class="text-sm">
-		<button type="submit" class="primary htmx-request-hide">New Post</button>
-		<button type="button" class="primary htmx-request-show" disabled>Posting...</button>
-		&nbsp;
-		<label for="file-upload" class="link text-lg" role="button">{{icon "image"}}</label>
+	<div>
+		<span class="text-sm">
+			<button type="submit" class="primary htmx-request-hide">New Post</button>
+			<button type="button" class="primary htmx-request-show" disabled>Posting...</button>
+		</span>
+		<span class="text-lg">
+			&nbsp;
+			<label for="file-upload" class="link" role="button">{{icon "image"}}</label>
+			&nbsp;
+			<label class="link" role="button" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
+			<!--
+				&nbsp;
+				<label class="link" role="button" hx-get="/.giphy" hx-target="#giphy-search" hx-swap="innerHTML" hx-push-url="false">{{icon "search"}}</label>
+				<div id="giphy-search" class="inline-block" style="position:relative; width:100%; max-width:200px;"></div>
+			-->
+		</span>
 	</div>
 </form>
 
