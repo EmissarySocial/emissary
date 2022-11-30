@@ -8,7 +8,7 @@
 
 body {
 	background-color: var(--body-background);
-	color: var(--gray70);
+	color: var(--text-color);
 	overflow-x: hidden;
 }
 

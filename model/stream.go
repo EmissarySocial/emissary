@@ -12,24 +12,24 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID        primitive.ObjectID   `path:"streamId"       json:"streamId"            bson:"_id"`               // Unique identifier of this Stream.  (NOT USED PUBLICLY)
-	ParentID        primitive.ObjectID   `path:"parentId"       json:"parentId"            bson:"parentId"`          // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	Token           string               `path:"token"          json:"token"               bson:"token"`             // Unique value that identifies this element in the URL
-	TopLevelID      string               `path:"topLevelId"     json:"topLevelId"          bson:"topLevelId"`        // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
-	TemplateID      string               `path:"templateId"     json:"templateId"          bson:"templateId"`        // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
-	StateID         string               `path:"stateId"        json:"stateId"             bson:"stateId"`           // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	Permissions     Permissions          `path:"permissions"    json:"permissions"         bson:"permissions"`       // Permissions for which users can access this stream.
-	DefaultAllow    []primitive.ObjectID `path:"defaultAllow"   json:"defaultAllow"        bson:"defaultAllow"`      // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
-	Document        DocumentLink         `path:"document"       json:"document"            bson:"document"`          // Link to the object that this stream is about
-	Origin          OriginLink           `path:"origin"         json:"origin,omitempty"    bson:"origin"`            // If imported, the external document where this stream came from (eg. PESO import)
-	Author          PersonLink           `path:"author"         json:"author"              bson:"author"`            // Author information for this stream
-	ReplyTo         ReplyToLink          `path:"replyTo"        json:"replyTo,omitempty"   bson:"replyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
-	Content         Content              `path:"content"        json:"content"             bson:"content,omitempty"` // Content objects for this stream.
-	Data            maps.Map             `path:"data"           json:"data"                bson:"data,omitempty"`    // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	Rank            int                  `path:"rank"           json:"rank"                bson:"rank"`              // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	AsFeature       bool                 `path:"asFeature"      json:"asFeature"           bson:"asFeature"`         // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
-	PublishDate     int64                `path:"publishDate"    json:"publishDate"         bson:"publishDate"`       // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate   int64                `path:"unpublishDate " json:"unpublishDate"       bson:"unpublishDate"`     // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	StreamID        primitive.ObjectID   `path:"streamId"       json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
+	ParentID        primitive.ObjectID   `path:"parentId"       json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	Token           string               `path:"token"          json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
+	TopLevelID      string               `path:"topLevelId"     json:"topLevelId"          bson:"topLevelId"`          // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
+	TemplateID      string               `path:"templateId"     json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	StateID         string               `path:"stateId"        json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	Permissions     Permissions          `path:"permissions"    json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
+	DefaultAllow    []primitive.ObjectID `path:"defaultAllow"   json:"defaultAllow"        bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
+	Document        DocumentLink         `path:"document"       json:"document"            bson:"document"`            // Link to the object that this stream is about
+	Origin          OriginLink           `path:"origin"         json:"origin,omitempty"    bson:"origin"`              // If imported, the external document where this stream came from (eg. PESO import)
+	Author          PersonLink           `path:"author"         json:"author"              bson:"author"`              // Author information for this stream
+	InReplyTo       ReplyToLink          `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	Content         Content              `path:"content"        json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
+	Data            maps.Map             `path:"data"           json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Rank            int                  `path:"rank"           json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	AsFeature       bool                 `path:"asFeature"      json:"asFeature"           bson:"asFeature"`           // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
+	PublishDate     int64                `path:"publishDate"    json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
+	UnPublishDate   int64                `path:"unpublishDate " json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `path:"journal" json:"journal" bson:"journal"`
 }
 
@@ -116,8 +116,8 @@ func (stream *Stream) Links() []Link {
 		result = append(result, stream.Origin.Link())
 	}
 
-	if !stream.ReplyTo.IsEmpty() {
-		result = append(result, stream.ReplyTo.Link())
+	if !stream.InReplyTo.IsEmpty() {
+		result = append(result, stream.InReplyTo.Link())
 	}
 
 	return result

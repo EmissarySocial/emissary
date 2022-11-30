@@ -1,15 +1,39 @@
-<div class="comment">
-    <div class="author">{{.AuthorName}}</div>
-    <div class="description">{{.Summary}}</div>
-    <div class="date">
-        <span>{{ .PublishDate | humanizeTime }}</span>
-    
-        {{- if .UserCan "delete" -}}
-            <a hx-get="/{{.Token}}/delete" hx-push-url="false">delete</a>
-        {{- end -}}    
-    </div>
-</div>
+<div class="page h-item">
 
-<div class="space-above">
-    <button script="on click send closeModal">Close Window</button>
+	<div class="float-right">
+		<button hx-get="/{{.StreamID}}/edit" class="text-sm">Edit Post</button>
+	</div>
+
+	<div style="max-width:600px;"> 
+
+		<div class="p-author space-below">
+			<a href="{{.Author.ProfileURL}}" class="text-plain">
+				<img src="{{.Author.ImageURL}}" class="circle-24 inline-block" style="margin-right:8px;">
+				<div class="inline-block">
+					<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
+					<div class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
+				</div>
+			</a>
+		</div>
+
+		{{- if eq false .InReplyTo.IsEmpty -}}
+			<div class="space-below">
+				<div class="gray50">Replying to <a href="" class="u-in-reply-to">@PersonName, Comment...</a></div>
+			</div>
+		{{- end -}}
+
+		<div class="space-below">
+			<h2 class="p-summary">{{.Summary | html}}</h2>
+		</div>
+
+		{{- if ne .Document.ImageURL "" -}}
+			<div>
+				<img src="{{.Document.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
+			</div>
+		{{- end -}}
+
+		{{.Mentions}}
+
+	</div>
+
 </div>

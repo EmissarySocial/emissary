@@ -35,6 +35,12 @@ func DocumentLinkSchema() schema.Element {
 	}
 }
 
+// IsEmpty returns TRUE if this record does not link to an internal
+// or external document (if both the InternalID and the URL are empty)
+func (doc DocumentLink) IsEmpty() bool {
+	return doc.InternalID.IsZero() && (doc.URL == "")
+}
+
 func (doc *DocumentLink) IsComplete() bool {
 
 	if doc.URL == "" {
@@ -54,4 +60,16 @@ func (doc *DocumentLink) IsComplete() bool {
 	}
 
 	return true
+}
+
+// Link returns a Link to the document that is being replied to
+func (doc DocumentLink) Link(relation string) Link {
+
+	return Link{
+		Relation:   relation,
+		InternalID: doc.InternalID,
+		URL:        doc.URL,
+		Label:      doc.Label,
+		UpdateDate: doc.UpdateDate,
+	}
 }

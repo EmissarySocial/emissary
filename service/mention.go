@@ -62,7 +62,14 @@ func (service *Mention) Close() {
  * Common Data Methods
  *******************************************/
 
-// List returns an iterator containing all of the Mentions who match the provided criteria
+// Query returns a slice containing all of the Mentions that match the provided criteria
+func (service *Mention) Query(criteria exp.Expression, options ...option.Option) ([]model.Mention, error) {
+	result := make([]model.Mention, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// List returns an iterator containing all of the Mentions that match the provided criteria
 func (service *Mention) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
 }
@@ -167,7 +174,15 @@ func (service *Mention) Schema() schema.Schema {
 }
 
 /*******************************************
- * WEB-MENTION HELPERS
+ * Custom Queries
+ *******************************************/
+
+func (service *Mention) QueryByObjectID(objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
+	return service.Query(exp.Equal("objectId", objectID), options...)
+}
+
+/*******************************************
+ * Web-Mention Helpers
  *******************************************/
 
 func (service *Mention) FindLinks(body string) []string {

@@ -30,9 +30,7 @@
 	"actions": {
 		"view": {
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
-				]}
+				{"step":"view-html"}
 			]
 		},
 		"create":{

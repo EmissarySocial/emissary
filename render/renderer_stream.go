@@ -227,6 +227,11 @@ func (w Stream) Author() model.PersonLink {
 	return w.stream.Author
 }
 
+// AuthorURL returns the public URL of the person who created this Stream
+func (w Stream) AuthorURL() string {
+	return w.stream.Author.ProfileURL
+}
+
 // Name of the person who created this Stream
 func (w Stream) AuthorName() string {
 	return w.stream.Author.Name
@@ -290,17 +295,13 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
+func (w Stream) InReplyTo() model.ReplyToLink {
+	return w.stream.InReplyTo
+}
+
 // IsReply returns TRUE if this stream is marked as a reply to another stream or resource
 func (w Stream) IsReply() bool {
-	return (w.stream.ReplyTo.IsEmpty())
-}
-
-func (w Stream) ReplyToURL() string {
-	return w.stream.ReplyTo.URL
-}
-
-func (w Stream) ReplyToID() primitive.ObjectID {
-	return w.stream.ReplyTo.InternalID
+	return (w.stream.InReplyTo.IsEmpty())
 }
 
 // IsEmpty returns TRUE if the stream is an empty placeholder.
@@ -456,6 +457,11 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 
 	// Fall through means no streams are valid.  Return an empty renderer instead.
 	return Stream{}
+}
+
+func (w Stream) Mentions() ([]model.Mention, error) {
+	mentionService := w.factory().Mention()
+	return mentionService.QueryByObjectID(w.stream.StreamID)
 }
 
 /*******************************************

@@ -7,7 +7,7 @@
 
 	{{- range $outbox -}}
 		<hr style="border-color:var(--gray10);">
-		<div hx-get="/{{.StreamID.Hex}}" role="button" class="h-entry" style="display:grid; column-gap:16px; row-gap:16px; grid-template-columns: 60px 1fr; margin-bottom:20px;">
+		<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="h-entry" style="display:grid; column-gap:16px; row-gap:16px; grid-template-columns: 60px 1fr; margin-bottom:20px;">
 			<div style="height:60px; width:60px;">
 				{{- if ne .Author.ImageURL ""}}
 					<img src="{{.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
