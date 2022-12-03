@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -213,7 +212,7 @@ func (service *User) LoadByUsername(username string, result *model.User) error {
 func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model.User) error {
 	criteria := exp.Equal("username", usernameOrEmail).OrEqual("emailAddress", usernameOrEmail)
 	err := service.Load(criteria, result)
-	spew.Dump(criteria, result, err)
+
 	return err
 }
 
@@ -298,22 +297,56 @@ func (service *User) SetOwner(owner config.Owner) error {
 	return nil
 }
 
+// MakeNewPasswordResetCode generates a new password reset code for the provided user.
+func (service *User) MakeNewPasswordResetCode(user *model.User) error {
+
+	// Create a new password reset code for this user
+	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+
+	// Try to save the user with the new password reset code.
+	if err := service.Save(user, "Create Password Reset Code"); err != nil {
+
+		return derp.Wrap(err, "service.User", "Error saving user", user)
+	}
+
+	return nil
+}
+
+// ResetPassword resets the password for the provided user
+func (service *User) ResetPassword(user *model.User, resetCode string, newPassword string) error {
+
+	// Verify that the password reset code is valid
+	if !user.PasswordReset.IsValid(resetCode) {
+		return derp.NewForbiddenError("service.User", "Invalid password reset code", user, resetCode)
+	}
+
+	// Update the password
+	user.Password = newPassword
+
+	// Invalidate the old reset code.
+	user.PasswordReset = model.PasswordReset{}
+
+	// Try to save the user with the new password reset code.
+	if err := service.Save(user, "Create Password Reset Code"); err != nil {
+		return derp.Wrap(err, "service.User", "Error saving user", user)
+	}
+
+	return nil
+}
+
 // SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.
 func (service *User) SendWelcomeEmail(user *model.User) {
 
-	// Create a new password reset code for this user
-	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+	if err := service.MakeNewPasswordResetCode(user); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error making password reset", user))
+		return
+	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendWelcome(user); err != nil {
 		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
 		return
-	}
-
-	// Try to save the user with the new password reset code.
-	if err := service.Save(user, "Send Welcome Email"); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
 	}
 }
 
@@ -321,18 +354,15 @@ func (service *User) SendWelcomeEmail(user *model.User) {
 // If there is a problem sending the email, then the new code is not saved.
 func (service *User) SendPasswordResetEmail(user *model.User) {
 
-	// Create a new password reset code for this user
-	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+	if err := service.MakeNewPasswordResetCode(user); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error making password reset", user))
+		return
+	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
 		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
 		return
-	}
-
-	// Try to save the user with the new password reset code.
-	if err := service.Save(user, "Send Password Reset"); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
 	}
 }
 

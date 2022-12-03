@@ -110,15 +110,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		user := model.NewUser()
 
 		if err := userService.LoadByUsernameOrEmail(transaction.EmailAddress, &user); err == nil {
-
-			// Send the reset email (or not, IDC..)
-			emailService := factory.Email()
-
-			if err := emailService.SendPasswordReset(&user); err != nil {
-				return derp.Wrap(err, "handler.PostResetPassword", "Error sending password reset email")
-			}
-		} else {
-			spew.Dump("Password Reset Failed", transaction)
+			userService.SendPasswordResetEmail(&user)
 		}
 
 		// Return a success message regardless of whether or not the user was found.
@@ -137,12 +129,16 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		spew.Dump("GetResetCode")
+
 		// Try to get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
 		}
+
+		spew.Dump("have factory")
 
 		// Try to load the user by userID and resetCode
 		userService := factory.User()
@@ -151,9 +147,14 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		userID := ctx.QueryParam("userId")
 		resetCode := ctx.QueryParam("code")
 
+		spew.Dump(userID, resetCode)
+
 		if err := userService.LoadByResetCode(userID, resetCode, &user); err != nil {
+			spew.Dump(err)
 			return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
 		}
+
+		spew.Dump(user)
 
 		// Try to render the HTML response
 		template := factory.Layout().Global().HTMLTemplate
@@ -164,10 +165,14 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 			"code":        resetCode,
 		}
 
+		spew.Dump(object)
+
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
+			spew.Dump(err)
 			return derp.Wrap(err, "handler.GetResetCode", "Error executing template")
 		}
 
+		spew.Dump("success??")
 		return nil
 	}
 }

@@ -36,7 +36,7 @@ func PasswordResetSchema() schema.Element {
 
 // IsValid returns TRUE if the password reset code is valid and has not expired.
 func (reset PasswordReset) IsValid(code string) bool {
-	return (reset.AuthCode == code) && !reset.IsExpired()
+	return (code != "") && (reset.AuthCode == code) && !reset.IsExpired()
 }
 
 // IsExpired returns TRUE if the password reset has expired
