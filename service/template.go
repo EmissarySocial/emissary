@@ -221,7 +221,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	for key := range service.templates {
 		keys = append(keys, key)
 	}
-	return nil, derp.New(404, "sevice.Template.Load", "Template not found", templateID, keys)
+	return nil, derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID, keys)
 }
 
 /*******************************************
@@ -282,7 +282,7 @@ func (service *Template) State(templateID string, stateID string) (model.State, 
 	state, ok := template.State(stateID)
 
 	if !ok {
-		return state, derp.New(500, "service.Template.State", "Invalid state", templateID, stateID)
+		return state, derp.NewInternalError("service.Template.State", "Invalid state", templateID, stateID)
 	}
 
 	// Success!

@@ -62,7 +62,7 @@ func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 	sterankoContext, ok := ctx.(*steranko.Context)
 
 	if !ok {
-		return primitive.NilObjectID, derp.New(http.StatusUnauthorized, location, "Invalid Authorization")
+		return primitive.NilObjectID, derp.NewUnauthorizedError(, location, "Invalid Authorization")
 	}
 
 	authorization, err := sterankoContext.Authorization()
@@ -76,7 +76,7 @@ func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 	auth, ok := authorization.(*model.Authorization)
 
 	if !ok {
-		return primitive.NilObjectID, derp.New(http.StatusUnauthorized, location, "Invalid Authorization", authorization)
+		return primitive.NilObjectID, derp.NewUnauthorizedError(, location, "Invalid Authorization", authorization)
 	}
 
 	return auth.UserID, nil

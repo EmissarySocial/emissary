@@ -31,7 +31,7 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 		f, ok := w.(http.Flusher)
 
 		if !ok {
-			return derp.Report(derp.New(500, "handler.ServerSentEvent", "Streaming Not Supported"))
+			return derp.Report(derp.NewInternalError("handler.ServerSentEvent", "Streaming Not Supported"))
 		}
 
 		token := ctx.Param("stream")

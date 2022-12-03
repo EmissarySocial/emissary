@@ -69,13 +69,13 @@ func (following *Following) GetString(name string) (string, error) {
 }
 
 func (following *Following) GetInt(name string) (int, error) {
-	return 0, derp.New(500, "model.following.GetInt", "Invalid property", name)
+	return 0, derp.NewInternalError("model.following.GetInt", "Invalid property", name)
 }
 
 func (following *Following) GetInt64(name string) (int64, error) {
-	return 0, derp.New(500, "model.following.GetInt64", "Invalid property", name)
+	return 0, derp.NewInternalError("model.following.GetInt64", "Invalid property", name)
 }
 
 func (following *Following) GetBool(name string) (bool, error) {
-	return false, derp.New(500, "model.following.GetBool", "Invalid property", name)
+	return false, derp.NewInternalError("model.following.GetBool", "Invalid property", name)
 }

@@ -39,7 +39,7 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "handler.PostSignIn", "Invalid Domain.")
+			return derp.NewInternalError("handler.PostSignIn", "Invalid Domain.")
 		}
 
 		s := factory.Steranko()
@@ -63,7 +63,7 @@ func PostSignOut(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "handler.PostSignOut", "Invalid Request.  Please try again later.")
+			return derp.NewInternalError("handler.PostSignOut", "Invalid Request.  Please try again later.")
 		}
 
 		s := factory.Steranko()
@@ -101,7 +101,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "handler.GetResetCode", "Invalid domain")
+			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
 		}
 
 		// Try to load the user by username.  If the user cannot be found, the response
@@ -197,7 +197,7 @@ func PostResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "handler.GetResetCode", "Invalid domain")
+			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
 		}
 
 		// Try to load the user by userID and resetCode
