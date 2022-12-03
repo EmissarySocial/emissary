@@ -10,12 +10,14 @@ import (
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
 type SterankoUserService struct {
 	userService *User
+	domainEmail *DomainEmail
 }
 
 // NewSterankoUserService returns a fully populated SterankoUserService.
-func NewSterankoUserService(userService *User) SterankoUserService {
+func NewSterankoUserService(userService *User, domainEmail *DomainEmail) SterankoUserService {
 	return SterankoUserService{
 		userService: userService,
+		domainEmail: domainEmail,
 	}
 }
 
@@ -63,7 +65,12 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 
 // RequestPasswordReset is not currently implemented in this service. (TODO)
 func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
-	return nil
+
+	if user, ok := user.(*model.User); ok {
+		return service.domainEmail.SendPasswordReset(user)
+	}
+
+	return derp.NewInternalError("service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // NewClaims creates a new JWT claim object

@@ -108,7 +108,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 
 		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
-		domainEmailService.SendWelcome(user)
+		domainEmailService.SendWelcome(&user)
 
 		return nil
 	}

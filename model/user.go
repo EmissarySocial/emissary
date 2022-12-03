@@ -20,8 +20,8 @@ type User struct {
 	StatusMessage   string               `path:"statusMessage"  json:"statusMessage"   bson:"statusMessage"` // Status summary for this user
 	Location        string               `path:"location"       json:"location"        bson:"location"`      // Human-friendly description of this user's physical location.
 	Links           []PersonLink         `path:"links"          json:"links"           bson:"links"`         // Slice of links to profiles on other web services.
-	EmailAddress    string               `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`  // Email address for this user
 	ProfileURL      string               `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`    // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress    string               `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`  // Email address for this user
 	Username        string               `path:"username"       json:"username"        bson:"username"`      // This is the primary public identifier for the user.
 	Password        string               `path:"password"       json:"password"        bson:"password"`      // This password should be encrypted with BCrypt.
 	IsOwner         bool                 `path:"isOwner"        json:"isOwner"         bson:"isOwner"`       // If TRUE, then this user is a website owner with FULL privileges.

@@ -50,7 +50,7 @@ func (service *DomainEmail) Refresh(configuration config.Domain) {
 
 // SendWelcome sends a welcome email to the user.  This method
 // returns an error so that it CAN NOT be run asynchronously.
-func (service *DomainEmail) SendWelcome(user model.User) error {
+func (service *DomainEmail) SendWelcome(user *model.User) error {
 
 	// Send the welcome email
 	err := service.serverEmail.Send(
@@ -79,7 +79,8 @@ func (service *DomainEmail) SendWelcome(user model.User) error {
 
 // SendPasswordReset sends a passowrd reset email to the user.  This method
 // swallows errors so that it can be run asynchronously.
-func (service *DomainEmail) SendPasswordReset(user model.User) {
+func (service *DomainEmail) SendPasswordReset(user *model.User) error {
+
 	// Send the welcome email
 	err := service.serverEmail.Send(
 		service.smtp,
@@ -102,7 +103,7 @@ func (service *DomainEmail) SendPasswordReset(user model.User) {
 		},
 	)
 
-	derp.Report(derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending password reset email to user", user.Username))
+	return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending password reset email to user", user.Username)
 }
 
 func (service *DomainEmail) host() string {

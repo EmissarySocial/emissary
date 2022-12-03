@@ -4,6 +4,8 @@ go 1.19
 
 replace github.com/benpate/data => ../../benpate/data
 
+replace github.com/benpate/exp => ../../benpate/exp
+
 replace github.com/benpate/digit => ../../benpate/digit
 
 replace github.com/benpate/exp-builder => ../../benpate/exp-builder

@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -208,6 +209,14 @@ func (service *User) LoadByUsername(username string, result *model.User) error {
 	return service.Load(criteria, result)
 }
 
+// LoadByUsernameOrEmail loads a single model.User object that matches the provided username
+func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model.User) error {
+	criteria := exp.Equal("username", usernameOrEmail).OrEqual("emailAddress", usernameOrEmail)
+	err := service.Load(criteria, result)
+	spew.Dump(criteria, result, err)
+	return err
+}
+
 // LoadByUsername loads a single model.User object that matches the provided token
 func (service *User) LoadByToken(token string, result *model.User) error {
 
@@ -297,13 +306,32 @@ func (service *User) SendWelcomeEmail(user *model.User) {
 	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
-	if err := service.emailService.SendWelcome(*user); err != nil {
+	if err := service.emailService.SendWelcome(user); err != nil {
 		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
 		return
 	}
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(user, "Send Welcome Email"); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
+	}
+}
+
+// SendPasswordResetEmail generates a new password reset code and sends a welcome email to a new user.
+// If there is a problem sending the email, then the new code is not saved.
+func (service *User) SendPasswordResetEmail(user *model.User) {
+
+	// Create a new password reset code for this user
+	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+
+	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
+	if err := service.emailService.SendPasswordReset(user); err != nil {
+		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
+		return
+	}
+
+	// Try to save the user with the new password reset code.
+	if err := service.Save(user, "Send Password Reset"); err != nil {
 		derp.Report(derp.Wrap(err, "service.User", "Error saving user", user))
 	}
 }

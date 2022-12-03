@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -88,7 +89,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		var transaction struct {
-			Email string `form:"email"`
+			EmailAddress string `form:"emailAddress"`
 		}
 
 		// Try to get the POST transaction data from the request body
@@ -108,11 +109,16 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByUsername(transaction.Email, &user); err == nil {
+		if err := userService.LoadByUsernameOrEmail(transaction.EmailAddress, &user); err == nil {
 
 			// Send the reset email (or not, IDC..)
 			emailService := factory.Email()
-			go emailService.SendPasswordReset(user)
+
+			if err := emailService.SendPasswordReset(&user); err != nil {
+				return derp.Wrap(err, "handler.PostResetPassword", "Error sending password reset email")
+			}
+		} else {
+			spew.Dump("Password Reset Failed", transaction)
 		}
 
 		// Return a success message regardless of whether or not the user was found.
@@ -135,7 +141,7 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.New(500, "handler.GetResetCode", "Invalid domain")
+			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
 		}
 
 		// Try to load the user by userID and resetCode

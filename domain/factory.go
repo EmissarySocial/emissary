@@ -495,7 +495,7 @@ func (factory *Factory) Queue() *queue.Queue {
 func (factory *Factory) Steranko() *steranko.Steranko {
 
 	return steranko.New(
-		service.NewSterankoUserService(factory.User()),
+		service.NewSterankoUserService(factory.User(), factory.Email()),
 		factory.Key(),
 		steranko.Config{
 			PasswordSchema: schema.Schema{Element: schema.String{}},
