@@ -152,17 +152,13 @@ func (service *Block) Schema() schema.Schema {
 }
 
 /*******************************************
- * Custom Queries
+ * Custom Actions
  *******************************************/
 
-func (service *Block) QueryAllURLs(criteria exp.Expression) ([]string, error) {
+func (service *Block) AllowSender(person *model.PersonLink) (bool, error) {
+	return true, nil
+}
 
-	result := make([]string, 0)
-	fields := option.Fields("actor.profileUrl")
-
-	if err := service.collection.Query(&result, notDeleted(criteria), fields); err != nil {
-		return result, derp.Wrap(err, "service.Block.QueryBlockURLs", "Error querying block URLs", criteria)
-	}
-
-	return result, nil
+func (service *Block) AllowDocument(document *model.DocumentLink) (bool, error) {
+	return true, nil
 }
