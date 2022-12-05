@@ -526,22 +526,22 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
  * SUBSCRIPTIONS
  *******************************************/
 
-func (w Stream) Subscriptions() ([]model.Subscription, error) {
+func (w Stream) Following() ([]model.Following, error) {
 
-	result := []model.Subscription{}
-	subscriptionService := w.factory().Subscription()
+	result := []model.Following{}
+	followingService := w.factory().Following()
 
-	iterator, err := subscriptionService.ListByUserID(w.AuthenticatedID())
+	iterator, err := followingService.ListByUserID(w.AuthenticatedID())
 
 	if err != nil {
-		return result, derp.Wrap(err, "renderer.Stream.Subscriptions", "Error listing subscriptions")
+		return result, derp.Wrap(err, "renderer.Stream.Following", "Error listing following")
 	}
 
-	subscription := model.NewSubscription()
+	following := model.NewFollowing()
 
-	for iterator.Next(&subscription) {
-		result = append(result, subscription)
-		subscription = model.NewSubscription()
+	for iterator.Next(&following) {
+		result = append(result, following)
+		following = model.NewFollowing()
 	}
 
 	return result, nil

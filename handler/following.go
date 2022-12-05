@@ -19,48 +19,48 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetSubscription displays an edit for for a specific subscription
-func GetSubscription(serverFactory *server.Factory) echo.HandlerFunc {
+// GetFollowing displays an edit for for a specific following
+func GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.GetSubscription"
+	const location = "handler.GetFollowing"
 
 	return func(ctx echo.Context) error {
 
 		// Load all pre-requisites
-		factory, subscription, userID, subscriptionID, err := subscription_common(serverFactory, ctx)
+		factory, following, userID, followingID, err := following_common(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
+			return derp.Wrap(err, location, "Error loading following", userID, followingID)
 		}
 
 		// Create a new form
 		folderService := factory.Folder()
-		folders := subscription_folderOptions(folderService, userID)
-		form := subscription_getForm(folders)
+		folders := following_folderOptions(folderService, userID)
+		form := following_getForm(folders)
 
-		if subscriptionID == "new" {
-			form.Element.Label = "Add a Subscription"
+		if followingID == "new" {
+			form.Element.Label = "Follow a Person or Website"
 		} else {
-			form.Element.Label = "Edit Subscription"
+			form.Element.Label = "Edit Follow Settings"
 		}
 
-		html, err := form.Editor(subscription, nil)
+		html, err := form.Editor(following, nil)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating form editor", nil)
 		}
 
 		// Wrap the form as a modal dialog (with submit buttons)
-		html = render.WrapModalForm(ctx.Response(), "/@me/pub/subscriptions/"+subscriptionID, html)
+		html = render.WrapModalForm(ctx.Response(), "/@me/pub/following/"+followingID, html)
 
 		// Done.
 		return ctx.HTML(http.StatusOK, html)
 	}
 }
 
-func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
+func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.PostSubscription"
+	const location = "handler.PostFollowing"
 
 	return func(ctx echo.Context) error {
 
@@ -72,10 +72,10 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Load all pre-requisites
-		factory, subscription, userID, subscriptionID, err := subscription_common(serverFactory, ctx)
+		factory, following, userID, followingID, err := following_common(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
+			return derp.Wrap(err, location, "Error loading following", userID, followingID)
 		}
 
 		// Collect data from the form POST
@@ -83,17 +83,17 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error reading form data", nil)
 		}
 
-		subscription.URL = transaction.URL
-		subscription.PollDuration = transaction.PollDuration
-		subscription.PurgeDuration = transaction.PurgeDuration
+		following.URL = transaction.URL
+		following.PollDuration = transaction.PollDuration
+		following.PurgeDuration = transaction.PurgeDuration
 
 		if folderID, err := primitive.ObjectIDFromHex(transaction.FolderID); err == nil {
-			subscription.FolderID = folderID
+			following.FolderID = folderID
 		}
 
-		// Save the subscription to the database
-		if err := factory.Subscription().Save(&subscription, "Updated by User"); err != nil {
-			return derp.Wrap(err, location, "Error saving subscription", subscription)
+		// Save the following to the database
+		if err := factory.Following().Save(&following, "Updated by User"); err != nil {
+			return derp.Wrap(err, location, "Error saving following", following)
 		}
 
 		// Close the Modal Dialog and return
@@ -103,28 +103,28 @@ func PostSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func GetDeleteSubscription(serverFactory *server.Factory) echo.HandlerFunc {
+func GetDeleteFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.DeleteSubscription"
+	const location = "handler.DeleteFollowing"
 
 	return func(ctx echo.Context) error {
 
-		_, subscription, userID, subscriptionID, err := subscription_common(serverFactory, ctx)
+		_, following, userID, followingID, err := following_common(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
+			return derp.Wrap(err, location, "Error loading following", userID, followingID)
 		}
 
 		b := html.New()
 
-		b.H2().InnerHTML("Delete This Subscription?").Close()
-		b.Div().Class("space-below").InnerHTML(subscription.Label).Close()
-		b.Div().Class("space-below").InnerHTML(subscription.URL).Close()
+		b.H2().InnerHTML("Delete This Following?").Close()
+		b.Div().Class("space-below").InnerHTML(following.Label).Close()
+		b.Div().Class("space-below").InnerHTML(following.URL).Close()
 
 		b.Button().Class("warning").
-			Attr("hx-post", "/@me/pub/subscriptions/"+subscription.SubscriptionID.Hex()+"/delete").
+			Attr("hx-post", "/@me/pub/following/"+following.FollowingID.Hex()+"/delete").
 			Attr("hx-swap", "none").
-			InnerHTML("Delete Subscription").
+			InnerHTML("Delete Following").
 			Close()
 
 		b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
@@ -136,21 +136,21 @@ func GetDeleteSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func PostDeleteSubscription(serverFactory *server.Factory) echo.HandlerFunc {
+func PostDeleteFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.DeleteSubscription"
+	const location = "handler.DeleteFollowing"
 
 	return func(ctx echo.Context) error {
 
-		factory, subscription, userID, subscriptionID, err := subscription_common(serverFactory, ctx)
+		factory, following, userID, followingID, err := following_common(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading subscription", userID, subscriptionID)
+			return derp.Wrap(err, location, "Error loading following", userID, followingID)
 		}
 
-		// Delete the subscription
-		if err := factory.Subscription().Delete(&subscription, "Deleted by User"); err != nil {
-			return derp.Wrap(err, location, "Error deleting subscription", subscription)
+		// Delete the following
+		if err := factory.Following().Delete(&following, "Deleted by User"); err != nil {
+			return derp.Wrap(err, location, "Error deleting following", following)
 		}
 
 		// Close the Modal Dialog and return
@@ -159,16 +159,16 @@ func PostDeleteSubscription(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// subscription_common is a helper method that loads all of the standard pre-requisites for subscription handlers
-func subscription_common(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory, model.Subscription, primitive.ObjectID, string, error) {
+// following_common is a helper method that loads all of the standard pre-requisites for following handlers
+func following_common(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory, model.Following, primitive.ObjectID, string, error) {
 
-	const location = "handler.subscriptionLoad"
+	const location = "handler.followingLoad"
 
 	// Get the factory for this domain
 	factory, err := serverFactory.ByContext(ctx)
 
 	if err != nil {
-		return nil, model.Subscription{}, primitive.NilObjectID, "", derp.Wrap(err, location, "Error getting server factory")
+		return nil, model.Following{}, primitive.NilObjectID, "", derp.Wrap(err, location, "Error getting server factory")
 	}
 
 	// Validate the user's session
@@ -177,27 +177,27 @@ func subscription_common(serverFactory *server.Factory, ctx echo.Context) (*doma
 
 	// Requre that users are signed in to use this modal
 	if !authorization.IsAuthenticated() {
-		return nil, model.Subscription{}, primitive.NilObjectID, "", derp.NewUnauthorizedError(location, "User is not authenticated", nil)
+		return nil, model.Following{}, primitive.NilObjectID, "", derp.NewUnauthorizedError(location, "User is not authenticated", nil)
 	}
 
-	// Create/Load the subscription
-	subscriptionService := factory.Subscription()
-	subscription := model.NewSubscription()
-	subscriptionID := ctx.Param("subscription")
+	// Create/Load the following
+	followingService := factory.Following()
+	following := model.NewFollowing()
+	followingID := ctx.Param("following")
 	userID := authorization.UserID
 
-	if err := subscriptionService.LoadByToken(userID, subscriptionID, &subscription); err != nil {
-		return nil, model.Subscription{}, primitive.NilObjectID, "", derp.Wrap(err, location, "Error loading subscription", subscriptionID)
+	if err := followingService.LoadByToken(userID, followingID, &following); err != nil {
+		return nil, model.Following{}, primitive.NilObjectID, "", derp.Wrap(err, location, "Error loading following", followingID)
 	}
 
-	return factory, subscription, userID, subscriptionID, nil
+	return factory, following, userID, followingID, nil
 }
 
-// subscription_getForm returns a form for adding/editing subscriptions
-func subscription_getForm(folders []form.LookupCode) form.Form {
+// following_getForm returns a form for adding/editing following
+func following_getForm(folders []form.LookupCode) form.Form {
 
 	return form.Form{
-		Schema: schema.New(model.SubscriptionSchema()),
+		Schema: schema.New(model.FollowingSchema()),
 		Element: form.Element{
 			Type: "layout-tabs",
 			Children: []form.Element{
@@ -278,9 +278,9 @@ func subscription_getForm(folders []form.LookupCode) form.Form {
 	}
 }
 
-// subscription_folderOptions returns an array of form.LookupCodes that represents all of the folders
+// following_folderOptions returns an array of form.LookupCodes that represents all of the folders
 // that belong to the currently logged in user.
-func subscription_folderOptions(folderService *service.Folder, authenticatedID primitive.ObjectID) []form.LookupCode {
+func following_folderOptions(folderService *service.Folder, authenticatedID primitive.ObjectID) []form.LookupCode {
 
 	folders, _ := folderService.QueryByUserID(authenticatedID)
 	result := make([]form.LookupCode, len(folders))

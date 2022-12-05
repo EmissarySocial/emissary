@@ -47,18 +47,18 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	attachmentService   service.Attachment
-	groupService        service.Group
-	domainService       service.Domain
-	emailService        service.DomainEmail
-	folderService       service.Folder
-	inboxService        service.Inbox
-	mentionService      service.Mention
-	streamService       service.Stream
-	streamDraftService  service.StreamDraft
-	subscriptionService service.Subscription
-	realtimeBroker      RealtimeBroker
-	userService         service.User
+	attachmentService  service.Attachment
+	groupService       service.Group
+	domainService      service.Domain
+	emailService       service.DomainEmail
+	folderService      service.Folder
+	inboxService       service.Inbox
+	mentionService     service.Mention
+	streamService      service.Stream
+	streamDraftService service.StreamDraft
+	followingService   service.Following
+	realtimeBroker     RealtimeBroker
+	userService        service.User
 
 	// real-time watchers
 	streamUpdateChannel chan model.Stream
@@ -139,14 +139,15 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionInbox),
 	)
 
-	// Start the Subscription Service
-	factory.subscriptionService = service.NewSubscription(
-		factory.collection(CollectionSubscription),
+	// Start the Following Service
+	factory.followingService = service.NewFollowing(
+		factory.collection(CollectionFollowing),
+		factory.User(),
 		factory.Inbox(),
 		factory.Queue(),
 	)
 
-	go factory.subscriptionService.Start()
+	go factory.followingService.Start()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
@@ -207,7 +208,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
-		factory.subscriptionService.Refresh(factory.collection(CollectionSubscription))
+		factory.followingService.Refresh(factory.collection(CollectionFollowing))
 		factory.userService.Refresh(factory.collection(CollectionUser))
 
 		// Watch for updates to streams
@@ -235,7 +236,7 @@ func (factory *Factory) Close() {
 	factory.domainService.Close()
 	factory.realtimeBroker.Close()
 	factory.streamService.Close()
-	factory.subscriptionService.Close()
+	factory.followingService.Close()
 	factory.userService.Close()
 }
 
@@ -312,14 +313,13 @@ func (factory *Factory) EncryptionKey() *service.EncryptionKey {
 
 // Follower returns a fully populated Follower service
 func (factory *Factory) Follower() *service.Follower {
-	service := service.NewFollower(factory.collection(CollectionFollower))
+	service := service.NewFollower(factory.collection(CollectionFollower), factory.User())
 	return &service
 }
 
 // Following returns a fully populated Following service
 func (factory *Factory) Following() *service.Following {
-	service := service.NewFollowing(factory.collection(CollectionFollowing))
-	return &service
+	return &factory.followingService
 }
 
 // Folder returns a fully populated Folder service
@@ -346,11 +346,6 @@ func (factory *Factory) Stream() *service.Stream {
 // StreamDraft returns a fully populated StreamDraft service.
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
-}
-
-// Subscription returns a fully populated Subscription service
-func (factory *Factory) Subscription() *service.Subscription {
-	return &factory.subscriptionService
 }
 
 // User returns a fully populated User service

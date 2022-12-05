@@ -373,9 +373,7 @@ input.text-md {
     margin-bottom:calc(var(--rhythm));
 }
 
-
-.text-plain,
-.text-plain:hover{
+.text-plain {
     color:var(--text-color)!important;
     text-decoration:none;
 }

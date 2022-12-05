@@ -218,11 +218,11 @@ func (service *Inbox) SetReadDate(ownerID primitive.ObjectID, token string, read
 	return nil
 }
 
-// QueryPurgeable returns a list of Activitys that are older than the purge date for this subscription
-func (service *Inbox) QueryPurgeable(subscription *model.Subscription) ([]model.Activity, error) {
+// QueryPurgeable returns a list of Activitys that are older than the purge date for this following
+func (service *Inbox) QueryPurgeable(following *model.Following) ([]model.Activity, error) {
 
 	// Purge date is X days before the current date
-	purgeDuration := time.Duration(subscription.PurgeDuration) * 24 * time.Hour
+	purgeDuration := time.Duration(following.PurgeDuration) * 24 * time.Hour
 	purgeDate := time.Now().Add(0 - purgeDuration).Unix()
 
 	// Activitys can be purged if they are READ and older than the purge date

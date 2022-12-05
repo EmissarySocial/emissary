@@ -16,10 +16,10 @@
 			<div role="link" hx-get="/@me/inbox-all">{{icon "folder"}} All Items</div>
 		{{- end -}}
 
-		{{- if eq $selected "subscriptions" -}}
-			<div role="link" hx-get="/@me/subscriptions" class="bold">{{icon "rss"}} Subscriptions</div>
+		{{- if eq $selected "following" -}}
+			<div role="link" hx-get="/@me/following" class="bold">{{icon "rss"}} Following</div>
 		{{- else -}}
-			<div role="link" hx-get="/@me/subscriptions">{{icon "rss"}} Subscriptions</div>
+			<div role="link" hx-get="/@me/following">{{icon "rss"}} Following</div>
 		{{- end -}}
 
 		<br>

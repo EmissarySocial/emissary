@@ -114,7 +114,7 @@ func (service *User) Delete(user *model.User, note string) error {
 }
 
 /*******************************************
- * GENERIC DATA FUNCTIONS
+ * Generic Data Functions
  *******************************************/
 
 // ObjectType returns the type of object that this service manages
@@ -252,8 +252,20 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 }
 
 /*******************************************
- * CUSTOM ACTIONS
+ * Custom Actions
  *******************************************/
+
+func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
+	return nil
+}
+
+func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
+	return nil
+}
+
+func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
+	return nil
+}
 
 func (service *User) SetOwner(owner config.Owner) error {
 

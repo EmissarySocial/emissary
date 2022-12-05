@@ -75,7 +75,7 @@ func (service *Folder) Save(folder *model.Folder, note string) error {
 
 	// Clean the value before saving
 	if err := service.Schema().Clean(folder); err != nil {
-		return derp.Wrap(err, "service.Folder.Save", "Error cleaning Activity", folder)
+		return derp.Wrap(err, "service.Folder.Save", "Error cleaning Folder", folder)
 	}
 
 	// Save the value to the database

@@ -39,9 +39,6 @@ const CollectionStreamDraft = "StreamDraft"
 // CollectionStreamSource is the database collection where Sources are stored
 const CollectionStreamSource = "StreamSource"
 
-// CollectionSubscription is the database collection where Subscriptions are stored
-const CollectionSubscription = "Subscription"
-
 // CollectionTemplate is the database collection where Templates are stored
 const CollectionTemplate = "Template"
 

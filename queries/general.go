@@ -7,6 +7,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -36,4 +37,17 @@ func CountRecords(ctx context.Context, collection data.Collection, criteria exp.
 
 	// Otherwise, return the count returned by mongo.
 	return result[0].Count, nil
+}
+
+func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Expression, update maps.Map) error {
+
+	mongo := mongoCollection(collection)
+
+	_, err := mongo.UpdateMany(
+		ctx,
+		mongodb.ExpressionToBSON(criteria),
+		bson.M{"$set": update},
+	)
+
+	return err
 }

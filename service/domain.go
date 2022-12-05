@@ -58,7 +58,7 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 	service.model = model.NewDomain()
 }
 
-// Close stops the subscription service watcher
+// Close stops the following service watcher
 func (service *Domain) Close() {
 }
 

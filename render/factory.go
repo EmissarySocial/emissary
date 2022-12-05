@@ -23,7 +23,7 @@ type Factory interface {
 	Mention() *service.Mention
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
-	Subscription() *service.Subscription
+	Following() *service.Following
 	Template() *service.Template
 	User() *service.User
 

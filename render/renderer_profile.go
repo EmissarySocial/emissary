@@ -160,6 +160,14 @@ func (w Profile) Username() string {
 	return w.user.Username
 }
 
+func (w Profile) FollowerCount() int {
+	return w.user.FollowerCount
+}
+
+func (w Profile) FollowingCount() int {
+	return w.user.FollowingCount
+}
+
 func (w Profile) FolderID() string {
 	return w.context().QueryParam("folderId")
 }
@@ -326,15 +334,15 @@ func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
 	return &result
 }
 
-func (w Profile) Subscriptions() ([]model.SubscriptionSummary, error) {
+func (w Profile) Following() ([]model.FollowingSummary, error) {
 
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Profile.Subscriptions", "Must be signed in to view subscriptions")
+		return nil, derp.NewUnauthorizedError("render.Profile.Following", "Must be signed in to view following")
 	}
 
-	subscriptionService := w._factory.Subscription()
+	followingService := w._factory.Following()
 
-	return subscriptionService.QueryByUserID(userID)
+	return followingService.QueryByUserID(userID)
 }

@@ -32,11 +32,14 @@
 					<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 					<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
 					<div class="space-above">
+						{{icon "people"}}
+						<a class="text-plain"><b>{{.FollowerCount}}</b> Followers</a>
+						&middot;
+						<a class="text-plain"><b>{{.FollowingCount}}</b> Following</a>
+					</div>
+					<div class="space-above">
 						<span class="p-note">{{.StatusMessage}}</span>
 					</div>
-					{{- if ne "" .Location -}}
-						<div class="space-above p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
-					{{- end -}}
 
 				</div>
 
@@ -47,16 +50,19 @@
 					{{- $links := .Links -}}
 
 					{{- if or (gt 0 (len $links)) (.UserCan "edit-profile")  -}}
-						<p>
+						<div class="float-right">
 							{{- if .UserCan "edit-links" -}}
-								<button hx-get="/@me/edit-links" role="button" class="float-right text-xs">Edit</button>
+								<button hx-get="/@me/edit-links" role="button" class="text-xs vertical-space-none">Edit</button>
 							{{- end -}}
-							<div class="bold">Links</div>
-						</p>
+						</div>
+					{{- end -}}
+
+					{{- if ne "" .Location -}}
+						<div class="p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
 					{{- end -}}
 
 					{{- range $links -}}
-						<div><a rel="me" class="u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Organization}}</a></div>
+						<div><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Organization}}</a></div>
 					{{- end -}}
 
 				</div>
@@ -71,7 +77,7 @@
 			</div>
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-2-3 pure-u-xl-3-4" style="border-left: solid 1px var(--gray20); padding-left:20px;">
-				<h1>My Timeline</h1>
+				<h2>My Posts</h2>
 
 				{{if .UserCan "outbox-add" -}}
 					<div hx-target="this" hx-swap="outerHTML">

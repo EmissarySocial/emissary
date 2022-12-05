@@ -14,19 +14,21 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID   `path:"userId"         json:"userId"          bson:"_id"`           // Unique identifier for this user.
-	GroupIDs        []primitive.ObjectID `path:"groupIds"       json:"groupIds"        bson:"groupIds"`      // Slice of IDs for the groups that this user belongs to.
-	DisplayName     string               `path:"displayName"    json:"displayName"     bson:"displayName"`   // Name to be displayed for this user
-	StatusMessage   string               `path:"statusMessage"  json:"statusMessage"   bson:"statusMessage"` // Status summary for this user
-	Location        string               `path:"location"       json:"location"        bson:"location"`      // Human-friendly description of this user's physical location.
-	Links           []PersonLink         `path:"links"          json:"links"           bson:"links"`         // Slice of links to profiles on other web services.
-	ProfileURL      string               `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`    // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string               `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`  // Email address for this user
-	Username        string               `path:"username"       json:"username"        bson:"username"`      // This is the primary public identifier for the user.
-	Password        string               `path:"password"       json:"password"        bson:"password"`      // This password should be encrypted with BCrypt.
-	IsOwner         bool                 `path:"isOwner"        json:"isOwner"         bson:"isOwner"`       // If TRUE, then this user is a website owner with FULL privileges.
-	ImageID         primitive.ObjectID   `path:"imageId"        json:"imageId"         bson:"imageId"`       // AttachmentID of this user's avatar image.
-	PasswordReset   PasswordReset        `                      json:"passwordReset"   bson:"passwordReset"` // Most recent password reset information.
+	UserID          primitive.ObjectID   `path:"userId"         json:"userId"          bson:"_id"`            // Unique identifier for this user.
+	GroupIDs        []primitive.ObjectID `path:"groupIds"       json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
+	DisplayName     string               `path:"displayName"    json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
+	StatusMessage   string               `path:"statusMessage"  json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
+	Location        string               `path:"location"       json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
+	Links           []PersonLink         `path:"links"          json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
+	ProfileURL      string               `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress    string               `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
+	Username        string               `path:"username"       json:"username"        bson:"username"`       // This is the primary public identifier for the user.
+	Password        string               `path:"password"       json:"password"        bson:"password"`       // This password should be encrypted with BCrypt.
+	FollowerCount   int                  `path:"followerCount"  json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
+	FollowingCount  int                  `path:"followingCount" json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
+	IsOwner         bool                 `path:"isOwner"        json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	ImageID         primitive.ObjectID   `path:"imageId"        json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
+	PasswordReset   PasswordReset        `                      json:"passwordReset"   bson:"passwordReset"`  // Most recent password reset information.
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
