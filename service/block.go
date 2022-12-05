@@ -152,13 +152,15 @@ func (service *Block) Schema() schema.Schema {
 }
 
 /*******************************************
- * Custom Actions
+ * Custom Filters
  *******************************************/
 
-func (service *Block) AllowSender(person *model.PersonLink) (bool, error) {
+// AllowSender returns TRUE if the designated User accepts documents from this sender (based on their blocklist settings)
+func (service *Block) AllowSender(userID primitive.ObjectID, person *model.PersonLink) (bool, error) {
 	return true, nil
 }
 
-func (service *Block) AllowDocument(document *model.DocumentLink) (bool, error) {
+// AllowSender returns TRUE if the designated User accepts the Document (based on their blocklist settings)
+func (service *Block) AllowDocument(userID primitive.ObjectID, document *model.DocumentLink) (bool, error) {
 	return true, nil
 }
