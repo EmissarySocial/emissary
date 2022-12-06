@@ -69,9 +69,9 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		ModifiedDate:  &modifiedDate,
 
 		Author: &feeds.JSONAuthor{
-			Name:   stream.Author.Name,
-			Url:    stream.Author.ProfileURL,
-			Avatar: stream.Author.ImageURL,
+			Name:   stream.Document.Author.Name,
+			Url:    stream.Document.Author.ProfileURL,
+			Avatar: stream.Document.Author.ImageURL,
 		},
 	}
 }

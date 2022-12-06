@@ -163,7 +163,11 @@ func (w Stream) ParentID() string {
 	return w.stream.ParentID.Hex()
 }
 
+// TopLevelID returns the unique ID of the top-level stream in this stream's hierarchy
 func (w Stream) TopLevelID() string {
+	if w.stream.TopLevelID == "" {
+		return w.stream.StreamID.Hex()
+	}
 	return w.stream.TopLevelID
 }
 
@@ -224,26 +228,26 @@ func (w Stream) Permalink() string {
 
 // Author returns the Author record for this stream
 func (w Stream) Author() model.PersonLink {
-	return w.stream.Author
+	return w.stream.Document.Author
 }
 
 // AuthorURL returns the public URL of the person who created this Stream
 func (w Stream) AuthorURL() string {
-	return w.stream.Author.ProfileURL
+	return w.stream.Document.Author.ProfileURL
 }
 
 // Name of the person who created this Stream
 func (w Stream) AuthorName() string {
-	return w.stream.Author.Name
+	return w.stream.Document.Author.Name
 }
 
 // PhotoURL of the person who created this Stream
 func (w Stream) AuthorImage() string {
-	return w.stream.Author.ImageURL
+	return w.stream.Document.Author.ImageURL
 }
 
 func (w Stream) AuthorEmail() string {
-	return w.stream.Author.EmailAddress
+	return w.stream.Document.Author.EmailAddress
 }
 
 // Returns the body content as an HTML template
@@ -295,7 +299,7 @@ func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
 }
 
-func (w Stream) InReplyTo() model.ReplyToLink {
+func (w Stream) InReplyTo() model.DocumentLink {
 	return w.stream.InReplyTo
 }
 
@@ -343,7 +347,7 @@ func (w Stream) Features() (template.HTML, error) {
 	for features.Next(&stream) {
 
 		// Try to get a renderer for the feature (should always happen)
-		renderer, err := NewStreamWithoutTemplate(w.factory(), w.context(), &stream, "feature")
+		renderer, err := NewStreamWithoutTemplate(w.factory(), w.context(), &stream, "view")
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Error getting feature renderer"))

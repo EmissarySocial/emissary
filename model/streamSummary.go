@@ -11,9 +11,7 @@ type StreamSummary struct {
 	Token       string             `path:"token"          json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
 	TemplateID  string             `path:"templateId"     json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	Document    DocumentLink       `path:"document"       json:"document"            bson:"document"`            // Link to the object that this stream is about
-	Author      PersonLink         `path:"author"         json:"author"              bson:"author"`              // Author information for this stream
-	Origin      OriginLink         `path:"origin"         json:"origin,omitempty"    bson:"origin"`              // If imported, the external document where this stream came from
-	InReplyTo   ReplyToLink        `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	InReplyTo   DocumentLink       `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate int64              `path:"publishDate"    json:"publishDate"         bson:"publishDate"`         // Date when this stream was published
 	Rank        int                `path:"rank"           json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 }
@@ -35,7 +33,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "document", "author", "origin", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "document", "inReplyTo", "publishDate", "rank"}
 }
 
 func (streamSummary StreamSummary) Fields() []string {

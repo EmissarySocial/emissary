@@ -3,7 +3,7 @@
 	"role": "comment",
 	"label": "Comment",
 	"description": "Single comment in the comments section of a page.",
-	"containedBy": ["message"],
+	"containedBy": ["comment-group"],
 	"schema": {
 		"type": "object",
 		"properties": {

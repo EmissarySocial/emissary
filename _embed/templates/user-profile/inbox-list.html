@@ -22,27 +22,30 @@
 
 			<div id="item_{{.ActivityID.Hex}}" class="inbox-item" data-status="{{.Status}}" data-inboxItemId="{{.ActivityID.Hex}}" style="max-width:640px; cursor:pointer;" 
 				hx-get="/@me/activity?activityId={{.ActivityID.Hex}}"
-				xdata-script="on click halt the event then go to url '{{.Object.URL}}' in new window">
+				xdata-script="on click halt the event then go to url '{{.Document.URL}}' in new window">
 
 				<div class="flex-row" hx-push-url="true">
 
 					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Object.Label}}</div>
-						<div class="text-gray text-sm space-below" style="line-height:1em;">
-							{{ icon .Origin.Icon }} &nbsp;
-							{{ .Actor.Name }} 
-							&middot; 
-							{{ .Actor.Organization }}
-							&middot;
-							{{ .PublishDate | tinyDate }}
+						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Document.Label}}</div>
+						<div class="text-gray text-sm space-below" style="display:flex; flex-direction:row; line-height:1em;">
+							<span style="line-height:1em; white-space:nowrap; height:1em; overflow:hidden; text-overflow:ellipsis;">
+								{{ icon .Origin.Icon }}
+								{{ .Origin.Label }} &middot;
+								{{ .Document.Author.Name }} 
+							</span>
+							<span style="white-space: nowrap;">
+								&nbsp;&middot;
+								{{ .PublishDate | tinyDate }}
+							</span>
 						</div>
-						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Object.Summary}}</div>
+						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Document.Summary}}</div>
 					</div>
 				
-					{{- if ne .Object.ImageURL "" -}}
+					{{- if ne .Document.ImageURL "" -}}
 						<div style="width:160px;">
 							<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-								<img src="{{.Object.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+								<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
 							</div>
 						</div>
 					{{- end -}}

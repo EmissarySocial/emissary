@@ -9,13 +9,13 @@
 		<hr style="border-color:var(--gray10);">
 		<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="h-entry" style="display:grid; column-gap:16px; row-gap:16px; grid-template-columns: 60px 1fr; margin-bottom:20px;">
 			<div style="height:60px; width:60px;">
-				{{- if ne .Author.ImageURL ""}}
-					<img src="{{.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
+				{{- if ne .Document.Author.ImageURL ""}}
+					<img src="{{.Document.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
 				{{- end -}}
 			</div>
 			<div style="max-width:600px">
 				<div class="p-author h-card text-sm gray50" style="margin:0px;">
-					<span class="p-name">{{.Author.Name}}</span>
+					<span class="p-name">{{.Document.Author.Name}}</span>
 					&middot;
 					<span class="p-published">{{.PublishDate | humanizeTime}}</span>
 				</div>

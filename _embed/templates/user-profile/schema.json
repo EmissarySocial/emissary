@@ -163,7 +163,7 @@
 				{"step":"edit-table", "path":"links", "form": {
 					"type":"layout-table",
 					"children": [
-						{"type":"text", "path":"organization", "label":"Label"},
+						{"type":"text", "path":"name", "label":"Label"},
 						{"type":"text", "path":"profileUrl", "label":"URL"}
 					]
 				}},

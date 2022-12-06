@@ -34,7 +34,7 @@
 		}
 	},
 	"actions": {
-		"feature": {"step": "view-html"},
+		"view": {"step": "view-html"},
 		"children": {"step": "view-html"},
 		"edit": {
 			"roles": ["owner", "author"],

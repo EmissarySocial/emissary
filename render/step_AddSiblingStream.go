@@ -84,7 +84,7 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 	}
 
 	// Verify that the new child can be placed underneath the parent
-	if !template.CanBeContainedBy(parentTemplate.Role) {
+	if !template.CanBeContainedBy(parentTemplate.TemplateID, parentTemplate.Role) {
 		return derp.NewInternalError("service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
 	}
 

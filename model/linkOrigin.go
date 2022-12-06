@@ -1,50 +1,44 @@
 package model
 
 import (
-	"time"
-
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// OriginSourceActivityPub identifies a link was created by an ActivityPub source
-const OriginSourceActivityPub = "ACTIVITYPUB"
+// OriginTypeActivityPub identifies a link was created by an ActivityPub source
+const OriginTypeActivityPub = "ACTIVITYPUB"
 
-// OriginSourceInternal identifies a link was created by this application
-const OriginSourceInternal = "INTERNAL"
+// OriginTypeInternal identifies a link was created by this application
+const OriginTypeInternal = "INTERNAL"
 
-// OriginSourceRSS identifies a link was created by an RSS source
-const OriginSourceRSS = "RSS"
+// OriginTypeRSS identifies a link was created by an RSS source
+const OriginTypeRSS = "RSS"
 
-// OriginSourceRSSCloud identifies a link was created by an RSS Cloud source
-const OriginSourceRSSCloud = "RSS-CLOUD"
+// OriginTypeRSSCloud identifies a link was created by an RSS Cloud source
+const OriginTypeRSSCloud = "RSS-CLOUD"
 
-// OriginSourceTwitter identifies a link was created by Twitter
-const OriginSourceTwitter = "TWITTER"
+// OriginTypeTwitter identifies a link was created by Twitter
+const OriginTypeTwitter = "TWITTER"
 
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
 	InternalID primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"` // Unique ID of a document in this database
-	Source     string             `path:"source"      json:"source"      bson:"source"`               // The source that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
-	URL        string             `path:"url"         json:"url"         bson:"url"`                  // Public URL of the original record
-	Label      string             `path:"label"       json:"label"       bson:"label,omitempty"`      // Label of the original document
-	Summary    string             `path:"summary"     json:"summary"     bson:"summary,omitempty"`    // Description of the original document
-	ImageURL   string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`   // Image URL of the original document
-	UpdateDate int64              `path:"updateDate"  json:"updateDate"  bson:"updateDate"`           // Unix timestamp of the date/time when this link was last updated.
+	Type       string             `path:"type"        json:"type"        bson:"type"`                 // The type of service that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
+	URL        string             `path:"url"         json:"url"         bson:"url"`                  // Public URL of the origin
+	Label      string             `path:"label"       json:"label"       bson:"label,omitempty"`      // Human-Friendly label of the origin
+	ImageURL   string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
 }
 
 func NewOriginLink() OriginLink {
-	return OriginLink{
-		UpdateDate: time.Now().Unix(),
-	}
+	return OriginLink{}
 }
 
 func OriginLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId": schema.String{Format: "objectId"},
-			"source":     schema.String{Enum: []string{OriginSourceActivityPub, OriginSourceInternal, OriginSourceRSS, OriginSourceRSSCloud, OriginSourceTwitter}},
+			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypeRSS, OriginTypeRSSCloud, OriginTypeTwitter}},
 			"url":        schema.String{Format: "url"},
 			"label":      schema.String{},
 			"summary":    schema.String{},
@@ -63,15 +57,14 @@ func (origin OriginLink) Link() Link {
 	return Link{
 		InternalID: origin.InternalID,
 		Relation:   LinkRelationOriginal,
-		Source:     origin.Source,
+		Source:     origin.Type,
 		URL:        origin.URL,
 		Label:      origin.Label,
-		UpdateDate: origin.UpdateDate,
 	}
 }
 
 func (origin OriginLink) Icon() string {
-	switch origin.Source {
+	switch origin.Type {
 	case "ACTIVITYPUB":
 		return "code-slash"
 	case "INTERNAL":

@@ -173,12 +173,12 @@ func (service *Inbox) LoadItemByID(ownerID primitive.ObjectID, inboxItemID primi
 	return service.Load(criteria, result)
 }
 
-// LoadBySource locates a single stream that matches the provided OriginURL
-func (service *Inbox) LoadByOriginURL(ownerID primitive.ObjectID, originURL string, result *model.Activity) error {
+// LoadBySource locates a single stream that matches the provided Document URL
+func (service *Inbox) LoadByDocumentURL(ownerID primitive.ObjectID, documentURL string, result *model.Activity) error {
 
 	criteria := exp.
 		Equal("ownerId", ownerID).
-		AndEqual("object.url", originURL)
+		AndEqual("document.url", documentURL)
 
 	return service.Load(criteria, result)
 }

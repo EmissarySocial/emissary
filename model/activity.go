@@ -14,8 +14,8 @@ type Activity struct {
 	OwnerID      primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`                // Unique ID of the User who owns this Activity (in their inbox or outbox)
 	FolderID     primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Activity is stored
 	Origin       OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Activity
-	Actor        PersonLink         `path:"actor"        json:"actor"        bson:"actor,omitempty"`        // Link to the Actor who performed this Activity
-	Object       DocumentLink       `path:"object"       json:"object"       bson:"object,omitempty"`       // Link to the Object that was acted upon
+	Document     DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"`     // Document that is the subject of this Activity
+	ContentHTML  string             `path:"contentHtml"  json:"contentHtml"  bson:"contentHtml,omitempty"`  // HTML content of the Activity
 	OriginalJSON string             `path:"originalJson" json:"originalJson" bson:"originalJson,omitempty"` // Original JSON string that was received from the ActivityPub server
 	PublishDate  int64              `path:"publishDate"  json:"publishDate"  bson:"publishDate"`            // Date when this Activity was published
 	ReadDate     int64              `path:"readDate"     json:"readDate"     bson:"readDate"`               // Unix timestamp of the date/time when this Activity was read by the owner
@@ -35,8 +35,8 @@ func ActivitySchema() schema.Element {
 			"activityId":   schema.String{Format: "objectId"},
 			"ownerId":      schema.String{Format: "objectId"},
 			"folderId":     schema.String{Format: "objectId"},
-			"actor":        PersonLinkSchema(),
-			"object":       DocumentLinkSchema(),
+			"document":     DocumentLinkSchema(),
+			"contentHtml":  schema.String{Format: "html"},
 			"originalJson": schema.String{Format: "json"},
 			"publishDate":  schema.Integer{},
 			"readDate":     schema.Integer{},

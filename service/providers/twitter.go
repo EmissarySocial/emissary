@@ -132,22 +132,21 @@ func (provider Twitter) getTwitterClient(token *oauth2.Token) *twitter.Client {
 
 func tweetAsStream(tweet twitter.Tweet) model.Stream {
 
-	// Get create time
-	createDate, err := tweet.CreatedAtTime()
-
-	if err != nil {
-		createDate = time.Now()
-	}
-
 	// Return stream
 	stream := model.NewStream()
 	stream.Document = model.DocumentLink{
 		Summary: tweet.Text,
 	}
 	stream.Origin = model.OriginLink{
-		Source:     model.LinkSourceTwitter,
-		URL:        twitterURL(tweet),
-		UpdateDate: createDate.Unix(),
+		Type: model.OriginTypeTwitter,
+		URL:  twitterURL(tweet),
+	}
+
+	// Get create time
+	if createDate, err := tweet.CreatedAtTime(); err == nil {
+		stream.PublishDate = createDate.Unix()
+	} else {
+		stream.PublishDate = time.Now().Unix()
 	}
 
 	return stream

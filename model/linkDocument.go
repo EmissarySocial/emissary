@@ -7,11 +7,11 @@ import (
 
 type DocumentLink struct {
 	InternalID  primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"`  // Unique ID of a document in this database
+	Author      PersonLink         `path:"author"      json:"author"      bson:"author,omitempty"`      // Author of this document
 	URL         string             `path:"url"         json:"url"         bson:"url,omitempty"`         // URL of the original document
 	Label       string             `path:"label"       json:"label"       bson:"label,omitempty"`       // Label/Title of the document
 	Summary     string             `path:"summary"     json:"summary"     bson:"summary,omitempty"`     // Brief summary of the document
 	ImageURL    string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
-	ContentHTML string             `path:"contentHtml" json:"contentHtml" bson:"contentHtml,omitempty"` // HTML content of the document
 	PublishDate int64              `path:"publishDate" json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this document was first published
 	UpdateDate  int64              `path:"updateDate"  json:"updateDate"  bson:"updateDate,omitempty"`  // Unix timestamp of the date/time when this document was last updated
 }
@@ -25,10 +25,9 @@ func DocumentLinkSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"internalId":  schema.String{Format: "objectId"},
 			"url":         schema.String{Format: "url"},
-			"label":       schema.String{},
-			"summary":     schema.String{},
+			"label":       schema.String{MaxLength: 100},
+			"summary":     schema.String{MaxLength: 1000},
 			"imageUrl":    schema.String{Format: "url"},
-			"contentHtml": schema.String{Format: "html"},
 			"publishDate": schema.Integer{},
 			"updateDate":  schema.Integer{},
 		},
@@ -62,7 +61,7 @@ func (doc *DocumentLink) IsComplete() bool {
 	return true
 }
 
-// Link returns a Link to the document that is being replied to
+// Link returns a Link for this document
 func (doc DocumentLink) Link(relation string) Link {
 
 	return Link{
@@ -72,4 +71,9 @@ func (doc DocumentLink) Link(relation string) Link {
 		Label:      doc.Label,
 		UpdateDate: doc.UpdateDate,
 	}
+}
+
+// AuthorLink returns a correctly annotated Link to the author of this document.
+func (doc DocumentLink) AuthorLink() Link {
+	return doc.Author.Link(LinkRelationAuthor)
 }

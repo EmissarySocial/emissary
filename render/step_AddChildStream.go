@@ -74,7 +74,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	}
 
 	// Verify that the new stream can be put into the parent stream
-	if !template.CanBeContainedBy(renderer.templateRole()) {
+	if !template.CanBeContainedBy(renderer.template().TemplateID, renderer.templateRole()) {
 		return derp.NewInternalError(location, "Template cannot be placed here", templateID)
 	}
 

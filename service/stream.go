@@ -651,22 +651,6 @@ func (service *Stream) DeleteUnusedFeatures(streamID primitive.ObjectID, validTe
 	return nil
 }
 
-// CreatePersonalStream generates a hidden stream that is tightly linked to a specific user.
-// Used to create inbox/outbox streams
-func (service *Stream) CreatePersonalStream(user *model.User, templateID string) (primitive.ObjectID, error) {
-
-	stream := model.NewStream()
-	stream.TemplateID = templateID
-	stream.ParentID = user.UserID
-	stream.Author = user.PersonLink(model.LinkRelationAuthor)
-	stream.Permissions = model.NewPermissions()
-	stream.Permissions.Assign("myself", user.UserID)
-
-	err := service.Save(&stream, "auto: create inbox")
-
-	return stream.StreamID, err
-}
-
 // RestoreDeleted un-deletes all soft-deleted records underneath a common ancestor.
 func (service *Stream) RestoreDeleted(ancestorID primitive.ObjectID) error {
 

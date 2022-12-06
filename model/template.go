@@ -52,8 +52,20 @@ func (template Template) ID() string {
 
 // CanBeContainedBy returns TRUE if this Streams using this Template can be nested inside of
 // Streams using the Template named in the parameters
-func (template *Template) CanBeContainedBy(templateRole string) bool {
-	return compare.Contains(template.ContainedBy, templateRole)
+func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
+
+	// Special carve-out for "feature" templates.  They can go anywhere
+	if template.IsFeature() {
+		return true
+	}
+
+	// Otherwise, this template MUSt list the potential parent Stream's *role* in its ContainedBy list
+	for _, templateRole := range templateRoles {
+		if compare.Contains(template.ContainedBy, templateRole) {
+			return true
+		}
+	}
+	return false
 }
 
 func (template *Template) IsFeature() bool {

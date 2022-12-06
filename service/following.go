@@ -160,6 +160,10 @@ func (service *Following) Save(following *model.Following, note string) error {
 	following.StatusMessage = ""
 	following.Status = model.FollowingStatusNew
 
+	// RULE: Automatically determine the type of follow (RSS, ActivityPub, etc.)
+	// TODO: CRITICAL: Add ActivityPub types here.
+	following.Method = model.FollowMethodRSS
+
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error cleaning Following", following)
@@ -353,6 +357,10 @@ func (service *Following) PollFollowing(following model.Following) error {
 		return nil // Error has been logged, so don't break the request.
 	}
 
+	// Update the label for this "following" record using the RSS feed title.
+	// This should get saved once we successfully update the record status.
+	following.Label = rssFeed.Title
+
 	// If we have a feed, then import all of the items from it.
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
@@ -497,7 +505,7 @@ func (service *Following) saveActivity(following *model.Following, rssFeed *gofe
 
 	activity := model.NewActivity()
 
-	if err := service.inboxService.LoadByOriginURL(following.UserID, rssItem.Link, &activity); err != nil {
+	if err := service.inboxService.LoadByDocumentURL(following.UserID, rssItem.Link, &activity); err != nil {
 
 		// Anything but a "not found" error is a real error
 		if !derp.NotFound(err) {
@@ -538,11 +546,11 @@ func populateActivity(activity *model.Activity, following *model.Following, rssF
 	// Populate activity from the rssItem
 	activity.PublishDate = rssDate(rssItem.PublishedParsed)
 	activity.Origin = following.Origin()
-	activity.Actor = rssActor(rssFeed, rssItem)
-	activity.Object = rssDocument(rssItem)
+	activity.Document = rssDocument(rssFeed, rssItem)
+	activity.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 
 	// Fill in additional properties from the web page, if necessary
-	if !activity.Object.IsComplete() {
+	if !activity.Document.IsComplete() {
 
 		var body bytes.Buffer
 
@@ -561,14 +569,14 @@ func populateActivity(activity *model.Activity, following *model.Following, rssF
 		}
 
 		// Update the activity with data missing from the RSS feed
-		activity.Object.Label = first.String(activity.Object.Label, info.Title)
-		activity.Object.Summary = first.String(activity.Object.Summary, info.Description)
+		activity.Document.Label = first.String(activity.Document.Label, info.Title)
+		activity.Document.Summary = first.String(activity.Document.Summary, info.Description)
 
-		if activity.Object.ImageURL == "" {
+		if activity.Document.ImageURL == "" {
 			if info.ImageSrcURL != "" {
-				activity.Object.ImageURL = info.ImageSrcURL
+				activity.Document.ImageURL = info.ImageSrcURL
 			} else if len(info.OGInfo.Images) > 0 {
-				activity.Object.ImageURL = info.OGInfo.Images[0].URL
+				activity.Document.ImageURL = info.OGInfo.Images[0].URL
 			}
 		}
 
@@ -579,37 +587,32 @@ func populateActivity(activity *model.Activity, following *model.Following, rssF
 	return nil
 }
 
-// rssActor returns all information about the actor of an RSS item
-func rssActor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
+func rssDocument(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.DocumentLink {
+
+	return model.DocumentLink{
+		URL:         rssItem.Link,
+		Label:       htmlTools.ToText(rssItem.Title),
+		Summary:     htmlTools.ToText(rssItem.Description),
+		ImageURL:    rssImageURL(rssItem),
+		Author:      rssAuthor(rssFeed, rssItem),
+		PublishDate: rssDate(rssItem.PublishedParsed),
+		UpdateDate:  time.Now().Unix(),
+	}
+}
+
+// rssAuthor returns all information about the actor of an RSS item
+func rssAuthor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 
 	if rssFeed == nil {
 		return model.NewPersonLink()
 	}
 
 	result := model.PersonLink{
-		Organization: htmlTools.ToText(rssFeed.Title),
-		Name:         htmlTools.ToText(rssItem.Author.Name),
-		ProfileURL:   rssFeed.Link,
-	}
-
-	if rssFeed.Image != nil {
-		result.ImageURL = rssFeed.Image.URL
+		Name:       htmlTools.ToText(rssItem.Author.Name),
+		ProfileURL: rssFeed.Link,
 	}
 
 	return result
-}
-
-func rssDocument(rssItem *gofeed.Item) model.DocumentLink {
-
-	return model.DocumentLink{
-		URL:         rssItem.Link,
-		Label:       htmlTools.ToText(rssItem.Title),
-		Summary:     htmlTools.ToText(rssItem.Description),
-		ContentHTML: bluemonday.UGCPolicy().Sanitize(rssItem.Content),
-		ImageURL:    rssImageURL(rssItem),
-		PublishDate: rssDate(rssItem.PublishedParsed),
-		UpdateDate:  time.Now().Unix(),
-	}
 }
 
 // rssImageURL returns the URL of the first image in the item's enclosure list.

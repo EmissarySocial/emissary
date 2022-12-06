@@ -93,15 +93,13 @@ func (user *User) GetBool(name string) (bool, error) {
  * Conversion Methods
  *******************************************/
 
-func (user *User) PersonLink(relation string) PersonLink {
+func (user *User) PersonLink() PersonLink {
 	return PersonLink{
-		Relation:     relation,
 		InternalID:   user.UserID,
 		Name:         user.DisplayName,
 		EmailAddress: user.Username,
 		ProfileURL:   user.ProfileURL,
 		ImageURL:     user.ActivityPubAvatarURL(),
-		UpdateDate:   time.Now().Unix(),
 	}
 }
 

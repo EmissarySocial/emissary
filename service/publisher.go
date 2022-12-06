@@ -52,7 +52,7 @@ func (publisher Publisher) setPublishedData(stream *model.Stream, userID primiti
 			return derp.Wrap(err, "service.Publisher.Publish", "Error loading user", userID)
 		}
 
-		stream.Author = user.PersonLink(model.LinkRelationAuthor)
+		stream.Document.Author = user.PersonLink()
 
 		// Re-save the Stream with the updated values.
 		if err := publisher.streamService.Save(stream, "Publish"); err != nil {

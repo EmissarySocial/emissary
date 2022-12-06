@@ -33,7 +33,7 @@
 		}
 	},
 	"actions": {
-		"feature": {"step": "view-html", "roles":["anonymous"]},
+		"view": {"step": "view-html", "roles":["anonymous"]},
 		"checkout": {
 			"roles": ["anonymous"],
 			"states": ["ready"],

@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/null"
@@ -38,9 +36,9 @@ const FollowingStatusFailure = "FAILURE"
 // Currently, the only supported feed types are: RSS, Atom, and JSON Feed.  Others may be added in the future.
 type Following struct {
 	FollowingID   primitive.ObjectID `path:"followingId"    json:"followingId"    bson:"_id"`           // Unique Identifier of this record
-	UserID        primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this following
+	UserID        primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
 	FolderID      primitive.ObjectID `path:"folderId"       json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
-	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this following
+	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this "following" record
 	URL           string             `path:"url"            json:"url"            bson:"url"`           // Connection URL for obtaining new sub-streams.
 	Method        string             `path:"method"         json:"method"         bson:"method"`        // Method used to subscribe to remote streams (RSS, etc)
 	Status        string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
@@ -49,7 +47,7 @@ type Following struct {
 	PollDuration  int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
 	NextPoll      int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
 	PurgeDuration int                `path:"purgeDuration"  json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
-	ErrorCount    int                `path:"errorCount"     json:"errorCount"     bson:"errorCount"`    // Number of times that this following has failed to load (for exponential backoff)
+	ErrorCount    int                `path:"errorCount"     json:"errorCount"     bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
 	IsPublic      bool               `path:"isPublic"       json:"isPublic"       bson:"isPublic"   `   // If TRUE, this record is visible publicly
 
 	journal.Journal `path:"journal" json:"-" bson:"journal"`
@@ -90,27 +88,27 @@ func FollowingSchema() schema.Element {
  *******************************************/
 
 // ID returns the primary key of this object
-func (sub *Following) ID() string {
-	return sub.FollowingID.Hex()
+func (following *Following) ID() string {
+	return following.FollowingID.Hex()
 }
 
-func (sub *Following) GetObjectID(name string) (primitive.ObjectID, error) {
+func (following *Following) GetObjectID(name string) (primitive.ObjectID, error) {
 	return primitive.NilObjectID, derp.NewInternalError("model.Following.GetObjectID", "Invalid property", name)
 }
 
-func (sub *Following) GetString(name string) (string, error) {
+func (following *Following) GetString(name string) (string, error) {
 	return "", derp.NewInternalError("model.Following.GetString", "Invalid property", name)
 }
 
-func (sub *Following) GetInt(name string) (int, error) {
+func (following *Following) GetInt(name string) (int, error) {
 	return 0, derp.NewInternalError("model.Following.GetInt", "Invalid property", name)
 }
 
-func (sub *Following) GetInt64(name string) (int64, error) {
+func (following *Following) GetInt64(name string) (int64, error) {
 	return 0, derp.NewInternalError("model.Following.GetInt64", "Invalid property", name)
 }
 
-func (sub *Following) GetBool(name string) (bool, error) {
+func (following *Following) GetBool(name string) (bool, error) {
 	return false, derp.NewInternalError("model.Following.GetBool", "Invalid property", name)
 }
 
@@ -118,12 +116,11 @@ func (sub *Following) GetBool(name string) (bool, error) {
  * data.Object Interface
  *******************************************/
 
-func (sub *Following) Origin() OriginLink {
+func (following *Following) Origin() OriginLink {
 	return OriginLink{
-		InternalID: sub.FollowingID,
-		Label:      sub.Label,
-		Source:     sub.Method,
-		URL:        sub.URL,
-		UpdateDate: time.Now().Unix(),
+		InternalID: following.FollowingID,
+		Label:      following.Label,
+		Type:       following.Method,
+		URL:        following.URL,
 	}
 }

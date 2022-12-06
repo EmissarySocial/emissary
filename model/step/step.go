@@ -85,9 +85,6 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "edit-properties":
 		return NewEditProperties(stepInfo)
 
-	case "expand-url":
-		return NewExpandURL(stepInfo)
-
 	case "view-rss":
 		return NewViewRSS(stepInfo)
 

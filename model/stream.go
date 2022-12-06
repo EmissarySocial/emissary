@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
@@ -20,10 +18,9 @@ type Stream struct {
 	StateID         string               `path:"stateId"        json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	Permissions     Permissions          `path:"permissions"    json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
 	DefaultAllow    []primitive.ObjectID `path:"defaultAllow"   json:"defaultAllow"        bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
-	Document        DocumentLink         `path:"document"       json:"document"            bson:"document"`            // Link to the object that this stream is about
-	Origin          OriginLink           `path:"origin"         json:"origin,omitempty"    bson:"origin"`              // If imported, the external document where this stream came from (eg. PESO import)
-	Author          PersonLink           `path:"author"         json:"author"              bson:"author"`              // Author information for this stream
-	InReplyTo       ReplyToLink          `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	Document        DocumentLink         `path:"document"       json:"document"            bson:"document"`            // Summary content of this document
+	InReplyTo       DocumentLink         `path:"inReplyTo"      json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	Origin          OriginLink           `path:"origin"         json:"origin,omitempty"    bson:"origin,omitempty"`    // If this stream is imported from an external service, this is a link to the original document
 	Content         Content              `path:"content"        json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
 	Data            maps.Map             `path:"data"           json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                  `path:"rank"           json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
@@ -60,7 +57,7 @@ func StreamSchema() schema.Element {
 			"defaultAllow":  schema.Array{Items: schema.String{Format: "objectId"}},
 			"document":      DocumentLinkSchema(),
 			"author":        PersonLinkSchema(),
-			"replyTo":       ReplyToLinkSchema(),
+			"replyTo":       DocumentLinkSchema(),
 			"content":       ContentSchema(),
 			"rank":          schema.Integer{},
 			"asFeature":     schema.Boolean{},
@@ -108,16 +105,12 @@ func (stream *Stream) Links() []Link {
 
 	result := make([]Link, 0, 3)
 
-	if !stream.Author.IsEmpty() {
-		result = append(result, stream.Author.Link())
-	}
-
-	if !stream.Origin.IsEmpty() {
-		result = append(result, stream.Origin.Link())
+	if !stream.Document.Author.IsEmpty() {
+		result = append(result, stream.Document.AuthorLink())
 	}
 
 	if !stream.InReplyTo.IsEmpty() {
-		result = append(result, stream.InReplyTo.Link())
+		result = append(result, stream.InReplyTo.Link(LinkRelationInReplyTo))
 	}
 
 	return result
@@ -125,41 +118,16 @@ func (stream *Stream) Links() []Link {
 
 // SetAuthor populates the `Author` link of this `Stream`.
 func (stream *Stream) SetAuthor(user *User) {
-	stream.Author = user.PersonLink(LinkRelationAuthor)
-}
-
-// AsOriginLink returns an `OriginLink` for this `Stream`
-func (stream *Stream) AsOriginLink() OriginLink {
-
-	// If this `Stream` already has an `Origin`, then use it,
-	// but link the `InternalID` back to this stream.
-	if !stream.Origin.IsEmpty() {
-		return OriginLink{
-			InternalID: stream.StreamID,
-			URL:        stream.Origin.URL,
-			Source:     stream.Origin.Source,
-			Label:      stream.Origin.Label,
-			UpdateDate: time.Now().Unix(),
-		}
-	}
-
-	// Otherwise, create a new `OriginLink`
-	return OriginLink{
-		InternalID: stream.StreamID,
-		URL:        stream.Document.URL,
-		Source:     OriginSourceInternal,
-		UpdateDate: time.Now().Unix(),
-	}
+	stream.Document.Author = user.PersonLink()
 }
 
 // OutboxItem generates a new Stream that will sit in the author's Outbox
 func (stream *Stream) OutboxItem() Stream {
 	result := NewStream()
 	result.Document = stream.Document
-	result.Author = stream.Author
 	result.TopLevelID = "outbox"
 	result.TemplateID = "outbox-item"
-	result.ParentID = stream.Author.InternalID
+	result.ParentID = stream.Document.Author.InternalID
 
 	return result
 }
@@ -194,8 +162,8 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	}
 
 	// Authors sometimes have special permissions, too.
-	if !stream.Author.InternalID.IsZero() {
-		if authorization.UserID == stream.Author.InternalID {
+	if !stream.Document.Author.InternalID.IsZero() {
+		if authorization.UserID == stream.Document.Author.InternalID {
 			result = append(result, MagicRoleAuthor)
 		}
 	}
