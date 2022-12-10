@@ -56,7 +56,7 @@ func (w Profile) Render() (template.HTML, error) {
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Profile.Render", "Error generating HTML"))
+		return "", derp.Report(derp.Wrap(err, "render.Profile.Render", "Error generating HTML", w._context.Request().URL.String()))
 
 	}
 
@@ -317,10 +317,6 @@ func (w Profile) Folder() (model.Folder, error) {
 
 func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
 
-	if !w.IsAuthenticated() {
-		return nil
-	}
-
 	queryBuilder := builder.NewBuilder().
 		Int("publishDate")
 
@@ -331,6 +327,20 @@ func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
 
 	result := NewSliceBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
+	return &result
+}
+
+func (w Profile) Followers() *SliceBuilder[model.FollowerSummary] {
+
+	queryBuilder := builder.NewBuilder().
+		String("displayName")
+
+	criteria := exp.And(
+		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	result := NewSliceBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
 	return &result
 }
 

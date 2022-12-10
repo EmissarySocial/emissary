@@ -30,11 +30,14 @@ type OriginLink struct {
 	ImageURL   string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
 }
 
+// NewOriginLink returns a fully initialized OriginLink
 func NewOriginLink() OriginLink {
 	return OriginLink{}
 }
 
+// OriginLinkSchema returns a JSON Schema for OriginLink structures
 func OriginLinkSchema() schema.Element {
+
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId": schema.String{Format: "objectId"},
@@ -48,12 +51,14 @@ func OriginLinkSchema() schema.Element {
 	}
 }
 
+// IsEmpty returns TRUE if this OriginLink is empty
 func (origin OriginLink) IsEmpty() bool {
 	return origin.InternalID.IsZero() && (origin.URL == "")
 }
 
 // Link returns a Link to this origin
 func (origin OriginLink) Link() Link {
+
 	return Link{
 		InternalID: origin.InternalID,
 		Relation:   LinkRelationOriginal,
@@ -63,16 +68,20 @@ func (origin OriginLink) Link() Link {
 	}
 }
 
+// Icon returns the standard icon label for this origin
 func (origin OriginLink) Icon() string {
+
 	switch origin.Type {
-	case "ACTIVITYPUB":
+
+	case LinkSourceActivityPub:
 		return "code-slash"
-	case "INTERNAL":
+	case LinkSourceInternal:
 		return "star"
-	case "RSS":
+	case LinkSourceRSS:
 		return "rss"
-	case "TWITTER":
+	case LinkSourceTwitter:
 		return "twitter"
 	}
+
 	return "question-square"
 }

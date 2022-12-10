@@ -1,30 +1,19 @@
 package service
 
 import (
-	"bytes"
 	"math/rand"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queue"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/first"
-	htmlTools "github.com/benpate/rosetta/html"
-	"github.com/dyatlov/go-htmlinfo/htmlinfo"
+	"github.com/davecgh/go-spew/spew"
 
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/mmcdole/gofeed"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/net/html"
 )
 
 // Following manages all interactions with the Following collection
@@ -109,8 +98,8 @@ func (service *Following) Start() {
 			default:
 
 				// Poll each following for new items.
-				derp.Report(service.PollFollowing(following))
-				derp.Report(service.PurgeFollowing(following))
+				service.Connect(following)
+				service.PurgeInbox(following)
 			}
 
 			following = model.NewFollowing()
@@ -178,7 +167,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Poll external services (if necessary)
-	go service.PollFollowing(*following)
+	go service.Connect(*following)
 
 	// Win!
 	return nil
@@ -311,86 +300,61 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 }
 
 /*******************************************
- * Following Methods
+ * Custom Actions
  *******************************************/
 
-func (service *Following) PurgeFollowing(following model.Following) error {
+// Connect attempts to connect to a new URL and determines how to follow it.
+func (service *Following) Connect(following model.Following) error {
 
-	const location = "service.Following.PurgeFollowing"
-
-	// Check each following for expired items.
-	items, err := service.inboxService.QueryPurgeable(&following)
-
-	// If there was an error querying for purgeable items, log it and exit.
-	if err != nil {
-		return derp.Wrap(err, location, "Error querying purgeable items", following)
-	}
-
-	// Purge each item that has expired
-	for _, item := range items {
-		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
-			return derp.Wrap(err, location, "Error purging item", item)
-		}
-	}
-
-	return nil
-}
-
-// PollFollowing tries to import an RSS feed and adds/updates activitys for each item in it.
-func (service *Following) PollFollowing(following model.Following) error {
-
-	const location = "service.Following.PollFollowing"
+	const location = "service.Following.Connect"
 
 	// Update the following status
 	if err := service.SetStatus(&following, model.FollowingStatusLoading, ""); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
-	// Find the RSS feed associated with this following
-	rssFeed, err := service.GetRSSFeed(&following)
+	links, err := discoverLinks(following.URL)
 
 	if err != nil {
-		// If we can't find the RSS feed URL, then mark the following as an error.
-		if err := service.SetStatus(&following, model.FollowingStatusFailure, err.Error()); err != nil {
-			return derp.Wrap(err, location, "Error updating following status", following)
+		return derp.Wrap(err, location, "Error discovering links", following.URL)
+	}
+
+	spew.Dump(following)
+
+	// Try to connect to each link in order.  If a link fails, then try the next one.
+	for _, link := range links {
+
+		spew.Dump(link)
+
+		switch link.RelationType {
+
+		case model.MimeTypeActivityPub:
+
+			following.Method = model.FollowMethodActivityPub
+
+			if err := service.ConnectActivityPub(&following, link); err == nil {
+				return nil
+			} else {
+				derp.Report(err)
+			}
+
+		case model.MimeTypeRSS, model.MimeTypeAtom, model.MimeTypeJSONFeed, model.MimeTypeXML:
+
+			following.Method = model.FollowMethodRSS
+			if err := service.PollRSS(&following, link); err == nil {
+				return nil
+			} else {
+				derp.Report(err)
+			}
 		}
-		return nil // Error has been logged, so don't break the request.
 	}
 
-	// Update the label for this "following" record using the RSS feed title.
-	// This should get saved once we successfully update the record status.
-	following.Label = rssFeed.Title
-
-	// If we have a feed, then import all of the items from it.
-
-	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
-	var errorCollection error
-
-	for _, item := range rssFeed.Items {
-		if err := service.saveActivity(&following, rssFeed, item); err != nil {
-			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
-		}
+	// Since we can't find any feeds, set the following status to "failure"
+	if err := service.SetStatus(&following, model.FollowingStatusFailure, "No recognizable feeds found"); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error updating following status", following))
 	}
 
-	// If there were errors parsing the feed, then mark the following as an error.
-	if errorCollection != nil {
-
-		// Try to update the following status
-		if err := service.SetStatus(&following, model.FollowingStatusFailure, errorCollection.Error()); err != nil {
-			return derp.Wrap(err, location, "Error updating following status", following)
-		}
-
-		// There were errors, but they're noted in the following status, so THIS step is successful
-		return nil
-	}
-
-	// If we're here, then we have successfully imported the RSS feed.
-	// Mark the following as having been polled
-	if err := service.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
-	}
-
-	return nil
+	return derp.NewInternalError(location, "No recognizable feeds found", following.URL)
 }
 
 // SetStatus updates the status (and statusMessage) of a Following record.
@@ -449,233 +413,25 @@ func (service *Following) SetStatus(following *model.Following, status string, s
 	return nil
 }
 
-func (service *Following) GetRSSFeed(following *model.Following) (*gofeed.Feed, error) {
+// PurgeInbox removes all inbox items that are past their expiration date
+func (service *Following) PurgeInbox(following model.Following) error {
 
-	const location = "service.Following.GetRSSFeed"
+	const location = "service.Following.PurgeFollowing"
 
-	var body bytes.Buffer
+	// Check each following for expired items.
+	items, err := service.inboxService.QueryPurgeable(&following)
 
-	// Try to load the URL from the following
-	transaction := remote.Get(following.URL).Response(&body, nil)
-
-	if err := transaction.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Error fetching URL")
-	}
-
-	// If it is a valid RSS feed, then we have won.  NOTE: We're not checking the
-	// document mime type becuase that's confusing and not reliable.
-	if rssFeed, err := gofeed.NewParser().ParseString(body.String()); err == nil {
-		return rssFeed, nil
-	}
-
-	// Fall through means that it was not a valid feed.  Maybe it's a HTML document that
-	// LINKS to a feed.  Let's try that...
-
-	// Try to parse the document as an HTML document
-	htmlDocument, err := goquery.NewDocumentFromReader(&body)
-
+	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
+		return derp.Wrap(err, location, "Error querying purgeable items", following)
 	}
 
-	links := htmlDocument.Find("link").Nodes
-
-	// Look through RSS links for a valid feed
-	for _, link := range links {
-
-		// Only follow links that say they are some kind of "RSS" feed
-		switch nodeAttribute(link, "type") {
-		case "application/rss+xml", "application/atom+xml", "application/json+feed":
-
-			href := getRelativeURL(following.URL, nodeAttribute(link, "href"))
-			if rssFeed, err := gofeed.NewParser().ParseURL(href); err == nil {
-				return rssFeed, nil
-			}
-		}
-	}
-
-	// Fall through means that we couldn't find a valid feed ANYWHERE.
-	return nil, derp.NewBadRequestError(location, "RSS Feed Not Found", following.URL)
-}
-
-// saveActivity adds/updates an individual Activity based on an RSS item
-func (service *Following) saveActivity(following *model.Following, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
-
-	const location = "service.Following.saveActivity"
-
-	activity := model.NewActivity()
-
-	if err := service.inboxService.LoadByDocumentURL(following.UserID, rssItem.Link, &activity); err != nil {
-
-		// Anything but a "not found" error is a real error
-		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error loading local activity")
-		}
-
-		// Fall through means "not found" which means "make a new activity"
-		activity.OwnerID = following.UserID
-		activity.Origin = following.Origin()
-		activity.PublishDate = rssDate(rssItem.PublishedParsed)
-		activity.FolderID = following.FolderID
-
-		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > activity.PublishDate {
-			activity.PublishDate = updateDate
-		}
-	}
-
-	// If the RSS entry has been updated since the Activity was last touched, then refresh it.
-	if rssDate(rssItem.PublishedParsed) >= activity.Journal.UpdateDate {
-
-		populateActivity(&activity, following, rssFeed, rssItem)
-
-		// Try to save the new/updated activity
-		if err := service.inboxService.Save(&activity, "Imported from RSS feed"); err != nil {
-			return derp.Wrap(err, "service.Following.Poll", "Error saving activity")
+	// Purge each item that has expired
+	for _, item := range items {
+		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
+			return derp.Wrap(err, location, "Error purging item", item)
 		}
 	}
 
 	return nil
-}
-
-/*******************************************
- * Helper Functions
- *******************************************/
-
-func populateActivity(activity *model.Activity, following *model.Following, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
-
-	// Populate activity from the rssItem
-	activity.PublishDate = rssDate(rssItem.PublishedParsed)
-	activity.Origin = following.Origin()
-	activity.Document = rssDocument(rssFeed, rssItem)
-	activity.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
-
-	// Fill in additional properties from the web page, if necessary
-	if !activity.Document.IsComplete() {
-
-		var body bytes.Buffer
-
-		// Try to load the URL from the RSS feed
-		txn := remote.Get(activity.Origin.URL).Response(&body, nil)
-		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, "service.Following.populateActivity", "Error fetching URL", activity.Origin.URL)
-		}
-
-		// Parse the response into an HTMLInfo object
-		contentType := txn.ResponseObject.Header.Get("Content-Type")
-		info := htmlinfo.NewHTMLInfo()
-
-		if err := info.Parse(&body, &activity.Origin.URL, &contentType); err != nil {
-			return derp.Wrap(err, "service.Following.populateActivity", "Error parsing HTML", activity.Origin.URL)
-		}
-
-		// Update the activity with data missing from the RSS feed
-		activity.Document.Label = first.String(activity.Document.Label, info.Title)
-		activity.Document.Summary = first.String(activity.Document.Summary, info.Description)
-
-		if activity.Document.ImageURL == "" {
-			if info.ImageSrcURL != "" {
-				activity.Document.ImageURL = info.ImageSrcURL
-			} else if len(info.OGInfo.Images) > 0 {
-				activity.Document.ImageURL = info.OGInfo.Images[0].URL
-			}
-		}
-
-		// TODO: MEDIUM: Maybe implement h-feed in here?
-		// https://indieweb.org/h-feed
-	}
-
-	return nil
-}
-
-func rssDocument(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.DocumentLink {
-
-	return model.DocumentLink{
-		URL:         rssItem.Link,
-		Label:       htmlTools.ToText(rssItem.Title),
-		Summary:     htmlTools.ToText(rssItem.Description),
-		ImageURL:    rssImageURL(rssItem),
-		Author:      rssAuthor(rssFeed, rssItem),
-		PublishDate: rssDate(rssItem.PublishedParsed),
-		UpdateDate:  time.Now().Unix(),
-	}
-}
-
-// rssAuthor returns all information about the actor of an RSS item
-func rssAuthor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
-
-	if rssFeed == nil {
-		return model.NewPersonLink()
-	}
-
-	result := model.PersonLink{
-		Name:       htmlTools.ToText(rssItem.Author.Name),
-		ProfileURL: rssFeed.Link,
-	}
-
-	return result
-}
-
-// rssImageURL returns the URL of the first image in the item's enclosure list.
-func rssImageURL(rssItem *gofeed.Item) string {
-
-	if rssItem == nil {
-		return ""
-	}
-
-	if rssItem.Image != nil {
-		return rssItem.Image.URL
-	}
-
-	// Search for an image in the enclosures
-	for _, enclosure := range rssItem.Enclosures {
-		if list.Slash(enclosure.Type).Head() == "image" {
-			return enclosure.URL
-		}
-	}
-
-	return ""
-}
-
-func rssDate(date *time.Time) int64 {
-
-	if date == nil {
-		return 0
-	}
-
-	return date.Unix()
-}
-
-// nodeAttribute searches for a specific attribute in a node and returns its value
-func nodeAttribute(node *html.Node, name string) string {
-
-	if node == nil {
-		return ""
-	}
-
-	for _, attr := range node.Attr {
-		if attr.Key == name {
-			return attr.Val
-		}
-	}
-
-	return ""
-}
-
-func getRelativeURL(baseURL string, relativeURL string) string {
-
-	// If the relative URL is already absolute, then just return it
-	if strings.HasPrefix(relativeURL, "http://") || strings.HasPrefix(relativeURL, "https://") {
-		return relativeURL
-	}
-
-	// If the relative URL is a root-relative URL, then assume HTTPS (it's 2022, for crying out loud)
-	if strings.HasPrefix(relativeURL, "//") {
-		return "https:" + relativeURL
-	}
-
-	if result, err := url.JoinPath(baseURL, relativeURL); err == nil {
-		return result
-	}
-
-	return relativeURL
 }

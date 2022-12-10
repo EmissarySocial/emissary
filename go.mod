@@ -12,6 +12,8 @@ replace github.com/benpate/exp-builder => ../../benpate/exp-builder
 
 replace github.com/benpate/form => ../../benpate/form
 
+replace github.com/benpate/remote => ../../benpate/remote
+
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 replace github.com/benpate/table => ../../benpate/table

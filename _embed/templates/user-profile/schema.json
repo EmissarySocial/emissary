@@ -38,9 +38,14 @@
 		}
 	},
 	"actions": {
-		"view": {
-			"step":"view-html"
-		},
+		"view": {"step":"view-html", "file":"profile"},
+		"profile-sidebar": {"step":"view-html"},
+		"followers": {"step":"view-html", "file":"profile-followers"},
+		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
+		"following": {"step":"view-html", "file":"profile-following"},
+		"rss": {"step":"view-rss", "format":"rss"},
+		"atom": {"step":"view-rss", "format":"atom"},
+		"json": {"step":"view-rss", "format":"json"},
 		"outbox-add": {
 			"roles": ["myself"],
 			"steps": [
@@ -110,13 +115,6 @@
 				{"step":"with-folder", "steps": [
 					{"step":"delete"}
 				]}
-			]
-		},
-		"following": {
-			"roles": ["myself"],
-			"steps": [
-				{"step":"set-query-param", "selected":"following"},
-				{"step":"view-html", "file":"view-following"}
 			]
 		},
 		"edit-profile": {

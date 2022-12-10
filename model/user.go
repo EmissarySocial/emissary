@@ -26,6 +26,7 @@ type User struct {
 	Password        string               `path:"password"       json:"password"        bson:"password"`       // This password should be encrypted with BCrypt.
 	FollowerCount   int                  `path:"followerCount"  json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
 	FollowingCount  int                  `path:"followingCount" json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
+	BlockCount      int                  `path:"blockCount" json:"blockCount"  bson:"blockCount"`             // Number of users that this user is following
 	IsOwner         bool                 `path:"isOwner"        json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
 	ImageID         primitive.ObjectID   `path:"imageId"        json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
 	PasswordReset   PasswordReset        `                      json:"passwordReset"   bson:"passwordReset"`  // Most recent password reset information.

@@ -89,6 +89,8 @@ func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
 		if folderID, err := primitive.ObjectIDFromHex(transaction.FolderID); err == nil {
 			following.FolderID = folderID
+		} else {
+			following.FolderID = primitive.NilObjectID
 		}
 
 		// Save the following to the database
@@ -99,7 +101,6 @@ func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 		// Close the Modal Dialog and return
 		render.CloseModal(ctx, "")
 		return ctx.NoContent(http.StatusOK)
-
 	}
 }
 

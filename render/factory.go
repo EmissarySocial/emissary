@@ -17,13 +17,14 @@ type Factory interface {
 	// Model Services
 	Attachment() *service.Attachment
 	Folder() *service.Folder
+	Following() *service.Following
+	Follower() *service.Follower
 	Group() *service.Group
 	Inbox() *service.Inbox
 	Layout() *service.Layout
 	Mention() *service.Mention
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
-	Following() *service.Following
 	Template() *service.Template
 	User() *service.User
 

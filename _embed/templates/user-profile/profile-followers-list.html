@@ -1,0 +1,20 @@
+<table class="table">
+
+	{{ range .Followers.Slice }}
+		<tr role="button">
+			<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
+				{{icon "rss"}} 
+			</td>
+			<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
+				{{ if eq "" .Label }} 
+					{{- .URL -}}
+				{{ else }}
+					{{- .Label -}}
+				{{ end }}
+			</td>
+			<td class="align-right">
+				<button hx-get="/@me/pub/followers/{{.FollowerID.Hex}}/delete" class="text-red">Delete</button>
+			</td>
+		</tr>
+	{{ end }}
+</table>

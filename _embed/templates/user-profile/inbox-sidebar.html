@@ -5,21 +5,15 @@
 
 	<div style="position:-webkit-sticky; position:sticky; top:100px;">
 		{{- if eq $selected "inbox" -}}
-			<div role="link" hx-get="/@me/inbox" class="bold">{{icon "folder"}} Unread Items</div>
+			<div role="link" hx-get="/@me/inbox" class="bold">{{icon "folder"}} Unread</div>
 		{{- else -}}
-			<div role="link" hx-get="/@me/inbox">{{icon "folder"}} Unread Items</div>
+			<div role="link" hx-get="/@me/inbox">{{icon "folder"}} Unread</div>
 		{{- end -}}
 
 		{{- if eq $selected "inbox-all" -}}
-			<div role="link" hx-get="/@me/inbox-all" class="bold">{{icon "folder"}} All Items</div>
+			<div role="link" hx-get="/@me/inbox-all" class="bold">{{icon "folder"}} All Posts</div>
 		{{- else -}}
-			<div role="link" hx-get="/@me/inbox-all">{{icon "folder"}} All Items</div>
-		{{- end -}}
-
-		{{- if eq $selected "following" -}}
-			<div role="link" hx-get="/@me/following" class="bold">{{icon "rss"}} Following</div>
-		{{- else -}}
-			<div role="link" hx-get="/@me/following">{{icon "rss"}} Following</div>
+			<div role="link" hx-get="/@me/inbox-all">{{icon "folder"}} All Posts</div>
 		{{- end -}}
 
 		<br>

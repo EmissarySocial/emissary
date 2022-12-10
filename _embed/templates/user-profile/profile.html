@@ -1,0 +1,33 @@
+<!-- Alternate links for service discovery -->
+<link rel="alternate" type="application/rss+xml" href="/@{{.Username}}/rss"/>
+<link rel="alternate" type="application/atom+xml" href="/@{{.Username}}/atom"/>
+<link rel="alternate" type="application/feed+json" href="/@{{.Username}}/json"/>
+<link rel="alternate" type="application/activity+json" href="/@{{.Username}}/pub/outbox"/>
+
+<!-- Page content -->
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this">
+	<title>{{.DisplayName}}</title>
+
+	<div class="page h-card">
+
+		<div class="pure-g">
+
+			{{ .View "profile-sidebar" }}
+
+			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4 pure-u-xl-4-5" style="border-left: solid 1px var(--gray20); padding-left:20px;">
+
+				<h1>My Posts</h1>
+
+				{{if .UserCan "outbox-add" -}}
+					<div hx-target="this" hx-swap="outerHTML">
+						<button hx-get="/@me/outbox-add" class="text-sm primary">New Post</button>
+					</div>
+				{{- end -}}
+
+				<div class="h-feed">
+					{{ .View "outbox-list"}}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
