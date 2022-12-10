@@ -256,15 +256,18 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
  *******************************************/
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
-	return nil
+	err := queries.SetFollowersCount(context.TODO(), service.collection, userID)
+	return derp.Wrap(err, "service.User", "Error setting follower count", userID)
 }
 
 func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
-	return nil
+	err := queries.SetFollowingCount(context.TODO(), service.collection, userID)
+	return derp.Wrap(err, "service.User", "Error setting following count", userID)
 }
 
 func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
-	return nil
+	err := queries.SetBlockCount(context.TODO(), service.collection, userID)
+	return derp.Wrap(err, "service.User", "Error setting block count", userID)
 }
 
 func (service *User) SetOwner(owner config.Owner) error {
