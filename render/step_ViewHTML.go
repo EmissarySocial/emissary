@@ -8,7 +8,7 @@ import (
 
 // StepViewHTML represents an action-step that can render a Stream into HTML
 type StepViewHTML struct {
-	Filename string
+	File string
 }
 
 // Get renders the Stream HTML to the context
@@ -21,8 +21,8 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 
 	var filename string
 
-	if step.Filename != "" {
-		filename = step.Filename
+	if step.File != "" {
+		filename = step.File
 	} else {
 		filename = renderer.ActionID()
 	}

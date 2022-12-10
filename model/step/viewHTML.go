@@ -4,13 +4,13 @@ import "github.com/benpate/rosetta/maps"
 
 // ViewHTML represents an action-step that can render a Stream into HTML
 type ViewHTML struct {
-	Filename string
+	File string
 }
 
 // NewViewHTML generates a fully initialized ViewHTML step.
 func NewViewHTML(stepInfo maps.Map) (ViewHTML, error) {
 	return ViewHTML{
-		Filename: stepInfo.GetString("file"),
+		File: stepInfo.GetString("file"),
 	}, nil
 }
 
