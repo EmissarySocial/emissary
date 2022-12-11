@@ -44,6 +44,7 @@ func WrapModal(response *echo.Response, content string, options ...string) strin
 	// These two headers make it a modal
 	header := response.Header()
 	header.Set("HX-Retarget", "aside")
+	header.Set("HX-Reswap", "innerHTML")
 	header.Set("HX-Push", "false")
 
 	// Build the HTML
