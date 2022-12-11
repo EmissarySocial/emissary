@@ -1,12 +1,13 @@
-<!-- Alternate links for service discovery -->
-<link rel="alternate" type="application/rss+xml" href="/@{{.Username}}/rss"/>
-<link rel="alternate" type="application/atom+xml" href="/@{{.Username}}/atom"/>
-<link rel="alternate" type="application/feed+json" href="/@{{.Username}}/json"/>
-<link rel="alternate" type="application/activity+json" href="/@{{.Username}}/pub/outbox"/>
-
 <!-- Page content -->
-<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this">
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this" hx-swap="outerHTML">
+
 	<title>{{.DisplayName}}</title>
+
+	<!-- Alternate links for service discovery -->
+	<link rel="alternate" type="application/rss+xml" href="/@{{.Username}}/rss"/>
+	<link rel="alternate" type="application/atom+xml" href="/@{{.Username}}/atom"/>
+	<link rel="alternate" type="application/feed+json" href="/@{{.Username}}/json"/>
+	<link rel="alternate" type="application/activity+json" href="/@{{.Username}}/pub/outbox"/>
 
 	<div class="page h-card">
 

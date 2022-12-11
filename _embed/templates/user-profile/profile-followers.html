@@ -1,5 +1,6 @@
-<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this">
-	<title>{{.DisplayName}}</title>
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this" hx-swap="outerHTML">
+
+	<title>{{.FollowerCount}} Followers | {{.DisplayName}}</title>
 
 	<div class="page h-card">
 
