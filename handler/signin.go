@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -129,16 +128,12 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		spew.Dump("GetResetCode")
-
 		// Try to get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
 		}
-
-		spew.Dump("have factory")
 
 		// Try to load the user by userID and resetCode
 		userService := factory.User()
@@ -147,14 +142,9 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		userID := ctx.QueryParam("userId")
 		resetCode := ctx.QueryParam("code")
 
-		spew.Dump(userID, resetCode)
-
 		if err := userService.LoadByResetCode(userID, resetCode, &user); err != nil {
-			spew.Dump(err)
 			return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
 		}
-
-		spew.Dump(user)
 
 		// Try to render the HTML response
 		template := factory.Layout().Global().HTMLTemplate
@@ -165,14 +155,10 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 			"code":        resetCode,
 		}
 
-		spew.Dump(object)
-
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
-			spew.Dump(err)
 			return derp.Wrap(err, "handler.GetResetCode", "Error executing template")
 		}
 
-		spew.Dump("success??")
 		return nil
 	}
 }
