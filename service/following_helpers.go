@@ -162,9 +162,16 @@ func getRelativeURL(baseURL string, relativeURL string) string {
 		return "https:" + relativeURL
 	}
 
-	if result, err := url.JoinPath(baseURL, relativeURL); err == nil {
-		return result
+	// Parse the base URL so that we can do URL-math on it
+	baseURLParsed, _ := url.Parse(baseURL)
+
+	// If the relative URL is a path-relative URL, then just replace the path
+	if strings.HasPrefix(relativeURL, "/") {
+		baseURLParsed.Path = relativeURL
+		return baseURLParsed.String()
 	}
 
-	return relativeURL
+	// Otherwise, join the paths
+	baseURLParsed.Path, _ = url.JoinPath(baseURLParsed.Path, relativeURL)
+	return baseURLParsed.String()
 }
