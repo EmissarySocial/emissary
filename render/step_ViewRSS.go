@@ -20,7 +20,6 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 	const location = "render.StepViewRSS.Get"
 
 	factory := renderer.factory()
-	streamRenderer := renderer.(*Stream)
 
 	// Get all child streams from the database
 	children, err := factory.Stream().ListByParent(renderer.objectID())
@@ -33,7 +32,7 @@ func (step StepViewRSS) Get(renderer Renderer, buffer io.Writer) error {
 	result := feeds.Feed{
 		Title:       "",
 		Description: "",
-		Link:        &feeds.Link{Href: streamRenderer.Permalink()},
+		Link:        &feeds.Link{Href: renderer.Permalink()},
 		Author:      &feeds.Author{Name: ""},
 		Created:     time.Now(),
 	}
