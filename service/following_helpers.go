@@ -88,9 +88,17 @@ func rssAuthor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 		return model.NewPersonLink()
 	}
 
+	if rssItem == nil {
+		return model.NewPersonLink()
+	}
+
 	result := model.PersonLink{
-		Name:       htmlTools.ToText(rssItem.Author.Name),
 		ProfileURL: rssFeed.Link,
+	}
+
+	if rssItem.Author != nil {
+		result.Name = htmlTools.ToText(rssItem.Author.Name)
+		result.EmailAddress = rssItem.Author.Email
 	}
 
 	return result

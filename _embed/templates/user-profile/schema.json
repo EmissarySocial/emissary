@@ -1,7 +1,7 @@
 {
 	"templateId":"user-profile",
 	"role":"user-profile",
-	"label":"Inbox",
+	"label":"User Profile",
 	"description":"Profile displays everything about a user, including their inbox and outbox information",
 	"icon":"inbox",
 	"containedBy": [],
@@ -46,53 +46,50 @@
 		"rss": {"step":"view-rss", "format":"rss"},
 		"atom": {"step":"view-rss", "format":"atom"},
 		"json": {"step":"view-rss", "format":"json"},
+		"outbox-list": {"step":"view-html"},
 		"outbox-add": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"add-child-embed", "templates":["outbox-message"], "showLabels":false}
 			]
 		},
-		"outbox-list": {
-			"roles": ["myself"],
-			"step":"view-html"
-		},
 		"inbox": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"set-query-param", "selected":"inbox", "readDate":"0"},
 				{"step":"view-html", "file":"inbox"}
 			]
 		},
 		"inbox-all": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"set-query-param", "selected":"inbox-all"},
 				{"step":"view-html", "file":"inbox"}
 			]
 		},
 		"inbox-folder": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"set-query-param", "selected":"inbox-folder"},
 				{"step":"view-html", "file":"inbox"}
 			]
 		},
 		"inbox-sidebar": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"step":"view-html"
 		},
 		"inbox-list": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"step":"view-html"
 		},
 		"activity": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [{"step":"as-modal", "class":"huge", "steps": [
 				{"step":"view-html"}
 			]}]
 		},
 		"inbox-folder-edit": {
-			"roles":["myself"],
+			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"as-modal", "steps": [
@@ -110,7 +107,7 @@
 			]
 		},
 		"inbox-folder-delete": {
-			"roles":["myself"],
+			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"delete"}
@@ -118,7 +115,7 @@
 			]
 		},
 		"edit-profile": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
 					{"step":"form-html", "form": {
@@ -135,7 +132,7 @@
 			]
 		},
 		"edit-photo": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps":[
 				{"step":"as-modal", "steps":[
 					{"step":"view-html"},
@@ -148,7 +145,7 @@
 			]
 		},
 		"edit-links": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
 					{"step":"view-html"}
@@ -156,7 +153,7 @@
 			]
 		},
 		"edit-links-table": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"edit-table", "path":"links", "form": {
 					"type":"layout-table",
@@ -169,11 +166,11 @@
 			]
 		},
 		"preview-photo": {
-			"roles": ["myself"],
+			"roles": ["self"],
 			"step":"view-html"
 		},
 		"delete-photo": {
-			"roles":["myself"],
+			"roles":["self"],
 			"steps":[
 				{"step":"delete-attachments", "all":true},
 				{"step":"set-thumbnail", "path":"imageId"},

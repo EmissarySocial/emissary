@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/davecgh/go-spew/spew"
 
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -319,14 +318,10 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error discovering links", following.URL)
 	}
 
-	spew.Dump(following)
-
 	// Try to connect to each link in order.  If a link fails, then try the next one.
 	for _, link := range links {
 
-		spew.Dump(link)
-
-		switch link.RelationType {
+		switch link.MediaType {
 
 		case model.MimeTypeActivityPub:
 

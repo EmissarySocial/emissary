@@ -36,25 +36,24 @@ func (step StepWithFolder) doStep(renderer Renderer, buffer io.Writer, actionMet
 
 	// Collect required services and values
 	factory := renderer.factory()
-	inboxFolderService := factory.Folder()
-	inboxFolderToken := renderer.context().QueryParam("inboxFolderId")
-	inboxFolder := model.NewFolder()
+	context := renderer.context()
+	folderService := factory.Folder()
+	folderToken := context.QueryParam("folderId")
+	folder := model.NewFolder()
+	folder.UserID = renderer.AuthenticatedID()
 
 	// If we have a real ID, then try to load the folder from the database
-	if inboxFolderToken != "new" {
-		if err := inboxFolderService.LoadByToken(renderer.AuthenticatedID(), inboxFolderToken, &inboxFolder); err != nil {
+	if folderToken != "new" {
+		if err := folderService.LoadByToken(renderer.AuthenticatedID(), folderToken, &folder); err != nil {
 			if actionMethod == ActionMethodGet {
-				return derp.Wrap(err, location, "Unable to load Folder", inboxFolderToken)
+				return derp.Wrap(err, location, "Unable to load Folder", folderToken)
 			}
 			// Fall through for POSTS..  we're just creating a new folder.
 		}
 	}
 
-	// For new folders, set the owner to the authenticated user
-	inboxFolder.UserID = renderer.AuthenticatedID()
-
 	// Create a new renderer tied to the Folder record
-	subRenderer, err := NewModel(factory, renderer.context(), inboxFolderService, &inboxFolder, renderer.template(), "view")
+	subRenderer, err := NewModel(factory, context, folderService, &folder, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to create sub-renderer")

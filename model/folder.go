@@ -112,7 +112,7 @@ func (folder Folder) State() string {
 // should never be allowed on an inbox folder, so they are not returned.
 func (folder Folder) Roles(authorization *Authorization) []string {
 
-	// Only MagicRoleMyself is allowed
+	// Folders are private, so only MagicRoleMyself is allowed
 	if authorization.UserID == folder.UserID {
 		return []string{MagicRoleMyself}
 	}

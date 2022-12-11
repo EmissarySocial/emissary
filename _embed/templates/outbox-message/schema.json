@@ -22,7 +22,7 @@
 		}
 	},
 	"roles": {
-		"myself": {
+		"self": {
 			"label":"Myself",
 			"decription":"Outbox messages can only be sent by the current user."
 		}
@@ -34,7 +34,7 @@
 			]
 		},
 		"create":{
-			"roles": ["myself"],
+			"roles": ["self"],
 			"steps": [
 				{"step":"view-html"},
 				{"step":"set-data", "paths":["document.summary"]},
@@ -46,7 +46,7 @@
 			]
 		},
 		"delete": {
-			"roles":["myself"],
+			"roles":["self"],
 			"steps": [
 				{"step":"delete"},
 				{"step":"publish"}

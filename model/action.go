@@ -59,7 +59,7 @@ func (action *Action) AllowedRoles(stateID string) []string {
 	}
 
 	// By default, owners can do everything
-	result := []string{MagicRoleOwner}
+	result := []string{}
 
 	// If there are additional roles allowed, then add them to the result
 	if len(action.Roles) > 0 {
@@ -70,6 +70,14 @@ func (action *Action) AllowedRoles(stateID string) []string {
 	if stateRoles, ok := action.StateRoles[stateID]; ok {
 		result = append(result, stateRoles...)
 	}
+
+	// If no roles have been defined, then this action can be performed by anyone
+	if len(result) == 0 {
+		result = append(result, MagicRoleAnonymous, MagicRoleAuthenticated)
+	}
+
+	// Owners can always perform actions, no matter what.
+	result = append(result, MagicRoleOwner)
 
 	return result
 }

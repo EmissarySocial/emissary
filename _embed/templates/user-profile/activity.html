@@ -4,15 +4,15 @@
 	<button script="on click send closeModal" class="text-sm">Close</button>
 </div>
 
-<h1>{{$activity.Object.Label}}</h1>
+<h1>{{$activity.Document.Label}}</h1>
 
 <div>
-	<button data-script="on click go to url '{{$activity.Object.URL}}' in new window then trigger closeModal">Visit Website</button>
+	<button data-script="on click go to url '{{$activity.Document.URL}}' in new window then trigger closeModal">Visit Website</button>
 	<button>Move to Folder</button>
 </div>
 
-<div>{{$activity.Object.Summary}}</div>
-<div>{{$activity.Object.ContentHTML | html}}</div>
+<div>{{$activity.Document.Summary}}</div>
+<div>{{$activity.ContentHTML | html}}</div>
 
 <script type="text/hyperscript">
 	init
