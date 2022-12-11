@@ -101,7 +101,9 @@ func (service Icons) Get(name string) string {
 	case "users-fill":
 		return service.get("people-fill")
 
-	// Services
+		// Services
+	case "activity-pub":
+		return service.get("cloud")
 	case "facebook":
 		return service.get("facebook")
 	case "github":
@@ -112,6 +114,8 @@ func (service Icons) Get(name string) string {
 		return service.get("instagram")
 	case "twitter":
 		return service.get("twitter")
+	case "rss":
+		return service.get("rss")
 	case "stripe":
 		return service.get("credit-card")
 	case "stripe-fill":
