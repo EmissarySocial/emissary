@@ -7,6 +7,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const ActivityFormatToot = "TOOT"
+
+const ActivityFormatArticle = "ARTICLE"
+
+const ActivityFormatMedia = "MEDIA"
+
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
@@ -100,6 +106,22 @@ func (activity *Activity) GetInt64(name string) (int64, error) {
 /*******************************************
  * Other Methods
  *******************************************/
+
+// Format returns a suggestion for how to display this activity
+func (activity Activity) Format() string {
+
+	// TODO: Smarter rules here?
+
+	if activity.Document.Label != "" {
+		return ActivityFormatArticle
+	}
+
+	if activity.Document.ImageURL != "" {
+		return ActivityFormatMedia
+	}
+
+	return ActivityFormatToot
+}
 
 func (activity *Activity) Status() string {
 	if activity.ReadDate == 0 {

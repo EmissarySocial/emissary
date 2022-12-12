@@ -20,26 +20,65 @@
 		{{- range $inbox -}}
 			<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>
 
-			<div id="item_{{.ActivityID.Hex}}" class="inbox-item" data-status="{{.Status}}" data-inboxItemId="{{.ActivityID.Hex}}" style="max-width:640px; cursor:pointer;" 
-				hx-get="/@me/activity?activityId={{.ActivityID.Hex}}"
-				xdata-script="on click halt the event then go to url '{{.Document.URL}}' in new window">
+			<div 
+				id="item_{{.ActivityID.Hex}}" 
+				class="inbox-item" 
+				data-status="{{.Status}}" 
+				data-inboxItemId="{{.ActivityID.Hex}}" 
+				style="max-width:640px; cursor:pointer;" 
+				hx-get="/@me/activity?activityId={{.ActivityID.Hex}}">
 
 				<div class="flex-row" hx-push-url="true">
 
+					{{- if eq .Format "TOOT" -}}
+
+					{{- else if eq .Format "MEDIA" -}}
+
+					{{- else -}}
+
+					{{- end -}}
+
 					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-						<div class="bold black" style="line-height:1em; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{.Document.Label}}</div>
-						<div class="text-gray text-sm space-below" style="display:flex; flex-direction:row; line-height:1em;">
-							<span style="line-height:1em; white-space:nowrap; height:1em; overflow:hidden; text-overflow:ellipsis;">
-								{{ icon .Origin.Icon }}
-								{{ .Origin.Label }} &middot;
-								{{ .Document.Author.Name }} 
-							</span>
-							<span style="white-space: nowrap;">
-								&nbsp;&middot;
-								{{ .PublishDate | tinyDate }}
-							</span>
-						</div>
-						<div class="text-gray" style="text-overflow:ellipsis; overflow:hidden; max-height:6em;">{{.Document.Summary}}</div>
+						
+						{{- if eq .Document.Label "" -}}
+							<div class="flex-row">
+
+								{{- if ne .Document.Author.ImageURL "" -}}
+									<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:100px;">
+								{{- end -}}
+
+								<div>
+									<div class="ellipsis">
+										<span class="bold black">{{.Document.Author.Name}}</span>
+									</div>
+									<div class="text-gray text-sm space-below flex-row">
+										<span class="ellipsis">
+											{{ icon .Origin.Icon }}
+											{{ .Origin.Label }} &middot;
+										</span>
+										<span class="nowrap">
+											{{ .PublishDate | tinyDate }}
+										</span>
+									</div>
+								</div>
+							</div>
+
+						{{- else -}}
+							<div class="bold black ellipsis">{{.Document.Label}}</div>
+							<div class="text-gray text-sm space-below flex-row">
+								<span class="ellipsis">
+									{{ icon .Origin.Icon }}
+									{{ .Origin.Label }} &middot;
+									{{ .Document.Author.Name }} 
+									&nbsp;&middot;
+								</span>
+								<span class="nowrap">
+									{{ .PublishDate | tinyDate }}
+								</span>
+							</div>
+							{{- end -}}
+
+						<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary}}</div>
 					</div>
 				
 					{{- if ne .Document.ImageURL "" -}}

@@ -73,7 +73,7 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 	}
 
 	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
-	mimeType = string(list.Head([]byte(mimeType), ';'))
+	mimeType = list.Semicolon(mimeType).First()
 
 	// If the document itself is an RSS feed, then success.
 	switch mimeType {
@@ -98,7 +98,7 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 	for _, link := range links {
 
 		mediaType := nodeAttribute(link, "type")
-		mediaType = string(list.Head([]byte(mediaType), ';'))
+		mediaType = list.Semicolon(mediaType).First()
 
 		switch mediaType {
 

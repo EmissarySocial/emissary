@@ -6,7 +6,7 @@ import (
 )
 
 // Converts a value into an ObjectID.  If the value cannot be converted, then a new ObjectID is returned
-func ID(value interface{}) primitive.ObjectID {
+func ID(value any) primitive.ObjectID {
 
 	if id, ok := value.(primitive.ObjectID); ok {
 		return id

@@ -50,7 +50,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory := Factory{
 		storage:       storage,
 		mutex:         sync.RWMutex{},
-		domains:       make(map[string]*domain.Factory, 0),
+		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
 	}

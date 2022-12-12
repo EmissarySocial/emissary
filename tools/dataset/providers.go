@@ -42,6 +42,7 @@ func Providers() []form.LookupCode {
 			Description: "To migrate from original API key",
 			Group:       "MANUAL",
 		},
+		/* REMOVED FOR NOW
 		{
 			Value:       "TWITTER",
 			Label:       "Twitter",
@@ -49,5 +50,6 @@ func Providers() []form.LookupCode {
 			Description: "Link to Twitter data feeds",
 			Group:       "OAUTH",
 		},
+		*/
 	}
 }

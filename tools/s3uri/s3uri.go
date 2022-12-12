@@ -56,7 +56,7 @@ func (s3u *S3URI) Reset() *S3URI {
 	return reset(s3u)
 }
 
-func (s3u *S3URI) Parse(v interface{}) (*S3URI, error) {
+func (s3u *S3URI) Parse(v any) (*S3URI, error) {
 	return parse(s3u, v)
 }
 
@@ -80,7 +80,7 @@ func (s3u *S3URI) GetCredentials() (string, string, string) {
 	return *s3u.AccessKey, *s3u.Secret, ""
 }
 
-func Parse(v interface{}) (*S3URI, error) {
+func Parse(v any) (*S3URI, error) {
 	return NewS3URI().Parse(v)
 }
 
@@ -99,7 +99,7 @@ func MustParse(s3u *S3URI, err error) *S3URI {
 	return s3u
 }
 
-func Validate(v interface{}) bool {
+func Validate(v any) bool {
 	_, err := NewS3URI().Parse(v)
 	return err == nil
 }
@@ -114,7 +114,7 @@ func ValidateString(s string) bool {
 	return err == nil
 }
 
-func parse(s3u *S3URI, s interface{}) (*S3URI, error) {
+func parse(s3u *S3URI, s any) (*S3URI, error) {
 	var (
 		u   *url.URL
 		err error

@@ -314,7 +314,7 @@ func (w Stream) IsEmpty() bool {
 }
 
 func (w Stream) IsCurrentStream() bool {
-	return w.stream.Token == list.Slash(w.context().Path()).Head()
+	return w.stream.Token == list.Slash(w.context().Path()).First()
 }
 
 func (w Stream) Roles() []string {

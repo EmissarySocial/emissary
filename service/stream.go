@@ -386,7 +386,7 @@ func (service *Stream) LoadByURL(targetURL string, result *model.Stream) error {
 	}
 
 	// RULE: Discard leading slash, then only use the first path segment (no actions)
-	token := list.Slash(parsedURL.Path).Tail().Head()
+	token := list.Slash(parsedURL.Path).At(1)
 
 	// Return the stream that matches the token
 	return service.LoadByToken(token, result)

@@ -67,9 +67,23 @@ func (service CommonBehavior) NewTransport(ctx context.Context, actorBoxIRI *url
 	getHeadersToSign := []string{httpsig.RequestTarget, "Date"}
 	postHeadersToSign := []string{httpsig.RequestTarget, "Date", "Digest"}
 
-	getSigner, _, err := httpsig.NewSigner(prefs, digestPref, getHeadersToSign, httpsig.Signature)
-	postSigner, _, err := httpsig.NewSigner(prefs, digestPref, postHeadersToSign, httpsig.Signature)
+	getSigner, _, err := httpsig.NewSigner(prefs, digestPref, getHeadersToSign, httpsig.Signature, 0)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "gofed.activitypub.CommonBehavior.NewTransport", "Error creating get signer")
+	}
+
+	postSigner, _, err := httpsig.NewSigner(prefs, digestPref, postHeadersToSign, httpsig.Signature, 0)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "gofed.activitypub.CommonBehavior.NewTransport", "Error creating post signer")
+	}
+
 	privateKey, err := service.encryptionKeyService.GetPrivateKey(userID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "gofed.activitypub.CommonBehavior.NewTransport", "Error loading private key", userID)
+	}
 
 	client := &http.Client{
 		Timeout: time.Second * 30,

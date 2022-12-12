@@ -2,22 +2,19 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
+- icon
 - table
 - steranko 
-- nebula
 - mediaserver
 - exp-builder
 - digit
-- activitystream
 
 FEW DEPENDENTS
 
-- icon
 - form
 
 SOME DEPENDENTS
 
-- json-ld
 - html
 - data-mock
 - data-mongo

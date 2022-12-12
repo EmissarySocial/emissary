@@ -1,9 +1,9 @@
 {{- $selected := .QueryParam "selected" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 
-<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-xl-1-5" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
-	<div style="position:-webkit-sticky; position:sticky; top:100px;">
+	<div class="pos-sticky" style="top:100px;">
 		{{- if eq $selected "inbox" -}}
 			<div role="link" hx-get="/@me/inbox" class="bold">{{icon "folder"}} Unread</div>
 		{{- else -}}
@@ -21,15 +21,32 @@
 		{{- range .Folders -}}
 
 			{{- if and (eq $selected "inbox-folder")  (eq .FolderID.Hex $folderID) -}}
-				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}" class="bold">{{icon "folder"}} {{.Label}}</div>
+				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}" class="bold ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- else -}}
-				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}">{{icon "folder"}} {{.Label}}</div>
+				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}" class="ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- end -}}
 
 		{{- end -}}
 		<div role="button" hx-get="/@me/inbox-folder-edit?folderId=new">{{icon "add"}} Add Folder</div>
 	</div>
 
-	<div hx-get="/@me/inbox-sidebar" hx-swap="outerHTML" hx-trigger="refresh-sidebar from:body" hx-push-url="false" hx-target="#inbox-sidebar"></div>
-
+	<div 
+		hx-get="/@me/inbox-sidebar" 
+		hx-swap="outerHTML" 
+		hx-trigger="refresh-sidebar from:body" 
+		hx-push-url="false" 
+		hx-target="#inbox-sidebar">
+	</div>
 </div>
+
+<style>
+	#inbox-sidebar {
+		margin-top:-10px;
+		margin-left:-20px;
+		margin-right:20px;
+		background-color:var(--gray04);
+		padding: 30px 20px 10px 20px;
+		border-right:solid 1px var(--gray15);
+		color:var(--gray80);
+	}
+</style>

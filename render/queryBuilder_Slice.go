@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 )
 
@@ -114,10 +115,9 @@ func (builder SliceBuilder[T]) Reverse() SliceBuilder[T] {
  ********************************/
 
 func (builder SliceBuilder[T]) Slice() ([]T, error) {
-
 	result := make([]T, 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
-	return result, err
+	return result, derp.Report(err)
 }
 
 /********************************

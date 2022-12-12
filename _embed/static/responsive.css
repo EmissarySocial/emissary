@@ -56,7 +56,7 @@
 @media screen and (min-width:768px) {
 
 	.framed {
-		width:44em;
+		width:90%;
 	}
 
 	.show-md {
@@ -71,7 +71,7 @@
 @media screen and (min-width:1024px) {
 
 	.framed {
-		width:60em;
+		width:80%;
 	}
 
 	.show-lg {

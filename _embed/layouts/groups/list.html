@@ -4,7 +4,7 @@
     <tbody hx-get="/admin/groups/list?label=gt:{{$last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend">
     {{- range $groups -}}
         <tr class="clickable">
-            <td role="link" hx-get="/admin/groups/{{.GroupID}}/edit" class="width-full">
+            <td role="link" hx-get="/admin/groups/{{.GroupID}}/edit" class="width-100">
                 {{icon "users"}}&nbsp;{{.Label}}
             </td>
             <td role="link" hx-get="/admin/groups/{{.GroupID}}/delete">

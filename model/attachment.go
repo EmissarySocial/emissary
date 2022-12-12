@@ -151,5 +151,5 @@ func (attachment *Attachment) MimeType() string {
 }
 
 func (attachment *Attachment) MimeCategory() string {
-	return list.Slash(attachment.MimeType()).Head()
+	return list.Slash(attachment.MimeType()).First()
 }

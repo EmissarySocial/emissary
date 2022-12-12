@@ -43,8 +43,10 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case providers.ProviderTypeStripe:
 		return service.GetStripeProvider(), true
 
-	case providers.ProviderTypeTwitter:
-		return service.GetTwitterProvider(), true
+		/* REMOVED FOR NOW
+		case providers.ProviderTypeTwitter:
+			return service.GetTwitterProvider(), true
+		*/
 	}
 
 	return providers.Null{}, false
@@ -59,8 +61,10 @@ func (service *Provider) GetStripeProvider() providers.Stripe {
 	return providers.NewStripe()
 }
 
+/* REMOVED FOR NOW
 // GetTwitterProvider returns a populated Twitter adapter
 func (service *Provider) GetTwitterProvider() providers.Twitter {
 	config, _ := service.config.Get(providers.ProviderTypeTwitter)
 	return providers.NewTwitter(config)
 }
+*/

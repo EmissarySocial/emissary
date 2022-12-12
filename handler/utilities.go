@@ -89,7 +89,7 @@ func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
 // If there is only one value set for a key (most common) then it is stored in the map
 // as a string.  Otherwise, it is stored as a []string.
 func cleanQueryParams(values url.Values) maps.Map {
-	result := make(maps.Map)
+	result := make(maps.Map, len(values))
 	for key, value := range values {
 
 		if len(value) == 1 {

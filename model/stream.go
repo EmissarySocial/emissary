@@ -103,7 +103,7 @@ func (stream *Stream) GetBool(name string) (bool, error) {
 // Links returns all resources linked to this Stream.  Some links may be empty.
 func (stream *Stream) Links() []Link {
 
-	result := make([]Link, 0, 3)
+	result := make([]Link, 0, 2)
 
 	if !stream.Document.Author.IsEmpty() {
 		result = append(result, stream.Document.AuthorLink())

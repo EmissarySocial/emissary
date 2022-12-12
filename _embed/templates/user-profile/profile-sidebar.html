@@ -1,17 +1,17 @@
-<div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5">
+<div id="profile-sidebar" class="pure-u-1 pure-u-md-1-3 --pure-u-lg-1-4 pure-u-xl-1-5">
 	<link rel="canonical" class="u-url" href="{{.ActivityPubProfileURL}}"></link>
 
-	<div hx-get="/@{{.Username}}" hx-push-url="true" role="link" class="hover-trigger" style="position:relative;">
+	<div hx-get="/@{{.Username}}" hx-push-url="true" role="link" class="hover-trigger space-below" style="position:relative;">
 		{{- if .UserCan "edit-photo" -}}
 			<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 			<link rel="stylesheet" href="/static/nebula/uploader.css"/>
-			<button hx-get="/@me/edit-photo" role="button" class="text-xs vertical-space-none" style="position:absolute; top:0px; right:0px;">Edit</button>
+			<button hx-get="/@me/edit-photo" role="button" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
 		{{- if ne "" .ActivityPubAvatarURL -}}
-			<img class="u-photo" src="{{.ActivityPubAvatarURL}}" style="aspect-ratio:1; width:90%; border-radius:300px;">
+			<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="width:90%; max-width:200px;">
 		{{- else -}}
-			<div class="placeholder-gray space-below" style="position:relative; aspect-ratio:1; width:90%; border-radius:300px;"></div>
+			<div class="circle aspect-square placeholder-gray" style="width:90%; max-width:200px;"></div>
 		{{- end -}}
 	</div>
 
@@ -62,3 +62,15 @@
 	{{- end -}}
 
 </div>
+
+<style>
+	#profile-sidebar {
+		margin-top:-10px;
+		margin-left:-20px;
+		margin-right:20px;
+		background-color:var(--gray04);
+		padding: 30px 20px 10px 20px;
+		border-right:solid 1px var(--gray15);
+		color:var(--gray80);
+	}
+</style>

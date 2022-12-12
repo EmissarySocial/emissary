@@ -197,7 +197,7 @@ func (service *Domain) ActiveClients() []model.Client {
 	}
 
 	// List all clients, filtering by "active" ones.
-	result := make([]model.Client, len(domain.Clients))
+	result := make([]model.Client, 0, len(domain.Clients))
 
 	for _, client := range domain.Clients {
 		if client.Active {

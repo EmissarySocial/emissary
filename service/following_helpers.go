@@ -117,7 +117,7 @@ func rssImageURL(rssItem *gofeed.Item) string {
 
 	// Search for an image in the enclosures
 	for _, enclosure := range rssItem.Enclosures {
-		if list.Slash(enclosure.Type).Head() == "image" {
+		if list.Slash(enclosure.Type).First() == "image" {
 			return enclosure.URL
 		}
 	}
@@ -150,6 +150,7 @@ func nodeAttribute(node *html.Node, name string) string {
 	return ""
 }
 
+// TODO: HIGH: Scan all references and perhaps use https://pkg.go.dev/net/url#URL.ResolveReference instead?
 func getRelativeURL(baseURL string, relativeURL string) string {
 
 	// If the relative URL is already absolute, then just return it

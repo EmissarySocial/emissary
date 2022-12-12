@@ -84,61 +84,7 @@ h3.space-below {
     flex-direction:column;
 }
 
-.flex-row > *,
-.flex-column > * {
-    flex-basis:auto;
-    flex-grow:1;
-}
-
-.flex-nowrap {
-    display:flex;
-    flex-wrap:nowrap;
-    overflow:scroll;
-}
-
-.width-40 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:40px;
-    width:40px;
-}
-
-.width-50 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:50px;
-    width:50px;
-}
-
-.width-60 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:60px;
-    width:60px;
-}
-
 .width-100 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:100px;
-    width:100px;
-}
-
-.width-150 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:150px;
-    width:150px;
-}
-
-.width-200 {
-    flex-grow:0;
-    flex-shrink:0;
-    flex-basis:200px;
-    width:200px;
-}
-
-.width-full {
     width:100%;
 }
 
@@ -408,35 +354,6 @@ hr {
     margin-bottom:calc(var(--rhythm) * 3);
 }
 
-/****************************
- * Element-Level classes
- ****************************/
-
-
-b, strong, .bold {
-	font-weight:calc(var(--weight) + 200);
-}
-
-a, .link {
-	color:var(--link-color);
-	text-decoration:none;
-}
-
-a:hover,
-.link:hover,
-[role="link"]:hover {
-	cursor:pointer;
-	color:var(--link-color-hover)!important;
-}
-
-.clickable, [role="link"], [role="button"] {
-	cursor:pointer;
-}
-
-p:last-child {
-    margin:0px;
-}
-
 code {
     display:block;
     background-color:var(--gray10);
@@ -448,3 +365,4 @@ code {
 code.inline {
     display:inline;
 }
+

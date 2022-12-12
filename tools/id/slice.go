@@ -7,7 +7,7 @@ import (
 )
 
 // Converts a value into a slice of ObjectIDs
-func SliceOfID(value interface{}) []primitive.ObjectID {
+func SliceOfID(value any) []primitive.ObjectID {
 
 	switch v := value.(type) {
 
