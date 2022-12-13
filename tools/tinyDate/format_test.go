@@ -50,16 +50,10 @@ func TestFormat(t *testing.T) {
 		t2, _ := time.Parse(time.RFC3339, "2022-05-01T23:00:00Z")
 		require.Equal(t, "11mo", FormatDiff(t1, t2))
 	}
-	{
-		// Test days (overlapping month)
-		t1, _ := time.Parse(time.RFC3339, "2000-01-00T00:00:00Z")
-		t2, _ := time.Parse(time.RFC3339, "2021-02-01T23:00:00Z")
-		require.Equal(t, "21y", FormatDiff(t1, t2))
-	}
 }
 
 func TestYears(t *testing.T) {
-	t1, _ := time.Parse(time.RFC3339, "2000-01-00T00:00:00Z")
+	t1, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
 	t2, _ := time.Parse(time.RFC3339, "2021-02-01T23:00:00Z")
 	require.Equal(t, "21y", FormatDiff(t1, t2))
 }
