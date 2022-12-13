@@ -1,9 +1,12 @@
 package service
 
 import (
+	"bytes"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	"github.com/benpate/remote"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -21,8 +24,19 @@ func (service *Following) PollRSS(following *model.Following, link digit.Link) e
 		return nil
 	}
 
+	// Build the remote request.  Request the MediaType that was specified in the original link.
+	var body bytes.Buffer
+	transaction := remote.
+		Get(link.Href).
+		Header("Accept", link.MediaType).
+		Response(&body, nil)
+
+	if err := transaction.Send(); err != nil {
+		return derp.Wrap(err, location, "Error fetching RSS feed", link.Href)
+	}
+
 	// Try to find the RSS feed associated with this link
-	rssFeed, err := gofeed.NewParser().ParseURL(link.Href)
+	rssFeed, err := gofeed.NewParser().ParseString(body.String())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing RSS feed", link.Href)
