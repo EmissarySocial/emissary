@@ -105,6 +105,10 @@
 				{"step":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
 				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
-		}
+		},
+		"rss": {"roles": ["viewer"], "step":"view-rss", "format":"rss"},
+		"atom": {"roles": ["viewer"], "step":"view-rss", "format":"atom"},
+		"json": {"roles": ["viewer"], "step":"view-rss", "format":"json"},
+		"websub": {"roles": ["viewer"], "step":"websub"}
 	}
 }

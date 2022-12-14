@@ -163,9 +163,6 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 
-	case "send-mentions":
-		return NewSendMentions(stepInfo)
-
 	case "stripe-checkout":
 		return NewStripeCheckout(stepInfo)
 
@@ -177,6 +174,9 @@ func New(stepInfo maps.Map) (Step, error) {
 
 	case "stripe-setup":
 		return NewStripeSetup(stepInfo)
+
+	case "websub":
+		return NewWebSub(stepInfo)
 	}
 
 	// Fall through means we have an unrecognized action

@@ -30,7 +30,7 @@ func (publisher Publisher) Publish(stream *model.Stream, userID primitive.Object
 	}
 
 	// RULE: Send notifications (if necessary)
-	if err := publisher.sendNotifications(stream); err != nil {
+	if err := publisher.notifyFollowers(stream); err != nil {
 		return derp.Wrap(err, "service.Publisher.Publish", "Error sending notifications", stream)
 	}
 
@@ -63,9 +63,9 @@ func (publisher Publisher) setPublishedData(stream *model.Stream, userID primiti
 	return nil
 }
 
-// sendNotifications creates an "outbox-item" `Stream` and sends
+// notifyFollowers creates an "outbox-item" `Stream` and sends
 // notifications to all followers of the stream's author
-func (publisher Publisher) sendNotifications(stream *model.Stream) error {
+func (publisher Publisher) notifyFollowers(stream *model.Stream) error {
 
 	// Try to load an existing outbox item for this stream
 	outboxItem := model.NewStream()

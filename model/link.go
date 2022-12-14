@@ -10,6 +10,10 @@ const LinkRelationAuthor = "author"
 // https://html.spec.whatwg.org/multipage/links.html#link-type-bookmark
 const LinkRelationBookmark = "bookmark"
 
+// LinkRelationHub is a link to a WebSub hub
+// https://www.w3.org/TR/websub/#discovery
+const LinkRelationHub = "hub"
+
 // LinkRelationInReplyTo indicates that this document is a reply to another document
 // https://www.rfc-editor.org/rfc/rfc4685.html
 const LinkRelationInReplyTo = "in-reply-to"

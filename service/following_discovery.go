@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/tomnomnom/linkheader"
 )
 
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
@@ -31,30 +32,6 @@ func discoverLinks(targetURL string) ([]digit.Link, error) {
 
 	// Fall through, fail through
 	return make([]digit.Link, 0), derp.NewBadRequestError(location, "Unable to discover links from WebFinger or HTML", targetURL)
-}
-
-func discoverLinksFromWebFinger(targetURL string) []digit.Link {
-
-	// Compute the WebFinger service for the targetURL
-	webfingerURL, err := getWebFingerURL(targetURL)
-
-	if err != nil {
-		return make([]digit.Link, 0)
-	}
-
-	// Send a GET request to the WebFinger service
-	object := digit.NewResource("")
-	transaction := remote.Get(webfingerURL.String()).Response(&object, nil)
-
-	if err := transaction.Send(); err != nil {
-		return make([]digit.Link, 0)
-	}
-
-	if object.Links == nil {
-		return make([]digit.Link, 0)
-	}
-
-	return object.Links
 }
 
 func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
@@ -86,32 +63,89 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 	}
 
 	// Otherwise, try to parse the document as an HTML file with embedded links to the ActivityPub/RSS/Atom/JSONFeed feeds.
+
+	// Scan the HTTP headers for WebSub links
+	for _, link := range linkheader.Parse(transaction.ResponseObject.Header.Get("Link")) {
+
+		if link.Rel == model.LinkRelationHub {
+			result = append(result, digit.Link{
+				RelationType: link.Rel,
+				MediaType:    model.MagicMimeTypeWebSub,
+				Href:         link.URL,
+			})
+		}
+	}
+
+	// Scan the HTML document for relevant links
 	htmlDocument, err := goquery.NewDocumentFromReader(&body)
 
 	if err != nil {
 		return nil, derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
 	}
 
-	links := htmlDocument.Find("link[rel=alternate],link[rel=self]").Nodes
+	links := htmlDocument.Find("link[rel=alternate],link[rel=self],link[rel=hub]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {
 
-		mediaType := nodeAttribute(link, "type")
+		var mediaType string
+
+		relationType := nodeAttribute(link, "rel")
+		href := nodeAttribute(link, "href")
+		href = getRelativeURL(targetURL, href)
+
+		// Special case for WebSub relation types
+		switch relationType {
+		case model.LinkRelationHub:
+
+			result = append(result, digit.Link{
+				RelationType: relationType,
+				MediaType:    model.MagicMimeTypeWebSub,
+				Href:         href,
+			})
+			continue
+		}
+
+		// General case for all other relation types
+		mediaType = nodeAttribute(link, "type")
 		mediaType = list.Semicolon(mediaType).First()
 
 		switch mediaType {
 
 		case model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS:
 			result = append(result, digit.Link{
-				RelationType: "alternate",
+				RelationType: relationType,
 				MediaType:    mediaType,
-				Href:         getRelativeURL(targetURL, nodeAttribute(link, "href")),
+				Href:         href,
 			})
 		}
 	}
 
 	return result, nil
+}
+
+func discoverLinksFromWebFinger(targetURL string) []digit.Link {
+
+	// Compute the WebFinger service for the targetURL
+	webfingerURL, err := getWebFingerURL(targetURL)
+
+	if err != nil {
+		return make([]digit.Link, 0)
+	}
+
+	// Send a GET request to the WebFinger service
+	object := digit.NewResource("")
+	transaction := remote.Get(webfingerURL.String()).Response(&object, nil)
+
+	if err := transaction.Send(); err != nil {
+		return make([]digit.Link, 0)
+	}
+
+	if object.Links == nil {
+		return make([]digit.Link, 0)
+	}
+
+	return object.Links
 }
 
 func getWebFingerURL(targetURL string) (url.URL, error) {
@@ -132,6 +166,7 @@ func getWebFingerURL(targetURL string) (url.URL, error) {
 
 	// TODO: HIGH: Try to parse as a Mastodon username @benpate@mastodon.social
 	// TODO: MEDIUM: Try to parse as an email address??
+	// TODO: LOW: Look into Textcasting? http://textcasting.org
 
 	return result, derp.NewNotFoundError(location, "Error parsing following URL", targetURL)
 }
@@ -139,7 +174,7 @@ func getWebFingerURL(targetURL string) (url.URL, error) {
 func sortLinks(links []digit.Link) []digit.Link {
 
 	result := make([]digit.Link, 0, len(links))
-	mediaTypes := []string{model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML}
+	mediaTypes := []string{model.MagicMimeTypeWebSub, model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML}
 
 	for _, mediaType := range mediaTypes {
 		for _, link := range links {

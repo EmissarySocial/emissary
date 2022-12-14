@@ -4,10 +4,11 @@
 	<title>{{.DisplayName}}</title>
 
 	<!-- Alternate links for service discovery -->
-	<link rel="alternate" type="application/rss+xml" href="/@{{.Username}}/rss"/>
-	<link rel="alternate" type="application/atom+xml" href="/@{{.Username}}/atom"/>
-	<link rel="alternate" type="application/feed+json" href="/@{{.Username}}/json"/>
-	<link rel="alternate" type="application/activity+json" href="/@{{.Username}}/pub/outbox"/>
+	<link rel="alternate" type="application/rss+xml" href="/@{{.UserID}}/rss"/>
+	<link rel="alternate" type="application/atom+xml" href="/@{{.UserID}}/atom"/>
+	<link rel="alternate" type="application/feed+json" href="/@{{.UserID}}/json"/>
+	<link rel="hub" href="/@{{.UserID}}/websub"/>
+	<link rel="alternate" type="application/activity+json" href="/@{{.UserID}}/pub/outbox"/>
 
 	<div class="page h-card">
 
@@ -15,7 +16,7 @@
 
 			{{ .View "profile-sidebar" }}
 
-			<div class="pure-u-1 pure-u-md-2-3 --pure-u-lg-3-4 pure-u-xl-4-5">
+			<div class="pure-u-1 pure-u-md-3-4">
 
 				<h1>My Posts</h1>
 

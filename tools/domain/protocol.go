@@ -23,9 +23,8 @@ func NameOnly(host string) string {
 func IsLocalhost(hostname string) bool {
 
 	// Nornalize the hostname
+	hostname = NameOnly(hostname)
 	hostname = strings.ToLower(hostname)
-	hostname = strings.TrimPrefix(hostname, "http://")
-	hostname = strings.TrimPrefix(hostname, "https://")
 
 	if hostname == "localhost" {
 		return true

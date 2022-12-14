@@ -71,7 +71,7 @@
 @media screen and (min-width:1024px) {
 
 	.framed {
-		width:80%;
+		width:85%;
 	}
 
 	.show-lg {
@@ -86,7 +86,8 @@
 @media screen and (min-width:1280px) {
 
 	.framed {
-		width:76em;
+		width:80%;
+		max-width:76em;
 	}
 
 	.show-xl {

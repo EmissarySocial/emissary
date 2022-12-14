@@ -5,11 +5,12 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/exp"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,18 +21,18 @@ type Following struct {
 	collection   data.Collection
 	userService  *User
 	inboxService *Inbox
-	queue        *queue.Queue
+	host         string
 	closed       chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, userService *User, inboxService *Inbox, queue *queue.Queue) Following {
+func NewFollowing(collection data.Collection, userService *User, inboxService *Inbox, host string) Following {
 
 	service := Following{
 		collection:   collection,
 		userService:  userService,
 		inboxService: inboxService,
-		queue:        queue,
+		host:         host,
 		closed:       make(chan bool),
 	}
 
@@ -299,6 +300,40 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 }
 
 /*******************************************
+ * WebSub Queries
+ *******************************************/
+
+func (service *Following) ListWebSubByTopic(userID primitive.ObjectID, topic string) (data.Iterator, error) {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("url", topic).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.List(criteria)
+}
+
+func (service *Following) ListWebSubByCallback(userID primitive.ObjectID, callback string) (data.Iterator, error) {
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("data.callback", callback).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.List(criteria)
+}
+
+func (service *Following) LoadByWebSub(userID primitive.ObjectID, topic string, callback string, result *model.Following) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("url", topic).
+		AndEqual("data.callback", callback).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.Load(criteria, result)
+}
+
+/*******************************************
  * Custom Actions
  *******************************************/
 
@@ -321,26 +356,30 @@ func (service *Following) Connect(following model.Following) error {
 	// Try to connect to each link in order.  If a link fails, then try the next one.
 	for _, link := range links {
 
+		// Define the function that we'll call to connect and follow the link
+		var fn func(*model.Following, digit.Link) error
+
 		switch link.MediaType {
 
 		case model.MimeTypeActivityPub:
-
 			following.Method = model.FollowMethodActivityPub
-
-			if err := service.ConnectActivityPub(&following, link); err == nil {
-				return nil
-			} else {
-				derp.Report(err)
-			}
+			fn = service.ConnectActivityPub
 
 		case model.MimeTypeRSS, model.MimeTypeAtom, model.MimeTypeJSONFeed, model.MimeTypeXML:
-
 			following.Method = model.FollowMethodRSS
-			if err := service.PollRSS(&following, link); err == nil {
-				return nil
-			} else {
-				derp.Report(err)
-			}
+			fn = service.PollRSS
+
+		case model.MagicMimeTypeWebSub:
+			following.Method = model.FollowMethodWebSub
+			fn = service.ConnectWebSub
+		}
+
+		// Execute the "follow" function
+		if err := fn(&following, link); err == nil {
+			break
+		} else {
+			spew.Dump("---------------- following.Connect")
+			derp.Report(err)
 		}
 	}
 

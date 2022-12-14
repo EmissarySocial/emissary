@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/stripe/stripe-go/v72/client"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Factory is used to locate all necessary services
@@ -42,4 +43,7 @@ type Factory interface {
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream
 	StripeClient() (client.API, error)
+
+	WebSubInbox(primitive.ObjectID) service.WebSubInbox
+	WebSubOutbox(primitive.ObjectID) service.WebSubOutbox
 }

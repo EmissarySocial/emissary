@@ -9,3 +9,5 @@ const MimeTypeAtom = "application/atom+xml"
 const MimeTypeRSS = "application/rss+xml"
 
 const MimeTypeXML = "application/xml"
+
+const MagicMimeTypeWebSub = "MAGIC-MIME-TYPE-WEBSUB"

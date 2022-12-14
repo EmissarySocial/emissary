@@ -84,9 +84,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Save:
 		return StepSave(s)
 
-	case step.SendMentions:
-		return StepSendMentions(s)
-
 	case step.SetData:
 		return StepSetData(s)
 
@@ -140,6 +137,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.ViewRSS:
 		return StepViewRSS(s)
+
+	case step.WebSub:
+		return StepWebSub(s)
 
 	case step.WithChildren:
 		return StepWithChildren(s)

@@ -99,11 +99,9 @@
 				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
 			}]
 		},
-		"rss": {
-			"roles": ["viewer"],
-			"steps": [
-				{"step":"view-rss", "format":"rss"}
-			]
-		}
+		"rss": {"roles": ["viewer"], "step":"view-rss", "format":"rss"},
+		"atom": {"roles": ["viewer"], "step":"view-rss", "format":"atom"},
+		"json": {"roles": ["viewer"], "step":"view-rss", "format":"json"},
+		"websub": {"roles": ["viewer"], "step":"websub"}
 	}
 }

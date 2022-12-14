@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +19,7 @@ const FollowMethodRSS = "RSS"
 // const FollowMethodRSSCloud = "RSS-CLOUD"
 
 // FollowMethodWebSub represents a WebSub subscription
-// const FollowMethodWebSub = "WEBSUB"
+const FollowMethodWebSub = "WEBSUB"
 
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"
@@ -41,6 +42,7 @@ type Following struct {
 	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this "following" record
 	URL           string             `path:"url"            json:"url"            bson:"url"`           // Connection URL for obtaining new sub-streams.
 	Method        string             `path:"method"         json:"method"         bson:"method"`        // Method used to subscribe to remote streams (RSS, etc)
+	Data          maps.Map           `path:"data"           json:"data"           bson:"data"`          // Additional data used by the subscription method
 	Status        string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
 	StatusMessage string             `path:"statusMessage"  json:"statusMessage"  bson:"statusMessage"` // Optional message describing the status of the last poll
 	LastPolled    int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
@@ -59,6 +61,7 @@ func NewFollowing() Following {
 		FollowingID:   primitive.NewObjectID(),
 		PollDuration:  24, // default poll interval is 24 hours
 		PurgeDuration: 14, // default purge interval is 14 days
+		Data:          make(maps.Map),
 	}
 }
 

@@ -1,6 +1,12 @@
 <div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
 <div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:body">
 
+	<!-- Alternate links for service discovery -->
+	<link rel="alternate" type="application/rss+xml" href="/{{.StreamID}}/rss"/>
+	<link rel="alternate" type="application/atom+xml" href="/{{.StreamID}}/atom"/>
+	<link rel="alternate" type="application/feed+json" href="/{{.StreamID}}/json"/>
+	<link rel="hub" href="/{{.StreamID}}/websub"/>
+
 	<div class="page">
 		{{ if .UserCan "edit" }}
 			<div id="menu-bar">

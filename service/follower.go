@@ -15,12 +15,14 @@ import (
 type Follower struct {
 	collection  data.Collection
 	userService *User
+	host        string
 }
 
 // NewFollower returns a fully initialized Follower service
-func NewFollower(collection data.Collection, userService *User) Follower {
+func NewFollower(collection data.Collection, userService *User, host string) Follower {
 	service := Follower{
 		userService: userService,
+		host:        host,
 	}
 
 	service.Refresh(collection)
@@ -74,7 +76,7 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowerCount(follower.UserID)
+	go service.userService.CalcFollowerCount(follower.ParentID)
 
 	// TODO: Notify followers (if necessary)
 
@@ -166,4 +168,36 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 	}
 
 	return result, nil
+}
+
+/*******************************************
+ * WebSub Queries
+ *******************************************/
+
+func (service *Follower) ListWebSub(parentID primitive.ObjectID) (data.Iterator, error) {
+
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.List(criteria)
+}
+
+func (service *Follower) ListWebSubByCallback(parentID primitive.ObjectID, callback string) (data.Iterator, error) {
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("data.callback", callback).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.List(criteria)
+}
+
+func (service *Follower) LoadByWebSub(parentID primitive.ObjectID, callback string, result *model.Follower) error {
+
+	criteria := exp.
+		Equal("userId", parentID).
+		AndEqual("data.callback", callback).
+		AndEqual("method", model.FollowMethodWebSub)
+
+	return service.Load(criteria, result)
 }

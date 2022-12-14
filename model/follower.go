@@ -3,16 +3,23 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Follower struct {
-	FollowerID primitive.ObjectID `path:"followerId" json:"followerId" bson:"_id"`    // Unique identifier for this Follower
-	UserID     primitive.ObjectID `path:"userId"     json:"userId"     bson:"userId"` // Unique identifier for the User that is being followed
-	Actor      PersonLink         `path:"actor"      json:"actor"      bson:"actor"`  // Person who is following the User
-	Method     string             `path:"method"     json:"method"     bson:"method"` // Method of following (e.g. "RSS", "RSSCloud", "ActivityPub".)
+const FollowerTypeStream = "Stream"
 
+const FollowerTypeUser = "User"
+
+type Follower struct {
+	FollowerID      primitive.ObjectID `path:"followerId" json:"followerId" bson:"_id"`        // Unique identifier for this Follower
+	ParentID        primitive.ObjectID `path:"parentId"   json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
+	Type            string             `path:"type"       json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream")
+	Method          string             `path:"method"     json:"method"     bson:"method"`     // Method of following (e.g. "RSS", "WebSub", "RSSCloud", "ActivityPub".)
+	Actor           PersonLink         `path:"actor"      json:"actor"      bson:"actor"`      // Person who is following the User
+	Data            maps.Map           `path:"data"       json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
+	ExpireDate      int64              `path:"expireDate" json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
 	journal.Journal `path:"journal" json:"journal" bson:"journal"`
 }
 
@@ -27,7 +34,8 @@ func FollowerSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"followerId": schema.String{Format: "objectId"},
-			"userId":     schema.String{Format: "objectId"},
+			"parentId":   schema.String{Format: "objectId"},
+			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"actor":      PersonLinkSchema(),
 			"method":     schema.String{Enum: []string{FollowMethodRSS, FollowMethodActivityPub}},
 		},
@@ -46,8 +54,8 @@ func (follower *Follower) GetObjectID(name string) (primitive.ObjectID, error) {
 	switch name {
 	case "followerId":
 		return follower.FollowerID, nil
-	case "userId":
-		return follower.UserID, nil
+	case "parentId":
+		return follower.ParentID, nil
 	}
 
 	return primitive.NilObjectID, derp.NewInternalError("model.follower.GetObjectID", "Invalid property", name)
@@ -55,6 +63,8 @@ func (follower *Follower) GetObjectID(name string) (primitive.ObjectID, error) {
 
 func (follower *Follower) GetString(name string) (string, error) {
 	switch name {
+	case "type":
+		return follower.Type, nil
 	case "method":
 		return follower.Method, nil
 	}
@@ -67,6 +77,10 @@ func (follower *Follower) GetInt(name string) (int, error) {
 }
 
 func (follower *Follower) GetInt64(name string) (int64, error) {
+	switch name {
+	case "expireDate":
+		return follower.ExpireDate, nil
+	}
 	return 0, derp.NewInternalError("model.follower.GetInt64", "Invalid property", name)
 }
 

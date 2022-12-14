@@ -25,6 +25,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/go-fed/activity/pub"
 	"github.com/spf13/afero"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/stripe/stripe-go/v72/client"
 )
@@ -144,8 +145,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollowing),
 		factory.User(),
 		factory.Inbox(),
-		factory.Queue(),
-	)
+		factory.config.Hostname)
 
 	go factory.followingService.Start()
 
@@ -313,7 +313,7 @@ func (factory *Factory) EncryptionKey() *service.EncryptionKey {
 
 // Follower returns a fully populated Follower service
 func (factory *Factory) Follower() *service.Follower {
-	service := service.NewFollower(factory.collection(CollectionFollower), factory.User())
+	service := service.NewFollower(factory.collection(CollectionFollower), factory.User(), factory.Host())
 	return &service
 }
 
@@ -403,6 +403,24 @@ func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
 
 func (factory *Factory) ActivityPub_Clock() activitypub.Clock {
 	return activitypub.Clock{}
+}
+
+/*******************************************
+ * WebSub
+ *******************************************/
+
+func (factory *Factory) WebSubOutbox(parentID primitive.ObjectID) service.WebSubOutbox {
+	return service.NewWebSubOutbox(
+		factory.Follower(),
+		parentID,
+	)
+}
+
+func (factory *Factory) WebSubInbox(userID primitive.ObjectID) service.WebSubInbox {
+	return service.NewWebSubInbox(
+		factory.Following(),
+		userID,
+	)
 }
 
 /*******************************************

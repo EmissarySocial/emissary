@@ -46,6 +46,7 @@
 		"rss": {"step":"view-rss", "format":"rss"},
 		"atom": {"step":"view-rss", "format":"atom"},
 		"json": {"step":"view-rss", "format":"json"},
+		"websub": {"step":"websub"},
 		"outbox-list": {"step":"view-html"},
 		"outbox-add": {
 			"roles": ["self"],
@@ -70,7 +71,7 @@
 		"inbox-folder": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"set-query-param", "selected":"inbox-folder"},
+				{"step":"set-query-param", "selected":"inbox-folder", "readDate":"0"},
 				{"step":"view-html", "file":"inbox"}
 			]
 		},
