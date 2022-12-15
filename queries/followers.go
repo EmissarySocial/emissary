@@ -18,13 +18,13 @@ func CountFollowers(ctx context.Context, collection data.Collection, userID prim
 
 func SetFollowersCount(ctx context.Context, collection data.Collection, userID primitive.ObjectID) error {
 
-	followersCount, err := CountFollowers(ctx, collection, userID)
+	followerCount, err := CountFollowers(ctx, collection, userID)
 
 	if err != nil {
 		return derp.Wrap(err, "queries.SetFollowersCount", "Error counting followers records")
 	}
 
 	return RawUpdate(ctx, collection, exp.Equal("userId", userID), maps.Map{
-		"followersCount": followersCount,
+		"followerCount": followerCount,
 	})
 }

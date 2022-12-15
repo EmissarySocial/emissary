@@ -145,7 +145,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollowing),
 		factory.User(),
 		factory.Inbox(),
-		factory.config.Hostname)
+		factory.Host())
 
 	go factory.followingService.Start()
 

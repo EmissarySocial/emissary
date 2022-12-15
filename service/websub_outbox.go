@@ -6,8 +6,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/derp"
+	websubmodel "github.com/benpate/websub/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	websubmodel "meow.tf/websub/model"
 )
 
 // WebSubOutbox is an facade for the Follower service that presents a websub Store

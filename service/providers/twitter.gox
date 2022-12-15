@@ -110,7 +110,6 @@ func (provider Twitter) PollStreams(client *model.Client) <-chan model.Stream {
 
 		// Pass each tweet into the channel
 		for _, tweet := range tweets {
-			spew.Dump(tweet)
 			result <- tweetAsStream(tweet)
 		}
 	}()

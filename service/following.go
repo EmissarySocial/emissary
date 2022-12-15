@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
-	"github.com/davecgh/go-spew/spew"
 
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -180,6 +179,12 @@ func (service *Following) Delete(following *model.Following, note string) error 
 		return derp.Wrap(err, "service.Following", "Error deleting Following", following, note)
 	}
 
+	// Recalculate the follower count for this user
+	go service.userService.CalcFollowingCount(following.UserID)
+
+	// Disconnect from external services (if necessary)
+	service.Disconnect(following)
+
 	return nil
 }
 
@@ -347,11 +352,8 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
-	links, err := discoverLinks(following.URL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error discovering links", following.URL)
-	}
+	// Try to get all the links we can.  If this fails, it'll be caught below.
+	links, _ := discoverLinks(following.URL)
 
 	// Try to connect to each link in order.  If a link fails, then try the next one.
 	for _, link := range links {
@@ -374,21 +376,36 @@ func (service *Following) Connect(following model.Following) error {
 			fn = service.ConnectWebSub
 		}
 
-		// Execute the "follow" function
-		if err := fn(&following, link); err == nil {
-			break
+		// Execute the "follow" function.  If there's a problem, then try the next link.
+		if err := fn(&following, link); err != nil {
+			continue
+		}
+
+		// Fall through means that we were able to connect and follow the link.  Mark successful.
+		if err := service.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error updating following status", following))
 		} else {
-			spew.Dump("---------------- following.Connect")
-			derp.Report(err)
+			return nil
 		}
 	}
 
-	// Since we can't find any feeds, set the following status to "failure"
-	if err := service.SetStatus(&following, model.FollowingStatusFailure, "No recognizable feeds found"); err != nil {
+	// If we're here, it means that we didn't find any feeds.. so THAT'S a failure.
+	if err := service.SetStatus(&following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.URL); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error updating following status", following))
 	}
 
 	return derp.NewInternalError(location, "No recognizable feeds found", following.URL)
+}
+
+func (service *Following) Disconnect(following *model.Following) error {
+
+	switch following.Method {
+	case model.FollowMethodActivityPub:
+		return service.DisconnectActivityPub(following)
+	case model.FollowMethodWebSub:
+		return service.DisconnectWebSub(following)
+	}
+	return nil
 }
 
 // SetStatus updates the status (and statusMessage) of a Following record.
@@ -468,4 +485,8 @@ func (service *Following) PurgeInbox(following model.Following) error {
 	}
 
 	return nil
+}
+
+func (service *Following) CallbackURL() string {
+	return service.host + "/.websub"
 }

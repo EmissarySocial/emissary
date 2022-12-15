@@ -3,7 +3,8 @@ package render
 import (
 	"io"
 
-	"meow.tf/websub"
+	"github.com/benpate/websub"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepWebSub represents an action-step that can render a Stream into HTML
@@ -20,8 +21,22 @@ func (step StepWebSub) UseGlobalWrapper() bool {
 }
 
 func (step StepWebSub) Post(renderer Renderer) error {
+	context := renderer.context()
 	outbox := renderer.factory().WebSubOutbox(renderer.objectID())
-	handler := websub.New(outbox)
-	handler.ServeHTTP(renderer.context().Response(), renderer.context().Request())
+	client := websub.New(outbox)
+
+	client.AddHandler(func(event *websub.Verified) {
+		spew.Dump("Verified", event)
+	})
+
+	client.AddHandler(func(event *websub.VerificationFailed) {
+		spew.Dump("Verification Failed", event.Error)
+	})
+
+	client.AddHandler(func(event *websub.Publish) {
+		spew.Dump("Verification Failed", event)
+	})
+
+	client.ServeHTTP(context.Response(), context.Request())
 	return nil
 }

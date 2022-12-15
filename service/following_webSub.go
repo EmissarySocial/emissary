@@ -4,15 +4,14 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	client "github.com/benpate/websub-client"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
-	"meow.tf/websub/client"
 )
 
 func (service *Following) ConnectWebSub(following *model.Following, link digit.Link) error {
 
 	const location = "service.Following.ConnectWebSub"
-	c := client.New(service.websubCallbackURL())
 
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
@@ -20,6 +19,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 	following.Data.SetString("secret", random.String(32))
 
 	// Try to connect to the WebSub hub
+	c := client.New(service.websubCallbackURL())
 	sub, err := c.Subscribe(client.SubscribeOptions{
 		Hub:      link.Href,
 		Topic:    following.URL,
@@ -27,7 +27,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 		Secret:   following.Data.GetString("secret"),
 	})
 
-	spew.Dump(sub)
+	spew.Dump(sub, err)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error subscribing to WebSub hub", link.Href)

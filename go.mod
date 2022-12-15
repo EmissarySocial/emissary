@@ -2,6 +2,9 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
+replace github.com/benpate/websub => ../../benpate/websub
+replace github.com/benpate/websub-client => ../../benpate/websub-client
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.157
@@ -48,8 +51,8 @@ require (
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/net v0.4.0
 	golang.org/x/oauth2 v0.3.0
-	meow.tf/websub v1.2.0
-	meow.tf/websub/client v0.2.0
+	github.com/benpate/websub v1.2.0
+	github.com/benpate/websub-client v0.2.0
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )

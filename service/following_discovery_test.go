@@ -3,7 +3,6 @@ package service
 import (
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,7 +11,6 @@ func TestWebFinger(t *testing.T) {
 	// Discover links via WebFinger
 	links, err := discoverLinks("https://mastodon.social/@benpate")
 
-	spew.Dump(links)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(links))
 

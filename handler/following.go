@@ -268,8 +268,13 @@ func following_getForm(folders []form.LookupCode) form.Form {
 							Path:  "status",
 						},
 						{
+							Type:  "text",
+							Label: "Method",
+							Path:  "method",
+						},
+						{
 							Type:  "textarea",
-							Label: "Details",
+							Label: "Error Details",
 							Path:  "statusMessage",
 						},
 					},
