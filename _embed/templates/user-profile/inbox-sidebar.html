@@ -1,7 +1,7 @@
 {{- $selected := .QueryParam "selected" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 
-<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-4" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
 	<div class="pos-sticky" style="top:100px;">
 		{{- if eq $selected "inbox" -}}
