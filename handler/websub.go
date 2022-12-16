@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -66,17 +65,18 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading following record", userID, followingID, transaction)
 		}
 
-		// Validate the request (B)
-		if following.UpdateMethod != model.FollowUpdateMethodWebSub {
+		// RULE: Require that this Following uses WebSub
+		if following.Method != model.FollowMethodWebSub {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following, transaction)
 		}
 
-		if following.ResourceURL != transaction.Topic {
+		// RULE: Require that the Topic URL matches this Following
+		if following.URL != transaction.Topic {
 			return derp.New(derp.CodeBadRequestError, location, "Invalid WebSub topic", following, transaction)
 		}
 
+		// RULE: Force another poll in half the time of this lease
 		following.PollDuration = int(transaction.Lease / 60 / 60 / 2) // poll again in half the lease duration
-		following.Expiration = time.Now().Add(time.Duration(transaction.Lease) * time.Second).Unix()
 
 		// Update the record status and save.
 		if err := followingService.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
@@ -124,7 +124,7 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Validate the request (B)
-		if following.UpdateMethod != model.FollowUpdateMethodWebSub {
+		if following.Method != model.FollowMethodWebSub {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following)
 		}
 

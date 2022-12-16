@@ -38,7 +38,7 @@ func ReactionSchema() schema.Element {
 			"userId":     schema.String{Format: "objectId"},
 			"actor":      PersonLinkSchema(),
 			"object":     OriginLinkSchema(),
-			"method":     schema.String{Enum: []string{FollowUpdateMethodPoll, FollowUpdateMethodWebSub, FollowUpdateMethodRSSCloud, FollowUpdateMethodActivityPub}},
+			"method":     schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodRSSCloud, FollowMethodActivityPub}},
 		},
 	}
 }

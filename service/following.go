@@ -143,7 +143,7 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 func (service *Following) Save(following *model.Following, note string) error {
 
 	// RULE: Reset status and error counts when saving
-	following.UpdateMethod = model.FollowUpdateMethodPoll
+	following.Method = model.FollowMethodPoll
 	following.Status = model.FollowingStatusNew
 	following.StatusMessage = ""
 	following.ErrorCount = 0
@@ -310,7 +310,7 @@ func (service *Following) ListWebSubByTopic(userID primitive.ObjectID, topic str
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("url", topic).
-		AndEqual("updateMethod", model.FollowUpdateMethodWebSub)
+		AndEqual("method", model.FollowMethodWebSub)
 
 	return service.List(criteria)
 }
@@ -320,7 +320,7 @@ func (service *Following) LoadByWebSub(userID primitive.ObjectID, topic string, 
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("url", topic).
-		AndEqual("updateMethod", model.FollowUpdateMethodWebSub)
+		AndEqual("method", model.FollowMethodWebSub)
 
 	return service.Load(criteria, result)
 }
@@ -340,7 +340,7 @@ func (service *Following) Connect(following model.Following) error {
 	}
 
 	// Try to get all the links we can.  If this fails, it'll be caught below.
-	following.Links = discoverLinks(following.ResourceURL)
+	following.Links = discoverLinks(following.URL)
 
 	// LOAD CONTENT (JSONFeed, Atom, RSS)
 	service.Poll(&following)
@@ -372,7 +372,7 @@ func (service *Following) Poll(following *model.Following) {
 	}
 
 	// If we're here, it means that we didn't find any feeds.. so THAT'S a failure.
-	if err := service.SetStatus(following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.ResourceURL); err != nil {
+	if err := service.SetStatus(following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.URL); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error updating following status", following))
 	}
 }
@@ -397,10 +397,10 @@ func (service *Following) FindUpdaters(following *model.Following) {
 
 func (service *Following) Disconnect(following *model.Following) {
 
-	switch following.UpdateMethod {
-	case model.FollowUpdateMethodActivityPub:
+	switch following.Method {
+	case model.FollowMethodActivityPub:
 		service.DisconnectActivityPub(following)
-	case model.FollowUpdateMethodWebSub:
+	case model.FollowMethodWebSub:
 		service.DisconnectWebSub(following)
 	}
 }

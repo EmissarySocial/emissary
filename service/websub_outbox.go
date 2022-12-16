@@ -137,7 +137,7 @@ func (outbox WebSubOutbox) fromSubscription(sub websubmodel.Subscription) model.
 	follower := model.NewFollower()
 
 	follower.ParentID = outbox.parentID
-	follower.Method = model.FollowUpdateMethodWebSub
+	follower.Method = model.FollowMethodWebSub
 	follower.Actor.ProfileURL = sub.Callback
 	follower.Data.SetString("callback", sub.Callback)
 	follower.Data.SetString("secret", sub.Secret)

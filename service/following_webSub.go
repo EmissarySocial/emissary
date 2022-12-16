@@ -19,7 +19,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 
 	transaction := remote.Post(link.Href).
 		Form("hub.mode", "subscribe").
-		Form("hub.topic", following.ResourceURL).
+		Form("hub.topic", following.URL).
 		Form("hub.callback", service.websubCallbackURL(following)).
 		Form("hub.secret", secret).
 		Form("hub.lease_seconds", "2582000").
@@ -30,7 +30,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 	}
 
 	// Update values in the following object
-	following.UpdateMethod = model.FollowUpdateMethodWebSub
+	following.Method = model.FollowMethodWebSub
 	following.PollDuration = 30
 	following.Secret = secret
 
@@ -52,7 +52,7 @@ func (service *Following) DisconnectWebSub(following *model.Following) {
 
 			transaction := remote.Post(link.Href).
 				Form("hub.mode", "unsubscribe").
-				Form("hub.topic", following.ResourceURL).
+				Form("hub.topic", following.URL).
 				Form("hub.callback", service.websubCallbackURL(following))
 
 			transaction.Send() // Silent fail is okay here.

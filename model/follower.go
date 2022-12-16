@@ -38,7 +38,7 @@ func FollowerSchema() schema.Element {
 			"parentId":   schema.String{Format: "objectId"},
 			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"actor":      PersonLinkSchema(),
-			"method":     schema.String{Enum: []string{FollowUpdateMethodPoll, FollowUpdateMethodWebSub, FollowUpdateMethodRSSCloud, FollowUpdateMethodActivityPub}},
+			"method":     schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodRSSCloud, FollowMethodActivityPub}},
 		},
 	}
 }
