@@ -83,7 +83,7 @@ func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error reading form data", nil)
 		}
 
-		following.URL = transaction.URL
+		following.ResourceURL = transaction.URL
 		following.PollDuration = transaction.PollDuration
 		following.PurgeDuration = transaction.PurgeDuration
 
@@ -118,9 +118,9 @@ func GetDeleteFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
 		b := html.New()
 
-		b.H2().InnerHTML("Delete This Following?").Close()
+		b.H2().InnerHTML("Stop Following?").Close()
 		b.Div().Class("space-below").InnerHTML(following.Label).Close()
-		b.Div().Class("space-below").InnerHTML(following.URL).Close()
+		b.Div().Class("space-below").InnerHTML(following.ResourceURL).Close()
 
 		b.Button().Class("warning").
 			Attr("hx-post", "/@me/pub/following/"+following.FollowingID.Hex()+"/delete").

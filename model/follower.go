@@ -16,7 +16,7 @@ type Follower struct {
 	FollowerID      primitive.ObjectID `path:"followerId" json:"followerId" bson:"_id"`        // Unique identifier for this Follower
 	ParentID        primitive.ObjectID `path:"parentId"   json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
 	Type            string             `path:"type"       json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream")
-	Method          string             `path:"method"     json:"method"     bson:"method"`     // Method of following (e.g. "RSS", "WebSub", "RSSCloud", "ActivityPub".)
+	Method          string             `path:"method"     json:"method"     bson:"method"`     // Method of following (e.g. "POLL", "WEBSUB", "RSS-CLOUD", "ACTIVITYPUB")
 	Actor           PersonLink         `path:"actor"      json:"actor"      bson:"actor"`      // Person who is following the User
 	Data            maps.Map           `path:"data"       json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
 	ExpireDate      int64              `path:"expireDate" json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
@@ -26,6 +26,7 @@ type Follower struct {
 func NewFollower() Follower {
 	return Follower{
 		FollowerID: primitive.NewObjectID(),
+		Data:       make(maps.Map),
 	}
 }
 
@@ -37,7 +38,7 @@ func FollowerSchema() schema.Element {
 			"parentId":   schema.String{Format: "objectId"},
 			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"actor":      PersonLinkSchema(),
-			"method":     schema.String{Enum: []string{FollowMethodRSS, FollowMethodActivityPub}},
+			"method":     schema.String{Enum: []string{FollowUpdateMethodPoll, FollowUpdateMethodWebSub, FollowUpdateMethodRSSCloud, FollowUpdateMethodActivityPub}},
 		},
 	}
 }

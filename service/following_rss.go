@@ -19,15 +19,10 @@ func (service *Following) PollRSS(following *model.Following, link digit.Link) e
 
 	const location = "service.Following.PollRSS"
 
-	// If this is not an RSS following, then just shut that whole thing down...
-	if following.Method != model.FollowMethodRSS {
-		return nil
-	}
-
 	// Build the remote request.  Request the MediaType that was specified in the original link.
 	var body bytes.Buffer
-	transaction := remote.
-		Get(link.Href).
+
+	transaction := remote.Get(link.Href).
 		Header("Accept", link.MediaType).
 		Response(&body, nil)
 

@@ -178,7 +178,7 @@ func (service *Follower) ListWebSub(parentID primitive.ObjectID) (data.Iterator,
 
 	criteria := exp.
 		Equal("parentId", parentID).
-		AndEqual("method", model.FollowMethodWebSub)
+		AndEqual("method", model.FollowUpdateMethodWebSub)
 
 	return service.List(criteria)
 }
@@ -187,7 +187,7 @@ func (service *Follower) ListWebSubByCallback(parentID primitive.ObjectID, callb
 	criteria := exp.
 		Equal("parentId", parentID).
 		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
+		AndEqual("method", model.FollowUpdateMethodWebSub)
 
 	return service.List(criteria)
 }
@@ -197,7 +197,7 @@ func (service *Follower) LoadByWebSub(parentID primitive.ObjectID, callback stri
 	criteria := exp.
 		Equal("userId", parentID).
 		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
+		AndEqual("method", model.FollowUpdateMethodWebSub)
 
 	return service.Load(criteria, result)
 }

@@ -14,27 +14,26 @@ import (
 )
 
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
-func discoverLinks(targetURL string) ([]digit.Link, error) {
+func discoverLinks(targetURL string) []digit.Link {
 
 	const location = "service.discoverLinks"
 
-	// Next, look for links embedded in the HTML
-	if result, err := discoverLinksFromHTML(targetURL); err != nil {
-		return nil, derp.Wrap(err, location, "Error discovering links from HTML", targetURL)
-	} else if len(result) > 0 {
-		return sortLinks(result), nil
+	// Look for links embedded in the HTML
+	if result := discoverLinksFromHTML(targetURL); len(result) > 0 {
+		return sortLinks(result)
 	}
 
-	// Try to use WebFinger first
+	// Fall back to WebFinger, just in case
 	if result := discoverLinksFromWebFinger(targetURL); len(result) > 0 {
-		return sortLinks(result), nil
+		return sortLinks(result)
 	}
 
 	// Fall through, fail through
-	return make([]digit.Link, 0), derp.NewBadRequestError(location, "Unable to discover links from WebFinger or HTML", targetURL)
+	derp.Report(derp.NewBadRequestError(location, "Unable to discover links from WebFinger or HTML", targetURL))
+	return make([]digit.Link, 0)
 }
 
-func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
+func discoverLinksFromHTML(targetURL string) []digit.Link {
 
 	const location = "service.discoverLinksFromHTML"
 
@@ -42,53 +41,56 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 
 	result := make([]digit.Link, 0)
 
-	// Try to load the
+	// Try to load the targetURL.
 	transaction := remote.Get(targetURL).Response(&body, nil)
 
 	if err := transaction.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Error loading HTML document", targetURL)
+		derp.Report(derp.Wrap(err, location, "Error loading URL", targetURL))
+		return result
 	}
 
-	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
-	mimeType = list.Semicolon(mimeType).First()
-
-	// If the document itself is an RSS feed, then success.
-	switch mimeType {
-	case model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
-		return []digit.Link{{
-			RelationType: "alternate",
-			MediaType:    mimeType,
-			Href:         targetURL,
-		}}, nil
-	}
-
-	// Otherwise, try to parse the document as an HTML file with embedded links to the ActivityPub/RSS/Atom/JSONFeed feeds.
-
-	// Scan the HTTP headers for WebSub links
+	// Scan the response headers for WebSub links
+	// TODO: LOW: Are RSS links ever put in the headers also?
 	for _, link := range linkheader.Parse(transaction.ResponseObject.Header.Get("Link")) {
 
 		if link.Rel == model.LinkRelationHub {
 			result = append(result, digit.Link{
-				RelationType: link.Rel,
+				RelationType: model.LinkRelationHub,
 				MediaType:    model.MagicMimeTypeWebSub,
 				Href:         link.URL,
 			})
 		}
 	}
 
+	// If the document itself is an RSS feed, then we're done.  Add it to the list.
+	// TODO: LOW: Possibly parse RSS-Cloud here?
+	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
+	mimeType = list.Semicolon(mimeType).First()
+
+	switch mimeType {
+	case model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
+		return append(result, digit.Link{
+			RelationType: model.LinkRelationSelf,
+			MediaType:    mimeType,
+			Href:         targetURL,
+		})
+	}
+
+	// Fall through assumes that this is an HTML document.
+	// So, look for embedded links to other feeds (ActivityPub/RSS/Atom/JSONFeed).
+
 	// Scan the HTML document for relevant links
 	htmlDocument, err := goquery.NewDocumentFromReader(&body)
 
 	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
+		derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
+		return result
 	}
 
 	links := htmlDocument.Find("link[rel=alternate],link[rel=self],link[rel=hub]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {
-
-		var mediaType string
 
 		relationType := nodeAttribute(link, "rel")
 		href := nodeAttribute(link, "href")
@@ -99,7 +101,7 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 		case model.LinkRelationHub:
 
 			result = append(result, digit.Link{
-				RelationType: relationType,
+				RelationType: model.LinkRelationHub,
 				MediaType:    model.MagicMimeTypeWebSub,
 				Href:         href,
 			})
@@ -107,21 +109,21 @@ func discoverLinksFromHTML(targetURL string) ([]digit.Link, error) {
 		}
 
 		// General case for all other relation types
-		mediaType = nodeAttribute(link, "type")
+		mediaType := nodeAttribute(link, "type")
 		mediaType = list.Semicolon(mediaType).First()
 
 		switch mediaType {
 
 		case model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS:
 			result = append(result, digit.Link{
-				RelationType: relationType,
+				RelationType: model.LinkRelationAlternate,
 				MediaType:    mediaType,
 				Href:         href,
 			})
 		}
 	}
 
-	return result, nil
+	return result
 }
 
 func discoverLinksFromWebFinger(targetURL string) []digit.Link {

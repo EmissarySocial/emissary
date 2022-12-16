@@ -9,9 +9,8 @@ import (
 func TestWebFinger(t *testing.T) {
 
 	// Discover links via WebFinger
-	links, err := discoverLinks("https://mastodon.social/@benpate")
+	links := discoverLinks("https://mastodon.social/@benpate")
 
-	require.Nil(t, err)
 	require.Equal(t, 2, len(links))
 
 	require.Equal(t, "alternate", links[0].RelationType)
@@ -26,9 +25,8 @@ func TestWebFinger(t *testing.T) {
 func TestRSS_Mastodon(t *testing.T) {
 
 	// Discover links via WebFinger
-	links, err := discoverLinks("https://mastodon.social/@benpate.rss")
+	links := discoverLinks("https://mastodon.social/@benpate.rss")
 
-	require.Nil(t, err)
 	require.Equal(t, 1, len(links))
 	require.Equal(t, "alternate", links[0].RelationType)
 	require.Equal(t, "application/rss+xml", links[0].MediaType)
@@ -38,8 +36,8 @@ func TestRSS_Mastodon(t *testing.T) {
 func TestRSS_Smashing(t *testing.T) {
 
 	// Discover links via WebFinger
-	links, err := discoverLinks("https://www.smashingmagazine.com/feed/")
-	require.Nil(t, err)
+	links := discoverLinks("https://www.smashingmagazine.com/feed/")
+
 	require.Equal(t, 1, len(links))
 	require.Equal(t, "alternate", links[0].RelationType)
 	require.Equal(t, "application/xml", links[0].MediaType)
@@ -49,8 +47,8 @@ func TestRSS_Smashing(t *testing.T) {
 func TestHTMLLink_Smashing(t *testing.T) {
 
 	// Discover links via WebFinger
-	links, err := discoverLinks("https://smashingmagazine.com/")
-	require.Nil(t, err)
+	links := discoverLinks("https://smashingmagazine.com/")
+
 	require.Equal(t, 1, len(links))
 	require.Equal(t, "alternate", links[0].RelationType)
 	require.Equal(t, "application/rss+xml", links[0].MediaType)
@@ -60,8 +58,8 @@ func TestHTMLLink_Smashing(t *testing.T) {
 func TestHTMLLink_AppleInsider(t *testing.T) {
 
 	// Discover links via WebFinger
-	links, err := discoverLinks("https://appleinsider.com/")
-	require.Nil(t, err)
+	links := discoverLinks("https://appleinsider.com/")
+
 	require.Equal(t, 1, len(links))
 	require.Equal(t, "alternate", links[0].RelationType)
 	require.Equal(t, "application/rss+xml", links[0].MediaType)

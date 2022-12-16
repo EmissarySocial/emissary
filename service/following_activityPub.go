@@ -10,6 +10,6 @@ func (service *Following) ConnectActivityPub(following *model.Following, link di
 	return derp.NewInternalError("service.Following.ConnectActivityPub", "Not Implemented", following)
 }
 
-func (service *Following) DisconnectActivityPub(following *model.Following) error {
-	return nil
+func (service *Following) DisconnectActivityPub(following *model.Following) {
+	// NOOP (for now)
 }

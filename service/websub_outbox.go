@@ -12,14 +12,16 @@ import (
 
 // WebSubOutbox is an facade for the Follower service that presents a websub Store
 type WebSubOutbox struct {
-	parentID        primitive.ObjectID
 	followerService *Follower
+	locatorService  Locator
+	parentID        primitive.ObjectID
 }
 
-func NewWebSubOutbox(followerService *Follower, parentID primitive.ObjectID) WebSubOutbox {
+func NewWebSubOutbox(followerService *Follower, locatorService Locator, parentID primitive.ObjectID) WebSubOutbox {
 	return WebSubOutbox{
-		parentID:        parentID,
 		followerService: followerService,
+		locatorService:  locatorService,
+		parentID:        parentID,
 	}
 }
 
@@ -66,14 +68,26 @@ func (outbox WebSubOutbox) For(callback string) ([]websubmodel.Subscription, err
 // Add saves/adds a subscription to the store.
 func (outbox WebSubOutbox) Add(sub websubmodel.Subscription) error {
 
-	follower := model.NewFollower()
-	follower.Method = model.FollowMethodWebSub
-	follower.Actor.ProfileURL = sub.Callback
-	follower.Data.SetInt64("id", sub.ID)
-	follower.Data.SetString("callback", sub.Callback)
-	follower.ExpireDate = sub.Expires.Unix()
+	const location = "service.WebSubOutbox.Add"
 
-	return derp.NewInternalError("service.WebSubOutbox.Add", "Not implemented")
+	_, objectID, err := outbox.locatorService.GetObjectFromURL(sub.Topic)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Failed to get object from URL", sub)
+	}
+
+	if objectID != outbox.parentID {
+		return derp.NewBadRequestError(location, "Topic does not match parent object", sub.Topic, outbox.parentID)
+	}
+
+	follower := outbox.fromSubscription(sub)
+
+	// Save the new follower
+	if err := outbox.followerService.Save(&follower, "WebSub Add"); err != nil {
+		return derp.Wrap(err, location, "Failed to save follower", sub)
+	}
+
+	return nil
 }
 
 // Get retrieves a subscription given a topic and callback.
@@ -108,6 +122,7 @@ func (outbox WebSubOutbox) Remove(sub websubmodel.Subscription) error {
 }
 
 func (outbox WebSubOutbox) toSubscription(follower model.Follower) websubmodel.Subscription {
+
 	return websubmodel.Subscription{
 		ID:       follower.Data.GetInt64("id"),
 		Topic:    follower.Actor.ProfileURL,
@@ -115,4 +130,18 @@ func (outbox WebSubOutbox) toSubscription(follower model.Follower) websubmodel.S
 		Secret:   follower.Data.GetString("secret"),
 		Expires:  time.Unix(follower.ExpireDate, 0),
 	}
+}
+
+func (outbox WebSubOutbox) fromSubscription(sub websubmodel.Subscription) model.Follower {
+
+	follower := model.NewFollower()
+
+	follower.ParentID = outbox.parentID
+	follower.Method = model.FollowUpdateMethodWebSub
+	follower.Actor.ProfileURL = sub.Callback
+	follower.Data.SetString("callback", sub.Callback)
+	follower.Data.SetString("secret", sub.Secret)
+	follower.ExpireDate = sub.Expires.Unix()
+
+	return follower
 }

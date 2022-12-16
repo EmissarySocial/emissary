@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 
 	"github.com/benpate/rosetta/schema"
@@ -144,13 +143,10 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 func (service *Following) Save(following *model.Following, note string) error {
 
 	// RULE: Reset status and error counts when saving
-	following.ErrorCount = 0
-	following.StatusMessage = ""
+	following.UpdateMethod = model.FollowUpdateMethodPoll
 	following.Status = model.FollowingStatusNew
-
-	// RULE: Automatically determine the type of follow (RSS, ActivityPub, etc.)
-	// TODO: CRITICAL: Add ActivityPub types here.
-	following.Method = model.FollowMethodRSS
+	following.StatusMessage = ""
+	following.ErrorCount = 0
 
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {
@@ -165,7 +161,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// Recalculate the follower count for this user
 	go service.userService.CalcFollowingCount(following.UserID)
 
-	// Poll external services (if necessary)
+	// Connect to external services and discover the best update method
 	go service.Connect(*following)
 
 	// Win!
@@ -203,6 +199,7 @@ func (service *Following) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the ID of a following object
 func (service *Following) ObjectID(object data.Object) primitive.ObjectID {
 
 	if following, ok := object.(*model.Following); ok {
@@ -313,27 +310,17 @@ func (service *Following) ListWebSubByTopic(userID primitive.ObjectID, topic str
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("url", topic).
-		AndEqual("method", model.FollowMethodWebSub)
+		AndEqual("updateMethod", model.FollowUpdateMethodWebSub)
 
 	return service.List(criteria)
 }
 
-func (service *Following) ListWebSubByCallback(userID primitive.ObjectID, callback string) (data.Iterator, error) {
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
-
-	return service.List(criteria)
-}
-
-func (service *Following) LoadByWebSub(userID primitive.ObjectID, topic string, callback string, result *model.Following) error {
+func (service *Following) LoadByWebSub(userID primitive.ObjectID, topic string, result *model.Following) error {
 
 	criteria := exp.
 		Equal("userId", userID).
 		AndEqual("url", topic).
-		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
+		AndEqual("updateMethod", model.FollowUpdateMethodWebSub)
 
 	return service.Load(criteria, result)
 }
@@ -353,59 +340,69 @@ func (service *Following) Connect(following model.Following) error {
 	}
 
 	// Try to get all the links we can.  If this fails, it'll be caught below.
-	links, _ := discoverLinks(following.URL)
+	following.Links = discoverLinks(following.ResourceURL)
+
+	// LOAD CONTENT (JSONFeed, Atom, RSS)
+	service.Poll(&following)
+
+	// SEARCH FOR UPDATERS (WebSub, ActivityPub)
+	service.FindUpdaters(&following)
+
+	return nil
+}
+
+// Poll checks the following record for new content.
+func (service *Following) Poll(following *model.Following) {
+
+	const location = "service.Following.Poll"
 
 	// Try to connect to each link in order.  If a link fails, then try the next one.
-	for _, link := range links {
-
-		// Define the function that we'll call to connect and follow the link
-		var fn func(*model.Following, digit.Link) error
+	for _, link := range following.Links {
 
 		switch link.MediaType {
 
-		case model.MimeTypeActivityPub:
-			following.Method = model.FollowMethodActivityPub
-			fn = service.ConnectActivityPub
+		case model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
 
-		case model.MimeTypeRSS, model.MimeTypeAtom, model.MimeTypeJSONFeed, model.MimeTypeXML:
-			following.Method = model.FollowMethodRSS
-			fn = service.PollRSS
-
-		case model.MagicMimeTypeWebSub:
-			following.Method = model.FollowMethodWebSub
-			fn = service.ConnectWebSub
-		}
-
-		// Execute the "follow" function.  If there's a problem, then try the next link.
-		if err := fn(&following, link); err != nil {
-			continue
-		}
-
-		// Fall through means that we were able to connect and follow the link.  Mark successful.
-		if err := service.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error updating following status", following))
-		} else {
-			return nil
+			// Execute the "follow" function (which must update the following status)
+			// If this returns successfully, then the connection has been made.
+			if err := service.PollRSS(following, link); err == nil {
+				return
+			}
 		}
 	}
 
 	// If we're here, it means that we didn't find any feeds.. so THAT'S a failure.
-	if err := service.SetStatus(&following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.URL); err != nil {
+	if err := service.SetStatus(following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.ResourceURL); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error updating following status", following))
 	}
-
-	return derp.NewInternalError(location, "No recognizable feeds found", following.URL)
 }
 
-func (service *Following) Disconnect(following *model.Following) error {
+func (service *Following) FindUpdaters(following *model.Following) {
 
-	switch following.Method {
-	case model.FollowMethodActivityPub:
-		return service.DisconnectActivityPub(following)
-	case model.FollowMethodWebSub:
-		return service.DisconnectWebSub(following)
+	for _, link := range following.Links {
+
+		if link.RelationType == model.LinkRelationHub {
+			if err := service.ConnectWebSub(following, link); err == nil {
+				return
+			}
+		}
+
+		if link.MediaType == model.MimeTypeActivityPub {
+			if err := service.ConnectActivityPub(following, link); err == nil {
+				return
+			}
+		}
 	}
-	return nil
+}
+
+func (service *Following) Disconnect(following *model.Following) {
+
+	switch following.UpdateMethod {
+	case model.FollowUpdateMethodActivityPub:
+		service.DisconnectActivityPub(following)
+	case model.FollowUpdateMethodWebSub:
+		service.DisconnectWebSub(following)
+	}
 }
 
 // SetStatus updates the status (and statusMessage) of a Following record.

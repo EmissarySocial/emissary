@@ -121,4 +121,5 @@ func (b *RealtimeBroker) notify(streamID primitive.ObjectID) {
 	for _, client := range b.streams[streamID] {
 		client.WriteChannel <- streamID
 	}
+
 }

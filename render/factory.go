@@ -44,6 +44,5 @@ type Factory interface {
 	StreamUpdateChannel() chan model.Stream
 	StripeClient() (client.API, error)
 
-	WebSubInbox(primitive.ObjectID) service.WebSubInbox
 	WebSubOutbox(primitive.ObjectID) service.WebSubOutbox
 }

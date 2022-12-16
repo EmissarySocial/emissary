@@ -412,14 +412,8 @@ func (factory *Factory) ActivityPub_Clock() activitypub.Clock {
 func (factory *Factory) WebSubOutbox(parentID primitive.ObjectID) service.WebSubOutbox {
 	return service.NewWebSubOutbox(
 		factory.Follower(),
+		factory.Locator(),
 		parentID,
-	)
-}
-
-func (factory *Factory) WebSubInbox(userID primitive.ObjectID) service.WebSubInbox {
-	return service.NewWebSubInbox(
-		factory.Following(),
-		userID,
 	)
 }
 
@@ -491,6 +485,14 @@ func (factory *Factory) Key() service.Key {
 // aliases for icons in the UI
 func (factory *Factory) Icons() icon.Provider {
 	return service.Icons{}
+}
+
+func (factory *Factory) Locator() service.Locator {
+	return service.NewLocator(
+		factory.User(),
+		factory.Stream(),
+		factory.Hostname(),
+	)
 }
 
 // Publisher returns the Publisher service, which contains

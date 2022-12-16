@@ -146,8 +146,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Built-In Service  Routes
 	e.POST("/.webmention", handler.PostWebMention(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
-	e.GET("/.websub", handler.WebSubClient(factory))
-	e.POST("/.websub", handler.WebSubClient(factory))
+	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
+	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))

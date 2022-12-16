@@ -3,29 +3,32 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/digit"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// FollowMethodActivityPub represents the ActivityPub subscription
-const FollowMethodActivityPub = "ACTIVITYPUB"
+// FollowUpdateMethodActivityPub represents the ActivityPub subscription
+const FollowUpdateMethodActivityPub = "ACTIVITYPUB"
 
-// FollowMethodRSS represents an RSS subscription
-const FollowMethodRSS = "RSS"
+// FollowUpdateMethodPoll represents a subscription that must be polled for updates
+const FollowUpdateMethodPoll = "POLL"
 
-// FollowMethodRSSCloud represents an RSS-Cloud subscription
-// const FollowMethodRSSCloud = "RSS-CLOUD"
+// FollowUpdateMethodRSSCloud represents an RSS-Cloud subscription
+const FollowUpdateMethodRSSCloud = "RSS-CLOUD"
 
-// FollowMethodWebSub represents a WebSub subscription
-const FollowMethodWebSub = "WEBSUB"
+// FollowUpdateMethodWebSub represents a WebSub subscription
+const FollowUpdateMethodWebSub = "WEBSUB"
 
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"
 
 // FollowingStatusLoading represents a following that is currently loading
 const FollowingStatusLoading = "LOADING"
+
+// FollowingStatusPending represents a following that has been partially connected (e.g. WebSub)
+const FollowingStatusPending = "PENDING"
 
 // FollowingStatusSuccess represents a following that has successfully loaded
 const FollowingStatusSuccess = "SUCCESS"
@@ -40,17 +43,18 @@ type Following struct {
 	UserID        primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
 	FolderID      primitive.ObjectID `path:"folderId"       json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
 	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this "following" record
-	URL           string             `path:"url"            json:"url"            bson:"url"`           // Connection URL for obtaining new sub-streams.
-	Method        string             `path:"method"         json:"method"         bson:"method"`        // Method used to subscribe to remote streams (RSS, etc)
-	Data          maps.Map           `path:"data"           json:"data"           bson:"data"`          // Additional data used by the subscription method
+	ResourceURL   string             `path:"resourceUrl"    json:"resourceUrl"    bson:"resourceUrl"`   // Human-Facing URL that is being followed.
+	Links         []digit.Link       `path:"links"          json:"links"          bson:"links"`         // List of links can be used to update this following.
+	UpdateMethod  string             `path:"updateMethod"   json:"updateMethod"   bson:"updateMethod"`  // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
+	Secret        string             `path:"secret"         json:"secret"         bson:"secret"`        // Secret used to authenticate this feed (if required)
 	Status        string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
 	StatusMessage string             `path:"statusMessage"  json:"statusMessage"  bson:"statusMessage"` // Optional message describing the status of the last poll
 	LastPolled    int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
 	PollDuration  int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
 	NextPoll      int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
+	Expiration    int64              `path:"expiration"     json:"expiration"     bson:"expiration"`    // Date when this record will expire (unless renewed)
 	PurgeDuration int                `path:"purgeDuration"  json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
 	ErrorCount    int                `path:"errorCount"     json:"errorCount"     bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
-	IsPublic      bool               `path:"isPublic"       json:"isPublic"       bson:"isPublic"   `   // If TRUE, this record is visible publicly
 
 	journal.Journal `path:"journal" json:"-" bson:"journal"`
 }
@@ -59,9 +63,10 @@ type Following struct {
 func NewFollowing() Following {
 	return Following{
 		FollowingID:   primitive.NewObjectID(),
+		Status:        FollowingStatusNew,
+		UpdateMethod:  FollowUpdateMethodPoll,
 		PollDuration:  24, // default poll interval is 24 hours
 		PurgeDuration: 14, // default purge interval is 14 days
-		Data:          make(maps.Map),
 	}
 }
 
@@ -74,7 +79,7 @@ func FollowingSchema() schema.Element {
 			"folderId":      schema.String{Format: "objectId"},
 			"label":         schema.String{Required: true, MinLength: 1, MaxLength: 100},
 			"url":           schema.String{Format: "url", Required: true, MinLength: 1, MaxLength: 1000},
-			"method":        schema.String{Required: true, Enum: []string{FollowMethodRSS, FollowMethodActivityPub}},
+			"method":        schema.String{Required: true, Enum: []string{FollowUpdateMethodPoll, FollowUpdateMethodWebSub, FollowUpdateMethodRSSCloud, FollowUpdateMethodActivityPub}},
 			"status":        schema.String{Enum: []string{FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage": schema.String{MaxLength: 1000},
 			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0)},
@@ -123,7 +128,7 @@ func (following *Following) Origin() OriginLink {
 	return OriginLink{
 		InternalID: following.FollowingID,
 		Label:      following.Label,
-		Type:       following.Method,
-		URL:        following.URL,
+		Type:       following.UpdateMethod,
+		URL:        following.ResourceURL,
 	}
 }
