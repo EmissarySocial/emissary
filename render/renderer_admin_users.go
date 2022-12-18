@@ -104,6 +104,10 @@ func (w User) objectID() primitive.ObjectID {
 	return w.user.UserID
 }
 
+func (w User) objectType() string {
+	return "User"
+}
+
 func (w User) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }

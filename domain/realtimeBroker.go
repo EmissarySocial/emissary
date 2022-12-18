@@ -2,6 +2,10 @@ package domain
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queue"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -9,6 +13,11 @@ import (
 // for keeping a list of which clients (browsers) are currently attached
 // and broadcasting events (messages) to those clients.
 type RealtimeBroker struct {
+
+	// FollowerService for WebSub notifications
+	followerService *service.Follower
+
+	queue *queue.Queue
 
 	// map of realtime clients
 	clients map[primitive.ObjectID]*RealtimeClient
@@ -33,12 +42,14 @@ type RealtimeBroker struct {
 func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBroker {
 
 	result := RealtimeBroker{
-		clients:       make(map[primitive.ObjectID]*RealtimeClient),
-		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
-		streamUpdates: updates,
-		AddClient:     make(chan *RealtimeClient),
-		RemoveClient:  make(chan *RealtimeClient),
-		close:         make(chan bool),
+		followerService: factory.Follower(),
+		queue:           factory.Queue(),
+		clients:         make(map[primitive.ObjectID]*RealtimeClient),
+		streams:         make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
+		streamUpdates:   updates,
+		AddClient:       make(chan *RealtimeClient),
+		RemoveClient:    make(chan *RealtimeClient),
+		close:           make(chan bool),
 	}
 
 	go result.listen(factory)
@@ -102,11 +113,12 @@ func (b *RealtimeBroker) listen(factory *Factory) {
 		case stream := <-b.streamUpdates:
 
 			// Send an update to every client that has subscribed to this stream
-			go b.notify(stream.StreamID)
+			go b.notifySSE(stream.StreamID)
 
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
-				go b.notify(stream.ParentID)
+				go b.notifySSE(stream.ParentID)
+				go b.notifyWebSub(stream)
 			}
 
 		case <-b.close:
@@ -115,11 +127,40 @@ func (b *RealtimeBroker) listen(factory *Factory) {
 	}
 }
 
-// notify sends updates for every client that is watching a given stream
-func (b *RealtimeBroker) notify(streamID primitive.ObjectID) {
+// notifySSE sends updates for every SEE client that is watching a given stream
+func (b *RealtimeBroker) notifySSE(streamID primitive.ObjectID) {
 
+	// Send realtime messages to SSE clients
 	for _, client := range b.streams[streamID] {
 		client.WriteChannel <- streamID
 	}
+}
 
+// notifyWebSub sends update to every WebSub follower
+func (b *RealtimeBroker) notifyWebSub(stream model.Stream) {
+
+	followers, err := b.followerService.ListWebSub(stream.ParentID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "domain.RealtimeBroker.notifyWebSub", "Error loading WebSub followers", stream))
+		return
+	}
+
+	// Loop through all followers, and send WebSub messages through the queue
+	follower := model.NewFollower()
+
+	if followers.Next(&follower) {
+
+		// TODO: LOW create an RSS Feed for stream here, for the "fat ping."
+
+		for {
+
+			go b.queue.Run(tasks.NewSendWebSubMessage(stream, follower))
+			follower = model.NewFollower()
+
+			if !followers.Next(&follower) {
+				break
+			}
+		}
+	}
 }

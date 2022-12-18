@@ -52,6 +52,10 @@ func (w Model) object() data.Object {
 	return w._object
 }
 
+func (w Model) objectType() string {
+	return w._service.ObjectType()
+}
+
 func (w Model) objectID() primitive.ObjectID {
 	return w._service.ObjectID(w._object)
 }

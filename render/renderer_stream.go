@@ -114,6 +114,10 @@ func (w Stream) objectID() primitive.ObjectID {
 	return w.stream.StreamID
 }
 
+func (w Stream) objectType() string {
+	return "Stream"
+}
+
 // schema returns the validation schema associated with this renderer
 func (w Stream) schema() schema.Schema {
 	return w.template().Schema

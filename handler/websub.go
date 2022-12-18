@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -128,8 +127,8 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following)
 		}
 
-		// TODO: MEDIUM: Validate the secret (HMAC how?)
-		spew.Dump(following.Secret)
+		// TODO: LOW: Validate the secret (HMAC how?)
+		// TODO: LOW: Fat Pings require HMAC
 
 		followingService.Poll(&following)
 

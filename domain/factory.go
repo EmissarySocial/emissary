@@ -25,7 +25,6 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/go-fed/activity/pub"
 	"github.com/spf13/afero"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/stripe/stripe-go/v72/client"
 )
@@ -53,11 +52,12 @@ type Factory struct {
 	domainService      service.Domain
 	emailService       service.DomainEmail
 	folderService      service.Folder
+	followerService    service.Follower
+	followingService   service.Following
 	inboxService       service.Inbox
 	mentionService     service.Mention
 	streamService      service.Stream
 	streamDraftService service.StreamDraft
-	followingService   service.Following
 	realtimeBroker     RealtimeBroker
 	userService        service.User
 
@@ -143,9 +143,16 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Following Service
 	factory.followingService = service.NewFollowing(
 		factory.collection(CollectionFollowing),
+		factory.Stream(),
 		factory.User(),
 		factory.Inbox(),
 		factory.Host())
+
+	factory.followerService = service.NewFollower(
+		factory.collection(CollectionFollower),
+		factory.User(),
+		factory.Host(),
+	)
 
 	go factory.followingService.Start()
 
@@ -208,6 +215,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
+		factory.followerService.Refresh(factory.collection(CollectionFollower))
 		factory.followingService.Refresh(factory.collection(CollectionFollowing))
 		factory.userService.Refresh(factory.collection(CollectionUser))
 
@@ -237,6 +245,7 @@ func (factory *Factory) Close() {
 	factory.realtimeBroker.Close()
 	factory.streamService.Close()
 	factory.followingService.Close()
+	factory.followerService.Close()
 	factory.userService.Close()
 }
 
@@ -313,8 +322,7 @@ func (factory *Factory) EncryptionKey() *service.EncryptionKey {
 
 // Follower returns a fully populated Follower service
 func (factory *Factory) Follower() *service.Follower {
-	service := service.NewFollower(factory.collection(CollectionFollower), factory.User(), factory.Host())
-	return &service
+	return &factory.followerService
 }
 
 // Following returns a fully populated Following service
@@ -403,18 +411,6 @@ func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
 
 func (factory *Factory) ActivityPub_Clock() activitypub.Clock {
 	return activitypub.Clock{}
-}
-
-/*******************************************
- * WebSub
- *******************************************/
-
-func (factory *Factory) WebSubOutbox(parentID primitive.ObjectID) service.WebSubOutbox {
-	return service.NewWebSubOutbox(
-		factory.Follower(),
-		factory.Locator(),
-		parentID,
-	)
 }
 
 /*******************************************

@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 )
 
@@ -67,15 +66,9 @@ func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
 	const location = "render.StepPublish.sendWebMentions"
 
-	// RULE: Don't send mentions if the server is local
-	if domain.IsLocalhost(renderer.Hostname()) {
-		fmt.Println("Skipping mentions because hostname is localhost")
-		return nil
-	}
-
 	// RULE: Don't send mentions on items that require login
 	if !renderer.UserCan(model.MagicRoleAnonymous) {
-		fmt.Println("Skipping mentions because user is not anonymous")
+		fmt.Println("Skipping mentions because this content is protected by a password")
 		return nil
 	}
 

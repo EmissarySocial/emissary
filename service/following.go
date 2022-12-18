@@ -16,22 +16,24 @@ import (
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	collection   data.Collection
-	userService  *User
-	inboxService *Inbox
-	host         string
-	closed       chan bool
+	collection    data.Collection
+	streamService *Stream
+	userService   *User
+	inboxService  *Inbox
+	host          string
+	closed        chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, userService *User, inboxService *Inbox, host string) Following {
+func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, host string) Following {
 
 	service := Following{
-		collection:   collection,
-		userService:  userService,
-		inboxService: inboxService,
-		host:         host,
-		closed:       make(chan bool),
+		collection:    collection,
+		streamService: streamService,
+		userService:   userService,
+		inboxService:  inboxService,
+		host:          host,
+		closed:        make(chan bool),
 	}
 
 	service.Refresh(collection)
@@ -175,6 +177,10 @@ func (service *Following) Delete(following *model.Following, note string) error 
 		return derp.Wrap(err, "service.Following", "Error deleting Following", following, note)
 	}
 
+	if err := service.streamService.DeleteBySource(following.FollowingID, "Deleting with Follow"); err != nil {
+		return derp.Wrap(err, "service.Following", "Error deleting streams for Following", following, note)
+	}
+
 	// Recalculate the follower count for this user
 	go service.userService.CalcFollowingCount(following.UserID)
 
@@ -299,30 +305,6 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 	}
 
 	return service.LoadByID(userID, followingID, result)
-}
-
-/*******************************************
- * WebSub Queries
- *******************************************/
-
-func (service *Following) ListWebSubByTopic(userID primitive.ObjectID, topic string) (data.Iterator, error) {
-
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("url", topic).
-		AndEqual("method", model.FollowMethodWebSub)
-
-	return service.List(criteria)
-}
-
-func (service *Following) LoadByWebSub(userID primitive.ObjectID, topic string, result *model.Following) error {
-
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("url", topic).
-		AndEqual("method", model.FollowMethodWebSub)
-
-	return service.Load(criteria, result)
 }
 
 /*******************************************

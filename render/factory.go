@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/stripe/stripe-go/v72/client"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Factory is used to locate all necessary services
@@ -37,12 +36,11 @@ type Factory interface {
 	Hostname() string
 	Icons() icon.Provider
 	MediaServer() mediaserver.MediaServer
+	Locator() service.Locator
 	LookupProvider() form.LookupProvider
 	Providers() set.Slice[config.Provider]
 	Publisher() service.Publisher
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream
 	StripeClient() (client.API, error)
-
-	WebSubOutbox(primitive.ObjectID) service.WebSubOutbox
 }

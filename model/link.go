@@ -78,3 +78,7 @@ func (link Link) HTML() string {
 
 	return "<link rel=\"" + link.Relation + "\" href=\"" + link.URL + "\">"
 }
+
+func (link Link) Header() string {
+	return `<` + link.URL + `>; rel="` + link.Relation + `"`
+}

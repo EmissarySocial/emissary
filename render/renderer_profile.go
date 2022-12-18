@@ -122,6 +122,10 @@ func (w Profile) objectID() primitive.ObjectID {
 	return w.user.UserID
 }
 
+func (w Profile) objectType() string {
+	return "User"
+}
+
 func (w Profile) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }

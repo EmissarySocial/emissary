@@ -54,6 +54,7 @@ type Renderer interface {
 	service() service.ModelService      // The abstracted ModelService the backs this Renderer
 	templateRole() string               // Returns the role that the current template plays in the system. Used for choosing child template.
 	template() *model.Template          // The template used for this renderer (if any)
+	objectType() string                 // The type of object being rendered
 	authorization() model.Authorization // retrieves the user's authorization data from the context
 	schema() schema.Schema              // Schema to use to validate this Object
 	object() data.Object                // Model Object being rendered

@@ -44,7 +44,6 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 }
 
 func (service *Following) DisconnectWebSub(following *model.Following) {
-	const location = "service.Following.DisconnectWebSub"
 
 	// Find the "hub" link for this following
 	for _, link := range following.Links {

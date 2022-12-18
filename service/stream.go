@@ -190,7 +190,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	go func() {
 
 		// RULE: Delete all related Children
-		if err := service.DeleteChildren(stream, note); err != nil {
+		if err := service.DeleteByParent(stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting child streams", stream, note))
 		}
 
@@ -206,6 +206,25 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	}()
 
 	// Bueno!!
+	return nil
+}
+
+// DeleteMany removes all child streams from the provided stream (virtual delete)
+func (service *Stream) DeleteMany(criteria exp.Expression, note string) error {
+
+	var stream model.Stream
+	it, err := service.List(notDeleted(criteria))
+
+	if err != nil {
+		return derp.Wrap(err, "service.Stream.Delete", "Error listing streams to delete", criteria)
+	}
+
+	for it.Next(&stream) {
+		if err := service.Delete(&stream, note); err != nil {
+			return derp.Wrap(err, "service.Stream.Delete", "Error deleting stream", stream)
+		}
+	}
+
 	return nil
 }
 
@@ -508,23 +527,12 @@ func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expressio
  * Custom Actions
  *******************************************/
 
-// DeleteChildren removes all child streams from the provided stream (virtual delete)
-func (service *Stream) DeleteChildren(stream *model.Stream, note string) error {
+func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
+	return service.DeleteMany(exp.Equal("parentId", parentID), note)
+}
 
-	var child model.Stream
-	it, err := service.ListByParent(stream.StreamID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Stream.Delete", "Error listing child streams", stream)
-	}
-
-	for it.Next(&child) {
-		if err := service.Delete(&child, note); err != nil {
-			return derp.Wrap(err, "service.Stream.Delete", "Error deleting child stream", child)
-		}
-	}
-
-	return nil
+func (service *Stream) DeleteBySource(internalID primitive.ObjectID, note string) error {
+	return service.DeleteMany(exp.Equal("source.internalId", internalID), note)
 }
 
 // Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.

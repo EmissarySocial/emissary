@@ -103,6 +103,10 @@ func (w TopLevel) objectID() primitive.ObjectID {
 	return w.stream.StreamID
 }
 
+func (w TopLevel) objectType() string {
+	return "Stream"
+}
+
 func (w TopLevel) schema() schema.Schema {
 	return w.layout.Schema
 }

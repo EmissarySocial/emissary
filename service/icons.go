@@ -120,6 +120,10 @@ func (service Icons) Get(name string) string {
 		return service.get("credit-card")
 	case "stripe-fill":
 		return service.get("credit-card-fill")
+	case "websub":
+		return service.get("clouds")
+	case "websub-fill":
+		return service.get("clouds-fill")
 
 		// Content Types
 	case "article":

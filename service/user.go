@@ -109,6 +109,9 @@ func (service *User) Delete(user *model.User, note string) error {
 	}
 
 	// TODO: HIGH: Clean up related records (like InboxItem and OutboxItem)
+	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User", "Error deleting User's streams", user, note)
+	}
 
 	return nil
 }
@@ -257,17 +260,17 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
 	err := queries.SetFollowersCount(context.TODO(), service.collection, userID)
-	return derp.Wrap(err, "service.User", "Error setting follower count", userID)
+	return derp.Report(derp.Wrap(err, "service.User", "Error setting follower count", userID))
 }
 
 func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
 	err := queries.SetFollowingCount(context.TODO(), service.collection, userID)
-	return derp.Wrap(err, "service.User", "Error setting following count", userID)
+	return derp.Report(derp.Wrap(err, "service.User", "Error setting following count", userID))
 }
 
 func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
 	err := queries.SetBlockCount(context.TODO(), service.collection, userID)
-	return derp.Wrap(err, "service.User", "Error setting block count", userID)
+	return derp.Report(derp.Wrap(err, "service.User", "Error setting block count", userID))
 }
 
 func (service *User) SetOwner(owner config.Owner) error {

@@ -11,14 +11,16 @@ const OriginTypeActivityPub = "ACTIVITYPUB"
 // OriginTypeInternal identifies a link was created by this application
 const OriginTypeInternal = "INTERNAL"
 
-// OriginTypeRSS identifies a link was created by an RSS source
-const OriginTypeRSS = "RSS"
+// OriginTypePoll identifies a link was created by an RSS source
+const OriginTypePoll = "POLL"
 
 // OriginTypeRSSCloud identifies a link was created by an RSS Cloud source
 const OriginTypeRSSCloud = "RSS-CLOUD"
 
 // OriginTypeTwitter identifies a link was created by Twitter
 const OriginTypeTwitter = "TWITTER"
+
+const OriginTypeWebSub = "WEBSUB"
 
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
@@ -41,7 +43,7 @@ func OriginLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId": schema.String{Format: "objectId"},
-			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypeRSS, OriginTypeRSSCloud, OriginTypeTwitter}},
+			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeTwitter}},
 			"url":        schema.String{Format: "url"},
 			"label":      schema.String{},
 			"summary":    schema.String{},
@@ -73,15 +75,17 @@ func (origin OriginLink) Icon() string {
 
 	switch origin.Type {
 
-	case LinkSourceActivityPub:
+	case OriginTypeActivityPub:
 		return "code-slash"
-	case LinkSourceInternal:
+	case OriginTypeInternal:
 		return "star"
-	case LinkSourceRSS:
+	case OriginTypePoll:
 		return "rss"
-	case LinkSourceTwitter:
+	case OriginTypeTwitter:
 		return "twitter"
+	case OriginTypeWebSub:
+		return "websub"
 	}
 
-	return "question-square"
+	return "question-square " + origin.Type
 }

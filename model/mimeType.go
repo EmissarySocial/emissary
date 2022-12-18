@@ -2,6 +2,8 @@ package model
 
 const MimeTypeActivityPub = "application/activity+json"
 
+const MimeTypeJSON = "application/json"
+
 const MimeTypeJSONFeed = "application/feed+json"
 
 const MimeTypeAtom = "application/atom+xml"

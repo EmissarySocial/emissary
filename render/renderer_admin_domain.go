@@ -97,6 +97,10 @@ func (w Domain) objectID() primitive.ObjectID {
 	return w.domain.DomainID
 }
 
+func (w Domain) objectType() string {
+	return "Domain"
+}
+
 func (w Domain) schema() schema.Schema {
 	return w.layout.Schema
 }

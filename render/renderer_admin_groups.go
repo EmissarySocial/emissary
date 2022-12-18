@@ -105,6 +105,10 @@ func (w Group) objectID() primitive.ObjectID {
 	return w.group.GroupID
 }
 
+func (w Group) objectType() string {
+	return "Group"
+}
+
 func (w Group) schema() schema.Schema {
 	return schema.New(model.GroupSchema())
 }
