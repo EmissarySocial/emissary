@@ -96,7 +96,7 @@
 					{"step":"as-modal", "steps": [
 						{"step":"form-html", "form": {
 							"type":"layout-vertical",
-							"label":"Folder Info",
+							"label":"Manage Folder",
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"}
 							]}

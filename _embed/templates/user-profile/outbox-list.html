@@ -4,28 +4,39 @@
 
 	{{- $lastIndex := subtract (len $outbox) 1 -}}
 	{{- $last := index $outbox $lastIndex -}}
+	{{- $userCanEdit := .UserCan "edit-profile" -}}
 
 	{{- range $outbox -}}
-		<hr style="border-color:var(--gray10);">
-		<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="h-entry" style="display:grid; column-gap:16px; row-gap:16px; grid-template-columns: 60px 1fr; margin-bottom:20px;">
-			<div style="height:60px; width:60px;">
-				{{- if ne .Document.Author.ImageURL ""}}
-					<img src="{{.Document.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
-				{{- end -}}
-			</div>
-			<div style="max-width:600px">
-				<div class="p-author h-card text-sm gray50" style="margin:0px;">
-					<span class="p-name">{{.Document.Author.Name}}</span>
-					&middot;
-					<span class="p-published">{{.PublishDate | humanizeTime}}</span>
+		<hr>
+		<div class="hover-trigger">
+			{{- if $userCanEdit -}}
+				<div class="float-right hover-reveal text-sm">
+					<button>Edit</button>
+					<button hx-get="/{{.StreamID.Hex}}/delete" hx-push-url="false">Delete</button>
 				</div>
-				<div class="h-name bold black">{{.Document.Label}}</div>
-				<div class="h-summary black">{{.Document.Summary | html }}</div>
-				{{- if ne .Document.ImageURL ""}}
-					<div style="margin-top:var(--rhythm);">
-						<img src="{{.Document.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+			{{- end -}}
+			<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
+				<div style="height:60px; width:60px;">
+					{{- if ne .Document.Author.ImageURL ""}}
+						<img src="{{.Document.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">
+					{{- end -}}
+				</div>
+				<div style="flex-grow:1">
+					<div style="max-width:600px;">
+						<div class="p-author h-card text-sm gray50" style="margin:0px;">
+							<span class="p-name">{{.Document.Author.Name}}</span>
+							&middot;
+							<span class="p-published">{{.PublishDate | humanizeTime}}</span>
+						</div>
+						<div class="h-name bold black">{{.Document.Label}}</div>
+						<div class="h-summary black">{{.Document.Summary | html }}</div>
+						{{- if ne .Document.ImageURL ""}}
+							<div style="margin-top:var(--rhythm);">
+								<img src="{{.Document.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+							</div>
+						{{- end -}}
 					</div>
-				{{- end -}}
+				</div>
 			</div>
 		</div>
 	{{- end -}}

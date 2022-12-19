@@ -49,7 +49,8 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"delete"},
-				{"step":"publish"}
+				{"step":"publish"},
+				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]
 		}
 	}

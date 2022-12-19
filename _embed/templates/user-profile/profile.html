@@ -21,8 +21,8 @@
 				<div class="space-below" hx-push-url="true">
 					<b>{{icon "book"}} Posts</b> &nbsp;
 					<span hx-get="/@{{.UserID}}/followers" class="clickable">{{icon "person"}} Followers</a> &nbsp;
-						<span hx-get="/@{{.UserID}}/following" class="clickable">{{icon "star"}} Following</a>
-						</div>
+					<span hx-get="/@{{.UserID}}/following" class="clickable">{{icon "star"}} Following</a>
+				</div>
 
 				{{if .UserCan "outbox-add" -}}
 					<div hx-target="this" hx-swap="outerHTML">

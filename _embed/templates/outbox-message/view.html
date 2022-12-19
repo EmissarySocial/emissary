@@ -1,7 +1,8 @@
 <div class="page h-item">
 
 	<div class="float-right">
-		<button hx-get="/{{.StreamID}}/edit" class="text-sm">Edit Post</button>
+		<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-sm">Edit</button>
+		<button hx-get="/{{.StreamID}}/delete" hx-push-url="false" class="text-sm">Delete</button>
 	</div>
 
 	<div style="max-width:600px;"> 
