@@ -12,6 +12,8 @@ func (service Icons) Get(name string) string {
 	// App Actions and Behaviors
 	case "add":
 		return service.get("plus")
+	case "book":
+		return service.get("book")
 	case "cancel":
 		return service.get("x-lg")
 	case "check-circle":
