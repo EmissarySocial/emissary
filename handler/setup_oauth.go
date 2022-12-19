@@ -82,7 +82,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 
 		// Apply the POST data into the connection
 		editForm := setupOAuthForm("")
-		editForm.Do(data, &connection)
+		editForm.SetAll(&connection, data, nil)
 
 		// Save/Delete the connection
 		if !connection.IsEmpty() {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/maps"
 )
 
 // StepForm represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -48,7 +49,6 @@ func (step StepForm) Post(renderer Renderer) error {
 	const location = "render.StepForm.Post"
 
 	request := renderer.context().Request()
-	schema := renderer.schema()
 
 	// Parse form information
 	if err := request.ParseForm(); err != nil {
@@ -56,17 +56,10 @@ func (step StepForm) Post(renderer Renderer) error {
 	}
 
 	object := renderer.object()
+	form := form.New(renderer.schema(), step.Form)
 
-	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validates inputs before setting.
-	for _, element := range step.Form.AllElements() {
-		value := request.Form[element.Path]
-		if err := schema.Set(object, element.Path, value); err != nil {
-			return derp.Wrap(err, location, "Error setting path value", element, value)
-		}
-	}
-
-	if err := schema.Validate(object); err != nil {
-		return derp.Wrap(err, location, "Object data is invalid")
+	if err := form.SetAll(object, maps.FromURLValues(request.Form), renderer.factory().LookupProvider()); err != nil {
+		return derp.Wrap(err, location, "Error setting form values")
 	}
 
 	return nil

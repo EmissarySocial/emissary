@@ -5,39 +5,39 @@ import (
 )
 
 type LookupProvider struct {
-	Group *Group
-	User  *User
+	groupService *Group
 }
 
-func NewLookupProvider(group *Group, user *User) LookupProvider {
+func NewLookupProvider(groupService *Group) LookupProvider {
 	return LookupProvider{
-		Group: group,
-		User:  user,
+		groupService: groupService,
 	}
 }
 
-func (service LookupProvider) LookupCodes(path string) []form.LookupCode {
+func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
 	case "sharing":
-		return []form.LookupCode{
-			{Value: "anonymous", Label: "Everyone (including anonymous visitors)"},
-			{Value: "authenticated", Label: "Authenticated People Only"},
-			{Value: "private", Label: "Only Selected Groups"},
-		}
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "anonymous", Label: "Everyone (including anonymous visitors)"},
+			form.LookupCode{Value: "authenticated", Label: "Authenticated People Only"},
+			form.LookupCode{Value: "private", Label: "Only Selected Groups"},
+		)
 
 	case "purgeDurations":
-		return []form.LookupCode{
-			{Label: "1 Day", Value: "1"},
-			{Label: "1 Week", Value: "7"},
-			{Label: "1 Month", Value: "31"},
-			{Label: "1 Year", Value: "365"},
-			{Label: "Forever", Value: "0"},
-		}
-	case "groups":
-		return service.Group.ListAsOptions()
-	}
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "1 Day", Value: "1"},
+			form.LookupCode{Label: "1 Week", Value: "7"},
+			form.LookupCode{Label: "1 Month", Value: "31"},
+			form.LookupCode{Label: "1 Year", Value: "365"},
+			form.LookupCode{Label: "Forever", Value: "0"},
+		)
 
-	return []form.LookupCode{}
+	case "groups":
+		return NewGroupLookupProvider(service.groupService)
+
+	default:
+		return form.NewReadOnlyLookupGroup()
+	}
 }

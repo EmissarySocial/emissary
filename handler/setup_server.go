@@ -129,7 +129,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		form := form.New(schema, element)
 
 		// Apply the changes to the configuration
-		if err := form.Do(data, &config); err != nil {
+		if err := form.SetAll(&config, data, nil); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverPost", "Error saving form data", data))
 		}
 

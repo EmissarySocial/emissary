@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -162,7 +163,7 @@ func (service *Folder) Schema() schema.Schema {
  *******************************************/
 
 func (service *Folder) QueryByUserID(userID primitive.ObjectID) ([]model.Folder, error) {
-	return service.Query(exp.Equal("userId", userID), option.SortAsc("rank"))
+	return service.Query(exp.Equal("userId", userID), option.SortAsc("label"))
 }
 
 // LoadByToken locates a single stream that matches the provided token
@@ -189,4 +190,12 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
 		AndEqual("origin.url", originURL)
 
 	return service.Load(criteria, result)
+}
+
+/*******************************************
+ * Misc Actions
+ *******************************************/
+
+func (service *Folder) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
+	return NewFolderLookupProvider(service, userID)
 }

@@ -81,7 +81,7 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	form := manualProvider.ManualConfig()
 
 	// Apply the form data to the domain object
-	if err := form.Do(postData, &client); err != nil {
+	if err := form.SetAll(&client, postData, nil); err != nil {
 		return derp.Wrap(err, location, "Error updating domain object form")
 	}
 

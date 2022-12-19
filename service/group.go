@@ -44,6 +44,12 @@ func (service *Group) Close() {
  * Common Data Methods
  *******************************************/
 
+func (service *Group) Query(criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
+	result := make([]model.Group, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
 // List returns an iterator containing all of the Groups who match the provided criteria
 func (service *Group) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)

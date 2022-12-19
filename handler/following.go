@@ -3,12 +3,12 @@ package handler
 import (
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -35,8 +35,7 @@ func GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Create a new form
 		folderService := factory.Folder()
-		folders := following_folderOptions(folderService, userID)
-		form := following_getForm(folders)
+		form := following_getForm()
 
 		if followingID == "new" {
 			form.Element.Label = "Follow a Person or Website"
@@ -44,7 +43,7 @@ func GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 			form.Element.Label = "Edit Follow Settings"
 		}
 
-		html, err := form.Editor(following, nil)
+		html, err := form.Editor(following, folderService.LookupProvider(userID))
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating form editor", nil)
@@ -89,6 +88,22 @@ func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
 		if folderID, err := primitive.ObjectIDFromHex(transaction.FolderID); err == nil {
 			following.FolderID = folderID
+
+		} else if strings.HasPrefix(transaction.FolderID, "::NEWVALUE::") {
+			transaction.FolderID = strings.TrimPrefix(transaction.FolderID, "::NEWVALUE::")
+			lookupProvider := factory.Folder().LookupProvider(userID)
+
+			if writableGroup, ok := lookupProvider.Group("form").(form.WritableLookupGroup); ok {
+
+				if newFolderID, err := writableGroup.Add(transaction.FolderID); err != nil {
+					return derp.Wrap(err, location, "Error creating new folder", transaction.FolderID)
+				} else if parsedFolderID, err := primitive.ObjectIDFromHex(newFolderID); err != nil {
+					return derp.Wrap(err, location, "Error parsing new folder ID", newFolderID)
+				} else {
+					following.FolderID = parsedFolderID
+				}
+			}
+
 		} else {
 			following.FolderID = primitive.NilObjectID
 		}
@@ -195,7 +210,7 @@ func following_common(serverFactory *server.Factory, ctx echo.Context) (*domain.
 }
 
 // following_getForm returns a form for adding/editing following
-func following_getForm(folders []form.LookupCode) form.Form {
+func following_getForm() form.Form {
 
 	return form.Form{
 		Schema: schema.New(model.FollowingSchema()),
@@ -217,7 +232,7 @@ func following_getForm(folders []form.LookupCode) form.Form {
 							Label: "Folder",
 							Path:  "folderId",
 							Options: maps.Map{
-								"enum": folders,
+								"provider": "folders",
 							},
 							Description: "Automatically add items to this folder.",
 						},
@@ -282,18 +297,4 @@ func following_getForm(folders []form.LookupCode) form.Form {
 			},
 		},
 	}
-}
-
-// following_folderOptions returns an array of form.LookupCodes that represents all of the folders
-// that belong to the currently logged in user.
-func following_folderOptions(folderService *service.Folder, authenticatedID primitive.ObjectID) []form.LookupCode {
-
-	folders, _ := folderService.QueryByUserID(authenticatedID)
-	result := make([]form.LookupCode, len(folders))
-
-	for index, folder := range folders {
-		result[index] = folder.LookupCode()
-	}
-
-	return result
 }
