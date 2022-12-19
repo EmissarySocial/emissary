@@ -1,10 +1,8 @@
 package render
 
 import (
-	"fmt"
 	"io"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
 )
@@ -66,11 +64,12 @@ func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
 	const location = "render.StepPublish.sendWebMentions"
 
-	// RULE: Don't send mentions on items that require login
-	if !renderer.UserCan(model.MagicRoleAnonymous) {
-		fmt.Println("Skipping mentions because this content is protected by a password")
-		return nil
-	}
+	/*
+		// RULE: Don't send mentions on items that require login
+		if !renderer.UserCan(model.MagicRoleAnonymous) {
+			fmt.Println("Skipping mentions because this content is protected by a password")
+			return nil
+		}*/
 
 	// Get full HTML for this Stream
 	html, err := renderer.View("view")
