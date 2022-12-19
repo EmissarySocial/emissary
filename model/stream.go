@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -74,26 +73,6 @@ func StreamSchema() schema.Element {
 // ID returns the primary key of this object
 func (stream *Stream) ID() string {
 	return stream.StreamID.Hex()
-}
-
-func (stream *Stream) GetObjectID(name string) (primitive.ObjectID, error) {
-	return primitive.NilObjectID, derp.NewInternalError("model.Stream.GetObjectID", "Invalid property", name)
-}
-
-func (stream *Stream) GetString(name string) (string, error) {
-	return "", derp.NewInternalError("model.Stream.GetString", "Invalid property", name)
-}
-
-func (stream *Stream) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Stream.GetInt", "Invalid property", name)
-}
-
-func (stream *Stream) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.Stream.GetInt64", "Invalid property", name)
-}
-
-func (stream *Stream) GetBool(name string) (bool, error) {
-	return false, derp.NewInternalError("model.Stream.GetBool", "Invalid property", name)
 }
 
 /*******************************************

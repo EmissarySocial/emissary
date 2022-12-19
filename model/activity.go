@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -56,51 +55,6 @@ func ActivitySchema() schema.Element {
 
 func (activity *Activity) ID() string {
 	return activity.ActivityID.Hex()
-}
-
-/*******************************************
- * schema.DataObject Interface
- *******************************************/
-
-func (activity *Activity) GetObjectID(name string) (primitive.ObjectID, error) {
-	switch name {
-	case "activityId":
-		return activity.ActivityID, nil
-	case "ownerId":
-		return activity.OwnerID, nil
-	case "folderId":
-		return activity.FolderID, nil
-	default:
-		return primitive.NilObjectID, derp.NewInternalError("model.Activity.GetObjectID", "Invalid name", name)
-	}
-}
-
-func (activity *Activity) GetString(name string) (string, error) {
-	switch name {
-	case "originalJson":
-		return activity.OriginalJSON, nil
-	default:
-		return "", derp.NewInternalError("model.Activity.GetString", "Invalid name", name)
-	}
-}
-
-func (activity *Activity) GetBool(name string) (bool, error) {
-	return false, derp.NewInternalError("model.Activity.GetInt", "Invalid name", name)
-}
-
-func (activity *Activity) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Activity.GetInt", "Invalid name", name)
-}
-
-func (activity *Activity) GetInt64(name string) (int64, error) {
-	switch name {
-	case "publishDate":
-		return activity.PublishDate, nil
-	case "readDate":
-		return activity.ReadDate, nil
-	default:
-		return 0, derp.NewInternalError("model.Activity.GetInt64", "Invalid name", name)
-	}
 }
 
 /*******************************************

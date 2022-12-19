@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -66,46 +65,4 @@ func BlockSchema() schema.Element {
 
 func (block Block) ID() string {
 	return block.BlockID.Hex()
-}
-
-func (block *Block) GetObjectID(name string) (primitive.ObjectID, error) {
-	switch name {
-	case "blockId":
-		return block.BlockID, nil
-	case "userId":
-		return block.UserID, nil
-	}
-	return primitive.NilObjectID, derp.NewInternalError("model.Block.GetObjectID", "Invalid property", name)
-}
-
-func (block *Block) GetString(name string) (string, error) {
-	switch name {
-	case "source":
-		return block.Source, nil
-	case "type":
-		return block.Type, nil
-	case "trigger":
-		return block.Trigger, nil
-	case "comment":
-		return block.Comment, nil
-	}
-	return "", derp.NewInternalError("model.Block.GetString", "Invalid property", name)
-}
-
-func (block *Block) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Block.GetInt", "Invalid property", name)
-}
-
-func (block *Block) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.Block.GetInt64", "Invalid property", name)
-}
-
-func (block *Block) GetBool(name string) (bool, error) {
-	switch name {
-	case "isPublic":
-		return block.IsPublic, nil
-	case "isActive":
-		return block.IsActive, nil
-	}
-	return false, derp.NewInternalError("model.Block.GetBool", "Invalid property", name)
 }

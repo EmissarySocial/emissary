@@ -70,26 +70,6 @@ func (user *User) ID() string {
 	return user.UserID.Hex()
 }
 
-func (user *User) GetObjectID(name string) (primitive.ObjectID, error) {
-	return primitive.NilObjectID, derp.NewInternalError("model.User.GetObjectID", "Invalid property", name)
-}
-
-func (user *User) GetString(name string) (string, error) {
-	return "", derp.NewInternalError("model.User.GetString", "Invalid property", name)
-}
-
-func (user *User) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.User.GetInt", "Invalid property", name)
-}
-
-func (user *User) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.User.GetInt64", "Invalid property", name)
-}
-
-func (user *User) GetBool(name string) (bool, error) {
-	return false, derp.NewInternalError("model.User.GetBool", "Invalid property", name)
-}
-
 /*******************************************
  * Conversion Methods
  *******************************************/

@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -53,47 +52,4 @@ func MentionSchema() schema.Element {
 
 func (mention Mention) ID() string {
 	return mention.MentionID.Hex()
-}
-
-func (mention *Mention) GetObjectID(name string) (primitive.ObjectID, error) {
-
-	switch name {
-	case "mentionId":
-		return mention.MentionID, nil
-	case "streamId":
-		return mention.StreamID, nil
-	}
-	return primitive.NilObjectID, derp.NewInternalError("model.Mention.GetObjectID", "Invalid property", name)
-}
-
-func (mention *Mention) GetString(name string) (string, error) {
-	switch name {
-	case "originUrl":
-		return mention.OriginURL, nil
-	case "authorName":
-		return mention.AuthorName, nil
-	case "authorEmail":
-		return mention.AuthorEmail, nil
-	case "authorWebsiteUrl":
-		return mention.AuthorWebsiteURL, nil
-	case "authorPhotoUrl":
-		return mention.AuthorPhotoURL, nil
-	case "authorStatus":
-		return mention.AuthorStatus, nil
-	case "entryName":
-		return mention.EntryName, nil
-	case "entrySummary":
-		return mention.EntrySummary, nil
-	case "entryPhotoUrl":
-		return mention.EntryPhotoURL, nil
-	}
-	return "", derp.NewInternalError("model.Mention.GetString", "Invalid property", name)
-}
-
-func (mention *Mention) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Mention.GetInt", "Invalid property", name)
-}
-
-func (mention *Mention) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.Mention.GetInt64", "Invalid property", name)
 }

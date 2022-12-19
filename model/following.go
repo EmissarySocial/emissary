@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -97,26 +96,6 @@ func FollowingSchema() schema.Element {
 // ID returns the primary key of this object
 func (following *Following) ID() string {
 	return following.FollowingID.Hex()
-}
-
-func (following *Following) GetObjectID(name string) (primitive.ObjectID, error) {
-	return primitive.NilObjectID, derp.NewInternalError("model.Following.GetObjectID", "Invalid property", name)
-}
-
-func (following *Following) GetString(name string) (string, error) {
-	return "", derp.NewInternalError("model.Following.GetString", "Invalid property", name)
-}
-
-func (following *Following) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Following.GetInt", "Invalid property", name)
-}
-
-func (following *Following) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.Following.GetInt64", "Invalid property", name)
-}
-
-func (following *Following) GetBool(name string) (bool, error) {
-	return false, derp.NewInternalError("model.Following.GetBool", "Invalid property", name)
 }
 
 /*******************************************
