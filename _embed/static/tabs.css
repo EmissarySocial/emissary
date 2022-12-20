@@ -90,5 +90,7 @@
     border-radius:0px;
     background-color:rgba(0,0,0,0);
     color:var(--gray100);
+    padding:8px;
+    margin:0px 8px;
     font-weight:500;
 }
