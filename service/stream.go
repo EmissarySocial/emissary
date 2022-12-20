@@ -253,7 +253,7 @@ func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *Stream) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, criteria, options...)
+	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
 func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

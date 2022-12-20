@@ -216,7 +216,7 @@ func (service *Following) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *Following) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, criteria, options...)
+	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
 func (service *Following) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

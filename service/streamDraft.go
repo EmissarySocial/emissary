@@ -131,7 +131,7 @@ func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *StreamDraft) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, criteria, options...)
+	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
 func (service *StreamDraft) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

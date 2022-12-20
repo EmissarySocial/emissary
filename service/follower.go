@@ -47,6 +47,12 @@ func (service *Follower) Close() {
  * Common Data Methods
  *******************************************/
 
+func (service *Follower) Query(criteria exp.Expression, options ...option.Option) ([]model.Follower, error) {
+	result := make([]model.Follower, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
 // List returns an iterator containing all of the Followers who match the provided criteria
 func (service *Follower) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
@@ -119,7 +125,7 @@ func (service *Follower) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *Follower) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, criteria, options...)
+	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
 func (service *Follower) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

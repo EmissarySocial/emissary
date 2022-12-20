@@ -149,7 +149,7 @@ func (service *Domain) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *Domain) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, criteria, options...)
+	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
 func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
