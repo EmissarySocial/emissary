@@ -43,6 +43,7 @@
 		"followers": {"step":"view-html", "file":"profile-followers"},
 		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
 		"following": {"step":"view-html", "file":"profile-following"},
+		"blocks": {"step":"view-html", "file":"profile-blocks"},
 		"rss": {"step":"view-rss", "format":"rss"},
 		"atom": {"step":"view-rss", "format":"atom"},
 		"json": {"step":"view-rss", "format":"json"},

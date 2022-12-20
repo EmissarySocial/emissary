@@ -21,6 +21,7 @@
 					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
 					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
 					<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
+					<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
 				</div>
 
 				<br>
@@ -32,13 +33,12 @@
 								{{icon .StatusIcon}} 
 							</td>
 							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">
-								{{ if eq "" .Label }} 
-									{{- .URL -}}
-								{{ else }}
+								{{ if ne "" .Label }} 
 									{{- .Label -}}
+								{{ else }}
+									{{- .URL -}}
 								{{ end }}
 							</td>
-							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">{{.Status}}</td>
 							<td class="align-right">
 								<button hx-get="/@me/pub/following/{{.FollowingID.Hex}}/delete" class="text-red">Delete</button>
 							</td>

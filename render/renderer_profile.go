@@ -172,6 +172,10 @@ func (w Profile) FollowingCount() int {
 	return w.user.FollowingCount
 }
 
+func (w Profile) BlockCount() int {
+	return w.user.BlockCount
+}
+
 func (w Profile) FolderID() string {
 	return w.context().QueryParam("folderId")
 }

@@ -1,6 +1,6 @@
 <div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this" hx-swap="outerHTML">
 
-	<title>{{.FollowerCount}} Followers | {{.DisplayName}}</title>
+	<title>{{.BlockCount}} Blocks | {{.DisplayName}}</title>
 
 	<div class="page h-card">
 
@@ -12,14 +12,13 @@
 	
 				<div role="tablist" class="underlined" hx-push-url="true">
 					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
-					<span role="tab" aria-selected="true">{{icon "person-fill"}} Followers</span>
+					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
 					<span role="tab" hx-get="/@{{.UserID}}/following">{{icon "star"}} Following</span>
-					<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
+					<span role="tab" aria-selected="true">{{icon "block-fill"}} Blocks</span>
 				</div>
 				<br>
-
-				{{ .View "followers-list"}}
-						
+					
+				Blocks will be listed here...
 			</div>
 		</div>
 	</div>

@@ -1,24 +1,33 @@
 {{- $canEdit := .UserCan "edit-profile" -}}
+{{- $followers := .Followers.Slice -}}
 
-<table class="table">
+{{- if eq 0 (len $followers) -}}
 
-	{{ range .Followers.Slice }}
-		<tr role="button">
-			<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
-				{{icon "rss"}} 
-			</td>
-			<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
-				{{ if ne "" .Actor.Name }} 
-					{{- .Actor.Name -}}
-				{{- else -}}
-					{{- .Actor.ProfileURL -}}
-				{{- end -}}
-			</td>
-			<td class="align-right">
-				{{- if $canEdit -}}
-					<button hx-get="/@me/pub/followers/{{.FollowerID.Hex}}/delete" class="text-red">Delete</button>
-				{{- end -}}
-			</td>
-		</tr>
-	{{ end }}
-</table>
+	No followers.
+
+{{- else -}}
+
+	<table class="table">
+
+		{{ range $followers }}
+			<tr role="button">
+				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
+					{{icon "rss"}} 
+				</td>
+				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
+					{{ if ne "" .Actor.Name }} 
+						{{- .Actor.Name -}}
+					{{- else -}}
+						{{- .Actor.ProfileURL -}}
+					{{- end -}}
+				</td>
+				<td class="align-right">
+					{{- if $canEdit -}}
+						<button hx-get="/@me/pub/followers/{{.FollowerID.Hex}}/delete" class="text-red">Delete</button>
+					{{- end -}}
+				</td>
+			</tr>
+		{{ end }}
+	</table>
+
+{{- end -}}
