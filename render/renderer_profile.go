@@ -341,10 +341,11 @@ func (w Profile) Followers() *SliceBuilder[model.FollowerSummary] {
 
 	criteria := exp.And(
 		queryBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
 	result := NewSliceBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+
 	return &result
 }
 

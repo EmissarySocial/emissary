@@ -128,20 +128,30 @@ func (service Icons) Get(name string) string {
 		return service.get("twitter")
 	case "rss":
 		return service.get("rss")
+	case "rss-fill":
+		return service.get("rss-fill")
+	case "rss-cloud":
+		return service.get("cloud-arrow-down")
+	case "rss-cloud-fill":
+		return service.get("cloud-arrow-down-fill")
 	case "stripe":
 		return service.get("credit-card")
 	case "stripe-fill":
 		return service.get("credit-card-fill")
 	case "websub":
-		return service.get("clouds")
+		return service.get("cloud-arrow-down")
 	case "websub-fill":
-		return service.get("clouds-fill")
+		return service.get("cloud-arrow-down-fill")
 
 	// Content Types
 	case "article":
 		return service.get("file-text")
 	case "article-fill":
 		return service.get("file-text-fill")
+	case "block":
+		return service.get("slash-circle")
+	case "block-fill":
+		return service.get("slash-circle-fill")
 	case "forward":
 		return service.get("forward")
 	case "forward-fill":

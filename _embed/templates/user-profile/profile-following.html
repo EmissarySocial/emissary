@@ -28,8 +28,8 @@
 				<table class="table">
 					{{ range $following }}
 						<tr role="button">
-							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">
-								{{icon "rss"}} 
+							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}" class="{{.StatusClass}}">
+								{{icon .StatusIcon}} 
 							</td>
 							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">
 								{{ if eq "" .Label }} 
