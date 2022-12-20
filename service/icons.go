@@ -14,6 +14,8 @@ func (service Icons) Get(name string) string {
 		return service.get("plus")
 	case "book":
 		return service.get("book")
+	case "book-fill":
+		return service.get("book-fill")
 	case "cancel":
 		return service.get("x-lg")
 	case "check-circle":
@@ -70,6 +72,10 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "person":
+		return service.get("person")
+	case "person-fill":
+		return service.get("person-fill")
 	case "save":
 		return service.get("check-lg")
 	case "search":
@@ -86,6 +92,10 @@ func (service Icons) Get(name string) string {
 		return service.get("share")
 	case "share-fill":
 		return service.get("share-fill")
+	case "star":
+		return service.get("star")
+	case "star-fill":
+		return service.get("star-fill")
 	case "reply":
 		return service.get("reply")
 	case "reply-fill":
@@ -127,7 +137,7 @@ func (service Icons) Get(name string) string {
 	case "websub-fill":
 		return service.get("clouds-fill")
 
-		// Content Types
+	// Content Types
 	case "article":
 		return service.get("file-text")
 	case "article-fill":
@@ -148,6 +158,10 @@ func (service Icons) Get(name string) string {
 		return service.get("chat-left-text")
 	case "message-fill":
 		return service.get("chat-left-text-fill")
+	case "outbox":
+		return service.get("envelope")
+	case "outbox-fill":
+		return service.get("envelope-fill")
 	case "picture":
 		return service.get("image")
 	case "picture-fill":

@@ -10,10 +10,10 @@
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4">
 	
-				<div class="space-below" hx-push-url="true">
-					<span hx-get="/@{{.UserID}}" class="clickable">{{icon "book"}} Posts</span> &nbsp;
-					<b>{{icon "person"}} Followers</b> &nbsp;
-					<span hx-get="/@{{.UserID}}/following" class="clickable">{{icon "star"}} Following</a>
+				<div role="tablist" class="underlined" hx-push-url="true">
+					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
+					<span role="tab" aria-selected="true">{{icon "person-fill"}} Followers</span>
+					<span role="tab" hx-get="/@{{.UserID}}/following">{{icon "star"}} Following</span>
 				</div>
 				<br>
 
