@@ -7,7 +7,6 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/maps"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -23,7 +22,7 @@ func CountRecords(ctx context.Context, collection data.Collection, criteria exp.
 		bson.M{"$count": "count"},
 	}
 
-	result := []CountRecordsResult{}
+	result := make([]CountRecordsResult, 0)
 
 	// Try to execute the query as a mongodb pipeline
 	if err := pipeline(ctx, collection, &result, query); err != nil {
@@ -39,15 +38,7 @@ func CountRecords(ctx context.Context, collection data.Collection, criteria exp.
 	return result[0].Count, nil
 }
 
-func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Expression, update maps.Map) error {
-
-	mongo := mongoCollection(collection)
-
-	_, err := mongo.UpdateMany(
-		ctx,
-		mongodb.ExpressionToBSON(criteria),
-		bson.M{"$set": update},
-	)
-
+func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Expression, update bson.M) error {
+	_, err := mongoCollection(collection).UpdateMany(ctx, mongodb.ExpressionToBSON(criteria), update)
 	return err
 }

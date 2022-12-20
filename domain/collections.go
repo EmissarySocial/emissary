@@ -3,6 +3,9 @@ package domain
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
+// CollectionBlock is the database collection where Block records are stored
+const CollectionBlock = "Block"
+
 // CollectionEncryptionKey is the database collection where EncryptionKey records are stored
 const CollectionEncryptionKey = "EncryptionKey"
 

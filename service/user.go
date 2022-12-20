@@ -21,20 +21,23 @@ import (
 // User manages all interactions with the User collection
 type User struct {
 	collection    data.Collection
+	followers     data.Collection
+	following     data.Collection
+	blocks        data.Collection
 	streamService *Stream
 	emailService  *DomainEmail
 	host          string
 }
 
 // NewUser returns a fully populated User service
-func NewUser(collection data.Collection, streamService *Stream, emailService *DomainEmail, host string) User {
+func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, emailService *DomainEmail, host string) User {
 	service := User{
 		streamService: streamService,
 		emailService:  emailService,
 		host:          host,
 	}
 
-	service.Refresh(collection)
+	service.Refresh(userCollection, followerCollection, followingCollection, blockCollection)
 
 	return service
 }
@@ -44,8 +47,11 @@ func NewUser(collection data.Collection, streamService *Stream, emailService *Do
  *******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(collection data.Collection) {
-	service.collection = collection
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection) {
+	service.collection = userCollection
+	service.followers = followerCollection
+	service.following = followingCollection
+	service.blocks = blockCollection
 }
 
 // Close stops any background processes controlled by this service
@@ -259,17 +265,17 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
  *******************************************/
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowersCount(context.TODO(), service.collection, userID)
+	err := queries.SetFollowersCount(service.collection, service.followers, userID)
 	return derp.Report(derp.Wrap(err, "service.User", "Error setting follower count", userID))
 }
 
 func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowingCount(context.TODO(), service.collection, userID)
+	err := queries.SetFollowingCount(service.collection, service.following, userID)
 	return derp.Report(derp.Wrap(err, "service.User", "Error setting following count", userID))
 }
 
 func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
-	err := queries.SetBlockCount(context.TODO(), service.collection, userID)
+	err := queries.SetBlockCount(service.collection, service.blocks, userID)
 	return derp.Report(derp.Wrap(err, "service.User", "Error setting block count", userID))
 }
 

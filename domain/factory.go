@@ -122,6 +122,9 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the User Service
 	factory.userService = service.NewUser(
 		factory.collection(CollectionUser),
+		factory.collection(CollectionFollower),
+		factory.collection(CollectionFollowing),
+		factory.collection(CollectionBlock),
 		factory.Stream(),
 		factory.Email(),
 		factory.Host(),
@@ -217,7 +220,13 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.followerService.Refresh(factory.collection(CollectionFollower))
 		factory.followingService.Refresh(factory.collection(CollectionFollowing))
-		factory.userService.Refresh(factory.collection(CollectionUser))
+
+		factory.userService.Refresh(
+			factory.collection(CollectionUser),
+			factory.collection(CollectionFollower),
+			factory.collection(CollectionFollowing),
+			factory.collection(CollectionBlock),
+		)
 
 		// Watch for updates to streams
 		if session, ok := factory.Session.(*mongodb.Session); ok {
