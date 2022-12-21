@@ -2,9 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/form => ../../benpate/form
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.157
@@ -14,13 +11,13 @@ require (
 	github.com/benpate/digit v0.6.0
 	github.com/benpate/exp v0.6.0
 	github.com/benpate/exp-builder v0.5.0
-	github.com/benpate/form v0.13.0
+	github.com/benpate/form v0.13.1
 	github.com/benpate/html v0.15.0
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.8.0
+	github.com/benpate/mediaserver v0.8.1
 	github.com/benpate/remote v0.9.0
-	github.com/benpate/rosetta v0.7.0
-	github.com/benpate/steranko v0.12.0
+	github.com/benpate/rosetta v0.8.0
+	github.com/benpate/steranko v0.12.1
 	github.com/benpate/table v0.4.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
