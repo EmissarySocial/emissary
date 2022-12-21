@@ -38,7 +38,12 @@
 		}
 	},
 	"actions": {
-		"view": {"step":"view-html", "file":"profile"},
+		"view": {
+			"steps":[
+				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
+				{"step":"view-html", "file":"profile"}
+			]
+		},
 		"profile-sidebar": {"step":"view-html"},
 		"followers": {"step":"view-html", "file":"profile-followers"},
 		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
