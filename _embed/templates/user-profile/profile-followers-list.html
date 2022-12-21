@@ -1,4 +1,4 @@
-{{- $canEdit := .UserCan "edit-profile" -}}
+{{- $canBlock := .UserCan "block" -}}
 {{- $followers := .Followers.Slice -}}
 
 {{- if eq 0 (len $followers) -}}
@@ -12,18 +12,20 @@
 		{{ range $followers }}
 			<tr role="button">
 				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
-					{{icon "rss"}} 
+					{{icon .MethodIcon }} 
 				</td>
 				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
 					{{ if ne "" .Actor.Name }} 
 						{{- .Actor.Name -}}
-					{{- else -}}
+					{{- else if ne "" .Actor.ProfileURL -}}
 						{{- .Actor.ProfileURL -}}
+					{{- else -}}
+						{{- .Actor.InboxURL -}}
 					{{- end -}}
 				</td>
 				<td class="align-right">
-					{{- if $canEdit -}}
-						<button hx-get="/@me/pub/followers/{{.FollowerID.Hex}}/delete" class="text-red">Delete</button>
+					{{- if $canBlock -}}
+						<button hx-get="/@me/pub/followers/{{.FollowerID.Hex}}/delete" class="text-red">Block</button>
 					{{- end -}}
 				</td>
 			</tr>

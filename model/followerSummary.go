@@ -5,7 +5,7 @@ import (
 )
 
 type FollowerSummary struct {
-	FollowerID primitive.ObjectID `path:"followerId" json:"followerId" bson:"_id"`      // Unique identifier for this Follower
+	FollowerID primitive.ObjectID `path:"summaryId" json:"summaryId" bson:"_id"`        // Unique identifier for this Follower
 	ParentID   primitive.ObjectID `path:"parentId"   json:"parentId"   bson:"parentId"` // Unique identifier for the User that is being followed
 	Actor      PersonLink         `path:"actor"      json:"actor"      bson:"actor"`    // Person who is follower the User
 	Method     string             `path:"method"     json:"method"     bson:"method"`   // Method of follower (e.g. "RSS", "RSSCloud", "ActivityPub".)
@@ -16,6 +16,25 @@ func FollowerSummaryFields() []string {
 	return []string{"_id", "parentId", "actor", "method"}
 }
 
-func (followerSummary FollowerSummary) Fields() []string {
+func (summary FollowerSummary) Fields() []string {
 	return FollowerSummaryFields()
+}
+
+/*******************************************
+ * Other Methods
+ *******************************************/
+
+func (summary FollowerSummary) MethodIcon() string {
+	switch summary.Method {
+	case FollowMethodPoll:
+		return "rss-fill"
+	case FollowMethodWebSub:
+		return "websub-fill"
+	case FollowMethodRSSCloud:
+		return "rss-cloud-fill"
+	case FollowMethodActivityPub:
+		return "activitypub-fill"
+	}
+
+	return ""
 }
