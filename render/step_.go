@@ -87,6 +87,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetData:
 		return StepSetData(s)
 
+	case step.SetHeader:
+		return StepSetHeader(s)
+
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
 
