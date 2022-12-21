@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/path"
 )
 
@@ -23,5 +24,9 @@ func (step StepSetState) UseGlobalWrapper() bool {
 func (step StepSetState) Post(renderer Renderer) error {
 
 	// Try to set the state via the Path interface.
-	return path.Set(renderer.object(), "stateId", step.StateID)
+	if ok := path.SetString(renderer.object(), "stateId", step.StateID); !ok {
+		return derp.NewInternalError("Unable to set stateId", step.StateID)
+	}
+
+	return nil
 }
