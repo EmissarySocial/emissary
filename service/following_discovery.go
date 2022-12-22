@@ -51,14 +51,24 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 
 	// Scan the response headers for WebSub links
 	// TODO: LOW: Are RSS links ever put in the headers also?
-	for _, link := range linkheader.Parse(transaction.ResponseObject.Header.Get("Link")) {
+	linkHeaders := linkheader.ParseMultiple(transaction.ResponseObject.Header["Link"])
 
-		if link.Rel == model.LinkRelationHub {
+	for _, link := range linkHeaders {
+
+		switch link.Rel {
+		case model.LinkRelationHub:
 			result = append(result, digit.Link{
-				RelationType: model.LinkRelationHub,
 				MediaType:    model.MagicMimeTypeWebSub,
+				RelationType: link.Rel,
 				Href:         link.URL,
 			})
+
+		case model.LinkRelationSelf:
+			result = append(result, digit.Link{
+				RelationType: link.Rel,
+				Href:         link.URL,
+			})
+
 		}
 	}
 
@@ -87,7 +97,7 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 		return result
 	}
 
-	links := htmlDocument.Find("link[rel=alternate],link[rel=self],link[rel=hub]").Nodes
+	links := htmlDocument.Find("link[rel=alternate],link[rel=self],link[rel=hub],atom:link").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {
@@ -176,7 +186,7 @@ func getWebFingerURL(targetURL string) (url.URL, error) {
 func sortLinks(links []digit.Link) []digit.Link {
 
 	result := make([]digit.Link, 0, len(links))
-	mediaTypes := []string{model.MagicMimeTypeWebSub, model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML}
+	mediaTypes := []string{model.MagicMimeTypeWebSub, model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, ""}
 
 	for _, mediaType := range mediaTypes {
 		for _, link := range links {

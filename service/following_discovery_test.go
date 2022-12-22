@@ -5,6 +5,7 @@ package service
 import (
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -66,4 +67,19 @@ func TestHTMLLink_AppleInsider(t *testing.T) {
 	require.Equal(t, "alternate", links[0].RelationType)
 	require.Equal(t, "application/rss+xml", links[0].MediaType)
 	require.Equal(t, "https://appleinsider.com/appleinsider.rss", links[0].Href)
+}
+
+func TestWebSub_WebSubRocks(t *testing.T) {
+
+	links := discoverLinks("https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq")
+
+	require.Equal(t, 2, len(links))
+
+	require.Equal(t, "hub", links[0].RelationType)
+	require.Equal(t, model.MagicMimeTypeWebSub, links[0].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq/hub", links[0].Href)
+
+	require.Equal(t, "self", links[1].RelationType)
+	require.Equal(t, "", links[1].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq", links[1].Href)
 }
