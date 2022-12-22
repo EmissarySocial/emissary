@@ -145,6 +145,11 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// TODO: LOW: Validate the secret (HMAC how?)
 		// TODO: LOW: Fat Pings require HMAC
+		/*
+			if following.Secret != "" {
+				signature := ctx.Request().Header.Get("X-Hub-Signature")
+			}
+		*/
 
 		followingService.Poll(&following)
 
