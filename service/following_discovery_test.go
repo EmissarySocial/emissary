@@ -87,7 +87,7 @@ func TestWebSub_WebSubRocks_Header(t *testing.T) {
 
 func TestWebSub_WebSubRocks_Misc(t *testing.T) {
 
-	links := discoverLinks("https://websub.rocks/blog/200/o47oHxDvoEAGl2Nw0cUU")
+	links := discoverLinks("https://websub.rocks/blog/204/V3ISV7nK4tBgZ9Jf2TSi")
 
 	spew.Dump(links)
 

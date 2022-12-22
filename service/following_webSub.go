@@ -8,18 +8,22 @@ import (
 	"github.com/labstack/gommon/random"
 )
 
-func (service *Following) ConnectWebSub(following *model.Following, link digit.Link) error {
+func (service *Following) ConnectWebSub(following *model.Following, link digit.Link, topic string) error {
 
 	const location = "service.Following.ConnectWebSub"
 
 	var success string
 	var failure string
 
+	if topic == "" {
+		return derp.NewBadRequestError(location, "Missing topic URL", following, link, topic)
+	}
+
 	secret := random.String(32)
 
 	transaction := remote.Post(link.Href).
 		Form("hub.mode", "subscribe").
-		Form("hub.topic", following.URL).
+		Form("hub.topic", topic).
 		Form("hub.callback", service.websubCallbackURL(following)).
 		Form("hub.secret", secret).
 		Form("hub.lease_seconds", "2582000").
@@ -31,6 +35,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
+	following.URL = topic
 	following.PollDuration = 30
 	following.Secret = secret
 

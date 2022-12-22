@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/tomnomnom/linkheader"
 )
 
@@ -20,12 +21,12 @@ func discoverLinks(targetURL string) []digit.Link {
 
 	// Look for links embedded in the HTML
 	if result := discoverLinksFromHTML(targetURL); len(result) > 0 {
-		return sortLinks(result)
+		return result
 	}
 
 	// Fall back to WebFinger, just in case
 	if result := discoverLinksFromWebFinger(targetURL); len(result) > 0 {
-		return sortLinks(result)
+		return result
 	}
 
 	// Fall through, fail through
@@ -48,6 +49,8 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 		derp.Report(derp.Wrap(err, location, "Error loading URL", targetURL))
 		return result
 	}
+
+	spew.Dump(transaction.ResponseObject.Header)
 
 	// Scan the response headers for WebSub links
 	// TODO: LOW: Are RSS links ever put in the headers also?
@@ -181,20 +184,4 @@ func getWebFingerURL(targetURL string) (url.URL, error) {
 	// TODO: LOW: Look into Textcasting? http://textcasting.org
 
 	return result, derp.NewNotFoundError(location, "Error parsing following URL", targetURL)
-}
-
-func sortLinks(links []digit.Link) []digit.Link {
-
-	result := make([]digit.Link, 0, len(links))
-	mediaTypes := []string{model.MagicMimeTypeWebSub, model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, ""}
-
-	for _, mediaType := range mediaTypes {
-		for _, link := range links {
-			if link.MediaType == mediaType {
-				result = append(result, link)
-			}
-		}
-	}
-
-	return result
 }

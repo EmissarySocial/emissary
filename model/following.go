@@ -99,7 +99,7 @@ func (following *Following) ID() string {
 }
 
 /*******************************************
- * data.Object Interface
+ * Other Methods
  *******************************************/
 
 func (following *Following) Origin() OriginLink {
@@ -109,4 +109,13 @@ func (following *Following) Origin() OriginLink {
 		Type:       following.Method,
 		URL:        following.URL,
 	}
+}
+
+func (following *Following) GetLink(property string, value string) digit.Link {
+	for _, link := range following.Links {
+		if link.GetString(property) == value {
+			return link
+		}
+	}
+	return digit.Link{}
 }
