@@ -179,8 +179,8 @@ func getWebFingerURL(targetURL string) (url.URL, error) {
 		return result, nil
 	}
 
-	// TODO: HIGH: Try to parse as a Mastodon username @benpate@mastodon.social
-	// TODO: MEDIUM: Try to parse as an email address??
+	// TODO: HIGH: Try to parse as a Mastodon username @benpate@mastodon.social => https://mastodon.social/.well-known/webfinger?resource=acct:benpate
+	// TODO: MEDIUM: Try to parse as an email address ben@pate.org => https://pate.org/.well-known/webfinger?resource=acct:ben@pate.org
 	// TODO: LOW: Look into Textcasting? http://textcasting.org
 
 	return result, derp.NewNotFoundError(location, "Error parsing following URL", targetURL)
