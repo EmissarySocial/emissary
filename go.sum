@@ -71,8 +71,8 @@ github.com/benpate/data-mongo v0.22.1 h1:S8iJIcm82AJrsxHwpA2isgaV/FtesfoRxxCdKv4
 github.com/benpate/data-mongo v0.22.1/go.mod h1:nfXx8V3N29tplmlGS0ed4wtXEVpKUXWDi3Q45ShS0DM=
 github.com/benpate/derp v0.25.1 h1:1SqCDIdRIjN3SqAZLZteWlWJa7rtpeGwLKEtwFBP1lE=
 github.com/benpate/derp v0.25.1/go.mod h1:Qrtco2SAercNzKqb6WsaXvxn1E+/4DHBaWB+BwehJAo=
-github.com/benpate/digit v0.6.0 h1:/9Da2yQ6NgsN7DLshkhjhJ8JZZAaMkVpZsvgAV0w+uo=
-github.com/benpate/digit v0.6.0/go.mod h1:69iIcMaPSy1re1M4AIZFkDJrubxOGw6UhVzBJYWD118=
+github.com/benpate/digit v0.7.0 h1:bEd/rVc4sKR+p12vDBGXbP5huw0jGB4R5AaZSsnvOoE=
+github.com/benpate/digit v0.7.0/go.mod h1:69iIcMaPSy1re1M4AIZFkDJrubxOGw6UhVzBJYWD118=
 github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk=
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.6.0 h1:upJ6F8NNLTPPqMwxksn+PvGpWfUJOyDeolp9x0P9eKQ=
