@@ -84,7 +84,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		// RULE: Require that the Topic URL matches this Following
 		if following.URL != transaction.Topic {
 			fmt.Println("!! Invalid WebSub topic")
-			return derp.New(derp.CodeBadRequestError, location, "Invalid WebSub topic", following, transaction)
+			return derp.NewNotFoundError(location, "Invalid WebSub topic", following, transaction)
 		}
 
 		// RULE: Force another poll in half the time of this lease
