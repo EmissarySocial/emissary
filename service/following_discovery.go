@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/tomnomnom/linkheader"
 )
 
@@ -49,8 +48,6 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 		derp.Report(derp.Wrap(err, location, "Error loading URL", targetURL))
 		return result
 	}
-
-	spew.Dump(transaction.ResponseObject.Header)
 
 	// Scan the response headers for WebSub links
 	// TODO: LOW: Are RSS links ever put in the headers also?
@@ -100,7 +97,7 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 		return result
 	}
 
-	links := htmlDocument.Find("link[rel=alternate],link[rel=self],link[rel=hub],atom:link").Nodes
+	links := htmlDocument.Find("[rel=alternate],[rel=self],[rel=hub]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {

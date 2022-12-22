@@ -96,17 +96,15 @@ func TestWebSub_WebSubRocks_Misc(t *testing.T) {
 
 func TestWebSub_WebSubRocks_RSS(t *testing.T) {
 
-	links := discoverLinks("https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx")
-
-	spew.Dump(links)
+	links := discoverLinksFromHTML("https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx")
 
 	require.Equal(t, 2, len(links))
 
-	require.Equal(t, "hub", links[0].RelationType)
-	require.Equal(t, model.MagicMimeTypeWebSub, links[0].MediaType)
-	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx/hub", links[0].Href)
+	require.Equal(t, "alternate", links[0].RelationType)
+	require.Equal(t, model.MimeTypeRSS, links[0].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx", links[0].Href)
 
-	require.Equal(t, "self", links[1].RelationType)
-	require.Equal(t, "", links[1].MediaType)
-	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx", links[1].Href)
+	require.Equal(t, "hub", links[1].RelationType)
+	require.Equal(t, model.MagicMimeTypeWebSub, links[1].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx/hub", links[1].Href)
 }
