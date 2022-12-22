@@ -76,11 +76,10 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		fmt.Println("..following loaded successfully")
 
-		// RULE: Require that this Following uses WebSub
+		/* RULE: Require that this Following uses WebSub
 		if following.Method != model.FollowMethodWebSub {
-			fmt.Println("!! Not a WebSub follow")
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following, transaction)
-		}
+		}*/
 
 		// RULE: Require that the Topic URL matches this Following
 		if following.URL != transaction.Topic {
@@ -89,6 +88,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// RULE: Force another poll in half the time of this lease
+		following.Method = model.FollowMethodWebSub
 		following.PollDuration = int(transaction.Lease / 60 / 60 / 2) // poll again in half the lease duration
 
 		// Update the record status and save.

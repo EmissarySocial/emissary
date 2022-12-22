@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 
 	"github.com/benpate/rosetta/schema"
@@ -364,6 +365,11 @@ func (service *Following) FindUpdaters(following *model.Following) {
 	for _, link := range following.Links {
 
 		if link.RelationType == model.LinkRelationHub {
+
+			if self := service.getSelfLink(following.Links); self != "" {
+				following.URL = self // Update the following URL if a "self" link is provided (it should be)
+			}
+
 			if err := service.ConnectWebSub(following, link); err == nil {
 				return
 			}
@@ -375,6 +381,15 @@ func (service *Following) FindUpdaters(following *model.Following) {
 			}
 		}
 	}
+}
+
+func (service *Following) getSelfLink(links []digit.Link) string {
+	for _, link := range links {
+		if link.RelationType == model.LinkRelationSelf {
+			return link.Href
+		}
+	}
+	return ""
 }
 
 func (service *Following) Disconnect(following *model.Following) {
