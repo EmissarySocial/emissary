@@ -76,13 +76,13 @@ func TestWebSub_WebSubRocks_Header(t *testing.T) {
 
 	require.Equal(t, 2, len(links))
 
-	require.Equal(t, "hub", links[0].RelationType)
-	require.Equal(t, model.MagicMimeTypeWebSub, links[0].MediaType)
-	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq/hub", links[0].Href)
+	require.Equal(t, "self", links[0].RelationType)
+	require.Equal(t, "", links[0].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq", links[0].Href)
 
-	require.Equal(t, "self", links[1].RelationType)
-	require.Equal(t, "", links[1].MediaType)
-	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq", links[1].Href)
+	require.Equal(t, "hub", links[1].RelationType)
+	require.Equal(t, model.MagicMimeTypeWebSub, links[1].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq/hub", links[1].Href)
 }
 
 func TestWebSub_WebSubRocks_Misc(t *testing.T) {
