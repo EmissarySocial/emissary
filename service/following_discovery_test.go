@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,7 +70,7 @@ func TestHTMLLink_AppleInsider(t *testing.T) {
 	require.Equal(t, "https://appleinsider.com/appleinsider.rss", links[0].Href)
 }
 
-func TestWebSub_WebSubRocks(t *testing.T) {
+func TestWebSub_WebSubRocks_Header(t *testing.T) {
 
 	links := discoverLinks("https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq")
 
@@ -82,4 +83,30 @@ func TestWebSub_WebSubRocks(t *testing.T) {
 	require.Equal(t, "self", links[1].RelationType)
 	require.Equal(t, "", links[1].MediaType)
 	require.Equal(t, "https://websub.rocks/blog/100/z6OK77IFLM2fWS5mJiKq", links[1].Href)
+}
+
+func TestWebSub_WebSubRocks_Misc(t *testing.T) {
+
+	links := discoverLinks("https://websub.rocks/blog/200/o47oHxDvoEAGl2Nw0cUU")
+
+	spew.Dump(links)
+
+	require.Equal(t, 2, len(links))
+}
+
+func TestWebSub_WebSubRocks_RSS(t *testing.T) {
+
+	links := discoverLinks("https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx")
+
+	spew.Dump(links)
+
+	require.Equal(t, 2, len(links))
+
+	require.Equal(t, "hub", links[0].RelationType)
+	require.Equal(t, model.MagicMimeTypeWebSub, links[0].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx/hub", links[0].Href)
+
+	require.Equal(t, "self", links[1].RelationType)
+	require.Equal(t, "", links[1].MediaType)
+	require.Equal(t, "https://websub.rocks/blog/103/jHUNH8w2MbV1CjuwQ5Nx", links[1].Href)
 }
