@@ -50,5 +50,9 @@ func (step StepWebSub) Post(renderer Renderer) error {
 		request.LeaseSeconds,
 	))
 
+	// Set Status Code 202 (Accepted) to conform to WebSub spec
+	// https://www.w3.org/TR/websub/#subscription-response-details
+	renderer.context().Response().WriteHeader(202)
+
 	return nil
 }
