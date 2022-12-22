@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
@@ -83,11 +84,7 @@ func (w Common) Host() string {
 
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
-	if w._context.Request().TLS == nil {
-		return "http://"
-	}
-
-	return "https://"
+	return domain.Protocol(w.Hostname())
 }
 
 // Hostname returns the configured hostname for this request
