@@ -72,14 +72,16 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following, transaction)
 		}*/
 
+		// RULE: Update the Topic URL if it is not already set
+		if self := following.GetLink("rel", "self"); !self.IsEmpty() {
+			if transaction.Topic == self.Href {
+				following.URL = self.Href
+			}
+		}
+
 		// RULE: Require that the Topic URL matches this Following
 		if transaction.Topic != following.URL {
-
-			if self := following.GetLink("rel", "self"); !self.IsEmpty() {
-				following.URL = self.Href
-			} else {
-				return derp.NewNotFoundError(location, "Invalid WebSub topic", following, transaction)
-			}
+			return derp.NewNotFoundError(location, "Invalid WebSub topic", following, transaction)
 		}
 
 		// RULE: Force another poll in half the time of this lease

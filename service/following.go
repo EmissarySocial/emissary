@@ -324,11 +324,11 @@ func (service *Following) Connect(following model.Following) error {
 	// Try to get all the links we can.  If this fails, it'll be caught below.
 	following.Links = discoverLinks(following.URL)
 
-	// LOAD CONTENT (JSONFeed, Atom, RSS)
-	service.Poll(&following)
-
 	// SEARCH FOR UPDATERS (WebSub, ActivityPub)
 	service.FindUpdaters(&following)
+
+	// LOAD CONTENT (JSONFeed, Atom, RSS)
+	service.Poll(&following)
 
 	return nil
 }
@@ -363,10 +363,9 @@ func (service *Following) FindUpdaters(following *model.Following) {
 
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
 		if self := following.GetLink("rel", model.LinkRelationSelf); !self.IsEmpty() {
-			if err := service.ConnectWebSub(following, hub, self.Href); err != nil {
-				derp.Report(err)
+			if err := service.ConnectWebSub(following, hub, self.Href); err == nil {
+				return
 			}
-			return
 		}
 	}
 
@@ -435,7 +434,7 @@ func (service *Following) SetStatus(following *model.Following, status string, s
 	}
 
 	// Try to save the Following to the database
-	if err := service.collection.Save(following, "Updating status to loading"); err != nil {
+	if err := service.collection.Save(following, "Updating status"); err != nil {
 		return derp.Wrap(err, "service.Following", "Error updating following status", following)
 	}
 
