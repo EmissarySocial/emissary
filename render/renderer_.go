@@ -27,6 +27,7 @@ type Renderer interface {
 	Token() string                       // URL Token of the record being rendered
 	TopLevelID() string                  // ID of the Top-Level item to highlight in the navigation.
 	PageTitle() string                   // Human-friendly title to put at the top of the page.
+	Summary() string                     // Human-friendly summary to put at the top of the page (maybe)
 	Permalink() string                   // Permanent link to the stream being rendered
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page

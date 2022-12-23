@@ -30,6 +30,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20221211235915-8301a59f5e68
+	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.21
@@ -40,6 +41,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/tdewolff/minify v2.3.6+incompatible
+	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.13.0
 	github.com/yeqown/go-qrcode/v2 v2.2.1

@@ -95,15 +95,7 @@ func (w Profile) TopLevelID() string {
 }
 
 func (w Profile) PageTitle() string {
-
-	if w.ActionID() == "view" {
-		if w.template().TemplateID == "user-outbox" {
-			return "Profile"
-		}
-		return "Inbox"
-	}
-
-	return ""
+	return w.user.DisplayName
 }
 
 func (w Profile) Permalink() string {

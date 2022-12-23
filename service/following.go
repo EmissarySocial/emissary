@@ -324,11 +324,11 @@ func (service *Following) Connect(following model.Following) error {
 	// Try to get all the links we can.  If this fails, it'll be caught below.
 	following.Links = discoverLinks(following.URL)
 
-	// SEARCH FOR UPDATERS (WebSub, ActivityPub)
-	service.FindUpdaters(&following)
-
 	// LOAD CONTENT (JSONFeed, Atom, RSS)
 	service.Poll(&following)
+
+	// SEARCH FOR UPDATERS (WebSub, ActivityPub)
+	service.FindUpdaters(&following)
 
 	return nil
 }

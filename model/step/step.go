@@ -88,8 +88,8 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "edit-properties":
 		return NewEditProperties(stepInfo)
 
-	case "view-rss":
-		return NewViewRSS(stepInfo)
+	case "view-feed":
+		return NewViewFeed(stepInfo)
 
 	// SOCIAL / ACTIVITYPUB STEPS
 

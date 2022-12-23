@@ -74,7 +74,19 @@ func (w Common) BannerURL() string {
 }
 
 /*******************************************
- * REQUEST INFO
+ * Page Defaults
+ *******************************************/
+
+func (w Common) PageTitle() string {
+	return ""
+}
+
+func (w Common) Summary() string {
+	return ""
+}
+
+/*******************************************
+ * Request Info
  *******************************************/
 
 // Host returns the protocol + the Hostname

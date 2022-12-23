@@ -106,9 +106,7 @@
 				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		},
-		"rss": {"roles": ["viewer"], "step":"view-rss", "format":"rss"},
-		"atom": {"roles": ["viewer"], "step":"view-rss", "format":"atom"},
-		"json": {"roles": ["viewer"], "step":"view-rss", "format":"json"},
+		"feed": {"roles": ["viewer"], "step":"view-feed"},
 		"websub": {"roles": ["viewer"], "step":"websub"}
 	}
 }
