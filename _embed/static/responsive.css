@@ -44,13 +44,16 @@
 		width:100%;
 	}
 
+	.hide-xs,
 	.show-sm {
 		display:inherit;
 	}
 
-	.hide-sm {
+	.hide-sm,
+	.hide-md {
 		display:none;
 	}
+
 }
 
 @media screen and (min-width:768px) {
@@ -59,11 +62,13 @@
 		width:90%;
 	}
 
+	.hide-sm,
 	.show-md {
 		display:inherit;
 	}
 
-	.hide-md {
+	.hide-md,
+	.hide-lg {
 		display:none;
 	}
 }
@@ -74,11 +79,13 @@
 		width:85%;
 	}
 
+	.hide-md,
 	.show-lg {
 		display:inherit;
 	}
 
-	.hide-lg {
+	.hide-lg,
+	.hide-xl {
 		display:none;
 	}
 }
@@ -90,6 +97,7 @@
 		max-width:76em;
 	}
 
+	.hide-lg,
 	.show-xl {
 		display:inherit;
 	}
