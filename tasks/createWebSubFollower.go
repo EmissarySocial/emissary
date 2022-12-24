@@ -18,6 +18,7 @@ type CreateWebSubFollower struct {
 	locatorService  service.Locator
 	objectType      string
 	objectID        primitive.ObjectID
+	format          string // JSONFeed, RSS, Atom
 	mode            string
 	topic           string
 	callback        string
@@ -25,12 +26,13 @@ type CreateWebSubFollower struct {
 	leaseSeconds    int
 }
 
-func NewCreateWebSubFollower(followerService *service.Follower, locatorService service.Locator, objectType string, objectID primitive.ObjectID, mode string, topic string, callback string, secret string, leaseSeconds int) CreateWebSubFollower {
+func NewCreateWebSubFollower(followerService *service.Follower, locatorService service.Locator, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) CreateWebSubFollower {
 	return CreateWebSubFollower{
 		followerService: followerService,
 		locatorService:  locatorService,
 		objectType:      objectType,
 		objectID:        objectID,
+		format:          format,
 		mode:            mode,
 		topic:           topic,
 		callback:        callback,
@@ -72,6 +74,7 @@ func (task CreateWebSubFollower) subscribe() error {
 	follower.ParentID = task.objectID
 	follower.Type = task.objectType
 	follower.Method = model.FollowMethodWebSub
+	follower.Format = task.format
 	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
 	follower.Actor = model.PersonLink{
 		InboxURL: task.callback,

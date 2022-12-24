@@ -1,6 +1,15 @@
 package model
 
-import "github.com/benpate/rosetta/schema"
+import (
+	"github.com/benpate/rosetta/html"
+	"github.com/benpate/rosetta/schema"
+)
+
+const ContentFormatHTML = "html"
+
+const ContentFormatText = "text"
+
+const ContentFormatMarkdown = "markdown"
 
 type Content struct {
 	Format string `json:"format" bson:"format" path:"format"`
@@ -15,5 +24,21 @@ func ContentSchema() schema.Element {
 			"raw":    schema.String{Format: "unsafe-any"},
 			"html":   schema.String{Format: "html"},
 		},
+	}
+}
+
+func NewHTMLContent(value string) Content {
+	return Content{
+		Format: ContentFormatHTML,
+		Raw:    value,
+		HTML:   value,
+	}
+}
+
+func NewTextContent(value string) Content {
+	return Content{
+		Format: ContentFormatText,
+		Raw:    value,
+		HTML:   html.FromText(value),
 	}
 }

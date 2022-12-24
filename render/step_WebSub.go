@@ -3,8 +3,10 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
+	"github.com/timewasted/go-accept-headers"
 )
 
 // StepWebSub represents an action-step that can render a Stream into HTML
@@ -38,11 +40,18 @@ func (step StepWebSub) Post(renderer Renderer) error {
 	factory := renderer.factory()
 	queue := factory.Queue()
 
+	format, err := accept.Negotiate(renderer.context().Request().Header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS)
+
+	if err != nil {
+		format = model.MimeTypeJSONFeed
+	}
+
 	go queue.Run(tasks.NewCreateWebSubFollower(
 		factory.Follower(),
 		factory.Locator(),
 		renderer.objectType(),
 		renderer.objectID(),
+		format,
 		request.Mode,
 		request.Topic,
 		request.Callback,

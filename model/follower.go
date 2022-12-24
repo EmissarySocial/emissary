@@ -16,6 +16,7 @@ type Follower struct {
 	ParentID        primitive.ObjectID `path:"parentId"   json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
 	Type            string             `path:"type"       json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream")
 	Method          string             `path:"method"     json:"method"     bson:"method"`     // Method of following (e.g. "POLL", "WEBSUB", "RSS-CLOUD", "ACTIVITYPUB")
+	Format          string             `path:"format"     json:"format"     bson:"format"`     // Format of the data being followed (e.g. "JSON", "XML", "ATOM", "RSS")
 	Actor           PersonLink         `path:"actor"      json:"actor"      bson:"actor"`      // Person who is following the User
 	Data            maps.Map           `path:"data"       json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
 	ExpireDate      int64              `path:"expireDate" json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.

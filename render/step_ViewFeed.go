@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/convert"
+	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/gorilla/feeds"
@@ -46,27 +48,7 @@ func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) error {
 		Created:     time.Now(),
 	}
 
-	result.Items = []*feeds.Item{}
-
-	// Iterate through list of children and add to the RSS feed
-	stream := model.NewStream()
-
-	for children.Next(&stream) {
-		result.Items = append(result.Items, &feeds.Item{
-			Title:       stream.Document.Label,
-			Description: stream.Document.Summary,
-			Link: &feeds.Link{
-				Href: stream.Document.URL,
-			},
-			Author: &feeds.Author{
-				Name:  stream.Document.Author.Name,
-				Email: stream.Document.Author.EmailAddress,
-			},
-			Created: time.UnixMilli(stream.PublishDate),
-		})
-
-		stream = model.NewStream() // Reset the stream variable so we don't get collisions
-	}
+	result.Items = iterators.Map(children, model.NewStream, convert.StreamToGorillaFeed)
 
 	// Now write the feed into the requested format
 	{
@@ -138,7 +120,7 @@ func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, childre
 		Version:     "https://jsonfeed.org/version/1.1",
 		Title:       renderer.PageTitle(),
 		HomePageURL: renderer.Permalink(),
-		FeedURL:     "",
+		FeedURL:     renderer.Permalink() + "/feed?format=json",
 		Description: renderer.Summary(),
 		Hubs: []jsonfeed.Hub{
 			{
@@ -148,27 +130,7 @@ func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, childre
 		},
 	}
 
-	stream := model.NewStream()
-	for children.Next(&stream) {
-		feed.Items = append(feed.Items, jsonfeed.Item{
-			ID:            stream.Token,
-			URL:           stream.Document.URL,
-			Title:         stream.Document.Label,
-			ContentHTML:   stream.Content.HTML,
-			Summary:       stream.Document.Summary,
-			Image:         stream.Document.ImageURL,
-			DatePublished: time.UnixMilli(stream.PublishDate),
-			DateModified:  time.UnixMilli(stream.UpdateDate),
-			Author: &jsonfeed.Author{
-				Name:   stream.Document.Author.Name,
-				URL:    stream.Document.Author.ProfileURL,
-				Avatar: stream.Document.Author.ImageURL,
-			},
-			// TODO: Attachments for podcasts, etc.
-		})
-
-		stream = model.NewStream() // Reset the variable to prevent collisions
-	}
+	feed.Items = iterators.Map(children, model.NewStream, convert.StreamToJsonFeed)
 
 	context.Response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
 
