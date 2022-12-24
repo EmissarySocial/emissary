@@ -12,6 +12,7 @@
 					<td class="text-lg">{{icon "person"}}</td>
 					<td>Full Name</td>
 					<td>Email</td>
+					<td>Username</td>
 					<td>&nbsp;</td>
 				</tr>
 			</thead>
@@ -20,6 +21,7 @@
 				<tr>
 					<td class="text-lg">{{icon "person"}}</td>
 					<td>{{.DisplayName}}</td>
+					<td>{{.EmailAddress}}</td>
 					<td>{{.Username}}</td>
 					<td nowrap>
 						<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" script="on htmx:afterRequest wait 5s then log 'next??'">
@@ -34,7 +36,8 @@
 			<tr>
 				<td class="text-lg">{{icon "add"}}</td>
 				<td><input type="text" name="displayName" placeholder="Full Name" tabIndex="0" autocomplete="off"></td>
-				<td><input type="text" name="username" placeholder="Email" tabIndex="0" autocomplete="off"></td>
+				<td><input type="text" name="emailAddress" placeholder="Email" tabIndex="0" autocomplete="off"></td>
+				<td><input type="text" name="username" placeholder="Username" tabIndex="0" autocomplete="off"></td>
 				<td nowrap><button type="submit">{{icon "email"}} Invite</button></td>
 			</tr>
 

@@ -47,13 +47,15 @@ func WrapModal(response *echo.Response, content string, options ...string) strin
 	header.Set("HX-Reswap", "innerHTML")
 	header.Set("HX-Push", "false")
 
+	optionMap := parseOptions(options...)
+
 	// Build the HTML
 	b := html.New()
 
 	// Modal Wrapper
 	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
 	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").EndBracket() // this is needed because we're embedding foreign content below.
+	b.Div().ID("modal-window").Class(optionMap.GetString("class")).EndBracket() // this is needed because we're embedding foreign content below.
 
 	// Contents
 	b.Grow(len(content))

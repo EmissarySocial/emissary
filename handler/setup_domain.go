@@ -204,6 +204,12 @@ func setupDomainForm(header string) form.Element {
 				},
 				{
 					Type:        "text",
+					Path:        "owner.username",
+					Label:       "Username",
+					Description: "The username for this account",
+				},
+				{
+					Type:        "text",
 					Path:        "owner.emailAddress",
 					Label:       "Email Address",
 					Description: "A welcome email will be sent to this address",

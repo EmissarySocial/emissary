@@ -37,7 +37,7 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		// Wrap it as a modal
-		return ctx.HTML(http.StatusOK, render.WrapModal(ctx.Response(), modal))
+		return ctx.HTML(http.StatusOK, render.WrapModal(ctx.Response(), modal, "class:large"))
 	}
 }
 
@@ -67,6 +67,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 
 		user.DisplayName = data.GetString("displayName")
 		user.Username = data.GetString("username")
+		user.EmailAddress = data.GetString("emailAddress")
 		user.IsOwner = true
 
 		// Try to save the new user record

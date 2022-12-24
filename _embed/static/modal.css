@@ -57,6 +57,10 @@
 	transform:scale(0.8);
 }
 
+#modal-window.large {
+	width: 800px;
+}
+
 #modal-window.huge {
 	width:96%;
 	height:96%;
