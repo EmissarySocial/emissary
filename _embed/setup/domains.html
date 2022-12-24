@@ -16,15 +16,11 @@
 			{{$empty := true}}
 			{{- range .Domains -}}
 				<tr>
-					<td>
-						<a hx-get="/domains/{{.DomainID}}">{{icon "server"}} {{ .Label }}</a>
-					</td>
-					<td>
-						{{.Hostname}}
-					</td>
-					<td class="align-right">
-						<button hx-get="/domains/{{.DomainID}}">Edit Domain</button>
-						<button hx-get="/domains/{{.DomainID}}/users">Admin Accounts</button>
+					<td nowrap><a hx-get="/domains/{{.DomainID}}">{{icon "server"}} {{ .Label }}</a></td>
+					<td><div class="hide-md">{{.Hostname}}</div></td>
+					<td class="align-right" nowrap>
+						<button hx-get="/domains/{{.DomainID}}">Edit <span class="hide-sm">Domain</span></button>
+						<button hx-get="/domains/{{.DomainID}}/users"><span class="hide-sm">Edit</span> Users</button>
 						<!--button hx-post="/domains/{{.DomainID}}/signin">Sign In {{icon "login"}}</button-->
 						<span style="min-width:20px">&nbsp;&nbsp;</span>
 						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>

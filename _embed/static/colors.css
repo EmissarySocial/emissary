@@ -113,12 +113,6 @@
 	}
 }
 
-@media (max-width:768px) {
-	:root {
-		--page-background: var(--gray05);
-	}
-}
-
 .white {color:var(--white);}
 .gray05 {color:var(--gray05);}
 .gray10 {color:var(--gray10);}
