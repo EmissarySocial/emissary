@@ -7,20 +7,51 @@
 
 		{{.View "heading"}}
 	
-		{{- range $children -}}
-			{{- .Render -}}
-		{{- end -}}
-		
-		<div>
-			<button hx-get="/{{.Token}}/add-child">
-				{{- icon "plus" -}}
-				{{- if eq 0 (len $children) -}}
-					Add an Item
-				{{- else -}}
-					Add Another
-				{{- end -}}
-			</button>
-		</div>
+		<div class="flex-row">
+			{{- if .Data "showSidebar" -}}
+				<div class="sidebar">
+					<div>
+						{{- range $children -}}
+							<a href="#{{.StreamID}}" class="block sidebar-item ellipsis">{{.Label}}</a>
+						{{- end -}}
+					</div>
+				</div>
+			{{- end -}}
 
+			<div style="width:100%">
+				{{- range $children -}}
+					<div id="{{.StreamID}}">{{- .Render -}}</div>
+				{{- end -}}
+		
+				<div>
+					<button hx-get="/{{.Token}}/add-child">
+						{{- icon "plus" -}}
+						{{- if eq 0 (len $children) -}}
+							Add an Item
+						{{- else -}}
+							Add Another
+						{{- end -}}
+					</button>
+				</div>
+
+			</div>
+
+		</div>
+		
 	</div>
+
+	<style>
+		.sidebar {
+			width:20%;
+			margin-right:20px;
+			position:relative;
+		}
+
+		.sidebar > div {
+			position:-webkit-sticky;
+			position:sticky;
+			top:100px;
+		}
+	</style>
+
 </div>
