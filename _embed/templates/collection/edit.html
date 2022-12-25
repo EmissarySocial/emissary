@@ -5,8 +5,20 @@
 	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 		<div id="menu-bar">			
-			<a href="/{{.Token}}">&larr; Done Sorting</a>
-		</div>
+			<a href="/{{.Token}}">&larr; Return to View</a>
+
+            <a hx-get="/{{.Token}}/properties">Properties</a>
+
+            {{- if .UserCan "sharing" -}}
+                <a hx-get="/{{.Token}}/sharing">Sharing</a>
+            {{- end -}}
+        
+            <div class="right">
+                {{- if .UserCan "delete" -}}
+                    <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+                {{- end -}}
+            </div>
+        </div>
 		
 		<h1 class="p-name">{{.Label}}</h1>
 				
