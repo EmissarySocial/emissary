@@ -1,0 +1,26 @@
+{{- $children := .Children.All.ByRank.View -}}
+
+<div hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window">
+
+
+	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+
+		{{.View "heading"}}
+	
+		{{- range $children -}}
+			{{- .Render -}}
+		{{- end -}}
+		
+		<div>
+			<button hx-get="/{{.Token}}/add-child">
+				{{- icon "plus" -}}
+				{{- if eq 0 (len $children) -}}
+					Add an Item
+				{{- else -}}
+					Add Another
+				{{- end -}}
+			</button>
+		</div>
+
+	</div>
+</div>

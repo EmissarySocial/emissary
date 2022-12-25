@@ -1,0 +1,25 @@
+{{- if .UserCan "edit" -}}
+<div id="menu-bar">
+    <a href="/{{.Token}}/edit">Edit / Sort</a>
+    <a hx-get="/{{.Token}}/properties">Properties</a>
+
+    {{- if .UserCan "sharing" -}}
+        <a hx-get="/{{.Token}}/sharing">Sharing</a>
+    {{- end -}}
+
+    <div class="right">
+        {{- if .UserCan "delete" -}}
+            <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+        {{- end -}}
+    </div>
+</div>
+{{- end -}}
+
+
+<h1 class="p-name">{{.Label}}</h1>
+
+{{- if ne "" .Summary -}}
+    <div class="p-summary">{{.Summary}}</div>
+{{- end -}}
+
+<br>

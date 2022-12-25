@@ -21,6 +21,14 @@ b, strong, .bold {
 	font-weight:calc(var(--weight) + 200);
 }
 
+.text-thin {
+	font-weight:calc(var(--weight) - 200);
+}
+
+i, em, .italics {
+	font-style:italic;
+}
+
 .circle {
 	border-radius:50%;
 }

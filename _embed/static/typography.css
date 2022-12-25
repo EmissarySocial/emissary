@@ -326,6 +326,10 @@ input.text-md {
     text-decoration:none;
 }
 
+.text-light-gray {
+    color:var(--gray40);
+}
+
 .text-gray {
     color:var(--gray60);
 }
