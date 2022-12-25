@@ -17,6 +17,7 @@
 						"label": "Add a Person",
 						"children": [
 							{"type": "text", "label": "Full Name", "path": "displayName"},
+							{"type": "text", "label": "Email Address", "path": "emailAddress"},
 							{"type": "text", "label": "Username", "path": "username"},
 							{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider":"groups", "sort":false}}
 						]
@@ -37,6 +38,7 @@
 						"description": "",
 						"children": [
 							{"type": "text", "label": "Full Name", "path": "displayName"},
+							{"type": "text", "label": "Email Address", "path": "emailAddress"},
 							{"type": "text", "label": "Username", "path": "username"},
 							{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
 						]

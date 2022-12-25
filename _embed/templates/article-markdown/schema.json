@@ -11,6 +11,11 @@
 			"document": {"type":"object", "properties":{
 				"label": {"type": "string"},
 				"summary": {"type": "string"}
+			}},
+			"content": {"type":"object", "properties":{
+				"type": {"type": "string"},
+				"raw": {"type": "string"},
+				"html": {"type": "string"}
 			}}
 		}
 	},
@@ -41,7 +46,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"document.label": "New Article"}},
+				{"step": "set-data", "values": {"document.label": "New Article (Markdown)", "content.raw": "Enter new markdown text here"}},
 				{"step": "set-state", "state": "unpublished"}
 			]
 		},

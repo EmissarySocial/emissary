@@ -41,7 +41,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"document.label": "New Article"}},
+				{"step": "set-data", "values": {"document.label": "New Article (WYSIWYG)"}},
 				{"step": "set-state", "state": "unpublished"}
 			]
 		},

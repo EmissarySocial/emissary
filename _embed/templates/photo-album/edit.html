@@ -10,19 +10,23 @@
 {{- end -}}
 
 <div id="menu-bar">
-	<a href="/{{.Token}}">View Album</a>
+	<div class="left">
+		<a href="/{{.Token}}">View Album</a>
 
-	{{- if .UserCan "properties" -}}
-		<a hx-get="/{{.Token}}/properties">Edit Info</a>
-	{{- end -}}
+		{{- if .UserCan "properties" -}}
+			<a hx-get="/{{.Token}}/properties">Edit Info</a>
+		{{- end -}}
 
-	{{- if .UserCan "sharing" -}}
-		<a hx-get="/{{.Token}}/sharing">Sharing</a>
-	{{- end -}}
+		{{- if .UserCan "sharing" -}}
+			<a hx-get="/{{.Token}}/sharing">Sharing</a>
+		{{- end -}}
+	</div>
 
-	{{- if .UserCan "delete" -}}
-		<a hx-get="/{{.Token}}/delete">Delete Album</a>
-	{{- end -}}
+	<div class="right">
+		{{- if .UserCan "delete" -}}
+			<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+		{{- end -}}
+	</div>
 </div>
 
 <article>
