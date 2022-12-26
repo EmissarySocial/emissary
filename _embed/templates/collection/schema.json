@@ -8,6 +8,7 @@
 	"schema": {
 		"type":"object",
 		"properties": {
+			"token": {"type":"string", "required":true},
 			"document": {"type":"object", "properties": {
 				"label": {"type":"string"},
 				"summary": {"type":"string"}
@@ -76,9 +77,9 @@
 					{"step":"form-html",
 						"form": {
 							"type":"layout-vertical",
-							"label":"Article Properties",
-							"description":"This will update the object in this state",
+							"label":"Edit Properties",
 							"children": [
+								{"type":"text",     "path":"token",            "label":"Token/Slug"},
 								{"type":"text",     "path":"document.label",   "label":"Label"},
 								{"type":"textarea", "path":"document.summary", "label":"Summary"},
 								{"type":"toggle",   "path":"data.showSidebar", "label":"", "options":{"true-text":"Sidebar is Visible", "false-text":"Sidebar is Hidden"}}

@@ -1,48 +1,49 @@
 {
-	"templateId": "article-editorjs",
-	"role": "article",
+	"templateId":"article-editorjs",
+	"role":"article",
 	"containedBy": ["top", "folder", "article"],
-	"label": "Article",
-	"description": "For regular use. Contains text, images, and more.",
-	"icon": "article",
+	"label":"Article",
+	"description":"For regular use. Contains text, images, and more.",
+	"icon":"article",
 	"schema": {
-		"type": "object",
+		"type":"object",
 		"properties": {
+			"token": {"type":"string", "required":true},
 			"document": {"type":"object", "properties": {
-				"label": {"type": "string"},
-				"summary": {"type": "string"}
+				"label": {"type":"string"},
+				"summary": {"type":"string"}
 			}}
 		}
 	},
 	"states": {
 		"unpublished": {
-			"label": "Default State",
-			"description": "Visible only to Authors and Owners"
+			"label":"Default State",
+			"description":"Visible only to Authors and Owners"
 		},
 		"published": {
-			"label": "Published",
-			"description": "Visible to all people with permissions"
+			"label":"Published",
+			"description":"Visible to all people with permissions"
 		}
 	},
 	"roles": {
 		"owner": {
-			"label": "Domain Owner",
-			"decription": "Full control over this stream."
+			"label":"Domain Owner",
+			"decription":"Full control over this stream."
 			}, 
 		"editor": {
-			"label": "Editor",
-			"description": "Can make changes to this article."
+			"label":"Editor",
+			"description":"Can make changes to this article."
 		},
 		"viewer": {
-			"label": "Viewer",
-			"description": "Can read and comment on this article."
+			"label":"Viewer",
+			"description":"Can read and comment on this article."
 		}
 	},
 	"actions": {
 		"init": {
 			"steps": [
-				{"step": "set-data", "values": {"document.label": "New Article (WYSIWYG)"}},
-				{"step": "set-state", "state": "unpublished"}
+				{"step":"set-data", "values": {"document.label":"New Article (WYSIWYG)"}},
+				{"step":"set-state", "state":"unpublished"}
 			]
 		},
 		"view": {
@@ -50,25 +51,25 @@
 			"stateRoles": {
 				"published": ["viewer"]
 			},
-			"step": "view-html"
+			"step":"view-html"
 		},
 		"heading": {
 			"roles": ["viewer", "editor", "owner"],
-			"step": "view-html"
+			"step":"view-html"
 		},
 		"edit": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "with-draft", "steps": [
-					{"step": "edit-content", "file":"edit", "format":"EDITORJS"}
+				{"step":"with-draft", "steps": [
+					{"step":"edit-content", "file":"edit", "format":"EDITORJS"}
 				]}
 			]
 		},
 		"upload-image": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "with-draft", "steps": [
-					{"step": "upload-attachments"}
+				{"step":"with-draft", "steps": [
+					{"step":"upload-attachments"}
 				]}
 			]
 		},
@@ -76,8 +77,8 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message": "Select who can view and comment on this article."},
-					{"step": "save", "message": "Sharing updated by {{.Author}}"}
+					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message":"Select who can view and comment on this article."},
+					{"step":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
 		},
@@ -85,78 +86,78 @@
 			"states": ["unpublished"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
-				{"step": "set-state", "state": "published"},
-				{"step": "save", "message": "Published by {{.Author}}"},
-				{"step": "publish", "role":"article"},
-				{"step": "refresh-page"}
+				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
+				{"step":"set-state", "state":"published"},
+				{"step":"save", "message":"Published by {{.Author}}"},
+				{"step":"publish", "role":"article"},
+				{"step":"refresh-page"}
 			]
 		},
 		"unpublish": {
 			"states": ["published"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
-				{"step": "set-state", "state": "unpublished"},
-				{"step": "save", "message": "Un-Published by {{.Author}}"},
-				{"step": "unpublish"},
-				{"step": "refresh-page"}
+				{"step":"as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
+				{"step":"set-state", "state":"unpublished"},
+				{"step":"save", "message":"Un-Published by {{.Author}}"},
+				{"step":"unpublish"},
+				{"step":"refresh-page"}
 			]
 		},
 		"promote-draft": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
-				{"step": "promote-draft"},
-				{"step": "publish", "role":"article"},
-				{"step": "forward-to", "url": "/{{.Token}}"}
+				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
+				{"step":"promote-draft"},
+				{"step":"publish", "role":"article"},
+				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
 		},
 		"discard-draft": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step": "with-draft", "steps":[
-					{"step": "delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
+				{"step":"with-draft", "steps":[
+					{"step":"delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
 				]},
-				{"step": "forward-to", "url": "/{{.Token}}"}
+				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
 		},
 		"properties": {
 			"roles": ["editor", "owner"],
 			"steps": [
-				{"step": "with-draft", "steps":[
-					{"step": "as-modal", "steps": [
-						{"step": "form-html",
+				{"step":"with-draft", "steps":[
+					{"step":"as-modal", "steps": [
+						{"step":"form-html",
 							"form": {
-								"type": "layout-vertical",
-								"label": "Article Properties",
-								"description": "This will update the object in this state",
+								"type":"layout-vertical",
+								"label":"Article Properties",
 								"children": [
-									{"type": "text",     "path": "document.label",   "label": "Label"},
-									{"type": "textarea", "path": "document.summary", "label": "Summary"}
+									{"type":"text", "path":"token", "label":"Token/Slug"},
+									{"type":"text",     "path":"document.label",   "label":"Label"},
+									{"type":"textarea", "path":"document.summary", "label":"Summary"}
 								]
 							}
 						}]
 					},
-					{"step": "save", "comment": "Properties updated by {{.Author}}"}
+					{"step":"save", "comment":"Properties updated by {{.Author}}"}
 				]
 			}]
 		},
 		"features": {
 			"roles": ["editor", "owner"],
 			"steps": [
-				{"step": "as-modal", "steps": [
-					{"step": "edit-features"},
-					{"step": "save", "comment": "Features updated by {{.Author}}"}
+				{"step":"as-modal", "steps": [
+					{"step":"edit-features"},
+					{"step":"save", "comment":"Features updated by {{.Author}}"}
 				]}
 			]
 		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step": "delete", "title": "Delete this Article?", "message": "All content and comments will be lost.  There is NO UNDO."},
-				{"step": "unpublish"},
-				{"step": "forward-to", "url":"/{{.ParentID}}"}
+				{"step":"delete", "title":"Delete this Article?", "message":"All content and comments will be lost.  There is NO UNDO."},
+				{"step":"unpublish"},
+				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		}
 	}
