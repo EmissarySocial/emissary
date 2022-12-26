@@ -10,15 +10,16 @@ import (
 
 // Domain represents an account or node on this server.
 type Domain struct {
-	DomainID   primitive.ObjectID `                  bson:"_id"`        // This is the internal ID for the domain.  It should not be available via the web service.
-	Label      string             `path:"label"      bson:"label"`      // Human-friendly name displayed at the top of this domain
-	HeaderHTML string             `path:"headerHtml" bson:"headerHtml"` // Pure HTML added to the top of the page navigation
-	FooterHTML string             `path:"footerHtml" bson:"footerHtml"` // Pure HTML added to the bottom of the page footer
-	CustomCSS  string             `path:"customCss"  bson:"customCss"`  // Pure CSS added to every page.
-	BannerURL  string             `path:"bannerUrl"  bson:"bannerUrl"`  // URL of a banner image to display at the top of this domain
-	Forward    string             `path:"forward"    bson:"forward"`    // If present, then all requests for this domain should be forwarded to the designated new domain.
-	SignupForm SignupForm         `path:"signupForm" bson:"signupForm"` // Valid signup forms to make new accounts.
-	Clients    set.Map[Client]    `path:"clients"    bson:"clients"`    // External connections (e.g. Facebook, Twitter, etc.)
+	DomainID    primitive.ObjectID `                   bson:"_id"`         // This is the internal ID for the domain.  It should not be available via the web service.
+	Label       string             `path:"label"       bson:"label"`       // Human-friendly name displayed at the top of this domain
+	HeaderHTML  string             `path:"headerHtml"  bson:"headerHtml"`  // Pure HTML added to the top of the page navigation
+	FooterHTML  string             `path:"footerHtml"  bson:"footerHtml"`  // Pure HTML added to the bottom of the page footer
+	CustomCSS   string             `path:"customCss"   bson:"customCss"`   // Pure CSS added to every page.
+	BannerURL   string             `path:"bannerUrl"   bson:"bannerUrl"`   // URL of a banner image to display at the top of this domain
+	Forward     string             `path:"forward"     bson:"forward"`     // If present, then all requests for this domain should be forwarded to the designated new domain.
+	SignupForm  SignupForm         `path:"signupForm"  bson:"signupForm"`  // Valid signup forms to make new accounts.
+	Clients     set.Map[Client]    `path:"clients"     bson:"clients"`     // External connections (e.g. Facebook, Twitter, etc.)
+	SocialLinks bool               `path:"socialLinks" bson:"socialLinks"` // If true, then the social navigation bar will be displayed
 	journal.Journal
 }
 
@@ -32,14 +33,15 @@ func NewDomain() Domain {
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":   schema.String{Format: "objectId"},
-			"label":      schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"headerHtml": schema.String{Format: "html"},
-			"footerHtml": schema.String{Format: "html"},
-			"customCss":  schema.String{Format: "css"},
-			"bannerUrl":  schema.String{Format: "url"},
-			"forward":    schema.String{Format: "url"},
-			"signupForm": SignupFormSchema(),
+			"domainId":    schema.String{Format: "objectId"},
+			"label":       schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"headerHtml":  schema.String{Format: "html"},
+			"footerHtml":  schema.String{Format: "html"},
+			"customCss":   schema.String{Format: "css"},
+			"bannerUrl":   schema.String{Format: "url"},
+			"forward":     schema.String{Format: "url"},
+			"signupForm":  SignupFormSchema(),
+			"socialLinks": schema.Boolean{},
 			// "clients":    ClientSchema(),
 		},
 	}
@@ -79,6 +81,14 @@ func (domain *Domain) GetString(name string) (string, error) {
 		return domain.Forward, nil
 	}
 	return "", derp.NewInternalError("model.Domain.GetString", "Invalid property", name)
+}
+
+func (domain *Domain) GetBool(name string) (bool, error) {
+	switch name {
+	case "socialLinks":
+		return domain.SocialLinks, nil
+	}
+	return false, derp.NewInternalError("model.Domain.GetInt", "Invalid property", name)
 }
 
 func (domain *Domain) GetInt(name string) (int, error) {

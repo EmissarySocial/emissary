@@ -3,16 +3,16 @@
 		send save to #markdownForm
 		wait for htmx:afterOnLoad from #markdownForm
 		if promote then
-			fetch /{{.Token}}/promote-draft with method:"POST"
+			fetch /{{.StreamID}}/promote-draft with method:"POST"
 		end
 
-		set window.location to "/{{.Token}}"
+		set window.location to "/{{.StreamID}}"
 	end
 </script>
 
 <div class="page">
 
-	<div hx-get="/{{.Token}}/heading" hx-trigger="refreshPage">
+	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage">
 		{{.View "heading"}}
 	</div>
 
@@ -20,31 +20,31 @@
 		<div class="left">
 			<button script="on click saveDraft(true)" class="button primary">Promote</button>
 			<button script="on click saveDraft(false)">Save Draft</button>
-			<button hx-get="/{{.Token}}/discard-draft">Discard Draft</button>
+			<button hx-get="/{{.StreamID}}/discard-draft">Discard Draft</button>
 		</div>
 
 		<div class="right">
 			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.Token}}/properties">Info</a>
+				<a hx-get="/{{.StreamID}}/properties">Info</a>
 			{{- end -}}
 
 			{{- if .UserCan "features" -}}
-				<a hx-get="/{{.Token}}/features">Features</a>
+				<a hx-get="/{{.StreamID}}/features">Features</a>
 			{{- end -}}
 
 			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}
 
 			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+				<a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>
 			{{- end -}}
 		</div>
 
 	</div>
 
 	<article>
-		<form id="markdownForm" hx-post="/{{.Token}}/edit" hx-trigger="save" hx-swap="none">
+		<form id="markdownForm" hx-post="/{{.StreamID}}/edit" hx-trigger="save" hx-swap="none">
 			<textarea name="content" style="width:100%; min-height:600px;">{{.ContentRaw}}</textarea>
 		</form>
 	</article>

@@ -1,24 +1,24 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
 	<h1 class="p-name">{{.Label}}</h1>
 	<div class="p-summary">{{.Summary}}</div>
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
-			<a href="/{{.Token}}/edit">Edit Content</a>
+			<a href="/{{.StreamID}}/edit">Edit Content</a>
 
 			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}
 
 			<div class="right">
 				{{- if .UserCan "publish" -}}
-					<a hx-get="/{{.Token}}/publish" hx-push-url="false" class="button">Publish</a>
+					<a hx-get="/{{.StreamID}}/publish" hx-push-url="false" class="button">Publish</a>
 				{{- end -}}
 
 				{{- if .UserCan "unpublish" -}}
-					<a hx-get="/{{.Token}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
+					<a hx-get="/{{.StreamID}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
 				{{- end -}}
 			</div>
 
