@@ -12,12 +12,19 @@
 }
 
 .card {
-	border: solid 1px var(--gray20);
+	-border: solid 1px var(--gray10);
+	border-radius:2px;
 	border-right-width:2px;
 	border-bottom-width:2px; ;
 	background-color: var(--gray00);
 	position:relative;
 	text-overflow: ellipsis;
+	box-shadow: 0 3px 6px 0 rgba(0,0,0,0.2);
+	transition: 0.3s;
+}
+
+.card:hover {
+	box-shadow: 0 6px 12px 0 rgba(0,0,0,0.2);
 }
 
 .card .text {
