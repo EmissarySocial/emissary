@@ -132,7 +132,7 @@
 								"type":"layout-vertical",
 								"label":"Article Properties",
 								"children": [
-									{"type":"text",     "path":"token",            "label":"Token/Slug"}
+									{"type":"text",     "path":"token",            "label":"Token/Slug"},
 									{"type":"text",     "path":"document.label",   "label":"Label"},
 									{"type":"textarea", "path":"document.summary", "label":"Summary"}
 								]
