@@ -6,10 +6,10 @@ import (
 	"github.com/benpate/digit"
 )
 
-func (service *Following) ConnectActivityPub(following *model.Following, link digit.Link) error {
+func (service *Following) connect_ActivityPub(following *model.Following, link digit.Link) error {
 	return derp.NewInternalError("service.Following.ConnectActivityPub", "Not Implemented", following)
 }
 
-func (service *Following) DisconnectActivityPub(following *model.Following) {
+func (service *Following) disconnect_ActivityPub(following *model.Following) {
 	// NOOP (for now)
 }

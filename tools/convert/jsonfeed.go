@@ -45,31 +45,27 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 	}
 }
 
-func JsonFeedToStream(origin model.OriginLink) func(jsonfeed.Item) model.Stream {
+func JsonFeedToStream(item jsonfeed.Item) model.Stream {
 
-	return func(item jsonfeed.Item) model.Stream {
-
-		stream := model.NewStream()
-		stream.PublishDate = item.DatePublished.UnixMilli()
-		stream.Origin = origin
-		stream.Document = model.DocumentLink{
-			URL:      item.URL,
-			Label:    item.Title,
-			Summary:  item.Summary,
-			ImageURL: item.Image,
-			Author: model.PersonLink{
-				Name:       item.Author.Name,
-				ProfileURL: item.Author.URL,
-				ImageURL:   item.Author.Avatar,
-			},
-		}
-
-		if item.ContentHTML != "" {
-			stream.Content = model.NewHTMLContent(item.ContentHTML)
-		} else if item.ContentText != "" {
-			stream.Content = model.NewTextContent(item.ContentText)
-		}
-
-		return stream
+	stream := model.NewStream()
+	stream.PublishDate = item.DatePublished.UnixMilli()
+	stream.Document = model.DocumentLink{
+		URL:      item.URL,
+		Label:    item.Title,
+		Summary:  item.Summary,
+		ImageURL: item.Image,
+		Author: model.PersonLink{
+			Name:       item.Author.Name,
+			ProfileURL: item.Author.URL,
+			ImageURL:   item.Author.Avatar,
+		},
 	}
+
+	if item.ContentHTML != "" {
+		stream.Content = model.NewHTMLContent(item.ContentHTML)
+	} else if item.ContentText != "" {
+		stream.Content = model.NewTextContent(item.ContentText)
+	}
+
+	return stream
 }

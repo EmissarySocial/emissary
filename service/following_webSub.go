@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/gommon/random"
 )
 
-func (service *Following) ConnectWebSub(following *model.Following, link digit.Link, topic string) error {
+func (service *Following) connect_WebSub(following *model.Following, link digit.Link, topic string) error {
 
 	const location = "service.Following.ConnectWebSub"
 
@@ -20,10 +20,9 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 	}
 
 	secret := random.String(32)
-	acceptHeader := "application/json+feed; q=1.0, application/json; q=0.9, application/atom+xml; q=0.8, application/rss+xml; q=0.7, text/xml; q=0.5, text/html; q=0.4, */*; q=0.1"
 
 	transaction := remote.Post(link.Href).
-		Header("Accept", acceptHeader).
+		Header("Accept", followingMimeStack).
 		Form("hub.mode", "subscribe").
 		Form("hub.topic", topic).
 		Form("hub.callback", service.websubCallbackURL(following)).
@@ -50,7 +49,7 @@ func (service *Following) ConnectWebSub(following *model.Following, link digit.L
 	return nil
 }
 
-func (service *Following) DisconnectWebSub(following *model.Following) {
+func (service *Following) disconnect_WebSub(following *model.Following) {
 
 	// Find the "hub" link for this following
 	for _, link := range following.Links {

@@ -27,11 +27,20 @@ func (task SendWebSubMessage) Run() error {
 
 	var body []byte
 
-	// TODO: MEDIUM: Add encoding for the message body
+	switch task.follower.Format {
+
+	case model.MimeTypeJSONFeed:
+		// Convert & Marshall
+
+	case model.MimeTypeAtom:
+		// Convert & Marshall
+
+	case model.MimeTypeRSS:
+		// Convert & Marshall
+	}
 
 	transaction := remote.Post(task.follower.Actor.InboxURL).
-		Header("Content-Type", "application/json").
-		// Header("Link", `<`+task.stream.Document.URL+`/websub; rel="hub", <`+task.stream.Document.URL+`>; rel="self"`).
+		Header("Content-Type", task.follower.Format).
 		Body(string(body))
 
 	// Add HMAC signature, if necessary

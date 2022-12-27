@@ -14,6 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// followingMimeStack lists the preferred mime types for follows
+const followingMimeStack = "application/json+feed; q=1.0, application/json; q=0.9, application/atom+xml; q=0.8, application/rss+xml; q=0.7, application/xml; q=0.6, text/xml; q=0.5, text/html; q=0.4, */*; q=0.1"
+
 // Following manages all interactions with the Following collection
 type Following struct {
 	collection    data.Collection
@@ -310,137 +313,6 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 /*******************************************
  * Custom Actions
  *******************************************/
-
-// Connect attempts to connect to a new URL and determines how to follow it.
-func (service *Following) Connect(following model.Following) error {
-
-	const location = "service.Following.Connect"
-
-	// Update the following status
-	if err := service.SetStatus(&following, model.FollowingStatusLoading, ""); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
-	}
-
-	// Try to get all the links we can.  If this fails, it'll be caught below.
-	following.Links = discoverLinks(following.URL)
-
-	// LOAD CONTENT (JSONFeed, Atom, RSS)
-	service.Poll(&following)
-
-	// SEARCH FOR UPDATERS (WebSub, ActivityPub)
-	service.FindUpdaters(&following)
-
-	return nil
-}
-
-// Poll checks the following record for new content.
-func (service *Following) Poll(following *model.Following) {
-
-	const location = "service.Following.Poll"
-
-	// Try to connect to each link in order.  If a link fails, then try the next one.
-	for _, link := range following.Links {
-
-		switch link.MediaType {
-
-		case model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
-
-			// Execute the "follow" function (which must update the following status)
-			// If this returns successfully, then the connection has been made.
-			if err := service.PollRSS(following, link); err == nil {
-				return
-			}
-		}
-	}
-
-	// If we're here, it means that we didn't find any feeds.. so THAT'S a failure.
-	if err := service.SetStatus(following, model.FollowingStatusFailure, "Please check your links.  There are no feeds to subscribe to on: "+following.URL); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error updating following status", following))
-	}
-}
-
-func (service *Following) FindUpdaters(following *model.Following) {
-
-	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
-		if self := following.GetLink("rel", model.LinkRelationSelf); !self.IsEmpty() {
-			if err := service.ConnectWebSub(following, hub, self.Href); err == nil {
-				return
-			}
-		}
-	}
-
-	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
-		if err := service.ConnectActivityPub(following, activityPub); err == nil {
-			return
-		}
-	}
-}
-
-func (service *Following) Disconnect(following *model.Following) {
-
-	switch following.Method {
-	case model.FollowMethodActivityPub:
-		service.DisconnectActivityPub(following)
-	case model.FollowMethodWebSub:
-		service.DisconnectWebSub(following)
-	}
-}
-
-// SetStatus updates the status (and statusMessage) of a Following record.
-func (service *Following) SetStatus(following *model.Following, status string, statusMessage string) error {
-
-	// RULE: Default Poll Duration is 24 hours
-	if following.PollDuration == 0 {
-		following.PollDuration = 24
-	}
-
-	// RULE: Require that poll duration is at least 1 hour
-	if following.PollDuration < 1 {
-		following.PollDuration = 1
-	}
-
-	// Update properties of the Following
-	following.Status = status
-	following.StatusMessage = statusMessage
-
-	// Recalculate the next poll time
-	switch following.Status {
-	case model.FollowingStatusSuccess:
-
-		// On success, "LastPolled" is only updated when we're successful.  Reset other times.
-		following.LastPolled = time.Now().Unix()
-		following.NextPoll = following.LastPolled + int64(following.PollDuration*60)
-		following.ErrorCount = 0
-
-	case model.FollowingStatusFailure:
-
-		// On failure, compute exponential backoff
-		// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m
-		// But do not change "LastPolled" because that is the last time we were successful
-		errorBackoff := following.ErrorCount
-
-		if errorBackoff > 8 {
-			errorBackoff = 8
-		}
-
-		errorBackoff = 2 ^ errorBackoff
-
-		following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
-		following.ErrorCount++
-
-	default:
-		// On all other statuse, the error counters are not touched
-		// because "New" and "Loading" are going to be overwritten very soon.
-	}
-
-	// Try to save the Following to the database
-	if err := service.collection.Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following", "Error updating following status", following)
-	}
-
-	// Success!!
-	return nil
-}
 
 // PurgeInbox removes all inbox items that are past their expiration date
 func (service *Following) PurgeInbox(following model.Following) error {

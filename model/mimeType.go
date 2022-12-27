@@ -1,15 +1,19 @@
 package model
 
+const MagicMimeTypeWebSub = "MAGIC-MIME-TYPE-WEBSUB"
+
 const MimeTypeActivityPub = "application/activity+json"
+
+const MimeTypeAtom = "application/atom+xml"
+
+const MimeTypeEventStream = "text/event-stream"
 
 const MimeTypeJSON = "application/json"
 
 const MimeTypeJSONFeed = "application/feed+json"
 
-const MimeTypeAtom = "application/atom+xml"
+const MimeTypeHTML = "text/html"
 
 const MimeTypeRSS = "application/rss+xml"
 
 const MimeTypeXML = "application/xml"
-
-const MagicMimeTypeWebSub = "MAGIC-MIME-TYPE-WEBSUB"

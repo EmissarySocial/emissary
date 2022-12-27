@@ -15,7 +15,7 @@ const FollowMethodActivityPub = "ACTIVITYPUB"
 const FollowMethodPoll = "POLL"
 
 // FollowMethodRSSCloud represents an RSS-Cloud subscription
-const FollowMethodRSSCloud = "RSS-CLOUD"
+const FollowMethodRSSCloud = "RSSCLOUD"
 
 // FollowMethodWebSub represents a WebSub subscription
 const FollowMethodWebSub = "WEBSUB"

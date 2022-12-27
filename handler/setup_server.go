@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -23,7 +24,7 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
 
 		header := ctx.Response().Header()
-		header.Set("Content-Type", "text/html")
+		header.Set("Content-Type", model.MimeTypeHTML)
 		header.Set("Cache-Control", "no-cache")
 
 		if useWrapper {

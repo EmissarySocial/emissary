@@ -50,7 +50,12 @@ func GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Wrap the form as a modal dialog (with submit buttons)
-		html = render.WrapModalForm(ctx.Response(), "/@me/pub/following/"+followingID, html)
+		html = render.WrapModalForm(
+			ctx.Response(),
+			"/@me/pub/following/"+followingID,
+			html,
+			"delete:/@me/pub/following/"+followingID+"/delete",
+		)
 
 		// Done.
 		return ctx.HTML(http.StatusOK, html)

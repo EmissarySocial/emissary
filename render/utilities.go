@@ -96,6 +96,12 @@ func WrapForm(endpoint string, content string, options ...string) string {
 
 	// Controls
 	b.Div()
+
+	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
+		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-post", deleteURL).Attr("hx-confirm", "Are you sure you want to DELETE this record?").InnerHTML("Delete").Close()
+		b.Space()
+	}
+
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
 	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML(submitLabel).Close()

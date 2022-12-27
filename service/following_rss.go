@@ -2,11 +2,10 @@ package service
 
 import (
 	"bytes"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
-	"github.com/benpate/remote"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -14,27 +13,15 @@ import (
  * Connection Methods
  *******************************************/
 
-// PollRSS tries to import an RSS feed and adds/updates activitys for each item in it.
-func (service *Following) PollRSS(following *model.Following, link digit.Link) error {
+func (service *Following) import_RSS(following *model.Following, transaction *http.Response, body *bytes.Buffer) error {
 
-	const location = "service.Following.PollRSS"
-
-	// Build the remote request.  Request the MediaType that was specified in the original link.
-	var body bytes.Buffer
-
-	transaction := remote.Get(link.Href).
-		Header("Accept", link.MediaType).
-		Response(&body, nil)
-
-	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error fetching RSS feed", link.Href)
-	}
+	const location = "service.Following.importRSS"
 
 	// Try to find the RSS feed associated with this link
 	rssFeed, err := gofeed.NewParser().ParseString(body.String())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing RSS feed", link.Href)
+		return derp.Wrap(err, location, "Error parsing RSS feed", body.String())
 	}
 
 	// Update the label for this "following" record using the RSS feed title.

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,6 +17,7 @@ type webSubConfirmation struct {
 	Lease     int64  `query:"hub.lease_seconds"`
 }
 
+// GetWebSubClient is called by an external WebSub server to confirm a subscription request.
 func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -65,8 +65,6 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading following record", userID, followingID, transaction)
 		}
 
-		fmt.Println("..following loaded successfully")
-
 		/* RULE: Require that this Following uses WebSub
 		if following.Method != model.FollowMethodWebSub {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following, transaction)
@@ -93,13 +91,12 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.getWebSubClient_subscribe", "Error updating following status", following)
 		}
 
-		fmt.Println("..following status updated successfully")
-
 		// Win!
 		return ctx.String(http.StatusOK, transaction.Challenge)
 	}
 }
 
+// PostWebSubClient is called by an external WebSub server to notify us of a change.
 func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -148,7 +145,9 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			}
 		*/
 
-		followingService.Poll(&following)
+		if err := followingService.Connect(following); err != nil {
+			return derp.Wrap(err, location, "Error connecting to following", following)
+		}
 
 		return nil
 	}

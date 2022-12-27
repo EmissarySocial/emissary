@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"mime"
 	"net/url"
 	"strings"
 	"time"
@@ -42,10 +43,11 @@ func populateActivity(activity *model.Activity, following *model.Following, rssF
 		}
 
 		// Parse the response into an HTMLInfo object
-		contentType := txn.ResponseObject.Header.Get("Content-Type")
+		mimeType := txn.ResponseObject.Header.Get("Content-Type")
+		mediaType, _, _ := mime.ParseMediaType(mimeType)
 		info := htmlinfo.NewHTMLInfo()
 
-		if err := info.Parse(&body, &activity.Origin.URL, &contentType); err != nil {
+		if err := info.Parse(&body, &activity.Origin.URL, &mediaType); err != nil {
 			return derp.Wrap(err, "service.Following.populateActivity", "Error parsing HTML", activity.Origin.URL)
 		}
 

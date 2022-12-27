@@ -2,6 +2,8 @@ package service
 
 import (
 	"bytes"
+	"mime"
+	"net/http"
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -14,75 +16,44 @@ import (
 )
 
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
-func discoverLinks(targetURL string) []digit.Link {
-
-	const location = "service.discoverLinks"
+func discoverLinks(response *http.Response, body *bytes.Buffer) []digit.Link {
 
 	// Look for links embedded in the HTML
-	if result := discoverLinksFromHTML(targetURL); len(result) > 0 {
+	if result := discoverLinks_HTML(response, body); len(result) > 0 {
 		return result
 	}
 
 	// Fall back to WebFinger, just in case
-	if result := discoverLinksFromWebFinger(targetURL); len(result) > 0 {
+	if result := discoverLinks_WebFinger(response.Request.URL.String()); len(result) > 0 {
 		return result
 	}
 
 	// Fall through, fail through
-	derp.Report(derp.NewBadRequestError(location, "Unable to discover links from WebFinger or HTML", targetURL))
 	return make([]digit.Link, 0)
 }
 
-func discoverLinksFromHTML(targetURL string) []digit.Link {
+func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Link {
 
-	const location = "service.discoverLinksFromHTML"
+	const location = "service.discoverLinks_HTML"
 
-	var body bytes.Buffer
-
-	result := make([]digit.Link, 0)
-
-	// Try to load the targetURL.
-	transaction := remote.Get(targetURL).Response(&body, nil)
-
-	if err := transaction.Send(); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading URL", targetURL))
-		return result
-	}
-
-	// Scan the response headers for WebSub links
-	// TODO: LOW: Are RSS links ever put in the headers also?
-	linkHeaders := linkheader.ParseMultiple(transaction.ResponseObject.Header["Link"])
-
-	for _, link := range linkHeaders {
-
-		switch link.Rel {
-		case model.LinkRelationHub:
-			result = append(result, digit.Link{
-				MediaType:    model.MagicMimeTypeWebSub,
-				RelationType: link.Rel,
-				Href:         link.URL,
-			})
-
-		case model.LinkRelationSelf:
-			result = append(result, digit.Link{
-				RelationType: link.Rel,
-				Href:         link.URL,
-			})
-
-		}
-	}
+	result := discoverLinks_Headers(response)
 
 	// If the document itself is an RSS feed, then we're done.  Add it to the list.
 	// TODO: LOW: Possibly parse RSS-Cloud here?
-	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
-	mimeType = list.Semicolon(mimeType).First()
+	mimeType := response.Header.Get("Content-Type")
+	mediaType, _, _ := mime.ParseMediaType(mimeType)
 
-	switch mimeType {
-	case model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
+	switch mediaType {
+	case
+		model.MimeTypeJSONFeed,
+		model.MimeTypeAtom,
+		model.MimeTypeRSS,
+		model.MimeTypeXML:
+
 		return append(result, digit.Link{
 			RelationType: model.LinkRelationSelf,
-			MediaType:    mimeType,
-			Href:         targetURL,
+			MediaType:    mediaType,
+			Href:         response.Request.URL.String(),
 		})
 	}
 
@@ -90,7 +61,7 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 	// So, look for embedded links to other feeds (ActivityPub/RSS/Atom/JSONFeed).
 
 	// Scan the HTML document for relevant links
-	htmlDocument, err := goquery.NewDocumentFromReader(&body)
+	htmlDocument, err := goquery.NewDocumentFromReader(bytes.NewReader(body.Bytes()))
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error parsing HTML document"))
@@ -104,7 +75,7 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 
 		relationType := nodeAttribute(link, "rel")
 		href := nodeAttribute(link, "href")
-		href = getRelativeURL(targetURL, href)
+		href = getRelativeURL(response.Request.URL.String(), href)
 
 		// Special case for WebSub relation types
 		switch relationType {
@@ -136,7 +107,40 @@ func discoverLinksFromHTML(targetURL string) []digit.Link {
 	return result
 }
 
-func discoverLinksFromWebFinger(targetURL string) []digit.Link {
+// discoverLinks_Headers scans the HTTP headers for WebSub links
+func discoverLinks_Headers(response *http.Response) []digit.Link {
+
+	result := make([]digit.Link, 0)
+
+	// Scan the response headers for WebSub links
+	// TODO: LOW: Are RSS links ever put into the headers?
+	// TODO: LOW: Are RSSCloud links ever put into the headers?
+	linkHeaders := linkheader.ParseMultiple(response.Header["Link"])
+
+	for _, link := range linkHeaders {
+
+		switch link.Rel {
+		case model.LinkRelationHub:
+			result = append(result, digit.Link{
+				MediaType:    model.MagicMimeTypeWebSub,
+				RelationType: link.Rel,
+				Href:         link.URL,
+			})
+
+		case model.LinkRelationSelf:
+			result = append(result, digit.Link{
+				RelationType: link.Rel,
+				Href:         link.URL,
+			})
+
+		}
+	}
+
+	return result
+}
+
+// discoverLinks_WebFinger uses the WebFinger protocol to search for additional metadata about the targetURL
+func discoverLinks_WebFinger(targetURL string) []digit.Link {
 
 	// Compute the WebFinger service for the targetURL
 	webfingerURL, err := getWebFingerURL(targetURL)
@@ -160,6 +164,7 @@ func discoverLinksFromWebFinger(targetURL string) []digit.Link {
 	return object.Links
 }
 
+// getWebFingerURL determines the best WebFinger URL for a given target URL.
 func getWebFingerURL(targetURL string) (url.URL, error) {
 
 	const location = "service.getWebFingerURL"
