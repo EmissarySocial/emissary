@@ -6,25 +6,26 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/labstack/gommon/random"
+	"github.com/benpate/rosetta/first"
 )
 
-func (service *Following) connect_WebSub(following *model.Following, link digit.Link, topic string) error {
+func (service *Following) connect_WebSub(following *model.Following, link digit.Link) error {
 
 	const location = "service.Following.ConnectWebSub"
 
 	var success string
 	var failure string
 
-	if topic == "" {
-		return derp.NewBadRequestError(location, "Missing topic URL", following, link, topic)
-	}
+	// Autocompute the topic.  Use "self" link first, or just the following URL
+	self := following.GetLink("rel", model.LinkRelationSelf)
+	topicURL := first.String(self.Href, following.URL)
 
 	secret := random.String(32)
 
 	transaction := remote.Post(link.Href).
 		Header("Accept", followingMimeStack).
 		Form("hub.mode", "subscribe").
-		Form("hub.topic", topic).
+		Form("hub.topic", topicURL).
 		Form("hub.callback", service.websubCallbackURL(following)).
 		Form("hub.secret", secret).
 		Form("hub.lease_seconds", "2582000").
@@ -36,7 +37,7 @@ func (service *Following) connect_WebSub(following *model.Following, link digit.
 
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
-	following.URL = topic
+	following.URL = topicURL
 	following.PollDuration = 30
 	following.Secret = secret
 

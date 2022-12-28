@@ -202,10 +202,8 @@ func (service *Following) connect_PushServices(following *model.Following) {
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
-		if self := following.GetLink("rel", model.LinkRelationSelf); !self.IsEmpty() {
-			if err := service.connect_WebSub(following, hub, self.Href); err == nil {
-				return
-			}
+		if err := service.connect_WebSub(following, hub); err == nil {
+			return
 		}
 	}
 }
