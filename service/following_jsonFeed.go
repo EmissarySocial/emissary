@@ -15,22 +15,39 @@ import (
 
 func (service *Following) import_JSONFeed(following *model.Following, _ *http.Response, body *bytes.Buffer) error {
 
+	const location = "service.Following.importJSONFeed"
+
 	var feed jsonfeed.Feed
 
+	// Parse the JSON feed
 	if err := json.Unmarshal(body.Bytes(), &feed); err != nil {
-		return derp.Wrap(err, "service.Following.importJSONFeed", "Error parsing JSON Feed", following, body.String())
+		return derp.Wrap(err, location, "Error parsing JSON Feed", following, body.String())
 	}
 
 	following.Label = feed.Title
 
-	for _, item := range feed.Items {
-		stream := convert.JsonFeedToStream(item)
+	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
+	var errorCollection error
 
-		if err := service.saveStream(following, &stream); err != nil {
-			return derp.Wrap(err, "service.Following.importJSONFeed", "Error saving stream", following, stream)
+	for _, item := range feed.Items {
+		activity := convert.JsonFeedToActivity(item)
+		if err := service.saveActivity(following, &activity); err != nil {
+			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error saving activity", following, activity))
 		}
 	}
 
+	if errorCollection != nil {
+
+		// Try to update the following status
+		if err := service.SetStatus(following, model.FollowingStatusFailure, errorCollection.Error()); err != nil {
+			return derp.Wrap(err, location, "Error updating following status", following)
+		}
+
+		// There were errors, but they're noted in the following status, so THIS step is successful
+		return nil
+	}
+
+	// Discover hubs
 	for _, hub := range feed.Hubs {
 
 		switch strings.ToUpper(hub.Type) {
@@ -47,7 +64,6 @@ func (service *Following) import_JSONFeed(following *model.Following, _ *http.Re
 				continue
 			}
 
-		// Unrecognized hub type
 		default:
 			continue
 		}
@@ -58,7 +74,7 @@ func (service *Following) import_JSONFeed(following *model.Following, _ *http.Re
 
 	// Save our success
 	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
-		return derp.Wrap(err, "service.Following.importJSONFeed", "Error setting status", following)
+		return derp.Wrap(err, location, "Error setting status", following)
 	}
 
 	return nil

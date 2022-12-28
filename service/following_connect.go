@@ -151,14 +151,40 @@ func (service *Following) poll(following *model.Following, link digit.Link, impo
 	return nil
 }
 
-// saveStream saves a stream to the database, marking its origin as the "following" object
-func (service *Following) saveStream(following *model.Following, stream *model.Stream) error {
+// saveActivity adds/updates an individual Activity based on an RSS item
+func (service *Following) saveActivity(following *model.Following, activity *model.Activity) error {
 
-	stream.Origin = following.Origin()
+	const location = "service.Following.saveActivity"
 
-	if err := service.streamService.Save(stream, "From Followed Account"); err != nil {
-		return derp.Wrap(err, "service.Following", "Error saving stream", stream)
+	original := model.NewActivity()
+	activity.UpdateWithFollowing(following)
+
+	// Search for an existing Activity that matches the parameter
+	err := service.inboxService.LoadByDocumentURL(following.UserID, activity.Document.URL, &original)
+
+	// If this activity IS NOT FOUND in the database, then save the new record to the database
+	if derp.NotFound(err) {
+
+		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+			return derp.Wrap(err, location, "Error saving activity")
+		}
+
+		return nil
 	}
 
-	return nil
+	// If this activity IS FOUND in the database, then try to update it
+	if err == nil {
+
+		// Otherwise, update the original and save
+		original.UpdateWithActivity(activity)
+
+		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+			return derp.Wrap(err, location, "Error saving activity")
+		}
+
+		return nil
+	}
+
+	// Otherwise, it's a legitimate error, so let's shut this whole thing down.
+	return derp.Wrap(err, location, "Error loading local activity")
 }

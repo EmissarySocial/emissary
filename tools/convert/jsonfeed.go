@@ -45,11 +45,11 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 	}
 }
 
-func JsonFeedToStream(item jsonfeed.Item) model.Stream {
+func JsonFeedToActivity(item jsonfeed.Item) model.Activity {
 
-	stream := model.NewStream()
-	stream.PublishDate = item.DatePublished.UnixMilli()
-	stream.Document = model.DocumentLink{
+	activity := model.NewActivity()
+	activity.PublishDate = item.DatePublished.UnixMilli()
+	activity.Document = model.DocumentLink{
 		URL:      item.URL,
 		Label:    item.Title,
 		Summary:  item.Summary,
@@ -62,10 +62,10 @@ func JsonFeedToStream(item jsonfeed.Item) model.Stream {
 	}
 
 	if item.ContentHTML != "" {
-		stream.Content = model.NewHTMLContent(item.ContentHTML)
+		activity.Content = model.NewHTMLContent(item.ContentHTML)
 	} else if item.ContentText != "" {
-		stream.Content = model.NewTextContent(item.ContentText)
+		activity.Content = model.NewTextContent(item.ContentText)
 	}
 
-	return stream
+	return activity
 }

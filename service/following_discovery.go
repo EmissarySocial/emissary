@@ -12,6 +12,8 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/mmcdole/gofeed"
 	"github.com/tomnomnom/linkheader"
 )
 
@@ -142,6 +144,18 @@ func discoverLinks_Headers(response *http.Response) []digit.Link {
 			})
 
 		}
+	}
+
+	return result
+}
+
+func discoverLinks_RSS(response *http.Response, rssFeed *gofeed.Feed) []digit.Link {
+
+	result := discoverLinks_Headers(response)
+
+	// Look for WebSub links
+	for _, link := range rssFeed.Links {
+		spew.Dump("found link in RSS/Atom Feed", link)
 	}
 
 	return result
