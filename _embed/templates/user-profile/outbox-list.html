@@ -11,8 +11,7 @@
 		<div class="hover-trigger">
 			{{- if $userCanEdit -}}
 				<div class="float-right hover-reveal text-sm">
-					<button>Edit</button>
-					<button hx-get="/{{.StreamID.Hex}}/delete" hx-push-url="false">Delete</button>
+					<button hx-get="/{{.StreamID.Hex}}/edit">Edit</button>
 				</div>
 			{{- end -}}
 			<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">

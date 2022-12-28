@@ -312,6 +312,11 @@ func (w Stream) IsReply() bool {
 	return (w.stream.InReplyTo.IsEmpty())
 }
 
+// IsNew returns TRUE if this stream has not been saved to the database
+func (w Stream) IsNew() bool {
+	return w.stream.IsNew()
+}
+
 // IsEmpty returns TRUE if the stream is an empty placeholder.
 func (w Stream) IsEmpty() bool {
 	return (w.stream == nil) || (w.stream.StreamID == primitive.NilObjectID)

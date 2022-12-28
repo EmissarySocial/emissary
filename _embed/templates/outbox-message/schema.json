@@ -36,19 +36,31 @@
 		"create":{
 			"roles": ["self"],
 			"steps": [
-				{"step":"view-html"},
+				{"step":"view-html", "file":"edit"},
 				{"step":"set-data", "paths":["document.summary"]},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"document.imageUrl"},
 				{"step":"publish"},
-				{"step":"trigger-event", "event":{"refreshPage":true}}
+				{"step":"refresh-page"}
+			]
+		},
+		"edit": {
+			"roles":["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"view-html", "file":"edit"},
+					{"step":"set-data", "paths":["document.summary"]},
+					{"step":"save"},
+					{"step":"publish"},
+					{"step":"refresh-page"}
+				]}
 			]
 		},
 		"delete": {
 			"roles":["self"],
 			"steps": [
-				{"step":"delete"},
+				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
 				{"step":"publish"},
 				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]

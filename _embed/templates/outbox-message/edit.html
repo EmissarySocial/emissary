@@ -29,6 +29,10 @@
 		on htmx:configRequest(parameters)
 			set parameters['document.summary'] to Autolinker.link(#summaryHTML.innerText, $autolinkerOptions)">
 
+	{{if not .IsNew}}
+		<h1>Edit Post</h1>
+	{{end}}
+
 	<div style="margin-bottom:10px;">
 		<div id="summaryHTML"
 			class="input"
@@ -48,7 +52,7 @@
 					set oldPosition to :caret.getPos() then
 					set my innerHTML to Autolinker.link(my innerText, $autolinkerOptions) then
 					call :caret.setPos(oldPosition)"
-		></div>
+		>{{.Summary}}</div>
 	</div>
 
 	<div id="file-preview"></div>
@@ -61,21 +65,21 @@
 		class="hide">
 
 	<div>
-		<span class="text-sm">
-			<button type="submit" class="primary htmx-request-hide">New Post</button>
-			<button type="button" class="primary htmx-request-show" disabled>Posting...</button>
-		</span>
-		<span class="text-lg">
-			&nbsp;
-			<label for="file-upload" class="link" role="button">{{icon "image"}}</label>
-			&nbsp;
-			<label class="link" role="button" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
-			<!--
+		{{- if .IsNew -}}
+			<button type="submit" class="primary htmx-request-hide text-sm">New Post</button>
+			<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
+			<span class="text-lg">
 				&nbsp;
-				<label class="link" role="button" hx-get="/.giphy" hx-target="#giphy-search" hx-swap="innerHTML" hx-push-url="false">{{icon "search"}}</label>
-				<div id="giphy-search" class="inline-block" style="position:relative; width:100%; max-width:200px;"></div>
-			-->
-		</span>
+				<label for="file-upload" class="link" role="button">{{icon "image"}}</label>
+				&nbsp;
+				<label class="link" role="button" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
+			</span>
+		{{- else -}}
+			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
+			<button type="submit" class="primary htmx-request-hide">Edit Post</button>
+			<button type="button" class="primary htmx-request-show" disabled>Saving Changed...</button>
+			<button type="button" script="on click trigger closeModal">Cancel</button>
+		{{- end -}}
 	</div>
 </form>
 
