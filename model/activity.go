@@ -30,6 +30,8 @@ type Activity struct {
 func NewActivity() Activity {
 	return Activity{
 		ActivityID: primitive.NewObjectID(),
+		OwnerID:    primitive.NilObjectID,
+		FolderID:   primitive.NilObjectID,
 	}
 }
 

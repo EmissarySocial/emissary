@@ -4,16 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/kr/jsonfeed"
 )
 
-func (service *Following) import_JSONFeed(following *model.Following, _ *http.Response, body *bytes.Buffer) error {
+func (service *Following) import_JSONFeed(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
 	const location = "service.Following.importJSONFeed"
 
@@ -36,6 +34,7 @@ func (service *Following) import_JSONFeed(following *model.Following, _ *http.Re
 		}
 	}
 
+	// If there were errors parsing the feed, then mark the record as an error.
 	if errorCollection != nil {
 
 		// Try to update the following status
@@ -47,30 +46,7 @@ func (service *Following) import_JSONFeed(following *model.Following, _ *http.Re
 		return nil
 	}
 
-	// Discover hubs
-	for _, hub := range feed.Hubs {
-
-		switch strings.ToUpper(hub.Type) {
-
-		case model.FollowMethodWebSub:
-			link := digit.NewLink(model.LinkRelationHub, model.MimeTypeJSONFeed, hub.URL)
-			if err := service.connect_WebSub(following, link, following.URL); err != nil {
-				continue
-			}
-
-		case model.FollowMethodRSSCloud:
-			link := digit.NewLink(model.LinkRelationHub, model.MimeTypeJSONFeed, hub.URL)
-			if err := service.connect_RSSCloud(following, link); err != nil {
-				continue
-			}
-
-		default:
-			continue
-		}
-
-		// If we're here, we found a hub that we can use, so we're done.
-		break
-	}
+	following.Links = discoverLinks_JSONFeed(response, &feed)
 
 	// Save our success
 	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {

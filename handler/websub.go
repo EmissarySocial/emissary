@@ -76,7 +76,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			spew.Dump("rewriting topic link..", self, transaction)
 			if transaction.Topic == self.Href {
 				following.URL = self.Href
-				spew.Dump("successful??", following)
+				spew.Dump("successful!", following)
 			} else {
 				spew.Dump("nope, but why?")
 			}

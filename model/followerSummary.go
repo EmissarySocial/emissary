@@ -30,8 +30,6 @@ func (summary FollowerSummary) MethodIcon() string {
 		return "rss-fill"
 	case FollowMethodWebSub:
 		return "websub-fill"
-	case FollowMethodRSSCloud:
-		return "rss-cloud-fill"
 	case FollowMethodActivityPub:
 		return "activitypub-fill"
 	}

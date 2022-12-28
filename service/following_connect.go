@@ -55,6 +55,9 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
+	// Try to connect to push services (WebSub, ActivityPub, etc)
+	service.connect_PushServices(&following)
+
 	return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
 }
 
@@ -66,9 +69,6 @@ func (service *Following) Disconnect(following *model.Following) {
 
 	case model.FollowMethodWebSub:
 		service.disconnect_WebSub(following)
-
-	case model.FollowMethodRSSCloud:
-		service.disconnect_RSSCloud(following)
 	}
 }
 
@@ -187,4 +187,24 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 
 	// Otherwise, it's a legitimate error, so let's shut this whole thing down.
 	return derp.Wrap(err, location, "Error loading local activity")
+}
+
+// connect_PushServices tries to connect to the best available push service
+func (service *Following) connect_PushServices(following *model.Following) {
+
+	// ActivityPub is first because it's the highest fidelity (when it works)
+	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
+		if err := service.connect_ActivityPub(following, activityPub); err == nil {
+			return
+		}
+	}
+
+	// WebSub is second because it works (and fat pings will be cool when they're implemented)
+	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
+		if self := following.GetLink("rel", model.LinkRelationSelf); !self.IsEmpty() {
+			if err := service.connect_WebSub(following, hub, self.Href); err == nil {
+				return
+			}
+		}
+	}
 }

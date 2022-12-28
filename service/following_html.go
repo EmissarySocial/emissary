@@ -23,14 +23,12 @@ func (service *Following) import_HTML(following *model.Following, response *http
 		return derp.Wrap(err, location, "Error importing HTML", following, body.String())
 	}
 
-	// Look for WebSub/RSSCloud/ActivityPub hubs
-	service.findPushServices(following)
-
 	// Update status to "active"
 	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
 		return derp.Wrap(err, location, "Error setting status", following)
 	}
 
+	// Success!
 	return nil
 }
 
@@ -87,21 +85,4 @@ func (service *Following) import_Microformats(following *model.Following, respon
 	}
 
 	return atLeastOneChild
-}
-
-func (service *Following) findPushServices(following *model.Following) {
-
-	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
-		if self := following.GetLink("rel", model.LinkRelationSelf); !self.IsEmpty() {
-			if err := service.connect_WebSub(following, hub, self.Href); err == nil {
-				return
-			}
-		}
-	}
-
-	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
-		if err := service.connect_ActivityPub(following, activityPub); err == nil {
-			return
-		}
-	}
 }

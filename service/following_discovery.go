@@ -5,6 +5,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/PuerkitoBio/goquery"
@@ -13,6 +14,7 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/kr/jsonfeed"
 	"github.com/mmcdole/gofeed"
 	"github.com/tomnomnom/linkheader"
 )
@@ -156,6 +158,23 @@ func discoverLinks_RSS(response *http.Response, rssFeed *gofeed.Feed) []digit.Li
 	// Look for WebSub links
 	for _, link := range rssFeed.Links {
 		spew.Dump("found link in RSS/Atom Feed", link)
+	}
+
+	return result
+}
+
+func discoverLinks_JSONFeed(response *http.Response, jsonFeed *jsonfeed.Feed) []digit.Link {
+
+	result := discoverLinks_Headers(response)
+
+	// Discover hubs
+	for _, hub := range jsonFeed.Hubs {
+
+		switch strings.ToUpper(hub.Type) {
+
+		case model.FollowMethodWebSub:
+			result = append(result, digit.NewLink(model.LinkRelationHub, model.MimeTypeJSONFeed, hub.URL))
+		}
 	}
 
 	return result

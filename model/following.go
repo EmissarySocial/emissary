@@ -14,9 +14,6 @@ const FollowMethodActivityPub = "ACTIVITYPUB"
 // FollowMethodPoll represents a subscription that must be polled for updates
 const FollowMethodPoll = "POLL"
 
-// FollowMethodRSSCloud represents an RSS-Cloud subscription
-const FollowMethodRSSCloud = "RSSCLOUD"
-
 // FollowMethodWebSub represents a WebSub subscription
 const FollowMethodWebSub = "WEBSUB"
 
@@ -77,7 +74,7 @@ func FollowingSchema() schema.Element {
 			"folderId":      schema.String{Format: "objectId"},
 			"label":         schema.String{Required: true, MinLength: 1, MaxLength: 100},
 			"url":           schema.String{Format: "url", Required: true, MinLength: 1, MaxLength: 1000},
-			"method":        schema.String{Required: true, Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodRSSCloud, FollowMethodActivityPub}},
+			"method":        schema.String{Required: true, Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":        schema.String{Enum: []string{FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage": schema.String{MaxLength: 1000},
 			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0)},

@@ -30,8 +30,6 @@ func (summary FollowingSummary) StatusIcon() string {
 		icon = "activitypub"
 	case FollowMethodPoll:
 		icon = "rss"
-	case FollowMethodRSSCloud:
-		icon = "rss-cloud"
 	case FollowMethodWebSub:
 		icon = "websub"
 	}
