@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -72,8 +73,12 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// RULE: Update the Topic URL if it is not already set
 		if self := following.GetLink("rel", "self"); !self.IsEmpty() {
+			spew.Dump("rewriting topic link..", self, transaction)
 			if transaction.Topic == self.Href {
 				following.URL = self.Href
+				spew.Dump("successful??", following)
+			} else {
+				spew.Dump("nope, but why?")
 			}
 		}
 
