@@ -343,11 +343,11 @@ input.text-md {
 }
 
 .text-red {
-    color:var(--red50)!important;
+    color:var(--red60)!important;
 }
 
 .text-red:hover {
-    color:var(--red60)!important;
+    color:var(--red50)!important;
 }
 
 hr {
