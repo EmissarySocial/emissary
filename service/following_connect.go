@@ -162,23 +162,24 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 	// Search for an existing Activity that matches the parameter
 	err := service.inboxService.LoadByDocumentURL(following.UserID, activity.Document.URL, &original)
 
+	switch {
+
 	// If this activity IS NOT FOUND in the database, then save the new record to the database
-	if derp.NotFound(err) {
+	case derp.NotFound(err):
 
 		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
 			return derp.Wrap(err, location, "Error saving activity")
 		}
 
 		return nil
-	}
 
 	// If this activity IS FOUND in the database, then try to update it
-	if err == nil {
+	case err == nil:
 
 		// Otherwise, update the original and save
 		original.UpdateWithActivity(activity)
 
-		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+		if err := service.inboxService.Save(&original, "Activity Updated"); err != nil {
 			return derp.Wrap(err, location, "Error saving activity")
 		}
 
