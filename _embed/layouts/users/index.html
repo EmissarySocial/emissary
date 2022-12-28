@@ -1,22 +1,22 @@
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
-
 <div class="page" hx-get="/admin/users/index" hx-trigger="refreshPage from:body">
    
-    <h1>Settings</h1>
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+	<script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
+	
+	<h1>Settings</h1>
 
-    <div id="menu-bar" hx-push-url="true">
-        {{- $token := .Token -}}
-        {{- range .AdminSections -}}
-            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-        {{- end -}}
-    </div>
+	<div id="menu-bar" hx-push-url="true">
+		{{- $token := .Token -}}
+		{{- range .AdminSections -}}
+			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+		{{- end -}}
+	</div>
 
-    <table id="users" class="table">
-        <tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
-            {{icon "add"}}&nbsp;Invite a Person
-        </td></tr>
+	<table id="users" class="table">
+		<tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
+			{{icon "add"}}&nbsp;Invite a Person
+		</td></tr>
 
-        {{- .View "list" -}}
-    </table>
+		{{- .View "list" -}}
+	</table>
 </div>

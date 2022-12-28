@@ -98,7 +98,7 @@
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"as-modal", "steps": [
-						{"step":"form-html", "form": {
+						{"step":"edit", "form": {
 							"type":"layout-vertical",
 							"label":"Manage Folder",
 							"children": [
@@ -123,7 +123,7 @@
 			"roles": ["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
-					{"step":"form-html", "form": {
+					{"step":"edit", "form": {
 						"type":"layout-vertical",
 						"label":"Edit Profile Info",
 						"children": [

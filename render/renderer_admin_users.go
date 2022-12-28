@@ -128,6 +128,10 @@ func (w User) UserID() string {
 	return w.user.UserID.Hex()
 }
 
+func (w User) Label() string {
+	return w.user.DisplayName
+}
+
 func (w User) DisplayName() string {
 	return w.user.DisplayName
 }

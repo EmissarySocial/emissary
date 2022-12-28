@@ -26,16 +26,19 @@
 		"edit": {
 			"steps": [{
 				"step": "as-modal",
-				"steps": [{
-					"step": "form-html",
-					"form": {
-						"type": "layout-vertical",
-						"label": "Edit Group",
-						"description": "",
-						"children": [
-							{"type": "text", "label": "Label", "path": "label"}
-						]
-					}},
+				"steps": [
+					{
+						"step": "edit",
+						"form": {
+							"type": "layout-vertical",
+							"label": "Edit Group",
+							"description": "",
+							"children": [
+								{"type": "text", "label": "Label", "path": "label"}
+							]
+						},
+						"options": ["delete:/admin/groups/{{.GroupID}}/delete"]
+					},
 					{"step": "save","comment": "Updated by {{.Author}}"}
 				]
 			}]
@@ -43,7 +46,7 @@
 
 		"delete": {
 			"steps":[
-				{"step": "delete", "type": "group", "title":"Delete this Group?", "message": "People assigned to this group will not be removed."},
+				{"step": "delete", "type": "group", "message": "People will be removed from this group, but will not be deleted."},
 				{"step": "refresh-page"}
 			]
 		}

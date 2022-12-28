@@ -29,20 +29,23 @@
 		"edit": {
 			"steps": [{
 				"step": "as-modal",
-				"steps": [{
-					"step": "edit",
-					"type": "user",
-					"form": {
-						"type": "layout-vertical",
-						"label": "Edit Person",
-						"description": "",
-						"children": [
-							{"type": "text", "label": "Full Name", "path": "displayName"},
-							{"type": "text", "label": "Email Address", "path": "emailAddress"},
-							{"type": "text", "label": "Username", "path": "username"},
-							{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
-						]
-					}},
+				"steps": [
+					{
+						"step": "edit",
+						"type": "user",
+						"form": {
+							"type": "layout-vertical",
+							"label": "Edit Person",
+							"description": "",
+							"children": [
+								{"type": "text", "label": "Full Name", "path": "displayName"},
+								{"type": "text", "label": "Email Address", "path": "emailAddress"},
+								{"type": "text", "label": "Username", "path": "username"},
+								{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
+							]
+						},
+						"options": ["delete:/admin/users/{{.UserID}}/delete"]
+					},
 					{"step": "save", "type":"user", "comment": "Updated by {{.Author}}"}
 				]
 			}]
@@ -51,7 +54,7 @@
 		"delete": {
 			"steps":[
 				{"step": "delete", "type": "user"},
-				{"step": "forward-to", "url": "/admin/users"}
+				{"step": "refresh-page"}
 			]
 		}
 	}

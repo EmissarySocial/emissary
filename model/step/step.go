@@ -38,9 +38,6 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "save":
 		return NewSave(stepInfo)
 
-	case "form-html":
-		return NewForm(stepInfo)
-
 	case "set-data":
 		return NewSetData(stepInfo)
 

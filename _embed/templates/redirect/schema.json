@@ -31,7 +31,7 @@
 				"step": "as-modal",
 				"steps": [
 					{
-						"step": "form-html",
+						"step": "edit",
 						"label": "Edit Redirect",
 						"form": {
 							"type": "layout-vertical",

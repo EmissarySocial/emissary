@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
@@ -8,30 +10,37 @@ import (
 
 // EditModelObject is an action that can add new sub-streams to the domain.
 type EditModelObject struct {
-	Form     form.Element
-	Defaults []Step
+	Form    form.Element
+	Options []*template.Template
 }
 
 // NewEditModelObject returns a fully initialized EditModelObject record
 func NewEditModelObject(stepInfo maps.Map) (EditModelObject, error) {
 
-	// Parse form
+	// Parse the form definition
 	f, err := form.Parse(stepInfo.GetInterface("form"))
 
 	if err != nil {
 		return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'form'", stepInfo)
 	}
 
-	// Parse defaults
-	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"))
+	// Parse options
+	options := stepInfo.GetSliceOfString("options")
+	optionTemplates := make([]*template.Template, len(options))
 
-	if err != nil {
-		return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'defaults'", stepInfo)
+	for index, option := range options {
+		template, err := template.New("option").Parse(option)
+
+		if err != nil {
+			return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'options'", stepInfo)
+		}
+
+		optionTemplates[index] = template
 	}
 
 	return EditModelObject{
-		Form:     f,
-		Defaults: defaults,
+		Form:    f,
+		Options: optionTemplates,
 	}, nil
 }
 

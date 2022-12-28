@@ -1,6 +1,8 @@
 package render
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"strings"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -98,7 +101,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	b.Div()
 
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
-		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-post", deleteURL).Attr("hx-confirm", "Are you sure you want to DELETE this record?").InnerHTML("Delete").Close()
+		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerHTML("Delete").Close()
 		b.Space()
 	}
 
@@ -228,4 +231,21 @@ func replaceActionID(path string, newActionID string) string {
 	parsedPath := strings.Split(path, "/")
 
 	return "/" + parsedPath[0] + "/" + newActionID
+}
+
+type TemplateLike interface {
+	Execute(wr io.Writer, data interface{}) error
+}
+
+// executeTemplate returns the result of a template execution as a string
+func executeTemplate(template TemplateLike, data any) string {
+
+	var buffer bytes.Buffer
+
+	if err := template.Execute(&buffer, data); err != nil {
+		spew.Dump(err)
+		return ""
+	}
+
+	return buffer.String()
 }

@@ -2,16 +2,16 @@ package render
 
 import (
 	"io"
+	"text/template"
 
-	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
 type StepEditModelObject struct {
-	Form     form.Element
-	Defaults []step.Step
+	Form    form.Element
+	Options []*template.Template
 }
 
 // Get displays a modal form that lets users enter data for their new model object.
@@ -21,21 +21,20 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 
 	factory := renderer.factory()
 	schema := renderer.schema()
-	object := renderer.object()
-
-	// First, try to execute any "default" steps so that the object is initialized
-	if err := Pipeline(step.Defaults).Get(factory, renderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing default steps")
-	}
 
 	// Try to render the Form HTML
-	result, err := form.Editor(schema, step.Form, object, factory.LookupProvider())
+	result, err := form.Editor(schema, step.Form, renderer.object(), factory.LookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")
 	}
 
-	result = WrapForm(renderer.URL(), result)
+	optionStrings := make([]string, len(step.Options))
+	for index, option := range step.Options {
+		optionStrings[index] = executeTemplate(option, renderer)
+	}
+
+	result = WrapForm(renderer.URL(), result, optionStrings...)
 
 	// Wrap result as a modal dialog
 	io.WriteString(buffer, result)
@@ -52,15 +51,9 @@ func (step StepEditModelObject) Post(renderer Renderer) error {
 	const location = "render.StepEditModelObject.Post"
 
 	// This finds/creates a new object in the renderer
-	factory := renderer.factory()
 	request := renderer.context().Request()
 	object := renderer.object()
 	schema := renderer.schema()
-
-	// Execute any "default" steps so that the object is initialized
-	if err := Pipeline(step.Defaults).Post(factory, renderer); err != nil {
-		return derp.Wrap(err, location, "Error executing default steps")
-	}
 
 	// Parse form information
 	if err := request.ParseForm(); err != nil {

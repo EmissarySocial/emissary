@@ -45,7 +45,7 @@
 			"steps": [{
 				"step": "as-modal",
 				"steps": [{
-					"step": "form-html",
+					"step": "edit",
 					"form": {
 						"type": "layout-vertical",
 						"label": "Edit Photograph",

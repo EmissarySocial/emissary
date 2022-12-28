@@ -7,9 +7,6 @@
                 <td role="link" hx-get="/admin/users/{{$user.UserID}}/edit" class="width-100">
                     {{icon "user"}}&nbsp;{{$user.DisplayName}}
                 </td>
-                <td role="link" hx-get="/admin/users/{{$user.UserID}}/delete">
-                    {{icon "delete"}}
-                </td>
             </tr>
         </div>
     {{- end -}}

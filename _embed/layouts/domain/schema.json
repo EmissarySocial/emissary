@@ -17,7 +17,7 @@
 				"step": "as-modal", 
 				"steps": [
 					{
-						"step": "form-html",
+						"step": "edit",
 						"form": {
 							"type": "layout-vertical",
 							"label": "Custom Signup Form",

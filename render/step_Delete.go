@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"text/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
@@ -9,8 +10,8 @@ import (
 
 // StepDelete represents an action-step that can delete a Stream from the Domain
 type StepDelete struct {
-	Title   string
-	Message string
+	Title   *template.Template
+	Message *template.Template
 	Submit  string
 }
 
@@ -19,8 +20,8 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 
 	b := html.New()
 
-	b.H2().InnerHTML(step.Title).Close()
-	b.Div().Class("space-below").InnerHTML(step.Message).Close()
+	b.H2().InnerHTML(executeTemplate(step.Title, renderer)).Close()
+	b.Div().Class("space-below").InnerHTML(executeTemplate(step.Message, renderer)).Close()
 
 	b.Button().Class("warning").
 		Attr("hx-post", renderer.URL()).
