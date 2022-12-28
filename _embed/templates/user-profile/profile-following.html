@@ -26,13 +26,12 @@
 
 				<br>
 
+				<!-- TODO: LOW: Should support infinite scroll -->
 				<table class="table">
 					{{ range $following }}
-						<tr role="button">
-							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">
+						<tr hx-get="/@me/pub/following/{{.FollowingID.Hex}}" role="button">
+							<td>
 								<span class="{{.StatusClass}}">{{icon .StatusIcon}}</span>
-							</td>
-							<td hx-get="/@me/pub/following/{{.FollowingID.Hex}}">
 								{{ if ne "" .Label }} 
 									{{- .Label -}}
 								{{ else }}
