@@ -1,34 +1,44 @@
 package convert
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"willnorris.com/go/microformats"
 )
 
-func MicroformatToStream(feed *microformats.Microformat, entry *microformats.Microformat) model.Stream {
+func MicroformatToActivity(feed *microformats.Microformat, entry *microformats.Microformat) model.Activity {
 
-	stream := model.NewStream()
+	activity := model.NewActivity()
 
 	// Get properties from entry
-	stream.Document.URL = MicroformatPropertyToString(entry, "url")
-	stream.Document.Label = MicroformatPropertyToString(entry, "name")
-	stream.Document.Summary = MicroformatPropertyToString(entry, "summary")
+	activity.Document.URL = MicroformatPropertyToString(entry, "url")
+	activity.Document.Label = MicroformatPropertyToString(entry, "name")
+	activity.Document.Summary = MicroformatPropertyToString(entry, "summary")
 
 	// Get photo from entry, then feed
 	if photoURL := MicroformatPropertyToString(entry, "photo"); photoURL != "" {
-		stream.Document.ImageURL = photoURL
+		activity.Document.ImageURL = photoURL
 	} else if photoURL := MicroformatPropertyToString(feed, "photo"); photoURL != "" {
-		stream.Document.ImageURL = photoURL
+		activity.Document.ImageURL = photoURL
 	}
 
 	// Get author from entry, then feed
 	if author := AnyToMicroformat(entry.Properties["author"]); author != nil {
-		stream.Document.Author = MicroformatToAuthor(author)
+		activity.Document.Author = MicroformatToAuthor(author)
 	} else if author := AnyToMicroformat(feed.Properties["author"]); author != nil {
-		stream.Document.Author = MicroformatToAuthor(author)
+		activity.Document.Author = MicroformatToAuthor(author)
 	}
 
-	return stream
+	// Get the publish date from the entry
+	activity.PublishDate = time.Now().Unix()
+	if published := MicroformatPropertyToString(entry, "published"); published != "" {
+		if publishDate, err := time.Parse(time.RFC3339, published); err == nil {
+			activity.PublishDate = publishDate.Unix()
+		}
+	}
+
+	return activity
 }
 
 func MicroformatToAuthor(entry *microformats.Microformat) model.PersonLink {

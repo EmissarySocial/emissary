@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/mmcdole/gofeed"
 )
@@ -33,8 +34,9 @@ func (service *Following) import_RSS(following *model.Following, transaction *ht
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	var errorCollection error
 
-	for _, item := range rssFeed.Items {
-		if err := service.saveActivity(following, rssFeed, item); err != nil {
+	for _, rssItem := range rssFeed.Items {
+		activity := convert.RSSToActivity(rssFeed, rssItem)
+		if err := service.saveActivity(following, &activity); err != nil {
 			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
 		}
 	}
@@ -61,41 +63,39 @@ func (service *Following) import_RSS(following *model.Following, transaction *ht
 }
 
 // saveActivity adds/updates an individual Activity based on an RSS item
-func (service *Following) saveActivity(following *model.Following, rssFeed *gofeed.Feed, rssItem *gofeed.Item) error {
+func (service *Following) saveActivity(following *model.Following, activity *model.Activity) error {
 
 	const location = "service.Following.saveActivity"
 
-	activity := model.NewActivity()
+	original := model.NewActivity()
+	activity.UpdateWithFollowing(following)
 
-	// Look for duplicate records.  404 error means "no duplicate" so we can create a new one.
-	if err := service.inboxService.LoadByDocumentURL(following.UserID, rssItem.Link, &activity); err != nil {
+	// Search for an existing Activity that matches the parameter
+	err := service.inboxService.LoadByDocumentURL(following.UserID, activity.Document.URL, &original)
 
-		// Anything but a "not found" error is a real error
-		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error loading local activity")
+	// If this activity IS NOT FOUND in the database, then save the new record to the database
+	if derp.NotFound(err) {
+
+		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+			return derp.Wrap(err, location, "Error saving activity")
 		}
 
-		// Fall through means "not found" which means "make a new activity"
-		activity.OwnerID = following.UserID
-		activity.Origin = following.Origin()
-		activity.PublishDate = rssDate(rssItem.PublishedParsed)
-		activity.FolderID = following.FolderID
-
-		if updateDate := rssDate(rssItem.UpdatedParsed); updateDate > activity.PublishDate {
-			activity.PublishDate = updateDate
-		}
+		return nil
 	}
 
-	// If the RSS entry has been updated since the Activity was last touched, then refresh it.
-	if rssDate(rssItem.PublishedParsed) >= activity.Journal.UpdateDate {
+	// If this activity IS FOUND in the database, then try to update it
+	if err == nil {
 
-		populateActivity(&activity, following, rssFeed, rssItem)
+		// Otherwise, update the original and save
+		original.UpdateWithActivity(activity)
 
-		// Try to save the new/updated activity
-		if err := service.inboxService.Save(&activity, "Imported from RSS feed"); err != nil {
-			return derp.Wrap(err, "service.Following.Poll", "Error saving activity")
+		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+			return derp.Wrap(err, location, "Error saving activity")
 		}
+
+		return nil
 	}
 
-	return nil
+	// Otherwise, it's a legitimate error, so let's shut this whole thing down.
+	return derp.Wrap(err, location, "Error loading local activity")
 }

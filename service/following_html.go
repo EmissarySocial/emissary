@@ -77,8 +77,8 @@ func (service *Following) import_Microformats(following *model.Following, respon
 			for _, child := range feed.Children {
 				if slice.Contains(child.Type, "h-entry") {
 					atLeastOneChild = true
-					stream := convert.MicroformatToStream(feed, child)
-					if err := service.saveStream(following, &stream); err != nil {
+					activity := convert.MicroformatToActivity(feed, child)
+					if err := service.saveActivity(following, &activity); err != nil {
 						derp.Report(err) // report, but swallow error details
 					}
 				}

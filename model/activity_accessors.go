@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,24 +20,28 @@ func (activity *Activity) GetInt64(name string) int64 {
 	}
 }
 
-func (activity *Activity) GetObjectID(name string) primitive.ObjectID {
+func (activity *Activity) GetBytes(name string) []byte {
 	switch name {
 	case "activityId":
-		return activity.ActivityID
+		return id.ToBytes(activity.ActivityID)
 	case "ownerId":
-		return activity.OwnerID
+		return id.ToBytes(activity.OwnerID)
 	case "folderId":
-		return activity.FolderID
+		return id.ToBytes(activity.FolderID)
 	default:
-		return primitive.NilObjectID
+		return id.ToBytes(primitive.NilObjectID)
 	}
 }
 
-func (activity *Activity) GetString(name string) string {
+func (activity *Activity) GetObject(name string) any {
 	switch name {
-	case "originalJson":
-		return activity.OriginalJSON
+	case "origin":
+		return activity.Origin
+	case "document":
+		return activity.Document
+	case "content":
+		return activity.Content
 	default:
-		return ""
+		return nil
 	}
 }

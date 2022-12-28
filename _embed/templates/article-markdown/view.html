@@ -1,9 +1,6 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
 
-	<h1 class="p-name">{{.Label}}</h1>
-	<div class="p-summary">{{.Summary}}</div>
-
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<a href="/{{.StreamID}}/edit">Edit Content</a>
@@ -24,6 +21,9 @@
 
 		</div>
 	{{- end -}}
+
+	<h1 class="p-name">{{.Label}}</h1>
+	<div class="p-summary">{{.Summary}}</div>
 
 	<article class="content space-after e-content">
 		{{- .ContentHTML -}}

@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -54,8 +53,6 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 	if err := service.folderService.Save(&folder, "created"); err != nil {
 		return "", derp.Wrap(err, "service.FolderLookupProvider.Add", "Error saving folder", name)
 	}
-
-	spew.Dump("Added:", folder)
 
 	return folder.ID(), nil
 }
