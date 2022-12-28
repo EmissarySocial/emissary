@@ -48,7 +48,8 @@ func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Lin
 		model.MimeTypeJSONFeed,
 		model.MimeTypeAtom,
 		model.MimeTypeRSS,
-		model.MimeTypeXML:
+		model.MimeTypeXML,
+		model.MimeTypeXMLText:
 
 		return append(result, digit.Link{
 			RelationType: model.LinkRelationSelf,
@@ -95,7 +96,14 @@ func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Lin
 
 		switch mediaType {
 
-		case model.MimeTypeActivityPub, model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS:
+		case
+			model.MimeTypeActivityPub,
+			model.MimeTypeJSONFeed,
+			model.MimeTypeAtom,
+			model.MimeTypeRSS,
+			model.MimeTypeXML,
+			model.MimeTypeXMLText:
+
 			result = append(result, digit.Link{
 				RelationType: model.LinkRelationAlternate,
 				MediaType:    mediaType,

@@ -42,7 +42,7 @@ func (service *Following) Connect(following model.Following) error {
 		return service.import_JSONFeed(&following, transaction.ResponseObject, &body)
 
 	// Handle Atom and RSS feeds directly
-	case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML:
+	case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
 		return service.import_RSS(&following, transaction.ResponseObject, &body)
 
 	// Parse HTML to find feed links (and look for h-feed microformats)

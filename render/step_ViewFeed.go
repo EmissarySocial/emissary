@@ -104,7 +104,7 @@ func (step StepViewFeed) detectMimeType(renderer Renderer) string {
 	// Otherwise, get the format from the "Accept" header
 	header := context.Request().Header
 
-	if result, err := accept.Negotiate(header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS); err == nil {
+	if result, err := accept.Negotiate(header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText); err == nil {
 		return result
 	}
 

@@ -17,3 +17,5 @@ const MimeTypeHTML = "text/html"
 const MimeTypeRSS = "application/rss+xml"
 
 const MimeTypeXML = "application/xml"
+
+const MimeTypeXMLText = "text/xml"

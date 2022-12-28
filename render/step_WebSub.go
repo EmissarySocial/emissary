@@ -40,7 +40,7 @@ func (step StepWebSub) Post(renderer Renderer) error {
 	factory := renderer.factory()
 	queue := factory.Queue()
 
-	format, err := accept.Negotiate(renderer.context().Request().Header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS)
+	format, err := accept.Negotiate(renderer.context().Request().Header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText)
 
 	if err != nil {
 		format = model.MimeTypeJSONFeed
