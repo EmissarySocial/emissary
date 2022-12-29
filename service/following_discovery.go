@@ -123,6 +123,10 @@ func discoverLinks_Headers(response *http.Response) []digit.Link {
 
 	result := make([]digit.Link, 0)
 
+	if response == nil {
+		return result
+	}
+
 	// Scan the response headers for WebSub links
 	// TODO: LOW: Are RSS links ever put into the headers?
 	// TODO: LOW: Are RSSCloud links ever put into the headers?
@@ -152,7 +156,7 @@ func discoverLinks_Headers(response *http.Response) []digit.Link {
 
 func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link {
 
-	spew.Dump("DISCOVERING RSS LINKS...", response.Request.URL.String())
+	spew.Dump("DISCOVERING RSS LINKS...")
 
 	result := discoverLinks_Headers(response)
 

@@ -40,26 +40,35 @@ func (service *Following) Connect(following model.Following) error {
 
 	// Handle JSONFeeds directly
 	case model.MimeTypeJSONFeed:
-		return service.import_JSONFeed(&following, transaction.ResponseObject, &body)
+		if err := service.import_JSONFeed(&following, transaction.ResponseObject, &body); err != nil {
+			return derp.Wrap(err, location, "Error importing JSONFeed", following.URL)
+		}
 
 	// Handle Atom and RSS feeds directly
 	case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
-		return service.import_RSS(&following, transaction.ResponseObject, &body)
+		if err := service.import_RSS(&following, transaction.ResponseObject, &body); err != nil {
+			return derp.Wrap(err, location, "Error importing RSS", following.URL)
+		}
 
 	// Parse HTML to find feed links (and look for h-feed microformats)
 	case model.MimeTypeHTML:
-		return service.import_HTML(&following, transaction.ResponseObject, &body)
-	}
+		if err := service.import_HTML(&following, transaction.ResponseObject, &body); err != nil {
+			return derp.Wrap(err, location, "Error importing HTML", following.URL)
+		}
 
 	// Otherwise, we can't find a valid feed, so report an error.
-	if err := service.SetStatus(&following, model.FollowingStatusFailure, "Unsupported content type: "+mimeType); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
+	default:
+		if err := service.SetStatus(&following, model.FollowingStatusFailure, "Unsupported content type: "+mimeType); err != nil {
+			return derp.Wrap(err, location, "Error updating following status", following)
+		}
+
+		return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
 	}
 
-	// Try to connect to push services (WebSub, ActivityPub, etc)
+	// Finally, look for push services to connect to (WebSub, ActivityPub, etc)
 	service.connect_PushServices(&following)
 
-	return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
+	return nil
 }
 
 func (service *Following) Disconnect(following *model.Following) {
