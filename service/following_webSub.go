@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 )
 
@@ -16,11 +17,13 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	var success string
 	var failure string
 
+	spew.Dump("BEFORE UPDATE LINK", following)
 	// Autocompute the topic.  Use "self" link first, or just the following URL
 	self := following.GetLink("rel", model.LinkRelationSelf)
 	topicURL := first.String(self.Href, following.URL)
 	secret := random.String(32)
 
+	// Send request to the hub
 	transaction := remote.Post(hub.Href).
 		Header("Accept", followingMimeStack).
 		Form("hub.mode", "subscribe").
@@ -39,6 +42,8 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	following.URL = topicURL
 	following.PollDuration = 30
 	following.Secret = secret
+
+	spew.Dump("AFTER UPDATE LINK", following)
 
 	// If we're here, then we have successfully imported the RSS feed.
 	// Mark the following as having been polled
