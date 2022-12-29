@@ -167,7 +167,7 @@ func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link
 		return result
 	}
 
-	links := document.Find("link").Nodes
+	links := document.Find("[rel=hub],[rel=self]").Nodes
 
 	for _, link := range links {
 		relation := nodeAttribute(link, "rel")
@@ -184,7 +184,6 @@ func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link
 		}
 	}
 
-	spew.Dump("ALL LINKS:", result)
 	return result
 }
 
