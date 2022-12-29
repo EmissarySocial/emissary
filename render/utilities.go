@@ -243,7 +243,7 @@ func executeTemplate(template TemplateLike, data any) string {
 	var buffer bytes.Buffer
 
 	if err := template.Execute(&buffer, data); err != nil {
-		spew.Dump(err)
+		spew.Dump(derp.Wrap(err, "render.executeTemplate", "Error executing template", data))
 		return ""
 	}
 

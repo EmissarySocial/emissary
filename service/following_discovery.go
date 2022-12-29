@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/kr/jsonfeed"
 	"github.com/tomnomnom/linkheader"
 )
@@ -156,20 +155,24 @@ func discoverLinks_Headers(response *http.Response) []digit.Link {
 
 func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link {
 
-	spew.Dump("DISCOVERING RSS LINKS...")
-
 	result := discoverLinks_Headers(response)
 
 	document, err := goquery.NewDocumentFromReader(bytes.NewReader(body.Bytes()))
 
 	if err != nil {
-		spew.Dump(err)
+		derp.Report(derp.Wrap(err, "service.discoverLinks_RSS", "Error parsing RSS document"))
 		return result
 	}
 
 	links := document.Find("[rel=hub],[rel=self]").Nodes
 
 	for _, link := range links {
+
+		// Hacky way to skip over non-link nodes because the query library won't do it for us.
+		if (link.Data != "link") && (link.Data != "atom:link") {
+			continue
+		}
+
 		relation := nodeAttribute(link, "rel")
 		switch relation {
 		case
@@ -179,7 +182,6 @@ func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link
 			href := nodeAttribute(link, "href")
 			mimeType := nodeAttribute(link, "type")
 			link := digit.NewLink(relation, mimeType, href)
-			spew.Dump("FOUND LINK:", link)
 			result = append(result, link)
 		}
 	}

@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 )
 
@@ -20,9 +19,6 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	// Autocompute the topic.  Use "self" link first, or just the following URL
 	self := following.GetLink("rel", model.LinkRelationSelf)
 	topicURL := first.String(self.Href, following.URL)
-
-	spew.Dump("connect_WebSub", hub, self, topicURL)
-
 	secret := random.String(32)
 
 	transaction := remote.Post(hub.Href).
@@ -38,8 +34,6 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub.Href)
 	}
 
-	spew.Dump("request sent to hub")
-
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
 	following.URL = topicURL
@@ -49,11 +43,9 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	// If we're here, then we have successfully imported the RSS feed.
 	// Mark the following as having been polled
 	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
-		spew.Dump(err)
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
-	spew.Dump("done??")
 	return nil
 }
 
