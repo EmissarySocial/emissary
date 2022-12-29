@@ -5,11 +5,12 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
-	"github.com/labstack/gommon/random"
 	"github.com/benpate/rosetta/first"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/labstack/gommon/random"
 )
 
-func (service *Following) connect_WebSub(following *model.Following, link digit.Link) error {
+func (service *Following) connect_WebSub(following *model.Following, hub digit.Link) error {
 
 	const location = "service.Following.ConnectWebSub"
 
@@ -20,9 +21,11 @@ func (service *Following) connect_WebSub(following *model.Following, link digit.
 	self := following.GetLink("rel", model.LinkRelationSelf)
 	topicURL := first.String(self.Href, following.URL)
 
+	spew.Dump("connect_WebSub", hub, self, topicURL)
+
 	secret := random.String(32)
 
-	transaction := remote.Post(link.Href).
+	transaction := remote.Post(hub.Href).
 		Header("Accept", followingMimeStack).
 		Form("hub.mode", "subscribe").
 		Form("hub.topic", topicURL).
@@ -32,8 +35,10 @@ func (service *Following) connect_WebSub(following *model.Following, link digit.
 		Response(&success, &failure)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending WebSub subscription request", link.Href)
+		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub.Href)
 	}
+
+	spew.Dump("request sent to hub")
 
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
@@ -44,9 +49,11 @@ func (service *Following) connect_WebSub(following *model.Following, link digit.
 	// If we're here, then we have successfully imported the RSS feed.
 	// Mark the following as having been polled
 	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
+		spew.Dump(err)
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
+	spew.Dump("done??")
 	return nil
 }
 

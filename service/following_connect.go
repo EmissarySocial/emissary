@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -193,6 +194,8 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following) {
 
+	spew.Dump("connect_PushServices >>>>>>>>>>>>>>>>>>>>>>>>>>>", following)
+
 	// ActivityPub is first because it's the highest fidelity (when it works)
 	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
 		if err := service.connect_ActivityPub(following, activityPub); err == nil {
@@ -204,6 +207,10 @@ func (service *Following) connect_PushServices(following *model.Following) {
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
 		if err := service.connect_WebSub(following, hub); err == nil {
 			return
+		} else {
+			spew.Dump("connect_WebSub error", err)
 		}
+	} else {
+		spew.Dump("No hub found", following.Links)
 	}
 }

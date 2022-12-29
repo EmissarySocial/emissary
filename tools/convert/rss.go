@@ -42,12 +42,14 @@ func RSSToActivity(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.Activity {
 // rssToActivity_populate loads the original web page to try to fill in missing data
 func rssToActivity_populate(activity *model.Activity) {
 
+	const location = "convert.RSSToActivity.populate"
+
 	var body bytes.Buffer
 
 	// Try to load the URL from the RSS feed
-	txn := remote.Get(activity.Origin.URL).Response(&body, nil)
+	txn := remote.Get(activity.Document.URL).Response(&body, nil)
 	if err := txn.Send(); err != nil {
-		derp.Report(derp.Wrap(err, "service.Following.populateActivity", "Error fetching URL", activity.Origin.URL))
+		derp.Report(derp.Wrap(err, location, "Error fetching URL", activity))
 		return
 	}
 
@@ -57,7 +59,7 @@ func rssToActivity_populate(activity *model.Activity) {
 	info := htmlinfo.NewHTMLInfo()
 
 	if err := info.Parse(&body, &activity.Origin.URL, &mediaType); err != nil {
-		derp.Report(derp.Wrap(err, "service.Following.populateActivity", "Error parsing HTML", activity.Origin.URL))
+		derp.Report(derp.Wrap(err, location, "Error parsing HTML", activity.Origin.URL))
 		return
 	}
 
