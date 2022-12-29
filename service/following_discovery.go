@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/kr/jsonfeed"
-	"github.com/mmcdole/gofeed"
 	"github.com/tomnomnom/linkheader"
 )
 
@@ -151,15 +150,37 @@ func discoverLinks_Headers(response *http.Response) []digit.Link {
 	return result
 }
 
-func discoverLinks_RSS(response *http.Response, rssFeed *gofeed.Feed) []digit.Link {
+func discoverLinks_RSS(response *http.Response, body *bytes.Buffer) []digit.Link {
+
+	spew.Dump("DISCOVERING RSS LINKS...", response.Request.URL.String())
 
 	result := discoverLinks_Headers(response)
 
-	// Look for WebSub links
-	for _, link := range rssFeed.Links {
-		spew.Dump("found link in RSS/Atom Feed", link)
+	document, err := goquery.NewDocumentFromReader(bytes.NewReader(body.Bytes()))
+
+	if err != nil {
+		spew.Dump(err)
+		return result
 	}
 
+	links := document.Find("link").Nodes
+
+	for _, link := range links {
+		relation := nodeAttribute(link, "rel")
+		switch relation {
+		case
+			model.LinkRelationHub,
+			model.LinkRelationSelf:
+
+			href := nodeAttribute(link, "href")
+			mimeType := nodeAttribute(link, "type")
+			link := digit.NewLink(relation, mimeType, href)
+			spew.Dump("FOUND LINK:", link)
+			result = append(result, link)
+		}
+	}
+
+	spew.Dump("ALL LINKS:", result)
 	return result
 }
 
