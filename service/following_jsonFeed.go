@@ -23,6 +23,7 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 	}
 
 	following.Label = feed.Title
+	following.Links = discoverLinks_JSONFeed(response, &feed)
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	var errorCollection error
@@ -45,8 +46,6 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 		// There were errors, but they're noted in the following status, so THIS step is successful
 		return nil
 	}
-
-	following.Links = discoverLinks_JSONFeed(response, &feed)
 
 	// Save our success
 	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
