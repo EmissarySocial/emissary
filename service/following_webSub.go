@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 )
 
@@ -17,33 +16,14 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	var success string
 	var failure string
 
-	spew.Dump("BEFORE UPDATE LINK", following)
 	// Autocompute the topic.  Use "self" link first, or just the following URL
 	self := following.GetLink("rel", model.LinkRelationSelf)
-	topicURL := first.String(self.Href, following.URL)
-	secret := random.String(32)
-
-	// Send request to the hub
-	transaction := remote.Post(hub.Href).
-		Header("Accept", followingMimeStack).
-		Form("hub.mode", "subscribe").
-		Form("hub.topic", topicURL).
-		Form("hub.callback", service.websubCallbackURL(following)).
-		Form("hub.secret", secret).
-		Form("hub.lease_seconds", "2582000").
-		Response(&success, &failure)
-
-	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub.Href)
-	}
 
 	// Update values in the following object
 	following.Method = model.FollowMethodWebSub
-	following.URL = topicURL
+	following.URL = first.String(self.Href, following.URL)
+	following.Secret = random.String(32)
 	following.PollDuration = 30
-	following.Secret = secret
-
-	spew.Dump("AFTER UPDATE LINK", following)
 
 	// If we're here, then we have successfully imported the RSS feed.
 	// Mark the following as having been polled
@@ -51,6 +31,21 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
+	// Send request to the hub
+	transaction := remote.Post(hub.Href).
+		Header("Accept", followingMimeStack).
+		Form("hub.mode", "subscribe").
+		Form("hub.topic", following.URL).
+		Form("hub.callback", service.websubCallbackURL(following)).
+		Form("hub.secret", following.Secret).
+		Form("hub.lease_seconds", "2582000").
+		Response(&success, &failure)
+
+	if err := transaction.Send(); err != nil {
+		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub.Href)
+	}
+
+	// Success!
 	return nil
 }
 
