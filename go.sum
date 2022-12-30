@@ -93,8 +93,8 @@ github.com/benpate/rosetta v0.8.1 h1:N5L4SSr2lX330nDy8WH3Gws9LV3w5xf/5p2R1nig9pY
 github.com/benpate/rosetta v0.8.1/go.mod h1:IwXMFGhWdDHzhmliUuTzLQI9+ZSEOgeZ0SmfO+A69Yk=
 github.com/benpate/steranko v0.12.1 h1:Bqeugi9qQ6ctmfcSfgxhiXxdjV3FjUqCEBuQD7jWE3Q=
 github.com/benpate/steranko v0.12.1/go.mod h1:3LxE9FGjo9CK/608KSpd+Bh4ZaSXVK7m4epjsqZz1is=
-github.com/benpate/table v0.4.0 h1:LBQhkymgDUIZMEKZjnim/wFyrBeD2ubEnd6dRAO4h+g=
-github.com/benpate/table v0.4.0/go.mod h1:+ayvS8Ab++cSXfdM2HZymsW2zN4zNrydEteY3d3vjm8=
+github.com/benpate/table v0.4.1 h1:k+n13eJeqX0dDH9QMVRGo1x9JS3YOlvrDT11O1z63gM=
+github.com/benpate/table v0.4.1/go.mod h1:HIvfTvyyyb/JoLXpGtNCwzbpW9XCIwavOBFJ/03UPpY=
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chai2010/webp v1.1.1 h1:jTRmEccAJ4MGrhFOrPMpNGIJ/eybIgwKpcACsrTEapk=

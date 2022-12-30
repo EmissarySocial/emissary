@@ -18,7 +18,7 @@ require (
 	github.com/benpate/remote v0.9.0
 	github.com/benpate/rosetta v0.8.1
 	github.com/benpate/steranko v0.12.1
-	github.com/benpate/table v0.4.0
+	github.com/benpate/table v0.4.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.0
