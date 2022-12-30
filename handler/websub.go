@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/hmax"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/list"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -96,6 +99,12 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		const location = "handler.GetWebSubClient"
 
+		var body bytes.Buffer
+
+		if err := ctx.Bind(&body); err != nil {
+			return derp.Wrap(err, location, "Error reading request body")
+		}
+
 		// Get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
@@ -130,18 +139,20 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following)
 		}
 
-		// TODO: LOW: Validate the secret (HMAC how?)
-		// TODO: LOW: Fat Pings require HMAC
-		/*
-			if following.Secret != "" {
-				signature := ctx.Request().Header.Get("X-Hub-Signature")
-			}
-		*/
+		// Validate the HMAC signature
+		if following.Secret != "" {
+			header := ctx.Request().Header.Get("X-Hub-Signature")
+			method, signature := list.Equal(header).Split()
 
+			hmax.Validate(method, following.Secret, body.Bytes(), signature.Bytes())
+		}
+
+		// Connect to the the WebSub server
 		if err := followingService.Connect(following); err != nil {
 			return derp.Wrap(err, location, "Error connecting to following", following)
 		}
 
+		// Woot woot!
 		return nil
 	}
 }
