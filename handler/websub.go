@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/tools/hmax"
+	"github.com/EmissarySocial/emissary/tools/hmac"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/labstack/echo/v4"
@@ -144,7 +144,7 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			header := ctx.Request().Header.Get("X-Hub-Signature")
 			method, signature := list.Equal(header).Split()
 
-			hmax.Validate(method, following.Secret, body.Bytes(), signature.Bytes())
+			hmac.Validate(method, following.Secret, body.Bytes(), signature.Bytes())
 		}
 
 		// Connect to the the WebSub server

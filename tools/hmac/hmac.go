@@ -1,4 +1,4 @@
-package hmax
+package hmac
 
 import (
 	"crypto/hmac"
