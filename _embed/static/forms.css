@@ -142,7 +142,7 @@ input[type=radio] {
 	background-color: var(--input-background);
 	height:auto;
 	margin-right:10px;
-	overflow-y:scroll;
+	overflow-y:auto;
 	overflow-x:hidden;
 }
 

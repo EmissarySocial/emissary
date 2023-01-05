@@ -31,7 +31,7 @@ nav {
 	display: flex;
 	justify-content: center;
 	flex-wrap:wrap;
-	overflow-x:scroll;
+	overflow-x:auto;
 }
 
 nav .framed {

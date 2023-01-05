@@ -143,7 +143,7 @@
 	display:block;
 	padding:5px 0px 10px 0px;
 	white-space: nowrap;
-	overflow-x: scroll;
+	overflow-x: auto;
 	border: solid 1px cornflowerblue;
 	background-color:var(--gray10);
 }
