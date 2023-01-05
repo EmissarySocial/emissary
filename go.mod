@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.170
+	github.com/aws/aws-sdk-go v1.44.172
 	github.com/benpate/data v0.22.0
 	github.com/benpate/data-mongo v0.22.1
 	github.com/benpate/derp v0.25.1
@@ -48,8 +48,8 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.3
 	go.mongodb.org/mongo-driver v1.11.1
-	golang.org/x/net v0.4.0
-	golang.org/x/oauth2 v0.3.0
+	golang.org/x/net v0.5.0
+	golang.org/x/oauth2 v0.4.0
 	willnorris.com/go/microformats v1.1.1
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -115,8 +115,8 @@ require (
 	golang.org/x/image v0.2.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
