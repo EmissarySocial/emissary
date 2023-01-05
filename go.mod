@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.157
+	github.com/aws/aws-sdk-go v1.44.170
 	github.com/benpate/data v0.22.0
 	github.com/benpate/data-mongo v0.22.1
 	github.com/benpate/derp v0.25.1
@@ -18,7 +18,7 @@ require (
 	github.com/benpate/remote v0.9.0
 	github.com/benpate/rosetta v0.8.1
 	github.com/benpate/steranko v0.12.1
-	github.com/benpate/table v0.4.0
+	github.com/benpate/table v0.4.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.0
@@ -31,7 +31,7 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20221211235915-8301a59f5e68
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.9.1
+	github.com/labstack/echo/v4 v4.10.0
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.21
 	github.com/mmcdole/gofeed v1.1.3
