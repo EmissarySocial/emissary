@@ -23,7 +23,7 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 	}
 
 	following.Label = feed.Title
-	following.Links = discoverLinks_JSONFeed(response, &feed)
+	following.SetLinks(discoverLinks_JSONFeed(response, &feed)...)
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	var errorCollection error

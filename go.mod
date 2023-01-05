@@ -8,7 +8,7 @@ require (
 	github.com/benpate/data v0.22.0
 	github.com/benpate/data-mongo v0.22.1
 	github.com/benpate/derp v0.25.1
-	github.com/benpate/digit v0.7.0
+	github.com/benpate/digit v0.7.1
 	github.com/benpate/exp v0.6.0
 	github.com/benpate/exp-builder v0.5.0
 	github.com/benpate/form v0.13.1

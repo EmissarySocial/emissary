@@ -6,9 +6,9 @@
 	<!-- Alternate links for service discovery -->
 	<link rel="self" href="{{.Host}}/@{{.UserID}}"/>
 	<link rel="hub" href="{{.Host}}/@{{.UserID}}/websub"/>
-	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/rss"/>
-	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/atom"/>
-	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/json"/>
+	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/feed?format=rss"/>
+	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/feed?format=atom"/>
+	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/feed?format=json"/>
 	<link rel="alternate" type="application/activity+json" href="{{.Host}}/@{{.UserID}}/pub/outbox"/>
 
 	<div class="page h-card">

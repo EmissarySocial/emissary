@@ -28,7 +28,7 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	// Update the label for this "following" record using the RSS feed title.
 	// This should get saved once we successfully update the record status.
 	following.Label = rssFeed.Title
-	following.Links = discoverLinks_RSS(response, body)
+	following.SetLinks(discoverLinks_RSS(response, body)...)
 
 	// If we have a feed, then import all of the items from it.
 

@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/maps"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,6 +44,8 @@ func NewCreateWebSubFollower(followerService *service.Follower, locatorService s
 
 func (task CreateWebSubFollower) Run() error {
 
+	spew.Dump("Running Task: CreateWebSubFollower")
+
 	switch task.mode {
 	case "subscribe":
 		return task.subscribe()
@@ -53,6 +56,7 @@ func (task CreateWebSubFollower) Run() error {
 	return derp.NewInternalError("tasks.CreateWebSubFollower.Run", "Invalid mode", task.mode)
 }
 
+// subscribe creates/updates a follower record
 func (task CreateWebSubFollower) subscribe() error {
 
 	const location = "tasks.CreateWebSubFollower.subscribe"
@@ -70,15 +74,15 @@ func (task CreateWebSubFollower) subscribe() error {
 	}
 
 	// Create a new Follower record
-	follower := model.NewFollower()
-	follower.ParentID = task.objectID
-	follower.Type = task.objectType
-	follower.Method = model.FollowMethodWebSub
+	follower, err := task.followerService.LoadByWebSubUnique(task.objectType, task.objectID, task.callback)
+
+	if err != nil {
+		return derp.Report(derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback))
+	}
+
+	// Set additional properties that are not handled by LoadByWebSubUnique
 	follower.Format = task.format
 	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
-	follower.Actor = model.PersonLink{
-		InboxURL: task.callback,
-	}
 	follower.Data = maps.Map{
 		"secret": task.secret,
 	}
@@ -88,20 +92,23 @@ func (task CreateWebSubFollower) subscribe() error {
 		return derp.Report(derp.Wrap(err, location, "Error validating request", follower.ID))
 	}
 
+	// Save the new/updated follower
 	if err := task.followerService.Save(&follower, "Created via WebSub"); err != nil {
 		return derp.Report(derp.Wrap(err, location, "Error saving follower", follower.ID))
 	}
 
+	// Oh yeah...
 	return nil
 }
 
+// unsubscribe removes a follower record
 func (task CreateWebSubFollower) unsubscribe() error {
 
 	const location = "tasks.CreateWebSubFollower.unsubscribe"
 
 	// Load the existing follower record
 	follower := model.NewFollower()
-	if err := task.followerService.LoadByWebSub(task.objectID, task.callback, &follower); err != nil {
+	if err := task.followerService.LoadByWebSub(task.objectType, task.objectID, task.callback, &follower); err != nil {
 		return derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback)
 	}
 
@@ -125,6 +132,8 @@ func (task CreateWebSubFollower) validate(follower *model.Follower) error {
 
 	var body string
 
+	spew.Dump("Validating WebSub", follower)
+
 	// Validate the request with the client
 	challenge := random.String(42)
 	transaction := remote.Get(follower.Actor.InboxURL).
@@ -137,6 +146,8 @@ func (task CreateWebSubFollower) validate(follower *model.Follower) error {
 	if err := transaction.Send(); err != nil {
 		return derp.Wrap(err, location, "Error sending verification request", follower.ID)
 	}
+
+	spew.Dump(body)
 
 	if body != challenge {
 		return derp.NewBadRequestError(location, "Invalid challenge response", follower.ID)

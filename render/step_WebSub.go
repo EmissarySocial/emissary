@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/timewasted/go-accept-headers"
 )
 
@@ -35,6 +36,8 @@ func (step StepWebSub) Post(renderer Renderer) error {
 	if err := renderer.context().Bind(&request); err != nil {
 		return derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data")
 	}
+
+	spew.Dump("WebSub Request", request)
 
 	// Try to validate and save the follower via the queue.
 	factory := renderer.factory()

@@ -180,6 +180,7 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
  * WebSub Queries
  *******************************************/
 
+// ListWebSub returns an iterator containing all of the Followers of specific parentID
 func (service *Follower) ListWebSub(parentID primitive.ObjectID) (data.Iterator, error) {
 
 	criteria := exp.
@@ -189,21 +190,36 @@ func (service *Follower) ListWebSub(parentID primitive.ObjectID) (data.Iterator,
 	return service.List(criteria)
 }
 
-func (service *Follower) ListWebSubByCallback(parentID primitive.ObjectID, callback string) (data.Iterator, error) {
-	criteria := exp.
-		Equal("parentId", parentID).
-		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
-
-	return service.List(criteria)
-}
-
-func (service *Follower) LoadByWebSub(parentID primitive.ObjectID, callback string, result *model.Follower) error {
+// LoadByWebSub retrieves a follower based on the parentID and callback
+func (service *Follower) LoadByWebSub(objectType string, parentID primitive.ObjectID, callback string, result *model.Follower) error {
 
 	criteria := exp.
-		Equal("userId", parentID).
-		AndEqual("data.callback", callback).
-		AndEqual("method", model.FollowMethodWebSub)
+		Equal("type", objectType).
+		AndEqual("parentId", parentID).
+		AndEqual("method", model.FollowMethodWebSub).
+		AndEqual("actor.inboxId", callback)
 
 	return service.Load(criteria, result)
+}
+
+// LoadByWebSubUnique finds a follower based on the parentID and callback.  If no follower is found, a new record is created.
+func (service *Follower) LoadByWebSubUnique(objectType string, parentID primitive.ObjectID, callback string) (model.Follower, error) {
+
+	result := model.NewFollower()
+
+	err := service.LoadByWebSub(objectType, parentID, callback, &result)
+
+	if err == nil {
+		return result, nil
+	}
+
+	if derp.NotFound(err) {
+		result.ParentID = parentID
+		result.Type = objectType
+		result.Method = model.FollowMethodWebSub
+		result.Actor.InboxURL = callback
+		return result, nil
+	}
+
+	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Error loading follower", parentID, callback)
 }

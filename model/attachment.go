@@ -2,6 +2,7 @@ package model
 
 import (
 	"mime"
+	"strconv"
 	"strings"
 
 	"github.com/benpate/data/journal"
@@ -103,4 +104,13 @@ func (attachment *Attachment) MimeType() string {
 
 func (attachment *Attachment) MimeCategory() string {
 	return list.Slash(attachment.MimeType()).First()
+}
+
+func (attachment *Attachment) AspectRatio() string {
+
+	if attachment.Width == 0 {
+		return ""
+	}
+
+	return strconv.Itoa(attachment.Height / attachment.Width)
 }

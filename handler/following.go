@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -112,6 +113,8 @@ func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 		} else {
 			following.FolderID = primitive.NilObjectID
 		}
+
+		spew.Dump("Update Following Record....", following)
 
 		// Save the following to the database
 		if err := factory.Following().Save(&following, "Updated by User"); err != nil {

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/EmissarySocial/emissary/tools/id"
 )
 
 /*********************************
@@ -14,6 +14,17 @@ func (stream *Stream) GetBool(name string) bool {
 		return stream.AsFeature
 	default:
 		return false
+	}
+}
+
+func (stream *Stream) GetBytes(name string) []byte {
+	switch name {
+	case "streamId":
+		return id.ToBytes(stream.StreamID)
+	case "parentId":
+		return id.ToBytes(stream.ParentID)
+	default:
+		return nil
 	}
 }
 
@@ -37,10 +48,6 @@ func (stream *Stream) GetInt64(name string) int64 {
 	}
 }
 
-func (stream *Stream) GetFloat(name string) float64 {
-	return 0
-}
-
 func (stream *Stream) GetString(name string) string {
 	switch name {
 	case "token":
@@ -56,17 +63,6 @@ func (stream *Stream) GetString(name string) string {
 	}
 }
 
-func (stream *Stream) GetObjectID(name string) primitive.ObjectID {
-	switch name {
-	case "streamId":
-		return stream.StreamID
-	case "parentId":
-		return stream.ParentID
-	default:
-		return primitive.NilObjectID
-	}
-}
-
 /*********************************
  * Setter Methods
  *********************************/
@@ -76,6 +72,21 @@ func (stream *Stream) SetBool(name string, value bool) bool {
 	case "asFeature":
 		stream.AsFeature = value
 		return true
+	default:
+		return false
+	}
+}
+
+func (stream *Stream) SetBytes(name string, value []byte) bool {
+	switch name {
+	case "streamId":
+		stream.StreamID = id.FromBytes(value)
+		return true
+
+	case "parentId":
+		stream.ParentID = id.FromBytes(value)
+		return true
+
 	default:
 		return false
 	}
@@ -104,10 +115,6 @@ func (stream *Stream) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (stream *Stream) SetFloat(name string, value float64) bool {
-	return false
-}
-
 func (stream *Stream) SetString(name string, value string) bool {
 	switch name {
 	case "token":
@@ -121,19 +128,6 @@ func (stream *Stream) SetString(name string, value string) bool {
 		return true
 	case "stateId":
 		stream.StateID = value
-		return true
-	default:
-		return false
-	}
-}
-
-func (stream *Stream) SetObjectID(name string, value primitive.ObjectID) bool {
-	switch name {
-	case "streamId":
-		stream.StreamID = value
-		return true
-	case "parentId":
-		stream.ParentID = value
 		return true
 	default:
 		return false

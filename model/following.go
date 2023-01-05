@@ -108,6 +108,7 @@ func (following *Following) Origin() OriginLink {
 	}
 }
 
+// GetLink returns a link from the Following that matches the given property and value
 func (following *Following) GetLink(property string, value string) digit.Link {
 	for _, link := range following.Links {
 		if link.GetString(property) == value {
@@ -115,4 +116,22 @@ func (following *Following) GetLink(property string, value string) digit.Link {
 		}
 	}
 	return digit.Link{}
+}
+
+// SetLinks adds or replaces a link in the Following that matches the given property
+func (following *Following) SetLinks(newLinks ...digit.Link) {
+
+	for _, newLink := range newLinks {
+		// If the link already exists, replace it
+		for i, existingLink := range following.Links {
+
+			if existingLink.MatchesType(newLink) {
+				following.Links[i] = newLink
+				return
+			}
+		}
+
+		// Otherwise, add it
+		following.Links = append(following.Links, newLink)
+	}
 }
