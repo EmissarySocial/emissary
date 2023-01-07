@@ -1,9 +1,6 @@
 package model
 
-import (
-	"github.com/EmissarySocial/emissary/tools/id"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 /*******************************************
  * Getter Methods
@@ -20,20 +17,69 @@ func (activity *Activity) GetInt64(name string) int64 {
 	}
 }
 
-func (activity *Activity) GetBytes(name string) []byte {
+func (activity *Activity) GetString(name string) string {
 	switch name {
 	case "activityId":
-		return id.ToBytes(activity.ActivityID)
+		return activity.ActivityID.Hex()
 	case "ownerId":
-		return id.ToBytes(activity.OwnerID)
+		return activity.OwnerID.Hex()
 	case "folderId":
-		return id.ToBytes(activity.FolderID)
+		return activity.FolderID.Hex()
 	default:
-		return id.ToBytes(primitive.NilObjectID)
+		return ""
 	}
 }
 
-func (activity *Activity) GetObject(name string) any {
+/*******************************************
+ * Setter Methods
+ *******************************************/
+
+func (activity *Activity) SetInt64(name string, value int64) bool {
+	switch name {
+
+	case "publishDate":
+		activity.PublishDate = value
+		return true
+
+	case "readDate":
+		activity.ReadDate = value
+		return true
+
+	default:
+		return false
+	}
+}
+
+func (activity *Activity) SetString(name string, value string) bool {
+	switch name {
+
+	case "activityId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			activity.ActivityID = objectID
+			return true
+		}
+
+	case "ownerId":
+
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			activity.OwnerID = objectID
+			return true
+		}
+
+	case "folderId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			activity.FolderID = objectID
+			return true
+		}
+	}
+	return false
+}
+
+/*******************************************
+ * Tree Traversal Methods
+ *******************************************/
+
+func (activity *Activity) GetChild(name string) any {
 	switch name {
 	case "origin":
 		return activity.Origin

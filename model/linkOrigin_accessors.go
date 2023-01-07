@@ -8,17 +8,10 @@ import (
  * Getter Methods
  *********************************/
 
-func (origin *OriginLink) GetObjectID(name string) primitive.ObjectID {
-	switch name {
-	case "internalId":
-		return origin.InternalID
-	default:
-		return primitive.NilObjectID
-	}
-}
-
 func (origin *OriginLink) GetString(name string) string {
 	switch name {
+	case "internalId":
+		return origin.InternalID.Hex()
 	case "type":
 		return origin.Type
 	case "url":
@@ -36,18 +29,13 @@ func (origin *OriginLink) GetString(name string) string {
  * Setter Methods
  *********************************/
 
-func (origin *OriginLink) SetObjectID(name string, value primitive.ObjectID) bool {
-	switch name {
-	case "internalId":
-		origin.InternalID = value
-		return true
-	default:
-		return false
-	}
-}
-
 func (origin *OriginLink) SetString(name string, value string) bool {
 	switch name {
+	case "internalId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			origin.InternalID = objectID
+			return true
+		}
 	case "type":
 		origin.Type = value
 		return true
@@ -60,7 +48,7 @@ func (origin *OriginLink) SetString(name string, value string) bool {
 	case "imageUrl":
 		origin.ImageURL = value
 		return true
-	default:
-		return false
 	}
+
+	return false
 }

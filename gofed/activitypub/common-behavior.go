@@ -35,11 +35,11 @@ func NewCommonBehavior(db *db.Database, userService *service.User, encryptionKey
 }
 
 func (service CommonBehavior) AuthenticateGetInbox(ctx context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
-	return ctx, true, nil
+	return ctx, false, nil
 }
 
 func (service CommonBehavior) AuthenticateGetOutbox(ctx context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
-	return ctx, true, nil
+	return ctx, false, nil
 }
 
 func (service CommonBehavior) GetOutbox(ctx context.Context, r *http.Request) (vocab.ActivityStreamsOrderedCollectionPage, error) {

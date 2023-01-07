@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/id"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /*********************************
@@ -14,17 +14,6 @@ func (stream *Stream) GetBool(name string) bool {
 		return stream.AsFeature
 	default:
 		return false
-	}
-}
-
-func (stream *Stream) GetBytes(name string) []byte {
-	switch name {
-	case "streamId":
-		return id.ToBytes(stream.StreamID)
-	case "parentId":
-		return id.ToBytes(stream.ParentID)
-	default:
-		return nil
 	}
 }
 
@@ -50,6 +39,11 @@ func (stream *Stream) GetInt64(name string) int64 {
 
 func (stream *Stream) GetString(name string) string {
 	switch name {
+
+	case "streamId":
+		return stream.StreamID.Hex()
+	case "parentId":
+		return stream.ParentID.Hex()
 	case "token":
 		return stream.Token
 	case "topLevelId":
@@ -72,21 +66,6 @@ func (stream *Stream) SetBool(name string, value bool) bool {
 	case "asFeature":
 		stream.AsFeature = value
 		return true
-	default:
-		return false
-	}
-}
-
-func (stream *Stream) SetBytes(name string, value []byte) bool {
-	switch name {
-	case "streamId":
-		stream.StreamID = id.FromBytes(value)
-		return true
-
-	case "parentId":
-		stream.ParentID = id.FromBytes(value)
-		return true
-
 	default:
 		return false
 	}
@@ -117,21 +96,37 @@ func (stream *Stream) SetInt64(name string, value int64) bool {
 
 func (stream *Stream) SetString(name string, value string) bool {
 	switch name {
+
+	case "streamId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			stream.StreamID = objectID
+			return true
+		}
+
+	case "parentId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			stream.ParentID = objectID
+			return true
+		}
+
 	case "token":
 		stream.Token = value
 		return true
+
 	case "topLevelId":
 		stream.TopLevelID = value
 		return true
+
 	case "templateId":
 		stream.TemplateID = value
 		return true
+
 	case "stateId":
 		stream.StateID = value
 		return true
-	default:
-		return false
 	}
+
+	return false
 }
 
 /*********************************

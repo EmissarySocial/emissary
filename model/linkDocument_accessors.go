@@ -19,17 +19,10 @@ func (doc *DocumentLink) GetInt64(name string) int64 {
 	}
 }
 
-func (doc *DocumentLink) GetObjectID(name string) primitive.ObjectID {
-	switch name {
-	case "internalId":
-		return doc.InternalID
-	default:
-		return primitive.NilObjectID
-	}
-}
-
 func (doc *DocumentLink) GetString(name string) string {
 	switch name {
+	case "internalId":
+		return doc.InternalID.Hex()
 	case "url":
 		return doc.URL
 	case "label":
@@ -60,18 +53,13 @@ func (doc *DocumentLink) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (doc *DocumentLink) SetObjectID(name string, value primitive.ObjectID) bool {
-	switch name {
-	case "internalId":
-		doc.InternalID = value
-		return true
-	default:
-		return false
-	}
-}
-
 func (doc *DocumentLink) SetString(name string, value string) bool {
 	switch name {
+	case "internalId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			doc.InternalID = objectID
+			return true
+		}
 	case "url":
 		doc.URL = value
 		return true
@@ -84,9 +72,9 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
 	case "imageUrl":
 		doc.ImageURL = value
 		return true
-	default:
-		return false
 	}
+
+	return false
 }
 
 /*********************************
