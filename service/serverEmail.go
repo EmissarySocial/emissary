@@ -130,6 +130,20 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 
 	const location = "service.ServerEmail.Send"
 
+	// Build the email body
+	var buffer bytes.Buffer
+	if err := service.templates.ExecuteTemplate(&buffer, templateName, data); err != nil {
+		return derp.Wrap(err, location, "Error executing template", templateName, data)
+	}
+
+	// Build the email message
+	message := mail.NewMSG()
+	message.SetFrom(from).
+		AddTo(to...).
+		SetSubject(subject).
+		SetBody(mail.TextHTML, buffer.String())
+
+	// Try to connect to the server
 	server, ok := smtpConnection.Server()
 
 	if !ok {
@@ -142,21 +156,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, from, to, subject, data)
 	}
 
-	// Build the email body
-	var buffer bytes.Buffer
-
-	if err := service.templates.ExecuteTemplate(&buffer, templateName, data); err != nil {
-		return derp.Wrap(err, location, "Error executing template", templateName, data)
-	}
-
-	// Build the email message
-	message := mail.NewMSG()
-	message.SetFrom(from).
-		AddTo(to...).
-		SetSubject(subject).
-		SetBody(mail.TextHTML, buffer.String())
-
-	// Connect to the server and send the email
+	// Try to send the email
 	if err := message.Send(client); err != nil {
 		return derp.Wrap(err, location, "Error sending email", templateName, from, to, subject, data)
 	}

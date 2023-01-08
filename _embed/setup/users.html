@@ -24,7 +24,7 @@
 					<td>{{.EmailAddress}}</td>
 					<td>{{.Username}}</td>
 					<td nowrap>
-						<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" script="on htmx:afterRequest wait 5s then log 'next??'">
+						<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none">
 							<span class="htmx-request-hide">{{icon "loading"}}</span>
 							<span class="htmx-request-show spin">{{icon "loading"}}</span>
 						</button>
