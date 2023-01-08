@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/gofed/activitypub"
-	federatingdb "github.com/EmissarySocial/emissary/gofed/db"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/protocols/gofed/activitypub"
+	federatingdb "github.com/EmissarySocial/emissary/protocols/gofed/db"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
