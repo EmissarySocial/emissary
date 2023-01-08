@@ -14,5 +14,6 @@ import (
 // one, do nothing and instead rely on a particular database's transaction model, or
 // something else.
 func (db Database) Lock(c context.Context, id *url.URL) error {
+	db.locks.Lock(id.String())
 	return nil
 }
