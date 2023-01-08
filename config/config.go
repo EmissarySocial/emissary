@@ -118,7 +118,7 @@ func Schema() schema.Schema {
 func ReadableFolderSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"adapter":  schema.String{Required: true, Default: "EMBED", Enum: []string{"EMBED", "FILE", "GIT", "HTTP", "S3"}},
+			"adapter":  schema.String{Required: true, Default: "EMBED", Enum: []string{"EMBED", "FILE", "GIT", "S3"}},
 			"location": schema.String{Required: true, MaxLength: 1000},
 		},
 	}
