@@ -11,6 +11,6 @@ import (
 // overwrite any existing data.
 //
 // If needed, use streams.Serialize to turn the vocab.Type into literal JSON-LD bytes.
-func (db *Database) Create(c context.Context, asType vocab.Type) error {
+func (db Database) Create(c context.Context, asType vocab.Type) error {
 	return nil
 }

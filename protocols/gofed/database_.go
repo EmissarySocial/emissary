@@ -1,6 +1,9 @@
 package gofed
 
-import "sync"
+import (
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/moby/locker"
+)
 
 // Database implements the go-fed Database interface.  Individual methods include
 // comments imported from: https://go-fed.org/ref/activity/pub#The-Database-Interface
@@ -21,5 +24,21 @@ import "sync"
 //     Collection, to facilitate implementations that want to develop their own
 //     caching capability.
 type Database struct {
-	locks sync.Map
+	userService   *service.User
+	inboxService  *service.Inbox
+	streamService *service.Stream
+	hostname      string
+
+	locks *locker.Locker
+}
+
+func NewDatabase(userService *service.User, inboxService *service.Inbox, streamService *service.Stream, hostname string) Database {
+	return Database{
+		userService:   userService,
+		inboxService:  inboxService,
+		streamService: streamService,
+		hostname:      hostname,
+
+		locks: locker.New(),
+	}
 }

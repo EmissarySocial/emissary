@@ -7,8 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/protocols/gofed/activitypub"
-	federatingdb "github.com/EmissarySocial/emissary/protocols/gofed/db"
+	"github.com/EmissarySocial/emissary/protocols/gofed"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
@@ -393,33 +392,28 @@ func (factory *Factory) Template() *service.Template {
  * ActivityPub
  *******************************************/
 
-func (factory *Factory) ActivityPub_Actor() pub.Actor {
-	return pub.NewActor(
+func (factory *Factory) ActivityPub_Actor() pub.FederatingActor {
+	return pub.NewFederatingActor(
 		factory.ActivityPub_CommonBehavior(),
-		factory.ActivityPub_SocialProtocol(),
 		factory.ActivityPub_FederatingProtocol(),
 		factory.ActivityPub_Database(),
 		factory.ActivityPub_Clock())
 }
 
 func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
-	return activitypub.NewCommonBehavior(factory.ActivityPub_Database(), factory.User(), factory.EncryptionKey(), factory.Host())
-}
-
-func (factory *Factory) ActivityPub_SocialProtocol() pub.SocialProtocol {
-	return activitypub.NewSocialProtocol()
+	return gofed.NewCommonBehavior(factory.ActivityPub_Database(), factory.User(), factory.EncryptionKey(), factory.Host())
 }
 
 func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol {
-	return activitypub.NewFederatingProtocol(factory.ActivityPub_Database())
+	return gofed.NewFederatingProtocol(factory.ActivityPub_Database())
 }
 
-func (factory *Factory) ActivityPub_Database() *federatingdb.Database {
-	return federatingdb.NewDatabase(factory, factory.User(), factory.Inbox(), factory.Stream(), factory.Hostname())
+func (factory *Factory) ActivityPub_Database() gofed.Database {
+	return gofed.NewDatabase(factory.User(), factory.Inbox(), factory.Stream(), factory.Hostname())
 }
 
-func (factory *Factory) ActivityPub_Clock() activitypub.Clock {
-	return activitypub.Clock{}
+func (factory *Factory) ActivityPub_Clock() gofed.Clock {
+	return gofed.NewClock()
 }
 
 /*******************************************

@@ -5,4 +5,11 @@ package gofed
 // protocol. It supplements the pub.CommonBehavior interface with the additional
 // methods required by a federating application.
 type Federating struct {
+	database Database
+}
+
+func NewFederatingProtocol(database Database) Federating {
+	return Federating{
+		database: database,
+	}
 }

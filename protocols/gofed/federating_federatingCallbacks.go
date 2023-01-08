@@ -28,6 +28,6 @@ If you want to handle an Activity that does not have a default behavior provided
 
 Applications are not expected to handle every single ActivityStreams type and extension. The unhandled ones are passed to DefaultCallback.
 */
-func (fed *Federating) FederatingCallbacks(c context.Context) (wrapped pub.FederatingWrappedCallbacks, other []interface{}, err error) {
+func (fed Federating) FederatingCallbacks(c context.Context) (wrapped pub.FederatingWrappedCallbacks, other []interface{}, err error) {
 	return pub.FederatingWrappedCallbacks{}, []interface{}{}, nil
 }

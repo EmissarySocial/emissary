@@ -23,6 +23,6 @@ Note that the library will not maintain a long-lived pointer to the returned pub
 For more information, see the Transports section at https://go-fed.org/ref/activity/pub#Transports
 */
 
-func (common *Common) NewTransport(c context.Context, actorBoxIRI *url.URL, gofedAgent string) (t pub.Transport, err error) {
+func (common Common) NewTransport(c context.Context, actorBoxIRI *url.URL, gofedAgent string) (t pub.Transport, err error) {
 	return nil, nil
 }

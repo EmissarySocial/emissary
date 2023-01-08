@@ -14,6 +14,6 @@ If no error is returned, but your application determines that authentication or 
 
 Finally, if the authentication and authorization succeeds, then authenticated must be true and err nil. The request will continue to be processed.
 */
-func (fed *Federating) AuthenticatePostInbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
+func (fed Federating) AuthenticatePostInbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
 	return nil, false, nil
 }

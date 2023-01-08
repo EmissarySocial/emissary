@@ -16,6 +16,6 @@ If no error is returned, but the interaction should be blocked, then blocked mus
 
 Finally, the interaction should proceed, then blocked must be false and err nil. The request will continue to be processed.
 */
-func (fed *Federating) Blocked(c context.Context, actorIRIs []*url.URL) (blocked bool, err error) {
+func (fed Federating) Blocked(c context.Context, actorIRIs []*url.URL) (blocked bool, err error) {
 	return false, nil
 }

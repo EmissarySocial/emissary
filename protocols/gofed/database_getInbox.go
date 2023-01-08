@@ -16,6 +16,6 @@ import (
 // any items. If you have a caching layer, it can more easily hide under this method
 // with proper pagination and delayed writes to the database. The library is simply
 // going to prepend an item in the orderedItems property and then call SetInbox.
-func (db *Database) GetInbox(c context.Context, inboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error) {
+func (db Database) GetInbox(c context.Context, inboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error) {
 	return nil, nil
 }

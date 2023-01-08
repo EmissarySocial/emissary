@@ -15,6 +15,6 @@ import (
 // Ensure that the newly allocated IRI can properly be fetched in another web handler
 // by peers with proper authorization and authentication, which can be aided with
 // pub.HandlerFunc.
-func (db *Database) NewID(c context.Context, t vocab.Type) (id *url.URL, err error) {
+func (db Database) NewID(c context.Context, t vocab.Type) (id *url.URL, err error) {
 	return nil, nil
 }

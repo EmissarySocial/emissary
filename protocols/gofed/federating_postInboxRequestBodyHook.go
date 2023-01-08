@@ -14,6 +14,6 @@ Provides your application the opportunity to set contextual information based on
 
 Any errors returned immediately abort processing of the request and are returned to the caller of the Actor's PostInbox.
 */
-func (fed *Federating) PostInboxRequestBodyHook(c context.Context, r *http.Request, activity pub.Activity) (context.Context, error) {
+func (fed Federating) PostInboxRequestBodyHook(c context.Context, r *http.Request, activity pub.Activity) (context.Context, error) {
 	return c, nil
 }

@@ -6,6 +6,6 @@ import (
 )
 
 // Delete removes the entity or row with the matching id.
-func (db *Database) Delete(c context.Context, id *url.URL) error {
+func (db Database) Delete(c context.Context, id *url.URL) error {
 	return nil
 }

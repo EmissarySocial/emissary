@@ -15,6 +15,6 @@ If no error is returned, but authentication or authorization fails, then authent
 Finally, if the authentication and authorization succeeds, then then authenticated must be true and error nil. The request will continue to be processed.
 */
 
-func (common *Common) AuthenticateGetInbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
+func (common Common) AuthenticateGetInbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
 	return nil, false, nil
 }

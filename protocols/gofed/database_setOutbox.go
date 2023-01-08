@@ -11,6 +11,6 @@ import (
 //
 // It is similar in behavior to its SetInbox counterpart, but for the actor's
 // Outbox instead.  See the similar documentation for SetInbox.
-func (db *Database) SetOutbox(c context.Context, outbox vocab.ActivityStreamsOrderedCollectionPage) error {
+func (db Database) SetOutbox(c context.Context, outbox vocab.ActivityStreamsOrderedCollectionPage) error {
 	return nil
 }

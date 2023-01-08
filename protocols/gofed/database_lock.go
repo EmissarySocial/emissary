@@ -13,6 +13,6 @@ import (
 // An implementation may decide to manage a dictionary of mutexes and lock a specific
 // one, do nothing and instead rely on a particular database's transaction model, or
 // something else.
-func (db *Database) Lock(c context.Context, id *url.URL) error {
+func (db Database) Lock(c context.Context, id *url.URL) error {
 	return nil
 }
