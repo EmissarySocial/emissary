@@ -123,14 +123,17 @@ func (factory *Factory) start() {
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
 
+			factory.mutex.Lock()
 			if err := factory.refreshDomain(config, domainConfig); err != nil {
 				derp.Report(err)
 			}
+			factory.mutex.Unlock()
 		}
 	}
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
+// CALLS TO THIS MUST BE LOCKED
 func (factory *Factory) refreshDomain(config config.Config, domainConfig config.Domain) error {
 
 	// Try to find the domain
