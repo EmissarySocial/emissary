@@ -55,6 +55,7 @@ type Factory struct {
 	followingService   service.Following
 	inboxService       service.Inbox
 	mentionService     service.Mention
+	outboxService      service.Outbox
 	streamService      service.Stream
 	streamDraftService service.StreamDraft
 	realtimeBroker     RealtimeBroker
@@ -138,8 +139,14 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		render.FuncMap(factory.Icons()),
 	)
 
+	// Start the Inbox Service
 	factory.inboxService = service.NewInbox(
 		factory.collection(CollectionInbox),
+	)
+
+	// Start the Outbox Service
+	factory.outboxService = service.NewOutbox(
+		factory.collection(CollectionOutbox),
 	)
 
 	// Start the Following Service
@@ -148,6 +155,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.Stream(),
 		factory.User(),
 		factory.Inbox(),
+		factory.Outbox(),
 		factory.Host())
 
 	factory.followerService = service.NewFollower(
@@ -205,7 +213,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// Refresh cached services
-		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
@@ -215,6 +222,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
+		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.followerService.Refresh(factory.collection(CollectionFollower))
@@ -305,7 +313,7 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 		return factory.Inbox(), nil
 
 	case "outbox":
-		return factory.Inbox(), nil
+		return factory.Outbox(), nil
 
 	}
 
@@ -346,6 +354,11 @@ func (factory *Factory) Folder() *service.Folder {
 // Inbox returns a fully populated Inbox service
 func (factory *Factory) Inbox() *service.Inbox {
 	return &factory.inboxService
+}
+
+// Out\box returns a fully populated Outbox service
+func (factory *Factory) Outbox() *service.Outbox {
+	return &factory.outboxService
 }
 
 // Mention returns a fully populated Mention service
@@ -409,7 +422,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.User(), factory.Inbox(), factory.Stream(), factory.Hostname())
+	return gofed.NewDatabase(factory.User(), factory.Inbox(), factory.Outbox(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() gofed.Clock {

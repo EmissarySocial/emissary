@@ -23,18 +23,20 @@ type Following struct {
 	streamService *Stream
 	userService   *User
 	inboxService  *Inbox
+	outboxService *Outbox
 	host          string
 	closed        chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, host string) Following {
+func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, outboxService *Outbox, host string) Following {
 
 	service := Following{
 		collection:    collection,
 		streamService: streamService,
 		userService:   userService,
 		inboxService:  inboxService,
+		outboxService: outboxService,
 		host:          host,
 		closed:        make(chan bool),
 	}

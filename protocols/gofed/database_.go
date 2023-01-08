@@ -26,17 +26,17 @@ import (
 type Database struct {
 	userService   *service.User
 	inboxService  *service.Inbox
-	streamService *service.Stream
+	outboxService *service.Outbox
 	hostname      string
 
 	locks *locker.Locker
 }
 
-func NewDatabase(userService *service.User, inboxService *service.Inbox, streamService *service.Stream, hostname string) Database {
+func NewDatabase(userService *service.User, inboxService *service.Inbox, outboxService *service.Outbox, hostname string) Database {
 	return Database{
 		userService:   userService,
 		inboxService:  inboxService,
-		streamService: streamService,
+		outboxService: outboxService,
 		hostname:      hostname,
 
 		locks: locker.New(),
