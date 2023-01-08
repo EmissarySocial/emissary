@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/gofed/activityStreams"
+	"github.com/EmissarySocial/emissary/protocols/gofed/activityStreams"
 	"github.com/go-fed/activity/streams/vocab"
 )
 

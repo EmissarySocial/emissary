@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/gofed/common"
+	"github.com/EmissarySocial/emissary/protocols/gofed/common"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"

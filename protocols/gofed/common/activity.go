@@ -1,8 +1,8 @@
 package common
 
 import (
-	"github.com/EmissarySocial/emissary/gofed/activityStreams"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/protocols/gofed/activityStreams"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/go-fed/activity/streams/vocab"

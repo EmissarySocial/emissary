@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/EmissarySocial/emissary/gofed/common"
-	"github.com/EmissarySocial/emissary/gofed/db"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/protocols/gofed/common"
+	"github.com/EmissarySocial/emissary/protocols/gofed/db"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/go-fed/activity/pub"

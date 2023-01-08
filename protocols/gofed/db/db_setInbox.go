@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/gofed/activityStreams"
-	"github.com/EmissarySocial/emissary/gofed/common"
+	"github.com/EmissarySocial/emissary/protocols/gofed/activityStreams"
+	"github.com/EmissarySocial/emissary/protocols/gofed/common"
 	"github.com/benpate/derp"
 	"github.com/go-fed/activity/streams/vocab"
 )

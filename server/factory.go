@@ -123,49 +123,52 @@ func (factory *Factory) start() {
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
 
-			// Try to find the domain
-			if existing := factory.domains[domainConfig.Hostname]; existing != nil {
-
-				if err := existing.Refresh(domainConfig, config.Providers, factory.attachmentOriginals, factory.attachmentCache); err != nil {
-					derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname))
-				}
-
-				// Even if there's an error "refreshing" the domain, we don't want to delete it
-				existing.MarkForDeletion = false
-				continue
-			}
-
-			// Fall through means that the domain does not exist, so we need to create it
-			newDomain, err := domain.NewFactory(
-				domainConfig,
-				config.Providers,
-				&factory.emailService,
-				&factory.layoutService,
-				&factory.templateService,
-				&factory.contentService,
-				&factory.providerService,
-				factory.taskQueue,
-				factory.attachmentOriginals,
-				factory.attachmentCache,
-			)
-
-			if err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig))
-				continue
-			}
-
-			// If there are no errors, then add the domain to the list.
-			factory.domains[newDomain.Hostname()] = newDomain
-		}
-
-		// Any domains that are still marked for deletion will be gracefully closed, then removed
-		for domainID := range factory.domains {
-			if factory.domains[domainID].MarkForDeletion {
-				factory.domains[domainID].Close()
-				delete(factory.domains, domainID)
+			if err := factory.refreshDomain(config, domainConfig); err != nil {
+				derp.Report(err)
 			}
 		}
 	}
+}
+
+// refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
+func (factory *Factory) refreshDomain(config config.Config, domainConfig config.Domain) error {
+
+	// Try to find the domain
+	if existing := factory.domains[domainConfig.Hostname]; existing != nil {
+
+		// Even if there's an error "refreshing" the domain, we don't want to delete it
+		existing.MarkForDeletion = false
+
+		// Try to refresh the domain
+		if err := existing.Refresh(domainConfig, config.Providers, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+			return derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname)
+		}
+
+		return nil
+	}
+
+	// Fall through means that the domain does not exist, so we need to create it
+	newDomain, err := domain.NewFactory(
+		domainConfig,
+		config.Providers,
+		&factory.emailService,
+		&factory.layoutService,
+		&factory.templateService,
+		&factory.contentService,
+		&factory.providerService,
+		factory.taskQueue,
+		factory.attachmentOriginals,
+		factory.attachmentCache,
+	)
+
+	if err != nil {
+		return derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig)
+	}
+
+	// If there are no errors, then add the domain to the list.
+	factory.domains[newDomain.Hostname()] = newDomain
+
+	return nil
 }
 
 /****************************
@@ -211,20 +214,10 @@ func (factory *Factory) ListDomains() []config.Domain {
 // PutDomain adds a domain to the Factory
 func (factory *Factory) PutDomain(configuration config.Domain) error {
 
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
-
-	// Add the domain to the collection
-	factory.config.Domains.Put(configuration)
-
-	// Try to write the configuration to the storage service
-	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
+	// Save the domain info ant write a new configuration to the storage service
+	if err := factory.putDomain(configuration); err != nil {
+		return derp.Wrap(err, "server.Factory.PutDomain", "Error adding domain", configuration)
 	}
-
-	// Unlock here so that we can get the domain factory without blocking
-	// (ByDomainName will do its own locking)
-	factory.mutex.Unlock()
 
 	// The storage service will trigger a new configuration via the Subscrbe() channel,
 	// But we still want to call the owner update manually.
@@ -240,10 +233,27 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 		return derp.Wrap(err, "server.Factory.PutDomain", "Error setting owner", configuration.Owner)
 	}
 
-	// This last bit is an ugly hack to get around the fact that the domain factory
-	// is going to Unlock the mutex before it returns, so we need to re-lock it.
-	// It's o, it could be worse.
+	return nil
+}
+
+// putDomain is a helper for PutDomain that manages the locking
+func (factory *Factory) putDomain(configuration config.Domain) error {
+
 	factory.mutex.Lock()
+	defer factory.mutex.Unlock()
+
+	// Add the domain to the collection
+	factory.config.Domains.Put(configuration)
+
+	// Try to write the configuration to the storage service
+	if err := factory.storage.Write(factory.config); err != nil {
+		return derp.Wrap(err, "server.Factory.putDomain", "Error writing configuration")
+	}
+
+	// Try to update the domain in the in-memory cache
+	if err := factory.refreshDomain(factory.config, configuration); err != nil {
+		return derp.Wrap(err, "server.Factory.putDomain", "Error refreshing domain", configuration)
+	}
 
 	return nil
 }

@@ -4,20 +4,19 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/gofed/common"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/protocols/gofed/common"
 	"github.com/benpate/derp"
 )
 
-func (db *Database) ActorForInbox(ctx context.Context, outboxURL *url.URL) (actorURL *url.URL, err error) {
+func (db *Database) ActorForOutbox(ctx context.Context, outboxURL *url.URL) (actorURL *url.URL, err error) {
+	const location = "gofed.db.ActorForOutbox"
 
-	const location = "gofed.db.ActorForInbox"
-
-	// Get the userID from the outbox URL
+	// Get the userID from the Outbox URL
 	userID, _, _, err := common.ParseURL(outboxURL)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error parsing inbox URL", outboxURL)
+		return nil, derp.Wrap(err, location, "Error parsing outbox URL", outboxURL)
 	}
 
 	// Load the user from the database

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/gofed/db"
+	"github.com/EmissarySocial/emissary/protocols/gofed/db"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-fed/activity/pub"
 	"github.com/go-fed/activity/streams/vocab"
