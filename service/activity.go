@@ -164,6 +164,17 @@ func (service *Activity) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
+func (service *Activity) ListByLocation(ownerID primitive.ObjectID, location string, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	switch location {
+	case model.ActivityLocationInbox:
+		return service.ListInbox(ownerID, criteria, options...)
+	case model.ActivityLocationOutbox:
+		return service.ListOutbox(ownerID, criteria, options...)
+	default:
+		return nil, derp.New(derp.CodeBadRequestError, "service.Activity", "Invalid location", location)
+	}
+}
+
 func (service *Activity) ListInbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	criteria = exp.Equal("ownerId", ownerID).
 		AndEqual("location", model.ActivityLocationInbox).

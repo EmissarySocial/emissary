@@ -11,17 +11,14 @@ import (
 )
 
 // ParseItem finds the item URL, then splits it into its component parts.
-func ParseItem(item vocab.Type) (userID primitive.ObjectID, itemType string, itemID primitive.ObjectID, err error) {
+func ParseItem(item vocab.Type) (userID primitive.ObjectID, activityLocation string, activityID primitive.ObjectID, err error) {
 	return ParseURL(item.GetJSONLDId().GetIRI())
 }
 
-// ParseURL splits a URL into its component parts: userID, itemType, itemID.
-func ParseURL(url *url.URL) (userID primitive.ObjectID, itemType string, itemID primitive.ObjectID, err error) {
+// ParseURL splits a URL into its component parts: userID, activityLocation, activityID.
+func ParseURL(url *url.URL) (userID primitive.ObjectID, activityLocation string, activityID primitive.ObjectID, err error) {
 
 	const location = "service.activitypub.Database.parseURL"
-
-	var userIDstring string
-	var itemIDstring string
 
 	if !strings.HasPrefix(url.Path, "/@") {
 		err = derp.NewBadRequestError(location, "Path must begin with /@", url.String())
@@ -34,6 +31,7 @@ func ParseURL(url *url.URL) (userID primitive.ObjectID, itemType string, itemID 
 	}
 
 	// Parse the UserID from the path
+	var userIDstring string
 	userIDstring, path = path.Split()
 
 	userID, err = primitive.ObjectIDFromHex(userIDstring)
@@ -46,22 +44,23 @@ func ParseURL(url *url.URL) (userID primitive.ObjectID, itemType string, itemID 
 		return userID, "", primitive.NilObjectID, nil
 	}
 
-	// Parse the itemType from the path
-	itemType, path = path.Split()
+	// Parse the activityLocation from the path
+	activityLocation, path = path.Split()
 
 	if path.IsEmpty() {
-		return userID, itemType, primitive.NilObjectID, nil
+		return userID, activityLocation, primitive.NilObjectID, nil
 	}
 
-	// Parse the itemID from the path
-	itemIDstring, path = path.Split()
+	// Parse the activityID from the path
+	var activityIDstring string
+	activityIDstring, _ = path.Split()
 
-	itemID, err = primitive.ObjectIDFromHex(itemIDstring)
+	activityID, err = primitive.ObjectIDFromHex(activityIDstring)
 
 	if err != nil {
-		return userID, itemType, primitive.NilObjectID, derp.Wrap(err, location, "Invalid itemID", itemIDstring)
+		return userID, activityLocation, primitive.NilObjectID, derp.Wrap(err, location, "Invalid activityID", activityIDstring)
 	}
 
 	// Success.  All values parsed correctly.
-	return userID, itemType, itemID, nil
+	return userID, activityLocation, activityID, nil
 }
