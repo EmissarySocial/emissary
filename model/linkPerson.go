@@ -1,6 +1,8 @@
 package model
 
 import (
+	"net/url"
+
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -47,4 +49,9 @@ func (person PersonLink) Link(relation string) Link {
 		URL:        person.ProfileURL,
 		Label:      person.Name,
 	}
+}
+
+func (person PersonLink) GetURL(name string) *url.URL {
+	result, _ := url.Parse(person.GetString(name))
+	return result
 }

@@ -33,13 +33,13 @@ func MicroformatToActivity(feed *microformats.Microformat, entry *microformats.M
 	// Get the publish date from the entry
 	if published := MicroformatPropertyToString(entry, "published"); published != "" {
 		if publishDate, err := time.Parse(time.RFC3339, published); err == nil {
-			activity.PublishDate = publishDate.Unix()
+			activity.Document.PublishDate = publishDate.Unix()
 		}
 	}
 
 	// Default PublishDate just in case
-	if activity.PublishDate == 0 {
-		activity.PublishDate = time.Now().Unix()
+	if activity.Document.PublishDate == 0 {
+		activity.Document.PublishDate = time.Now().Unix()
 	}
 
 	return activity

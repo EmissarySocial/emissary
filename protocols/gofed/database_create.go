@@ -14,3 +14,23 @@ import (
 func (db Database) Create(c context.Context, asType vocab.Type) error {
 	return nil
 }
+
+/*
+
+
+https://emissary.social/@benpate/inbox/1234567890 => InboxService
+https://emissary.social/@benpate/outbox/1234567890 => OutboxService
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/

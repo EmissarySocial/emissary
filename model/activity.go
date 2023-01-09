@@ -15,14 +15,15 @@ const ActivityFormatMedia = "MEDIA"
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
-	ActivityID  primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
-	OwnerID     primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`            // Unique ID of the User who owns this Activity (in their inbox or outbox)
-	FolderID    primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
-	Origin      OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
-	Document    DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
-	Content     Content            `path:"content"      json:"content"      bson:"content,omitempty"`  // Content of the Activity
-	PublishDate int64              `path:"publishDate"  json:"publishDate"  bson:"publishDate"`        // Date when this Activity was published
-	ReadDate    int64              `path:"readDate"     json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the owner
+	ActivityID primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
+	OwnerID    primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`            // Unique ID of the User who owns this Activity (in their inbox or outbox)
+	Origin     OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
+	Document   DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
+	Content    Content            `path:"content"      json:"content"      bson:"content,omitempty"`  // Content of the Activity
+
+	// Inbox-specific fields
+	FolderID primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
+	ReadDate int64              `path:"readDate"     json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the owner
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -44,7 +45,6 @@ func ActivitySchema() schema.Element {
 			"document":     DocumentLinkSchema(),
 			"contentHtml":  schema.String{Format: "html"},
 			"originalJson": schema.String{Format: "json"},
-			"publishDate":  schema.Integer{},
 			"readDate":     schema.Integer{},
 		},
 	}
@@ -73,7 +73,6 @@ func (activity *Activity) UpdateWithActivity(other *Activity) {
 	activity.Origin = other.Origin
 	activity.Document = other.Document
 	activity.Content = other.Content
-	activity.PublishDate = other.PublishDate
 }
 
 // Format returns a suggestion for how to display this activity

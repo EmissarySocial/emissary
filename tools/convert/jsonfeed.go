@@ -48,12 +48,12 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 func JsonFeedToActivity(item jsonfeed.Item) model.Activity {
 
 	activity := model.NewActivity()
-	activity.PublishDate = item.DatePublished.UnixMilli()
 	activity.Document = model.DocumentLink{
-		URL:      item.URL,
-		Label:    item.Title,
-		Summary:  item.Summary,
-		ImageURL: item.Image,
+		URL:         item.URL,
+		Label:       item.Title,
+		Summary:     item.Summary,
+		ImageURL:    item.Image,
+		PublishDate: item.DatePublished.UnixMilli(),
 		Author: model.PersonLink{
 			Name:       item.Author.Name,
 			ProfileURL: item.Author.URL,

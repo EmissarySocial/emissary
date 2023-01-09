@@ -29,6 +29,8 @@ func (doc *DocumentLink) GetString(name string) string {
 		return doc.Label
 	case "summary":
 		return doc.Summary
+	case "type":
+		return doc.Type
 	case "imageUrl":
 		return doc.ImageURL
 	default:
@@ -68,6 +70,9 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
 		return true
 	case "summary":
 		doc.Summary = value
+		return true
+	case "type":
+		doc.Type = value
 		return true
 	case "imageUrl":
 		doc.ImageURL = value

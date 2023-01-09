@@ -8,8 +8,6 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 func (activity *Activity) GetInt64(name string) int64 {
 	switch name {
-	case "publishDate":
-		return activity.PublishDate
 	case "readDate":
 		return activity.ReadDate
 	default:
@@ -36,10 +34,6 @@ func (activity *Activity) GetString(name string) string {
 
 func (activity *Activity) SetInt64(name string, value int64) bool {
 	switch name {
-
-	case "publishDate":
-		activity.PublishDate = value
-		return true
 
 	case "readDate":
 		activity.ReadDate = value

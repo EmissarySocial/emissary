@@ -5,10 +5,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const DocumentTypeArticle = "Article"
+
+const DocumentTypeNote = "Note"
+
+const DocumentTypeBlock = "Block"
+
+const DocumentTypeLike = "Like"
+
+const DocumentTypeFollow = "Follow"
+
 type DocumentLink struct {
 	InternalID  primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"`  // Unique ID of a document in this database
 	Author      PersonLink         `path:"author"      json:"author"      bson:"author,omitempty"`      // Author of this document
 	URL         string             `path:"url"         json:"url"         bson:"url,omitempty"`         // URL of the original document
+	Type        string             `path:"type"        json:"type"        bson:"type,omitempty"`        // ActivityStream type of document (e.g. "Article", "Note", "Image", etc.)
 	Label       string             `path:"label"       json:"label"       bson:"label,omitempty"`       // Label/Title of the document
 	Summary     string             `path:"summary"     json:"summary"     bson:"summary,omitempty"`     // Brief summary of the document
 	ImageURL    string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
