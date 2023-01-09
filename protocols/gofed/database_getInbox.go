@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/go-fed/activity/streams"
 	"github.com/go-fed/activity/streams/vocab"
 )
 
@@ -17,5 +18,10 @@ import (
 // with proper pagination and delayed writes to the database. The library is simply
 // going to prepend an item in the orderedItems property and then call SetInbox.
 func (db Database) GetInbox(c context.Context, inboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error) {
-	return nil, nil
+
+	// It seems like we may not need to serve the Inbox via ActivityPub.
+	// Going to leave this empty for now, and will add if it becomes necessary.
+
+	result := streams.NewActivityStreamsOrderedCollectionPage()
+	return result, nil
 }
