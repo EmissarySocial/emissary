@@ -242,11 +242,8 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 		Int("publishDate")
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
-	criteria = criteria.And(
-		exp.Equal("ownerId", w.AuthenticatedID()),
-	)
 
-	return factory.Inbox().Query(criteria, option.MaxRows(10), option.SortAsc("publishDate"))
+	return factory.Activity().QueryInbox(w.AuthenticatedID(), criteria, option.MaxRows(10), option.SortAsc("publishDate"))
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
@@ -279,9 +276,9 @@ func (w Profile) Activity() (model.Activity, error) {
 
 	// Try to load the record from the database
 	result := model.NewActivity()
-	inboxService := w._factory.Inbox()
+	activityService := w._factory.Activity()
 
-	if err := inboxService.LoadItemByID(w.AuthenticatedID(), activityID, &result); err != nil {
+	if err := activityService.LoadInboxActivity(w.AuthenticatedID(), activityID, &result); err != nil {
 		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 

@@ -53,9 +53,8 @@ type Factory struct {
 	folderService      service.Folder
 	followerService    service.Follower
 	followingService   service.Following
-	inboxService       service.Inbox
+	activityService    service.Activity
 	mentionService     service.Mention
-	outboxService      service.Outbox
 	streamService      service.Stream
 	streamDraftService service.StreamDraft
 	realtimeBroker     RealtimeBroker
@@ -139,14 +138,9 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		render.FuncMap(factory.Icons()),
 	)
 
-	// Start the Inbox Service
-	factory.inboxService = service.NewInbox(
-		factory.collection(CollectionInbox),
-	)
-
-	// Start the Outbox Service
-	factory.outboxService = service.NewOutbox(
-		factory.collection(CollectionOutbox),
+	// Start the Activity Service
+	factory.activityService = service.NewActivity(
+		factory.collection(CollectionActivity),
 	)
 
 	// Start the Following Service
@@ -154,8 +148,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollowing),
 		factory.Stream(),
 		factory.User(),
-		factory.Inbox(),
-		factory.Outbox(),
+		factory.Activity(),
 		factory.Host())
 
 	factory.followerService = service.NewFollower(
@@ -219,10 +212,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.emailService.Refresh(domain)
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.inboxService.Refresh(factory.collection(CollectionInbox))
+		factory.activityService.Refresh(factory.collection(CollectionActivity))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.followerService.Refresh(factory.collection(CollectionFollower))
@@ -309,11 +301,8 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "following":
 		return factory.Following(), nil
 
-	case "inbox":
-		return factory.Inbox(), nil
-
-	case "outbox":
-		return factory.Outbox(), nil
+	case "activity":
+		return factory.Activity(), nil
 
 	}
 
@@ -351,14 +340,9 @@ func (factory *Factory) Folder() *service.Folder {
 	return &factory.folderService
 }
 
-// Inbox returns a fully populated Inbox service
-func (factory *Factory) Inbox() *service.Inbox {
-	return &factory.inboxService
-}
-
-// Out\box returns a fully populated Outbox service
-func (factory *Factory) Outbox() *service.Outbox {
-	return &factory.outboxService
+// Activity returns a fully populated Activity service
+func (factory *Factory) Activity() *service.Activity {
+	return &factory.activityService
 }
 
 // Mention returns a fully populated Mention service
@@ -422,7 +406,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.User(), factory.Inbox(), factory.Outbox(), factory.Hostname())
+	return gofed.NewDatabase(factory.User(), factory.Activity(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() gofed.Clock {

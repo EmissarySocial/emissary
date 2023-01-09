@@ -12,11 +12,16 @@ const ActivityFormatArticle = "ARTICLE"
 
 const ActivityFormatMedia = "MEDIA"
 
+const ActivityLocationInbox = "INBOX"
+
+const ActivityLocationOutbox = "OUTBOX"
+
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
 	ActivityID primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
 	OwnerID    primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`            // Unique ID of the User who owns this Activity (in their inbox or outbox)
+	Location   string             `path:"location"     json:"location"     bson:"location"`           // Location of Activity (e.g. "Inbox", "Outbox")
 	Origin     OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
 	Document   DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
 	Content    Content            `path:"content"      json:"content"      bson:"content,omitempty"`  // Content of the Activity

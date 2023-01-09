@@ -29,9 +29,9 @@ func Activity_MarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to load the inboxItem from the database
-		inboxService := factory.Inbox()
+		activityService := factory.Activity()
 
-		return inboxService.SetReadDate(userID, ctx.Param("item"), time.Now().Unix())
+		return activityService.SetReadDate(userID, ctx.Param("item"), time.Now().Unix())
 	}
 }
 
@@ -56,8 +56,8 @@ func Activity_MarkUnRead(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to load the inboxItem from the database
-		inboxService := factory.Inbox()
+		activityService := factory.Activity()
 
-		return inboxService.SetReadDate(userID, ctx.Param("item"), 0)
+		return activityService.SetReadDate(userID, ctx.Param("item"), 0)
 	}
 }

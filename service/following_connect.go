@@ -174,14 +174,14 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 	activity.UpdateWithFollowing(following)
 
 	// Search for an existing Activity that matches the parameter
-	err := service.inboxService.LoadByDocumentURL(following.UserID, activity.Document.URL, &original)
+	err := service.activityService.LoadInboxActivityByURL(following.UserID, activity.Document.URL, &original)
 
 	switch {
 
 	// If this activity IS NOT FOUND in the database, then save the new record to the database
 	case derp.NotFound(err):
 
-		if err := service.inboxService.Save(activity, "Activity Imported"); err != nil {
+		if err := service.activityService.Save(activity, "Activity Imported"); err != nil {
 			return derp.Wrap(err, location, "Error saving activity")
 		}
 
@@ -193,7 +193,7 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 		// Otherwise, update the original and save
 		original.UpdateWithActivity(activity)
 
-		if err := service.inboxService.Save(&original, "Activity Updated"); err != nil {
+		if err := service.activityService.Save(&original, "Activity Updated"); err != nil {
 			return derp.Wrap(err, location, "Error saving activity")
 		}
 
