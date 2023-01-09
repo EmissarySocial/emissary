@@ -406,7 +406,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.User(), factory.Activity(), factory.Hostname())
+	return gofed.NewDatabase(factory.User(), factory.Activity(), factory.Follower(), factory.Following(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() gofed.Clock {

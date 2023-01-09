@@ -255,6 +255,17 @@ func (service *Following) Schema() schema.Schema {
 }
 
 /*******************************************
+ * ActivityPub Queries
+ *******************************************/
+
+func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("method", model.FollowMethodActivityPub)
+
+	return service.List(criteria, options...)
+}
+
+/*******************************************
  * Custom Queries
  *******************************************/
 

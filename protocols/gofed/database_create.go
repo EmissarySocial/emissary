@@ -3,6 +3,7 @@ package gofed
 import (
 	"context"
 
+	"github.com/benpate/derp"
 	"github.com/go-fed/activity/streams/vocab"
 )
 
@@ -12,6 +13,23 @@ import (
 //
 // If needed, use streams.Serialize to turn the vocab.Type into literal JSON-LD bytes.
 func (db Database) Create(c context.Context, asType vocab.Type) error {
+
+	const location = "gofed.Database.Create"
+
+	// Convert the vocab.Type into a model.Activity
+	activity, err := ToModel(asType)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error converting Type", asType)
+	}
+
+	// TODO: CRITICAL: What about other properties, like OwnerID???
+
+	// Save the Activity to the database.
+	if err := db.activityService.Save(&activity, "Created by Go-Fed"); err != nil {
+		return derp.Wrap(err, location, "Error saving activity", activity)
+	}
+
 	return nil
 }
 

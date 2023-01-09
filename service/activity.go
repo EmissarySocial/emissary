@@ -81,6 +81,17 @@ func (service *Activity) Save(activity *model.Activity, note string) error {
 		return derp.Wrap(err, "service.Activity.Save", "Error cleaning Activity", activity)
 	}
 
+	// TODO: In what circumstances should this trigger additional events?
+	if activity.Location == model.ActivityLocationInbox && activity.Document.InternalID.IsZero() {
+		switch activity.Document.Type {
+		case model.DocumentTypeArticle:
+		case model.DocumentTypeNote:
+		case model.DocumentTypeBlock:
+		case model.DocumentTypeFollow:
+		case model.DocumentTypeLike:
+		}
+	}
+
 	// Save the value to the database
 	if err := service.collection.Save(activity, note); err != nil {
 		return derp.Wrap(err, "service.Activity", "Error saving Activity", activity, note)
@@ -199,6 +210,13 @@ func (service *Activity) QueryInbox(ownerID primitive.ObjectID, criteria exp.Exp
 	return service.Query(criteria, options...)
 }
 
+func (service *Activity) LoadActivityByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
+	criteria := exp.Equal("ownerId", ownerID).
+		AndEqual("document.url", url)
+
+	return service.Load(criteria, result)
+}
+
 func (service *Activity) LoadInboxActivity(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
 		AndEqual("location", model.ActivityLocationInbox).
@@ -210,7 +228,7 @@ func (service *Activity) LoadInboxActivity(ownerID primitive.ObjectID, activityI
 func (service *Activity) LoadInboxActivityByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
 		AndEqual("location", model.ActivityLocationInbox).
-		AndEqual("docuemnt.url", url)
+		AndEqual("document.url", url)
 
 	return service.Load(criteria, result)
 }

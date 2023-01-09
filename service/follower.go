@@ -177,17 +177,31 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 }
 
 /*******************************************
+ * ActivityPub Queries
+ *******************************************/
+
+// ListActivityPub returns an iterator containing all of the Followers of specific parentID
+func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowMethodActivityPub)
+
+	return service.List(criteria, options...)
+}
+
+/*******************************************
  * WebSub Queries
  *******************************************/
 
 // ListWebSub returns an iterator containing all of the Followers of specific parentID
-func (service *Follower) ListWebSub(parentID primitive.ObjectID) (data.Iterator, error) {
+func (service *Follower) ListWebSub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
 
 	criteria := exp.
 		Equal("parentId", parentID).
 		AndEqual("method", model.FollowMethodWebSub)
 
-	return service.List(criteria)
+	return service.List(criteria, options...)
 }
 
 // LoadByWebSub retrieves a follower based on the parentID and callback

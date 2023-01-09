@@ -1,6 +1,7 @@
 package gofed
 
 import (
+	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -11,10 +12,7 @@ import (
 	"github.com/go-fed/activity/streams/vocab"
 )
 
-func ToGoFed(item model.Activity) (vocab.Type, error) {
-	manager := streams.Manager{}
-	aliasMap := mapof.String{}
-
+func ToGoFed(item *model.Activity) (vocab.Type, error) {
 	jsonLD := mapof.Any{
 		"type":    item.Document.Type,
 		"id":      item.Document.URL,
@@ -30,18 +28,7 @@ func ToGoFed(item model.Activity) (vocab.Type, error) {
 		"published": time.UnixMilli(item.Document.PublishDate).Format(time.RFC3339),
 	}
 
-	switch jsonLD["type"] {
-
-	case model.DocumentTypeArticle:
-		return manager.DeserializeArticleActivityStreams()(jsonLD, aliasMap)
-
-	case model.DocumentTypeNote:
-		return manager.DeserializeNoteActivityStreams()(jsonLD, aliasMap)
-
-	default:
-		return nil, derp.NewInternalError("gofed.ToGoFed", "Unable to convert item to GoFed", item)
-
-	}
+	return streams.ToType(context.TODO(), jsonLD)
 }
 
 func ToModel(item vocab.Type) (model.Activity, error) {
