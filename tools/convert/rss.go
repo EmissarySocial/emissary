@@ -17,15 +17,21 @@ import (
 )
 
 // RSSToActivity populates an Activity object from a gofeed.Feed and gofeed.Item
-func RSSToActivity(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.Activity {
+func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Activity {
 
-	activity := model.NewActivity()
+	activity := model.NewInboxActivity()
+
+	activity.Origin = model.OriginLink{
+		URL:      feed.FeedLink,
+		Label:    feed.Title,
+		ImageURL: feed.Image.URL,
+	}
 	activity.Document = model.DocumentLink{
 		URL:         rssItem.Link,
 		Label:       htmlTools.ToText(rssItem.Title),
 		Summary:     htmlTools.ToText(rssItem.Description),
 		ImageURL:    rssImageURL(rssItem),
-		Author:      rssAuthor(rssFeed, rssItem),
+		Author:      rssAuthor(feed, rssItem),
 		PublishDate: rssDate(rssItem.PublishedParsed),
 		UpdateDate:  time.Now().Unix(),
 	}
@@ -80,9 +86,9 @@ func rssToActivity_populate(activity *model.Activity) {
 }
 
 // rssAuthor returns all information about the actor of an RSS item
-func rssAuthor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
+func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 
-	if rssFeed == nil {
+	if feed == nil {
 		return model.NewPersonLink()
 	}
 
@@ -91,7 +97,7 @@ func rssAuthor(rssFeed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 	}
 
 	result := model.PersonLink{
-		ProfileURL: rssFeed.Link,
+		ProfileURL: feed.Link,
 	}
 
 	if rssItem.Author != nil {

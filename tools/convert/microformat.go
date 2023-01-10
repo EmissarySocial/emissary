@@ -9,7 +9,7 @@ import (
 
 func MicroformatToActivity(feed *microformats.Microformat, entry *microformats.Microformat) model.Activity {
 
-	activity := model.NewActivity()
+	activity := model.NewInboxActivity()
 
 	// Get properties from entry
 	activity.Document.URL = MicroformatPropertyToString(entry, "url")

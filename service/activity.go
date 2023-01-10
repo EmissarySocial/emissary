@@ -250,9 +250,6 @@ func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, r
 
 	const location = "service.Activity.SetReadDate"
 
-	// Try to load the Activity from the database
-	activity := model.NewActivity()
-
 	// Convert the string to an ObjectID
 	activityID, err := primitive.ObjectIDFromHex(token)
 
@@ -260,6 +257,8 @@ func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, r
 		return derp.Wrap(err, location, "Cannot parse activityID", token)
 	}
 
+	// Try to load the Activity from the database
+	activity := model.NewInboxActivity()
 	if err := service.LoadFromInbox(ownerID, activityID, &activity); err != nil {
 		return derp.Wrap(err, location, "Cannot load Activity", ownerID, token)
 	}

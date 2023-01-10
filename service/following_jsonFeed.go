@@ -29,7 +29,7 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 	var errorCollection error
 
 	for _, item := range feed.Items {
-		activity := convert.JsonFeedToActivity(item)
+		activity := convert.JsonFeedToActivity(feed, item)
 		if err := service.saveActivity(following, &activity); err != nil {
 			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error saving activity", following, activity))
 		}

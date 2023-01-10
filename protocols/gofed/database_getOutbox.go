@@ -44,14 +44,14 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 
 	// Build the list of items
 	items := streams.NewActivityStreamsOrderedItemsProperty()
-	activity := model.NewActivity()
+	activity := model.NewOutboxActivity()
 	for it.Next(&activity) {
 		if record, err := ToGoFed(&activity); err == nil {
 			items.AppendType(record)
 		} else {
 			derp.Report(derp.Wrap(err, location, "Error serializing activity", activity))
 		}
-		activity = model.NewActivity()
+		activity = model.NewOutboxActivity()
 	}
 
 	if err := it.Error(); err != nil {

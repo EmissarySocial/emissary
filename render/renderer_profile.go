@@ -274,8 +274,8 @@ func (w Profile) Activity() (model.Activity, error) {
 		return model.Activity{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid activityId", w._context.QueryParam("activityId"))
 	}
 
-	// Try to load the record from the database
-	result := model.NewActivity()
+	// Try to load an Activity record from the Inbox
+	result := model.NewInboxActivity()
 	activityService := w._factory.Activity()
 
 	if err := activityService.LoadFromInbox(w.AuthenticatedID(), activityID, &result); err != nil {

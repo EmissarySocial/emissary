@@ -170,7 +170,7 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 
 	const location = "service.Following.saveActivity"
 
-	original := model.NewActivity()
+	original := model.NewInboxActivity()
 	activity.UpdateWithFollowing(following)
 
 	// Search for an existing Activity that matches the parameter

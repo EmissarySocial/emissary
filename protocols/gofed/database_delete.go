@@ -22,7 +22,6 @@ func (db Database) Delete(c context.Context, id *url.URL) error {
 
 	// Try to load the existing activity
 	activity := model.NewActivity()
-
 	if err := db.activityService.LoadByURL(ownerID, id.String(), &activity); err != nil {
 		return derp.Wrap(err, location, "Error loading activity", id)
 	}

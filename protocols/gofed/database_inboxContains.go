@@ -44,7 +44,7 @@ func (db Database) InboxContains(c context.Context, inbox *url.URL, id *url.URL)
 	}
 
 	// Try to load the Activity from the database
-	activity := model.NewActivity()
+	activity := model.NewInboxActivity()
 	err = db.activityService.LoadFromInbox(inboxOwnerID, activityID, &activity)
 
 	// If NO error, then EXISTS

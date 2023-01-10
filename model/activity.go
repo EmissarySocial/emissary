@@ -34,6 +34,26 @@ func NewActivity() Activity {
 	}
 }
 
+// NewInboxActivity returns a fully initialized Activity record, with the Place field set to "Inbox"
+func NewInboxActivity() Activity {
+	return Activity{
+		ActivityID: primitive.NewObjectID(),
+		OwnerID:    primitive.NilObjectID,
+		FolderID:   primitive.NilObjectID,
+		Place:      ActivityPlaceInbox,
+	}
+}
+
+// NewOutboxActivity returns a fully initialized Activity record, with the Place field set to "Outbox"
+func NewOutboxActivity() Activity {
+	return Activity{
+		ActivityID: primitive.NewObjectID(),
+		OwnerID:    primitive.NilObjectID,
+		FolderID:   primitive.NilObjectID,
+		Place:      ActivityPlaceOutbox,
+	}
+}
+
 // ActivitySchema returns a JSON Schema that describes this object
 func ActivitySchema() schema.Element {
 	return schema.Object{

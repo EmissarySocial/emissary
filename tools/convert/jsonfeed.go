@@ -45,9 +45,16 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 	}
 }
 
-func JsonFeedToActivity(item jsonfeed.Item) model.Activity {
+func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
 
-	activity := model.NewActivity()
+	activity := model.NewInboxActivity()
+
+	activity.Origin = model.OriginLink{
+		Label:    feed.Title,
+		URL:      feed.HomePageURL,
+		ImageURL: feed.Icon,
+	}
+
 	activity.Document = model.DocumentLink{
 		URL:         item.URL,
 		Label:       item.Title,

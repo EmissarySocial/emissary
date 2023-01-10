@@ -7,12 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// MagicFolderIDOutbox identifies the unique id for the "Outbox" folder
-const MagicFolderIDOutbox = "000000000000000000000000"
-
-// MagicFolderIDInbox identifies the unique id for the "Inbox" folder
-const MagicFolderIDInbox = "000000000000000000000001"
-
 // Folder represents a custom folder that organizes incoming messages
 type Folder struct {
 	FolderID primitive.ObjectID `path:"folderId" json:"folderId" bson:"_id"`    // Unique ID for this folder
