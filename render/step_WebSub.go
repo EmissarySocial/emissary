@@ -2,11 +2,12 @@ package render
 
 import (
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/rosetta/list"
 	"github.com/timewasted/go-accept-headers"
 )
 
@@ -14,15 +15,17 @@ import (
 type StepWebSub struct {
 }
 
-// Get renders the Stream HTML to the context
+// Get is not required by WebSub.  So let's redirect to the primary action.
 func (step StepWebSub) Get(renderer Renderer, buffer io.Writer) error {
-	return nil
+	newLocation := list.RemoveLast(renderer.URL(), list.DelimiterSlash)
+	return renderer.context().Redirect(http.StatusSeeOther, newLocation)
 }
 
 func (step StepWebSub) UseGlobalWrapper() bool {
-	return true
+	return false
 }
 
+// Post accepts a WebSub request, verifies it, and potentially creates a new Follower record.
 func (step StepWebSub) Post(renderer Renderer) error {
 
 	var request struct {
@@ -37,11 +40,8 @@ func (step StepWebSub) Post(renderer Renderer) error {
 		return derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data")
 	}
 
-	spew.Dump("WebSub Request", request)
-
 	// Try to validate and save the follower via the queue.
 	factory := renderer.factory()
-	queue := factory.Queue()
 
 	format, err := accept.Negotiate(renderer.context().Request().Header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText)
 
@@ -49,7 +49,10 @@ func (step StepWebSub) Post(renderer Renderer) error {
 		format = model.MimeTypeJSONFeed
 	}
 
-	go queue.Run(tasks.NewCreateWebSubFollower(
+	// Run the task in the background queue.
+	queue := factory.Queue()
+
+	queue.Run(tasks.NewCreateWebSubFollower(
 		factory.Follower(),
 		factory.Locator(),
 		renderer.objectType(),

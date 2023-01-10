@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 )
 
@@ -16,8 +15,6 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 
 	var success string
 	var failure string
-
-	spew.Dump("... attempting to connect to WebSub hub", hub.Href)
 
 	// Autocompute the topic.  Use "self" link first, or just the following URL
 	self := following.GetLink("rel", model.LinkRelationSelf)

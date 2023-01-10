@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/maps"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,8 +42,6 @@ func NewCreateWebSubFollower(followerService *service.Follower, locatorService s
 }
 
 func (task CreateWebSubFollower) Run() error {
-
-	spew.Dump("Running Task: CreateWebSubFollower")
 
 	switch task.mode {
 	case "subscribe":
@@ -132,8 +129,6 @@ func (task CreateWebSubFollower) validate(follower *model.Follower) error {
 
 	var body string
 
-	spew.Dump("Validating WebSub", follower)
-
 	// Validate the request with the client
 	challenge := random.String(42)
 	transaction := remote.Get(follower.Actor.InboxURL).
@@ -146,8 +141,6 @@ func (task CreateWebSubFollower) validate(follower *model.Follower) error {
 	if err := transaction.Send(); err != nil {
 		return derp.Wrap(err, location, "Error sending verification request", follower.ID)
 	}
-
-	spew.Dump(body)
 
 	if body != challenge {
 		return derp.NewBadRequestError(location, "Invalid challenge response", follower.ID)

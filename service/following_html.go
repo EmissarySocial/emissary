@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/microformats"
 )
 
@@ -18,7 +17,6 @@ func (service *Following) import_HTML(following *model.Following, response *http
 
 	// Look for Links to RSS feeds
 	following.Links = discoverLinks(response, body)
-	spew.Dump("... found links: ", following.Links)
 
 	// Look for Feed Data
 	if err := service.import_HTML_feed(following, response, body); err != nil {
@@ -31,13 +29,10 @@ func (service *Following) import_HTML(following *model.Following, response *http
 	}
 
 	// Success!
-	spew.Dump("OVERWRITTEN??", following.Links)
 	return nil
 }
 
 func (service *Following) import_HTML_feed(following *model.Following, response *http.Response, body *bytes.Buffer) error {
-
-	spew.Dump("... importing HTML feed")
 
 	// Follow links to RSS feeds first
 	for _, link := range following.Links {
@@ -45,7 +40,6 @@ func (service *Following) import_HTML_feed(following *model.Following, response 
 
 		case model.MimeTypeJSONFeed:
 			if err := service.poll(following, link, service.import_JSONFeed); err == nil {
-				spew.Dump("found JSON Feed")
 				return nil
 			} else {
 				derp.Report(err)

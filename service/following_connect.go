@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -21,8 +20,6 @@ func (service *Following) Connect(following model.Following) error {
 	if err := service.SetStatus(&following, model.FollowingStatusLoading, ""); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
-
-	spew.Dump("... attempting to connect to " + following.URL)
 
 	// Try to load the targetURL.
 	var body bytes.Buffer
@@ -37,8 +34,6 @@ func (service *Following) Connect(following model.Following) error {
 
 	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
 	mediaType, _, _ := mime.ParseMediaType(mimeType)
-
-	spew.Dump("... found content type: " + mimeType)
 
 	switch mediaType {
 
@@ -207,8 +202,6 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following) {
 
-	spew.Dump("attempting to connect to push services...", following.Links, following.GetLink("rel", model.LinkRelationHub))
-
 	// ActivityPub is first because it's the highest fidelity (when it works)
 	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
 		if err := service.connect_ActivityPub(following, activityPub); err == nil {
@@ -222,6 +215,4 @@ func (service *Following) connect_PushServices(following *model.Following) {
 			return
 		}
 	}
-
-	spew.Dump("NONE FOUND :(")
 }
