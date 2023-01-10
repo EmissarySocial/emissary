@@ -213,9 +213,17 @@ func (service *Activity) QueryInbox(userID primitive.ObjectID, criteria exp.Expr
 func (service *Activity) LoadByID(userID primitive.ObjectID, place model.ActivityPlace, activityID primitive.ObjectID, result *model.Activity) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("place", place).
-		AndEqual("activityId", activityID)
+		AndEqual("_id", activityID)
 
 	return service.Load(criteria, result)
+}
+
+func (service *Activity) LoadFromInbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(userID, model.ActivityPlaceInbox, activityID, result)
+}
+
+func (service *Activity) LoadFromOutbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(userID, model.ActivityPlaceOutbox, activityID, result)
 }
 
 func (service *Activity) LoadByURL(userID primitive.ObjectID, url string, result *model.Activity) error {
@@ -225,20 +233,12 @@ func (service *Activity) LoadByURL(userID primitive.ObjectID, url string, result
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadFromInbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(userID, model.ActivityPlaceInbox, activityID, result)
-}
-
 func (service *Activity) LoadFromInboxByURL(userID primitive.ObjectID, url string, result *model.Activity) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("place", model.ActivityPlaceInbox).
 		AndEqual("document.url", url)
 
 	return service.Load(criteria, result)
-}
-
-func (service *Activity) LoadFromOutbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(userID, model.ActivityPlaceOutbox, activityID, result)
 }
 
 /*******************************************
