@@ -22,8 +22,8 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 
 	const location = "gofed.Database.GetOutbox"
 
-	// Parse the URL to get the OwnerID
-	ownerID, _, _, err := ParsePath(outboxIRI)
+	// Parse the URL to get the UserID
+	userID, _, _, err := ParsePath(outboxIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing URL", outboxIRI.String())
@@ -36,7 +36,7 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 	criteria := builder.Evaluate(outboxIRI.Query())
 
 	// Query the database
-	it, err := db.activityService.ListOutbox(ownerID, criteria, option.MaxRows(60))
+	it, err := db.activityService.ListOutbox(userID, criteria, option.MaxRows(60))
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")

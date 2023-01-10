@@ -24,7 +24,7 @@ func (db Database) Create(c context.Context, asType vocab.Type) error {
 		return derp.Wrap(err, location, "Error converting Type", asType)
 	}
 
-	// TODO: CRITICAL: What about other properties, like OwnerID???
+	// TODO: CRITICAL: What about other properties, like UserID???
 	// Guessing this is only used for INBOUND activities..
 
 	// Save the Activity to the database.

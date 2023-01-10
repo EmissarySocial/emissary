@@ -12,7 +12,7 @@ import (
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
 	ActivityID primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
-	OwnerID    primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`            // Unique ID of the User who owns this Activity (in their inbox or outbox)
+	UserID     primitive.ObjectID `path:"userId"       json:"userId"       bson:"userId"`             // Unique ID of the User who owns this Activity (in their inbox or outbox)
 	Place      ActivityPlace      `path:"place"        json:"place"        bson:"place"`              // Place where this Activity is represented (e.g. "Inbox", "Outbox")
 	Origin     OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
 	Document   DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
@@ -20,7 +20,7 @@ type Activity struct {
 
 	// Inbox-specific fields
 	FolderID primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
-	ReadDate int64              `path:"readDate"     json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the owner
+	ReadDate int64              `path:"readDate"     json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the user
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -29,7 +29,7 @@ type Activity struct {
 func NewActivity() Activity {
 	return Activity{
 		ActivityID: primitive.NewObjectID(),
-		OwnerID:    primitive.NilObjectID,
+		UserID:     primitive.NilObjectID,
 		FolderID:   primitive.NilObjectID,
 	}
 }
@@ -38,7 +38,7 @@ func NewActivity() Activity {
 func NewInboxActivity() Activity {
 	return Activity{
 		ActivityID: primitive.NewObjectID(),
-		OwnerID:    primitive.NilObjectID,
+		UserID:     primitive.NilObjectID,
 		FolderID:   primitive.NilObjectID,
 		Place:      ActivityPlaceInbox,
 	}
@@ -48,7 +48,7 @@ func NewInboxActivity() Activity {
 func NewOutboxActivity() Activity {
 	return Activity{
 		ActivityID: primitive.NewObjectID(),
-		OwnerID:    primitive.NilObjectID,
+		UserID:     primitive.NilObjectID,
 		FolderID:   primitive.NilObjectID,
 		Place:      ActivityPlaceOutbox,
 	}
@@ -59,7 +59,7 @@ func ActivitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"activityId":   schema.String{Format: "objectId"},
-			"ownerId":      schema.String{Format: "objectId"},
+			"userId":       schema.String{Format: "objectId"},
 			"folderId":     schema.String{Format: "objectId"},
 			"document":     DocumentLinkSchema(),
 			"contentHtml":  schema.String{Format: "html"},
@@ -83,7 +83,7 @@ func (activity *Activity) ID() string {
 
 // UpdateWithFollowing updates the contents of this activity with a Following record
 func (activity *Activity) UpdateWithFollowing(following *Following) {
-	activity.OwnerID = following.UserID
+	activity.UserID = following.UserID
 	activity.FolderID = following.FolderID
 	activity.Origin = following.Origin()
 }

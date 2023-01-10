@@ -22,9 +22,9 @@ func (db Database) Update(c context.Context, asType vocab.Type) error {
 		return derp.Wrap(err, "gofed.Database.Update", "Error converting to model object", asType)
 	}
 
-	// Determine the ownerID, location, and activityID from the URL
+	// Determine the userID, location, and activityID from the URL
 	activityURL := updatedActivity.URL()
-	ownerID, location, activityID, err := ParsePath(activityURL)
+	userID, place, activityID, err := ParsePath(activityURL)
 
 	if err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error parsing URL", updatedActivity)
@@ -32,7 +32,7 @@ func (db Database) Update(c context.Context, asType vocab.Type) error {
 
 	// Try to load the existing activity
 	existingActivity := model.NewActivity()
-	if err := db.activityService.LoadByID(ownerID, location, activityID, &existingActivity); err != nil {
+	if err := db.activityService.LoadByID(userID, place, activityID, &existingActivity); err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error finding existing activity", updatedActivity)
 	}
 

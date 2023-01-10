@@ -19,8 +19,8 @@ func (activity *Activity) GetString(name string) string {
 	switch name {
 	case "activityId":
 		return activity.ActivityID.Hex()
-	case "ownerId":
-		return activity.OwnerID.Hex()
+	case "userId":
+		return activity.UserID.Hex()
 	case "folderId":
 		return activity.FolderID.Hex()
 	default:
@@ -53,10 +53,10 @@ func (activity *Activity) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "ownerId":
+	case "userId":
 
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.OwnerID = objectID
+			activity.UserID = objectID
 			return true
 		}
 

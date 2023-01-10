@@ -41,6 +41,7 @@ func (fed Federating) FederatingCallbacks(c context.Context) (wrapped pub.Federa
 	// Research:
 	// https://go-fed.org/ref/activity/pub#Federating-Wrapped-Callbacks
 
+	// wrappedCallbacks augment the default behavior
 	wrappedCallbacks := pub.FederatingWrappedCallbacks{
 		Create: func(c context.Context, create vocab.ActivityStreamsCreate) error {
 			spew.Dump("FederatingCallbacks.Create", create)

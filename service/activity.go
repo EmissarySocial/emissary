@@ -175,70 +175,70 @@ func (service *Activity) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
-func (service *Activity) ListByLocation(ownerID primitive.ObjectID, place model.ActivityPlace, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *Activity) ListByLocation(userID primitive.ObjectID, place model.ActivityPlace, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	switch place {
 	case model.ActivityPlaceInbox:
-		return service.ListInbox(ownerID, criteria, options...)
+		return service.ListInbox(userID, criteria, options...)
 	case model.ActivityPlaceOutbox:
-		return service.ListOutbox(ownerID, criteria, options...)
+		return service.ListOutbox(userID, criteria, options...)
 	default:
 		return nil, derp.New(derp.CodeBadRequestError, "service.Activity", "Invalid place", place.String())
 	}
 }
 
-func (service *Activity) ListInbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	criteria = exp.Equal("ownerId", ownerID).
+func (service *Activity) ListInbox(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	criteria = exp.Equal("userId", userID).
 		AndEqual("place", model.ActivityPlaceInbox).
 		And(criteria)
 
 	return service.List(criteria, options...)
 }
 
-func (service *Activity) ListOutbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	criteria = exp.Equal("ownerId", ownerID).
+func (service *Activity) ListOutbox(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	criteria = exp.Equal("userId", userID).
 		AndEqual("place", model.ActivityPlaceOutbox).
 		And(criteria)
 
 	return service.List(criteria, options...)
 }
 
-func (service *Activity) QueryInbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
-	criteria = exp.Equal("ownerId", ownerID).
+func (service *Activity) QueryInbox(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
+	criteria = exp.Equal("userId", userID).
 		AndEqual("place", model.ActivityPlaceInbox).
 		And(criteria)
 
 	return service.Query(criteria, options...)
 }
 
-func (service *Activity) LoadByID(ownerID primitive.ObjectID, place model.ActivityPlace, activityID primitive.ObjectID, result *model.Activity) error {
-	criteria := exp.Equal("ownerId", ownerID).
+func (service *Activity) LoadByID(userID primitive.ObjectID, place model.ActivityPlace, activityID primitive.ObjectID, result *model.Activity) error {
+	criteria := exp.Equal("userId", userID).
 		AndEqual("place", place).
 		AndEqual("activityId", activityID)
 
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
-	criteria := exp.Equal("ownerId", ownerID).
+func (service *Activity) LoadByURL(userID primitive.ObjectID, url string, result *model.Activity) error {
+	criteria := exp.Equal("userId", userID).
 		AndEqual("document.url", url)
 
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadFromInbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(ownerID, model.ActivityPlaceInbox, activityID, result)
+func (service *Activity) LoadFromInbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(userID, model.ActivityPlaceInbox, activityID, result)
 }
 
-func (service *Activity) LoadFromInboxByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
-	criteria := exp.Equal("ownerId", ownerID).
+func (service *Activity) LoadFromInboxByURL(userID primitive.ObjectID, url string, result *model.Activity) error {
+	criteria := exp.Equal("userId", userID).
 		AndEqual("place", model.ActivityPlaceInbox).
 		AndEqual("document.url", url)
 
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadFromOutbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(ownerID, model.ActivityPlaceOutbox, activityID, result)
+func (service *Activity) LoadFromOutbox(userID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(userID, model.ActivityPlaceOutbox, activityID, result)
 }
 
 /*******************************************
@@ -246,7 +246,7 @@ func (service *Activity) LoadFromOutbox(ownerID primitive.ObjectID, activityID p
  *******************************************/
 
 // SetReadDate updates the readDate for a single Activity IF it is not already read
-func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, readDate int64) error {
+func (service *Activity) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
 
 	const location = "service.Activity.SetReadDate"
 
@@ -259,8 +259,8 @@ func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, r
 
 	// Try to load the Activity from the database
 	activity := model.NewInboxActivity()
-	if err := service.LoadFromInbox(ownerID, activityID, &activity); err != nil {
-		return derp.Wrap(err, location, "Cannot load Activity", ownerID, token)
+	if err := service.LoadFromInbox(userID, activityID, &activity); err != nil {
+		return derp.Wrap(err, location, "Cannot load Activity", userID, token)
 	}
 
 	// RULE: If the Activity is already marked as read, then we don't need to update it.  Return success.

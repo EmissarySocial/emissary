@@ -18,20 +18,20 @@ func (db Database) InboxContains(c context.Context, inbox *url.URL, id *url.URL)
 	const location = "gofed.Database.InboxContains"
 
 	// Parse the URLs provided
-	inboxOwnerID, inboxLocation, _, err := ParsePath(inbox)
+	inboxUserID, inboxLocation, _, err := ParsePath(inbox)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error parsing Inbox URL", inbox)
 	}
 
-	activityOwnerID, activityLocation, activityID, err := ParsePath(id)
+	activityUserID, activityLocation, activityID, err := ParsePath(id)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error parsing Activity URL", id)
 	}
 
 	// Validate basic assumptions about the URLs
-	if inboxOwnerID != activityOwnerID {
+	if inboxUserID != activityUserID {
 		return false, nil
 	}
 
@@ -45,7 +45,7 @@ func (db Database) InboxContains(c context.Context, inbox *url.URL, id *url.URL)
 
 	// Try to load the Activity from the database
 	activity := model.NewInboxActivity()
-	err = db.activityService.LoadFromInbox(inboxOwnerID, activityID, &activity)
+	err = db.activityService.LoadFromInbox(inboxUserID, activityID, &activity)
 
 	// If NO error, then EXISTS
 	if err == nil {
