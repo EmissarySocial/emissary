@@ -22,10 +22,14 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Activity {
 	activity := model.NewInboxActivity()
 
 	activity.Origin = model.OriginLink{
-		URL:      feed.FeedLink,
-		Label:    feed.Title,
-		ImageURL: feed.Image.URL,
+		URL:   feed.FeedLink,
+		Label: feed.Title,
 	}
+
+	if feed.Image != nil {
+		activity.Origin.ImageURL = feed.Image.URL
+	}
+
 	activity.Document = model.DocumentLink{
 		URL:         rssItem.Link,
 		Label:       htmlTools.ToText(rssItem.Title),

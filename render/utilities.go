@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -243,7 +242,7 @@ func executeTemplate(template TemplateLike, data any) string {
 	var buffer bytes.Buffer
 
 	if err := template.Execute(&buffer, data); err != nil {
-		spew.Dump(derp.Wrap(err, "render.executeTemplate", "Error executing template", data))
+		derp.Report(derp.Wrap(err, "render.executeTemplate", "Error executing template", data))
 		return ""
 	}
 

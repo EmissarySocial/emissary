@@ -40,7 +40,9 @@ func (q *Queue) Worker() {
 
 // Run adds a task to the queue, to be run asynchronously when it is possible.
 func (q *Queue) Run(task Task) {
-	q.tasks <- task
+	go func() {
+		q.tasks <- task
+	}()
 }
 
 // CLose closes the queue and stops the workers.

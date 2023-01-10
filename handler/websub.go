@@ -68,10 +68,10 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading following record", userID, followingID, transaction)
 		}
 
-		/* RULE: Require that this Following uses WebSub
+		// RULE: Require that this Following uses WebSub
 		if following.Method != model.FollowMethodWebSub {
 			return derp.New(derp.CodeBadRequestError, location, "Not a WebSub follow", following, transaction)
-		}*/
+		}
 
 		// RULE: Require that the Topic URL matches this Following
 		if transaction.Topic != following.URL {
@@ -146,6 +146,10 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 			hmac.Validate(method, following.Secret, body.Bytes(), signature.Bytes())
 		}
+
+		// TODO: MEDIUM: WebSub - Handle FatPings.
+		// Right now, we re-poll the entire feed. But we could save a round-trip by
+		// inspecting the body and parsing any additional data that's been "Fat Ping-ed" to us.
 
 		// Connect to the the WebSub server
 		if err := followingService.Connect(following); err != nil {

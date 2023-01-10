@@ -84,8 +84,6 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 	// Recalculate the follower count for this user
 	go service.userService.CalcFollowerCount(follower.ParentID)
 
-	// TODO: Notify followers (if necessary)
-
 	return nil
 }
 
@@ -211,7 +209,7 @@ func (service *Follower) LoadByWebSub(objectType string, parentID primitive.Obje
 		Equal("type", objectType).
 		AndEqual("parentId", parentID).
 		AndEqual("method", model.FollowMethodWebSub).
-		AndEqual("actor.inboxId", callback)
+		AndEqual("actor.inboxUrl", callback)
 
 	return service.Load(criteria, result)
 }
@@ -219,14 +217,16 @@ func (service *Follower) LoadByWebSub(objectType string, parentID primitive.Obje
 // LoadByWebSubUnique finds a follower based on the parentID and callback.  If no follower is found, a new record is created.
 func (service *Follower) LoadByWebSubUnique(objectType string, parentID primitive.ObjectID, callback string) (model.Follower, error) {
 
+	// Try to load the Follower from the database
 	result := model.NewFollower()
-
 	err := service.LoadByWebSub(objectType, parentID, callback, &result)
 
+	// If EXISTS, then we've found it.
 	if err == nil {
 		return result, nil
 	}
 
+	// If NOT EXISTS, then create a new one
 	if derp.NotFound(err) {
 		result.ParentID = parentID
 		result.Type = objectType
@@ -235,5 +235,6 @@ func (service *Follower) LoadByWebSubUnique(objectType string, parentID primitiv
 		return result, nil
 	}
 
+	// If REAL ERROR, then derp
 	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Error loading follower", parentID, callback)
 }
