@@ -66,7 +66,8 @@ type Renderer interface {
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
 
-// TODO: We don't want to return a pointer here unless we HAVE TO.
+// TODO: LOW: We don't want to return a pointer here unless we HAVE TO.
+// This function is only used in one place, so perhaps we can just inline it?
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
 
 	switch object := object.(type) {

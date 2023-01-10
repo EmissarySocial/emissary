@@ -16,7 +16,7 @@ func (db Database) Get(c context.Context, id *url.URL) (value vocab.Type, err er
 	const location = "gofed.Database.Get"
 
 	// Parse the URL
-	ownerID, _, _, err := ParseURL(id)
+	ownerID, _, _, err := ParsePath(id)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing URL", id)

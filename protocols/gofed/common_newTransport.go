@@ -2,9 +2,14 @@ package gofed
 
 import (
 	"context"
+	"crypto"
+	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/benpate/derp"
 	"github.com/go-fed/activity/pub"
+	"github.com/go-fed/httpsig"
 )
 
 // Returns a new pub.Transport for federating with peer software. There is a pub.HttpSigTransport implementation
@@ -28,7 +33,52 @@ import (
 // credentials are able to be garbage collected.
 //
 // For more information, see the Transports section at https://go-fed.org/ref/activity/pub#Transports
-func (common Common) NewTransport(c context.Context, actorBoxIRI *url.URL, gofedAgent string) (t pub.Transport, err error) {
-	// TODO: CRITICAL: Must finish this.
-	return nil, nil
+func (common Common) NewTransport(c context.Context, actorBoxIRI *url.URL, gofedAgent string) (pub.Transport, error) {
+
+	const location = "gofed.Common.NewTransport"
+
+	// Set up Encryption config
+	prefs := []httpsig.Algorithm{httpsig.RSA_SHA512}
+	digestPref := httpsig.DigestAlgorithm(httpsig.DigestSha512)
+	getHeadersToSign := []string{httpsig.RequestTarget, "Date"}
+	postHeadersToSign := []string{httpsig.RequestTarget, "Date", "Digest"}
+	expiresIn := int64(3600) // 1 hour
+
+	// Create HTTP Signature signers
+	getSigner, _, err := httpsig.NewSigner(prefs, digestPref, getHeadersToSign, httpsig.Signature, expiresIn)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error creating 'GET' signer")
+	}
+
+	postSigner, _, err := httpsig.NewSigner(prefs, digestPref, postHeadersToSign, httpsig.Signature, expiresIn)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error creating 'POST' signer")
+	}
+
+	// Retrieve public/private keys from the database
+	pubKeyID, privKey, err := common.getKeysForActorBoxIRI(actorBoxIRI)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error getting public/private keys")
+	}
+
+	// Create HTTP CLient
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	return pub.NewHttpSigTransport(
+		client,
+		"emissary.social",
+		NewClock(),
+		getSigner,
+		postSigner,
+		pubKeyID,
+		privKey), nil
+}
+
+func (common Common) getKeysForActorBoxIRI(actorIRI *url.URL) (string, crypto.PrivateKey, error) {
+	return "", nil, nil
 }

@@ -8,22 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const ActivityFormatToot = "TOOT"
-
-const ActivityFormatArticle = "ARTICLE"
-
-const ActivityFormatMedia = "MEDIA"
-
-const ActivityLocationInbox = "INBOX"
-
-const ActivityLocationOutbox = "OUTBOX"
-
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
 	ActivityID primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
 	OwnerID    primitive.ObjectID `path:"ownerId"      json:"ownerId"      bson:"ownerId"`            // Unique ID of the User who owns this Activity (in their inbox or outbox)
-	Location   string             `path:"location"     json:"location"     bson:"location"`           // Location of Activity (e.g. "Inbox", "Outbox")
+	Place      ActivityPlace      `path:"place"        json:"place"        bson:"place"`              // Place where this Activity is represented (e.g. "Inbox", "Outbox")
 	Origin     OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
 	Document   DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
 	Content    Content            `path:"content"      json:"content"      bson:"content,omitempty"`  // Content of the Activity
@@ -35,6 +25,7 @@ type Activity struct {
 	journal.Journal `json:"-" bson:"journal"`
 }
 
+// NewActivity returns a fully initialized Activity record
 func NewActivity() Activity {
 	return Activity{
 		ActivityID: primitive.NewObjectID(),
@@ -43,6 +34,7 @@ func NewActivity() Activity {
 	}
 }
 
+// ActivitySchema returns a JSON Schema that describes this object
 func ActivitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -69,33 +61,18 @@ func (activity *Activity) ID() string {
  * Other Methods
  *******************************************/
 
+// UpdateWithFollowing updates the contents of this activity with a Following record
 func (activity *Activity) UpdateWithFollowing(following *Following) {
 	activity.OwnerID = following.UserID
 	activity.FolderID = following.FolderID
 	activity.Origin = following.Origin()
 }
 
-// UpdateWithActivity updates the contents of this activity with another activity
+// UpdateWithActivity updates the contents of this activity with another Activity record
 func (activity *Activity) UpdateWithActivity(other *Activity) {
 	activity.Origin = other.Origin
 	activity.Document = other.Document
 	activity.Content = other.Content
-}
-
-// Format returns a suggestion for how to display this activity
-func (activity Activity) Format() string {
-
-	// TODO: Smarter rules here?
-
-	if activity.Document.Label != "" {
-		return ActivityFormatArticle
-	}
-
-	if activity.Document.ImageURL != "" {
-		return ActivityFormatMedia
-	}
-
-	return ActivityFormatToot
 }
 
 // Status returns a string indicating whether this activity has been read or not

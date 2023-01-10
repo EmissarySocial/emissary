@@ -18,13 +18,14 @@ func (db Database) Create(c context.Context, asType vocab.Type) error {
 	const location = "gofed.Database.Create"
 
 	// Convert the vocab.Type into a model.Activity
-	activity, err := ToModel(asType, model.ActivityLocationInbox)
+	activity, err := ToModel(asType, model.ActivityPlaceInbox)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error converting Type", asType)
 	}
 
 	// TODO: CRITICAL: What about other properties, like OwnerID???
+	// Guessing this is only used for INBOUND activities..
 
 	// Save the Activity to the database.
 	if err := db.activityService.Save(&activity, "Created by Go-Fed"); err != nil {

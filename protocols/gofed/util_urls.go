@@ -4,9 +4,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
-	"github.com/go-fed/activity/streams/vocab"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,15 +20,36 @@ func IsLocalURL(hostname string, id *url.URL) bool {
 	return strings.HasPrefix(id.String(), hostname)
 }
 
-// ParseItem finds the item URL, then splits it into its component parts.
-func ParseItem(item vocab.Type) (userID primitive.ObjectID, activityLocation string, activityID primitive.ObjectID, err error) {
-	return ParseURL(item.GetJSONLDId().GetIRI())
+// ParseInboxPath parses the path parameters in a URL and ensures that it identifies a user's inbox
+func ParseInboxPath(url *url.URL) (userID primitive.ObjectID, activityID primitive.ObjectID, err error) {
+	return parsePathWithLocation(url, model.ActivityPlaceInbox)
 }
 
-// ParseURL splits a URL into its component parts: userID, activityLocation, activityID.
-func ParseURL(url *url.URL) (userID primitive.ObjectID, activityLocation string, activityID primitive.ObjectID, err error) {
+// ParseOutboxPath parses the path parameters in a URL and ensures that it identifies a user's outbox
+func ParseOutboxPath(url *url.URL) (userID primitive.ObjectID, activityID primitive.ObjectID, err error) {
+	return parsePathWithLocation(url, model.ActivityPlaceOutbox)
+}
 
-	const location = "service.activitypub.Database.parseURL"
+// parsePathWithLocation parses the path parameters in a URL and ensures that it itentifies a specific kind of record
+func parsePathWithLocation(url *url.URL, expectedActivityPlace model.ActivityPlace) (primitive.ObjectID, primitive.ObjectID, error) {
+
+	ownerID, activityPlace, itemID, err := ParsePath(url)
+
+	if err != nil {
+		return ownerID, itemID, err
+	}
+
+	if activityPlace != expectedActivityPlace {
+		err = derp.NewBadRequestError("service.activitypub.ParseWithLocation", "Expected location is not correct", url.String(), expectedActivityPlace.String())
+	}
+
+	return ownerID, itemID, err
+}
+
+// ParsePath splits a URL into its component parts: userID, activityPlace, activityID.
+func ParsePath(url *url.URL) (userID primitive.ObjectID, activityPlace model.ActivityPlace, activityID primitive.ObjectID, err error) {
+
+	const location = "service.activitypub.Database.ParsePath"
 
 	if !strings.HasPrefix(url.Path, "/@") {
 		err = derp.NewBadRequestError(location, "Path must begin with /@", url.String())
@@ -47,18 +68,21 @@ func ParseURL(url *url.URL) (userID primitive.ObjectID, activityLocation string,
 	userID, err = primitive.ObjectIDFromHex(userIDstring)
 
 	if err != nil {
-		return userID, "", primitive.NilObjectID, derp.Wrap(err, location, "Invalid userID", userIDstring)
+		return userID, model.ActivityPlaceUndefined, primitive.NilObjectID, derp.Wrap(err, location, "Invalid userID", userIDstring)
 	}
 
 	if path.IsEmpty() {
-		return userID, "", primitive.NilObjectID, nil
+		return userID, model.ActivityPlaceUndefined, primitive.NilObjectID, nil
 	}
 
-	// Parse the activityLocation from the path
-	activityLocation, path = path.Split()
+	// Parse the activityPlace from the path
+	var activityPlaceString string
+	activityPlaceString, path = path.Split()
+
+	activityPlace = model.ParseActivityPlace(activityPlaceString)
 
 	if path.IsEmpty() {
-		return userID, activityLocation, primitive.NilObjectID, nil
+		return userID, activityPlace, primitive.NilObjectID, nil
 	}
 
 	// Parse the activityID from the path
@@ -68,9 +92,9 @@ func ParseURL(url *url.URL) (userID primitive.ObjectID, activityLocation string,
 	activityID, err = primitive.ObjectIDFromHex(activityIDstring)
 
 	if err != nil {
-		return userID, activityLocation, primitive.NilObjectID, derp.Wrap(err, location, "Invalid activityID", activityIDstring)
+		return userID, activityPlace, primitive.NilObjectID, derp.Wrap(err, location, "Invalid activityID", activityIDstring)
 	}
 
 	// Success.  All values parsed correctly.
-	return userID, activityLocation, activityID, nil
+	return userID, activityPlace, activityID, nil
 }

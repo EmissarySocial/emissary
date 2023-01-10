@@ -18,7 +18,7 @@ func (db Database) Following(c context.Context, actorIRI *url.URL) (vocab.Activi
 	const location = "gofed.Database.Following"
 
 	// Get the ownerID from the URL
-	ownerID, _, _, err := ParseURL(actorIRI)
+	ownerID, _, _, err := ParsePath(actorIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing actor IRI", actorIRI)

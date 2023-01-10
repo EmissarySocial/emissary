@@ -14,7 +14,7 @@ func (db Database) Exists(c context.Context, id *url.URL) (exists bool, err erro
 	const location = "gofed.Database.Exists"
 
 	// Validate the provided URL
-	ownerID, _, _, err := ParseURL(id)
+	ownerID, activityType, activityID, err := ParsePath(id)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error parsing URL", id)
@@ -23,7 +23,7 @@ func (db Database) Exists(c context.Context, id *url.URL) (exists bool, err erro
 	// Try to load the existing activity
 	activity := model.NewActivity()
 
-	err = db.activityService.LoadByURL(ownerID, id.String(), &activity)
+	err = db.activityService.LoadByID(ownerID, activityType, activityID, &activity)
 
 	// No error means EXISTS
 	if err == nil {

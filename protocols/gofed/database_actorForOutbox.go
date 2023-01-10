@@ -12,14 +12,10 @@ import (
 // This will only be called with outboxIRI whose actors are owned by this instance.
 func (db Database) ActorForOutbox(c context.Context, outboxIRI *url.URL) (actorIRI *url.URL, err error) {
 
-	ownerID, location, _, err := ParseURL(outboxIRI)
+	ownerID, _, err := ParseOutboxPath(outboxIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "gofed.Database", "Error parsing outbox IRI", outboxIRI)
-	}
-
-	if location != "outbox" {
-		return nil, derp.Wrap(err, "gofed.Database", "Invalid location for outbox IRI", outboxIRI)
 	}
 
 	result, _ := url.Parse(actorIRI.String())

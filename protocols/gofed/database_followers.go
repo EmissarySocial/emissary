@@ -18,7 +18,7 @@ func (db Database) Followers(c context.Context, actorIRI *url.URL) (followers vo
 	const location = "gofed.Database.Followers"
 
 	// Get the ownerID from the URL
-	ownerID, _, _, err := ParseURL(actorIRI)
+	ownerID, _, _, err := ParsePath(actorIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing actor IRI", actorIRI)

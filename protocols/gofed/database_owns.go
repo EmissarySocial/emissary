@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
@@ -17,11 +18,11 @@ func (db Database) Owns(c context.Context, id *url.URL) (owns bool, err error) {
 	}
 
 	// Parse the URL
-	_, location, _, err := ParseURL(id)
+	_, location, _, err := ParsePath(id)
 
 	if err != nil {
 		return false, derp.Wrap(err, "gofed.Database.Owns", "Error parsing URL", id)
 	}
 
-	return (location != "inbox"), nil
+	return (location != model.ActivityPlaceInbox), nil
 }

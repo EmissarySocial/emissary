@@ -82,7 +82,7 @@ func (service *Activity) Save(activity *model.Activity, note string) error {
 	}
 
 	// TODO: In what circumstances should this trigger additional events?
-	if activity.Location == model.ActivityLocationInbox && activity.Document.InternalID.IsZero() {
+	if activity.Place == model.ActivityPlaceInbox && activity.Document.InternalID.IsZero() {
 		switch activity.Document.Type {
 		case model.DocumentTypeArticle:
 		case model.DocumentTypeNote:
@@ -175,20 +175,20 @@ func (service *Activity) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
-func (service *Activity) ListByLocation(ownerID primitive.ObjectID, location string, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	switch location {
-	case model.ActivityLocationInbox:
+func (service *Activity) ListByLocation(ownerID primitive.ObjectID, place model.ActivityPlace, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	switch place {
+	case model.ActivityPlaceInbox:
 		return service.ListInbox(ownerID, criteria, options...)
-	case model.ActivityLocationOutbox:
+	case model.ActivityPlaceOutbox:
 		return service.ListOutbox(ownerID, criteria, options...)
 	default:
-		return nil, derp.New(derp.CodeBadRequestError, "service.Activity", "Invalid location", location)
+		return nil, derp.New(derp.CodeBadRequestError, "service.Activity", "Invalid place", place.String())
 	}
 }
 
 func (service *Activity) ListInbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	criteria = exp.Equal("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationInbox).
+		AndEqual("place", model.ActivityPlaceInbox).
 		And(criteria)
 
 	return service.List(criteria, options...)
@@ -196,7 +196,7 @@ func (service *Activity) ListInbox(ownerID primitive.ObjectID, criteria exp.Expr
 
 func (service *Activity) ListOutbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	criteria = exp.Equal("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationOutbox).
+		AndEqual("place", model.ActivityPlaceOutbox).
 		And(criteria)
 
 	return service.List(criteria, options...)
@@ -204,15 +204,15 @@ func (service *Activity) ListOutbox(ownerID primitive.ObjectID, criteria exp.Exp
 
 func (service *Activity) QueryInbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
 	criteria = exp.Equal("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationInbox).
+		AndEqual("place", model.ActivityPlaceInbox).
 		And(criteria)
 
 	return service.Query(criteria, options...)
 }
 
-func (service *Activity) LoadByID(ownerID primitive.ObjectID, location string, activityID primitive.ObjectID, result *model.Activity) error {
+func (service *Activity) LoadByID(ownerID primitive.ObjectID, place model.ActivityPlace, activityID primitive.ObjectID, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
-		AndEqual("location", location).
+		AndEqual("place", place).
 		AndEqual("activityId", activityID)
 
 	return service.Load(criteria, result)
@@ -226,19 +226,19 @@ func (service *Activity) LoadByURL(ownerID primitive.ObjectID, url string, resul
 }
 
 func (service *Activity) LoadFromInbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(ownerID, model.ActivityLocationInbox, activityID, result)
+	return service.LoadByID(ownerID, model.ActivityPlaceInbox, activityID, result)
 }
 
 func (service *Activity) LoadFromInboxByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationInbox).
+		AndEqual("place", model.ActivityPlaceInbox).
 		AndEqual("document.url", url)
 
 	return service.Load(criteria, result)
 }
 
 func (service *Activity) LoadFromOutbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	return service.LoadByID(ownerID, model.ActivityLocationOutbox, activityID, result)
+	return service.LoadByID(ownerID, model.ActivityPlaceOutbox, activityID, result)
 }
 
 /*******************************************
@@ -288,7 +288,7 @@ func (service *Activity) QueryPurgeable(following *model.Following) ([]model.Act
 	purgeDate := time.Now().Add(0 - purgeDuration).Unix()
 
 	// Activities in the INBOX can be purged if they are READ and older than the purge date
-	criteria := exp.Equal("location", model.ActivityLocationInbox).
+	criteria := exp.Equal("place", model.ActivityPlaceInbox).
 		AndGreaterThan("readDate", 0).
 		AndLessThan("readDate", purgeDate)
 

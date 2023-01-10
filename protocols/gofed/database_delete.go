@@ -14,7 +14,7 @@ func (db Database) Delete(c context.Context, id *url.URL) error {
 	const location = "gofed.Database.Delete"
 
 	// Validate the provided URL
-	ownerID, _, _, err := ParseURL(id)
+	ownerID, _, _, err := ParsePath(id)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing URL", id)

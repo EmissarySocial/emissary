@@ -16,7 +16,7 @@ import (
 func (db Database) Update(c context.Context, asType vocab.Type) error {
 
 	// Convert the vocab.Type into a model.Activity
-	updatedActivity, err := ToModel(asType, model.ActivityLocationInbox)
+	updatedActivity, err := ToModel(asType, model.ActivityPlaceInbox)
 
 	if err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error converting to model object", asType)
@@ -24,7 +24,7 @@ func (db Database) Update(c context.Context, asType vocab.Type) error {
 
 	// Determine the ownerID, location, and activityID from the URL
 	activityURL := updatedActivity.URL()
-	ownerID, location, activityID, err := ParseURL(activityURL)
+	ownerID, location, activityID, err := ParsePath(activityURL)
 
 	if err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error parsing URL", updatedActivity)

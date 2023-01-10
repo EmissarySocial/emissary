@@ -23,7 +23,7 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 	const location = "gofed.Database.GetOutbox"
 
 	// Parse the URL to get the OwnerID
-	ownerID, _, _, err := ParseURL(outboxIRI)
+	ownerID, _, _, err := ParsePath(outboxIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing URL", outboxIRI.String())

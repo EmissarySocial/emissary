@@ -13,15 +13,10 @@ import (
 func (db Database) OutboxForInbox(c context.Context, inboxIRI *url.URL) (outboxIRI *url.URL, err error) {
 
 	// Parse the inboxIRI
-	ownerID, location, _, err := ParseURL(inboxIRI)
+	ownerID, _, err := ParseInboxPath(inboxIRI)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "gofed.Database", "Error parsing inbox IRI", inboxIRI)
-	}
-
-	// Validate basic assumptions about the URLs
-	if location != "inbox" {
-		return nil, derp.Wrap(err, "gofed.Database", "Invalid location for inbox IRI", inboxIRI)
 	}
 
 	// Generate the new outboxIRI
