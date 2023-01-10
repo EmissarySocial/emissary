@@ -85,10 +85,12 @@ func (w Profile) TopLevelID() string {
 	// If the user is viewing their own profile, then the top-level ID is the user's own ID
 	if w.UserID() == w.Common.AuthenticatedID().Hex() {
 
-		if w.ActionID() == "view" {
+		switch w.ActionID() {
+		case "inbox", "inbox-folder":
+			return "inbox"
+		default:
 			return "profile"
 		}
-		return "inbox"
 	}
 
 	return ""
