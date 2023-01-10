@@ -31,9 +31,10 @@ func ToGoFed(item *model.Activity) (vocab.Type, error) {
 	return streams.ToType(context.TODO(), jsonLD)
 }
 
-func ToModel(item vocab.Type) (model.Activity, error) {
+func ToModel(item vocab.Type, location string) (model.Activity, error) {
 
 	result := model.NewActivity()
+	result.Location = location
 	data, err := streams.Serialize(item)
 
 	if err != nil {

@@ -23,7 +23,7 @@ func (db Database) Exists(c context.Context, id *url.URL) (exists bool, err erro
 	// Try to load the existing activity
 	activity := model.NewActivity()
 
-	err = db.activityService.LoadActivityByURL(ownerID, id.String(), &activity)
+	err = db.activityService.LoadByURL(ownerID, id.String(), &activity)
 
 	// No error means EXISTS
 	if err == nil {

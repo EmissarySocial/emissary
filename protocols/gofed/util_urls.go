@@ -10,6 +10,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// IsLocalURL returns TRUE if the provided URL is owned by this server.
+func IsLocalURL(hostname string, id *url.URL) bool {
+
+	if id == nil {
+		return false
+	}
+
+	return strings.HasPrefix(id.String(), hostname)
+}
+
 // ParseItem finds the item URL, then splits it into its component parts.
 func ParseItem(item vocab.Type) (userID primitive.ObjectID, activityLocation string, activityID primitive.ObjectID, err error) {
 	return ParseURL(item.GetJSONLDId().GetIRI())

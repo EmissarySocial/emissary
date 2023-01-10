@@ -25,7 +25,7 @@ func (db Database) Get(c context.Context, id *url.URL) (value vocab.Type, err er
 	// Try to load the Activity from the database
 	activity := model.NewActivity()
 
-	if err := db.activityService.LoadActivityByURL(ownerID, id.String(), &activity); err != nil {
+	if err := db.activityService.LoadByURL(ownerID, id.String(), &activity); err != nil {
 		return nil, derp.Wrap(err, location, "Error loading activity", id)
 	}
 

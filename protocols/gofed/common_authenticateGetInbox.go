@@ -20,5 +20,8 @@ import (
 // Finally, if the authentication and authorization succeeds, then then authenticated must be true and
 // error nil. The request will continue to be processed.
 func (common Common) AuthenticateGetInbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
-	return nil, false, nil
+
+	// TODO: CRITICAL: Do we need to allow access to the Inbox??
+	w.Write([]byte("Access Denied."))
+	return c, false, nil
 }

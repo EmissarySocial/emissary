@@ -6,5 +6,6 @@ import "context"
 //
 // Zero or negative numbers indicate recurring infinitely, which can result in your application being manipulated by malicious peers. Do not return a value of zero nor a negative number.
 func (fed Federating) MaxInboxForwardingRecursionDepth(c context.Context) int {
+	// TODO: CRITICAL: Do This
 	return 0
 }

@@ -278,7 +278,7 @@ func (w Profile) Activity() (model.Activity, error) {
 	result := model.NewActivity()
 	activityService := w._factory.Activity()
 
-	if err := activityService.LoadInboxActivity(w.AuthenticatedID(), activityID, &result); err != nil {
+	if err := activityService.LoadFromInbox(w.AuthenticatedID(), activityID, &result); err != nil {
 		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 

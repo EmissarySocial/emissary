@@ -174,7 +174,7 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 	activity.UpdateWithFollowing(following)
 
 	// Search for an existing Activity that matches the parameter
-	err := service.activityService.LoadInboxActivityByURL(following.UserID, activity.Document.URL, &original)
+	err := service.activityService.LoadFromInboxByURL(following.UserID, activity.Document.URL, &original)
 
 	switch {
 

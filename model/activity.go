@@ -1,6 +1,8 @@
 package model
 
 import (
+	"net/url"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -102,4 +104,21 @@ func (activity *Activity) Status() string {
 		return "Unread"
 	}
 	return "Read"
+}
+
+// IsInternal returns true if this activity is "owned" by
+// this server, and is not federated via another server.
+func (activity *Activity) IsInternal() bool {
+	return !activity.Origin.InternalID.IsZero()
+}
+
+// PublishDate returns the date that this activity was published.
+func (activity *Activity) PublishDate() int64 {
+	return activity.Document.PublishDate
+}
+
+// URL returns the parsed, canonical URL for this Activity (as stored in the document)
+func (activity *Activity) URL() *url.URL {
+	result, _ := url.Parse(activity.Document.URL)
+	return result
 }

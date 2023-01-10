@@ -210,22 +210,26 @@ func (service *Activity) QueryInbox(ownerID primitive.ObjectID, criteria exp.Exp
 	return service.Query(criteria, options...)
 }
 
-func (service *Activity) LoadActivityByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
+func (service *Activity) LoadByID(ownerID primitive.ObjectID, location string, activityID primitive.ObjectID, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
-		AndEqual("document.url", url)
-
-	return service.Load(criteria, result)
-}
-
-func (service *Activity) LoadInboxActivity(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	criteria := exp.Equal("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationInbox).
+		AndEqual("location", location).
 		AndEqual("activityId", activityID)
 
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadInboxActivityByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
+func (service *Activity) LoadByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
+	criteria := exp.Equal("ownerId", ownerID).
+		AndEqual("document.url", url)
+
+	return service.Load(criteria, result)
+}
+
+func (service *Activity) LoadFromInbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(ownerID, model.ActivityLocationInbox, activityID, result)
+}
+
+func (service *Activity) LoadFromInboxByURL(ownerID primitive.ObjectID, url string, result *model.Activity) error {
 	criteria := exp.Equal("ownerId", ownerID).
 		AndEqual("location", model.ActivityLocationInbox).
 		AndEqual("document.url", url)
@@ -233,13 +237,13 @@ func (service *Activity) LoadInboxActivityByURL(ownerID primitive.ObjectID, url 
 	return service.Load(criteria, result)
 }
 
-func (service *Activity) LoadOutboxActivity(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
-	criteria := exp.Equal("activityId", activityID).
-		AndEqual("ownerId", ownerID).
-		AndEqual("location", model.ActivityLocationOutbox)
-
-	return service.Load(criteria, result)
+func (service *Activity) LoadFromOutbox(ownerID primitive.ObjectID, activityID primitive.ObjectID, result *model.Activity) error {
+	return service.LoadByID(ownerID, model.ActivityLocationOutbox, activityID, result)
 }
+
+/*******************************************
+ * Custom Behaviors
+ *******************************************/
 
 // SetReadDate updates the readDate for a single Activity IF it is not already read
 func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, readDate int64) error {
@@ -256,7 +260,7 @@ func (service *Activity) SetReadDate(ownerID primitive.ObjectID, token string, r
 		return derp.Wrap(err, location, "Cannot parse activityID", token)
 	}
 
-	if err := service.LoadInboxActivity(ownerID, activityID, &activity); err != nil {
+	if err := service.LoadFromInbox(ownerID, activityID, &activity); err != nil {
 		return derp.Wrap(err, location, "Cannot load Activity", ownerID, token)
 	}
 

@@ -3,6 +3,8 @@ package gofed
 import (
 	"context"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
 	"github.com/go-fed/activity/streams/vocab"
 )
 
@@ -12,5 +14,36 @@ import (
 // whether an Update means a partial-update or complete-replacement, as the library
 // has already done this for you, so it is safe to simply replace the row.
 func (db Database) Update(c context.Context, asType vocab.Type) error {
+
+	// Convert the vocab.Type into a model.Activity
+	updatedActivity, err := ToModel(asType, model.ActivityLocationInbox)
+
+	if err != nil {
+		return derp.Wrap(err, "gofed.Database.Update", "Error converting to model object", asType)
+	}
+
+	// Determine the ownerID, location, and activityID from the URL
+	activityURL := updatedActivity.URL()
+	ownerID, location, activityID, err := ParseURL(activityURL)
+
+	if err != nil {
+		return derp.Wrap(err, "gofed.Database.Update", "Error parsing URL", updatedActivity)
+	}
+
+	// Try to load the existing activity
+	existingActivity := model.NewActivity()
+	if err := db.activityService.LoadByID(ownerID, location, activityID, &existingActivity); err != nil {
+		return derp.Wrap(err, "gofed.Database.Update", "Error finding existing activity", updatedActivity)
+	}
+
+	// Update the existing activity with values from the caller
+	existingActivity.UpdateWithActivity(&updatedActivity)
+
+	// Save the activity back to the database.
+	if err := db.activityService.Save(&existingActivity, "Updated by Go-Fed"); err != nil {
+		return derp.Wrap(err, "gofed.Database.Update", "Error saving activity")
+	}
+
+	// Yussss.
 	return nil
 }

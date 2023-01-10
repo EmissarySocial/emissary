@@ -8,5 +8,6 @@ This method determines how deep to search within collections owned by peers when
 Zero or negative numbers indicate recurring infinitely, which can result in your application being manipulated by malicious peers. Do not return a value of zero nor a negative number.
 */
 func (fed Federating) MaxDeliveryRecursionDepth(c context.Context) int {
+	// TODO: CRITICAL: Do This
 	return 0
 }

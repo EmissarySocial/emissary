@@ -3,6 +3,7 @@ package gofed
 import (
 	"context"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/go-fed/activity/streams/vocab"
 )
@@ -17,7 +18,7 @@ func (db Database) Create(c context.Context, asType vocab.Type) error {
 	const location = "gofed.Database.Create"
 
 	// Convert the vocab.Type into a model.Activity
-	activity, err := ToModel(asType)
+	activity, err := ToModel(asType, model.ActivityLocationInbox)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error converting Type", asType)
@@ -32,23 +33,3 @@ func (db Database) Create(c context.Context, asType vocab.Type) error {
 
 	return nil
 }
-
-/*
-
-
-https://emissary.social/@benpate/inbox/1234567890 => InboxService
-https://emissary.social/@benpate/outbox/1234567890 => OutboxService
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/
