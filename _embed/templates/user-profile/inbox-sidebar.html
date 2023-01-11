@@ -33,18 +33,19 @@
 	<div 
 		hx-get="/@me/inbox-sidebar" 
 		hx-swap="outerHTML" 
-		hx-trigger="refresh-sidebar from:body" 
+		hx-trigger="refreshSidebar from:body" 
 		hx-push-url="false" 
 		hx-target="#inbox-sidebar">
 	</div>
-</div>
 
-<style>
-	#inbox-sidebar {
-		margin: -10px 20px -10px -20px;
-		background-color:var(--gray04);
-		padding: 30px 20px 10px 20px;
-		border-right:solid 1px var(--gray15);
-		color:var(--gray80);
-	}
-</style>
+	<style>
+		#inbox-sidebar {
+			margin: -10px 20px -10px -20px;
+			background-color:var(--gray04);
+			padding: 30px 20px 10px 20px;
+			border-right:solid 1px var(--gray15);
+			color:var(--gray80);
+		}
+	</style>
+
+</div>

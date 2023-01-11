@@ -14,7 +14,7 @@
 		<header>{{.DomainHeaderHTML | html}}</header>
 	{{- end -}}
 
-	<nav hx-push-url="true">
+	<nav hx-ext="preload" hx-push-url="true">
 		<div class="framed">
 			<div class="left">
 				{{- range .TopLevel -}}

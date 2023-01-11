@@ -65,6 +65,10 @@
 				{"step":"view-html", "file":"inbox"}
 			]
 		},
+		"inbox-sidebar": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
 		"inbox-all": {
 			"roles": ["self"],
 			"steps": [
@@ -78,10 +82,6 @@
 				{"step":"set-query-param", "selected":"inbox-folder", "readDate":"0"},
 				{"step":"view-html", "file":"inbox"}
 			]
-		},
-		"inbox-sidebar": {
-			"roles": ["self"],
-			"step":"view-html"
 		},
 		"inbox-list": {
 			"roles": ["self"],
@@ -107,7 +107,7 @@
 						},
 						{"step":"save"}
 					]},
-					{"step":"trigger-event", "event":{"closeModal":true, "refresh-sidebar":true}}
+					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
 				]}
 			]
 		},
