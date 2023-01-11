@@ -168,10 +168,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStream(factory))
 
 	// Hard-coded routes for additional stream services
-	// TODO: LOW: Can Stream Attachments and SSE be moved into a custom render step?
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory))
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory))
-	e.GET("/:stream/qrcode", handler.GetQRCode(factory))
+	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
+	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
@@ -184,12 +183,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// ActivityPub Routes
 	e.GET("/@:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
-	e.GET("/@:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
-
+	e.GET("/@:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
 	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutbox(factory))
-	e.GET("/@:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
 	e.POST("/@:userId/pub/outbox", handler.ActivityPub_PostOutbox(factory))
+	e.GET("/@:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GenericHandler(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GenericHandler(factory))

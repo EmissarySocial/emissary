@@ -256,20 +256,19 @@ func (user *User) ActivityPubOutboxURL() string {
 	return user.ProfileURL + "/pub/outbox"
 }
 
-func (user *User) ActivityPubFollowingURL() string {
-	return user.ProfileURL + "/pub/following"
-}
-
 func (user *User) ActivityPubFollowersURL() string {
 	return user.ProfileURL + "/pub/followers"
 }
 
+func (user *User) ActivityPubFollowingURL() string {
+	return user.ProfileURL + "/pub/following"
+}
 func (user *User) ActivityPubLikedURL() string {
 	return user.ProfileURL + "/pub/liked"
 }
 
 func (user *User) ActivityPubPublicKeyURL() string {
-	return user.ProfileURL + "/pub/key"
+	return user.ProfileURL + "/pub/keys"
 }
 
 func (user *User) ActivityPubSubscribeRequestURL() string {

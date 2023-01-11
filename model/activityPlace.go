@@ -15,6 +15,18 @@ const ActivityPlaceInbox ActivityPlace = 1
 // ActivityPlaceOutbox represents an Activity that is stored in a User's Outbox
 const ActivityPlaceOutbox ActivityPlace = 2
 
+// ActivityPlaceFollowers represents an Activity that is stored in a User's Followers Outbox
+const ActivityPlaceFollowers ActivityPlace = 3
+
+// ActivityPlaceFollowing represents an Activity that is stored in a User's Following Outbox
+const ActivityPlaceFollowing ActivityPlace = 4
+
+// ActivityPlaceLiked represents an Activity that is stored in a User's Liked Outbox
+const ActivityPlaceLiked ActivityPlace = 5
+
+// ActivityPlaceKeys represents an Activity that is stored in a User's Key Outbox
+const ActivityPlaceKeys ActivityPlace = 6
+
 // ParseActivityPlace converts a string into an ActivityPlace
 func ParseActivityPlace(value string) ActivityPlace {
 
@@ -23,6 +35,14 @@ func ParseActivityPlace(value string) ActivityPlace {
 		return ActivityPlaceInbox
 	case "outbox":
 		return ActivityPlaceOutbox
+	case "followers":
+		return ActivityPlaceFollowers
+	case "following":
+		return ActivityPlaceFollowing
+	case "liked":
+		return ActivityPlaceLiked
+	case "keys":
+		return ActivityPlaceKeys
 	default:
 		return ActivityPlaceUndefined
 	}
@@ -36,6 +56,14 @@ func (activityPlace ActivityPlace) String() string {
 		return "inbox"
 	case ActivityPlaceOutbox:
 		return "outbox"
+	case ActivityPlaceFollowers:
+		return "followers"
+	case ActivityPlaceFollowing:
+		return "following"
+	case ActivityPlaceLiked:
+		return "liked"
+	case ActivityPlaceKeys:
+		return "keys"
 	default:
 		return "undefined"
 	}
