@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/data"
+	"github.com/benpate/rosetta/html"
 	"github.com/kr/jsonfeed"
 )
 
@@ -69,9 +70,9 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
 	}
 
 	if item.ContentHTML != "" {
-		activity.Content = model.NewHTMLContent(item.ContentHTML)
+		activity.ContentHTML = item.ContentHTML
 	} else if item.ContentText != "" {
-		activity.Content = model.NewTextContent(item.ContentText)
+		activity.ContentHTML = html.FromText(item.ContentText)
 	}
 
 	return activity

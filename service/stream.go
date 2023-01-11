@@ -531,8 +531,8 @@ func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) 
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
 }
 
-func (service *Stream) DeleteBySource(internalID primitive.ObjectID, note string) error {
-	return service.DeleteMany(exp.Equal("source.internalId", internalID), note)
+func (service *Stream) DeleteByOrigin(internalID primitive.ObjectID, note string) error {
+	return service.DeleteMany(exp.Equal("origin.internalId", internalID), note)
 }
 
 // Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.

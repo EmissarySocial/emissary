@@ -9,13 +9,13 @@
 {{- else -}}
 
 	{{- if eq 0 (len $inbox) -}}
-		<div>The end.</div>
+		<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>
 
 	{{- else -}}
 
 		{{- $lastIndex := subtract (len $inbox) 1 -}}
 		{{- $last := index $inbox $lastIndex -}}
-		<div hx-get="/@me/inbox-list?publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
+		<div hx-get="/@me/inbox-list?document.publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
 		{{- range $inbox -}}
 			<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>

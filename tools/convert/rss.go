@@ -39,7 +39,7 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Activity {
 		PublishDate: rssDate(rssItem.PublishedParsed),
 		UpdateDate:  time.Now().Unix(),
 	}
-	activity.Content = model.NewHTMLContent(bluemonday.UGCPolicy().Sanitize(rssItem.Content))
+	activity.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 
 	// If there are fields missing from the RSS feed, try to fill them in from the web page
 	if !activity.Document.IsComplete() {

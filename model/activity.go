@@ -11,12 +11,12 @@ import (
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
-	ActivityID primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
-	UserID     primitive.ObjectID `path:"userId"       json:"userId"       bson:"userId"`             // Unique ID of the User who owns this Activity (in their inbox or outbox)
-	Place      ActivityPlace      `path:"place"        json:"place"        bson:"place"`              // Place where this Activity is represented (e.g. "Inbox", "Outbox")
-	Origin     OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
-	Document   DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
-	Content    Content            `path:"content"      json:"content"      bson:"content,omitempty"`  // Content of the Activity
+	ActivityID  primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
+	UserID      primitive.ObjectID `path:"userId"       json:"userId"       bson:"userId"`             // Unique ID of the User who owns this Activity (in their inbox or outbox)
+	Place       ActivityPlace      `path:"place"        json:"place"        bson:"place"`              // Place where this Activity is represented (e.g. "Inbox", "Outbox")
+	Origin      OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
+	Document    DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
+	ContentHTML string             `path:"content"      json:"content"      bson:"content,omitempty"`  // HTML Content of the Activity
 
 	// Inbox-specific fields
 	FolderID primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
@@ -92,7 +92,7 @@ func (activity *Activity) UpdateWithFollowing(following *Following) {
 func (activity *Activity) UpdateWithActivity(other *Activity) {
 	activity.Origin = other.Origin
 	activity.Document = other.Document
-	activity.Content = other.Content
+	activity.ContentHTML = other.ContentHTML
 }
 
 // Status returns a string indicating whether this activity has been read or not

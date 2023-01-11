@@ -180,7 +180,7 @@ func (service *Following) Delete(following *model.Following, note string) error 
 		return derp.Wrap(err, "service.Following", "Error deleting Following", following, note)
 	}
 
-	if err := service.streamService.DeleteBySource(following.FollowingID, "Deleting with Follow"); err != nil {
+	if err := service.streamService.DeleteByOrigin(following.FollowingID, "Deleting with Follow"); err != nil {
 		return derp.Wrap(err, "service.Following", "Error deleting streams for Following", following, note)
 	}
 

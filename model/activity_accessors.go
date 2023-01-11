@@ -23,6 +23,8 @@ func (activity *Activity) GetString(name string) string {
 		return activity.UserID.Hex()
 	case "folderId":
 		return activity.FolderID.Hex()
+	case "contentHtml":
+		return activity.ContentHTML
 	default:
 		return ""
 	}
@@ -65,6 +67,9 @@ func (activity *Activity) SetString(name string, value string) bool {
 			activity.FolderID = objectID
 			return true
 		}
+
+	case "contentHtml":
+		activity.ContentHTML = value
 	}
 	return false
 }
@@ -79,8 +84,6 @@ func (activity *Activity) GetChild(name string) any {
 		return activity.Origin
 	case "document":
 		return activity.Document
-	case "content":
-		return activity.Content
 	default:
 		return nil
 	}

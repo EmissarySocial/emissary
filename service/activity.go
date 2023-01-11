@@ -175,6 +175,13 @@ func (service *Activity) Schema() schema.Schema {
  * Custom Query Methods
  *******************************************/
 
+func (service *Activity) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("origin.InternalID", followingID)
+
+	return service.List(criteria)
+}
+
 func (service *Activity) ListByLocation(userID primitive.ObjectID, place model.ActivityPlace, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	switch place {
 	case model.ActivityPlaceInbox:

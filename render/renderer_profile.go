@@ -241,7 +241,7 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 	expBuilder := builder.NewBuilder().
 		ObjectID("folderId").
 		Int("readDate").
-		Int("publishDate")
+		Int("document.publishDate")
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 
@@ -255,7 +255,7 @@ func (w Profile) IsInboxEmpty(inbox []model.Activity) bool {
 		return false
 	}
 
-	if w._context.Request().URL.Query().Get("publishDate") != "" {
+	if w._context.Request().URL.Query().Get("document.publishDate") != "" {
 		return false
 	}
 
