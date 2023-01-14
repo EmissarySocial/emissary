@@ -1,6 +1,6 @@
 {{- $following := .Following -}}
 
-<div hx-get="{{.URL}}" hx-trigger="refreshPage from:body" hx-target="this" hx-swap="outerHTML">
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 
 	<div class="page h-card">

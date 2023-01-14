@@ -1,5 +1,5 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:body">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">

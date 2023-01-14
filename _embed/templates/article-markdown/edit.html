@@ -39,7 +39,7 @@
 
 	</div>
 
-	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage">
+	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage from:window">
 		{{.View "heading"}}
 	</div>
 
