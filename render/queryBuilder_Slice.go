@@ -7,12 +7,9 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/steranko"
 )
 
 type SliceBuilder[T model.FieldLister] struct {
-	factory       Factory
-	context       *steranko.Context
 	service       service.ModelService
 	Criteria      exp.Expression
 	SortField     string
@@ -20,7 +17,7 @@ type SliceBuilder[T model.FieldLister] struct {
 	MaxRows       int64
 }
 
-func NewSliceBuilder[T model.FieldLister](factory Factory, context *steranko.Context, service service.ModelService, criteria exp.Expression) SliceBuilder[T] {
+func NewSliceBuilder[T model.FieldLister](service service.ModelService, criteria exp.Expression) SliceBuilder[T] {
 
 	return SliceBuilder[T]{
 		service:       service,
@@ -124,6 +121,7 @@ func (builder SliceBuilder[T]) Slice() (sliceof.Type[T], error) {
 	return result, derp.Report(err)
 }
 
+/*
 func (builder SliceBuilder[T]) Objects(actionID string) (sliceof.Type[Renderer], error) {
 
 	var index int64
@@ -168,6 +166,7 @@ func (builder SliceBuilder[T]) Objects(actionID string) (sliceof.Type[Renderer],
 
 	return result, nil
 }
+*/
 
 /********************************
  * MISC HELPERS
