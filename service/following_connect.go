@@ -32,6 +32,14 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error loading URL", following.URL)
 	}
 
+	// Look for Links to ActivityPub/Feeds/Hubs
+	following.Links = discoverLinks(transaction.ResponseObject, &body)
+
+	// Try to discover/connect to ActivityPub resources
+	if success := service.connect_ActivityPub(&following, transaction.ResponseObject, &body); success {
+		return nil
+	}
+
 	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
 	mediaType, _, _ := mime.ParseMediaType(mimeType)
 
@@ -57,6 +65,7 @@ func (service *Following) Connect(following model.Following) error {
 
 	// Otherwise, we can't find a valid feed, so report an error.
 	default:
+
 		if err := service.SetStatus(&following, model.FollowingStatusFailure, "Unsupported content type: "+mimeType); err != nil {
 			return derp.Wrap(err, location, "Error updating following status", following)
 		}
@@ -201,13 +210,6 @@ func (service *Following) saveActivity(following *model.Following, activity *mod
 
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following) {
-
-	// ActivityPub is first because it's the highest fidelity (when it works)
-	if activityPub := following.GetLink("type", model.MimeTypeActivityPub); !activityPub.IsEmpty() {
-		if err := service.connect_ActivityPub(following, activityPub); err == nil {
-			return
-		}
-	}
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {

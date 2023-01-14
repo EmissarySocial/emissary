@@ -15,9 +15,6 @@ func (service *Following) import_HTML(following *model.Following, response *http
 
 	const location = "service.Following.importHTML"
 
-	// Look for Links to RSS feeds
-	following.Links = discoverLinks(response, body)
-
 	// Look for Feed Data
 	if err := service.import_HTML_feed(following, response, body); err != nil {
 		return derp.Wrap(err, location, "Error importing HTML", following, body.String())

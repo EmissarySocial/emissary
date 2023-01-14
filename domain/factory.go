@@ -494,7 +494,7 @@ func (factory *Factory) Locator() service.Locator {
 // Publisher returns the Publisher service, which contains
 // all of the business rules for publishing a stream to the federated Interwebs.
 func (factory *Factory) Publisher() service.Publisher {
-	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User())
+	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User(), factory)
 }
 
 // Queue returns the Queue service, which manages background jobs

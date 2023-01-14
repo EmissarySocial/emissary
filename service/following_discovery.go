@@ -18,17 +18,15 @@ import (
 )
 
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
-func discoverLinks(response *http.Response, body *bytes.Buffer) []digit.Link {
+func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
+
+	result := digit.NewLinkSet(10)
 
 	// Look for links embedded in the HTML
-	if result := discoverLinks_HTML(response, body); len(result) > 0 {
-		return result
-	}
+	result.Append(discoverLinks_HTML(response, body)...)
 
 	// Fall back to WebFinger, just in case
-	if result := discoverLinks_WebFinger(response.Request.URL.String()); len(result) > 0 {
-		return result
-	}
+	result.Append(discoverLinks_WebFinger(response.Request.URL.String())...)
 
 	// Fall through, fail through
 	return make([]digit.Link, 0)
@@ -41,7 +39,6 @@ func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Lin
 	result := discoverLinks_Headers(response)
 
 	// If the document itself is an RSS feed, then we're done.  Add it to the list.
-	// TODO: LOW: Possibly parse RSS-Cloud here?
 	mimeType := response.Header.Get("Content-Type")
 	mediaType, _, _ := mime.ParseMediaType(mimeType)
 
@@ -52,6 +49,8 @@ func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Lin
 		model.MimeTypeRSS,
 		model.MimeTypeXML,
 		model.MimeTypeXMLText:
+
+		// TODO: LOW: Possibly parse RSS-Cloud here?
 
 		return append(result, digit.Link{
 			RelationType: model.LinkRelationSelf,

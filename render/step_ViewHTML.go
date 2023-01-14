@@ -2,7 +2,6 @@ package render
 
 import (
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/benpate/derp"
@@ -17,6 +16,10 @@ type StepViewHTML struct {
 func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 
 	context := renderer.context()
+
+	/* TODO: Re-implement this later.
+	Caching leads to problems on INDEX-ONLY pages because you may have added/changed/deleted a child
+	object, but the parent page is still cached.  So, you need to invalidate the cache for the parent.
 
 	requestHeader := context.Request().Header
 
@@ -37,6 +40,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 			}
 		}
 	}
+	*/
 
 	header := context.Response().Header()
 

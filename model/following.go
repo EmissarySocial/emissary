@@ -40,7 +40,7 @@ type Following struct {
 	FolderID      primitive.ObjectID `path:"folderId"       json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
 	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this "following" record
 	URL           string             `path:"url"            json:"url"            bson:"url"`           // Human-Facing URL that is being followed.
-	Links         []digit.Link       `path:"links"          json:"links"          bson:"links"`         // List of links can be used to update this following.
+	Links         digit.LinkSet      `path:"links"          json:"links"          bson:"links"`         // List of links can be used to update this following.
 	Method        string             `path:"method"         json:"method"         bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
 	Secret        string             `path:"secret"         json:"secret"         bson:"secret"`        // Secret used to authenticate this feed (if required)
 	Status        string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
@@ -110,28 +110,12 @@ func (following *Following) Origin() OriginLink {
 
 // GetLink returns a link from the Following that matches the given property and value
 func (following *Following) GetLink(property string, value string) digit.Link {
-	for _, link := range following.Links {
-		if link.GetString(property) == value {
-			return link
-		}
-	}
-	return digit.Link{}
+	return following.Links.FindBy(property, value)
 }
 
 // SetLinks adds or replaces a link in the Following that matches the given property
 func (following *Following) SetLinks(newLinks ...digit.Link) {
-
 	for _, newLink := range newLinks {
-		// If the link already exists, replace it
-		for i, existingLink := range following.Links {
-
-			if existingLink.MatchesType(newLink) {
-				following.Links[i] = newLink
-				return
-			}
-		}
-
-		// Otherwise, add it
-		following.Links = append(following.Links, newLink)
+		following.Links.Apply(newLink)
 	}
 }
