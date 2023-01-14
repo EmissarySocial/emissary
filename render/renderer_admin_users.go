@@ -145,7 +145,7 @@ func (w User) ImageURL() string {
  * QUERY BUILDERS
  *******************************************/
 
-func (w User) Users() *SliceBuilder[model.UserSummary] {
+func (w User) Users() *QueryBuilder[model.UserSummary] {
 
 	query := builder.NewBuilder().
 		String("displayName").
@@ -158,7 +158,7 @@ func (w User) Users() *SliceBuilder[model.UserSummary] {
 
 	spew.Dump(criteria)
 
-	result := NewSliceBuilder[model.UserSummary](w._factory.User(), criteria)
+	result := NewQueryBuilder[model.UserSummary](w._factory.User(), criteria)
 
 	return &result
 }

@@ -325,7 +325,7 @@ func (w Profile) Folder() (model.Folder, error) {
 	return folder, err
 }
 
-func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
+func (w Profile) Outbox() *QueryBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		Int("publishDate")
@@ -335,12 +335,12 @@ func (w Profile) Outbox() *SliceBuilder[model.StreamSummary] {
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
-	result := NewSliceBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
 	return &result
 }
 
-func (w Profile) Followers() *SliceBuilder[model.FollowerSummary] {
+func (w Profile) Followers() *QueryBuilder[model.FollowerSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		String("displayName")
@@ -350,7 +350,7 @@ func (w Profile) Followers() *SliceBuilder[model.FollowerSummary] {
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
-	result := NewSliceBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
 
 	return &result
 }
