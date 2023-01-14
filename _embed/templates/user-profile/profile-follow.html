@@ -1,1 +1,41 @@
-Hey howdy...
+<div class="flex-row">
+	<img src="{{.ImageURL}}" class="circle" style="height:60px; width:60px;" />
+	<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
+</div>
+
+<hr class="space-below">
+
+<h3>Have an Account?</h3>
+
+<div class="space-below">
+	Enter your Emissary address (or other Fediverse address) to get automatic updates on your social timeline.
+</div>
+
+<form hx-post="/.ostatus/follow-request" class="space-below">
+	<div class="flex-row">
+		<input type="text" id="username" placeholder="https://yoursite.social/@yourname"/>
+		<button class="primary nowrap">Follow on<br>My Site</button>
+	</div>
+</form>
+
+<div>
+	<h3>Need an Account?</h3>
+
+	Emissary is the private social site that you own.  Post updates to friends and family, without the ads and tracking.
+	<br><br>
+
+	{{- if .DomainHasSignupForm -}}
+		<a href="/register" class="button">Sign Up Now</a>
+		<a href="https://emissary.social/hosting">Find Another Host</a>
+		<button script="on click trigger closeModal">Cancel</button>
+		
+	{{- else -}}
+		Signups on this site are closed, but you can follow {{.DisplayName}} from any other 
+		Fediverse app. Click below for a list of trustworthy providers.<br>
+		<br>
+		<a href="https://emissary.social/hosting" class="primary button" target="_blank">Find a Fediverse Host</a>
+			<button script="on click trigger closeModal">Cancel</button>
+	{{- end -}}
+</div>
+
+

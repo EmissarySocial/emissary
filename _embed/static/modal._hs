@@ -34,8 +34,8 @@ behavior Modal
 			set the window's location to nextPage
 		end
 	
-	on click(target)
-		if the target's className is "modal-underlay" then
+	on click (target)
+		if the target's id is "modal-underlay" then
 			trigger closeModal
 		end
 

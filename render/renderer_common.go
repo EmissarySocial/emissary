@@ -249,6 +249,14 @@ func (w Common) DomainCustomCSS() (string, error) {
 	}
 }
 
+func (w Common) DomainHasSignupForm() (bool, error) {
+	if domain, err := w.getDomain(); err != nil {
+		return false, err
+	} else {
+		return domain.HasSignupForm(), nil
+	}
+}
+
 /***************************
  * ACCESS PERMISSIONS
  **************************/
