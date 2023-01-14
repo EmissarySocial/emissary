@@ -1,6 +1,9 @@
 package model
 
 import (
+	"math"
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
@@ -35,12 +38,14 @@ func NewStream() Stream {
 	streamID := primitive.NewObjectID()
 
 	return Stream{
-		StreamID:    streamID,
-		Token:       streamID.Hex(),
-		ParentID:    primitive.NilObjectID,
-		StateID:     "new",
-		Permissions: NewPermissions(),
-		Data:        make(maps.Map),
+		StreamID:      streamID,
+		Token:         streamID.Hex(),
+		ParentID:      primitive.NilObjectID,
+		StateID:       "new",
+		Permissions:   NewPermissions(),
+		Data:          make(maps.Map),
+		PublishDate:   math.MaxInt64,
+		UnPublishDate: math.MaxInt64,
 	}
 }
 
@@ -179,4 +184,10 @@ func (stream *Stream) NewAttachment(filename string) Attachment {
 	result.Original = filename
 
 	return result
+}
+
+func (stream *Stream) IsPublished() bool {
+
+	now := time.Now().Unix()
+	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
 }
