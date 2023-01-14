@@ -170,6 +170,13 @@
 				{"step":"save", "comment":"Links updated by {{.Author}}"}
 			]
 		},
+		"follow": {
+			"steps": [
+				{"step":"as-modal", "background":"view", "steps":[
+					{"step":"view-html", "file":"profile-follow"}
+				]}
+			]
+		},
 		"preview-photo": {
 			"roles": ["self"],
 			"step":"view-html"

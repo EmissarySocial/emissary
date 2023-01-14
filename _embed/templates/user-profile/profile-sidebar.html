@@ -20,6 +20,11 @@
 		
 		<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 		<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
+		{{- if not .Myself -}}
+			<div class="space-above">
+				<button type="button" class="primary width-100" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
+			</div>
+		{{- end -}}
 		<div class="space-above" hx-push-url="true">
 			<span hx-get="/@{{.Username}}/followers" role="link"><b>{{.FollowerCount}}</b> Followers</span>
 			&nbsp;
