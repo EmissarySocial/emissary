@@ -148,6 +148,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
+	e.GET("/.ostatus/subscribe", handler.GetOStatusSubscribe(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
