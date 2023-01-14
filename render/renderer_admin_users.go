@@ -13,6 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -144,7 +145,7 @@ func (w User) ImageURL() string {
  * QUERY BUILDERS
  *******************************************/
 
-func (w User) Users() *RenderBuilder {
+func (w User) Users() *SliceBuilder[model.UserSummary] {
 
 	query := builder.NewBuilder().
 		String("displayName").
@@ -155,7 +156,9 @@ func (w User) Users() *RenderBuilder {
 		exp.Equal("journal.deleteDate", 0),
 	)
 
-	result := NewRenderBuilder(w._factory, w._context, w._factory.User(), criteria)
+	spew.Dump(criteria)
+
+	result := NewSliceBuilder[model.UserSummary](w.factory().User(), criteria)
 
 	return &result
 }

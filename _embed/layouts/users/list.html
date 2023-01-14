@@ -1,10 +1,10 @@
-{{- $users := .Users.Top12.ByDisplayName.View -}}
+{{- $users := .Users.Top12.ByDisplayName.Slice -}}
 {{- if not $users.IsEmpty }}
 
     <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend">
     {{- range $index, $user := $users -}}
             <tr class="clickable">
-                <td role="link" hx-get="/admin/users/{{$user.UserID}}/edit" class="width-100">
+                <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="width-100">
                     {{icon "user"}}&nbsp;{{$user.DisplayName}}
                 </td>
             </tr>

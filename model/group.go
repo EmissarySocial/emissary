@@ -29,6 +29,14 @@ func GroupSchema() schema.Element {
 	}
 }
 
+func GroupFields() []string {
+	return []string{"_id", "label"}
+}
+
+func (userSummary Group) Fields() []string {
+	return GroupFields()
+}
+
 /*******************************************
  * data.Object Interface
  *******************************************/
