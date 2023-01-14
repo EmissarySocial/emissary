@@ -1,7 +1,9 @@
 package render
 
 import (
+	"bytes"
 	"io"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
@@ -10,8 +12,9 @@ import (
 
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
-	SubSteps []step.Step
-	Class    string
+	SubSteps   []step.Step
+	Class      string
+	Background string
 }
 
 // Get displays a form where users can update stream data
@@ -19,28 +22,48 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAsModal.Get"
 
-	header := renderer.context().Response().Header()
-	header.Set("HX-Retarget", "aside")
-	header.Set("HX-Push", "false")
-	header.Set("HX-Reswap", "innerHTML")
+	// Partial pages only render the modal window
+	if renderer.IsPartialRequest() {
 
-	b := html.New()
+		header := renderer.context().Response().Header()
+		header.Set("HX-Retarget", "aside")
+		header.Set("HX-Reswap", "innerHTML")
+		if step.Background == "" {
+			header.Set("HX-Push", "false")
+		}
 
-	// Modal Wrapper
-	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
-	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").Class(step.Class).EndBracket()
+		if _, err := io.WriteString(buffer, step.getModalContent(renderer)); err != nil {
+			return derp.Wrap(err, location, "Error writing from builder to buffer")
+		}
 
-	// Write inner items
-	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {
-		return derp.Wrap(err, location, "Error executing subSteps")
+		return nil
 	}
 
-	// Done
-	b.CloseAll()
+	if step.Background == "" {
+		return derp.NewBadRequestError(location, "render.StepAsModal.Get", "Cannot open this route directly.")
+	}
 
-	// Write the modal dialog into the response buffer
-	if _, err := io.WriteString(buffer, b.String()); err != nil {
+	// Full pages render the entire page, including the modal window
+	fullPageRenderer, err := NewRenderer(renderer.factory(), renderer.context(), renderer.object(), step.Background)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating fullPageRenderer")
+	}
+
+	htmlTemplate := renderer.factory().Layout().Global().HTMLTemplate
+	var fullPage bytes.Buffer
+
+	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", fullPageRenderer); err != nil {
+		return derp.Wrap(err, "render.StepAsModal.Get", "Error executing template")
+	}
+
+	// Insert the modal into the page
+	asideBegin := "<aside>"
+	asideEnd := "</aside>"
+	modalString := step.getModalContent(renderer)
+	fullPageString := strings.Replace(fullPage.String(), asideBegin+asideEnd, asideBegin+modalString+asideEnd, 1)
+
+	if _, err := io.WriteString(buffer, fullPageString); err != nil {
 		return derp.Wrap(err, location, "Error writing from builder to buffer")
 	}
 
@@ -61,4 +84,28 @@ func (step StepAsModal) Post(renderer Renderer) error {
 
 	CloseModal(renderer.context(), "")
 	return nil
+}
+
+func (step StepAsModal) getModalContent(renderer Renderer) string {
+
+	const location = "render.StepAsModal.getModalContent"
+
+	b := html.New()
+
+	// Modal Wrapper
+	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
+	b.Div().ID("modal-underlay").Close()
+	b.Div().ID("modal-window").Class(step.Class).EndBracket()
+
+	// Write inner items
+	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error executing subSteps"))
+		return ""
+	}
+
+	// Done
+	b.CloseAll()
+
+	return b.String()
+
 }
