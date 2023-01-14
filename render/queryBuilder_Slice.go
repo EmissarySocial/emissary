@@ -7,9 +7,12 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/steranko"
 )
 
 type SliceBuilder[T model.FieldLister] struct {
+	factory       Factory
+	context       *steranko.Context
 	service       service.ModelService
 	Criteria      exp.Expression
 	SortField     string
@@ -17,7 +20,7 @@ type SliceBuilder[T model.FieldLister] struct {
 	MaxRows       int64
 }
 
-func NewSliceBuilder[T model.FieldLister](service service.ModelService, criteria exp.Expression) SliceBuilder[T] {
+func NewSliceBuilder[T model.FieldLister](factory Factory, context *steranko.Context, service service.ModelService, criteria exp.Expression) SliceBuilder[T] {
 
 	return SliceBuilder[T]{
 		service:       service,
@@ -119,6 +122,51 @@ func (builder SliceBuilder[T]) Slice() (sliceof.Type[T], error) {
 	result := make(sliceof.Type[T], 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
 	return result, derp.Report(err)
+}
+
+func (builder SliceBuilder[T]) Objects(actionID string) (sliceof.Type[Renderer], error) {
+
+	var index int64
+
+	// Query the database
+	iterator, err := builder.service.ObjectList(builder.Criteria, builder.makeSortOption())
+
+	if err != nil {
+		return nil, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error querying database"))
+	}
+
+	result := make(sliceof.Type[Renderer], iterator.Count())
+
+	// Loop over each item returned
+	object := builder.service.ObjectNew()
+
+	for iterator.Next(object) {
+
+		// Create a new renderer
+		if renderer, err := NewRenderer(builder.factory, builder.context, object, actionID); err != nil {
+			return result, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error creating new renderer"))
+		} else {
+			result = append(result, renderer)
+		}
+
+		// Calculate max rows
+		index = index + 1
+
+		if builder.MaxRows > 0 {
+			if index >= builder.MaxRows {
+				break
+			}
+		}
+
+		// Make a new object for the next renderer
+		object = builder.service.ObjectNew()
+	}
+
+	if err := iterator.Error(); err != nil {
+		return result, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error iterating through database results"))
+	}
+
+	return result, nil
 }
 
 /********************************

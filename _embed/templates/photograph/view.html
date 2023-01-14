@@ -32,7 +32,7 @@
 		</div>
 	</div>
 
-	{{- $children := .Children.All.View -}}
+	{{- $children := .Children.All.Slice -}}
 	{{- if eq (len $children) 0 -}}
 		<div class="card"><img src="/{{.Token}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" style="width:100%;"></div>
 	{{- end -}}

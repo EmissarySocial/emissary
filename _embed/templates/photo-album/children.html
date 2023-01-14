@@ -1,7 +1,5 @@
-{{- $results := .Children.Top6.View -}}
+{{- $results := .Children.Top6.Slice -}}
 {{- if not $results.IsEmpty -}}
-
-	{{- $last := last $results -}}
 
 	{{- if $results.IsLength 6 -}}
 

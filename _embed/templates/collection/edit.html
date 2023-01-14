@@ -25,7 +25,7 @@
 		<br>
 
 		<form class="sortable space-below" hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="end">
-			{{- range .Children.All.ByRank.View -}}
+			{{- range .Children.All.ByRank.Slice -}}
 				<div class="draggable">
 					<input type="hidden" name="keys" value="{{.StreamID}}">
 					<div class="float-right">

@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -378,11 +379,11 @@ func (w *Common) getDomain() (*model.Domain, error) {
  *******************************************/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() (List, error) {
+func (w Common) TopLevel() (sliceof.Type[model.StreamSummary], error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
-	builder := NewRenderBuilder(w.factory(), w.context(), w._factory.Stream(), criteria)
+	builder := NewSliceBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
-	result, err := builder.Top60().ByRank().View()
+	result, err := builder.Top60().ByRank().Slice()
 	return result, err
 }
 

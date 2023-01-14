@@ -482,22 +482,22 @@ func (w Stream) Mentions() ([]model.Mention, error) {
  *******************************************/
 
 // Siblings returns all Streams that have the same "parent" as the current Stream
-func (w Stream) Siblings() RenderBuilder {
-	return w.makeRenderBuilder(exp.Equal("parentId", w.stream.ParentID))
+func (w Stream) Siblings() SliceBuilder[model.StreamSummary] {
+	return w.makeStreamQueryBuilder(exp.Equal("parentId", w.stream.ParentID))
 }
 
 // Children returns all Streams with a "parent" is the current Stream
-func (w Stream) Children() RenderBuilder {
-	return w.makeRenderBuilder(exp.Equal("parentId", w.stream.StreamID))
+func (w Stream) Children() SliceBuilder[model.StreamSummary] {
+	return w.makeStreamQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
 }
 
 // Replies returns all Streams that are "in reply to" the current Stream
-func (w Stream) Replies() RenderBuilder {
-	return w.makeRenderBuilder(exp.Equal("inReplyTo", w.stream.StreamID.Hex()))
+func (w Stream) Replies() SliceBuilder[model.StreamSummary] {
+	return w.makeStreamQueryBuilder(exp.Equal("inReplyTo", w.stream.StreamID.Hex()))
 }
 
-// makeRenderBuilder returns a fully initialized RenderBuilder
-func (w Stream) makeRenderBuilder(criteria exp.Expression) RenderBuilder {
+// makeStreamQueryBuilder returns a fully initialized RenderBuilder
+func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) SliceBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		Int("journal.createDate").
@@ -514,7 +514,7 @@ func (w Stream) makeRenderBuilder(criteria exp.Expression) RenderBuilder {
 		criteria.And(query),
 	)
 
-	result := NewRenderBuilder(w.factory(), w.context(), w.factory().Stream(), criteria)
+	result := NewSliceBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 	result.SortField = w.template().ChildSortType
 	result.SortDirection = w.template().ChildSortDirection
 

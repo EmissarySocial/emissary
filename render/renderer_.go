@@ -66,20 +66,17 @@ type Renderer interface {
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
 
-// TODO: LOW: We don't want to return a pointer here unless we HAVE TO.
+// TODO: LOW: This is expensive and abstract.  Minimize the use of this function as much as possible.
 // This function is only used in one place, so perhaps we can just inline it?
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
 
 	switch object := object.(type) {
 
-	case *model.Group:
-		return NewGroup(factory, ctx, object, actionID)
-
 	case *model.Stream:
 		return NewStreamWithoutTemplate(factory, ctx, object, actionID)
 
 	case *model.User:
-		return NewUser(factory, ctx, object, actionID)
+		return NewProfile(factory, ctx, object, actionID)
 	}
 
 	return nil, derp.NewInternalError("render.NewRenderer", "Unrecognized object", object)

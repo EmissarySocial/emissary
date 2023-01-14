@@ -11,10 +11,10 @@
 		<div class="hover-trigger">
 			{{- if $userCanEdit -}}
 				<div class="float-right hover-reveal text-sm">
-					<button hx-get="/{{.StreamID.Hex}}/edit">Edit</button>
+					<button hx-get="/{{.StreamID}}/edit">Edit</button>
 				</div>
 			{{- end -}}
-			<div hx-get="/{{.StreamID.Hex}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
+			<div hx-get="/{{.StreamID}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
 				<div style="height:60px; width:60px;">
 					{{- if ne .Document.Author.ImageURL ""}}
 						<img src="{{.Document.Author.ImageURL}}" style="width:60px; border-radius:30px; object-fit:contain;">

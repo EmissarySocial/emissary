@@ -154,6 +154,17 @@ func (w Profile) UserID() string {
 	return w.user.UserID.Hex()
 }
 
+// Myself returns TRUE if the current user is viewing their own profile
+func (w Profile) Myself() bool {
+	authorization := getAuthorization(w._context)
+
+	if err := authorization.Valid(); err == nil {
+		return authorization.UserID == w.user.UserID
+	}
+
+	return false
+}
+
 func (w Profile) Username() string {
 	return w.user.Username
 }

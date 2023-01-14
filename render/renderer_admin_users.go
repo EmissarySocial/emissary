@@ -158,7 +158,7 @@ func (w User) Users() *SliceBuilder[model.UserSummary] {
 
 	spew.Dump(criteria)
 
-	result := NewSliceBuilder[model.UserSummary](w.factory().User(), criteria)
+	result := NewSliceBuilder[model.UserSummary](w._factory.User(), criteria)
 
 	return &result
 }

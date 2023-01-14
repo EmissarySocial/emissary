@@ -43,7 +43,7 @@
 				</tr>
 			</thead>
 			<tbody script="install sortContainer">
-				{{- range .Children.ByRank.View -}}
+				{{- range .Children.ByRank.Slice -}}
 					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
 						<td>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
@@ -59,7 +59,7 @@
 
 		<div class="pure-g" script="install sortContainer">
 
-			{{- range .Children.ByRank.View -}}
+			{{- range .Children.ByRank.Slice -}}
 				<article class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-5 h-entry">
 					<div class="draggable clickable card" hx-get="/{{.Token}}" href="/{{.Token}}">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
@@ -83,7 +83,7 @@
 
 		<div class="pure-g card-group" script="install sortContainer">
 
-			{{- range .Children.ByRank.View -}}
+			{{- range .Children.ByRank.Slice -}}
 				<article class="draggable pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4 h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">
 					<input type="hidden" name="keys" value="{{.StreamID}}"/>
 					<div class="card" role="link">

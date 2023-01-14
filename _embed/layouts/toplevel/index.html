@@ -15,7 +15,7 @@
         </div>
 
         {{ $topLevel := .TopLevel}}
-        {{- if notEmpty $topLevel -}}
+        {{- if not $topLevel.IsEmpty -}}
 
             <form class="sortable space-below" hx-post="/admin/toplevel/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
                 {{- range $topLevel -}}
