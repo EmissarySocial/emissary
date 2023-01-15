@@ -143,11 +143,20 @@ func New(stepInfo maps.Map) (Step, error) {
 	case "redirect-to":
 		return NewRedirectTo(stepInfo)
 
+	case "with-block":
+		return NewWithBlock(stepInfo)
+
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
 	case "with-folder":
 		return NewWithFolder(stepInfo)
+
+	case "with-following":
+		return NewWithFollowing(stepInfo)
+
+	case "with-follower":
+		return NewWithFollower(stepInfo)
 
 	case "with-prev-sibling":
 		return NewWithPrevSibling(stepInfo)

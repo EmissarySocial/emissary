@@ -271,7 +271,6 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "/pub/keys"
 }
 
-func (user *User) ActivityPubSubscribeRequestURL() string {
-	// TODO: HIGH: WTF is this?? "http://ostatus.org/schema/1.0/subscribe"
-	return user.ProfileURL + "/pub/authorize"
+func (user *User) JSONFeedURL() string {
+	return user.ProfileURL + "/feed?type=json"
 }

@@ -14,6 +14,8 @@ const MimeTypeJSONFeed = "application/feed+json"
 
 const MimeTypeHTML = "text/html"
 
+const MimeTypeImage = "image/*"
+
 const MimeTypeRSS = "application/rss+xml"
 
 const MimeTypeXML = "application/xml"

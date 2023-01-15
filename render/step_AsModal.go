@@ -7,12 +7,12 @@ import (
 
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
-	"github.com/benpate/html"
 )
 
 // StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
 	SubSteps   []step.Step
+	Options    []string
 	Class      string
 	Background string
 }
@@ -22,7 +22,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAsModal.Get"
 
-	// Partial pages only render the modal window
+	// Partial pages only render the modal window.  This happens MOST of the time.
 	if renderer.IsPartialRequest() {
 
 		header := renderer.context().Response().Header()
@@ -90,22 +90,13 @@ func (step StepAsModal) getModalContent(renderer Renderer) string {
 
 	const location = "render.StepAsModal.getModalContent"
 
-	b := html.New()
-
-	// Modal Wrapper
-	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
-	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").Class(step.Class).EndBracket()
-
 	// Write inner items
-	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, b); err != nil {
+	var buffer bytes.Buffer
+	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &buffer); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error executing subSteps"))
 		return ""
 	}
 
-	// Done
-	b.CloseAll()
-
-	return b.String()
+	return WrapModal(renderer.context().Response(), buffer.String(), step.Options...)
 
 }

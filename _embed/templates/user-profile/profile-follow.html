@@ -1,6 +1,9 @@
-<div class="flex-row">
+<div class="flex-row" style="align-items:center;">
 	<img src="{{.ImageURL}}" class="circle" style="height:60px; width:60px;" />
-	<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
+	<div>
+		<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
+		<div class="text-gray">{{.ProfileURL}}</div>
+	</div>
 </div>
 
 <hr class="space-below">
@@ -11,17 +14,20 @@
 	Enter your Emissary address (or other Fediverse address) to get automatic updates on your social timeline.
 </div>
 
-<form hx-post="/.ostatus/follow-request" class="space-below">
-	<div class="flex-row">
-		<input type="text" id="username" placeholder="https://yoursite.social/@yourname"/>
-		<button class="primary nowrap">Follow on<br>My Site</button>
+<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="space-below">
+	<div class="flex-row" style="margin-bottom:4px;">
+		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
+		<input type="text" name="remoteAccount" placeholder="https://yoursite.social/@yourname" autofocus autocomplete="url"/>
+		<button class="primary nowrap">Follow on<br>my site</button>
 	</div>
+	<div id="htmx-response-message" class="text-red">&nbsp;</div>
 </form>
 
 <div>
 	<h3>Need an Account?</h3>
 
-	Emissary is a private social app that you own.  Post updates to friends and family, without the ads and tracking.
+	Emissary is a private social app that you own.  Post updates to friends and family anywhere on the 
+	Fediverse or IndieWeb and say goodbye to ads and tracking.
 	<br><br>
 
 	{{- if .DomainHasSignupForm -}}

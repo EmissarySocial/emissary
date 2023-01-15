@@ -314,6 +314,12 @@ func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService
 }
 
+// Block returns a fully populated Block service
+func (factory *Factory) Block() *service.Block {
+	result := service.NewBlock(factory.collection(CollectionBlock), factory.User())
+	return &result
+}
+
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -148,7 +149,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
-	e.GET("/.ostatus/subscribe", handler.GetOStatusSubscribe(factory))
+	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
+	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
@@ -268,8 +270,8 @@ func errorHandler(err error, ctx echo.Context) {
 	switch code {
 	case http.StatusUnauthorized:
 
-		if ctx.Request().URL.Path != "/signin" {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin")
+		if currentPath := ctx.Request().URL.Path; currentPath != "/signin" {
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(currentPath))
 			return
 		}
 		ctx.String(code, derp.Message(err))

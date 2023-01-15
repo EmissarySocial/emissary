@@ -2,10 +2,10 @@
 	<link rel="canonical" class="u-url" href="{{.ActivityPubProfileURL}}"></link>
 
 	<div hx-get="/@{{.Username}}" hx-push-url="true" role="link" class="hover-trigger space-below" style="position:relative;">
-		{{- if .UserCan "edit-photo" -}}
+		{{- if .UserCan "profile-photo" -}}
 			<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 			<link rel="stylesheet" href="/static/nebula/uploader.css"/>
-			<button hx-get="/@me/edit-photo" role="button" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
+			<button hx-get="/@me/profile-photo" role="button" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
 		{{- if ne "" .ActivityPubAvatarURL -}}
@@ -16,7 +16,7 @@
 	</div>
 
 	<div class="space-below">
-		<button hx-get="/@me/edit-profile" class="text-xs float-right">Edit</button>
+		<button hx-get="/@me/profile-edit" class="text-xs float-right">Edit</button>
 		
 		<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 		<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
@@ -41,10 +41,10 @@
 
 		{{- $links := .Links -}}
 
-		{{- if or (gt 0 (len $links)) (.UserCan "edit-profile")  -}}
+		{{- if or (gt 0 (len $links)) (.UserCan "profile-edit")  -}}
 			<div class="float-right">
-				{{- if .UserCan "edit-links" -}}
-					<button hx-get="/@me/edit-links" role="button" class="text-xs vertical-space-none">Edit</button>
+				{{- if .UserCan "profile-links" -}}
+					<button hx-get="/@me/profile-links" role="button" class="text-xs vertical-space-none">Edit</button>
 				{{- end -}}
 			</div>
 		{{- end -}}
@@ -59,7 +59,7 @@
 
 	</div>
 
-	{{- if .UserCan "edit-profile" -}}
+	{{- if .UserCan "profile-edit" -}}
 		<hr>
 		<div>
 			<button hx-post="/signout" hx-target="body">Sign Out</button>

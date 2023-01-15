@@ -72,6 +72,10 @@ div.table > [role=button]:focus {
 	cursor:pointer;
 }
 
+div.table + div.table {
+	border-top: none;
+}
+
 /** EDITABLE GRIDS ***********************/
 
 table.grid {

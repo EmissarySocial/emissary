@@ -152,6 +152,21 @@ func (service *Block) Schema() schema.Schema {
 }
 
 /*******************************************
+ * CustomQueries
+ *******************************************/
+
+func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
+	blockID, err := primitive.ObjectIDFromHex(token)
+
+	if err == nil {
+		return derp.Wrap(err, "service.Block.LoadByToken", "Error converting token to ObjectID", token)
+	}
+
+	criteria := exp.Equal("_id", blockID).AndEqual("userID", userID)
+	return service.Load(criteria, block)
+}
+
+/*******************************************
  * Custom Filters
  *******************************************/
 

@@ -1,20 +1,50 @@
 package handler
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/digit"
 	"github.com/labstack/echo/v4"
 )
 
-// TODO: MEDIUM: Enable Remote Following Server:
-// https://www.hughrundle.net/how-to-implement-remote-following-for-your-activitypub-project/
-// oStatus Discovery Docs: http://ostatus.github.io/spec/OStatus%201.0%20Draft%202.html#anchor10
+// PostOStatusDiscover looks up a user's profile using oStatus discovery.
+// If successful, it returns a redirect to the user's follow-request page.
+// If unsuccessful, it returns a 200 with an English-language error message.
+func PostOStatusDiscover(serverFactory *server.Factory) echo.HandlerFunc {
 
-func GetOStatusSubscribe(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(context echo.Context) error {
-		return nil
+
+		var transaction struct {
+			LocalAccount  string `form:"localAccount"`
+			RemoteAccount string `form:"remoteAccount"`
+		}
+
+		// Get the transaction data from the form
+		if err := context.Bind(&transaction); err != nil {
+			return err
+		}
+
+		// Use WebFinger to get information about the user's account.
+		resource, err := digit.Lookup(transaction.RemoteAccount)
+
+		if err != nil {
+			return context.String(http.StatusOK, "Your account doesn't support auto-discovery.")
+		}
+
+		// Try to find the subscribe request link
+		link := resource.FindLink(digit.RelationTypeSubscribeRequest)
+
+		if link.IsEmpty() {
+			return context.String(http.StatusOK, "Your account doesn't support autodiscovery. (ERROR:B)")
+		}
+
+		// Replace the {uri} placeholder with the actual LOCAL account name
+		forwardToURL := strings.Replace(link.Href, "{uri}", transaction.RemoteAccount, -1)
+
+		// HTMX Redirect to the subscribe request page.
+		context.Response().Header().Set("HX-Redirect", forwardToURL)
+		return context.String(http.StatusOK, "")
 	}
 }
-
-// TODO: MEDIUM: Enable Remote Following Client:
-// Add a "follow" button to user's profiles that does autodiscovery for remote follows
-/// (or adds an email subscription?) (or gives a signup link?)

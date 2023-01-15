@@ -96,6 +96,32 @@ func (following *Following) ID() string {
 }
 
 /*******************************************
+ * RoleStateEnumerator Interface
+ *******************************************/
+
+// State returns the current state of this object.
+// For users, there is no state, so it returns ""
+func (following Following) State() string {
+	return ""
+}
+
+// Roles returns a list of all roles that match the provided authorization.
+// Since Following records should only be accessible by the following owner, this
+// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
+// and Authenticated) should never be allowed on an Following record, so they
+// are not returned.
+func (following Following) Roles(authorization *Authorization) []string {
+
+	// Folders are private, so only MagicRoleMyself is allowed
+	if authorization.UserID == following.UserID {
+		return []string{MagicRoleMyself}
+	}
+
+	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
+	return []string{}
+}
+
+/*******************************************
  * Other Methods
  *******************************************/
 

@@ -45,12 +45,70 @@
 			]
 		},
 		"profile-sidebar": {"step":"view-html"},
-		"followers": {"step":"view-html", "file":"profile-followers"},
-		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
-		"following": {"step":"view-html", "file":"profile-following"},
-		"blocks": {"step":"view-html", "file":"profile-blocks"},
-		"feed": {"step":"view-feed"},
-		"websub": {"step":"websub"},
+		"profile-edit": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"edit", "form": {
+						"type":"layout-vertical",
+						"label":"Edit Profile Info",
+						"children": [
+							{"type":"text", "path":"displayName", "label":"Name"},
+							{"type":"text", "path":"location", "label":"Location"},
+							{"type":"textarea", "path":"statusMessage", "label":"Message"}
+						]
+					}},
+					{"step":"save", "comment":"Profile updated by {{.Author}}"}
+				]}
+			]
+		},
+		"profile-photo": {
+			"roles": ["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"},
+					{"step":"delete-attachments", "all":true},
+					{"step":"upload-attachments", "maximum":1},
+					{"step":"set-thumbnail", "path":"imageId"},
+					{"step":"save", "comment":"Profile photo updated by {{.Author}}"}
+				]},
+				{"step":"reload-page"}
+			]
+		},
+		"profile-links": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"profile-links-table": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"edit-table", "path":"links", "form": {
+					"type":"layout-table",
+					"children": [
+						{"type":"text", "path":"name", "label":"Label"},
+						{"type":"text", "path":"profileUrl", "label":"URL"}
+					]
+				}},
+				{"step":"save", "comment":"Links updated by {{.Author}}"}
+			]
+		},
+		"profile-photo-preview": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
+		"profile-photo-delete": {
+			"roles":["self"],
+			"steps":[
+				{"step":"delete-attachments", "all":true},
+				{"step":"set-thumbnail", "path":"imageId"},
+				{"step":"save", "comment":"Profile photo deleted by {{.Author}}"},
+				{"step":"reload-page"}
+			]
+		},
 		"outbox-list": {"step":"view-html"},
 		"outbox-add": {
 			"roles": ["self"],
@@ -58,6 +116,124 @@
 				{"step":"add-child-embed", "templates":["outbox-message"], "showLabels":false}
 			]
 		},
+
+		"followers": {"step":"view-html", "file":"profile-followers"},
+		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
+		"follower-new": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"edit", "form": {
+						"type":"layout-vertical",
+						"label":"Add Follower",
+						"children": [
+							{"type":"text", "path":"url", "label":"URL"}
+						]
+					}},
+					{"step":"view-html", "file":"profile-follower"}
+				]}
+			]
+		},
+		"follower-edit": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-follower", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical",
+							"label":"Edit Follower",
+							"children": [
+								{"type":"text", "path":"name", "label":"Name", "readOnly":true},
+								{"type":"text", "path":"url", "label":"URL"}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+		"follow": {
+			"steps": [
+				{"step":"as-modal", "background":"view", "steps":[
+					{"step":"view-html", "file":"profile-follow"}
+				]}
+			]
+		},
+
+		"following": {"step":"view-html", "file":"profile-following"},
+		"following-list": {"step":"view-html", "file":"profile-following-list"},
+		"following-new":{
+			"roles":["self"],
+			"steps":[
+				{"step":"set-query-param", "followingId":"new"},
+				{"step":"with-following", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical",
+							"label":"Add a User or URL to Follow",
+							"children": [
+								{
+									"type":"text",
+									"label":"Fediverse Address or Website URL",
+									"path":"url",
+									"description":"Enter the URL of the website you want to subscribe to."
+								},
+								{
+									"type":"select",
+									"label":"Folder",
+									"path":"folderId",
+									"options":{"provider": "folders"},
+									"description": "Automatically add items to this folder."
+								}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+		"following-edit":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"as-modal", "options":["delete:/@me/following-delete?followingId={{.FollowingID}}"], "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical",
+							"label":"Edit Follow Settings",
+							"children": [
+								{
+									"type":"text",
+									"label":"Fediverse Address or Website URL",
+									"path":"url",
+									"description":"Enter the URL of the website you want to subscribe to."
+								},
+								{
+									"type":"select",
+									"label":"Folder",
+									"path":"folderId",
+									"options":{"provider": "folders"},
+									"description": "Automatically add items to this folder."
+								}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+		"following-delete":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"delete"},
+						{"step":"reload-page"}
+					]}
+				]}
+			]
+		},
+
+		"blocks": {"step":"view-html", "file":"profile-blocks"},
+		"feed": {"step":"view-feed"},
+		"websub": {"step":"websub"},
+
 		"inbox": {
 			"roles": ["self"],
 			"steps": [
@@ -87,7 +263,7 @@
 			"roles": ["self"],
 			"step":"view-html"
 		},
-		"activity": {
+		"inbox-item": {
 			"roles": ["self"],
 			"steps": [{"step":"as-modal", "class":"huge", "steps": [
 				{"step":"view-html"}
@@ -117,77 +293,6 @@
 				{"step":"with-folder", "steps": [
 					{"step":"delete"}
 				]}
-			]
-		},
-		"edit-profile": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"edit", "form": {
-						"type":"layout-vertical",
-						"label":"Edit Profile Info",
-						"children": [
-							{"type":"text", "path":"displayName", "label":"Name"},
-							{"type":"text", "path":"location", "label":"Location"},
-							{"type":"textarea", "path":"statusMessage", "label":"Message"}
-						]
-					}},
-					{"step":"save", "comment":"Profile updated by {{.Author}}"}
-				]}
-			]
-		},
-		"edit-photo": {
-			"roles": ["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"},
-					{"step":"delete-attachments", "all":true},
-					{"step":"upload-attachments", "maximum":1},
-					{"step":"set-thumbnail", "path":"imageId"},
-					{"step":"save", "comment":"Profile photo updated by {{.Author}}"}
-				]},
-				{"step":"reload-page"}
-			]
-		},
-		"edit-links": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
-				]}
-			]
-		},
-		"edit-links-table": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"edit-table", "path":"links", "form": {
-					"type":"layout-table",
-					"children": [
-						{"type":"text", "path":"name", "label":"Label"},
-						{"type":"text", "path":"profileUrl", "label":"URL"}
-					]
-				}},
-				{"step":"save", "comment":"Links updated by {{.Author}}"}
-			]
-		},
-		"follow": {
-			"steps": [
-				{"step":"as-modal", "background":"view", "steps":[
-					{"step":"view-html", "file":"profile-follow"}
-				]}
-			]
-		},
-		"preview-photo": {
-			"roles": ["self"],
-			"step":"view-html"
-		},
-		"delete-photo": {
-			"roles":["self"],
-			"steps":[
-				{"step":"delete-attachments", "all":true},
-				{"step":"set-thumbnail", "path":"imageId"},
-				{"step":"save", "comment":"Profile photo deleted by {{.Author}}"},
-				{"step":"reload-page"}
 			]
 		}
 	}

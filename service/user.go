@@ -412,10 +412,15 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+username).
 		Alias(user.ActivityPubProfileURL()).
-		Link(digit.RelationTypeProfile, "text/html", user.ActivityPubProfileURL()).
-		Link(digit.RelationTypeSelf, "application/activity+json", user.ActivityPubURL()).
-		Link(digit.RelationTypeAvatar, "image/*", user.ActivityPubAvatarURL()).
-		Link(digit.RelationTypeSubscribeRequest, "", user.ActivityPubSubscribeRequestURL())
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
+		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubProfileURL()).
+		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubAvatarURL()).
+		Link(digit.RelationTypeSubscribeRequest, "", service.ActivityPubSubscribeRequestURL(username))
 
 	return result, nil
+}
+
+func (service *User) ActivityPubSubscribeRequestURL(username string) string {
+	return service.host + "/.ostatus/tunnel"
 }

@@ -162,6 +162,17 @@ func (service *Follower) Schema() schema.Schema {
  * Custom Queries
  *******************************************/
 
+func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, follower *model.Follower) error {
+	followerID, err := primitive.ObjectIDFromHex(token)
+
+	if err == nil {
+		return derp.Wrap(err, "service.Follower.LoadByToken", "Error converting token to ObjectID", token)
+	}
+
+	criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
+	return service.Load(criteria, follower)
+}
+
 func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error) {
 
 	result := make([]string, 0)

@@ -62,6 +62,25 @@ func GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetFollowingTunnel is a hack to work around the restrictions from SameSite
+// cookies.  If the user is coming from another site, their Authentication
+// cookies won't be sent because we use SameSite=Strict.  But they WILL be
+// sent from this redirect.  So, it's another hop, but it's still better for
+// users.
+func GetFollowingTunnel(context echo.Context) error {
+
+	message := `<html>
+<head>
+	<meta http-equiv="refresh" content="0;URL='/@me/pub/following/new'"/>
+</head>
+<body>
+<p><a href="/@me/pub/following/new">Redirecting...</p>
+</body>
+</html>`
+
+	return context.HTML(http.StatusOK, message)
+}
+
 func PostFollowing(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.PostFollowing"

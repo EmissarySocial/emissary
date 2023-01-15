@@ -12,7 +12,7 @@ import (
 func (service *Following) connect_ActivityPub(following *model.Following, response *http.Response, buffer *bytes.Buffer) bool {
 
 	spew.Dump("connect_ActivityPub")
-	spew.Dump(buffer.String())
+	// spew.Dump(buffer.String())
 
 	self := following.Links.Find(
 		digit.NewLink(

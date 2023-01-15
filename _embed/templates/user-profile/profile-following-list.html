@@ -1,0 +1,16 @@
+{{- $following := .Following -}}
+
+<div class="table">
+{{- range $following -}}
+	<div hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}" role="button">
+		<span class="{{.StatusClass}}">{{icon .StatusIcon}}</span>
+		<span>
+		{{- if ne "" .Label -}}
+			{{- .Label -}}
+		{{- else -}}
+			{{- .URL -}}
+		{{- end -}}
+		</span>
+	</div>
+{{- end -}}
+</div>

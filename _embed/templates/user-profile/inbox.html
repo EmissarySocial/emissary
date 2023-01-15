@@ -10,9 +10,9 @@
 			<div class="float-right text-sm">
 
 				{{- if eq "inbox-folder" (.QueryParam "selected") -}}
-					<button hx-get="/@me/inbox-folder-edit?folderId={{.QueryParam `folderId`}}" role="button">Edit</button>
+					<button hx-get="/@me/inbox-folder-edit?folderId={{.QueryParam `folderId`}}">Edit</button>
 				{{- end -}}
-				<button hx-get="/@me/pub/following/new" role="button">
+				<button hx-get="/@me/pub/following/new">
 					{{icon "add"}} Follow
 				</button>
 			</div>

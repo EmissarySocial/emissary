@@ -8,6 +8,7 @@ import (
 // AsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
 type AsModal struct {
 	SubSteps   []Step
+	Options    []string
 	Class      string
 	Background string
 }
@@ -23,6 +24,7 @@ func NewAsModal(stepInfo maps.Map) (AsModal, error) {
 
 	return AsModal{
 		SubSteps:   subSteps,
+		Options:    stepInfo.GetSliceOfString("options"),
 		Class:      stepInfo.GetString("class"),
 		Background: stepInfo.GetString("background"),
 	}, nil

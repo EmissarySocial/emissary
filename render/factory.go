@@ -17,6 +17,7 @@ type Factory interface {
 	// Model Services
 	Activity() *service.Activity
 	Attachment() *service.Attachment
+	Block() *service.Block
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower

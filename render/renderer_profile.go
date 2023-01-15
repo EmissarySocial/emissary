@@ -193,6 +193,10 @@ func (w Profile) StatusMessage() string {
 	return w.user.StatusMessage
 }
 
+func (w Profile) ProfileURL() string {
+	return w.user.ProfileURL
+}
+
 func (w Profile) ImageURL() string {
 	return w.user.ActivityPubAvatarURL()
 }
