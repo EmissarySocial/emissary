@@ -13,7 +13,6 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -155,8 +154,6 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 		query.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("journal.deleteDate", 0),
 	)
-
-	spew.Dump(criteria)
 
 	result := NewQueryBuilder[model.UserSummary](w._factory.User(), criteria)
 
