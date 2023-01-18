@@ -41,15 +41,25 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 
 			// Special case for User objects (this should always be "imageId")
 			if objectType == "User" {
-				return path.Set(renderer.object(), step.Path, attachment.AttachmentID)
+				if ok := path.SetString(renderer.object(), step.Path, attachment.AttachmentID.Hex()); ok {
+					return nil
+				} else {
+					return derp.NewInternalError("render.StepSetThumbnail.Post", "Invalid path for non-user object (A)", step.Path)
+				}
 			}
 
 			// Standard path for all other records
 			imageURL := renderer.Permalink()
 			imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
-			return path.Set(renderer.object(), step.Path, imageURL)
+
+			if ok := path.SetString(renderer.object(), step.Path, imageURL); ok {
+				return nil
+			} else {
+				return derp.NewInternalError("render.StepSetThumbnail.Post", "Invalid path for non-user object (B)", step.Path)
+			}
 		}
 	}
 
-	return path.Set(renderer.object(), step.Path, "")
+	path.SetString(renderer.object(), step.Path, "")
+	return nil
 }

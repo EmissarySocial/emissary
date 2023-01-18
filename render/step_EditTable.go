@@ -102,8 +102,8 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 		}
 
 		// Try to find the schema element for this table control
-		if err := renderer.schema().Remove(renderer.object(), step.Path+"."+delete); err != nil {
-			return derp.Wrap(err, location, "Failed to remove row from table", step.Path)
+		if ok := renderer.schema().Remove(renderer.object(), step.Path+"."+delete); !ok {
+			return derp.NewInternalError(location, "Failed to remove row from table", step.Path)
 		}
 	}
 

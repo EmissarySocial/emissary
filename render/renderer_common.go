@@ -387,7 +387,7 @@ func (w *Common) getDomain() (*model.Domain, error) {
  *******************************************/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() (sliceof.Type[model.StreamSummary], error) {
+func (w Common) TopLevel() (sliceof.Object[model.StreamSummary], error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 

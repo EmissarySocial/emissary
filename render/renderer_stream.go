@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/form"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/path"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -409,7 +408,7 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 func (w Stream) PrevSibling(sortField string, action string) (Stream, error) {
 
 	criteria := exp.Equal("parentId", w.stream.ParentID).
-		AndLessThan(sortField, path.Get(w.stream, sortField))
+		AndLessThan(sortField, w.stream.GetSort(sortField))
 
 	sortOption := option.SortDesc(sortField)
 
@@ -420,7 +419,7 @@ func (w Stream) PrevSibling(sortField string, action string) (Stream, error) {
 func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 
 	criteria := exp.Equal("parentId", w.stream.ParentID).
-		AndGreaterThan(sortField, path.Get(w.stream, sortField))
+		AndGreaterThan(sortField, w.stream.GetSort(sortField))
 
 	sortOption := option.SortAsc(sortField)
 

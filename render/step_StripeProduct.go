@@ -273,17 +273,17 @@ func (step StepStripeProduct) priceChanged(api client.API, priceID string, unitA
 
 // stepStripeProductTransaction collects all of the data to be updated by the StripeProduct step
 type stepStripeProductTransaction struct {
-	ButtonLabel    string  `path:"buttonLabel"     form:"data.buttonLabel"`
-	ProductName    string  `path:"productName"     form:"data.productName"`
-	DecimalAmount  float64 `path:"decimalAmount"   form:"data.decimalAmount"`
-	TrackInventory bool    `path:"trackInventory"  form:"data.trackInventory"`
-	QuantityOnHand int     `path:"quantityOnHand"  form:"data.quantityOnHand"`
-	Active         bool    `path:"active"          form:"data.active"`
-	SuccessHTML    string  `path:"successHTML"     form:"data.successHTML"`
-	ShippingMethod string  `path:"shippingMethod"  form:"data.shippingMethod"`
-	ProductID      string  `path:"productId"       form:"data.productId"`
-	PriceID        string  `path:"priceId"         form:"data.priceId"`
-	TaxID          string  `path:"taxId"           form:"data.taxId"`
+	ButtonLabel    string  `form:"data.buttonLabel"`
+	ProductName    string  `form:"data.productName"`
+	DecimalAmount  float64 `form:"data.decimalAmount"`
+	TrackInventory bool    `form:"data.trackInventory"`
+	QuantityOnHand int     `form:"data.quantityOnHand"`
+	Active         bool    `form:"data.active"`
+	SuccessHTML    string  `form:"data.successHTML"`
+	ShippingMethod string  `form:"data.shippingMethod"`
+	ProductID      string  `form:"data.productId"`
+	PriceID        string  `form:"data.priceId"`
+	TaxID          string  `form:"data.taxId"`
 }
 
 func (txn stepStripeProductTransaction) validate() error {
