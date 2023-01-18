@@ -39,6 +39,9 @@ func (service *Content) New(format string, raw string) model.Content {
 		html = raw
 
 	case "MARKDOWN":
+
+		// TODO: Enable markdown plugins (tables, etc)
+		// https://github.com/yuin/goldmark#built-in-extensions
 		var buffer bytes.Buffer
 		if err := goldmark.Convert([]byte(raw), &buffer); err != nil {
 			derp.Report(err)
