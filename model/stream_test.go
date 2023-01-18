@@ -1,0 +1,50 @@
+package model
+
+import (
+	"testing"
+
+	"github.com/benpate/rosetta/schema"
+)
+
+func TestStreamSchema(t *testing.T) {
+
+	s := schema.New(StreamSchema())
+	stream := NewStream()
+
+	tests := []tableTestItem{
+		{"streamId", "000000000000000000000001", nil},
+		{"parentId", "000000000000000000000002", nil},
+		{"token", "TOKEN", nil},
+		{"topLevelId", "000000000000000000000003", nil},
+		{"templateId", "TEMPLATE", nil},
+		{"stateId", "STATE", nil},
+
+		{"document.internalId", "000000000000000000000004", nil},
+		{"document.url", "https://example/document", nil},
+		{"document.label", "DOC-LABEL", nil},
+		{"document.summary", "DOC-SUMMARY", nil},
+		{"document.imageUrl", "DOC-IMAGEURL", nil},
+		{"document.publishDate", "1", int64(1)},
+		{"document.updateDate", "2", int64(2)},
+		{"document.author.name", "DOC-AUTHOR-NAME", nil},
+
+		{"replyTo.url", "https://example/replyTo", nil},
+		{"replyTo.label", "REPLY-LABEL", nil},
+		{"replyTo.summary", "REPLY-SUMMARY", nil},
+		{"replyTo.imageUrl", "REPLY-IMAGEURL", nil},
+		{"replyTo.publishDate", "1", int64(1)},
+		{"replyTo.updateDate", "2", int64(2)},
+		{"replyTo.author.name", "REPLY-AUTHOR-NAME", nil},
+
+		{"content.format", "HTML", nil},
+		{"content.raw", "TEST_RAWCONTENT", nil},
+		{"content.html", "TEST_HTML", nil},
+
+		{"rank", "1234", 1234},
+		{"asFeature", "true", true},
+		{"publishDate", 12345678, int64(12345678)},
+		{"unpublishDate", 123456789, int64(123456789)},
+	}
+
+	tableTest_Schema(t, &s, &stream, tests)
+}

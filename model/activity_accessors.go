@@ -6,27 +6,37 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
  * Getter Methods
  *******************************************/
 
-func (activity *Activity) GetInt64(name string) int64 {
+func (activity *Activity) GetInt64OK(name string) (int64, bool) {
 	switch name {
+
 	case "readDate":
-		return activity.ReadDate
+		return activity.ReadDate, true
+
 	default:
-		return 0
+		return 0, false
 	}
 }
 
-func (activity *Activity) GetString(name string) string {
+func (activity *Activity) GetStringOK(name string) (string, bool) {
 	switch name {
+
 	case "activityId":
-		return activity.ActivityID.Hex()
+		return activity.ActivityID.Hex(), true
+
 	case "userId":
-		return activity.UserID.Hex()
+		return activity.UserID.Hex(), true
+
 	case "folderId":
-		return activity.FolderID.Hex()
+		return activity.FolderID.Hex(), true
+
 	case "contentHtml":
-		return activity.ContentHTML
+		return activity.ContentHTML, true
+
+	case "contentJson":
+		return activity.ContentJSON, true
+
 	default:
-		return ""
+		return "", false
 	}
 }
 
@@ -34,7 +44,7 @@ func (activity *Activity) GetString(name string) string {
  * Setter Methods
  *******************************************/
 
-func (activity *Activity) SetInt64(name string, value int64) bool {
+func (activity *Activity) SetInt64OK(name string, value int64) bool {
 	switch name {
 
 	case "readDate":
@@ -46,7 +56,7 @@ func (activity *Activity) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (activity *Activity) SetString(name string, value string) bool {
+func (activity *Activity) SetStringOK(name string, value string) bool {
 	switch name {
 
 	case "activityId":
@@ -70,7 +80,14 @@ func (activity *Activity) SetString(name string, value string) bool {
 
 	case "contentHtml":
 		activity.ContentHTML = value
+		return true
+
+	case "contentJson":
+		activity.ContentJSON = value
+		return true
+
 	}
+
 	return false
 }
 
@@ -78,13 +95,16 @@ func (activity *Activity) SetString(name string, value string) bool {
  * Tree Traversal Methods
  *******************************************/
 
-func (activity *Activity) GetChild(name string) any {
+func (activity *Activity) GetObjectOK(name string) (any, bool) {
 	switch name {
+
 	case "origin":
-		return activity.Origin
+		return &activity.Origin, true
+
 	case "document":
-		return activity.Document
+		return &activity.Document, true
+
 	default:
-		return nil
+		return nil, false
 	}
 }

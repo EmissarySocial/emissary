@@ -9,10 +9,10 @@ import (
 // other connection information like a username or password.  It may also represent a connection that is still being formed,
 // for instance, storing the intermediate state of an OAuth2 connection that has not yet completed the three-legged handshake.
 type Client struct {
-	ProviderID string        `bson:"provider" path:"providerId"` // ID of the provider that this credential accesses
-	Data       maps.Map      `bson:"data"     path:"data"`       // Unique data for this credential
-	Token      *oauth2.Token `bson:"token"    path:"token"`      // OAuth2 Token (if necessary)
-	Active     bool          `bson:"active"   path:"active"`     // Is this credential active?
+	ProviderID string        `bson:"provider"` // ID of the provider that this credential accesses
+	Data       maps.Map      `bson:"data"`     // Unique data for this credential
+	Token      *oauth2.Token `bson:"token"`    // OAuth2 Token (if necessary)
+	Active     bool          `bson:"active"`   // Is this credential active?
 }
 
 // NewClient returns a fully initialized Client object.

@@ -6,40 +6,48 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
  * Getters
  *******************************************/
 
-func (attachment *Attachment) GetInt(name string) int {
+func (attachment *Attachment) GetIntOK(name string) (int, bool) {
 
 	switch name {
+
 	case "rank":
-		return attachment.Rank
+		return attachment.Rank, true
+
 	case "height":
-		return attachment.Height
+		return attachment.Height, true
+
 	case "width":
-		return attachment.Width
+		return attachment.Width, true
 	}
 
-	return 0
+	return 0, false
 }
 
-func (attachment *Attachment) GetString(name string) string {
+func (attachment *Attachment) GetStringOK(name string) (string, bool) {
 
 	switch name {
+
 	case "attachmentId":
-		return attachment.AttachmentID.Hex()
+		return attachment.AttachmentID.Hex(), true
+
 	case "objectId":
-		return attachment.ObjectID.Hex()
+		return attachment.ObjectID.Hex(), true
+
 	case "objectType":
-		return attachment.ObjectType
+		return attachment.ObjectType, true
+
 	case "original":
-		return attachment.Original
+		return attachment.Original, true
 	}
-	return ""
+
+	return "", false
 }
 
 /*******************************************
  * Setters
  *******************************************/
 
-func (attachment *Attachment) SetInt(name string, value int) bool {
+func (attachment *Attachment) SetIntOK(name string, value int) bool {
 
 	switch name {
 
@@ -60,7 +68,7 @@ func (attachment *Attachment) SetInt(name string, value int) bool {
 	return false
 }
 
-func (attachment *Attachment) SetString(name string, value string) bool {
+func (attachment *Attachment) SetStringOK(name string, value string) bool {
 
 	switch name {
 

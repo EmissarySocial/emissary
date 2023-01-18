@@ -10,22 +10,22 @@ import (
 
 // Template represents an HTML template used for rendering Streams
 type Template struct {
-	TemplateID         string            `path:"templateId"         json:"templateId"         bson:"templateId"`         // Internal name/token other objects (like streams) will use to reference this Template.
-	Role               string            `path:"role"               json:"role"               bson:"role"`               // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
-	Label              string            `path:"label"              json:"label"              bson:"label"`              // Human-readable label used in management UI.
-	Description        string            `path:"description"        json:"description"        bson:"description"`        // Human-readable long-description text used in management UI.
-	Category           string            `path:"category"           json:"category"           bson:"category"`           // Human-readable category (grouping) used in management UI.
-	Icon               string            `path:"icon"               json:"icon"               bson:"icon"`               // Icon image used in management UI.
-	Sort               int               `path:"sort"               json:"sort"               bson:"sort"`               // Sort order used in management UI.
-	ContainedBy        []string          `path:"containedBy"        json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
-	ChildSortType      string            `path:"childSortType"      json:"childSortType"      bson:"childSortType"`      // SortType used to display children
-	ChildSortDirection string            `path:"childSortDirection" json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
-	URL                string            `path:"url"                json:"url"                bson:"url"`                // URL where this template is published
-	Schema             schema.Schema     `path:"schema"             json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
-	States             map[string]State  `path:"states"             json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
-	Roles              map[string]Role   `path:"roles"              json:"roles"              bson:"roles"`              // Map of custom roles defined by this Template.
-	Actions            map[string]Action `path:"actions"            json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
-	DefaultAction      string            `path:"defaultAction"      json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
+	TemplateID         string            `json:"templateId"         bson:"templateId"`         // Internal name/token other objects (like streams) will use to reference this Template.
+	Role               string            `json:"role"               bson:"role"`               // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
+	Label              string            `json:"label"              bson:"label"`              // Human-readable label used in management UI.
+	Description        string            `json:"description"        bson:"description"`        // Human-readable long-description text used in management UI.
+	Category           string            `json:"category"           bson:"category"`           // Human-readable category (grouping) used in management UI.
+	Icon               string            `json:"icon"               bson:"icon"`               // Icon image used in management UI.
+	Sort               int               `json:"sort"               bson:"sort"`               // Sort order used in management UI.
+	ContainedBy        []string          `json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
+	ChildSortType      string            `json:"childSortType"      bson:"childSortType"`      // SortType used to display children
+	ChildSortDirection string            `json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
+	URL                string            `json:"url"                bson:"url"`                // URL where this template is published
+	Schema             schema.Schema     `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
+	States             map[string]State  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
+	Roles              map[string]Role   `json:"roles"              bson:"roles"`              // Map of custom roles defined by this Template.
+	Actions            map[string]Action `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
+	DefaultAction      string            `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
 	HTMLTemplate       *template.Template
 }
 

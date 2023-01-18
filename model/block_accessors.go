@@ -6,40 +6,54 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
  * Getters
  *******************************************/
 
-func (block *Block) GetBool(name string) bool {
+func (block *Block) GetBoolOK(name string) (bool, bool) {
+
 	switch name {
+
 	case "isPublic":
-		return block.IsPublic
+		return block.IsPublic, true
+
 	case "isActive":
-		return block.IsActive
+		return block.IsActive, true
 	}
-	return false
+
+	return false, false
 }
 
-func (block *Block) GetString(name string) string {
+func (block *Block) GetStringOK(name string) (string, bool) {
+
 	switch name {
+
 	case "blockId":
-		return block.BlockID.Hex()
+		return block.BlockID.Hex(), true
+
 	case "userId":
-		return block.UserID.Hex()
+		return block.UserID.Hex(), true
+
 	case "source":
-		return block.Source
+		return block.Source, true
+
 	case "type":
-		return block.Type
+		return block.Type, true
+
 	case "trigger":
-		return block.Trigger
+		return block.Trigger, true
+
 	case "comment":
-		return block.Comment
+		return block.Comment, true
 	}
-	return ""
+
+	return "", false
 }
 
 /*******************************************
  * Setters
  *******************************************/
 
-func (block *Block) SetBool(name string, value bool) bool {
+func (block *Block) SetBoolOK(name string, value bool) bool {
+
 	switch name {
+
 	case "isPublic":
 		block.IsPublic = value
 		return true
@@ -49,10 +63,11 @@ func (block *Block) SetBool(name string, value bool) bool {
 		return true
 
 	}
+
 	return false
 }
 
-func (block *Block) SetString(name string, value string) bool {
+func (block *Block) SetStringOK(name string, value string) bool {
 
 	switch name {
 
@@ -85,5 +100,6 @@ func (block *Block) SetString(name string, value string) bool {
 		return true
 
 	}
+
 	return false
 }

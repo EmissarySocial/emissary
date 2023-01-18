@@ -12,7 +12,7 @@ type SetQueryParam struct {
 // NewSetQueryParam returns a fully initialized SetQueryParam object
 func NewSetQueryParam(stepInfo maps.Map) (SetQueryParam, error) {
 
-	stepInfo.DeletePath("step")
+	stepInfo.Remove("step")
 
 	return SetQueryParam{
 		Values: stepInfo,

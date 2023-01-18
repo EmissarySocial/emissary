@@ -25,11 +25,11 @@ const OriginTypeWebSub = "WEBSUB"
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
-	InternalID primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"` // Unique ID of a document in this database
-	Type       string             `path:"type"        json:"type"        bson:"type"`                 // The type of service that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
-	URL        string             `path:"url"         json:"url"         bson:"url"`                  // Public URL of the origin
-	Label      string             `path:"label"       json:"label"       bson:"label,omitempty"`      // Human-Friendly label of the origin
-	ImageURL   string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
+	InternalID primitive.ObjectID `json:"internalId" bson:"internalId,omitempty"` // Unique ID of a document in this database
+	Type       string             `json:"type"       bson:"type"`                 // The type of service that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
+	URL        string             `json:"url"        bson:"url"`                  // Public URL of the origin
+	Label      string             `json:"label"      bson:"label,omitempty"`      // Human-Friendly label of the origin
+	ImageURL   string             `json:"imageUrl"   bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
 }
 
 // NewOriginLink returns a fully initialized OriginLink
@@ -45,10 +45,8 @@ func OriginLinkSchema() schema.Element {
 			"internalId": schema.String{Format: "objectId"},
 			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeTwitter}},
 			"url":        schema.String{Format: "url"},
-			"label":      schema.String{},
-			"summary":    schema.String{},
+			"label":      schema.String{MaxLength: 128},
 			"imageUrl":   schema.String{Format: "url"},
-			"updateDate": schema.Integer{},
 		},
 	}
 }

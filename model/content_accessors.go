@@ -4,16 +4,20 @@ package model
  * Getter Methods
  *********************************/
 
-func (content *Content) GetString(name string) string {
+func (content *Content) GetStringOK(name string) (string, bool) {
 	switch name {
+
 	case "format":
-		return content.Format
+		return content.Format, true
+
 	case "raw":
-		return content.Raw
+		return content.Raw, true
+
 	case "html":
-		return content.HTML
+		return content.HTML, true
+
 	default:
-		return ""
+		return "", false
 	}
 }
 
@@ -21,17 +25,21 @@ func (content *Content) GetString(name string) string {
  * Setter Methods
  *********************************/
 
-func (content *Content) SetString(name string, value string) bool {
+func (content *Content) SetStringOK(name string, value string) bool {
 	switch name {
+
 	case "format":
 		content.Format = value
 		return true
+
 	case "raw":
 		content.Raw = value
 		return true
+
 	case "html":
 		content.HTML = value
 		return true
+
 	default:
 		return false
 	}

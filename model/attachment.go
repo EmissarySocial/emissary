@@ -17,13 +17,13 @@ const AttachmentTypeUser = "User"
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `                bson:"_id"`        // ID of this Attachment
-	ObjectID     primitive.ObjectID `                bson:"objectId"`   // ID of the Stream that owns this Attachment
-	ObjectType   string             `                bson:"objectType"` // Type of object that owns this Attachment
-	Original     string             `path:"original" bson:"original"`   // Original filename uploaded by user
-	Rank         int                `path:"rank"     bson:"rank"`       // The sort order to display the attachments in.
-	Height       int                `path:"height"   bson:"height"`
-	Width        int                `path:"width"    bson:"width"`
+	AttachmentID primitive.ObjectID `bson:"_id"`        // ID of this Attachment
+	ObjectID     primitive.ObjectID `bson:"objectId"`   // ID of the Stream that owns this Attachment
+	ObjectType   string             `bson:"objectType"` // Type of object that owns this Attachment
+	Original     string             `bson:"original"`   // Original filename uploaded by user
+	Rank         int                `bson:"rank"`       // The sort order to display the attachments in.
+	Height       int                `bson:"height"`     // Image height (if applicable)
+	Width        int                `bson:"width"`      // Image width (if applicable)
 
 	journal.Journal `bson:"journal"` // Journal entry for fetch compatability
 }

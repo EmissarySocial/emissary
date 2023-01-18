@@ -16,15 +16,15 @@ const DocumentTypeLike = "Like"
 const DocumentTypeFollow = "Follow"
 
 type DocumentLink struct {
-	InternalID  primitive.ObjectID `path:"internalId"  json:"internalId"  bson:"internalId,omitempty"`  // Unique ID of a document in this database
-	Author      PersonLink         `path:"author"      json:"author"      bson:"author,omitempty"`      // Author of this document
-	URL         string             `path:"url"         json:"url"         bson:"url,omitempty"`         // URL of the original document
-	Type        string             `path:"type"        json:"type"        bson:"type,omitempty"`        // ActivityStream type of document (e.g. "Article", "Note", "Image", etc.)
-	Label       string             `path:"label"       json:"label"       bson:"label,omitempty"`       // Label/Title of the document
-	Summary     string             `path:"summary"     json:"summary"     bson:"summary,omitempty"`     // Brief summary of the document
-	ImageURL    string             `path:"imageUrl"    json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
-	PublishDate int64              `path:"publishDate" json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this document was first published
-	UpdateDate  int64              `path:"updateDate"  json:"updateDate"  bson:"updateDate,omitempty"`  // Unix timestamp of the date/time when this document was last updated
+	InternalID  primitive.ObjectID `json:"internalId"  bson:"internalId,omitempty"`  // Unique ID of a document in this database
+	Author      PersonLink         `json:"author"      bson:"author,omitempty"`      // Author of this document
+	URL         string             `json:"url"         bson:"url,omitempty"`         // URL of the original document
+	Type        string             `json:"type"        bson:"type,omitempty"`        // ActivityStream type of document (e.g. "Article", "Note", "Image", etc.)
+	Label       string             `json:"label"       bson:"label,omitempty"`       // Label/Title of the document
+	Summary     string             `json:"summary"     bson:"summary,omitempty"`     // Brief summary of the document
+	ImageURL    string             `json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
+	PublishDate int64              `json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this document was first published
+	UpdateDate  int64              `json:"updateDate"  bson:"updateDate,omitempty"`  // Unix timestamp of the date/time when this document was last updated
 }
 
 func NewDocumentLink() DocumentLink {
@@ -35,12 +35,14 @@ func DocumentLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId":  schema.String{Format: "objectId"},
+			"author":      PersonLinkSchema(),
 			"url":         schema.String{Format: "url"},
+			"type":        schema.String{},
 			"label":       schema.String{MaxLength: 100},
 			"summary":     schema.String{MaxLength: 1000},
 			"imageUrl":    schema.String{Format: "url"},
-			"publishDate": schema.Integer{},
-			"updateDate":  schema.Integer{},
+			"publishDate": schema.Integer{BitSize: 64},
+			"updateDate":  schema.Integer{BitSize: 64},
 		},
 	}
 }

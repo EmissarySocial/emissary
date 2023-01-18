@@ -9,10 +9,10 @@ import (
 
 // Folder represents a custom folder that organizes incoming messages
 type Folder struct {
-	FolderID primitive.ObjectID `path:"folderId" json:"folderId" bson:"_id"`    // Unique ID for this folder
-	UserID   primitive.ObjectID `path:"userId"   json:"userId"   bson:"userId"` // ID of the User who owns this folder
-	Label    string             `path:"label"    json:"label"    bson:"label"`  // Label of the folder
-	Rank     int                `path:"rank"     json:"rank"     bson:"rank"`   // Sort order of the folder
+	FolderID primitive.ObjectID `json:"folderId" bson:"_id"`    // Unique ID for this folder
+	UserID   primitive.ObjectID `json:"userId"   bson:"userId"` // ID of the User who owns this folder
+	Label    string             `json:"label"    bson:"label"`  // Label of the folder
+	Rank     int                `json:"rank"     bson:"rank"`   // Sort order of the folder
 
 	journal.Journal `json:"-" bson:"journal"`
 }

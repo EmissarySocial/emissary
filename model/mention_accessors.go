@@ -6,40 +6,50 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
  * Getter Methods
  *********************************/
 
-func (mention *Mention) GetString(name string) string {
+func (mention *Mention) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "mentionId":
-		return mention.MentionID.Hex()
+		return mention.MentionID.Hex(), true
+
 	case "streamId":
-		return mention.StreamID.Hex()
+		return mention.StreamID.Hex(), true
+
 	case "originUrl":
-		return mention.OriginURL
+		return mention.OriginURL, true
+
 	case "authorName":
-		return mention.AuthorName
+		return mention.AuthorName, true
+
 	case "authorEmail":
-		return mention.AuthorEmail
+		return mention.AuthorEmail, true
+
 	case "authorWebsiteUrl":
-		return mention.AuthorWebsiteURL
+		return mention.AuthorWebsiteURL, true
+
 	case "authorPhotoUrl":
-		return mention.AuthorPhotoURL
+		return mention.AuthorPhotoURL, true
+
 	case "authorStatus":
-		return mention.AuthorStatus
+		return mention.AuthorStatus, true
+
 	case "entryName":
-		return mention.EntryName
+		return mention.EntryName, true
+
 	case "entrySummary":
-		return mention.EntrySummary
+		return mention.EntrySummary, true
+
 	case "entryPhotoUrl":
-		return mention.EntryPhotoURL
+		return mention.EntryPhotoURL, true
 	}
-	return ""
+	return "", false
 }
 
 /*********************************
  * Setter Methods
  *********************************/
 
-func (mention *Mention) SetString(name string, value string) bool {
+func (mention *Mention) SetStringOK(name string, value string) bool {
 	switch name {
 
 	case "mentionId":

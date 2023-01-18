@@ -11,10 +11,10 @@ import (
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	Roles      []string            `path:"roles"      json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     []string            `path:"states"     json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	StateRoles map[string][]string `path:"stateRoles" json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
-	Steps      []step.Step         `path:"steps"      json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	Roles      []string            `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     []string            `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	StateRoles map[string][]string `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
+	Steps      []step.Step         `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 }
 
 // NewAction returns a fully initialized Action

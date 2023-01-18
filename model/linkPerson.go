@@ -8,12 +8,12 @@ import (
 )
 
 type PersonLink struct {
-	InternalID   primitive.ObjectID `path:"internalId"   json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
-	Name         string             `path:"name"         json:"name"         bson:"name,omitempty"`         // Name of the person
-	ProfileURL   string             `path:"profileUrl"   json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
-	InboxURL     string             `path:"inboxUrl"     json:"inboxUrl"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
-	EmailAddress string             `path:"emailAddress" json:"emailAddress" bson:"emailAddress,omitempty"` // Email address of the person
-	ImageURL     string             `path:"imageUrl"     json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the person's avatar image
+	InternalID   primitive.ObjectID `json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
+	Name         string             `json:"name"         bson:"name,omitempty"`         // Name of the person
+	ProfileURL   string             `json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
+	InboxURL     string             `json:"inboxUrl"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
+	EmailAddress string             `json:"emailAddress" bson:"emailAddress,omitempty"` // Email address of the person
+	ImageURL     string             `json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the person's avatar image
 }
 
 func NewPersonLink() PersonLink {
@@ -25,7 +25,7 @@ func PersonLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"internalId":   schema.String{Format: "objectId"},
-			"name":         schema.String{},
+			"name":         schema.String{MaxLength: 128},
 			"profileUrl":   schema.String{Format: "url"},
 			"inboxUrl":     schema.String{Format: "url"},
 			"imageUrl":     schema.String{Format: "url"},
@@ -51,7 +51,12 @@ func (person PersonLink) Link(relation string) Link {
 	}
 }
 
+// GetURL gets a named property value of this person,
+// then retuns it as a parsed URL.  Only "profileUrl"
+// "inboxUrl" and "imageUrl" should be passed to this
+// function. all others will return nil values
 func (person PersonLink) GetURL(name string) *url.URL {
-	result, _ := url.Parse(person.GetString(name))
+	value, _ := person.GetStringOK(name)
+	result, _ := url.Parse(value)
 	return result
 }

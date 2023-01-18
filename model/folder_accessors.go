@@ -2,47 +2,44 @@ package model
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-func (folder *Folder) GetInt(name string) int {
+func (folder *Folder) GetIntOK(name string) (int, bool) {
 	switch name {
 
 	case "rank":
-		return folder.Rank
-
-	default:
-		return 0
+		return folder.Rank, true
 	}
+
+	return 0, false
 }
 
-func (folder *Folder) GetString(name string) string {
+func (folder *Folder) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "folderId":
-		return folder.FolderID.Hex()
+		return folder.FolderID.Hex(), true
 
 	case "userId":
-		return folder.UserID.Hex()
+		return folder.UserID.Hex(), true
 
 	case "label":
-		return folder.Label
-
-	default:
-		return ""
+		return folder.Label, true
 	}
+
+	return "", false
 }
 
-func (folder *Folder) SetInt(name string, value int) bool {
+func (folder *Folder) SetIntOK(name string, value int) bool {
 	switch name {
 
 	case "rank":
 		folder.Rank = value
 		return true
-
-	default:
-		return false
 	}
+
+	return false
 }
 
-func (folder *Folder) SetString(name string, value string) bool {
+func (folder *Folder) SetStringOK(name string, value string) bool {
 	switch name {
 
 	case "folderId":
@@ -60,7 +57,6 @@ func (folder *Folder) SetString(name string, value string) bool {
 	case "label":
 		folder.Label = value
 		return true
-
 	}
 
 	return false

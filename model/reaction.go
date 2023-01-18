@@ -14,14 +14,14 @@ const ReactionTypeDislike = "DISLIKE"
 const ReactionTypeVote = "VOTE"
 
 type Reaction struct {
-	ReactionID primitive.ObjectID `path:"reactionId" json:"reactionId" bson:"_id"`    // Unique identifier for this Reaction
-	Method     string             `path:"method"     json:"method"     bson:"method"` // Method of following (e.g. "RSS", "RSSCloud", "ActivityPub".)
-	Type       string             `path:"type"       json:"type"       bson:"type"`   // Type of reaction (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
-	Value      string             `path:"value"      json:"value"      bson:"value"`  // Custom value assigned to the reaction (emoji, vote, etc)
-	Actor      PersonLink         `path:"actor"      json:"actor"      bson:"actor"`  // Person who is reacting to the Content
-	Object     OriginLink         `path:"object"     json:"object"     bson:"object"` // Content that is being reacted to
+	ReactionID primitive.ObjectID `json:"reactionId" bson:"_id"`    // Unique identifier for this Reaction
+	Method     string             `json:"method"     bson:"method"` // Method of following (e.g. "RSS", "RSSCloud", "ActivityPub".)
+	Type       string             `json:"type"       bson:"type"`   // Type of reaction (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
+	Value      string             `json:"value"      bson:"value"`  // Custom value assigned to the reaction (emoji, vote, etc)
+	Actor      PersonLink         `json:"actor"      bson:"actor"`  // Person who is reacting to the Content
+	Object     OriginLink         `json:"object"     bson:"object"` // Content that is being reacted to
 
-	journal.Journal `path:"journal" json:"journal" bson:"journal"`
+	journal.Journal `json:"journal" bson:"journal"`
 }
 
 func NewReaction() Reaction {

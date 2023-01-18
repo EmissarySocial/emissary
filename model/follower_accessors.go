@@ -8,37 +8,46 @@ import (
  * Getters
  *******************************************/
 
-func (follower Follower) GetInt64(name string) int64 {
+func (follower *Follower) GetInt64OK(name string) (int64, bool) {
 	switch name {
+
 	case "expireDate":
-		return follower.ExpireDate
+		return follower.ExpireDate, true
 	}
-	return 0
+
+	return 0, false
 }
 
-func (follower Follower) GetString(name string) string {
+func (follower *Follower) GetStringOK(name string) (string, bool) {
 	switch name {
+
 	case "followerId":
-		return follower.FollowerID.Hex()
+		return follower.FollowerID.Hex(), true
+
 	case "parentId":
-		return follower.ParentID.Hex()
+		return follower.ParentID.Hex(), true
+
 	case "type":
-		return follower.Type
+		return follower.Type, true
+
 	case "method":
-		return follower.Method
+		return follower.Method, true
+
 	case "format":
-		return follower.Format
+		return follower.Format, true
 	}
 
-	return ""
+	return "", false
 }
 
 /*******************************************
  * Setters
  *******************************************/
 
-func (follower *Follower) SetInt64(name string, value int64) bool {
+func (follower *Follower) SetInt64OK(name string, value int64) bool {
+
 	switch name {
+
 	case "expireDate":
 		follower.ExpireDate = value
 		return true
@@ -47,7 +56,8 @@ func (follower *Follower) SetInt64(name string, value int64) bool {
 	return false
 }
 
-func (follower *Follower) SetString(name string, value string) bool {
+func (follower *Follower) SetStringOK(name string, value string) bool {
+
 	switch name {
 
 	case "followerId":
@@ -82,12 +92,15 @@ func (follower *Follower) SetString(name string, value string) bool {
  * Tree Traversal
  *******************************************/
 
-func (follower *Follower) GetChild(name string) (any, bool) {
+func (follower *Follower) GetObjectOK(name string) (any, bool) {
+
 	switch name {
+
 	case "actor":
-		return follower.Actor, true
+		return &follower.Actor, true
+
 	case "data":
-		return follower.Data, true
+		return &follower.Data, true
 	}
 
 	return nil, false

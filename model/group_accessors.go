@@ -6,21 +6,26 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
  * Getters
  *******************************************/
 
-func (group *Group) GetString(name string) string {
+func (group *Group) GetStringOK(name string) (string, bool) {
+
 	switch name {
+
 	case "groupId":
-		return group.GroupID.Hex()
+		return group.GroupID.Hex(), true
+
 	case "label":
-		return group.Label
+		return group.Label, true
 	}
-	return ""
+
+	return "", false
 }
 
 /*******************************************
  * Setters
  *******************************************/
 
-func (group *Group) SetString(name string, value string) bool {
+func (group *Group) SetStringOK(name string, value string) bool {
+
 	switch name {
 
 	case "groupId":

@@ -48,12 +48,12 @@ const LinkSourceTwitter = "TWITTER"
 
 // Link represents a link to another document on the Internet.
 type Link struct {
-	Relation   string             `path:"rel"        json:"rel"        bson:"rel"`                  // The relationship of the linked document, per https://www.iana.org/assignments/link-relations/link-relations.xhtml
-	Source     string             `path:"source"     json:"source"     bson:"source"`               // The source of the link.  This could be "ACTIVITYPUB", "RSS", "TWITTER", or "EMAIL"
-	InternalID primitive.ObjectID `path:"internalId" json:"internalId" bson:"internalId,omitempty"` // Unique ID of a document in this database
-	Label      string             `path:"label"      json:"label"      bson:"label,omitempty"`      // Label of the link
-	URL        string             `path:"url"        json:"url"        bson:"url,omitempty"`        // Public URL of the document
-	UpdateDate int64              `path:"updateDate" json:"updateDate" bson:"updateDate"`           // Unix timestamp of the date/time when this link was last updated.
+	Relation   string             `json:"rel"        bson:"rel"`                  // The relationship of the linked document, per https://www.iana.org/assignments/link-relations/link-relations.xhtml
+	Source     string             `json:"source"     bson:"source"`               // The source of the link.  This could be "ACTIVITYPUB", "RSS", "TWITTER", or "EMAIL"
+	InternalID primitive.ObjectID `json:"internalId" bson:"internalId,omitempty"` // Unique ID of a document in this database
+	Label      string             `json:"label"      bson:"label,omitempty"`      // Label of the link
+	URL        string             `json:"url"        bson:"url,omitempty"`        // Public URL of the document
+	UpdateDate int64              `json:"updateDate" bson:"updateDate"`           // Unix timestamp of the date/time when this link was last updated.
 }
 
 // ID implements the Set.ID interface

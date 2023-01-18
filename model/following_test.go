@@ -1,0 +1,31 @@
+package model
+
+import (
+	"testing"
+
+	"github.com/benpate/rosetta/schema"
+)
+
+func TestFollowingSchema(t *testing.T) {
+
+	following := NewFollowing()
+	s := schema.New(FollowingSchema())
+
+	table := []tableTestItem{
+		{"followingId", "123456781234567812345678", nil},
+		{"userId", "876543218765432187654321", nil},
+		{"folderId", "876543218765432187654321", nil},
+		{"label", "LABEL", nil},
+		{"url", "http://url.url", nil},
+		{"method", "METHOD", nil},
+		{"status", "STATUS", nil},
+		{"statusMessage", "STATUS-MESSAGE", nil},
+		{"lastPolled", "123", int64(123)},
+		{"pollDuration", "42", 42},
+		{"nextPoll", 424242, int64(424242)},
+		{"purgeDuration", "1", 1},
+		{"errorCount", int64(7), 7},
+	}
+
+	tableTest_Schema(t, &s, &following, table)
+}

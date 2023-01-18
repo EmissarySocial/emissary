@@ -33,7 +33,7 @@ func MentionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"mentionId":        schema.String{Format: "objectId"},
 			"streamId":         schema.String{Format: "objectId"},
-			"sourceUrl":        schema.String{Format: "uri"},
+			"originUrl":        schema.String{Format: "uri"},
 			"authorName":       schema.String{MaxLength: 50},
 			"authorEmail":      schema.String{Format: "email"},
 			"authorWebsiteUrl": schema.String{Format: "uri"},

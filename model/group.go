@@ -8,8 +8,8 @@ import (
 )
 
 type Group struct {
-	GroupID primitive.ObjectID `path:"groupId" json:"groupId" bson:"_id"`
-	Label   string             `path:"label"   json:"label"   bson:"label"`
+	GroupID primitive.ObjectID `json:"groupId" bson:"_id"`
+	Label   string             `json:"label"   bson:"label"`
 
 	journal.Journal `json:"journal" bson:"journal"`
 }

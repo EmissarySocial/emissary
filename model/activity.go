@@ -11,16 +11,17 @@ import (
 // Activity represents a single item in a User's inbox or outbox.  It is loosely modelled on the ActivityStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Activity struct {
-	ActivityID  primitive.ObjectID `path:"activityId"   json:"activityId"   bson:"_id"`                // Unique ID of the Activity
-	UserID      primitive.ObjectID `path:"userId"       json:"userId"       bson:"userId"`             // Unique ID of the User who owns this Activity (in their inbox or outbox)
-	Place       ActivityPlace      `path:"place"        json:"place"        bson:"place"`              // Place where this Activity is represented (e.g. "Inbox", "Outbox")
-	Origin      OriginLink         `path:"origin"       json:"origin"       bson:"origin,omitempty"`   // Link to the origin of this Activity
-	Document    DocumentLink       `path:"document"     json:"document"     bson:"document,omitempty"` // Document that is the subject of this Activity
-	ContentHTML string             `path:"content"      json:"content"      bson:"content,omitempty"`  // HTML Content of the Activity
+	ActivityID  primitive.ObjectID `json:"activityId"   bson:"_id"`                   // Unique ID of the Activity
+	UserID      primitive.ObjectID `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Activity (in their inbox or outbox)
+	Place       ActivityPlace      `json:"place"        bson:"place"`                 // Place where this Activity is represented (e.g. "Inbox", "Outbox")
+	Origin      OriginLink         `json:"origin"       bson:"origin,omitempty"`      // Link to the origin of this Activity
+	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Activity
+	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Activity
+	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
 
 	// Inbox-specific fields
-	FolderID primitive.ObjectID `path:"folderId"     json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
-	ReadDate int64              `path:"readDate"     json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the user
+	FolderID primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Activity is stored
+	ReadDate int64              `json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Activity was read by the user
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -58,13 +59,14 @@ func NewOutboxActivity() Activity {
 func ActivitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"activityId":   schema.String{Format: "objectId"},
-			"userId":       schema.String{Format: "objectId"},
-			"folderId":     schema.String{Format: "objectId"},
-			"document":     DocumentLinkSchema(),
-			"contentHtml":  schema.String{Format: "html"},
-			"originalJson": schema.String{Format: "json"},
-			"readDate":     schema.Integer{},
+			"activityId":  schema.String{Format: "objectId"},
+			"userId":      schema.String{Format: "objectId"},
+			"origin":      OriginLinkSchema(),
+			"document":    DocumentLinkSchema(),
+			"contentHtml": schema.String{Format: "html"},
+			"contentJson": schema.String{Format: "json"},
+			"folderId":    schema.String{Format: "objectId"},
+			"readDate":    schema.Integer{BitSize: 64},
 		},
 	}
 }

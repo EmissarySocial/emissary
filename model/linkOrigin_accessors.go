@@ -8,43 +8,54 @@ import (
  * Getter Methods
  *********************************/
 
-func (origin *OriginLink) GetString(name string) string {
+func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 	switch name {
+
 	case "internalId":
-		return origin.InternalID.Hex()
+		return origin.InternalID.Hex(), true
+
 	case "type":
-		return origin.Type
+		return origin.Type, true
+
 	case "url":
-		return origin.URL
+		return origin.URL, true
+
 	case "label":
-		return origin.Label
+		return origin.Label, true
+
 	case "imageUrl":
-		return origin.ImageURL
-	default:
-		return ""
+		return origin.ImageURL, true
+
 	}
+
+	return "", false
 }
 
 /*********************************
  * Setter Methods
  *********************************/
 
-func (origin *OriginLink) SetString(name string, value string) bool {
+func (origin *OriginLink) SetStringOK(name string, value string) bool {
 	switch name {
+
 	case "internalId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			origin.InternalID = objectID
 			return true
 		}
+
 	case "type":
 		origin.Type = value
 		return true
+
 	case "url":
 		origin.URL = value
 		return true
+
 	case "label":
 		origin.Label = value
 		return true
+
 	case "imageUrl":
 		origin.ImageURL = value
 		return true

@@ -5,20 +5,15 @@ import (
 )
 
 /*********************************
- * Getter Methods
+ * Sortable Methods
  *********************************/
 
-func (stream *Stream) GetBool(name string) bool {
-	switch name {
-	case "asFeature":
-		return stream.AsFeature
-	default:
-		return false
-	}
-}
-
-func (stream *Stream) GetInt(name string) int {
-	switch name {
+func (stream *Stream) GetSort(fieldName string) any {
+	switch fieldName {
+	case "publishDate":
+		return stream.PublishDate
+	case "document.label":
+		return stream.Document.Label
 	case "rank":
 		return stream.Rank
 	default:
@@ -26,42 +21,64 @@ func (stream *Stream) GetInt(name string) int {
 	}
 }
 
-func (stream *Stream) GetInt64(name string) int64 {
+/*********************************
+ * Schema Getter Interfaces
+ *********************************/
+
+func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 	switch name {
-	case "publishDate":
-		return stream.PublishDate
-	case "unpublishDate":
-		return stream.UnPublishDate
+	case "asFeature":
+		return stream.AsFeature, true
 	default:
-		return 0
+		return false, false
 	}
 }
 
-func (stream *Stream) GetString(name string) string {
+func (stream *Stream) GetIntOK(name string) (int, bool) {
+	switch name {
+	case "rank":
+		return stream.Rank, true
+	default:
+		return 0, false
+	}
+}
+
+func (stream *Stream) GetInt64OK(name string) (int64, bool) {
+	switch name {
+	case "publishDate":
+		return stream.PublishDate, true
+	case "unpublishDate":
+		return stream.UnPublishDate, true
+	default:
+		return 0, false
+	}
+}
+
+func (stream *Stream) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "streamId":
-		return stream.StreamID.Hex()
+		return stream.StreamID.Hex(), true
 	case "parentId":
-		return stream.ParentID.Hex()
+		return stream.ParentID.Hex(), true
 	case "token":
-		return stream.Token
+		return stream.Token, true
 	case "topLevelId":
-		return stream.TopLevelID
+		return stream.TopLevelID, true
 	case "templateId":
-		return stream.TemplateID
+		return stream.TemplateID, true
 	case "stateId":
-		return stream.StateID
+		return stream.StateID, true
 	default:
-		return ""
+		return "", false
 	}
 }
 
 /*********************************
- * Setter Methods
+ * Schema Setter Interfaces
  *********************************/
 
-func (stream *Stream) SetBool(name string, value bool) bool {
+func (stream *Stream) SetBoolOK(name string, value bool) bool {
 	switch name {
 	case "asFeature":
 		stream.AsFeature = value
@@ -71,7 +88,7 @@ func (stream *Stream) SetBool(name string, value bool) bool {
 	}
 }
 
-func (stream *Stream) SetInt(name string, value int) bool {
+func (stream *Stream) SetIntOK(name string, value int) bool {
 	switch name {
 	case "rank":
 		stream.Rank = value
@@ -81,7 +98,7 @@ func (stream *Stream) SetInt(name string, value int) bool {
 	}
 }
 
-func (stream *Stream) SetInt64(name string, value int64) bool {
+func (stream *Stream) SetInt64OK(name string, value int64) bool {
 	switch name {
 	case "publishDate":
 		stream.PublishDate = value
@@ -94,7 +111,7 @@ func (stream *Stream) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (stream *Stream) SetString(name string, value string) bool {
+func (stream *Stream) SetStringOK(name string, value string) bool {
 	switch name {
 
 	case "streamId":
@@ -133,7 +150,7 @@ func (stream *Stream) SetString(name string, value string) bool {
  * Tree Traversal Methods
  *********************************/
 
-func (stream *Stream) GetChild(name string) (any, bool) {
+func (stream *Stream) GetObjectOK(name string) (any, bool) {
 	switch name {
 	case "permissions":
 		return &stream.Permissions, true
@@ -141,7 +158,7 @@ func (stream *Stream) GetChild(name string) (any, bool) {
 		return &stream.DefaultAllow, true
 	case "document":
 		return &stream.Document, true
-	case "inReplyTo":
+	case "replyTo":
 		return &stream.InReplyTo, true
 	case "origin":
 		return &stream.Origin, true

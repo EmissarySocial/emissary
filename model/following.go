@@ -35,23 +35,23 @@ const FollowingStatusFailure = "FAILURE"
 // Following is a model object that represents a user's following to an external data feed.
 // Currently, the only supported feed types are: RSS, Atom, and JSON Feed.  Others may be added in the future.
 type Following struct {
-	FollowingID   primitive.ObjectID `path:"followingId"    json:"followingId"    bson:"_id"`           // Unique Identifier of this record
-	UserID        primitive.ObjectID `path:"userId"         json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
-	FolderID      primitive.ObjectID `path:"folderId"       json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
-	Label         string             `path:"label"          json:"label"          bson:"label"`         // Label of this "following" record
-	URL           string             `path:"url"            json:"url"            bson:"url"`           // Human-Facing URL that is being followed.
-	Links         digit.LinkSet      `path:"links"          json:"links"          bson:"links"`         // List of links can be used to update this following.
-	Method        string             `path:"method"         json:"method"         bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
-	Secret        string             `path:"secret"         json:"secret"         bson:"secret"`        // Secret used to authenticate this feed (if required)
-	Status        string             `path:"status"         json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
-	StatusMessage string             `path:"statusMessage"  json:"statusMessage"  bson:"statusMessage"` // Optional message describing the status of the last poll
-	LastPolled    int64              `path:"lastPolled"     json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
-	PollDuration  int                `path:"pollDuration"   json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
-	NextPoll      int64              `path:"nextPoll"       json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
-	PurgeDuration int                `path:"purgeDuration"  json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
-	ErrorCount    int                `path:"errorCount"     json:"errorCount"     bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
+	FollowingID   primitive.ObjectID `json:"followingId"    bson:"_id"`           // Unique Identifier of this record
+	UserID        primitive.ObjectID `json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
+	FolderID      primitive.ObjectID `json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
+	Label         string             `json:"label"          bson:"label"`         // Label of this "following" record
+	URL           string             `json:"url"            bson:"url"`           // Human-Facing URL that is being followed.
+	Links         digit.LinkSet      `json:"links"          bson:"links"`         // List of links can be used to update this following.
+	Method        string             `json:"method"         bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
+	Secret        string             `json:"secret"         bson:"secret"`        // Secret used to authenticate this feed (if required)
+	Status        string             `json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
+	StatusMessage string             `json:"statusMessage"  bson:"statusMessage"` // Optional message describing the status of the last poll
+	LastPolled    int64              `json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
+	PollDuration  int                `json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
+	NextPoll      int64              `json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
+	PurgeDuration int                `json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
+	ErrorCount    int                `json:"errorCount"     bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
 
-	journal.Journal `path:"journal" json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:"journal"`
 }
 
 // NewFollowing returns a fully initialized Following object
@@ -72,14 +72,15 @@ func FollowingSchema() schema.Element {
 			"followingId":   schema.String{Format: "objectId"},
 			"userId":        schema.String{Format: "objectId"},
 			"folderId":      schema.String{Format: "objectId"},
-			"label":         schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"url":           schema.String{Format: "url", Required: true, MinLength: 1, MaxLength: 1000},
+			"label":         schema.String{Required: true, MaxLength: 128},
+			"url":           schema.String{Format: "url", Required: true, MaxLength: 1024},
 			"method":        schema.String{Required: true, Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":        schema.String{Enum: []string{FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
-			"statusMessage": schema.String{MaxLength: 1000},
-			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0)},
+			"statusMessage": schema.String{MaxLength: 1024},
+			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 7)},
-			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0)},
+			"purgeDuration": schema.Integer{Minimum: null.NewInt64(0)},
+			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"errorCount":    schema.Integer{Minimum: null.NewInt64(0)},
 			"IsPublic":      schema.Boolean{},
 		},

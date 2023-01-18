@@ -8,33 +8,33 @@ import (
  * Getter Methods
  *********************************/
 
-func (doc *DocumentLink) GetInt64(name string) int64 {
+func (doc *DocumentLink) GetInt64OK(name string) (int64, bool) {
 	switch name {
 	case "publishDate":
-		return doc.PublishDate
-	case "unpdateDate":
-		return doc.UpdateDate
+		return doc.PublishDate, true
+	case "updateDate":
+		return doc.UpdateDate, true
 	default:
-		return 0
+		return 0, false
 	}
 }
 
-func (doc *DocumentLink) GetString(name string) string {
+func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	switch name {
 	case "internalId":
-		return doc.InternalID.Hex()
+		return doc.InternalID.Hex(), true
 	case "url":
-		return doc.URL
+		return doc.URL, true
 	case "label":
-		return doc.Label
+		return doc.Label, true
 	case "summary":
-		return doc.Summary
+		return doc.Summary, true
 	case "type":
-		return doc.Type
+		return doc.Type, true
 	case "imageUrl":
-		return doc.ImageURL
+		return doc.ImageURL, true
 	default:
-		return ""
+		return "", false
 	}
 }
 
@@ -42,12 +42,12 @@ func (doc *DocumentLink) GetString(name string) string {
  * Setter Methods
  *********************************/
 
-func (doc *DocumentLink) SetInt64(name string, value int64) bool {
+func (doc *DocumentLink) SetInt64OK(name string, value int64) bool {
 	switch name {
 	case "publishDate":
 		doc.PublishDate = value
 		return true
-	case "unpdateDate":
+	case "updateDate":
 		doc.UpdateDate = value
 		return true
 	default:
@@ -55,7 +55,7 @@ func (doc *DocumentLink) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (doc *DocumentLink) SetString(name string, value string) bool {
+func (doc *DocumentLink) SetStringOK(name string, value string) bool {
 	switch name {
 	case "internalId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
@@ -86,7 +86,7 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
  * Tree Traversal Methods
  *********************************/
 
-func (doc *DocumentLink) GetChild(name string) (any, bool) {
+func (doc *DocumentLink) GetObjectOK(name string) (any, bool) {
 	switch name {
 	case "author":
 		return &doc.Author, true

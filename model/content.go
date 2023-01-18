@@ -25,9 +25,9 @@ const ContentFormatEditorJS = "editorjs"
 
 // Content represents the WYSIWYG body content in a Stream or Activity
 type Content struct {
-	Format string `json:"format" bson:"format" path:"format"`
-	Raw    string `json:"raw"    bson:"raw"    path:"raw"`
-	HTML   string `json:"html"   bson:"html"   path:"html"`
+	Format string `json:"format" bson:"format"`
+	Raw    string `json:"raw"    bson:"raw"`
+	HTML   string `json:"html"   bson:"html"`
 }
 
 // ContentSchema returns the JSON Schema for a Content object

@@ -15,22 +15,22 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID       `path:"userId"         json:"userId"          bson:"_id"`            // Unique identifier for this user.
-	GroupIDs        []primitive.ObjectID     `path:"groupIds"       json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
-	DisplayName     string                   `path:"displayName"    json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
-	StatusMessage   string                   `path:"statusMessage"  json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
-	Location        string                   `path:"location"       json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
-	Links           sliceof.Type[PersonLink] `path:"links"          json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
-	ProfileURL      string                   `path:"profileUrl"     json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string                   `path:"emailAddress"   json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
-	Username        string                   `path:"username"       json:"username"        bson:"username"`       // This is the primary public identifier for the user.
-	Password        string                   `path:"password"       json:"password"        bson:"password"`       // This password should be encrypted with BCrypt.
-	FollowerCount   int                      `path:"followerCount"  json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
-	FollowingCount  int                      `path:"followingCount" json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
-	BlockCount      int                      `path:"blockCount"     json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
-	IsOwner         bool                     `path:"isOwner"        json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
-	ImageID         primitive.ObjectID       `path:"imageId"        json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
-	PasswordReset   PasswordReset            `                      json:"passwordReset"   bson:"passwordReset"`  // Most recent password reset information.
+	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`            // Unique identifier for this user.
+	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
+	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
+	DisplayName     string                     `json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
+	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
+	Location        string                     `json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
+	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
+	ProfileURL      string                     `json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress    string                     `json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
+	Username        string                     `json:"username"        bson:"username"`       // This is the primary public identifier for the user.
+	Password        string                     `                       bson:"password"`       // This password should be encrypted with BCrypt.
+	FollowerCount   int                        `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
+	FollowingCount  int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
+	BlockCount      int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
+	IsOwner         bool                       `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	PasswordReset   PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
@@ -44,20 +44,23 @@ func NewUser() User {
 }
 
 func UserSchema() schema.Element {
+
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"userId":        schema.String{Format: "objectId"},
-			"groupIds":      schema.Array{Items: schema.String{Format: "objectId"}},
-			"displayName":   schema.String{MaxLength: 50},
-			"statusMessage": schema.String{MaxLength: 100},
-			"location":      schema.String{MaxLength: 50},
-			"links":         schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"emailAddress":  schema.String{Format: "email"},
-			"username":      schema.String{MaxLength: 50, Required: true},
-			"password":      schema.String{MaxLength: 255, Required: true},
-			"isOwner":       schema.Boolean{},
-			"profileUrl":    schema.String{Format: "url"},
-			"imageUrl":      schema.String{Format: "url"},
+			"userId":         schema.String{Format: "objectId"},
+			"groupIds":       id.SliceSchema(),
+			"imageId":        schema.String{Format: "objectId"},
+			"displayName":    schema.String{MaxLength: 64},
+			"statusMessage":  schema.String{MaxLength: 128},
+			"location":       schema.String{MaxLength: 64},
+			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"profileUrl":     schema.String{Format: "url"},
+			"emailAddress":   schema.String{Format: "email"},
+			"username":       schema.String{MaxLength: 32, Required: true},
+			"followerCount":  schema.Integer{},
+			"followingCount": schema.Integer{},
+			"blockCount":     schema.Integer{},
+			"isOwner":        schema.Boolean{},
 		},
 	}
 }

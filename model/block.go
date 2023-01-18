@@ -26,16 +26,16 @@ const BlockTypeExternal = "EXTERNAL"
 
 // Block represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Block struct {
-	BlockID  primitive.ObjectID `path:"blockId" json:"blockId" bson:"_id"`        // Unique identifier of this Block
-	UserID   primitive.ObjectID `path:"userId"  json:"userId"  bson:"userId"`     // Unique identifier of the User who owns this Block
-	Source   string             `path:"source"  json:"source"  bson:"source"`     // Source of the Block (e.g. "INTERNAL", "ACTIVITYPUB")
-	Type     string             `path:"type"    json:"type"    bson:"type"`       // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
-	Trigger  string             `path:"trigger" json:"trigger" bson:"trigger"`    // Parameter for this block type)
-	Comment  string             `path:"comment" json:"comment" bson:"comment"`    // Optional comment describing why this block exists
-	IsPublic bool               `path:"isPublic" json:"isPublic" bson:"isPublic"` // If TRUE, this record is visible publicly
-	IsActive bool               `path:"isActive" json:"isActive" bson:"isActive"` // If TRUE, this record is active
+	BlockID  primitive.ObjectID `json:"blockId" bson:"_id"`       // Unique identifier of this Block
+	UserID   primitive.ObjectID `json:"userId"  bson:"userId"`    // Unique identifier of the User who owns this Block
+	Source   string             `json:"source"  bson:"source"`    // Source of the Block (e.g. "INTERNAL", "ACTIVITYPUB")
+	Type     string             `json:"type"    bson:"type"`      // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
+	Trigger  string             `json:"trigger" bson:"trigger"`   // Parameter for this block type)
+	Comment  string             `json:"comment" bson:"comment"`   // Optional comment describing why this block exists
+	IsPublic bool               `json:"isPublic" bson:"isPublic"` // If TRUE, this record is visible publicly
+	IsActive bool               `json:"isActive" bson:"isActive"` // If TRUE, this record is active
 
-	journal.Journal `path:"journal" json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:"journal"`
 }
 
 func NewBlock() Block {
