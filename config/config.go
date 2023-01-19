@@ -6,23 +6,24 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Config defines all of the domains available on this server
 type Config struct {
-	Domains             set.Slice[Domain]   `path:"domains"             json:"domains"`             // Slice of one or more domain configurations
-	Providers           set.Slice[Provider] `path:"providers"           json:"providers"`           // Slice of one or more OAuth client configurations
-	Layouts             []Folder            `path:"layouts"             json:"layouts"`             // Folders containing all system layouts
-	Templates           []Folder            `path:"templates"           json:"templates"`           // Folders containing all stream templates
-	Emails              []Folder            `path:"emails"              json:"emails"`              // Folders containing email templates
-	AttachmentOriginals Folder              `path:"attachmentOriginals" json:"attachmentOriginals"` // Folder where original attachments will be stored
-	AttachmentCache     Folder              `path:"attachmentCache"     json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
-	Certificates        Folder              `path:"certificates"        json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
-	AdminEmail          string              `path:"adminEmail"          json:"adminEmail"`          // Email address of the administrator
-	Source              string              `path:"-"                   json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
-	Location            string              `path:"-"                   json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
-	MongoID             primitive.ObjectID  `path:"configId"            json:"_" bson:"_id"`        // Used as unique key for MongoDB
+	Domains             set.Slice[Domain]      `json:"domains"`             // Slice of one or more domain configurations
+	Providers           set.Slice[Provider]    `json:"providers"`           // Slice of one or more OAuth client configurations
+	Layouts             sliceof.Object[Folder] `json:"layouts"`             // Folders containing all system layouts
+	Templates           sliceof.Object[Folder] `json:"templates"`           // Folders containing all stream templates
+	Emails              sliceof.Object[Folder] `json:"emails"`              // Folders containing email templates
+	AttachmentOriginals Folder                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
+	AttachmentCache     Folder                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
+	Certificates        Folder                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
+	AdminEmail          string                 `json:"adminEmail"`          // Email address of the administrator
+	Source              string                 `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
+	Location            string                 `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
+	MongoID             primitive.ObjectID     `json:"_" bson:"_id"`        // Used as unique key for MongoDB
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -101,8 +102,8 @@ func Schema() schema.Schema {
 		Comment: "Validating schema for a server configuration",
 		Element: schema.Object{
 			Properties: schema.ElementMap{
-				"domains":             schema.Array{Items: DomainSchema().Element},
-				"providers":           schema.Array{Items: ProviderSchema().Element},
+				"domains":             schema.Array{Items: DomainSchema()},
+				"providers":           schema.Array{Items: ProviderSchema()},
 				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"layouts":             schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},

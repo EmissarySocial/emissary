@@ -1,18 +1,21 @@
 package config
 
 import (
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type SMTPConnection struct {
-	Hostname string `path:"hostname" json:"hostname"` // Server name to connect to
-	Username string `path:"username" json:"username"` // Username for authentication
-	Password string `path:"password" json:"password"` // Password/secret for authentication
-	Port     int    `path:"port"     json:"port"`     // Port to connect to
-	TLS      bool   `path:"tls"      json:"tls"`      // If TRUE, then use TLS to connect
+	Hostname string `json:"hostname"` // Server name to connect to
+	Username string `json:"username"` // Username for authentication
+	Password string `json:"password"` // Password/secret for authentication
+	Port     int    `json:"port"`     // Port to connect to
+	TLS      bool   `json:"tls"`      // If TRUE, then use TLS to connect
+}
+
+func NewSMTPConnection() SMTPConnection {
+	return SMTPConnection{}
 }
 
 func SMTPConnectionSchema() schema.Element {
@@ -31,7 +34,11 @@ func SMTPConnectionSchema() schema.Element {
 func (smtp SMTPConnection) Validate() error {
 	schema := SMTPConnectionSchema()
 	result := schema.Validate(smtp)
-	derp.Report(result)
+
+	if result.IsEmpty() {
+		return nil
+	}
+
 	return result
 }
 

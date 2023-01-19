@@ -5,11 +5,15 @@ import (
 )
 
 type Owner struct {
-	DisplayName    string `path:"displayName"     json:"displayName"     bson:"displayName"`
-	Username       string `path:"username"        json:"username"        bson:"username"`
-	EmailAddress   string `path:"emailAddress"    json:"emailAddress"    bson:"emailAddress"`
-	PhoneNumber    string `path:"phoneNumber"     json:"phoneNumber"     bson:"phoneNumber"`
-	MailingAddress string `path:"mailingAddress"  json:"mailingAddress"  bson:"mailingAddress"`
+	DisplayName    string `json:"displayName"     bson:"displayName"`
+	Username       string `json:"username"        bson:"username"`
+	EmailAddress   string `json:"emailAddress"    bson:"emailAddress"`
+	PhoneNumber    string `json:"phoneNumber"     bson:"phoneNumber"`
+	MailingAddress string `json:"mailingAddress"  bson:"mailingAddress"`
+}
+
+func NewOwner() Owner {
+	return Owner{}
 }
 
 func OwnerSchema() schema.Element {
