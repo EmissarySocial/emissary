@@ -22,9 +22,9 @@ func NewGroup() Group {
 
 func GroupSchema() schema.Element {
 	return schema.Object{
-		Properties: map[string]schema.Element{
+		Properties: schema.ElementMap{
 			"groupId": schema.String{Format: "objectId"},
-			"label":   schema.String{MaxLength: 50},
+			"label":   schema.String{MaxLength: 64, Required: true},
 		},
 	}
 }

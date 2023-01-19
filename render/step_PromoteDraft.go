@@ -27,7 +27,7 @@ func (step StepStreamPromoteDraft) Post(renderer Renderer) error {
 	factory := renderer.factory()
 
 	// Try to load the draft from the database, overwriting the stream already in the renderer
-	stream, err := factory.StreamDraft().Publish(renderer.objectID(), step.StateID)
+	stream, err := factory.StreamDraft().Promote(renderer.objectID(), step.StateID)
 
 	if err != nil {
 		return derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft")

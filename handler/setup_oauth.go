@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"github.com/labstack/echo/v4"
 )
 
@@ -108,8 +109,10 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 
 func setupOAuthForm(title string) form.Form {
 
+	providerSchema := schema.New(config.ProviderSchema())
+
 	return form.Form{
-		Schema: config.ProviderSchema(),
+		Schema: providerSchema,
 		Element: form.Element{
 			Type:        "layout-vertical",
 			Label:       title,

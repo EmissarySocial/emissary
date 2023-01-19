@@ -36,6 +36,7 @@ func (group *Group) SetStringOK(name string, value string) bool {
 
 	case "label":
 		group.Label = value
+		return true
 	}
 
 	return false

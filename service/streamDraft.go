@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -194,7 +195,7 @@ func (service *StreamDraft) LoadByToken(token string, result *model.Stream) erro
  * CUSTOM ACTIONS
  *******************************************/
 
-func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string) (model.Stream, error) {
+func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string) (model.Stream, error) {
 
 	var draft model.Stream
 	var stream model.Stream
@@ -216,6 +217,8 @@ func (service *StreamDraft) Publish(streamID primitive.ObjectID, stateID string)
 	stream.StateID = stateID
 	stream.Token = draft.Token
 	stream.Journal.DeleteDate = 0 // just in case...
+
+	spew.Dump("streamDraft.Promote", stream)
 
 	// Try to save the updated stream back to the database
 	if err := service.streamService.Save(&stream, "published"); err != nil {

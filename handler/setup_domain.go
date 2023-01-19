@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/schema"
 	"github.com/labstack/echo/v4"
 )
 
@@ -36,7 +37,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 
 		domainEditForm := setupDomainForm(header)
 
-		s := config.DomainSchema()
+		s := schema.New(config.DomainSchema())
 
 		formHTML, err := form.Editor(s, domainEditForm, domain, nil)
 
@@ -66,7 +67,7 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
 		}
 
-		s := config.DomainSchema()
+		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))

@@ -69,10 +69,8 @@ github.com/benpate/data v0.22.0/go.mod h1:VpaDjJioT5msVdk8Uwu074iANhvDdz2pVS5cDE
 github.com/benpate/data-mock v0.22.1 h1:xYvIV+dVWe6W9Uy3eVQaGgoOEeyAZvYPK3Es+kURbHU=
 github.com/benpate/data-mongo v0.22.1 h1:S8iJIcm82AJrsxHwpA2isgaV/FtesfoRxxCdKv42F7U=
 github.com/benpate/data-mongo v0.22.1/go.mod h1:nfXx8V3N29tplmlGS0ed4wtXEVpKUXWDi3Q45ShS0DM=
-github.com/benpate/derp v0.25.1 h1:1SqCDIdRIjN3SqAZLZteWlWJa7rtpeGwLKEtwFBP1lE=
-github.com/benpate/derp v0.25.1/go.mod h1:Qrtco2SAercNzKqb6WsaXvxn1E+/4DHBaWB+BwehJAo=
-github.com/benpate/digit v0.7.1 h1:3zxZx0sNLpShzx6c80m6BkVO6iJAa7JmJpuV6jyNN4Y=
-github.com/benpate/digit v0.7.1/go.mod h1:69iIcMaPSy1re1M4AIZFkDJrubxOGw6UhVzBJYWD118=
+github.com/benpate/derp v0.26.0 h1:AXjoUAfw0qF3Qnca1NuLcvjfgDaucP/By4KKyo9h0rs=
+github.com/benpate/derp v0.26.0/go.mod h1:Qrtco2SAercNzKqb6WsaXvxn1E+/4DHBaWB+BwehJAo=
 github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk=
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.6.0 h1:upJ6F8NNLTPPqMwxksn+PvGpWfUJOyDeolp9x0P9eKQ=
@@ -89,8 +87,6 @@ github.com/benpate/mediaserver v0.8.1 h1:4vfflpm2vh5yZAoMJAIedAH1EBc7CGpc580HwLJ
 github.com/benpate/mediaserver v0.8.1/go.mod h1:uUmK56Vv+BhRtwsEqPJxTCXUfRtJhh+O9PJShZUGNjw=
 github.com/benpate/remote v0.9.0 h1:SbVghdX+l45Tg5OIEMlcCbltpcan3EIcu5oQVT+sX1U=
 github.com/benpate/remote v0.9.0/go.mod h1:Nj9Ck3SgshdwWK7L9t1089vHtz8JcKnkRZ0Wjj7WHcE=
-github.com/benpate/rosetta v0.9.1 h1:J12spA04QTvUS4SLcBTxO0RlH6USzovtwzdTnIFR/9c=
-github.com/benpate/rosetta v0.9.1/go.mod h1:IwXMFGhWdDHzhmliUuTzLQI9+ZSEOgeZ0SmfO+A69Yk=
 github.com/benpate/steranko v0.12.1 h1:Bqeugi9qQ6ctmfcSfgxhiXxdjV3FjUqCEBuQD7jWE3Q=
 github.com/benpate/steranko v0.12.1/go.mod h1:3LxE9FGjo9CK/608KSpd+Bh4ZaSXVK7m4epjsqZz1is=
 github.com/benpate/table v0.4.1 h1:k+n13eJeqX0dDH9QMVRGo1x9JS3YOlvrDT11O1z63gM=

@@ -2,10 +2,13 @@ package set
 
 import (
 	"sort"
+
+	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // Slice is a simple in-memory slice-based set for arbitrary data.
-type Slice[V Value] []V
+type Slice[V Value] sliceof.Object[V]
 
 // NewSlice returns a new Slice that is populated with the given items.
 func NewSlice[V Value](values ...V) Slice[V] {
@@ -94,4 +97,31 @@ func (set *Slice[V]) Swap(i int, j int) {
 
 func (set *Slice[V]) Sort() {
 	sort.Sort(set)
+}
+
+/******************************************
+ * schema Interfaces
+ ******************************************/
+
+func (set *Slice[V]) GetObjectOK(name string) (any, bool) {
+
+	if index, ok := schema.Index(name); ok {
+
+		for index >= len(*set) {
+			var newItem V
+			*set = append(*set, newItem)
+		}
+
+		return &(*set)[index], true
+	}
+
+	return nil, false
+}
+
+func (set Slice[V]) Length() int {
+	return len(set)
+}
+
+func (set *Slice[V]) Remove(name string) {
+	set.Delete(name)
 }

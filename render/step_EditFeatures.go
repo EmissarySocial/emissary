@@ -7,13 +7,10 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 type StepEditFeatures struct{}
-
-type stepEditFeaturesTransaction struct {
-	TemplateIDs []string `path:"templateIds" form:"templateIds"`
-}
 
 func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 
@@ -39,8 +36,11 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 	featuresElement := form.Element{
 		Type:  "layout-vertical",
 		Label: "Add/Remove Features of this Stream",
-		Children: []form.Element{
-			{Type: "multiselect", Path: "templateIds", Description: "Check the features you want to add, drag to rearrange.", Options: maps.Map{"options": features, "sort": true}},
+		Children: []form.Element{{
+			Type:        "multiselect",
+			Path:        "templateIds",
+			Description: "Check the features you want to add, drag to rearrange.",
+			Options:     maps.Map{"options": features, "sort": true}},
 		},
 	}
 
@@ -92,4 +92,15 @@ func (step StepEditFeatures) Post(renderer Renderer) error {
 
 func (step StepEditFeatures) UseGlobalWrapper() bool {
 	return true
+}
+
+type stepEditFeaturesTransaction struct {
+	TemplateIDs sliceof.String `form:"templateIds"`
+}
+
+func (txn *stepEditFeaturesTransaction) GetObjectOK(name string) (any, bool) {
+	if name == "templateIds" {
+		return &txn.TemplateIDs, true
+	}
+	return nil, false
 }
