@@ -151,21 +151,30 @@ func (stream *Stream) SetStringOK(name string, value string) bool {
  *********************************/
 
 func (stream *Stream) GetObjectOK(name string) (any, bool) {
+
 	switch name {
+
 	case "permissions":
 		return &stream.Permissions, true
+
 	case "defaultAllow":
 		return &stream.DefaultAllow, true
+
 	case "document":
 		return &stream.Document, true
+
 	case "replyTo":
 		return &stream.InReplyTo, true
+
 	case "origin":
 		return &stream.Origin, true
+
 	case "content":
 		return &stream.Content, true
+
 	case "data":
 		return &stream.Data, true
+
 	default:
 		return nil, false
 	}

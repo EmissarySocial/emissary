@@ -24,7 +24,7 @@ type StepSetSimpleSharing struct {
 func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error {
 
 	streamRenderer := renderer.(*Stream)
-	model := streamRenderer.stream.Permissions.SimpleModel()
+	model := streamRenderer.stream.SimplePermissionModel()
 
 	// Try to write form HTML
 	factory := renderer.factory()
@@ -96,11 +96,11 @@ func (step StepSetSimpleSharing) Post(renderer Renderer) error {
 	// Build the stream criteria
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
-	stream.Permissions = model.NewPermissions()
+	stream.Permissions = model.NewStreamPermissions()
 
 	for _, groupID := range groupIDs {
 		for _, role := range step.Roles {
-			stream.Permissions.Assign(role, groupID)
+			stream.AssignPermission(role, groupID)
 		}
 	}
 

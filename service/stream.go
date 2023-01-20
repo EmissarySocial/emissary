@@ -128,7 +128,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	defaultRoles := template.Default().AllowedRoles(stream.StateID)
-	stream.DefaultAllow = stream.Permissions.Groups(defaultRoles...)
+	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
 
 	// RULE: Copy AsFeature flag from Template into Stream
 	stream.AsFeature = template.IsFeature()

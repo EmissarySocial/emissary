@@ -3,7 +3,9 @@ package model
 import (
 	"testing"
 
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 func TestStreamSchema(t *testing.T) {
@@ -47,4 +49,19 @@ func TestStreamSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &stream, tests)
+}
+
+func TestPermissionSchema(t *testing.T) {
+
+	m := mapof.NewObject[sliceof.String]()
+	s := schema.New(PermissionSchema())
+
+	table := []tableTestItem{
+		{"ABC.0", "FIRST VALUE", nil},
+		{"ABC.1", "SECOND VALUE", nil},
+		{"XYZ.0", "THIRD VALUE", nil},
+		{"XYZ.1", "FOURTH VALUE", nil},
+	}
+
+	tableTest_Schema(t, &s, &m, table)
 }
