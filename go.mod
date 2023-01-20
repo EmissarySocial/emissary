@@ -2,6 +2,7 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
+replace github.com/benpate/derp => ../../benpate/derp
 replace github.com/benpate/digit => ../../benpate/digit
 replace github.com/benpate/form => ../../benpate/form
 replace github.com/benpate/rosetta => ../../benpate/rosetta
