@@ -1,8 +1,7 @@
 package id
 
 import (
-	"sort"
-
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -57,40 +56,23 @@ func (slice *Slice) SetStringOK(name string, value string) bool {
 	return false
 }
 
-// Converts a value into a slice of ObjectIDs
-func SliceOfID(value any) Slice {
+func (slice *Slice) SetValue(value any) error {
 
-	switch v := value.(type) {
+	switch typed := value.(type) {
 
 	case []primitive.ObjectID:
-		return v
+		*slice = typed
+		return nil
 
 	case []string:
-		result := make([]primitive.ObjectID, len(v))
-		for index := range v {
-			result[index] = ID(v[index])
+		*slice = make([]primitive.ObjectID, len(typed))
+		for index := range typed {
+			item, _ := primitive.ObjectIDFromHex(typed[index])
+			(*slice)[index] = item
 		}
-		return result
+		return nil
+
+	default:
+		return derp.NewBadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
 	}
-
-	return make([]primitive.ObjectID, 0)
-}
-
-func SliceOfString(value []primitive.ObjectID) []string {
-	result := make([]string, len(value))
-
-	for index := range value {
-		result[index] = value[index].Hex()
-	}
-
-	return result
-}
-
-func Sort(value []primitive.ObjectID) []primitive.ObjectID {
-
-	sort.Slice(value, func(i int, j int) bool {
-		return (value[i].Hex() < value[j].Hex())
-	})
-
-	return value
 }
