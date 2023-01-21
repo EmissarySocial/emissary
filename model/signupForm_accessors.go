@@ -1,6 +1,20 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func SignupFormSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"title":   schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"message": schema.String{Required: true, MinLength: 1, MaxLength: 1000},
+			"groupId": schema.String{Format: "objectId"},
+			"active":  schema.Boolean{},
+		},
+	}
+}
 
 func (form SignupForm) GetBoolOK(name string) (bool, bool) {
 

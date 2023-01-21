@@ -20,9 +20,9 @@ func (summary FollowerSummary) Fields() []string {
 	return FollowerSummaryFields()
 }
 
-/*******************************************
+/******************************************
  * Other Methods
- *******************************************/
+ ******************************************/
 
 func (summary FollowerSummary) MethodIcon() string {
 	switch summary.Method {

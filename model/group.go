@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,15 +19,6 @@ func NewGroup() Group {
 	}
 }
 
-func GroupSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"groupId": schema.String{Format: "objectId"},
-			"label":   schema.String{MaxLength: 64, Required: true},
-		},
-	}
-}
-
 func GroupFields() []string {
 	return []string{"_id", "label"}
 }
@@ -37,17 +27,17 @@ func (userSummary Group) Fields() []string {
 	return GroupFields()
 }
 
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (group *Group) ID() string {
 	return group.GroupID.Hex()
 }
 
-/*******************************************
+/******************************************
  * Other Data Accessors
- *******************************************/
+ ******************************************/
 
 func (group *Group) LookupCode() form.LookupCode {
 	return form.LookupCode{

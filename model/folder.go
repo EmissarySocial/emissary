@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,29 +23,17 @@ func NewFolder() Folder {
 	}
 }
 
-// FolderSchema returns a Rosetta Schema for the Folder object
-func FolderSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"folderId": schema.String{Format: "objectId"},
-			"userId":   schema.String{Format: "objectId"},
-			"label":    schema.String{MaxLength: 100},
-			"rank":     schema.Integer{},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (folder Folder) ID() string {
 	return folder.FolderID.Hex()
 }
 
-/*******************************************
+/******************************************
  * Other Data Accessors
- *******************************************/
+ ******************************************/
 
 func (folder *Folder) LookupCode() form.LookupCode {
 	return form.LookupCode{
@@ -55,9 +42,9 @@ func (folder *Folder) LookupCode() form.LookupCode {
 	}
 }
 
-/*******************************************
+/******************************************
  * RoleStateEnumerator Interface
- *******************************************/
+ ******************************************/
 
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""

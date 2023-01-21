@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,33 +30,17 @@ func NewFollower() Follower {
 	}
 }
 
-func FollowerSchema() schema.Element {
-
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"followerId": schema.String{Format: "objectId"},
-			"parentId":   schema.String{Format: "objectId"},
-			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
-			"method":     schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"format":     schema.String{Enum: []string{MimeTypeActivityPub, MimeTypeAtom, MimeTypeHTML, MimeTypeJSONFeed, MimeTypeRSS, MimeTypeXML}},
-			"actor":      PersonLinkSchema(),
-			"data":       schema.Object{Wildcard: schema.String{MaxLength: 256}},
-			"expireDate": schema.Integer{BitSize: 64},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (follower *Follower) ID() string {
 	return follower.FollowerID.Hex()
 }
 
-/*******************************************
+/******************************************
  * RoleStateEnumerator Interface
- *******************************************/
+ ******************************************/
 
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""

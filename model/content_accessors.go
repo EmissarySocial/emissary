@@ -1,7 +1,20 @@
 package model
 
+import "github.com/benpate/rosetta/schema"
+
+// ContentSchema returns the JSON Schema for a Content object
+func ContentSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"format": schema.String{},
+			"raw":    schema.String{Format: "unsafe-any"},
+			"html":   schema.String{Format: "html"},
+		},
+	}
+}
+
 /*********************************
- * Getter Methods
+ * Getter Interfaces
  *********************************/
 
 func (content *Content) GetStringOK(name string) (string, bool) {
@@ -22,7 +35,7 @@ func (content *Content) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Setter Methods
+ * Setter Interfaces
  *********************************/
 
 func (content *Content) SetStringOK(name string, value string) bool {

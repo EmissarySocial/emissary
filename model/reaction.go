@@ -43,9 +43,9 @@ func ReactionSchema() schema.Element {
 	}
 }
 
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (reaction *Reaction) ID() string {
 	return reaction.ReactionID.Hex()

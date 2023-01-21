@@ -1,10 +1,22 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-/*******************************************
- * Getters
- *******************************************/
+func GroupSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"groupId": schema.String{Format: "objectId"},
+			"label":   schema.String{MaxLength: 64, Required: true},
+		},
+	}
+}
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (group *Group) GetStringOK(name string) (string, bool) {
 
@@ -20,9 +32,9 @@ func (group *Group) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-/*******************************************
- * Setters
- *******************************************/
+/******************************************
+ * Setter Interfaces
+ ******************************************/
 
 func (group *Group) SetStringOK(name string, value string) bool {
 

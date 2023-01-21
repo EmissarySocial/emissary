@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/maps"
-	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -52,37 +51,6 @@ func NewStream() Stream {
 	}
 }
 
-func StreamSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"streamId":      schema.String{Format: "objectId"},
-			"parentId":      schema.String{Format: "objectId"},
-			"token":         schema.String{Format: "token"},
-			"topLevelId":    schema.String{Format: "objectId"},
-			"templateId":    schema.String{},
-			"stateId":       schema.String{},
-			"permissions":   PermissionSchema(),
-			"document":      DocumentLinkSchema(),
-			"author":        PersonLinkSchema(),
-			"replyTo":       DocumentLinkSchema(),
-			"content":       ContentSchema(),
-			"rank":          schema.Integer{},
-			"asFeature":     schema.Boolean{},
-			"publishDate":   schema.Integer{BitSize: 64},
-			"unpublishDate": schema.Integer{BitSize: 64},
-		},
-	}
-}
-
-func PermissionSchema() schema.Element {
-
-	return schema.Object{
-		Wildcard: schema.Array{
-			Items: schema.String{Format: "objectId"},
-		},
-	}
-}
-
 // NewStreamPermissions returns a fully initialized Permissions object
 func NewStreamPermissions() mapof.Object[sliceof.String] {
 	return make(mapof.Object[sliceof.String])
@@ -100,6 +68,20 @@ func (stream *Stream) ID() string {
 /******************************************
  * Other Data Accessors
  ******************************************/
+
+// GetSort returns the sortable value for this stream, based onthe provided fieldName
+func (stream *Stream) GetSort(fieldName string) any {
+	switch fieldName {
+	case "publishDate":
+		return stream.PublishDate
+	case "document.label":
+		return stream.Document.Label
+	case "rank":
+		return stream.Rank
+	default:
+		return 0
+	}
+}
 
 // Links returns all resources linked to this Stream.  Some links may be empty.
 func (stream *Stream) Links() []Link {

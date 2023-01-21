@@ -1,28 +1,43 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/*********************************
- * Sortable Methods
- *********************************/
+func StreamSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"streamId":      schema.String{Format: "objectId"},
+			"parentId":      schema.String{Format: "objectId"},
+			"token":         schema.String{Format: "token"},
+			"topLevelId":    schema.String{Format: "objectId"},
+			"templateId":    schema.String{},
+			"stateId":       schema.String{},
+			"permissions":   PermissionSchema(),
+			"document":      DocumentLinkSchema(),
+			"author":        PersonLinkSchema(),
+			"replyTo":       DocumentLinkSchema(),
+			"content":       ContentSchema(),
+			"rank":          schema.Integer{},
+			"asFeature":     schema.Boolean{},
+			"publishDate":   schema.Integer{BitSize: 64},
+			"unpublishDate": schema.Integer{BitSize: 64},
+		},
+	}
+}
 
-func (stream *Stream) GetSort(fieldName string) any {
-	switch fieldName {
-	case "publishDate":
-		return stream.PublishDate
-	case "document.label":
-		return stream.Document.Label
-	case "rank":
-		return stream.Rank
-	default:
-		return 0
+func PermissionSchema() schema.Element {
+
+	return schema.Object{
+		Wildcard: schema.Array{
+			Items: schema.String{Format: "objectId"},
+		},
 	}
 }
 
 /*********************************
- * Schema Getter Interfaces
+ * Getter Interfaces
  *********************************/
 
 func (stream *Stream) GetBoolOK(name string) (bool, bool) {
@@ -75,7 +90,7 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Schema Setter Interfaces
+ * Setter Interfaces
  *********************************/
 
 func (stream *Stream) SetBoolOK(name string, value bool) bool {
@@ -147,7 +162,7 @@ func (stream *Stream) SetStringOK(name string, value string) bool {
 }
 
 /*********************************
- * Tree Traversal Methods
+ * Tree Traversal Interfaces
  *********************************/
 
 func (stream *Stream) GetObjectOK(name string) (any, bool) {

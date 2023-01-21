@@ -1,10 +1,28 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-/*******************************************
- * Getters
- *******************************************/
+func BlockSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"blockId":  schema.String{Format: "objectId"},
+			"userId":   schema.String{Format: "objectId"},
+			"source":   schema.String{Enum: []string{BlockSourceInternal, BlockSourceActivityPub}},
+			"type":     schema.String{Enum: []string{BlockTypeURL, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
+			"trigger":  schema.String{},
+			"comment":  schema.String{},
+			"isPublic": schema.Boolean{},
+			"isActive": schema.Boolean{},
+		},
+	}
+}
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (block *Block) GetBoolOK(name string) (bool, bool) {
 
@@ -46,9 +64,9 @@ func (block *Block) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-/*******************************************
- * Setters
- *******************************************/
+/******************************************
+ * Setter Interfaces
+ ******************************************/
 
 func (block *Block) SetBoolOK(name string, value bool) bool {
 

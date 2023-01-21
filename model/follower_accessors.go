@@ -1,12 +1,29 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/*******************************************
- * Getters
- *******************************************/
+func FollowerSchema() schema.Element {
+
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"followerId": schema.String{Format: "objectId"},
+			"parentId":   schema.String{Format: "objectId"},
+			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
+			"method":     schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
+			"format":     schema.String{Enum: []string{MimeTypeActivityPub, MimeTypeAtom, MimeTypeHTML, MimeTypeJSONFeed, MimeTypeRSS, MimeTypeXML}},
+			"actor":      PersonLinkSchema(),
+			"data":       schema.Object{Wildcard: schema.String{MaxLength: 256}},
+			"expireDate": schema.Integer{BitSize: 64},
+		},
+	}
+}
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (follower *Follower) GetInt64OK(name string) (int64, bool) {
 	switch name {
@@ -40,9 +57,9 @@ func (follower *Follower) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-/*******************************************
- * Setters
- *******************************************/
+/******************************************
+ * Setter Interfaces
+ ******************************************/
 
 func (follower *Follower) SetInt64OK(name string, value int64) bool {
 
@@ -88,9 +105,9 @@ func (follower *Follower) SetStringOK(name string, value string) bool {
 	return false
 }
 
-/*******************************************
+/******************************************
  * Tree Traversal
- *******************************************/
+ ******************************************/
 
 func (follower *Follower) GetObjectOK(name string) (any, bool) {
 

@@ -1,9 +1,30 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func MentionSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"mentionId":        schema.String{Format: "objectId"},
+			"streamId":         schema.String{Format: "objectId"},
+			"originUrl":        schema.String{Format: "uri"},
+			"authorName":       schema.String{MaxLength: 50},
+			"authorEmail":      schema.String{Format: "email"},
+			"authorWebsiteUrl": schema.String{Format: "uri"},
+			"authorPhotoUrl":   schema.String{Format: "uri"},
+			"authorStatus":     schema.String{MaxLength: 500},
+			"entryName":        schema.String{MaxLength: 50},
+			"entrySummary":     schema.String{MaxLength: 500},
+			"entryPhotoUrl":    schema.String{Format: "uri"},
+		},
+	}
+}
 
 /*********************************
- * Getter Methods
+ * Getter Interfaces
  *********************************/
 
 func (mention *Mention) GetStringOK(name string) (string, bool) {
@@ -46,7 +67,7 @@ func (mention *Mention) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Setter Methods
+ * Setter Interfaces
  *********************************/
 
 func (mention *Mention) SetStringOK(name string, value string) bool {

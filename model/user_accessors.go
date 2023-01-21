@@ -1,9 +1,35 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func UserSchema() schema.Element {
+
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"userId":         schema.String{Format: "objectId"},
+			"groupIds":       id.SliceSchema(),
+			"imageId":        schema.String{Format: "objectId"},
+			"displayName":    schema.String{MaxLength: 64},
+			"statusMessage":  schema.String{MaxLength: 128},
+			"location":       schema.String{MaxLength: 64},
+			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"profileUrl":     schema.String{Format: "url"},
+			"emailAddress":   schema.String{Format: "email"},
+			"username":       schema.String{MaxLength: 32, Required: true},
+			"followerCount":  schema.Integer{},
+			"followingCount": schema.Integer{},
+			"blockCount":     schema.Integer{},
+			"isOwner":        schema.Boolean{},
+		},
+	}
+}
 
 /*********************************
- * Getter Methods
+ * Getter Interfaces
  *********************************/
 
 func (user *User) GetBoolOK(name string) (bool, bool) {
@@ -67,7 +93,7 @@ func (user *User) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Setter Methods
+ * Setter Interfaces
  *********************************/
 
 func (user *User) SetBoolOK(name string, value bool) bool {

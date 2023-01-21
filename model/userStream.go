@@ -22,9 +22,9 @@ func NewUserStream() UserStream {
 	}
 }
 
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 // ID returns a string representation of the UserStream's unique identifier
 func (userStream *UserStream) ID() string {

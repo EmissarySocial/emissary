@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -44,32 +43,17 @@ func NewBlock() Block {
 	}
 }
 
-func BlockSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"blockId":  schema.String{Format: "objectId"},
-			"userId":   schema.String{Format: "objectId"},
-			"source":   schema.String{Enum: []string{BlockSourceInternal, BlockSourceActivityPub}},
-			"type":     schema.String{Enum: []string{BlockTypeURL, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
-			"trigger":  schema.String{},
-			"comment":  schema.String{},
-			"isPublic": schema.Boolean{},
-			"isActive": schema.Boolean{},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (block Block) ID() string {
 	return block.BlockID.Hex()
 }
 
-/*******************************************
+/******************************************
  * RoleStateEnumerator Interface
- *******************************************/
+ ******************************************/
 
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""

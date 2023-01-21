@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -43,40 +42,18 @@ func NewUser() User {
 	}
 }
 
-func UserSchema() schema.Element {
-
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"userId":         schema.String{Format: "objectId"},
-			"groupIds":       id.SliceSchema(),
-			"imageId":        schema.String{Format: "objectId"},
-			"displayName":    schema.String{MaxLength: 64},
-			"statusMessage":  schema.String{MaxLength: 128},
-			"location":       schema.String{MaxLength: 64},
-			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"profileUrl":     schema.String{Format: "url"},
-			"emailAddress":   schema.String{Format: "email"},
-			"username":       schema.String{MaxLength: 32, Required: true},
-			"followerCount":  schema.Integer{},
-			"followingCount": schema.Integer{},
-			"blockCount":     schema.Integer{},
-			"isOwner":        schema.Boolean{},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 // ID returns the primary key for this record
 func (user *User) ID() string {
 	return user.UserID.Hex()
 }
 
-/*******************************************
+/******************************************
  * Conversion Methods
- *******************************************/
+ ******************************************/
 
 func (user *User) PersonLink() PersonLink {
 	return PersonLink{
@@ -190,9 +167,9 @@ func (user *User) Claims() jwt.Claims {
 	return result
 }
 
-/*******************************************
+/******************************************
  * RoleStateEnumerator Interface
- *******************************************/
+ ******************************************/
 
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""
@@ -232,9 +209,9 @@ func (user *User) Roles(authorization *Authorization) []string {
 	return result
 }
 
-/*******************************************
+/******************************************
  * URLs
- *******************************************/
+ ******************************************/
 
 func (user *User) ActivityPubProfileURL() string {
 	return user.ProfileURL

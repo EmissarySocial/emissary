@@ -1,8 +1,6 @@
 package config
 
 import (
-	"github.com/benpate/rosetta/null"
-	"github.com/benpate/rosetta/schema"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
@@ -16,18 +14,6 @@ type SMTPConnection struct {
 
 func NewSMTPConnection() SMTPConnection {
 	return SMTPConnection{}
-}
-
-func SMTPConnectionSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"hostname": schema.String{MaxLength: 255, Required: true},
-			"username": schema.String{MaxLength: 255, Required: true},
-			"password": schema.String{MaxLength: 255, Required: true},
-			"port":     schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(65535), Required: true},
-			"tls":      schema.Boolean{},
-		},
-	}
 }
 
 // Validate confirms that the SMTPConnection matches ths SMTPConnectionSchema

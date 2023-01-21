@@ -1,11 +1,26 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// OriginLinkSchema returns a JSON Schema for OriginLink structures
+func OriginLinkSchema() schema.Element {
+
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"internalId": schema.String{Format: "objectId"},
+			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeTwitter}},
+			"url":        schema.String{Format: "url"},
+			"label":      schema.String{MaxLength: 128},
+			"imageUrl":   schema.String{Format: "url"},
+		},
+	}
+}
+
 /*********************************
- * Getter Methods
+ * Getter Interfaces
  *********************************/
 
 func (origin *OriginLink) GetStringOK(name string) (string, bool) {
@@ -32,7 +47,7 @@ func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Setter Methods
+ * Setter Interfaces
  *********************************/
 
 func (origin *OriginLink) SetStringOK(name string, value string) bool {

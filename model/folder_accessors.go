@@ -1,6 +1,25 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// FolderSchema returns a Rosetta Schema for the Folder object
+func FolderSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"folderId": schema.String{Format: "objectId"},
+			"userId":   schema.String{Format: "objectId"},
+			"label":    schema.String{MaxLength: 100},
+			"rank":     schema.Integer{},
+		},
+	}
+}
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (folder *Folder) GetIntOK(name string) (int, bool) {
 	switch name {
@@ -27,6 +46,10 @@ func (folder *Folder) GetStringOK(name string) (string, bool) {
 
 	return "", false
 }
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (folder *Folder) SetIntOK(name string, value int) bool {
 	switch name {

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,20 +34,6 @@ type OriginLink struct {
 // NewOriginLink returns a fully initialized OriginLink
 func NewOriginLink() OriginLink {
 	return OriginLink{}
-}
-
-// OriginLinkSchema returns a JSON Schema for OriginLink structures
-func OriginLinkSchema() schema.Element {
-
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"internalId": schema.String{Format: "objectId"},
-			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeTwitter}},
-			"url":        schema.String{Format: "url"},
-			"label":      schema.String{MaxLength: 128},
-			"imageUrl":   schema.String{Format: "url"},
-		},
-	}
 }
 
 // IsEmpty returns TRUE if this OriginLink is empty

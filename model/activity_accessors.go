@@ -1,10 +1,29 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-/*******************************************
- * Getter Methods
- *******************************************/
+// ActivitySchema returns a JSON Schema that describes this object
+func ActivitySchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"activityId":  schema.String{Format: "objectId"},
+			"userId":      schema.String{Format: "objectId"},
+			"origin":      OriginLinkSchema(),
+			"document":    DocumentLinkSchema(),
+			"contentHtml": schema.String{Format: "html"},
+			"contentJson": schema.String{Format: "json"},
+			"folderId":    schema.String{Format: "objectId"},
+			"readDate":    schema.Integer{BitSize: 64},
+		},
+	}
+}
+
+/******************************************
+ * Getter Interfaces
+ ******************************************/
 
 func (activity *Activity) GetInt64OK(name string) (int64, bool) {
 	switch name {
@@ -40,9 +59,9 @@ func (activity *Activity) GetStringOK(name string) (string, bool) {
 	}
 }
 
-/*******************************************
- * Setter Methods
- *******************************************/
+/******************************************
+ * Setter Interfaces
+ ******************************************/
 
 func (activity *Activity) SetInt64OK(name string, value int64) bool {
 	switch name {
@@ -91,9 +110,9 @@ func (activity *Activity) SetStringOK(name string, value string) bool {
 	return false
 }
 
-/*******************************************
+/******************************************
  * Tree Traversal Methods
- *******************************************/
+ ******************************************/
 
 func (activity *Activity) GetObjectOK(name string) (any, bool) {
 	switch name {

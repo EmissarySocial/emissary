@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,26 +29,9 @@ func NewDomain() Domain {
 	}
 }
 
-func DomainSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"domainId":    schema.String{Format: "objectId"},
-			"label":       schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"headerHtml":  schema.String{Format: "html"},
-			"footerHtml":  schema.String{Format: "html"},
-			"customCss":   schema.String{Format: "css"},
-			"bannerUrl":   schema.String{Format: "url"},
-			"forward":     schema.String{Format: "url"},
-			"signupForm":  SignupFormSchema(),
-			"socialLinks": schema.Boolean{},
-			// "clients":    ClientSchema(),
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 // ID returns the primary key of this object
 func (domain *Domain) ID() string {
@@ -99,9 +81,9 @@ func (domain *Domain) GetInt64(name string) (int64, error) {
 	return 0, derp.NewInternalError("model.Domain.GetInt64", "Invalid property", name)
 }
 
-/*******************************************
+/******************************************
  * Other Data Accessors
- *******************************************/
+ ******************************************/
 
 // HasSignupForm returns TRUE if this domain includes a valid signup form.
 func (domain *Domain) HasSignupForm() bool {

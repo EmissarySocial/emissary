@@ -1,11 +1,26 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func PersonLinkSchema() schema.Element {
+
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"internalId":   schema.String{Format: "objectId"},
+			"name":         schema.String{MaxLength: 128},
+			"profileUrl":   schema.String{Format: "url"},
+			"inboxUrl":     schema.String{Format: "url"},
+			"imageUrl":     schema.String{Format: "url"},
+			"emailAddress": schema.String{Format: "email"},
+		},
+	}
+}
+
 /*********************************
- * Getter  Methods
+ * Getter Interfaces
  *********************************/
 
 func (link *PersonLink) GetStringOK(name string) (string, bool) {
@@ -35,7 +50,7 @@ func (link *PersonLink) GetStringOK(name string) (string, bool) {
 }
 
 /*********************************
- * Setter Methods
+ * Setter Interfaces
  *********************************/
 
 func (link *PersonLink) SetStringOK(name string, value string) bool {

@@ -257,9 +257,9 @@ func (factory *Factory) Close() {
 	factory.userService.Close()
 }
 
-/*******************************************
+/******************************************
  * Domain Data Accessors
- *******************************************/
+ ******************************************/
 
 // ID implements the set.Set interface.  (Domains are indexed by their hostname)
 func (factory *Factory) ID() string {
@@ -284,9 +284,9 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
 	return factory.providers
 }
 
-/*******************************************
+/******************************************
  * Domain Model Services
- *******************************************/
+ ******************************************/
 
 func (factory *Factory) Model(name string) (service.ModelService, error) {
 
@@ -377,9 +377,9 @@ func (factory *Factory) Group() *service.Group {
 	return &factory.groupService
 }
 
-/*******************************************
+/******************************************
  * Render Objects
- *******************************************/
+ ******************************************/
 
 // Layout service manages global website layouts (managed globally by the server.Factory)
 func (factory *Factory) Layout() *service.Layout {
@@ -391,9 +391,9 @@ func (factory *Factory) Template() *service.Template {
 	return factory.templateService
 }
 
-/*******************************************
+/******************************************
  * ActivityPub
- *******************************************/
+ ******************************************/
 
 func (factory *Factory) ActivityPub_Actor() pub.FederatingActor {
 	return pub.NewFederatingActor(
@@ -419,9 +419,9 @@ func (factory *Factory) ActivityPub_Clock() gofed.Clock {
 	return gofed.NewClock()
 }
 
-/*******************************************
+/******************************************
  * Real-Time Update Channels
- *******************************************/
+ ******************************************/
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *RealtimeBroker {
@@ -433,9 +433,9 @@ func (factory *Factory) StreamUpdateChannel() chan model.Stream {
 	return factory.streamUpdateChannel
 }
 
-/*******************************************
+/******************************************
  * Media Server
- *******************************************/
+ ******************************************/
 
 // MediaServer manages all file uploads
 func (factory *Factory) MediaServer() mediaserver.MediaServer {
@@ -465,9 +465,9 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 	return afero.NewBasePathFs(base, path)
 }
 
-/*******************************************
+/******************************************
  * Other Non-Model Services
- *******************************************/
+ ******************************************/
 
 // Content returns the Content transformation service
 func (factory *Factory) Content() *service.Content {
@@ -525,9 +525,9 @@ func (factory *Factory) LookupProvider() form.LookupProvider {
 	return service.NewLookupProvider(factory.Group())
 }
 
-/*******************************************
+/******************************************
  * External APIs
- *******************************************/
+ ******************************************/
 
 // OAuth returns a fully populated OAuth service
 func (factory *Factory) Provider() *service.Provider {
@@ -576,9 +576,9 @@ func (factory *Factory) StripeClient() (client.API, error) {
 // Other libraries to make it here eventually...
 // Service APIs (like Twitter? Slack? Discord?, The FB?)
 
-/*******************************************
+/******************************************
  * Helper Utilities
- *******************************************/
+ ******************************************/
 
 // collection returns a data.Collection that matches the requested name.
 func (factory *Factory) collection(name string) data.Collection {

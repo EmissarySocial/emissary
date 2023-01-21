@@ -1,5 +1,21 @@
 package config
 
+import "github.com/benpate/rosetta/schema"
+
+func DomainSchema() schema.Element {
+
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"label":         schema.String{MaxLength: 100, Required: true},
+			"hostname":      schema.String{MaxLength: 255, Required: true},
+			"connectString": schema.String{MaxLength: 1000},
+			"databaseName":  schema.String{Pattern: `[a-zA-Z0-9-_]+`},
+			"smtp":          SMTPConnectionSchema(),
+			"owner":         OwnerSchema(),
+		},
+	}
+}
+
 func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	switch name {

@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/rosetta/html"
-	"github.com/benpate/rosetta/schema"
 )
 
 // ContentFormatHTML represents a content object whose Raw value is defined in HTML
@@ -28,17 +27,6 @@ type Content struct {
 	Format string `json:"format" bson:"format"`
 	Raw    string `json:"raw"    bson:"raw"`
 	HTML   string `json:"html"   bson:"html"`
-}
-
-// ContentSchema returns the JSON Schema for a Content object
-func ContentSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"format": schema.String{},
-			"raw":    schema.String{Format: "unsafe-any"},
-			"html":   schema.String{Format: "html"},
-		},
-	}
 }
 
 // NewHTMLContent creates a new HTML Content object with the specified HTML value

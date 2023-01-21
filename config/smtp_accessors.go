@@ -1,5 +1,22 @@
 package config
 
+import (
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
+)
+
+func SMTPConnectionSchema() schema.Element {
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"hostname": schema.String{MaxLength: 255, Required: true},
+			"username": schema.String{MaxLength: 255, Required: true},
+			"password": schema.String{MaxLength: 255, Required: true},
+			"port":     schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(65535), Required: true},
+			"tls":      schema.Boolean{},
+		},
+	}
+}
+
 func (smtp SMTPConnection) GetBoolOK(name string) (bool, bool) {
 
 	switch name {

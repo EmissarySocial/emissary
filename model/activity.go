@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -55,33 +54,17 @@ func NewOutboxActivity() Activity {
 	}
 }
 
-// ActivitySchema returns a JSON Schema that describes this object
-func ActivitySchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"activityId":  schema.String{Format: "objectId"},
-			"userId":      schema.String{Format: "objectId"},
-			"origin":      OriginLinkSchema(),
-			"document":    DocumentLinkSchema(),
-			"contentHtml": schema.String{Format: "html"},
-			"contentJson": schema.String{Format: "json"},
-			"folderId":    schema.String{Format: "objectId"},
-			"readDate":    schema.Integer{BitSize: 64},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 func (activity *Activity) ID() string {
 	return activity.ActivityID.Hex()
 }
 
-/*******************************************
+/******************************************
  * Other Methods
- *******************************************/
+ ******************************************/
 
 // UpdateWithFollowing updates the contents of this activity with a Following record
 func (activity *Activity) UpdateWithFollowing(following *Following) {

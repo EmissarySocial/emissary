@@ -3,8 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/digit"
-	"github.com/benpate/rosetta/null"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -65,40 +63,18 @@ func NewFollowing() Following {
 	}
 }
 
-// FollowingSchema returns a validating schema for Following objects
-func FollowingSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"followingId":   schema.String{Format: "objectId"},
-			"userId":        schema.String{Format: "objectId"},
-			"folderId":      schema.String{Format: "objectId"},
-			"label":         schema.String{Required: true, MaxLength: 128},
-			"url":           schema.String{Format: "url", Required: true, MaxLength: 1024},
-			"method":        schema.String{Required: true, Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"status":        schema.String{Enum: []string{FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
-			"statusMessage": schema.String{MaxLength: 1024},
-			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 7)},
-			"purgeDuration": schema.Integer{Minimum: null.NewInt64(0)},
-			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"errorCount":    schema.Integer{Minimum: null.NewInt64(0)},
-			"IsPublic":      schema.Boolean{},
-		},
-	}
-}
-
-/*******************************************
+/******************************************
  * data.Object Interface
- *******************************************/
+ ******************************************/
 
 // ID returns the primary key of this object
 func (following *Following) ID() string {
 	return following.FollowingID.Hex()
 }
 
-/*******************************************
+/******************************************
  * RoleStateEnumerator Interface
- *******************************************/
+ ******************************************/
 
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""
@@ -122,9 +98,9 @@ func (following Following) Roles(authorization *Authorization) []string {
 	return []string{}
 }
 
-/*******************************************
+/******************************************
  * Other Methods
- *******************************************/
+ ******************************************/
 
 func (following *Following) Origin() OriginLink {
 	return OriginLink{

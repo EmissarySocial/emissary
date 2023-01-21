@@ -57,9 +57,9 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBrok
 	return result
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh
 func (b *RealtimeBroker) Refresh() {
@@ -71,9 +71,9 @@ func (b *RealtimeBroker) Close() {
 	close(b.close)
 }
 
-/*******************************************
+/******************************************
  * LISTEN/NOTIFY METHODS
- *******************************************/
+ ******************************************/
 
 // Listen handles the addition & removal of clients, as well as
 // the broadcasting of messages out to clients that are currently attached.

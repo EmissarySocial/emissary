@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,22 +28,6 @@ type DocumentLink struct {
 
 func NewDocumentLink() DocumentLink {
 	return DocumentLink{}
-}
-
-func DocumentLinkSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"internalId":  schema.String{Format: "objectId"},
-			"author":      PersonLinkSchema(),
-			"url":         schema.String{Format: "url"},
-			"type":        schema.String{},
-			"label":       schema.String{MaxLength: 100},
-			"summary":     schema.String{MaxLength: 1000},
-			"imageUrl":    schema.String{Format: "url"},
-			"publishDate": schema.Integer{BitSize: 64},
-			"updateDate":  schema.Integer{BitSize: 64},
-		},
-	}
 }
 
 // IsEmpty returns TRUE if this record does not link to an internal
