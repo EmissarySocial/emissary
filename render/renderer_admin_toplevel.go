@@ -47,9 +47,9 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, a
 	}, nil
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this Stream
 func (w TopLevel) Render() (template.HTML, error) {

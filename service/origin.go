@@ -25,9 +25,9 @@ func NewOrigin(domainService *Domain, streamService *Stream, providerService *Pr
 	return result
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 func (service *Origin) Refresh(domainService *Domain, streamService *Stream, providerService *Provider) {
 	service.domainService = domainService
@@ -38,9 +38,9 @@ func (service *Origin) Refresh(domainService *Domain, streamService *Stream, pro
 func (service *Origin) Close() {
 }
 
-/*******************************************
+/******************************************
  * Polling Methods
- *******************************************/
+ ******************************************/
 
 func (service *Origin) PollAll() <-chan model.Stream {
 

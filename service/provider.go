@@ -18,18 +18,18 @@ func NewProvider(providers []config.Provider) Provider {
 	return result
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates the list of clients
 func (service *Provider) Refresh(providers []config.Provider) {
 	service.config = providers
 }
 
-/*******************************************
+/******************************************
  * Other Methods
- *******************************************/
+ ******************************************/
 
 // GetProvider returns a populated adapter for the given provider
 func (service *Provider) GetProvider(providerID string) (providers.Provider, bool) {

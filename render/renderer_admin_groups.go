@@ -49,9 +49,9 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
 	}, nil
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this Stream
 func (w Group) Render() (template.HTML, error) {
@@ -121,9 +121,9 @@ func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
-/*******************************************
+/******************************************
  * DATA ACCESSORS
- *******************************************/
+ ******************************************/
 
 func (w Group) GroupID() string {
 	return w.group.GroupID.Hex()
@@ -133,9 +133,9 @@ func (w Group) Label() string {
 	return w.group.Label
 }
 
-/*******************************************
+/******************************************
  * QUERY BUILDERS
- *******************************************/
+ ******************************************/
 
 func (w Group) Groups() *QueryBuilder[model.Group] {
 

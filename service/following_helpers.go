@@ -7,9 +7,9 @@ import (
 	"golang.org/x/net/html"
 )
 
-/*******************************************
+/******************************************
  * Helper Functions
- *******************************************/
+ ******************************************/
 
 // nodeAttribute searches for a specific attribute in a node and returns its value
 func nodeAttribute(node *html.Node, name string) string {

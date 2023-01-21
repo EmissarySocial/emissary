@@ -32,9 +32,9 @@ func NewFilesystem(embedded fs.FS) Filesystem {
 	}
 }
 
-/*******************************************
+/******************************************
  * READ ONLY METHODS
- *******************************************/
+ ******************************************/
 
 // GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
 func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
@@ -85,9 +85,9 @@ func (filesystem *Filesystem) GetFSs(folders ...config.Folder) []fs.FS {
 	return result
 }
 
-/*******************************************
+/******************************************
  * READ/WRITE METHODS
- *******************************************/
+ ******************************************/
 
 // GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
 func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
@@ -151,9 +151,9 @@ func (filesystem *Filesystem) GetAferos(folders ...config.Folder) []afero.Fs {
 	return result
 }
 
-/*******************************************
+/******************************************
  * REAL TIME WATCHING
- *******************************************/
+ ******************************************/
 
 // Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
 func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, closed <-chan bool) error {

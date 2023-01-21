@@ -28,9 +28,9 @@ type Stream struct {
 	Common
 }
 
-/*******************************************
+/******************************************
  * CONSTRUCTORS
- *******************************************/
+ ******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
 func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Stream, error) {
@@ -86,9 +86,9 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 	return NewStream(factory, ctx, template, stream, actionID)
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this Stream
 func (w Stream) Render() (template.HTML, error) {
@@ -132,9 +132,9 @@ func (w Stream) templateRole() string {
 	return w.template().Role
 }
 
-/*******************************************
+/******************************************
  * ACTION SHORTCUTS
- *******************************************/
+ ******************************************/
 
 // View executes a separate view for this Stream
 func (w Stream) View(actionID string) (template.HTML, error) {
@@ -152,9 +152,9 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
-/*******************************************
+/******************************************
  * STREAM DATA
- *******************************************/
+ ******************************************/
 
 // StreamID returns the unique ID for the stream being rendered
 func (w Stream) StreamID() string {
@@ -330,9 +330,9 @@ func (w Stream) Roles() []string {
 	return w.stream.Roles(&authorization)
 }
 
-/*******************************************
+/******************************************
  * RELATED STREAMS
- *******************************************/
+ ******************************************/
 
 // Features renders the "feature" action for every child stream
 func (w Stream) Features() (template.HTML, error) {
@@ -476,9 +476,9 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 	return mentionService.QueryByObjectID(w.stream.StreamID)
 }
 
-/*******************************************
+/******************************************
  * RELATED RESULTSETS
- *******************************************/
+ ******************************************/
 
 // Siblings returns all Streams that have the same "parent" as the current Stream
 func (w Stream) Siblings() QueryBuilder[model.StreamSummary] {
@@ -520,9 +520,9 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 	return result
 }
 
-/*******************************************
+/******************************************
  * ATTACHMENTS
- *******************************************/
+ ******************************************/
 
 // Reference to the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
@@ -534,9 +534,9 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 	return w.factory().Attachment().QueryByObjectID(model.AttachmentTypeStream, w.stream.StreamID)
 }
 
-/*******************************************
+/******************************************
  * SUBSCRIPTIONS
- *******************************************/
+ ******************************************/
 
 func (w Stream) Following() ([]model.Following, error) {
 
@@ -559,9 +559,9 @@ func (w Stream) Following() ([]model.Following, error) {
 	return result, nil
 }
 
-/*******************************************
+/******************************************
  * ACCESS PERMISSIONS
- *******************************************/
+ ******************************************/
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {

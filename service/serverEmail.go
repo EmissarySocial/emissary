@@ -36,9 +36,9 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 func (service *ServerEmail) Refresh(locations []config.Folder) {
 
@@ -65,9 +65,9 @@ func (service *ServerEmail) Refresh(locations []config.Folder) {
 	go service.watch()
 }
 
-/*******************************************
+/******************************************
  * REAL-TIME UPDATES
- *******************************************/
+ ******************************************/
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.

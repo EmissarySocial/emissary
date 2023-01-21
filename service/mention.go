@@ -44,9 +44,9 @@ func NewMention(collection data.Collection) Mention {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Mention) Refresh(collection data.Collection) {
@@ -58,9 +58,9 @@ func (service *Mention) Close() {
 	// Nothin to do here.
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // Query returns a slice containing all of the Mentions that match the provided criteria
 func (service *Mention) Query(criteria exp.Expression, options ...option.Option) ([]model.Mention, error) {
@@ -113,9 +113,9 @@ func (service *Mention) Delete(mention *model.Mention, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Mention) ObjectType() string {
@@ -173,17 +173,17 @@ func (service *Mention) Schema() schema.Schema {
 	return schema.New(model.MentionSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *Mention) QueryByObjectID(objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
 	return service.Query(exp.Equal("objectId", objectID), options...)
 }
 
-/*******************************************
+/******************************************
  * Web-Mention Helpers
- *******************************************/
+ ******************************************/
 
 func (service *Mention) FindLinks(body string) []string {
 

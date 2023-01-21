@@ -27,9 +27,9 @@ func NewEncryptionKey(collection data.Collection) EncryptionKey {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *EncryptionKey) Refresh(collection data.Collection) {
@@ -41,9 +41,9 @@ func (service *EncryptionKey) Close() {
 	// Nothin to do here.
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // List returns an iterator containing all of the EncryptionKeys who match the provided criteria
 func (service *EncryptionKey) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -81,9 +81,9 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *EncryptionKey) ObjectType() string {
@@ -141,9 +141,9 @@ func (service *EncryptionKey) Schema() schema.Schema {
 	return schema.New(model.EncryptionKeySchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *EncryptionKey) GetPrivateKey(userID primitive.ObjectID) (*rsa.PrivateKey, error) {
 
@@ -173,9 +173,9 @@ func (service *EncryptionKey) GetPublicKey(userID primitive.ObjectID) (*rsa.Publ
 	return service.getPublicKey(&encryptionKey)
 }
 
-/*******************************************
+/******************************************
  * Custom Actions
- *******************************************/
+ ******************************************/
 
 func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.EncryptionKey, error) {
 

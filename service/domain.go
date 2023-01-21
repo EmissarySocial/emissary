@@ -47,9 +47,9 @@ func NewDomain(collection data.Collection, configuration config.Domain, userServ
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Domain) Refresh(collection data.Collection, configuration config.Domain) {
@@ -62,9 +62,9 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 func (service *Domain) Close() {
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // Load retrieves an Domain from the database (or in-memory cache)
 func (service *Domain) Load(domain *model.Domain) error {
@@ -124,9 +124,9 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Generic Data Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Domain) ObjectType() string {
@@ -182,9 +182,9 @@ func (service *Domain) Schema() schema.Schema {
 	return schema.New(model.DomainSchema())
 }
 
-/*******************************************
+/******************************************
  * Provider Methods
- *******************************************/
+ ******************************************/
 
 // ActiveClients returns all active Clients for this domain
 func (service *Domain) ActiveClients() []model.Client {
@@ -256,9 +256,9 @@ func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider
 	return nil, false
 }
 
-/*******************************************
+/******************************************
  * OAuth Handshake Methods
- *******************************************/
+ ******************************************/
 
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
 func (service *Domain) OAuthCodeURL(providerID string) (string, error) {

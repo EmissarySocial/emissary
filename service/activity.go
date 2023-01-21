@@ -27,9 +27,9 @@ func NewActivity(collection data.Collection) Activity {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Activity) Refresh(collection data.Collection) {
@@ -41,9 +41,9 @@ func (service *Activity) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // New creates a newly initialized Activity that is ready to use
 func (service *Activity) New() model.Activity {
@@ -111,9 +111,9 @@ func (service *Activity) Delete(activity *model.Activity, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Generic Data Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Activity) ObjectType() string {
@@ -171,9 +171,9 @@ func (service *Activity) Schema() schema.Schema {
 	return schema.New(model.ActivitySchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Query Methods
- *******************************************/
+ ******************************************/
 
 func (service *Activity) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
@@ -248,9 +248,9 @@ func (service *Activity) LoadFromInboxByURL(userID primitive.ObjectID, url strin
 	return service.Load(criteria, result)
 }
 
-/*******************************************
+/******************************************
  * Custom Behaviors
- *******************************************/
+ ******************************************/
 
 // SetReadDate updates the readDate for a single Activity IF it is not already read
 func (service *Activity) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {

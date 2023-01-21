@@ -49,9 +49,9 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
 	}, nil
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this User
 func (w User) Render() (template.HTML, error) {
@@ -120,9 +120,9 @@ func (w User) executeTemplate(writer io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
-/*******************************************
+/******************************************
  * DATA ACCESSORS
- *******************************************/
+ ******************************************/
 
 func (w User) UserID() string {
 	return w.user.UserID.Hex()
@@ -140,9 +140,9 @@ func (w User) ImageURL() string {
 	return w.user.ActivityPubAvatarURL()
 }
 
-/*******************************************
+/******************************************
  * QUERY BUILDERS
- *******************************************/
+ ******************************************/
 
 func (w User) Users() *QueryBuilder[model.UserSummary] {
 
@@ -160,9 +160,9 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 	return &result
 }
 
-/*******************************************
+/******************************************
  * ADDITIONAL DATA
- *******************************************/
+ ******************************************/
 
 // AssignedGroups lists all groups to which the current user is assigned.
 func (w User) AssignedGroups() ([]model.Group, error) {

@@ -1,6 +1,6 @@
-/***************************
- * INPUT ELEMENTS
- ***************************/
+/******************************************
+ * Input Elements
+ ******************************************/
 
 input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input {
 	border: solid 1px var(--input-border);
@@ -67,7 +67,9 @@ input[type=radio] {
 	border: none;
 }
 
-/** TOGGLE CONTROLS ********/
+/******************************************
+ * Toggle Controls
+ ******************************************/
 
 .toggle-container {
 	cursor:pointer;
@@ -127,7 +129,9 @@ input[type=radio] {
 	padding-left:0.5em;
 }
 
-/** MULTI-SELECT ********/
+/****************************************** 
+ * Multi-Select
+ ******************************************/
 
 .multiselect {
 	display:flex;
@@ -199,9 +203,9 @@ input[type=radio] {
 }
 
 
-/***************************
- * SUBMIT BUTTONS
- ***************************/
+/******************************************
+ * Submit Buttons
+ ******************************************/
 
 button,
 .button {
@@ -319,9 +323,9 @@ button[disabled].barberpole
   animation: barberpole 3s linear infinite;
 }
 
-/***************************
- * FORM LAYOUTS
- ***************************/
+/******************************************
+ * Form Layouts
+ ******************************************/
 
 .layout-vertical {
 	display:block;
@@ -386,9 +390,9 @@ button[disabled].barberpole
 	display:block;
 }
 
-/***************************
- * FORM LAYOUTS
- ***************************/
+/******************************************
+ * Mist Layouts
+ ******************************************/
 
 .height100 {height:100px;}
 .height200 {height:200px;}
@@ -410,9 +414,9 @@ button[disabled].barberpole
 }
 
 
-/***************************
- * SPINNER
- ***************************/
+/******************************************
+ * Spinner
+ ******************************************/
 
 .spin {
 	display:inline-block;

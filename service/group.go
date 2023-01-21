@@ -26,9 +26,9 @@ func NewGroup(collection data.Collection) Group {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Group) Refresh(collection data.Collection) {
@@ -40,9 +40,9 @@ func (service *Group) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 func (service *Group) Query(criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
 	result := make([]model.Group, 0)
@@ -93,9 +93,9 @@ func (service *Group) Delete(group *model.Group, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Group) ObjectType() string {
@@ -153,9 +153,9 @@ func (service *Group) Schema() schema.Schema {
 	return schema.New(model.GroupSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 // LoadByID loads a single model.Group object that matches the provided groupID
 func (service *Group) LoadByID(groupID primitive.ObjectID, result *model.Group) error {

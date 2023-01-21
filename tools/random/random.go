@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-/*******************************************
+/******************************************
  * Modified from original source code (MIT licensed) at:
  * https://blog.questionable.services/article/generating-secure-random-numbers-crypto-rand/
- *******************************************/
+ ******************************************/
 
 // GenerateBytes returns securely generated random bytes.
 // It will return an error if the system's secure random

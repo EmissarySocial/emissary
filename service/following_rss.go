@@ -10,9 +10,9 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-/*******************************************
+/******************************************
  * Connection Methods
- *******************************************/
+ ******************************************/
 
 func (service *Following) import_RSS(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 

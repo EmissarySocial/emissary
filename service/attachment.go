@@ -28,9 +28,9 @@ func NewAttachment(collection data.Collection, mediaServer mediaserver.MediaServ
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Attachment) Refresh(collection data.Collection) {
@@ -42,9 +42,9 @@ func (service *Attachment) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // New creates a newly initialized Attachment that is ready to use
 func (service *Attachment) New() model.Attachment {
@@ -113,9 +113,9 @@ func (service *Attachment) Schema() schema.Schema {
 	return schema.New(model.AttachmentSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *Attachment) QueryByObjectID(objectType string, objectID primitive.ObjectID) ([]model.Attachment, error) {
 	return service.Query(

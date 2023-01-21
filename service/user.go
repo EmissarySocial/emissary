@@ -42,9 +42,9 @@ func NewUser(userCollection data.Collection, followerCollection data.Collection,
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection) {
@@ -59,9 +59,9 @@ func (service *User) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -122,9 +122,9 @@ func (service *User) Delete(user *model.User, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Generic Data Functions
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *User) ObjectType() string {
@@ -182,9 +182,9 @@ func (service *User) Schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *User) ListOwners() (data.Iterator, error) {
 	return service.List(exp.Equal("isOwner", true))
@@ -260,9 +260,9 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
 }
 
-/*******************************************
+/******************************************
  * Custom Actions
- *******************************************/
+ ******************************************/
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
 	err := queries.SetFollowersCount(service.collection, service.followers, userID)
@@ -390,9 +390,9 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
 	}
 }
 
-/*******************************************
+/******************************************
  * WebFinger Behavior
- *******************************************/
+ ******************************************/
 
 func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 

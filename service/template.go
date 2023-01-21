@@ -48,9 +48,9 @@ func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap 
 	return &service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 func (service *Template) Refresh(locations []config.Folder) {
 
@@ -77,9 +77,9 @@ func (service *Template) Refresh(locations []config.Folder) {
 	go service.watch()
 }
 
-/*******************************************
+/******************************************
  * REAL-TIME UPDATES
- *******************************************/
+ ******************************************/
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
@@ -172,9 +172,9 @@ func (service *Template) loadTemplates() error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // List returns all templates that match the provided criteria
 func (service *Template) List(filter func(*model.Template) bool) []form.LookupCode {
@@ -224,9 +224,9 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	return nil, derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID, keys)
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 // ListFeatures returns all templates that are used as "feature" templates
 func (service *Template) ListFeatures() []form.LookupCode {
@@ -264,9 +264,9 @@ func (service *Template) ListByContainerLimited(containedByRole string, limits [
 	return service.List(filter)
 }
 
-/*******************************************
+/******************************************
  * OTHER DATA ACCESS METHODS
- *******************************************/
+ ******************************************/
 
 // State returns the detailed State information associated with this Stream
 func (service *Template) State(templateID string, stateID string) (model.State, error) {

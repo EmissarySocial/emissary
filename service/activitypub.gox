@@ -18,9 +18,9 @@ type ActivityPub struct {
 	streamService *Stream
 }
 
-/*******************************************
+/******************************************
  * Action Methods
- *******************************************/
+ ******************************************/
 
 func (service *ActivityPub) Send(actor pub.Actor, document vocab.ActivityStreamsDocument) error {
 
@@ -30,9 +30,9 @@ func (service *ActivityPub) Send(actor pub.Actor, document vocab.ActivityStreams
 	sendActivity, err := actor.Send(background, outboxIRI, document)
 }
 
-/*******************************************
+/******************************************
  * Actor Methods
- *******************************************/
+ ******************************************/
 
 func (service *ActivityPub) LoadActor(userID primitive.ObjectID) (vocab.ActivityStreamsPerson, error) {
 
@@ -75,9 +75,9 @@ func (service *ActivityPub) Actor(user *model.User) (vocab.ActivityStreamsPerson
 	return person, nil
 }
 
-/*******************************************
+/******************************************
  * Stream Functions
- *******************************************/
+ ******************************************/
 
 func (service *ActivityPub) LoadStream(streamID primitive.ObjectID) (vocab.ActivityStreamsDocument, error) {
 
@@ -110,9 +110,9 @@ func (service *ActivityPub) StreamID(streamID primitive.ObjectID) string {
 	return service.host + "/.activitypub/stream/" + streamID.Hex()
 }
 
-/*******************************************
+/******************************************
  * Helper Functions
- *******************************************/
+ ******************************************/
 
 func ActorID(host string, userID primitive.ObjectID) *url.URL {
 	return asURL(host + "/.activitypub/actor/" + userID.Hex())

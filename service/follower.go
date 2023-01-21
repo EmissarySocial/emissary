@@ -29,9 +29,9 @@ func NewFollower(collection data.Collection, userService *User, host string) Fol
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Follower) Refresh(collection data.Collection) {
@@ -43,9 +43,9 @@ func (service *Follower) Close() {
 	// Nothin to do here.
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 func (service *Follower) Query(criteria exp.Expression, options ...option.Option) ([]model.Follower, error) {
 	result := make([]model.Follower, 0)
@@ -98,9 +98,9 @@ func (service *Follower) Delete(follower *model.Follower, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Follower) ObjectType() string {
@@ -158,9 +158,9 @@ func (service *Follower) Schema() schema.Schema {
 	return schema.New(model.FollowerSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, follower *model.Follower) error {
 	followerID, err := primitive.ObjectIDFromHex(token)
@@ -185,9 +185,9 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 	return result, nil
 }
 
-/*******************************************
+/******************************************
  * ActivityPub Queries
- *******************************************/
+ ******************************************/
 
 // ListActivityPub returns an iterator containing all of the Followers of specific parentID
 func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
@@ -199,9 +199,9 @@ func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ..
 	return service.List(criteria, options...)
 }
 
-/*******************************************
+/******************************************
  * WebSub Queries
- *******************************************/
+ ******************************************/
 
 // ListWebSub returns an iterator containing all of the Followers of specific parentID
 func (service *Follower) ListWebSub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {

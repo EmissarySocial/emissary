@@ -44,9 +44,9 @@ func NewStream(collection data.Collection, templateService *Template, attachment
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Stream) Refresh(hostName string, collection data.Collection, draftService *StreamDraft) {
@@ -60,9 +60,9 @@ func (service *Stream) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // New returns a new stream that uses the named template.
 func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
@@ -228,9 +228,9 @@ func (service *Stream) DeleteMany(criteria exp.Expression, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Generic Data Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Stream) ObjectType() string {
@@ -289,9 +289,9 @@ func (service *Stream) Schema() schema.Schema {
 	return schema.New(model.StreamSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 // ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListTopLevel() (data.Iterator, error) {
@@ -514,18 +514,18 @@ func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID)
 	return queries.MaxRank(ctx, service.collection, parentID)
 }
 
-/*******************************************
+/******************************************
  * Outbox Queries (may move to separate service later)
- *******************************************/
+ ******************************************/
 
 func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
 	criteria = criteria.AndEqual("ownerId", ownerID)
 	return service.QuerySummary(criteria, options...)
 }
 
-/*******************************************
+/******************************************
  * Custom Actions
- *******************************************/
+ ******************************************/
 
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
@@ -702,9 +702,9 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * WebFinger Behavior
- *******************************************/
+ ******************************************/
 
 func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")

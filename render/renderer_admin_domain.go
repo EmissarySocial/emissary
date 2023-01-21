@@ -53,9 +53,9 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 	return result, nil
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this Stream
 func (w Domain) Render() (template.HTML, error) {
@@ -129,18 +129,18 @@ func (w Domain) PageTitle() string {
 	return "Settings"
 }
 
-/*******************************************
+/******************************************
  * Other Data Accessors
- *******************************************/
+ ******************************************/
 
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w.domain.SignupForm
 }
 
-/*******************************************
+/******************************************
  * OTHER METHODS
- *******************************************/
+ ******************************************/
 
 func (w Domain) Providers() []form.LookupCode {
 

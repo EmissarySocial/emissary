@@ -44,9 +44,9 @@ func NewFollowing(collection data.Collection, streamService *Stream, userService
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Following) Refresh(collection data.Collection) {
@@ -113,9 +113,9 @@ func (service *Following) Start() {
 	}
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // New creates a newly initialized Following that is ready to use
 func (service *Following) New() model.Following {
@@ -193,9 +193,9 @@ func (service *Following) Delete(following *model.Following, note string) error 
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Following) ObjectType() string {
@@ -254,9 +254,9 @@ func (service *Following) Schema() schema.Schema {
 	return schema.New(model.FollowingSchema())
 }
 
-/*******************************************
+/******************************************
  * ActivityPub Queries
- *******************************************/
+ ******************************************/
 
 func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
@@ -265,9 +265,9 @@ func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...
 	return service.List(criteria, options...)
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 // QueryByUserID returns a slice of all following for a given user
 func (service *Following) QueryByUserID(userID primitive.ObjectID) ([]model.FollowingSummary, error) {
@@ -321,9 +321,9 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 	return service.LoadByID(userID, followingID, result)
 }
 
-/*******************************************
+/******************************************
  * Custom Actions
- *******************************************/
+ ******************************************/
 
 // PurgeActivity removes all inbox items that are past their expiration date
 func (service *Following) PurgeActivity(following model.Following) error {

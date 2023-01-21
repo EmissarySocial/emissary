@@ -26,9 +26,9 @@ func NewUserStream(collection data.Collection, ctx context.Context) UserStream {
 	}
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // List returns an iterator containing all of the UserStreams who match the provided criteria
 func (service *UserStream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {

@@ -45,9 +45,9 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
 	}, nil
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // Render generates the string value for this Profile
 func (w Profile) Render() (template.HTML, error) {
@@ -146,9 +146,9 @@ func (w Profile) UserCan(actionID string) bool {
 	return action.UserCan(w.user, &authorization)
 }
 
-/*******************************************
+/******************************************
  * DATA ACCESSORS
- *******************************************/
+ ******************************************/
 
 func (w Profile) UserID() string {
 	return w.user.UserID.Hex()
@@ -241,9 +241,9 @@ func (w Profile) ActivityPubPublicKeyURL() string {
 	return w.user.ActivityPubPublicKeyURL()
 }
 
-/*******************************************
+/******************************************
  * QUERY BUILDERS
- *******************************************/
+ ******************************************/
 
 func (w Profile) Inbox() ([]model.Activity, error) {
 

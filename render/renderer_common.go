@@ -44,9 +44,9 @@ func NewCommon(factory Factory, context *steranko.Context, template *model.Templ
 	}
 }
 
-/*******************************************
+/******************************************
  * RENDERER INTERFACE
- *******************************************/
+ ******************************************/
 
 // context returns request context embedded in this renderer.
 func (w Common) factory() Factory {
@@ -74,9 +74,9 @@ func (w Common) BannerURL() string {
 	return ""
 }
 
-/*******************************************
+/******************************************
  * Page Defaults
- *******************************************/
+ ******************************************/
 
 func (w Common) PageTitle() string {
 	return ""
@@ -86,9 +86,9 @@ func (w Common) Summary() string {
 	return ""
 }
 
-/*******************************************
+/******************************************
  * Request Info
- *******************************************/
+ ******************************************/
 
 // Host returns the protocol + the Hostname
 func (w Common) Host() string {
@@ -213,9 +213,9 @@ func (w Common) SetString(name string, value string) {
 	w.requestData.SetString(name, value)
 }
 
-/*******************************************
+/******************************************
  * DOMAIN DATA
- *******************************************/
+ ******************************************/
 
 func (w Common) DomainLabel() (string, error) {
 	if domain, err := w.getDomain(); err != nil {
@@ -311,9 +311,9 @@ func (w Common) authorization() model.Authorization {
 	return getAuthorization(w._context)
 }
 
-/*******************************************
+/******************************************
  * MISC HELPER FUNCTIONS
- *******************************************/
+ ******************************************/
 
 func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
 	if w._template == nil {
@@ -382,9 +382,9 @@ func (w *Common) getDomain() (*model.Domain, error) {
 	return &w.domain, nil
 }
 
-/*******************************************
+/******************************************
  * GLOBAL QUERIES
- *******************************************/
+ ******************************************/
 
 // TopLevel returns an array of Streams that have a Zero ParentID
 func (w Common) TopLevel() (sliceof.Object[model.StreamSummary], error) {
@@ -395,9 +395,9 @@ func (w Common) TopLevel() (sliceof.Object[model.StreamSummary], error) {
 	return result, err
 }
 
-/*******************************************
+/******************************************
  * ADDITIONAL DATA
- *******************************************/
+ ******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
 func (w Common) AdminSections() []form.LookupCode {

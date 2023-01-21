@@ -26,9 +26,9 @@ func NewBlock(collection data.Collection, userService *User) Block {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Block) Refresh(collection data.Collection) {
@@ -40,9 +40,9 @@ func (service *Block) Close() {
 	// Nothin to do here.
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // List returns an iterator containing all of the Blocks who match the provided criteria
 func (service *Block) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -91,9 +91,9 @@ func (service *Block) Delete(block *model.Block, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Block) ObjectType() string {
@@ -151,9 +151,9 @@ func (service *Block) Schema() schema.Schema {
 	return schema.New(model.BlockSchema())
 }
 
-/*******************************************
+/******************************************
  * CustomQueries
- *******************************************/
+ ******************************************/
 
 func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
 	blockID, err := primitive.ObjectIDFromHex(token)
@@ -166,9 +166,9 @@ func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block
 	return service.Load(criteria, block)
 }
 
-/*******************************************
+/******************************************
  * Custom Filters
- *******************************************/
+ ******************************************/
 
 // AllowSender returns TRUE if the designated User accepts documents from this sender (based on their blocklist settings)
 func (service *Block) AllowSender(userID primitive.ObjectID, person *model.PersonLink) (bool, error) {

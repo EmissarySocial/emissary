@@ -26,9 +26,9 @@ func NewFolder(collection data.Collection) Folder {
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Folder) Refresh(collection data.Collection) {
@@ -40,9 +40,9 @@ func (service *Folder) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
 // New creates a newly initialized Folder that is ready to use
 func (service *Folder) New() model.Folder {
@@ -98,9 +98,9 @@ func (service *Folder) Delete(inboxItem *model.Folder, note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * Model Service Methods
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *Folder) ObjectType() string {
@@ -158,9 +158,9 @@ func (service *Folder) Schema() schema.Schema {
 	return schema.New(model.FolderSchema())
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 func (service *Folder) QueryByUserID(userID primitive.ObjectID) ([]model.Folder, error) {
 	return service.Query(exp.Equal("userId", userID), option.SortAsc("label"))
@@ -192,9 +192,9 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
 	return service.Load(criteria, result)
 }
 
-/*******************************************
+/******************************************
  * Misc Actions
- *******************************************/
+ ******************************************/
 
 func (service *Folder) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
 	return NewFolderLookupProvider(service, userID)

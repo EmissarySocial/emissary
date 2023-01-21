@@ -44,9 +44,9 @@ func NewLayout(filesystemService Filesystem, funcMap template.FuncMap, locations
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 func (service *Layout) Refresh(locations []config.Folder) {
 
@@ -66,9 +66,9 @@ func (service *Layout) Refresh(locations []config.Folder) {
 	go service.Watch()
 }
 
-/*******************************************
+/******************************************
  * REAL TIME UPDATES
- *******************************************/
+ ******************************************/
 
 // watch must be run as a goroutine, and constantly monitors the
 // "Updates" channel for news that a template has been updated.
@@ -179,9 +179,9 @@ func (service *Layout) loadLayouts() error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * LAYOUT ACCESSORS
- *******************************************/
+ ******************************************/
 
 func (service *Layout) Appearance() *model.Layout {
 	return &service.appearance
@@ -211,9 +211,9 @@ func (service *Layout) User() *model.Layout {
 	return &service.user
 }
 
-/*******************************************
+/******************************************
  * HELPER METHODS
- *******************************************/
+ ******************************************/
 
 // loadFromFilesystem retrieves the template from the disk and parses it into
 func (service *Layout) setLayout(name string, layout model.Layout) error {

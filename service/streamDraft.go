@@ -27,9 +27,9 @@ func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDra
 	return service
 }
 
-/*******************************************
+/******************************************
  * Lifecycle Methods
- *******************************************/
+ ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *StreamDraft) Refresh(collection data.Collection) {
@@ -41,13 +41,13 @@ func (service *StreamDraft) Close() {
 
 }
 
-/*******************************************
+/******************************************
  * Common Data Methods
- *******************************************/
+ ******************************************/
 
-/*******************************************
+/******************************************
  * COMMON DATA FUNCTIONS
- *******************************************/
+ ******************************************/
 
 // New creates a newly initialized StreamDraft that is ready to use
 func (service *StreamDraft) New() model.Stream {
@@ -106,9 +106,9 @@ func (service *StreamDraft) Delete(draft *model.Stream, _note string) error {
 	return nil
 }
 
-/*******************************************
+/******************************************
  * GENERIC DATA FUNCTIONS
- *******************************************/
+ ******************************************/
 
 // ObjectType returns the type of object that this service manages
 func (service *StreamDraft) ObjectType() string {
@@ -167,9 +167,9 @@ func (service *StreamDraft) Schema() schema.Schema {
 	return schema.New(nil)
 }
 
-/*******************************************
+/******************************************
  * Custom Queries
- *******************************************/
+ ******************************************/
 
 // LoadByID returns a single Stream that matches a particular StreamID
 func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
@@ -190,9 +190,9 @@ func (service *StreamDraft) LoadByToken(token string, result *model.Stream) erro
 	return service.Load(criteria, result)
 }
 
-/*******************************************
+/******************************************
  * CUSTOM ACTIONS
- *******************************************/
+ ******************************************/
 
 func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string) (model.Stream, error) {
 
