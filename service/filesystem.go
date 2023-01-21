@@ -70,18 +70,19 @@ func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
 }
 
 // GetFSs returns multiple fs.FS filesystems
-func (filesystem *Filesystem) GetFSs(folders ...config.Folder) ([]fs.FS, error) {
+func (filesystem *Filesystem) GetFSs(folders ...config.Folder) []fs.FS {
 
 	result := make([]fs.FS, len(folders))
-	var errAcc error
 
-	for i, folder := range folders {
-		item, err := filesystem.GetFS(folder)
-		result[i] = item
-		errAcc = derp.Append(errAcc, err)
+	for _, folder := range folders {
+		if item, err := filesystem.GetFS(folder); err == nil {
+			result = append(result, item)
+		} else {
+			derp.Report(err)
+		}
 	}
 
-	return result, errAcc
+	return result
 }
 
 /*******************************************
@@ -135,18 +136,19 @@ func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
 }
 
 // GetAferos returns multiple afero filesystems
-func (filesystem *Filesystem) GetAferos(folders ...config.Folder) ([]afero.Fs, error) {
+func (filesystem *Filesystem) GetAferos(folders ...config.Folder) []afero.Fs {
 
 	result := make([]afero.Fs, len(folders))
-	var errAcc error
 
-	for i, folder := range folders {
-		item, err := filesystem.GetAfero(folder)
-		result[i] = item
-		errAcc = derp.Append(errAcc, err)
+	for _, folder := range folders {
+		if item, err := filesystem.GetAfero(folder); err == nil {
+			result = append(result, item)
+		} else {
+			derp.Report(err)
+		}
 	}
 
-	return result, errAcc
+	return result
 }
 
 /*******************************************

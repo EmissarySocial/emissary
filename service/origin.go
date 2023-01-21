@@ -66,11 +66,11 @@ func (service *Origin) Poll(providerID string) <-chan model.Stream {
 
 func (service *Origin) Save(streams <-chan model.Stream) error {
 
-	var result error
 	for stream := range streams {
-		err := service.streamService.Save(&stream, "Imported from Origin")
-		result = derp.Append(result, err)
+		if err := service.streamService.Save(&stream, "Imported from Origin"); err != nil {
+			return derp.Wrap(err, "service.Origin.Save", "Error saving stream", stream)
+		}
 	}
 
-	return result
+	return nil
 }

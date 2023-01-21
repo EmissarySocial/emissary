@@ -33,13 +33,7 @@ func SMTPConnectionSchema() schema.Element {
 // Validate confirms that the SMTPConnection matches ths SMTPConnectionSchema
 func (smtp SMTPConnection) Validate() error {
 	schema := SMTPConnectionSchema()
-	result := schema.Validate(smtp)
-
-	if result.IsEmpty() {
-		return nil
-	}
-
-	return result
+	return schema.Validate(smtp)
 }
 
 // Server generates a fully initialized SMTP server object.

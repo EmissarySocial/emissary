@@ -33,25 +33,11 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	// If we have a feed, then import all of the items from it.
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
-	var errorCollection error
-
 	for _, rssItem := range rssFeed.Items {
 		activity := convert.RSSToActivity(rssFeed, rssItem)
 		if err := service.saveActivity(following, &activity); err != nil {
-			errorCollection = derp.Append(errorCollection, derp.Wrap(err, location, "Error updating local activity"))
+			return service.saveError(following, derp.Wrap(err, location, "Error updating local activity"))
 		}
-	}
-
-	// If there were errors parsing the feed, then mark the record as an error.
-	if errorCollection != nil {
-
-		// Try to update the following status
-		if err := service.SetStatus(following, model.FollowingStatusFailure, errorCollection.Error()); err != nil {
-			return derp.Wrap(err, location, "Error updating following status", following)
-		}
-
-		// There were errors, but they're noted in the following status, so THIS step is successful
-		return nil
 	}
 
 	// If we're here, then we have successfully imported the RSS feed.
@@ -61,4 +47,14 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	}
 
 	return nil
+}
+
+func (service *Following) saveError(following *model.Following, err error) error {
+
+	// Try to update the following status
+	if saveError := service.SetStatus(following, model.FollowingStatusFailure, err.Error()); saveError != nil {
+		return derp.Wrap(err, "service.Following.saveError", "Error updating following status", following)
+	}
+
+	return err
 }
