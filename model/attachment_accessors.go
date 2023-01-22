@@ -23,7 +23,7 @@ func AttachmentSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (attachment *Attachment) GetIntOK(name string) (int, bool) {
+func (attachment *Attachment) GetInt(name string) (int, bool) {
 
 	switch name {
 
@@ -40,7 +40,7 @@ func (attachment *Attachment) GetIntOK(name string) (int, bool) {
 	return 0, false
 }
 
-func (attachment *Attachment) GetStringOK(name string) (string, bool) {
+func (attachment *Attachment) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -64,7 +64,7 @@ func (attachment *Attachment) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (attachment *Attachment) SetIntOK(name string, value int) bool {
+func (attachment *Attachment) SetInt(name string, value int) bool {
 
 	switch name {
 
@@ -85,7 +85,7 @@ func (attachment *Attachment) SetIntOK(name string, value int) bool {
 	return false
 }
 
-func (attachment *Attachment) SetStringOK(name string, value string) bool {
+func (attachment *Attachment) SetString(name string, value string) bool {
 
 	switch name {
 

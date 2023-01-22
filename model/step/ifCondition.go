@@ -19,7 +19,7 @@ func NewIfCondition(stepInfo maps.Map) (IfCondition, error) {
 	const location = "model.step.NewIfCondition"
 
 	// Parse "condition" property
-	condition, err := template.New("").Parse(stepInfo.GetString("condition"))
+	condition, err := template.New("").Parse(getValue(stepInfo.GetString("condition")))
 
 	if err != nil {
 		return IfCondition{}, derp.Wrap(err, location, "Invalid 'condition'", stepInfo)

@@ -23,7 +23,7 @@ func OriginLinkSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (origin *OriginLink) GetStringOK(name string) (string, bool) {
+func (origin *OriginLink) GetString(name string) (string, bool) {
 	switch name {
 
 	case "internalId":
@@ -50,7 +50,7 @@ func (origin *OriginLink) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (origin *OriginLink) SetStringOK(name string, value string) bool {
+func (origin *OriginLink) SetString(name string, value string) bool {
 	switch name {
 
 	case "internalId":

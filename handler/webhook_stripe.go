@@ -57,9 +57,9 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 			stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 
 			// Validate the webhook signature
-			secret := stripeClient.Data.GetString(providers.Stripe_WebhookSecret) // domain.Connections.GetString("stripe_webhook_secret")
+			secret, ok := stripeClient.Data.GetString(providers.Stripe_WebhookSecret) // domain.Connections.GetString("stripe_webhook_secret")
 
-			if secret == "" {
+			if !ok || (secret == "") {
 				return derp.NewBadRequestError(location, "Webhooks are not configured on this domain")
 			}
 
@@ -110,9 +110,10 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 				}
 
 				// Check inventory
-				if stream.Data.GetBool("trackInventory") {
+				if trackInventory, ok := stream.Data.GetBool("trackInventory"); trackInventory && ok {
 
-					quantityOnHand := stream.Data.GetInt("quantityOnHand") - int(lineItem.Quantity)
+					quantityOnHand, _ := stream.Data.GetInt("quantityOnHand")
+					quantityOnHand = quantityOnHand - int(lineItem.Quantity)
 
 					stream.Data.SetInt("quantityOnHand", quantityOnHand)
 

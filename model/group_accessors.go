@@ -18,7 +18,7 @@ func GroupSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (group *Group) GetStringOK(name string) (string, bool) {
+func (group *Group) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -36,7 +36,7 @@ func (group *Group) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (group *Group) SetStringOK(name string, value string) bool {
+func (group *Group) SetString(name string, value string) bool {
 
 	switch name {
 

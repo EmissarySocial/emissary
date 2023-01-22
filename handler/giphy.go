@@ -47,7 +47,7 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewBadRequestError("handler.GetGiphyImages", "Giphy is not configured for this domain")
 		}
 
-		apiKey := giphy.GetString(providers.Giphy_APIKey)
+		apiKey, _ := giphy.GetString(providers.Giphy_APIKey)
 
 		b := html.New()
 

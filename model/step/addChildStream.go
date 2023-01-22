@@ -24,8 +24,8 @@ func NewAddChildStream(stepInfo maps.Map) (AddChildStream, error) {
 	}
 
 	return AddChildStream{
-		Title:       first.String(stepInfo.GetString("title"), "Add a Stream"),
-		View:        stepInfo.GetString("view"),
+		Title:       first.String(getValue(stepInfo.GetString("title")), "Add a Stream"),
+		View:        getValue(stepInfo.GetString("view")),
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
 		WithChild:   withChild,
 	}, nil

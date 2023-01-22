@@ -10,7 +10,7 @@ type Publish struct {
 // NewPublish returns a fully initialized Publish object
 func NewPublish(stepInfo maps.Map) (Publish, error) {
 	return Publish{
-		Role: stepInfo.GetString("role"),
+		Role: getValue(stepInfo.GetString("role")),
 	}, nil
 }
 

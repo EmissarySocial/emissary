@@ -57,7 +57,7 @@ func (config *Config) GetObjectOK(name string) (any, bool) {
 	return nil, false
 }
 
-func (config Config) GetStringOK(name string) (string, bool) {
+func (config Config) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -69,7 +69,7 @@ func (config Config) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (config *Config) SetStringOK(name string, value string) bool {
+func (config *Config) SetString(name string, value string) bool {
 
 	switch name {
 

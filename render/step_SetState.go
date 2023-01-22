@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/path"
+	"github.com/benpate/rosetta/schema"
 )
 
 // StepSetState represents an action-step that can change a Stream's state
@@ -24,8 +24,11 @@ func (step StepSetState) UseGlobalWrapper() bool {
 func (step StepSetState) Post(renderer Renderer) error {
 
 	// Try to set the state via the Path interface.
-	if ok := path.SetString(renderer.object(), "stateId", step.StateID); !ok {
-		return derp.NewInternalError("Unable to set stateId", step.StateID)
+	object := renderer.object()
+	if setter, ok := object.(schema.StringSetter); ok {
+		if ok := setter.SetString("stateId", step.StateID); !ok {
+			return derp.NewInternalError("Unable to set stateId", step.StateID)
+		}
 	}
 
 	return nil

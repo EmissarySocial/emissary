@@ -25,7 +25,7 @@ func FollowerSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (follower *Follower) GetInt64OK(name string) (int64, bool) {
+func (follower *Follower) GetInt64(name string) (int64, bool) {
 	switch name {
 
 	case "expireDate":
@@ -35,7 +35,7 @@ func (follower *Follower) GetInt64OK(name string) (int64, bool) {
 	return 0, false
 }
 
-func (follower *Follower) GetStringOK(name string) (string, bool) {
+func (follower *Follower) GetString(name string) (string, bool) {
 	switch name {
 
 	case "followerId":
@@ -61,7 +61,7 @@ func (follower *Follower) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (follower *Follower) SetInt64OK(name string, value int64) bool {
+func (follower *Follower) SetInt64(name string, value int64) bool {
 
 	switch name {
 
@@ -73,7 +73,7 @@ func (follower *Follower) SetInt64OK(name string, value int64) bool {
 	return false
 }
 
-func (follower *Follower) SetStringOK(name string, value string) bool {
+func (follower *Follower) SetString(name string, value string) bool {
 
 	switch name {
 

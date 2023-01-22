@@ -25,7 +25,7 @@ func ActivitySchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (activity *Activity) GetInt64OK(name string) (int64, bool) {
+func (activity *Activity) GetInt64(name string) (int64, bool) {
 	switch name {
 
 	case "readDate":
@@ -36,7 +36,7 @@ func (activity *Activity) GetInt64OK(name string) (int64, bool) {
 	}
 }
 
-func (activity *Activity) GetStringOK(name string) (string, bool) {
+func (activity *Activity) GetString(name string) (string, bool) {
 	switch name {
 
 	case "activityId":
@@ -63,7 +63,7 @@ func (activity *Activity) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (activity *Activity) SetInt64OK(name string, value int64) bool {
+func (activity *Activity) SetInt64(name string, value int64) bool {
 	switch name {
 
 	case "readDate":
@@ -75,7 +75,7 @@ func (activity *Activity) SetInt64OK(name string, value int64) bool {
 	}
 }
 
-func (activity *Activity) SetStringOK(name string, value string) bool {
+func (activity *Activity) SetString(name string, value string) bool {
 	switch name {
 
 	case "activityId":

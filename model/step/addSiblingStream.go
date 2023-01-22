@@ -24,8 +24,8 @@ func NewAddSiblingStream(stepInfo maps.Map) (AddSiblingStream, error) {
 	}
 
 	return AddSiblingStream{
-		Title:       first.String(stepInfo.GetString("title"), "Add a Stream"),
-		View:        stepInfo.GetString("view"),
+		Title:       first.String(getValue(stepInfo.GetString("title")), "Add a Stream"),
+		View:        getValue(stepInfo.GetString("view")),
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
 		WithSibling: withSibling,
 	}, nil

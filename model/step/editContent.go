@@ -14,8 +14,8 @@ type EditContent struct {
 func NewEditContent(stepInfo maps.Map) (EditContent, error) {
 
 	return EditContent{
-		Filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
-		Format:   first.String(stepInfo.GetString("format"), "EDITORJS"),
+		Filename: first.String(getValue(stepInfo.GetString("file")), getValue(stepInfo.GetString("actionId"))),
+		Format:   first.String(getValue(stepInfo.GetString("format")), "EDITORJS"),
 	}, nil
 }
 

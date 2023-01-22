@@ -27,37 +27,3 @@ func NewClient(providerID string) Client {
 func (client Client) ID() string {
 	return client.ProviderID
 }
-
-/**************************************
- * Data Accessor Methods
- **************************************/
-
-// GetString is a shortcut to the Data.GetString() method
-func (client Client) GetString(key string) string {
-	return client.Data.GetString(key)
-}
-
-// SetString is a shortcut to the Data.SetString() method
-func (client *Client) SetString(key string, value string) {
-	client.Data.SetString(key, value)
-}
-
-// GetInt is a shortcut to the Data.GetInt() method
-func (client Client) GetInt(key string) int {
-	return client.Data.GetInt(key)
-}
-
-// SetInt is a shortcut to the Data.SetInt() method
-func (client *Client) SetInt(key string, value int) {
-	client.Data.SetInt(key, value)
-}
-
-// GetInt64 is a shortcut to the Data.GetInt64() method
-func (client Client) GetInt64(key string) int64 {
-	return client.Data.GetInt64(key)
-}
-
-// SetInt64 is a shortcut to the Data.SetInt64() method
-func (client *Client) SetInt64(key string, value int64) {
-	client.Data.SetInt64(key, value)
-}

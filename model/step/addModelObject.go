@@ -16,7 +16,7 @@ type AddModelObject struct {
 func NewAddModelObject(stepInfo maps.Map) (AddModelObject, error) {
 
 	// Parse form
-	f, err := form.Parse(stepInfo.GetInterface("form"))
+	f, err := form.Parse(getValue(stepInfo.GetInterface("form")))
 
 	if err != nil {
 		return AddModelObject{}, derp.Wrap(err, "model.step.NewAddModelObject", "Invalid form", stepInfo["form"])

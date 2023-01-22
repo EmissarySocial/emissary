@@ -16,7 +16,7 @@ func DomainSchema() schema.Element {
 	}
 }
 
-func (domain Domain) GetStringOK(name string) (string, bool) {
+func (domain Domain) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -50,7 +50,7 @@ func (domain *Domain) GetObjectOK(name string) (any, bool) {
 	return nil, false
 }
 
-func (domain *Domain) SetStringOK(name string, value string) bool {
+func (domain *Domain) SetString(name string, value string) bool {
 
 	switch name {
 

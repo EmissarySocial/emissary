@@ -20,7 +20,7 @@ func WritableFolderSchema() schema.Element {
 	}
 }
 
-func (folder Folder) GetStringOK(name string) (string, bool) {
+func (folder Folder) GetString(name string) (string, bool) {
 	switch name {
 
 	case "adapter":
@@ -33,7 +33,7 @@ func (folder Folder) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (folder *Folder) SetStringOK(name string, value string) bool {
+func (folder *Folder) SetString(name string, value string) bool {
 
 	switch name {
 	case "adapter":

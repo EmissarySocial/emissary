@@ -19,7 +19,7 @@ func NewEditProperties(stepInfo maps.Map) (EditProperties, error) {
 	}
 
 	return EditProperties{
-		Title: first.String(stepInfo.GetString("title"), "Edit Info"),
+		Title: first.String(getValue(stepInfo.GetString("title")), "Edit Info"),
 		Paths: paths,
 	}, nil
 }

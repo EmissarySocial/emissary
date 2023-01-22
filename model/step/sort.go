@@ -15,9 +15,9 @@ type Sort struct {
 func NewSort(stepInfo maps.Map) (Sort, error) {
 
 	return Sort{
-		Keys:    first.String(stepInfo.GetString("keys"), "_id"),
-		Values:  first.String(stepInfo.GetString("values"), "rank"),
-		Message: stepInfo.GetString("message"),
+		Keys:    first.String(getValue(stepInfo.GetString("keys")), "_id"),
+		Values:  first.String(getValue(stepInfo.GetString("values")), "rank"),
+		Message: getValue(stepInfo.GetString("message")),
 	}, nil
 }
 

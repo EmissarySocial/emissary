@@ -17,7 +17,7 @@ func NewRedirectTo(stepInfo maps.Map) (RedirectTo, error) {
 
 	const location = "model.step.NewRedirectTo"
 
-	url, err := template.New("").Parse(stepInfo.GetString("url"))
+	url, err := template.New("").Parse(getValue(stepInfo.GetString("url")))
 
 	if err != nil {
 		return RedirectTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

@@ -23,7 +23,7 @@ func NewAddTopStream(stepInfo maps.Map) (AddTopStream, error) {
 	}
 
 	return AddTopStream{
-		Title:         first.String(stepInfo.GetString("title"), "Add a Stream"),
+		Title:         first.String(getValue(stepInfo.GetString("title")), "Add a Stream"),
 		TemplateIDs:   stepInfo.GetSliceOfString("templateIds"),
 		WithNewStream: withNewStream,
 	}, nil

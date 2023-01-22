@@ -12,7 +12,7 @@ type StreamPromoteDraft struct {
 
 func NewStreamPromoteDraft(stepInfo maps.Map) (StreamPromoteDraft, error) {
 	return StreamPromoteDraft{
-		StateID: first.String(stepInfo.GetString("state"), "published"),
+		StateID: first.String(getValue(stepInfo.GetString("state")), "published"),
 	}, nil
 }
 

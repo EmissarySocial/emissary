@@ -560,9 +560,9 @@ func (factory *Factory) StripeClient() (client.API, error) {
 	}
 
 	// Validate the stripe API key exists
-	stripeKey := stripeClient.Data.GetString(providers.Stripe_APIKey)
+	stripeKey, ok := stripeClient.Data.GetString(providers.Stripe_APIKey)
 
-	if stripeKey == "" {
+	if !ok || (stripeKey == "") {
 		return client.API{}, derp.NewInternalError(location, "Stripe key must not be empty")
 	}
 

@@ -14,7 +14,7 @@ type TriggerEvent struct {
 // NewTriggerEvent returns a fully initialized TriggerEvent object
 func NewTriggerEvent(stepInfo maps.Map) (TriggerEvent, error) {
 
-	eventData := stepInfo.GetInterface("event")
+	eventData := getValue(stepInfo.GetInterface("event"))
 	buffer, _ := json.Marshal(eventData)
 	eventString := string(buffer)
 

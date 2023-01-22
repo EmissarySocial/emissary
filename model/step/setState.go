@@ -10,7 +10,7 @@ type SetState struct {
 func NewSetState(stepInfo maps.Map) (SetState, error) {
 
 	return SetState{
-		StateID: stepInfo.GetString("state"),
+		StateID: getValue(stepInfo.GetString("state")),
 	}, nil
 }
 

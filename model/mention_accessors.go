@@ -27,7 +27,7 @@ func MentionSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (mention *Mention) GetStringOK(name string) (string, bool) {
+func (mention *Mention) GetString(name string) (string, bool) {
 	switch name {
 
 	case "mentionId":
@@ -70,7 +70,7 @@ func (mention *Mention) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (mention *Mention) SetStringOK(name string, value string) bool {
+func (mention *Mention) SetString(name string, value string) bool {
 	switch name {
 
 	case "mentionId":

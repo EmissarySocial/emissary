@@ -11,7 +11,7 @@ type StripeProduct struct {
 
 func NewStripeProduct(stepInfo maps.Map) (StripeProduct, error) {
 	return StripeProduct{
-		Title: first.String(stepInfo.GetString("title"), "Edit Product"),
+		Title: first.String(getValue(stepInfo.GetString("title")), "Edit Product"),
 	}, nil
 }
 

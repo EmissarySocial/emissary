@@ -14,7 +14,7 @@ func OwnerSchema() schema.Element {
 	}
 }
 
-func (owner Owner) GetStringOK(name string) (string, bool) {
+func (owner Owner) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -37,7 +37,7 @@ func (owner Owner) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (owner *Owner) SetStringOK(name string, value string) bool {
+func (owner *Owner) SetString(name string, value string) bool {
 
 	switch name {
 

@@ -10,7 +10,7 @@ type DeleteAttachments struct {
 // NewDeleteAttachments returns a fully parsed DeleteAttachments object
 func NewDeleteAttachments(stepInfo maps.Map) (DeleteAttachments, error) {
 	return DeleteAttachments{
-		All: stepInfo.GetBool("all"),
+		All: getValue(stepInfo.GetBool("all")),
 	}, nil
 }
 

@@ -174,23 +174,28 @@ func (w Common) TopLevelID() string {
  **************************/
 
 func (w Common) GetBool(name string) bool {
-	return w.requestData.GetBool(name)
+	result, _ := w.requestData.GetBool(name)
+	return result
 }
 
 func (w Common) GetFloat(name string) float64 {
-	return w.requestData.GetFloat(name)
+	result, _ := w.requestData.GetFloat(name)
+	return result
 }
 
 func (w Common) GetInt(name string) int {
-	return w.requestData.GetInt(name)
+	result, _ := w.requestData.GetInt(name)
+	return result
 }
 
 func (w Common) GetInt64(name string) int64 {
-	return w.requestData.GetInt64(name)
+	result, _ := w.requestData.GetInt64(name)
+	return result
 }
 
 func (w Common) GetString(name string) string {
-	return w.requestData.GetString(name)
+	result, _ := w.requestData.GetString(name)
+	return result
 }
 
 func (w Common) SetBool(name string, value bool) {

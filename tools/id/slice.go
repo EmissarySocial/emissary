@@ -29,7 +29,7 @@ func (slice Slice) Length() int {
 	return len(slice)
 }
 
-func (slice Slice) GetStringOK(name string) (string, bool) {
+func (slice Slice) GetString(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {
 		return (slice)[index].Hex(), true
@@ -38,7 +38,7 @@ func (slice Slice) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (slice *Slice) SetStringOK(name string, value string) bool {
+func (slice *Slice) SetString(name string, value string) bool {
 
 	if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 

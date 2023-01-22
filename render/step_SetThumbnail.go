@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/path"
+	"github.com/benpate/rosetta/schema"
 )
 
 // StepSetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -28,6 +28,12 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 
 	objectType := renderer.service().ObjectType()
 	objectID := renderer.objectID()
+	object := renderer.object()
+	setter, ok := object.(schema.StringSetter)
+
+	if !ok {
+		return derp.NewInternalError("render.StepSetThumbnail.Post", "Object must be a schema.StringSetter", object)
+	}
 
 	attachments, err := factory.Attachment().QueryByObjectID(objectType, objectID)
 
@@ -41,7 +47,7 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 
 			// Special case for User objects (this should always be "imageId")
 			if objectType == "User" {
-				if ok := path.SetString(renderer.object(), step.Path, attachment.AttachmentID.Hex()); ok {
+				if ok := setter.SetString(step.Path, attachment.AttachmentID.Hex()); ok {
 					return nil
 				} else {
 					return derp.NewInternalError("render.StepSetThumbnail.Post", "Invalid path for non-user object (A)", step.Path)
@@ -52,7 +58,7 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 			imageURL := renderer.Permalink()
 			imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
 
-			if ok := path.SetString(renderer.object(), step.Path, imageURL); ok {
+			if ok := setter.SetString(step.Path, imageURL); ok {
 				return nil
 			} else {
 				return derp.NewInternalError("render.StepSetThumbnail.Post", "Invalid path for non-user object (B)", step.Path)
@@ -60,6 +66,6 @@ func (step StepSetThumbnail) Post(renderer Renderer) error {
 		}
 	}
 
-	path.SetString(renderer.object(), step.Path, "")
+	setter.SetString(step.Path, "")
 	return nil
 }

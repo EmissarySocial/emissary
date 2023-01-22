@@ -18,7 +18,7 @@ type EditModelObject struct {
 func NewEditModelObject(stepInfo maps.Map) (EditModelObject, error) {
 
 	// Parse the form definition
-	f, err := form.Parse(stepInfo.GetInterface("form"))
+	f, err := form.Parse(getValue(stepInfo.GetInterface("form")))
 
 	if err != nil {
 		return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'form'", stepInfo)

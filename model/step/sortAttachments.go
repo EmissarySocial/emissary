@@ -15,9 +15,9 @@ type SortAttachments struct {
 func NewSortAttachments(stepInfo maps.Map) (SortAttachments, error) {
 
 	return SortAttachments{
-		Keys:    first.String(stepInfo.GetString("keys"), "_id"),
-		Values:  first.String(stepInfo.GetString("values"), "rank"),
-		Message: stepInfo.GetString("message"),
+		Keys:    first.String(getValue(stepInfo.GetString("keys")), "_id"),
+		Values:  first.String(getValue(stepInfo.GetString("values")), "rank"),
+		Message: getValue(stepInfo.GetString("message")),
 	}, nil
 }
 

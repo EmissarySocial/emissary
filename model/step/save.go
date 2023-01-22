@@ -11,7 +11,7 @@ type Save struct {
 func NewSave(stepInfo maps.Map) (Save, error) {
 
 	return Save{
-		Comment: stepInfo.GetString("comment"),
+		Comment: getValue(stepInfo.GetString("comment")),
 	}, nil
 }
 

@@ -25,7 +25,7 @@ func DocumentLinkSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (doc *DocumentLink) GetInt64OK(name string) (int64, bool) {
+func (doc *DocumentLink) GetInt64(name string) (int64, bool) {
 	switch name {
 	case "publishDate":
 		return doc.PublishDate, true
@@ -36,7 +36,7 @@ func (doc *DocumentLink) GetInt64OK(name string) (int64, bool) {
 	}
 }
 
-func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
+func (doc *DocumentLink) GetString(name string) (string, bool) {
 	switch name {
 	case "internalId":
 		return doc.InternalID.Hex(), true
@@ -59,7 +59,7 @@ func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (doc *DocumentLink) SetInt64OK(name string, value int64) bool {
+func (doc *DocumentLink) SetInt64(name string, value int64) bool {
 	switch name {
 	case "publishDate":
 		doc.PublishDate = value
@@ -72,7 +72,7 @@ func (doc *DocumentLink) SetInt64OK(name string, value int64) bool {
 	}
 }
 
-func (doc *DocumentLink) SetStringOK(name string, value string) bool {
+func (doc *DocumentLink) SetString(name string, value string) bool {
 	switch name {
 	case "internalId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {

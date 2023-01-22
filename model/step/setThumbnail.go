@@ -9,7 +9,7 @@ type SetThumbnail struct {
 
 func NewSetThumbnail(stepInfo maps.Map) (SetThumbnail, error) {
 	return SetThumbnail{
-		Path: stepInfo.GetString("path"),
+		Path: getValue(stepInfo.GetString("path")),
 	}, nil
 }
 

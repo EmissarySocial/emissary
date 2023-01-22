@@ -228,7 +228,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		streams := make([]model.Stream, 0)
 
-		if body.GetBool("home") {
+		if isHome, ok := body.GetBool("home"); isHome && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Welcome",
@@ -239,7 +239,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if body.GetBool("blog") {
+		if isBlog, ok := body.GetBool("blog"); isBlog && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Blog",
@@ -251,7 +251,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if body.GetBool("album") {
+		if isAlbum, ok := body.GetBool("album"); isAlbum && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Photo Album",

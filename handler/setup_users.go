@@ -65,9 +65,9 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		// Populate the new user record
 		user := model.NewUser()
 
-		user.DisplayName = data.GetString("displayName")
-		user.Username = data.GetString("username")
-		user.EmailAddress = data.GetString("emailAddress")
+		user.DisplayName, _ = data.GetString("displayName")
+		user.Username, _ = data.GetString("username")
+		user.EmailAddress, _ = data.GetString("emailAddress")
 		user.IsOwner = true
 
 		// Try to save the new user record

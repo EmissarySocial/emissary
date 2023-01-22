@@ -40,7 +40,7 @@ func PermissionSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (stream *Stream) GetBoolOK(name string) (bool, bool) {
+func (stream *Stream) GetBool(name string) (bool, bool) {
 	switch name {
 	case "asFeature":
 		return stream.AsFeature, true
@@ -49,7 +49,7 @@ func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 	}
 }
 
-func (stream *Stream) GetIntOK(name string) (int, bool) {
+func (stream *Stream) GetInt(name string) (int, bool) {
 	switch name {
 	case "rank":
 		return stream.Rank, true
@@ -58,7 +58,7 @@ func (stream *Stream) GetIntOK(name string) (int, bool) {
 	}
 }
 
-func (stream *Stream) GetInt64OK(name string) (int64, bool) {
+func (stream *Stream) GetInt64(name string) (int64, bool) {
 	switch name {
 	case "publishDate":
 		return stream.PublishDate, true
@@ -69,7 +69,7 @@ func (stream *Stream) GetInt64OK(name string) (int64, bool) {
 	}
 }
 
-func (stream *Stream) GetStringOK(name string) (string, bool) {
+func (stream *Stream) GetString(name string) (string, bool) {
 	switch name {
 
 	case "streamId":
@@ -93,7 +93,7 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (stream *Stream) SetBoolOK(name string, value bool) bool {
+func (stream *Stream) SetBool(name string, value bool) bool {
 	switch name {
 	case "asFeature":
 		stream.AsFeature = value
@@ -103,7 +103,7 @@ func (stream *Stream) SetBoolOK(name string, value bool) bool {
 	}
 }
 
-func (stream *Stream) SetIntOK(name string, value int) bool {
+func (stream *Stream) SetInt(name string, value int) bool {
 	switch name {
 	case "rank":
 		stream.Rank = value
@@ -113,7 +113,7 @@ func (stream *Stream) SetIntOK(name string, value int) bool {
 	}
 }
 
-func (stream *Stream) SetInt64OK(name string, value int64) bool {
+func (stream *Stream) SetInt64(name string, value int64) bool {
 	switch name {
 	case "publishDate":
 		stream.PublishDate = value
@@ -126,7 +126,7 @@ func (stream *Stream) SetInt64OK(name string, value int64) bool {
 	}
 }
 
-func (stream *Stream) SetStringOK(name string, value string) bool {
+func (stream *Stream) SetString(name string, value string) bool {
 	switch name {
 
 	case "streamId":

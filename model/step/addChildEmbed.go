@@ -15,7 +15,7 @@ func NewAddChildEmbed(stepInfo maps.Map) (AddChildEmbed, error) {
 
 	return AddChildEmbed{
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
-		ShowLabels:  stepInfo.GetBool("showLabels"),
+		ShowLabels:  getValue(stepInfo.GetBool("showLabels")),
 	}, nil
 }
 

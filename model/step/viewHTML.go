@@ -10,7 +10,7 @@ type ViewHTML struct {
 // NewViewHTML generates a fully initialized ViewHTML step.
 func NewViewHTML(stepInfo maps.Map) (ViewHTML, error) {
 	return ViewHTML{
-		File: stepInfo.GetString("file"),
+		File: getValue(stepInfo.GetString("file")),
 	}, nil
 }
 

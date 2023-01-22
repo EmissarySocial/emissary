@@ -25,8 +25,8 @@ func NewAsModal(stepInfo maps.Map) (AsModal, error) {
 	return AsModal{
 		SubSteps:   subSteps,
 		Options:    stepInfo.GetSliceOfString("options"),
-		Class:      stepInfo.GetString("class"),
-		Background: stepInfo.GetString("background"),
+		Class:      getValue(stepInfo.GetString("class")),
+		Background: getValue(stepInfo.GetString("background")),
 	}, nil
 }
 

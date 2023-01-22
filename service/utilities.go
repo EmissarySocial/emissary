@@ -87,3 +87,7 @@ func loadModelFromFilesystem(filesystem fs.FS, model any, location string) error
 	// Return to caller.
 	return nil
 }
+
+func value[T any](value T, _ bool) T {
+	return value
+}

@@ -17,7 +17,7 @@ func NewForwardTo(stepInfo maps.Map) (ForwardTo, error) {
 
 	const location = "model.step.NewForwardTo"
 
-	url, err := template.New("").Parse(stepInfo.GetString("url"))
+	url, err := template.New("").Parse(getValue(stepInfo.GetString("url")))
 
 	if err != nil {
 		return ForwardTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

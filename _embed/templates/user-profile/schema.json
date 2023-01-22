@@ -66,7 +66,7 @@
 			"roles": ["self"],
 			"steps":[
 				{"step":"as-modal", "steps":[
-					{"step":"view-html"},
+					{"step":"view-html", "file":"profile-photo"},
 					{"step":"delete-attachments", "all":true},
 					{"step":"upload-attachments", "maximum":1},
 					{"step":"set-thumbnail", "path":"imageId"},

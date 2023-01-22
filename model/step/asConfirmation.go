@@ -16,9 +16,9 @@ type AsConfirmation struct {
 func NewAsConfirmation(stepInfo maps.Map) (AsConfirmation, error) {
 
 	return AsConfirmation{
-		Title:   stepInfo.GetString("title"),
-		Message: stepInfo.GetString("message"),
-		Submit:  first.String(stepInfo.GetString("submit"), "Continue"),
+		Title:   getValue(stepInfo.GetString("title")),
+		Message: getValue(stepInfo.GetString("message")),
+		Submit:  first.String(getValue(stepInfo.GetString("submit")), "Continue"),
 	}, nil
 }
 

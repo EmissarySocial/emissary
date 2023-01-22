@@ -16,8 +16,8 @@ type SetSimpleSharing struct {
 func NewSetSimpleSharing(stepInfo maps.Map) (SetSimpleSharing, error) {
 
 	return SetSimpleSharing{
-		Title:   first.String(stepInfo.GetString("title"), "Sharing Settings"),
-		Message: first.String(stepInfo.GetString("message"), "Determine Who Can See This Stream"),
+		Title:   first.String(getValue(stepInfo.GetString("title")), "Sharing Settings"),
+		Message: first.String(getValue(stepInfo.GetString("message")), "Determine Who Can See This Stream"),
 		Roles:   stepInfo.GetSliceOfString("roles"),
 	}, nil
 }

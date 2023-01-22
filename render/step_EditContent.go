@@ -55,7 +55,7 @@ func (step StepEditContent) Post(renderer Renderer) error {
 			return derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data")
 		}
 
-		rawContent = body.GetString("content")
+		rawContent, _ = body.GetString("content")
 	}
 
 	// Create a new Content object from the request body

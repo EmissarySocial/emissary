@@ -24,7 +24,7 @@ func BlockSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (block *Block) GetBoolOK(name string) (bool, bool) {
+func (block *Block) GetBool(name string) (bool, bool) {
 
 	switch name {
 
@@ -38,7 +38,7 @@ func (block *Block) GetBoolOK(name string) (bool, bool) {
 	return false, false
 }
 
-func (block *Block) GetStringOK(name string) (string, bool) {
+func (block *Block) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -68,7 +68,7 @@ func (block *Block) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (block *Block) SetBoolOK(name string, value bool) bool {
+func (block *Block) SetBool(name string, value bool) bool {
 
 	switch name {
 
@@ -85,7 +85,7 @@ func (block *Block) SetBoolOK(name string, value bool) bool {
 	return false
 }
 
-func (block *Block) SetStringOK(name string, value string) bool {
+func (block *Block) SetString(name string, value string) bool {
 
 	switch name {
 

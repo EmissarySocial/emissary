@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/path"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -58,13 +58,19 @@ func (step StepSort) Post(renderer Renderer) error {
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
-		if path.GetInt(object, step.Values) == newRank {
-			continue
+		if getter, ok := object.(schema.IntGetter); ok {
+			if value, ok := getter.GetInt(step.Values); ok {
+				if value == newRank {
+					continue
+				}
+			}
 		}
 
 		// Update the object
-		if ok := path.SetInt(object, step.Values, newRank); !ok {
-			return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank)
+		if setter, ok := object.(schema.IntSetter); ok {
+			if ok := setter.SetInt(step.Values, newRank); !ok {
+				return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank)
+			}
 		}
 
 		// Try to save back to the database

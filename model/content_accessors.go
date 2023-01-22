@@ -17,7 +17,7 @@ func ContentSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (content *Content) GetStringOK(name string) (string, bool) {
+func (content *Content) GetString(name string) (string, bool) {
 	switch name {
 
 	case "format":
@@ -38,7 +38,7 @@ func (content *Content) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (content *Content) SetStringOK(name string, value string) bool {
+func (content *Content) SetString(name string, value string) bool {
 	switch name {
 
 	case "format":

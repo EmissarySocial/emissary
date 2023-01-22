@@ -10,7 +10,7 @@ type UploadAttachment struct {
 // NewUploadAttachment returns a fully parsed UploadAttachment object
 func NewUploadAttachment(stepInfo maps.Map) (UploadAttachment, error) {
 	return UploadAttachment{
-		Maximum: stepInfo.GetInt("maximum"),
+		Maximum: getValue(stepInfo.GetInt("maximum")),
 	}, nil
 }
 

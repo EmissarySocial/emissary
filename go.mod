@@ -2,29 +2,23 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/derp => ../../benpate/derp
-replace github.com/benpate/digit => ../../benpate/digit
-replace github.com/benpate/form => ../../benpate/form
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-replace github.com/benpate/table => ../../benpate/table
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.175
-	github.com/benpate/data v0.22.0
-	github.com/benpate/data-mongo v0.22.1
-	github.com/benpate/derp v0.26.0
-	github.com/benpate/digit v0.7.1
+	github.com/benpate/data v0.23.0
+	github.com/benpate/data-mongo v0.23.0
+	github.com/benpate/derp v0.27.0
+	github.com/benpate/digit v0.8.0
 	github.com/benpate/exp v0.6.0
-	github.com/benpate/exp-builder v0.5.0
-	github.com/benpate/form v0.13.1
+	github.com/benpate/exp-builder v0.6.0
+	github.com/benpate/form v0.14.0
 	github.com/benpate/html v0.15.0
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.8.1
-	github.com/benpate/remote v0.9.0
-	github.com/benpate/rosetta v0.9.1
-	github.com/benpate/steranko v0.12.1
-	github.com/benpate/table v0.4.1
+	github.com/benpate/mediaserver v0.9.0
+	github.com/benpate/remote v0.10.0
+	github.com/benpate/rosetta v0.10.0
+	github.com/benpate/steranko v0.13.0
+	github.com/benpate/table v0.5.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.0
@@ -93,7 +87,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.13 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mmcdole/goxpp v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -118,8 +112,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/crypto v0.4.0 // indirect
-	golang.org/x/image v0.2.0 // indirect
+	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/image v0.3.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect

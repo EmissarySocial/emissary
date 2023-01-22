@@ -57,7 +57,7 @@ func WrapModal(response *echo.Response, content string, options ...string) strin
 	// Modal Wrapper
 	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
 	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").Class(optionMap.GetString("class")).EndBracket() // this is needed because we're embedding foreign content below.
+	b.Div().ID("modal-window").Class(value(optionMap.GetString("class"))).EndBracket() // this is needed because we're embedding foreign content below.
 
 	// Contents
 	b.Grow(len(content))
@@ -99,18 +99,18 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	// Controls
 	b.Div()
 
-	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
+	if deleteURL, ok := optionMap.GetString("delete"); ok && (deleteURL != "") {
 		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerHTML("Delete").Close()
 		b.Space()
 	}
 
-	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
+	submitLabel := first.String(value(optionMap.GetString("submit-label")), "Save Changes")
+	savingLabel := first.String(value(optionMap.GetString("saving-label")), "Saving...")
 	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML(submitLabel).Close()
 	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML(savingLabel).Close()
 
-	if optionMap.GetString("cancel-button") != "hide" {
-		cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
+	if cancelButton, _ := optionMap.GetString("cancel-button"); cancelButton != "hide" {
+		cancelLabel := first.String(value(optionMap.GetString("cancel-label")), "Cancel")
 		b.Space()
 		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML(cancelLabel).Close()
 		b.Space()
@@ -247,4 +247,8 @@ func executeTemplate(template TemplateLike, data any) string {
 	}
 
 	return buffer.String()
+}
+
+func value[T any](value T, _ bool) T {
+	return value
 }

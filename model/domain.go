@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -36,49 +35,6 @@ func NewDomain() Domain {
 // ID returns the primary key of this object
 func (domain *Domain) ID() string {
 	return domain.DomainID.Hex()
-}
-
-func (domain *Domain) GetObjectID(name string) (primitive.ObjectID, error) {
-	switch name {
-	case "domainId":
-		return domain.DomainID, nil
-	}
-	return primitive.NilObjectID, derp.NewInternalError("model.Domain.GetObjectID", "Invalid property", name)
-}
-
-func (domain *Domain) GetString(name string) (string, error) {
-
-	switch name {
-	case "label":
-		return domain.Label, nil
-	case "headerHtml":
-		return domain.HeaderHTML, nil
-	case "footerHtml":
-		return domain.FooterHTML, nil
-	case "customCss":
-		return domain.CustomCSS, nil
-	case "bannerUrl":
-		return domain.BannerURL, nil
-	case "forward":
-		return domain.Forward, nil
-	}
-	return "", derp.NewInternalError("model.Domain.GetString", "Invalid property", name)
-}
-
-func (domain *Domain) GetBool(name string) (bool, error) {
-	switch name {
-	case "socialLinks":
-		return domain.SocialLinks, nil
-	}
-	return false, derp.NewInternalError("model.Domain.GetInt", "Invalid property", name)
-}
-
-func (domain *Domain) GetInt(name string) (int, error) {
-	return 0, derp.NewInternalError("model.Domain.GetInt", "Invalid property", name)
-}
-
-func (domain *Domain) GetInt64(name string) (int64, error) {
-	return 0, derp.NewInternalError("model.Domain.GetInt64", "Invalid property", name)
 }
 
 /******************************************

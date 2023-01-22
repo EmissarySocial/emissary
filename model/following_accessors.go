@@ -32,7 +32,7 @@ func FollowingSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (following Following) GetIntOK(name string) (int, bool) {
+func (following Following) GetInt(name string) (int, bool) {
 
 	switch name {
 
@@ -50,7 +50,7 @@ func (following Following) GetIntOK(name string) (int, bool) {
 	return 0, false
 }
 
-func (following Following) GetInt64OK(name string) (int64, bool) {
+func (following Following) GetInt64(name string) (int64, bool) {
 
 	switch name {
 
@@ -65,7 +65,7 @@ func (following Following) GetInt64OK(name string) (int64, bool) {
 	return 0, false
 }
 
-func (following Following) GetStringOK(name string) (string, bool) {
+func (following Following) GetString(name string) (string, bool) {
 
 	switch name {
 
@@ -102,7 +102,7 @@ func (following Following) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (following *Following) SetIntOK(name string, value int) bool {
+func (following *Following) SetInt(name string, value int) bool {
 
 	switch name {
 
@@ -122,7 +122,7 @@ func (following *Following) SetIntOK(name string, value int) bool {
 	return false
 }
 
-func (following *Following) SetInt64OK(name string, value int64) bool {
+func (following *Following) SetInt64(name string, value int64) bool {
 
 	switch name {
 
@@ -138,7 +138,7 @@ func (following *Following) SetInt64OK(name string, value int64) bool {
 	return false
 }
 
-func (following *Following) SetStringOK(name string, value string) bool {
+func (following *Following) SetString(name string, value string) bool {
 
 	switch name {
 

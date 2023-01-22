@@ -18,15 +18,15 @@ type SetHeader struct {
 // NewSetHeader returns a fully initialized SetHeader object
 func NewSetHeader(stepInfo maps.Map) (SetHeader, error) {
 
-	value, err := template.New("").Parse(stepInfo.GetString("value"))
+	value, err := template.New("").Parse(getValue(stepInfo.GetString("value")))
 
 	if err != nil {
-		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Error parsing value template", stepInfo.GetString("value"))
+		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Error parsing value template", value)
 	}
 
 	return SetHeader{
-		On:    first.String(stepInfo.GetString("on"), "both"),
-		Name:  stepInfo.GetString("name"),
+		On:    first.String(getValue(stepInfo.GetString("on")), "both"),
+		Name:  getValue(stepInfo.GetString("name")),
 		Value: value,
 	}, nil
 }
