@@ -119,8 +119,8 @@ github.com/davidscottmills/goeditorjs v1.0.0 h1:X8tMPjpWopWd8vPsZSxkPZqtjflh2LgN
 github.com/davidscottmills/goeditorjs v1.0.0/go.mod h1:Th+tPJTsJLF6FmLzLeiZ/rSFxMca3b4lsvtLLVnaVl8=
 github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1ei82L+c=
 github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
-github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
-github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
+github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
+github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65 h1:WfjVLSpoK/4Yu7aMv9+CuMH/TRqvWt7LWj8HJTSLrqY=
 github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65/go.mod h1:DwtDzuGvUJmwvhPZsGE6BzMCmiG9mL4pF5CujWCrO80=
 github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c h1:MEV1LrQtCBGacXajlT4CSuYWbZuLl/qaZVqwoOmwAbU=

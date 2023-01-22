@@ -21,7 +21,7 @@ require (
 	github.com/benpate/table v0.5.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
-	github.com/dustin/go-humanize v1.0.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
