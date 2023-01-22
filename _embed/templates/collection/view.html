@@ -9,11 +9,22 @@
 		<div class="flex-row">
 			{{- if .Data "showSidebar" -}}
 				<div class="sidebar">
-					<div>
-						{{- range $children -}}
-							<a href="#{{.StreamID}}" class="block sidebar-item ellipsis">{{.Label}}</a>
+					{{- if ne 0 (len $children) -}}
+						<div>
+							{{- range $children -}}
+								<a href="#{{.StreamID}}" class="block sidebar-item ellipsis">{{.Label}}</a>
+							{{- end -}}
+						</div>
+
+						{{- if .UserCan "add-child" -}}
+							<div class="space-above text-xs">
+								<br>
+								<button hx-get="/{{.Token}}/add-child">
+									{{- icon "plus"}} Add Another
+								</button>
+							</div>
 						{{- end -}}
-					</div>
+					{{- end -}}
 				</div>
 			{{- end -}}
 
@@ -22,17 +33,13 @@
 					<div id="{{.StreamID}}" hx-get="/{{.StreamID}}" hx-trigger="revealed" hx-target="this"></div>
 				{{- end -}}
 		
-				<div>
-					<button hx-get="/{{.Token}}/add-child">
-						{{- icon "plus" -}}
-						{{- if eq 0 (len $children) -}}
-							Add an Item
-						{{- else -}}
-							Add Another
-						{{- end -}}
-					</button>
-				</div>
-
+				{{- if .UserCan "add-child" -}}
+					<div>
+						<button hx-get="/{{.Token}}/add-child">
+							{{- icon "plus"}} Add an Item
+						</button>
+					</div>
+				{{- end -}}
 			</div>
 
 		</div>
