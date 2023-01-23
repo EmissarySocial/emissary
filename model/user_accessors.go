@@ -32,7 +32,7 @@ func UserSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (user *User) GetBool(name string) (bool, bool) {
+func (user *User) GetBoolOK(name string) (bool, bool) {
 	switch name {
 
 	case "isOwner":
@@ -43,7 +43,7 @@ func (user *User) GetBool(name string) (bool, bool) {
 	}
 }
 
-func (user *User) GetInt(name string) (int, bool) {
+func (user *User) GetIntOK(name string) (int, bool) {
 	switch name {
 
 	case "followerCount":
@@ -60,7 +60,7 @@ func (user *User) GetInt(name string) (int, bool) {
 	}
 }
 
-func (user *User) GetString(name string) (string, bool) {
+func (user *User) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "userId":
@@ -174,7 +174,7 @@ func (user *User) SetString(name string, value string) bool {
  * Tree Traversal
  *********************************/
 
-func (user *User) GetObjectOK(name string) (any, bool) {
+func (user *User) GetObject(name string) (any, bool) {
 
 	switch name {
 
