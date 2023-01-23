@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,7 +17,7 @@ type Follower struct {
 	Method     string             `json:"method"     bson:"method"`     // Method of follower (e.g. "POLL", "WEBSUB", "RSS-CLOUD", "ACTIVITYPUB")
 	Format     string             `json:"format"     bson:"format"`     // Format of the data being followed (e.g. "JSON", "XML", "ATOM", "RSS")
 	Actor      PersonLink         `json:"actor"      bson:"actor"`      // Person who is follower the User
-	Data       maps.Map           `json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
+	Data       mapof.Any          `json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
 	ExpireDate int64              `json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
 
 	journal.Journal `json:"journal" bson:"journal"`
@@ -26,7 +26,7 @@ type Follower struct {
 func NewFollower() Follower {
 	return Follower{
 		FollowerID: primitive.NewObjectID(),
-		Data:       make(maps.Map),
+		Data:       make(mapof.Any),
 	}
 }
 

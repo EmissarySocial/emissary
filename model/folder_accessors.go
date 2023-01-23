@@ -21,7 +21,7 @@ func FolderSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (folder *Folder) GetInt(name string) (int, bool) {
+func (folder *Folder) GetIntOK(name string) (int, bool) {
 	switch name {
 
 	case "rank":
@@ -31,7 +31,7 @@ func (folder *Folder) GetInt(name string) (int, bool) {
 	return 0, false
 }
 
-func (folder *Folder) GetString(name string) (string, bool) {
+func (folder *Folder) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "folderId":

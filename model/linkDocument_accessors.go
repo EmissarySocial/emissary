@@ -25,7 +25,7 @@ func DocumentLinkSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (doc *DocumentLink) GetInt64(name string) (int64, bool) {
+func (doc *DocumentLink) GetInt64OK(name string) (int64, bool) {
 	switch name {
 	case "publishDate":
 		return doc.PublishDate, true
@@ -36,7 +36,7 @@ func (doc *DocumentLink) GetInt64(name string) (int64, bool) {
 	}
 }
 
-func (doc *DocumentLink) GetString(name string) (string, bool) {
+func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	switch name {
 	case "internalId":
 		return doc.InternalID.Hex(), true
@@ -103,7 +103,7 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
  * Tree Traversal Methods
  *********************************/
 
-func (doc *DocumentLink) GetObjectOK(name string) (any, bool) {
+func (doc *DocumentLink) GetObject(name string) (any, bool) {
 	switch name {
 	case "author":
 		return &doc.Author, true

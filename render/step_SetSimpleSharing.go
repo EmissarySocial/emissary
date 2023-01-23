@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -126,8 +126,8 @@ func (step StepSetSimpleSharing) form() form.Element {
 	return form.Element{
 		Type: "layout-vertical",
 		Children: []form.Element{
-			{Type: "radio", Path: "rule", Options: maps.Map{"provider": "sharing"}},
-			{Type: "multiselect", Path: "groupIds", Options: maps.Map{"provider": "groups"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
+			{Type: "radio", Path: "rule", Options: mapof.Any{"provider": "sharing"}},
+			{Type: "multiselect", Path: "groupIds", Options: mapof.Any{"provider": "groups"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
 		},
 	}
 }

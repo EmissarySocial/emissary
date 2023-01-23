@@ -6,7 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
@@ -116,7 +116,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	// If no steps configued, then try the "step" alias
 	if len(action.Steps) == 0 {
 		if name := convert.String(data["step"]); name != "" {
-			action.Steps, _ = step.NewPipeline([]maps.Map{data})
+			action.Steps, _ = step.NewPipeline([]mapof.Any{data})
 		}
 	}
 

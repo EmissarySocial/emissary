@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,7 +26,7 @@ type Common struct {
 	action    *model.Action     // Action to be performed on the (template or layout)
 	actionID  string            // Token that identifies the action requested in the URL
 
-	requestData maps.Map // Temporary data scope for this request
+	requestData mapof.Any // Temporary data scope for this request
 
 	// Cached values, do not populate unless needed
 	domain model.Domain // This is a value because we expect to use it in every request.
@@ -39,7 +39,7 @@ func NewCommon(factory Factory, context *steranko.Context, template *model.Templ
 		_template:   template,
 		action:      action,
 		actionID:    actionID,
-		requestData: maps.New(),
+		requestData: mapof.NewAny(),
 		domain:      model.NewDomain(),
 	}
 }
@@ -174,47 +174,42 @@ func (w Common) TopLevelID() string {
  **************************/
 
 func (w Common) GetBool(name string) bool {
-	result, _ := w.requestData.GetBool(name)
-	return result
+	return w.requestData.GetBool(name)
 }
 
 func (w Common) GetFloat(name string) float64 {
-	result, _ := w.requestData.GetFloat(name)
-	return result
+	return w.requestData.GetFloat(name)
 }
 
 func (w Common) GetInt(name string) int {
-	result, _ := w.requestData.GetInt(name)
-	return result
+	return w.requestData.GetInt(name)
 }
 
 func (w Common) GetInt64(name string) int64 {
-	result, _ := w.requestData.GetInt64(name)
-	return result
+	return w.requestData.GetInt64(name)
 }
 
 func (w Common) GetString(name string) string {
-	result, _ := w.requestData.GetString(name)
-	return result
+	return w.requestData.GetString(name)
 }
 
-func (w Common) SetBool(name string, value bool) {
+func (w Common) setBool(name string, value bool) {
 	w.requestData.SetBool(name, value)
 }
 
-func (w Common) SetFloat(name string, value float64) {
+func (w Common) setFloat(name string, value float64) {
 	w.requestData.SetFloat(name, value)
 }
 
-func (w Common) SetInt(name string, value int) {
+func (w Common) setInt(name string, value int) {
 	w.requestData.SetInt(name, value)
 }
 
-func (w Common) SetInt64(name string, value int64) {
+func (w Common) setInt64(name string, value int64) {
 	w.requestData.SetInt64(name, value)
 }
 
-func (w Common) SetString(name string, value string) {
+func (w Common) setString(name string, value string) {
 	w.requestData.SetString(name, value)
 }
 

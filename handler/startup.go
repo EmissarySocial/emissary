@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -177,7 +177,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "displayname",
 			Label:       "Your Name",
 			Description: "Choose your publicly visible name.  You can always change it later.",
-			Options: maps.Map{
+			Options: mapof.Any{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -185,7 +185,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "username",
 			Label:       "Username",
 			Description: "The name you'll use to sign in.",
-			Options: maps.Map{
+			Options: mapof.Any{
 				"autocomplete": "OFF",
 			},
 		}, {
@@ -193,7 +193,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			Path:        "password",
 			Label:       "Password",
 			Description: "At least 12 characters. Don't reuse passwords. Don't make it guessable.",
-			Options: maps.Map{
+			Options: mapof.Any{
 				"autocomplete": "OFF",
 			},
 		}},
@@ -220,7 +220,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 	if ctx.Request().Method == http.MethodPost {
 
-		body := maps.New()
+		body := mapof.NewAny()
 
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Error binding request body")
@@ -228,7 +228,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 
 		streams := make([]model.Stream, 0)
 
-		if isHome, ok := body.GetBool("home"); isHome && ok {
+		if isHome, ok := body.GetBoolOK("home"); isHome && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Welcome",
@@ -239,7 +239,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if isBlog, ok := body.GetBool("blog"); isBlog && ok {
+		if isBlog, ok := body.GetBoolOK("blog"); isBlog && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Blog",
@@ -251,7 +251,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 			streams = append(streams, stream)
 		}
 
-		if isAlbum, ok := body.GetBool("album"); isAlbum && ok {
+		if isAlbum, ok := body.GetBoolOK("album"); isAlbum && ok {
 			stream := model.NewStream()
 			stream.Document = model.DocumentLink{
 				Label: "Photo Album",
@@ -289,17 +289,17 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		Children: []form.Element{{
 			Type:        "toggle",
 			Path:        "home",
-			Options:     maps.Map{"true-text": "Home Page", "false-text": "Home Page"},
+			Options:     mapof.Any{"true-text": "Home Page", "false-text": "Home Page"},
 			Description: "Landing page when visitors first reach your site.",
 		}, {
 			Type:        "toggle",
 			Path:        "blog",
-			Options:     maps.Map{"true-text": "Blog Folder", "false-text": "Blog Folder"},
+			Options:     mapof.Any{"true-text": "Blog Folder", "false-text": "Blog Folder"},
 			Description: "Create and publish articles.  Automatically organized by date.",
 		}, {
 			Type:        "toggle",
 			Path:        "album",
-			Options:     maps.Map{"true-text": "Photo Album", "false-text": "Photo Album"},
+			Options:     mapof.Any{"true-text": "Photo Album", "false-text": "Photo Album"},
 			Description: "Upload and share photographs.",
 		}},
 	}

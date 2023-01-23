@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,7 +25,7 @@ type Stream struct {
 	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
 	Origin          OriginLink                   `json:"origin,omitempty"    bson:"origin,omitempty"`    // If this stream is imported from an external service, this is a link to the original document
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
-	Data            maps.Map                     `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	AsFeature       bool                         `json:"asFeature"           bson:"asFeature"`           // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
 	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
@@ -45,7 +44,7 @@ func NewStream() Stream {
 		ParentID:      primitive.NilObjectID,
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
-		Data:          make(maps.Map),
+		Data:          mapof.NewAny(),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,
 	}
@@ -228,27 +227,27 @@ func (stream *Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
 }
 
 // SimplePermissionModel returns a model object for displaying Simple Sharing.
-func (stream *Stream) SimplePermissionModel() maps.Map {
+func (stream *Stream) SimplePermissionModel() mapof.Any {
 
 	// Special case if this is for EVERYBODY
 	if _, ok := stream.Permissions[MagicGroupIDAnonymous.Hex()]; ok {
-		return maps.Map{
+		return mapof.Any{
 			"rule":     "anonymous",
-			"groupIds": []string{},
+			"groupIds": sliceof.NewString(),
 		}
 	}
 
 	// Special case if this is for AUTHENTICATED
 	if _, ok := stream.Permissions[MagicGroupIDAuthenticated.Hex()]; ok {
-		return maps.Map{
+		return mapof.Any{
 			"rule":     "authenticated",
-			"groupIds": []string{},
+			"groupIds": sliceof.NewString(),
 		}
 	}
 
 	// Fall through means that additional groups are selected.
 	// First, get all keys to the Groups map
-	groupIDs := make([]string, len(stream.Permissions))
+	groupIDs := make(sliceof.String, len(stream.Permissions))
 	index := 0
 
 	for groupID := range stream.Permissions {
@@ -256,7 +255,7 @@ func (stream *Stream) SimplePermissionModel() maps.Map {
 		index++
 	}
 
-	return maps.Map{
+	return mapof.Any{
 		"rule":     "private",
 		"groupIds": groupIDs,
 	}

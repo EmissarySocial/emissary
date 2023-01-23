@@ -6,7 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stripe/stripe-go/v72"
@@ -51,11 +51,11 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Label: "Product",
 				Children: []form.Element{
 					{Type: "text", Label: "Product Name", Path: "data.productName", Description: "Displayed on Stripe dashboard.  Not visible to visitors"},
-					{Type: "text", Label: "Price", Path: "data.decimalAmount", Options: maps.Map{"step": 0.01}},
-					{Type: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: maps.Map{"options": step.getTaxRates(api)}},
-					{Type: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: maps.Map{"options": step.getShippingMethods(api)}},
+					{Type: "text", Label: "Price", Path: "data.decimalAmount", Options: mapof.Any{"step": 0.01}},
+					{Type: "select", Label: "Tax Rate", Path: "data.taxId", Description: "Sign in to your Stripe account to manage tax rates.", Options: mapof.Any{"options": step.getTaxRates(api)}},
+					{Type: "select", Label: "Shipping Method", Description: "Sign in to your Stripe account to manage shipping options.", Path: "data.shippingMethod", Options: mapof.Any{"options": step.getShippingMethods(api)}},
 					{Type: "text", Label: "Buy Button Label", Path: "data.buttonLabel"},
-					{Type: "toggle", Label: "", Path: "data.active", Options: maps.Map{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
+					{Type: "toggle", Label: "", Path: "data.active", Options: mapof.Any{"true-text": "Visible to Public? (yes)", "false-text": "Visible to Public? (no)"}},
 					{Type: "hidden", Path: "data.productId"},
 					{Type: "hidden", Path: "data.priceId"},
 				},
@@ -64,7 +64,7 @@ func (step StepStripeProduct) Get(renderer Renderer, buffer io.Writer) error {
 				Type:  "layout-vertical",
 				Label: "Inventory",
 				Children: []form.Element{
-					{Type: "toggle", Label: "", Path: "data.trackInventory", Options: maps.Map{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
+					{Type: "toggle", Label: "", Path: "data.trackInventory", Options: mapof.Any{"true-text": "Track inventory for this item", "false-text": "Do not track inventory"}},
 					{Type: "text", Label: "Available Quantity", Path: "data.quantityOnHand", Description: "Purchases disabled when quantity reaches zero."}, // TODO: MEDIUM: Restore conditional rules to forms, Show: form.Rule{Path: "data.trackInventory", Value: "'true'"}
 				},
 			},
@@ -316,7 +316,7 @@ func (txn stepStripeProductTransaction) unitAmount() int64 {
 
 func (txn stepStripeProductTransaction) apply(stream *model.Stream) {
 
-	stream.Data = maps.Map{
+	stream.Data = mapof.Any{
 		"buttonLabel":    txn.ButtonLabel,
 		"productName":    txn.ProductName,
 		"active":         txn.Active,

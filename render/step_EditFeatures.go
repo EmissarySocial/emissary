@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 )
@@ -40,7 +40,7 @@ func (step StepEditFeatures) Get(renderer Renderer, buffer io.Writer) error {
 			Type:        "multiselect",
 			Path:        "templateIds",
 			Description: "Check the features you want to add, drag to rearrange.",
-			Options:     maps.Map{"options": features, "sort": true}},
+			Options:     mapof.Any{"options": features, "sort": true}},
 		},
 	}
 
@@ -98,7 +98,7 @@ type stepEditFeaturesTransaction struct {
 	TemplateIDs sliceof.String `form:"templateIds"`
 }
 
-func (txn *stepEditFeaturesTransaction) GetObjectOK(name string) (any, bool) {
+func (txn *stepEditFeaturesTransaction) GetObject(name string) (any, bool) {
 	if name == "templateIds" {
 		return &txn.TemplateIDs, true
 	}

@@ -2,7 +2,7 @@ package step
 
 import (
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // EditContent represents an action-step that can edit/update Container in a streamDraft.
@@ -11,11 +11,11 @@ type EditContent struct {
 	Format   string
 }
 
-func NewEditContent(stepInfo maps.Map) (EditContent, error) {
+func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	return EditContent{
-		Filename: first.String(getValue(stepInfo.GetString("file")), getValue(stepInfo.GetString("actionId"))),
-		Format:   first.String(getValue(stepInfo.GetString("format")), "EDITORJS"),
+		Filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
+		Format:   first.String(stepInfo.GetString("format"), "editorjs"),
 	}, nil
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type StepEditConnection struct{}
@@ -58,7 +58,7 @@ func (step StepEditConnection) Post(renderer Renderer) error {
 	domainRenderer := renderer.(Domain)
 	context := renderer.context()
 
-	postData := maps.New()
+	postData := mapof.NewAny()
 
 	if err := context.Bind(&postData); err != nil {
 		return derp.Wrap(err, location, "Error parsing POST data")

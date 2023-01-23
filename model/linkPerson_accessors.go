@@ -23,7 +23,7 @@ func PersonLinkSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (link *PersonLink) GetString(name string) (string, bool) {
+func (link *PersonLink) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "internalId":

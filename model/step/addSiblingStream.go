@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // AddSiblingStream is an action that can add new sub-streams to the domain.
@@ -15,7 +15,7 @@ type AddSiblingStream struct {
 }
 
 // NewAddSiblingStream returns a fully initialized AddSiblingStream record
-func NewAddSiblingStream(stepInfo maps.Map) (AddSiblingStream, error) {
+func NewAddSiblingStream(stepInfo mapof.Any) (AddSiblingStream, error) {
 
 	withSibling, err := NewPipeline(stepInfo.GetSliceOfMap("with-sibling"))
 
@@ -24,8 +24,8 @@ func NewAddSiblingStream(stepInfo maps.Map) (AddSiblingStream, error) {
 	}
 
 	return AddSiblingStream{
-		Title:       first.String(getValue(stepInfo.GetString("title")), "Add a Stream"),
-		View:        getValue(stepInfo.GetString("view")),
+		Title:       first.String(stepInfo.GetString("title"), "Add a Stream"),
+		View:        stepInfo.GetString("view"),
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
 		WithSibling: withSibling,
 	}, nil

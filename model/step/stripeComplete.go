@@ -1,10 +1,10 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 type StripeComplete struct{}
 
-func NewStripeComplete(stepInfo maps.Map) (StripeComplete, error) {
+func NewStripeComplete(stepInfo mapof.Any) (StripeComplete, error) {
 	return StripeComplete{}, nil
 }
 

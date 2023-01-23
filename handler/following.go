@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -255,7 +255,7 @@ func following_getForm() form.Form {
 							Type:  "select",
 							Label: "Folder",
 							Path:  "folderId",
-							Options: maps.Map{
+							Options: mapof.Any{
 								"provider": "folders",
 							},
 							Description: "Automatically add items to this folder.",
@@ -265,7 +265,7 @@ func following_getForm() form.Form {
 							Label:       "Poll Frequency",
 							Description: "How often should this site be checked for new articles?",
 							Path:        "pollDuration",
-							Options: maps.Map{
+							Options: mapof.Any{
 								"enum": []form.LookupCode{
 									{Value: "1", Label: "Hourly"},
 									{Value: "6", Label: "Every 6 Hours"},
@@ -281,7 +281,7 @@ func following_getForm() form.Form {
 							Label:       "Remove After",
 							Description: "Read items will be automatically deleted after this amount of time.",
 							Path:        "purgeDuration",
-							Options: maps.Map{
+							Options: mapof.Any{
 								"enum": []form.LookupCode{
 									{Value: "1", Label: "1 Day"},
 									{Value: "7", Label: "1 Week"},

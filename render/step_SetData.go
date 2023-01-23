@@ -6,15 +6,15 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
 )
 
 // StepSetData represents an action-step that can update the custom data stored in a Stream
 type StepSetData struct {
-	Paths    []string // List of paths to pull from form data
-	Values   maps.Map // values to set directly into the object
-	Defaults maps.Map // values to set into the object IFF they are currently empty.
+	Paths    []string  // List of paths to pull from form data
+	Values   mapof.Any // values to set directly into the object
+	Defaults mapof.Any // values to set into the object IFF they are currently empty.
 }
 
 func (step StepSetData) Get(renderer Renderer, buffer io.Writer) error {
@@ -37,7 +37,7 @@ func (step StepSetData) Post(renderer Renderer) error {
 
 	if len(step.Paths) > 0 {
 
-		inputs := make(maps.Map)
+		inputs := mapof.NewAny()
 
 		// Collect form POST information
 		if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {

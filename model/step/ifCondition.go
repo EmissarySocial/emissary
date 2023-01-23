@@ -4,7 +4,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // IfCondition represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -14,12 +14,12 @@ type IfCondition struct {
 	Otherwise []Step
 }
 
-func NewIfCondition(stepInfo maps.Map) (IfCondition, error) {
+func NewIfCondition(stepInfo mapof.Any) (IfCondition, error) {
 
 	const location = "model.step.NewIfCondition"
 
 	// Parse "condition" property
-	condition, err := template.New("").Parse(getValue(stepInfo.GetString("condition")))
+	condition, err := template.New("").Parse(stepInfo.GetString("condition"))
 
 	if err != nil {
 		return IfCondition{}, derp.Wrap(err, location, "Invalid 'condition'", stepInfo)

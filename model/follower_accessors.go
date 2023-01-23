@@ -25,7 +25,7 @@ func FollowerSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (follower *Follower) GetInt64(name string) (int64, bool) {
+func (follower *Follower) GetInt64OK(name string) (int64, bool) {
 	switch name {
 
 	case "expireDate":
@@ -35,7 +35,7 @@ func (follower *Follower) GetInt64(name string) (int64, bool) {
 	return 0, false
 }
 
-func (follower *Follower) GetString(name string) (string, bool) {
+func (follower *Follower) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "followerId":
@@ -109,7 +109,7 @@ func (follower *Follower) SetString(name string, value string) bool {
  * Tree Traversal
  ******************************************/
 
-func (follower *Follower) GetObjectOK(name string) (any, bool) {
+func (follower *Follower) GetObject(name string) (any, bool) {
 
 	switch name {
 

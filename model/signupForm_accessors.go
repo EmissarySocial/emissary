@@ -16,7 +16,7 @@ func SignupFormSchema() schema.Element {
 	}
 }
 
-func (form SignupForm) GetBool(name string) (bool, bool) {
+func (form SignupForm) GetBoolOK(name string) (bool, bool) {
 
 	switch name {
 
@@ -28,7 +28,7 @@ func (form SignupForm) GetBool(name string) (bool, bool) {
 	return false, false
 }
 
-func (form SignupForm) GetString(name string) (string, bool) {
+func (form SignupForm) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

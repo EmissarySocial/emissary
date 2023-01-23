@@ -2,16 +2,16 @@ package step
 
 import (
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type StripeProduct struct {
 	Title string
 }
 
-func NewStripeProduct(stepInfo maps.Map) (StripeProduct, error) {
+func NewStripeProduct(stepInfo mapof.Any) (StripeProduct, error) {
 	return StripeProduct{
-		Title: first.String(getValue(stepInfo.GetString("title")), "Edit Product"),
+		Title: first.String(stepInfo.GetString("title"), "Edit Product"),
 	}, nil
 }
 

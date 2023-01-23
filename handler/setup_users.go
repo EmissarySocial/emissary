@@ -11,7 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
 )
 
@@ -48,7 +48,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 	return func(ctx echo.Context) error {
 
 		// Collect the transaction data from the request
-		data := maps.Map{}
+		data := mapof.NewAny()
 
 		if err := ctx.Bind(&data); err != nil {
 			return derp.Wrap(err, location, "Error binding data")
@@ -65,9 +65,9 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		// Populate the new user record
 		user := model.NewUser()
 
-		user.DisplayName, _ = data.GetString("displayName")
-		user.Username, _ = data.GetString("username")
-		user.EmailAddress, _ = data.GetString("emailAddress")
+		user.DisplayName = data.GetString("displayName")
+		user.Username = data.GetString("username")
+		user.EmailAddress = data.GetString("emailAddress")
 		user.IsOwner = true
 
 		// Try to save the new user record
@@ -163,7 +163,7 @@ func displayDomainUsersModal(domainConfig config.Domain, factory *domain.Factory
 
 	userService := factory.User()
 
-	data := maps.Map{
+	data := mapof.Any{
 		"DomainID": domainConfig.DomainID,
 		"Domain":   domainConfig.Label,
 		"Users":    userService.ListOwnersAsSlice(),

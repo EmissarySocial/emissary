@@ -1,10 +1,10 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 type StripeSetup struct{}
 
-func NewStripeSetup(stepInfo maps.Map) (StripeSetup, error) {
+func NewStripeSetup(stepInfo mapof.Any) (StripeSetup, error) {
 	return StripeSetup{}, nil
 }
 

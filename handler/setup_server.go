@@ -10,7 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/table"
 	"github.com/labstack/echo/v4"
 )
@@ -89,7 +89,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		data := maps.Map{}
+		data := mapof.NewAny()
 
 		if err := ctx.Bind(&data); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverPost", "Error parsing form data"))
@@ -154,7 +154,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Type: "layout-vertical",
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100%"}},
+				{Type: "text", Label: "Location", Path: "location", Options: mapof.Any{"column-width": "100%"}},
 			},
 		}, true, nil
 
@@ -163,7 +163,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Type: "layout-vertical",
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100%"}},
+				{Type: "text", Label: "Location", Path: "location", Options: mapof.Any{"column-width": "100%"}},
 			},
 		}, true, nil
 
@@ -172,7 +172,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Type: "layout-vertical",
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: maps.Map{"column-width": "100&"}},
+				{Type: "text", Label: "Location", Path: "location", Options: mapof.Any{"column-width": "100%"}},
 			},
 		}, true, nil
 

@@ -24,20 +24,20 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 		return derp.Report(derp.Wrap(err, location, "Error getting Stripe client"))
 	}
 
-	renderer.SetBool("valid", false) // Set valid=false until everything is loaded.
+	renderer.setBool("valid", false) // Set valid=false until everything is loaded.
 
 	// Get session from URL query
 	sessionID := renderer.context().QueryParam("session")
 
 	if sessionID == "" {
-		renderer.SetString("error", "Session ID is missing")
+		renderer.setString("error", "Session ID is missing")
 	}
 
 	// Retrieve Session data from Stripe
 	session, err := api.CheckoutSessions.Get(sessionID, nil)
 
 	if err != nil {
-		renderer.SetString("error", "Invalid Stripe Session ID: '"+sessionID+"'")
+		renderer.setString("error", "Invalid Stripe Session ID: '"+sessionID+"'")
 		derp.Report(err)
 		return nil
 	}
@@ -46,20 +46,20 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 	customer, err := api.Customers.Get(session.Customer.ID, nil)
 
 	if err != nil {
-		renderer.SetString("error", "Error retrieving customer record: '"+session.Customer.ID+"'")
+		renderer.setString("error", "Error retrieving customer record: '"+session.Customer.ID+"'")
 		derp.Report(err)
 		return nil
 	}
 
-	renderer.SetInt64("subTotal", session.AmountSubtotal)
-	renderer.SetInt64("total", session.AmountSubtotal)
-	renderer.SetString("customerId", session.Customer.ID)
+	renderer.setInt64("subTotal", session.AmountSubtotal)
+	renderer.setInt64("total", session.AmountSubtotal)
+	renderer.setString("customerId", session.Customer.ID)
 
-	renderer.SetString("customerName", customer.Name)
-	renderer.SetString("customerEmail", customer.Email)
-	renderer.SetString("customerPhone", customer.Phone)
+	renderer.setString("customerName", customer.Name)
+	renderer.setString("customerEmail", customer.Email)
+	renderer.setString("customerPhone", customer.Phone)
 
-	renderer.SetBool("valid", true)
+	renderer.setBool("valid", true)
 
 	// Success!!
 	return nil

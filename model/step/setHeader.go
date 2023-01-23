@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // SetHeader represents an action-step that can update the custom data stored in a Stream
@@ -16,17 +16,17 @@ type SetHeader struct {
 }
 
 // NewSetHeader returns a fully initialized SetHeader object
-func NewSetHeader(stepInfo maps.Map) (SetHeader, error) {
+func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
 
-	value, err := template.New("").Parse(getValue(stepInfo.GetString("value")))
+	value, err := template.New("").Parse(stepInfo.GetString("value"))
 
 	if err != nil {
 		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Error parsing value template", value)
 	}
 
 	return SetHeader{
-		On:    first.String(getValue(stepInfo.GetString("on")), "both"),
-		Name:  getValue(stepInfo.GetString("name")),
+		On:    first.String(stepInfo.GetString("on"), "both"),
+		Name:  stepInfo.GetString("name"),
 		Value: value,
 	}, nil
 }

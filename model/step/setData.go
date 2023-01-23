@@ -1,16 +1,16 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // SetData represents an action-step that can update the custom data stored in a Stream
 type SetData struct {
-	Paths    []string // List of paths to pull from form data
-	Values   maps.Map // values to set directly into the object
-	Defaults maps.Map // values to set into the object IFF they are currently empty.
+	Paths    []string  // List of paths to pull from form data
+	Values   mapof.Any // values to set directly into the object
+	Defaults mapof.Any // values to set into the object IFF they are currently empty.
 }
 
 // NewSetData returns a fully initialized SetData object
-func NewSetData(stepInfo maps.Map) (SetData, error) {
+func NewSetData(stepInfo mapof.Any) (SetData, error) {
 
 	return SetData{
 		Paths:    stepInfo.GetSliceOfString("paths"),

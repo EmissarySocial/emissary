@@ -4,12 +4,12 @@ import (
 	"io"
 
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // StepSetQueryParam represents an action-step that sets values to the request query string
 type StepSetQueryParam struct {
-	Values maps.Map
+	Values mapof.Any
 }
 
 // Get displays a form where users can update stream data

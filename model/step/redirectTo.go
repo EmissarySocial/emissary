@@ -4,7 +4,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // RedirectTo represents an action-step that forwards the user to a new page.
@@ -13,11 +13,11 @@ type RedirectTo struct {
 }
 
 // NewRedirectTo returns a fully initialized RedirectTo object
-func NewRedirectTo(stepInfo maps.Map) (RedirectTo, error) {
+func NewRedirectTo(stepInfo mapof.Any) (RedirectTo, error) {
 
 	const location = "model.step.NewRedirectTo"
 
-	url, err := template.New("").Parse(getValue(stepInfo.GetString("url")))
+	url, err := template.New("").Parse(stepInfo.GetString("url"))
 
 	if err != nil {
 		return RedirectTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

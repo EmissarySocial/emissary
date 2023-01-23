@@ -1,15 +1,13 @@
 package step
 
-import (
-	"github.com/benpate/rosetta/maps"
-)
+import "github.com/benpate/rosetta/mapof"
 
 // ViewFeed represents an action-step that can render a Stream into HTML
 type ViewFeed struct {
 }
 
 // NewViewFeed generates a fully initialized ViewFeed step.
-func NewViewFeed(stepInfo maps.Map) (ViewFeed, error) {
+func NewViewFeed(stepInfo mapof.Any) (ViewFeed, error) {
 
 	return ViewFeed{}, nil
 }

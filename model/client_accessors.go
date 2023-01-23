@@ -1,6 +1,6 @@
 package model
 
-func (client Client) GetBool(name string) (bool, bool) {
+func (client Client) GetBoolOK(name string) (bool, bool) {
 	switch name {
 
 	case "active":
@@ -20,7 +20,7 @@ func (client Client) GetObject(name string) (any, bool) {
 	return nil, false
 }
 
-func (client Client) GetString(name string) (string, bool) {
+func (client Client) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "providerId":

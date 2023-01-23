@@ -60,7 +60,7 @@ func (reaction *Reaction) GetObjectID(name string) (primitive.ObjectID, error) {
 	return primitive.NilObjectID, derp.NewInternalError("model.reaction.GetObjectID", "Invalid property", name)
 }
 
-func (reaction *Reaction) GetString(name string) (string, error) {
+func (reaction *Reaction) GetStringOK(name string) (string, error) {
 	switch name {
 	case "method":
 		return reaction.Method, nil
@@ -73,14 +73,14 @@ func (reaction *Reaction) GetString(name string) (string, error) {
 	return "", derp.NewInternalError("model.reaction.GetString", "Invalid property", name)
 }
 
-func (reaction *Reaction) GetInt(name string) (int, error) {
+func (reaction *Reaction) GetIntOK(name string) (int, error) {
 	return 0, derp.NewInternalError("model.reaction.GetInt", "Invalid property", name)
 }
 
-func (reaction *Reaction) GetInt64(name string) (int64, error) {
+func (reaction *Reaction) GetInt64OK(name string) (int64, error) {
 	return 0, derp.NewInternalError("model.reaction.GetInt64", "Invalid property", name)
 }
 
-func (reaction *Reaction) GetBool(name string) (bool, error) {
+func (reaction *Reaction) GetBoolOK(name string) (bool, error) {
 	return false, derp.NewInternalError("model.reaction.GetBool", "Invalid property", name)
 }

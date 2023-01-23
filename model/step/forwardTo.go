@@ -4,7 +4,7 @@ import (
 	"html/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // ForwardTo represents an action-step that forwards the user to a new page.
@@ -13,11 +13,11 @@ type ForwardTo struct {
 }
 
 // NewForwardTo returns a fully initialized ForwardTo object
-func NewForwardTo(stepInfo maps.Map) (ForwardTo, error) {
+func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
 
 	const location = "model.step.NewForwardTo"
 
-	url, err := template.New("").Parse(getValue(stepInfo.GetString("url")))
+	url, err := template.New("").Parse(stepInfo.GetString("url"))
 
 	if err != nil {
 		return ForwardTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

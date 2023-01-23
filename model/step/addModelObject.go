@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // AddModelObject is an action that can add new model objects of any type
@@ -13,10 +13,10 @@ type AddModelObject struct {
 }
 
 // NewAddModelObject returns a fully initialized AddModelObject record
-func NewAddModelObject(stepInfo maps.Map) (AddModelObject, error) {
+func NewAddModelObject(stepInfo mapof.Any) (AddModelObject, error) {
 
 	// Parse form
-	f, err := form.Parse(getValue(stepInfo.GetInterface("form")))
+	f, err := form.Parse(stepInfo.GetAny("form"))
 
 	if err != nil {
 		return AddModelObject{}, derp.Wrap(err, "model.step.NewAddModelObject", "Invalid form", stepInfo["form"])

@@ -41,7 +41,7 @@ func (person PersonLink) Link(relation string) Link {
 // "inboxUrl" and "imageUrl" should be passed to this
 // function. all others will return nil values
 func (person PersonLink) GetURL(name string) *url.URL {
-	value, _ := person.GetString(name)
+	value, _ := person.GetStringOK(name)
 	result, _ := url.Parse(value)
 	return result
 }

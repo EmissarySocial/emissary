@@ -5,7 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type DomainEmail struct {
@@ -59,7 +59,7 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 		service.owner.EmailAddress,
 		[]string{user.EmailAddress},
 		"Welcome to Emissary",
-		maps.Map{
+		mapof.Any{
 			// User info available to the template
 			"UserID":      user.UserID.Hex(),
 			"Username":    user.Username,
@@ -88,7 +88,7 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 		service.owner.EmailAddress,
 		[]string{user.EmailAddress},
 		"Emissary Password Reset",
-		maps.Map{
+		mapof.Any{
 			// User info available to the template
 			"UserID":      user.UserID.Hex(),
 			"Username":    user.Username,

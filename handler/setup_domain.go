@@ -10,7 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/labstack/echo/v4"
 )
@@ -61,7 +61,7 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 		// Try to load the existing domain.  If it does not exist, then create a new one.
 		domain, _ := factory.DomainByID(domainID)
 
-		input := maps.Map{}
+		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
@@ -224,7 +224,7 @@ func setupDomainForm(header string) form.Element {
 					Type:  "textarea",
 					Path:  "owner.mailingAddress",
 					Label: "Mailing Address",
-					Options: maps.Map{
+					Options: mapof.Any{
 						"rows": "3",
 					},
 				},

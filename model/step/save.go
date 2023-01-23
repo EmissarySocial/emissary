@@ -1,6 +1,6 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // Save represents an action-step that can save changes to any object
 type Save struct {
@@ -8,10 +8,10 @@ type Save struct {
 }
 
 // NewSave returns a fully initialized Save object
-func NewSave(stepInfo maps.Map) (Save, error) {
+func NewSave(stepInfo mapof.Any) (Save, error) {
 
 	return Save{
-		Comment: getValue(stepInfo.GetString("comment")),
+		Comment: stepInfo.GetString("comment"),
 	}, nil
 }
 

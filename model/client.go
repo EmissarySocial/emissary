@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"golang.org/x/oauth2"
 )
 
@@ -10,7 +10,7 @@ import (
 // for instance, storing the intermediate state of an OAuth2 connection that has not yet completed the three-legged handshake.
 type Client struct {
 	ProviderID string        `bson:"provider"` // ID of the provider that this credential accesses
-	Data       maps.Map      `bson:"data"`     // Unique data for this credential
+	Data       mapof.Any     `bson:"data"`     // Unique data for this credential
 	Token      *oauth2.Token `bson:"token"`    // OAuth2 Token (if necessary)
 	Active     bool          `bson:"active"`   // Is this credential active?
 }
@@ -19,7 +19,7 @@ type Client struct {
 func NewClient(providerID string) Client {
 	return Client{
 		ProviderID: providerID,
-		Data:       maps.New(),
+		Data:       mapof.NewAny(),
 	}
 }
 

@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // WithChildren represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithChildren struct {
 }
 
 // NewWithChildren returns a fully initialized WithChildren object
-func NewWithChildren(stepInfo maps.Map) (WithChildren, error) {
+func NewWithChildren(stepInfo mapof.Any) (WithChildren, error) {
 
 	const location = "NewWithChildren"
 

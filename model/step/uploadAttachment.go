@@ -1,6 +1,6 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // UploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
 type UploadAttachment struct {
@@ -8,9 +8,9 @@ type UploadAttachment struct {
 }
 
 // NewUploadAttachment returns a fully parsed UploadAttachment object
-func NewUploadAttachment(stepInfo maps.Map) (UploadAttachment, error) {
+func NewUploadAttachment(stepInfo mapof.Any) (UploadAttachment, error) {
 	return UploadAttachment{
-		Maximum: getValue(stepInfo.GetInt("maximum")),
+		Maximum: stepInfo.GetInt("maximum"),
 	}, nil
 }
 

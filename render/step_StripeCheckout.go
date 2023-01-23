@@ -27,7 +27,7 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
-	priceID, _ := stream.Data.GetString("priceId")
+	priceID, _ := stream.Data.GetStringOK("priceId")
 
 	api, err := factory.StripeClient()
 
@@ -52,7 +52,7 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 	}
 
 	// If tax rates are assigned, then add them to the order
-	if taxRateID, ok := stream.Data.GetString("taxId"); ok && (taxRateID != "") {
+	if taxRateID, ok := stream.Data.GetStringOK("taxId"); ok && (taxRateID != "") {
 		for index := range params.LineItems {
 			params.LineItems[index].TaxRates = stripe.StringSlice([]string{taxRateID})
 		}
@@ -63,7 +63,7 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 	}
 
 	// If shipping rates are assinged, then add them to the order
-	if shippingMethod, ok := stream.Data.GetString("shippingMethod"); ok && (shippingMethod != "") {
+	if shippingMethod, ok := stream.Data.GetStringOK("shippingMethod"); ok && (shippingMethod != "") {
 		shippingRates := convert.SliceOfString(shippingMethod)
 		params.ShippingRates = stripe.StringSlice(shippingRates)
 		params.ShippingAddressCollection = &stripe.CheckoutSessionShippingAddressCollectionParams{

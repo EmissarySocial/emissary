@@ -11,7 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/labstack/echo/v4"
 )
@@ -70,7 +70,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 		}
 
 		// Collect the updated connection information from the form post
-		data := maps.New()
+		data := mapof.NewAny()
 
 		if err := ctx.Bind(&data); err != nil {
 			return derp.Wrap(err, "handler.SetupOAuthPost", "Error binding form data")
@@ -122,7 +122,7 @@ func setupOAuthForm(title string) form.Form {
 					Type:  "text",
 					Label: "Client ID",
 					Path:  "clientId",
-					Options: maps.Map{
+					Options: mapof.Any{
 						"autocomplete": "off",
 					},
 				},
@@ -130,7 +130,7 @@ func setupOAuthForm(title string) form.Form {
 					Type:  "text",
 					Label: "Client Secret",
 					Path:  "clientSecret",
-					Options: maps.Map{
+					Options: mapof.Any{
 						"autocomplete": "off",
 					},
 				},

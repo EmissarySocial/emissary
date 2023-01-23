@@ -25,7 +25,7 @@ func ActivitySchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (activity *Activity) GetInt64(name string) (int64, bool) {
+func (activity *Activity) GetInt64OK(name string) (int64, bool) {
 	switch name {
 
 	case "readDate":
@@ -36,7 +36,7 @@ func (activity *Activity) GetInt64(name string) (int64, bool) {
 	}
 }
 
-func (activity *Activity) GetString(name string) (string, bool) {
+func (activity *Activity) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "activityId":
@@ -114,7 +114,7 @@ func (activity *Activity) SetString(name string, value string) bool {
  * Tree Traversal Methods
  ******************************************/
 
-func (activity *Activity) GetObjectOK(name string) (any, bool) {
+func (activity *Activity) GetObject(name string) (any, bool) {
 	switch name {
 
 	case "origin":

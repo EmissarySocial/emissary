@@ -2,7 +2,7 @@ package step
 
 import (
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // SetSimpleSharing represents an action that can edit a top-level folder in the Domain
@@ -13,11 +13,11 @@ type SetSimpleSharing struct {
 }
 
 // NewSetSimpleSharing returns a fully parsed SetSimpleSharing object
-func NewSetSimpleSharing(stepInfo maps.Map) (SetSimpleSharing, error) {
+func NewSetSimpleSharing(stepInfo mapof.Any) (SetSimpleSharing, error) {
 
 	return SetSimpleSharing{
-		Title:   first.String(getValue(stepInfo.GetString("title")), "Sharing Settings"),
-		Message: first.String(getValue(stepInfo.GetString("message")), "Determine Who Can See This Stream"),
+		Title:   first.String(stepInfo.GetString("title"), "Sharing Settings"),
+		Message: first.String(stepInfo.GetString("message"), "Determine Who Can See This Stream"),
 		Roles:   stepInfo.GetSliceOfString("roles"),
 	}, nil
 }

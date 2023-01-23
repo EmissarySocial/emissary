@@ -26,7 +26,7 @@ func DomainSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (domain Domain) GetBool(name string) (bool, bool) {
+func (domain Domain) GetBoolOK(name string) (bool, bool) {
 
 	switch name {
 	case "socialLinks":
@@ -36,7 +36,7 @@ func (domain Domain) GetBool(name string) (bool, bool) {
 	return false, false
 }
 
-func (domain *Domain) GetObjectOK(name string) (any, bool) {
+func (domain *Domain) GetObject(name string) (any, bool) {
 
 	switch name {
 	case "signupForm":
@@ -46,7 +46,7 @@ func (domain *Domain) GetObjectOK(name string) (any, bool) {
 	return nil, false
 }
 
-func (domain Domain) GetString(name string) (string, bool) {
+func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

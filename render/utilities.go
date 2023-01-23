@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -57,7 +57,7 @@ func WrapModal(response *echo.Response, content string, options ...string) strin
 	// Modal Wrapper
 	b.Div().ID("modal").Script("install Modal").Data("hx-swap", "none")
 	b.Div().ID("modal-underlay").Close()
-	b.Div().ID("modal-window").Class(value(optionMap.GetString("class"))).EndBracket() // this is needed because we're embedding foreign content below.
+	b.Div().ID("modal-window").Class(value(optionMap.GetStringOK("class"))).EndBracket() // this is needed because we're embedding foreign content below.
 
 	// Contents
 	b.Grow(len(content))
@@ -99,18 +99,18 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	// Controls
 	b.Div()
 
-	if deleteURL, ok := optionMap.GetString("delete"); ok && (deleteURL != "") {
+	if deleteURL, ok := optionMap.GetStringOK("delete"); ok && (deleteURL != "") {
 		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerHTML("Delete").Close()
 		b.Space()
 	}
 
-	submitLabel := first.String(value(optionMap.GetString("submit-label")), "Save Changes")
-	savingLabel := first.String(value(optionMap.GetString("saving-label")), "Saving...")
+	submitLabel := first.String(value(optionMap.GetStringOK("submit-label")), "Save Changes")
+	savingLabel := first.String(value(optionMap.GetStringOK("saving-label")), "Saving...")
 	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML(submitLabel).Close()
 	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML(savingLabel).Close()
 
-	if cancelButton, _ := optionMap.GetString("cancel-button"); cancelButton != "hide" {
-		cancelLabel := first.String(value(optionMap.GetString("cancel-label")), "Cancel")
+	if cancelButton, _ := optionMap.GetStringOK("cancel-button"); cancelButton != "hide" {
+		cancelLabel := first.String(value(optionMap.GetStringOK("cancel-label")), "Cancel")
 		b.Space()
 		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML(cancelLabel).Close()
 		b.Space()
@@ -211,9 +211,9 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 }
 
 // parseOptions parses a string of options into a map of key/value pairs
-func parseOptions(options ...string) maps.Map {
+func parseOptions(options ...string) mapof.Any {
 
-	result := maps.New()
+	result := mapof.NewAny()
 
 	for _, item := range options {
 		parts := strings.Split(item, ":")

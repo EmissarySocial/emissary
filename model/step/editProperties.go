@@ -2,7 +2,7 @@ package step
 
 import (
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // EditProperties contains the configuration data for a modal that lets users edit the features attached to a stream.
@@ -11,7 +11,7 @@ type EditProperties struct {
 	Paths []string
 }
 
-func NewEditProperties(stepInfo maps.Map) (EditProperties, error) {
+func NewEditProperties(stepInfo mapof.Any) (EditProperties, error) {
 	paths := stepInfo.GetSliceOfString("paths")
 
 	if len(paths) == 0 {
@@ -19,7 +19,7 @@ func NewEditProperties(stepInfo maps.Map) (EditProperties, error) {
 	}
 
 	return EditProperties{
-		Title: first.String(getValue(stepInfo.GetString("title")), "Edit Info"),
+		Title: first.String(stepInfo.GetString("title"), "Edit Info"),
 		Paths: paths,
 	}, nil
 }

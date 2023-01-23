@@ -1,16 +1,14 @@
 package step
 
-import (
-	"github.com/benpate/rosetta/maps"
-)
+import "github.com/benpate/rosetta/mapof"
 
 // SetQueryParam represents an action-step that forwards the user to a new page.
 type SetQueryParam struct {
-	Values maps.Map
+	Values mapof.Any
 }
 
 // NewSetQueryParam returns a fully initialized SetQueryParam object
-func NewSetQueryParam(stepInfo maps.Map) (SetQueryParam, error) {
+func NewSetQueryParam(stepInfo mapof.Any) (SetQueryParam, error) {
 
 	stepInfo.Remove("step")
 

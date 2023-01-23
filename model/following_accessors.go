@@ -32,7 +32,7 @@ func FollowingSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (following Following) GetInt(name string) (int, bool) {
+func (following Following) GetIntOK(name string) (int, bool) {
 
 	switch name {
 
@@ -50,7 +50,7 @@ func (following Following) GetInt(name string) (int, bool) {
 	return 0, false
 }
 
-func (following Following) GetInt64(name string) (int64, bool) {
+func (following Following) GetInt64OK(name string) (int64, bool) {
 
 	switch name {
 
@@ -65,7 +65,7 @@ func (following Following) GetInt64(name string) (int64, bool) {
 	return 0, false
 }
 
-func (following Following) GetString(name string) (string, bool) {
+func (following Following) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

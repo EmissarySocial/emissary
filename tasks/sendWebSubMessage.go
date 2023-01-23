@@ -44,7 +44,7 @@ func (task SendWebSubMessage) Run() error {
 		Body(string(body))
 
 	// Add HMAC signature, if necessary
-	if secret, ok := task.follower.Data.GetString("secret"); ok && (secret != "") {
+	if secret := task.follower.Data.GetString("secret"); secret != "" {
 		mac := hmac.New(sha256.New, []byte(secret))
 		mac.Write(body)
 		transaction.Header("X-Hub-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))

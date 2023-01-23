@@ -1,8 +1,6 @@
 package step
 
-import (
-	"github.com/benpate/rosetta/maps"
-)
+import "github.com/benpate/rosetta/mapof"
 
 // AddChildEmbed is an action that can add new sub-streams to the domain.
 type AddChildEmbed struct {
@@ -11,11 +9,11 @@ type AddChildEmbed struct {
 }
 
 // NewAddChildEmbed returns a fully initialized AddChildEmbed record
-func NewAddChildEmbed(stepInfo maps.Map) (AddChildEmbed, error) {
+func NewAddChildEmbed(stepInfo mapof.Any) (AddChildEmbed, error) {
 
 	return AddChildEmbed{
 		TemplateIDs: stepInfo.GetSliceOfString("template"),
-		ShowLabels:  getValue(stepInfo.GetBool("showLabels")),
+		ShowLabels:  stepInfo.GetBool("showLabels"),
 	}, nil
 }
 

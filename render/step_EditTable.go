@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/table"
 	"github.com/labstack/echo/v4"
 )
@@ -53,7 +53,7 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 	object := renderer.object()
 
 	// Try to get the form post data
-	body := make(maps.Map)
+	body := mapof.NewAny()
 
 	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &body); err != nil {
 		return derp.Wrap(err, location, "Failed to bind body", step)

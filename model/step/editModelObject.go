@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // EditModelObject is an action that can add new sub-streams to the domain.
@@ -15,10 +15,10 @@ type EditModelObject struct {
 }
 
 // NewEditModelObject returns a fully initialized EditModelObject record
-func NewEditModelObject(stepInfo maps.Map) (EditModelObject, error) {
+func NewEditModelObject(stepInfo mapof.Any) (EditModelObject, error) {
 
 	// Parse the form definition
-	f, err := form.Parse(getValue(stepInfo.GetInterface("form")))
+	f, err := form.Parse(stepInfo.GetAny("form"))
 
 	if err != nil {
 		return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'form'", stepInfo)

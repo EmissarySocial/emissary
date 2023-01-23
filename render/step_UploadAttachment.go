@@ -5,7 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
@@ -79,9 +79,9 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 
 		// EditorJS can only upload a single file at a time.
 		if isEditorJS {
-			response := maps.Map{
+			response := mapof.Any{
 				"success": 1,
-				"file": maps.Map{
+				"file": mapof.Any{
 					"url":    attachment.URL(),
 					"height": attachment.Height,
 					"width":  attachment.Width,

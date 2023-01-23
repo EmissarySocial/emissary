@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // TableEditor is an action that can add new sub-streams to the domain.
@@ -13,16 +13,16 @@ type TableEditor struct {
 }
 
 // NewTableEditor returns a fully initialized TableEditor record
-func NewTableEditor(stepInfo maps.Map) (TableEditor, error) {
+func NewTableEditor(stepInfo mapof.Any) (TableEditor, error) {
 
-	f, err := form.Parse(getValue(stepInfo.GetInterface("form")))
+	f, err := form.Parse(stepInfo.GetAny("form"))
 
 	if err != nil {
 		return TableEditor{}, derp.Wrap(err, "model.step.NewTableEditor", "Invalid 'form'", stepInfo)
 	}
 
 	return TableEditor{
-		Path: getValue(stepInfo.GetString("path")),
+		Path: stepInfo.GetString("path"),
 		Form: f,
 	}, nil
 }

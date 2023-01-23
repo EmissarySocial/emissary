@@ -37,7 +37,7 @@ func (step StepStripeSetup) Post(renderer Renderer) error {
 	stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 
 	// Verify that webhooks have been set up on this domain
-	if webhookSecret, _ := stripeClient.GetString(providers.Stripe_WebhookSecret); webhookSecret == "" {
+	if webhookSecret, _ := stripeClient.GetStringOK(providers.Stripe_WebhookSecret); webhookSecret == "" {
 
 		// Configure webhook
 		params := stripe.WebhookEndpointParams{

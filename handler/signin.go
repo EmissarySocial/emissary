@@ -6,7 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
 )
 
@@ -149,7 +149,7 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		// Try to render the HTML response
 		template := factory.Layout().Global().HTMLTemplate
 
-		object := maps.Map{
+		object := mapof.Any{
 			"userId":      userID,
 			"displayName": user.DisplayName,
 			"code":        resetCode,

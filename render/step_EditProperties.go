@@ -5,7 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // StepEditProperties represents an action-step that can edit/update Container in a streamDraft.
@@ -37,7 +37,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Path:        path,
 					Type:        "text",
 					Label:       "URL Token",
-					Options:     maps.Map{"format": "token"},
+					Options:     mapof.Any{"format": "token"},
 					Description: "Human-friendly web address",
 				})
 
@@ -48,7 +48,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Type:        "text",
 					Label:       "Label",
 					Description: "Displayed on navigation, pages, and indexes",
-					Options:     maps.Map{"maxlength": 100},
+					Options:     mapof.Any{"maxlength": 100},
 				})
 
 		case "description":
@@ -59,7 +59,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 					Path:        path,
 					Label:       "Text Description",
 					Description: "Long description displays on pages and indexes",
-					Options:     maps.Map{"maxlength": 1000},
+					Options:     mapof.Any{"maxlength": 1000},
 				})
 
 		}
@@ -85,8 +85,8 @@ func (step StepEditProperties) UseGlobalWrapper() bool {
 func (step StepEditProperties) Post(renderer Renderer) error {
 
 	const location = "render.StepEditProperties.Post"
-	body := maps.Map{}
 	context := renderer.context()
+	body := mapof.NewAny()
 
 	if err := context.Bind(&body); err != nil {
 		return derp.Wrap(err, location, "Error binding request body")

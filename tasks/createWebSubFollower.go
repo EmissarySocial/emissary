@@ -8,7 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/gommon/random"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -80,7 +80,7 @@ func (task CreateWebSubFollower) subscribe() error {
 	// Set additional properties that are not handled by LoadByWebSubUnique
 	follower.Format = task.format
 	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
-	follower.Data = maps.Map{
+	follower.Data = mapof.Any{
 		"secret": task.secret,
 	}
 

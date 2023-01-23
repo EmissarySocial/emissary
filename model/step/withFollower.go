@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // WithFollower represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithFollower struct {
 }
 
 // NewWithFollower returns a fully initialized WithFollower object
-func NewWithFollower(stepInfo maps.Map) (WithFollower, error) {
+func NewWithFollower(stepInfo mapof.Any) (WithFollower, error) {
 
 	const location = "NewWithFollower"
 

@@ -59,7 +59,7 @@ func (step StepSort) Post(renderer Renderer) error {
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
 		if getter, ok := object.(schema.IntGetter); ok {
-			if value, ok := getter.GetInt(step.Values); ok {
+			if value, ok := getter.GetIntOK(step.Values); ok {
 				if value == newRank {
 					continue
 				}

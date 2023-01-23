@@ -17,7 +17,7 @@ func ContentSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
-func (content *Content) GetString(name string) (string, bool) {
+func (content *Content) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "format":

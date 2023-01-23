@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // WithBlock represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithBlock struct {
 }
 
 // NewWithBlock returns a fully initialized WithBlock object
-func NewWithBlock(stepInfo maps.Map) (WithBlock, error) {
+func NewWithBlock(stepInfo mapof.Any) (WithBlock, error) {
 
 	const location = "NewWithBlock"
 

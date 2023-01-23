@@ -1,6 +1,6 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // DeleteAttachments represents an action that can upload attachments.  It can only be used on a StreamRenderer
 type DeleteAttachments struct {
@@ -8,9 +8,9 @@ type DeleteAttachments struct {
 }
 
 // NewDeleteAttachments returns a fully parsed DeleteAttachments object
-func NewDeleteAttachments(stepInfo maps.Map) (DeleteAttachments, error) {
+func NewDeleteAttachments(stepInfo mapof.Any) (DeleteAttachments, error) {
 	return DeleteAttachments{
-		All: getValue(stepInfo.GetBool("all")),
+		All: stepInfo.GetBool("all"),
 	}, nil
 }
 

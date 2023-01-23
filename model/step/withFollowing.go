@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // WithFollowing represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -12,7 +12,7 @@ type WithFollowing struct {
 }
 
 // NewWithFollowing returns a fully initialized WithFollowing object
-func NewWithFollowing(stepInfo maps.Map) (WithFollowing, error) {
+func NewWithFollowing(stepInfo mapof.Any) (WithFollowing, error) {
 
 	const location = "NewWithFollowing"
 

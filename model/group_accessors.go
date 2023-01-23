@@ -18,7 +18,7 @@ func GroupSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (group *Group) GetString(name string) (string, bool) {
+func (group *Group) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

@@ -29,7 +29,7 @@ func (slice Slice) Length() int {
 	return len(slice)
 }
 
-func (slice Slice) GetString(name string) (string, bool) {
+func (slice Slice) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {
 		return (slice)[index].Hex(), true

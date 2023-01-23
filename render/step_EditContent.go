@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
@@ -50,12 +50,12 @@ func (step StepEditContent) Post(renderer Renderer) error {
 	// All other types are a Form post
 	default:
 
-		body := maps.New()
+		body := mapof.NewAny()
 		if err := context.Bind(&body); err != nil {
 			return derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data")
 		}
 
-		rawContent, _ = body.GetString("content")
+		rawContent, _ = body.GetStringOK("content")
 	}
 
 	// Create a new Content object from the request body

@@ -15,7 +15,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
@@ -282,14 +282,14 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
 	config.RedirectURL = service.OAuthCallbackURL(providerID)
 	/* TODO: MEDIUM: add hash value for challenge_method...
-	codeChallengeBytes := sha256.Sum256([]byte(client.GetString("code_challenge")))
+	codeChallengeBytes := sha256.Sum256([]byte(client.GetStringOK("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	*/
 
-	codeChallenge := oauth2.SetAuthURLParam("code_challenge", value(client.GetString("code_challenge")))
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", value(client.GetStringOK("code_challenge")))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
-	authCodeURL := config.AuthCodeURL(value(client.GetString("state")), codeChallenge, codeChallengeMethod)
+	authCodeURL := config.AuthCodeURL(value(client.GetStringOK("state")), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL, nil
 }
@@ -320,7 +320,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	}
 
 	// Validate the state across requests
-	if newState, _ := client.Data.GetString("state"); newState != state {
+	if newState, _ := client.Data.GetStringOK("state"); newState != state {
 		return derp.NewBadRequestError(location, "Invalid OAuth State", state)
 	}
 
@@ -328,7 +328,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	config := provider.OAuthConfig()
 
 	token, err := config.Exchange(context.Background(), code,
-		oauth2.SetAuthURLParam("code_verifier", value(client.GetString("code_challenge"))),
+		oauth2.SetAuthURLParam("code_verifier", value(client.GetStringOK("code_challenge"))),
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthCallbackURL(providerID)))
 
 	if err != nil {
@@ -337,7 +337,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 
 	// Try to update the client with the new token
 	client.Token = token
-	client.Data = maps.New()
+	client.Data = mapof.NewAny()
 	client.Active = true
 	domain.Clients.Put(client)
 

@@ -8,7 +8,7 @@ type BoolGetterSetter interface {
 }
 
 type BoolGetter interface {
-	GetBool(string) bool
+	GetBoolOK(string) bool
 }
 
 type BoolSetter interface {
@@ -20,7 +20,7 @@ type IntGetterSetter interface {
 	IntSetter
 }
 type IntGetter interface {
-	GetInt(string) int
+	GetIntOK(string) int
 }
 
 type IntSetter interface {
@@ -33,7 +33,7 @@ type Int64GetterSetter interface {
 }
 
 type Int64Getter interface {
-	GetInt64(string) int64
+	GetInt64OK(string) int64
 }
 
 type Int64Setter interface {
@@ -46,7 +46,7 @@ type FloatGetterSetter interface {
 }
 
 type FloatGetter interface {
-	GetFloat(string) float64
+	GetFloatOK(string) float64
 }
 type FloatSetter interface {
 	SetFloat(string, float64) bool
@@ -70,7 +70,7 @@ type StringGetterSetter interface {
 	StringSetter
 }
 type StringGetter interface {
-	GetString(string) string
+	GetStringOK(string) string
 }
 
 type StringSetter interface {

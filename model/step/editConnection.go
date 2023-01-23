@@ -1,11 +1,11 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // EditConnection contains the configuration data for a modal that lets administrators manage connections to external servers.
 type EditConnection struct{}
 
-func NewEditConnection(stepInfo maps.Map) (EditConnection, error) {
+func NewEditConnection(stepInfo mapof.Any) (EditConnection, error) {
 	return EditConnection{}, nil
 }
 

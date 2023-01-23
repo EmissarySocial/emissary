@@ -77,7 +77,7 @@ func (adapter Stripe) AfterConnect(factory Factory, client *model.Client) error 
 	}
 
 	// Verify that webhooks have been set up on this domain
-	if secret, _ := client.GetString(Stripe_WebhookSecret); secret == "" {
+	if secret, _ := client.GetStringOK(Stripe_WebhookSecret); secret == "" {
 
 		api, err := factory.StripeClient()
 

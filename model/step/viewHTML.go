@@ -1,6 +1,6 @@
 package step
 
-import "github.com/benpate/rosetta/maps"
+import "github.com/benpate/rosetta/mapof"
 
 // ViewHTML represents an action-step that can render a Stream into HTML
 type ViewHTML struct {
@@ -8,9 +8,9 @@ type ViewHTML struct {
 }
 
 // NewViewHTML generates a fully initialized ViewHTML step.
-func NewViewHTML(stepInfo maps.Map) (ViewHTML, error) {
+func NewViewHTML(stepInfo mapof.Any) (ViewHTML, error) {
 	return ViewHTML{
-		File: getValue(stepInfo.GetString("file")),
+		File: stepInfo.GetString("file"),
 	}, nil
 }
 
