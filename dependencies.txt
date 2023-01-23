@@ -2,9 +2,8 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
-- icon
 - table
-- steranko 
+- steranko
 - mediaserver
 - exp-builder
 - digit
