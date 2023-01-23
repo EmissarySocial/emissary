@@ -24,7 +24,7 @@ func Schema() schema.Schema {
 	}
 }
 
-func (config *Config) GetObjectOK(name string) (any, bool) {
+func (config *Config) GetObject(name string) (any, bool) {
 
 	switch name {
 
@@ -57,7 +57,7 @@ func (config *Config) GetObjectOK(name string) (any, bool) {
 	return nil, false
 }
 
-func (config Config) GetString(name string) (string, bool) {
+func (config Config) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

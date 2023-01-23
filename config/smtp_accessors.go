@@ -17,7 +17,7 @@ func SMTPConnectionSchema() schema.Element {
 	}
 }
 
-func (smtp SMTPConnection) GetBool(name string) (bool, bool) {
+func (smtp SMTPConnection) GetBoolOK(name string) (bool, bool) {
 
 	switch name {
 
@@ -28,7 +28,7 @@ func (smtp SMTPConnection) GetBool(name string) (bool, bool) {
 	return false, false
 }
 
-func (smtp SMTPConnection) GetInt(name string) (int, bool) {
+func (smtp SMTPConnection) GetIntOK(name string) (int, bool) {
 
 	switch name {
 
@@ -39,7 +39,7 @@ func (smtp SMTPConnection) GetInt(name string) (int, bool) {
 	return 0, false
 }
 
-func (smtp SMTPConnection) GetString(name string) (string, bool) {
+func (smtp SMTPConnection) GetStringOK(name string) (string, bool) {
 
 	switch name {
 

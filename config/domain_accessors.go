@@ -16,7 +16,21 @@ func DomainSchema() schema.Element {
 	}
 }
 
-func (domain Domain) GetString(name string) (string, bool) {
+func (domain *Domain) GetObject(name string) (any, bool) {
+
+	switch name {
+
+	case "smtp":
+		return &domain.SMTPConnection, true
+
+	case "owner":
+		return &domain.Owner, true
+	}
+
+	return nil, false
+}
+
+func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	switch name {
 
@@ -34,20 +48,6 @@ func (domain Domain) GetString(name string) (string, bool) {
 	}
 
 	return "", false
-}
-
-func (domain *Domain) GetObjectOK(name string) (any, bool) {
-
-	switch name {
-
-	case "smtp":
-		return &domain.SMTPConnection, true
-
-	case "owner":
-		return &domain.Owner, true
-	}
-
-	return nil, false
 }
 
 func (domain *Domain) SetString(name string, value string) bool {

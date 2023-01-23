@@ -23,7 +23,7 @@ func ProviderSchema() schema.Element {
 	}
 }
 
-func (provider Provider) GetString(key string) (string, bool) {
+func (provider Provider) GetStringOK(key string) (string, bool) {
 
 	switch key {
 
