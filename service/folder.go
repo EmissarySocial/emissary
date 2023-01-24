@@ -171,6 +171,15 @@ func (service *Folder) QueryByUserID(userID primitive.ObjectID) ([]model.Folder,
 	return service.Query(exp.Equal("userId", userID), option.SortAsc("label"))
 }
 
+func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, result *model.Folder) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("label", label)
+
+	return service.Load(criteria, result)
+}
+
 // LoadByToken locates a single stream that matches the provided token
 func (service *Folder) LoadByToken(userID primitive.ObjectID, token string, result *model.Folder) error {
 

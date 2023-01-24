@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -82,6 +81,5 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 		return NewProfile(factory, ctx, object, actionID)
 	}
 
-	spew.Dump(object)
 	return nil, derp.NewInternalError("render.NewRenderer", "Unrecognized object", object)
 }

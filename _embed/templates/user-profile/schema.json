@@ -170,7 +170,7 @@
 						{"step":"set-data", "from-url":["url"]},
 						{"step":"edit", "form":{
 							"type":"layout-vertical",
-							"label":"Add a User or URL to Follow",
+							"label":"Follow a Person or Website",
 							"children": [
 								{
 									"type":"text",
@@ -195,8 +195,8 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"as-modal", "options":["delete:/@me/following-delete?followingId={{.FollowingID}}"], "steps":[
-						{"step":"edit", "form":{
+					{"step":"as-modal", "steps":[
+						{"step":"edit", "options":"delete:/@me/following-delete?followingId={{.ObjectID}}", "form":{
 							"type":"layout-vertical",
 							"label":"Edit Follow Settings",
 							"children": [
@@ -223,10 +223,8 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"as-modal", "steps":[
-						{"step":"delete"},
-						{"step":"reload-page"}
-					]}
+					{"step":"delete", "title":"Stop Following {{.Label}}", "message":"Are you sure you want to delete this follow?"},
+					{"step":"reload-page"}
 				]}
 			]
 		},
@@ -292,7 +290,7 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
-					{"step":"delete", "title":"Delete {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
+					{"step":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
 					{"step":"forward-to", "url":"/@me/inbox"}
 				]}
 			]

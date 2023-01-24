@@ -16,7 +16,7 @@
 			<div role="link" hx-get="/@me/inbox-all">{{icon "folder"}} All Posts</div>
 		{{- end -}}
 
-		<br>
+		<hr>
 
 		{{- range .Folders -}}
 
@@ -27,9 +27,10 @@
 			{{- end -}}
 
 		{{- end -}}
-		<br>
-		<div role="button" hx-get="/@me/inbox-folder-edit?folderId=new">{{icon "add"}} Add Folder</div>
-		<div role="button" hx-get="/@me/following">{{icon "settings"}} Manage Following</div>
+		<div role="button" hx-get="/@me/inbox-folder-edit?folderId=new">{{icon "add"}} Add a Folder</div>
+		<hr>
+		<div role="button" hx-get="/@me/following-new">{{icon "add"}} Add a Follow</div>
+		<div role="button" hx-get="/@me/following">{{icon "settings"}} Manage Follows</div>
 	</div>
 
 	<div 

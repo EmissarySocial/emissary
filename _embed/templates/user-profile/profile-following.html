@@ -9,12 +9,6 @@
 
 			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4">
 
-				{{- if .UserCan "profile-edit" -}}
-				<div class="float-right text-sm">
-					<button hx-get="/@me/following-new">{{icon "add"}} Follow</button>
-				</div>
-				{{- end -}}
-
 				<div role="tablist" class="underlined" hx-push-url="true">
 					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
 					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
@@ -23,6 +17,12 @@
 				</div>
 
 				<br>
+
+				{{- if .UserCan "profile-edit" -}}
+					<div class="table">
+						<div role="button" hx-get="/@me/following-new">{{icon "add"}} Follow a Person or Website</div>
+					</div>
+				{{- end -}}
 
 				{{.View "following-list"}}
 						

@@ -47,12 +47,25 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 	}
 
 	folder := model.NewFolder()
-	folder.Label = name
-	folder.UserID = service.userID
 
-	if err := service.folderService.Save(&folder, "created"); err != nil {
-		return "", derp.Wrap(err, "service.FolderLookupProvider.Add", "Error saving folder", name)
+	// RULE: Search for existing folder with the same name
+	err := service.folderService.LoadByLabel(service.userID, name, &folder)
+
+	if err == nil {
+		return folder.ID(), nil
 	}
 
-	return folder.ID(), nil
+	if derp.NotFound(err) {
+
+		folder.Label = name
+		folder.UserID = service.userID
+
+		if err := service.folderService.Save(&folder, "created"); err != nil {
+			return "", derp.Wrap(err, "service.FolderLookupProvider.Add", "Error saving folder", name)
+		}
+
+		return folder.ID(), nil
+	}
+
+	return "", derp.Wrap(err, "service.FolderLookupProvider.Add", "Error searching for existing folder", name)
 }

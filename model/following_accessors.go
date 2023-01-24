@@ -16,7 +16,7 @@ func FollowingSchema() schema.Element {
 			"label":         schema.String{MaxLength: 128},
 			"url":           schema.String{Format: "url", Required: true, MaxLength: 1024},
 			"method":        schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"status":        schema.String{Enum: []string{FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
+			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage": schema.String{MaxLength: 1024},
 			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 7)},
@@ -154,10 +154,9 @@ func (following *Following) SetString(name string, value string) bool {
 		}
 
 	case "folderId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			following.FolderID = objectID
-			return true
-		}
+		objectID, _ := primitive.ObjectIDFromHex(value)
+		following.FolderID = objectID
+		return true
 
 	case "label":
 		following.Label = value
