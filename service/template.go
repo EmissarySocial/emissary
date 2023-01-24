@@ -125,13 +125,15 @@ func (service *Template) loadTemplates() error {
 		filesystem, err := service.filesystemService.GetFS(location)
 
 		if err != nil {
-			return derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter", location)
+			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter", location))
+			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			return derp.Wrap(err, "service.Template.loadTemplates", "Error reading directory", location)
+			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error reading directory", location))
+			continue
 		}
 
 		for _, directory := range directories {
@@ -143,18 +145,21 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directory.Name())
 
 			if err != nil {
-				return derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location)
+				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location))
+				continue
 			}
 
 			template := model.NewTemplate(directory.Name(), service.funcMap)
 
 			// System locations (except for "static" and "global") have a schema.json file
 			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
-				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory)
+				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory))
+				continue
 			}
 
 			if err := loadHTMLTemplateFromFilesystem(subdirectory, template.HTMLTemplate, service.funcMap); err != nil {
-				return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory)
+				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory))
+				continue
 			}
 
 			fmt.Println("... template: " + template.TemplateID)
