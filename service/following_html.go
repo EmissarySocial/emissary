@@ -20,11 +20,6 @@ func (service *Following) import_HTML(following *model.Following, response *http
 		return derp.Wrap(err, location, "Error importing HTML", following, body.String())
 	}
 
-	// Update status to "active"
-	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
-		return derp.Wrap(err, location, "Error setting status", following)
-	}
-
 	// Success!
 	return nil
 }
@@ -56,7 +51,7 @@ func (service *Following) import_HTML_feed(following *model.Following, response 
 		return nil
 	}
 
-	return derp.NewBadRequestError("service.following.import_HTML_feed", "No feed or links found in HTML document", following, body.String())
+	return derp.NewBadRequestError("service.following.import_HTML_feed", "No feed or links found in HTML document", following)
 }
 
 func (service *Following) import_Microformats(following *model.Following, response *http.Response, body *bytes.Buffer) bool {

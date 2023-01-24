@@ -29,14 +29,10 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 	for _, item := range feed.Items {
 		activity := convert.JsonFeedToActivity(feed, item)
 		if err := service.saveActivity(following, &activity); err != nil {
-			return service.saveError(following, derp.Wrap(err, location, "Error saving activity", following, activity))
+			return derp.Wrap(err, location, "Error saving activity", following, activity)
 		}
 	}
 
-	// Save our success
-	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
-		return derp.Wrap(err, location, "Error setting status", following)
-	}
-
+	// Save our success!
 	return nil
 }

@@ -21,6 +21,27 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
 
+	// If there is an error connecting to the URL, then mark the status as Failure
+	if err := service.connect(following); err != nil {
+		if innerError := service.SetStatus(&following, model.FollowingStatusFailure, err.Error()); err != nil {
+			return derp.Wrap(innerError, location, "Error updating following status", following)
+		}
+
+		return err
+	}
+
+	// Otherwise, mark the status as "Connected"
+	if err := service.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
+		return derp.Wrap(err, location, "Error setting status", following)
+	}
+
+	return nil
+}
+
+func (service *Following) connect(following model.Following) error {
+
+	const location = "service.Following.connect"
+
 	// Try to load the targetURL.
 	var body bytes.Buffer
 	transaction := remote.
@@ -29,7 +50,7 @@ func (service *Following) Connect(following model.Following) error {
 		Response(&body, nil)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error loading URL", following.URL)
+		return derp.Wrap(err, location, "Error connecting to remote website", following.URL)
 	}
 
 	// Look for Links to ActivityPub/Feeds/Hubs
@@ -65,11 +86,6 @@ func (service *Following) Connect(following model.Following) error {
 
 	// Otherwise, we can't find a valid feed, so report an error.
 	default:
-
-		if err := service.SetStatus(&following, model.FollowingStatusFailure, "Unsupported content type: "+mimeType); err != nil {
-			return derp.Wrap(err, location, "Error updating following status", following)
-		}
-
 		return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
 	}
 

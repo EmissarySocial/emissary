@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/kr/jsonfeed"
 	"github.com/tomnomnom/linkheader"
 )
@@ -20,6 +21,7 @@ import (
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
 func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
 
+	spew.Dump("discoverLinks")
 	result := digit.NewLinkSet(10)
 
 	// Look for links embedded in the HTML
@@ -28,8 +30,8 @@ func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
 	// Fall back to WebFinger, just in case
 	result.Append(discoverLinks_WebFinger(response.Request.URL.String())...)
 
-	// Fall through, fail through
-	return make([]digit.Link, 0)
+	// Return all results
+	return result
 }
 
 func discoverLinks_HTML(response *http.Response, body *bytes.Buffer) []digit.Link {

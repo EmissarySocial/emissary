@@ -22,7 +22,7 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	rssFeed, err := gofeed.NewParser().ParseString(body.String())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing RSS feed", body.String())
+		return derp.Wrap(err, location, "Error parsing RSS feed")
 	}
 
 	// Update the label for this "following" record using the RSS feed title.
@@ -36,25 +36,9 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	for _, rssItem := range rssFeed.Items {
 		activity := convert.RSSToActivity(rssFeed, rssItem)
 		if err := service.saveActivity(following, &activity); err != nil {
-			return service.saveError(following, derp.Wrap(err, location, "Error updating local activity"))
+			return derp.Wrap(err, location, "Error updating local activity")
 		}
 	}
 
-	// If we're here, then we have successfully imported the RSS feed.
-	// Mark the following as having been polled
-	if err := service.SetStatus(following, model.FollowingStatusSuccess, ""); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
-	}
-
 	return nil
-}
-
-func (service *Following) saveError(following *model.Following, err error) error {
-
-	// Try to update the following status
-	if saveError := service.SetStatus(following, model.FollowingStatusFailure, err.Error()); saveError != nil {
-		return derp.Wrap(err, "service.Following.saveError", "Error updating following status", following)
-	}
-
-	return err
 }
