@@ -175,6 +175,13 @@ func (service *Activity) Schema() schema.Schema {
  * Custom Query Methods
  ******************************************/
 
+func (service *Activity) ListByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) (data.Iterator, error) {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID)
+
+	return service.List(criteria)
+}
+
 func (service *Activity) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("origin.InternalID", followingID)
@@ -251,6 +258,25 @@ func (service *Activity) LoadFromInboxByURL(userID primitive.ObjectID, url strin
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+func (service *Activity) DeleteByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {
+
+	it, err := service.ListByFolder(userID, folderID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Activity", "Cannot list Activities by folder", userID, folderID)
+	}
+
+	activity := model.NewActivity()
+	for it.Next(&activity) {
+		if err := service.Delete(&activity, "DeleteByFolder"); err != nil {
+			return derp.Wrap(err, "service.Activity", "Cannot delete Activity", activity)
+		}
+		activity = model.NewActivity()
+	}
+
+	return nil
+}
 
 // SetReadDate updates the readDate for a single Activity IF it is not already read
 func (service *Activity) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {

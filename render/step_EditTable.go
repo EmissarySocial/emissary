@@ -27,7 +27,7 @@ func (step StepTableEditor) Get(renderer Renderer, buffer io.Writer) error {
 
 	targetURL := step.getTargetURL(renderer)
 	t := table.New(&s, &step.Form, renderer.object(), step.Path, factory.Icons(), targetURL)
-	t.UseLookupProvider(factory.LookupProvider())
+	t.UseLookupProvider(renderer.lookupProvider())
 	t.AllowAll()
 
 	if editRow, ok := convert.IntOk(renderer.QueryParam("edit"), 0); ok {
@@ -112,7 +112,7 @@ func (step StepTableEditor) Post(renderer Renderer) error {
 
 	factory := renderer.factory()
 	t := table.New(&s, &step.Form, renderer.object(), step.Path, factory.Icons(), targetURL)
-	t.UseLookupProvider(factory.LookupProvider())
+	t.UseLookupProvider(renderer.lookupProvider())
 	t.AllowAll()
 
 	if err := t.DrawView(renderer.context().Response().Writer); err != nil {

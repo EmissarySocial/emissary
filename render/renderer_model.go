@@ -68,6 +68,27 @@ func (w Model) service() service.ModelService {
 	return w._service
 }
 
+func (w Model) ObjectID() string {
+	return w._object.ID()
+}
+
+func (w Model) Label() string {
+	switch object := w._object.(type) {
+
+	case *model.Folder:
+		return object.Label
+
+	case *model.Following:
+		return object.Label
+
+	case *model.Stream:
+		return object.Document.Label
+
+	default:
+		return ""
+	}
+}
+
 func (w Model) Token() string {
 	return ""
 }

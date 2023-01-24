@@ -6,20 +6,21 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Folder manages all interactions with a user's Folder
 type Folder struct {
-	collection data.Collection
+	collection      data.Collection
+	activityService *Activity
 }
 
 // NewFolder returns a fully populated Folder service
-func NewFolder(collection data.Collection) Folder {
+func NewFolder(collection data.Collection, activityService *Activity) Folder {
 	service := Folder{
-		collection: collection,
+		collection:      collection,
+		activityService: activityService,
 	}
 
 	service.Refresh(collection)
@@ -52,7 +53,7 @@ func (service *Folder) New() model.Folder {
 // Query returns a slice of Folders that math the provided criteria
 func (service *Folder) Query(criteria exp.Expression, options ...option.Option) ([]model.Folder, error) {
 	result := []model.Folder{}
-	err := service.collection.Query(&result, criteria, options...)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
@@ -88,11 +89,15 @@ func (service *Folder) Save(folder *model.Folder, note string) error {
 }
 
 // Delete removes an Folder from the database (virtual delete)
-func (service *Folder) Delete(inboxItem *model.Folder, note string) error {
+func (service *Folder) Delete(folder *model.Folder, note string) error {
+
+	if err := service.activityService.DeleteByFolder(folder.UserID, folder.FolderID); err != nil {
+		return derp.Wrap(err, "service.Folder", "Error deleting Folder activities", folder, note)
+	}
 
 	// Delete Folder record last.
-	if err := service.collection.Delete(inboxItem, note); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error deleting Folder", inboxItem, note)
+	if err := service.collection.Delete(folder, note); err != nil {
+		return derp.Wrap(err, "service.Folder", "Error deleting Folder", folder, note)
 	}
 
 	return nil
@@ -190,12 +195,4 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
 		AndEqual("origin.url", originURL)
 
 	return service.Load(criteria, result)
-}
-
-/******************************************
- * Misc Actions
- ******************************************/
-
-func (service *Folder) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
-	return NewFolderLookupProvider(service, userID)
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/go-fed/activity/pub"
 	"github.com/spf13/afero"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/stripe/stripe-go/v72/client"
 )
@@ -155,6 +156,11 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollower),
 		factory.User(),
 		factory.Host(),
+	)
+
+	factory.folderService = service.NewFolder(
+		factory.collection(CollectionFolder),
+		factory.Activity(),
 	)
 
 	go factory.followingService.Start()
@@ -521,8 +527,8 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 }
 
 // LookupProvider returns a fully populated LookupProvider service
-func (factory *Factory) LookupProvider() form.LookupProvider {
-	return service.NewLookupProvider(factory.Group())
+func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
+	return service.NewLookupProvider(factory.Group(), factory.Folder(), userID)
 }
 
 /******************************************

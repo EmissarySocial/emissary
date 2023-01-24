@@ -16,7 +16,6 @@ type StepEditProperties struct {
 
 func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 
-	factory := renderer.factory()
 	schema := renderer.schema()
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
@@ -66,7 +65,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Create HTML for the form
-	html, err := form.Editor(schema, element, stream, factory.LookupProvider())
+	html, err := form.Editor(schema, element, stream, renderer.lookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML")

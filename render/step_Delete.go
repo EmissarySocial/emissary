@@ -20,7 +20,7 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 
 	b := html.New()
 
-	b.H2().InnerHTML(executeTemplate(step.Title, renderer)).Close()
+	b.H1().InnerHTML(executeTemplate(step.Title, renderer)).Close()
 	b.Div().Class("space-below").InnerHTML(executeTemplate(step.Message, renderer)).Close()
 
 	b.Button().Class("warning").

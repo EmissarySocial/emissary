@@ -315,6 +315,12 @@ func (w Common) authorization() model.Authorization {
  * MISC HELPER FUNCTIONS
  ******************************************/
 
+func (w Common) lookupProvider() form.LookupProvider {
+
+	userID := w.AuthenticatedID()
+	return w._factory.LookupProvider(userID)
+}
+
 func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
 	if w._template == nil {
 		return derp.NewBadRequestError("render.Common.executeTemplate", "No template specified")

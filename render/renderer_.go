@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -51,18 +52,19 @@ type Renderer interface {
 	setInt64(name string, value int64)
 	setString(name string, value string)
 
-	factory() Factory                   // The service factory
-	context() *steranko.Context         // The request context embedded in the Renderer
-	service() service.ModelService      // The abstracted ModelService the backs this Renderer
-	templateRole() string               // Returns the role that the current template plays in the system. Used for choosing child template.
-	template() *model.Template          // The template used for this renderer (if any)
-	objectType() string                 // The type of object being rendered
-	authorization() model.Authorization // retrieves the user's authorization data from the context
-	schema() schema.Schema              // Schema to use to validate this Object
-	object() data.Object                // Model Object being rendered
-	objectID() primitive.ObjectID       // MongoDB ObjectID of the Object being rendered
-	setQuery(string, string)            // Sets a queryString parameter
-	getUser() (model.User, error)       // Retrieves the currently-logged-in user
+	factory() Factory                    // The service factory
+	context() *steranko.Context          // The request context embedded in the Renderer
+	service() service.ModelService       // The abstracted ModelService the backs this Renderer
+	templateRole() string                // Returns the role that the current template plays in the system. Used for choosing child template.
+	template() *model.Template           // The template used for this renderer (if any)
+	objectType() string                  // The type of object being rendered
+	authorization() model.Authorization  // retrieves the user's authorization data from the context
+	schema() schema.Schema               // Schema to use to validate this Object
+	object() data.Object                 // Model Object being rendered
+	objectID() primitive.ObjectID        // MongoDB ObjectID of the Object being rendered
+	setQuery(string, string)             // Sets a queryString parameter
+	getUser() (model.User, error)        // Retrieves the currently-logged-in user
+	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }

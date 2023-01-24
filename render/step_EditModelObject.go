@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -19,11 +20,10 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepEditModelObject.Get"
 
-	factory := renderer.factory()
 	schema := renderer.schema()
 
 	// Try to render the Form HTML
-	result, err := form.Editor(schema, step.Form, renderer.object(), factory.LookupProvider())
+	result, err := form.Editor(schema, step.Form, renderer.object(), renderer.lookupProvider())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error generating form")
@@ -50,27 +50,23 @@ func (step StepEditModelObject) Post(renderer Renderer) error {
 
 	const location = "render.StepEditModelObject.Post"
 
-	// This finds/creates a new object in the renderer
-	request := renderer.context().Request()
-	object := renderer.object()
-	schema := renderer.schema()
+	// Get the request body
+	body := mapof.NewAny()
 
-	// Parse form information
-	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, location, "Error parsing form data")
+	if err := renderer.context().Bind(&body); err != nil {
+		return derp.Wrap(err, location, "Error binding request body")
 	}
 
-	// Try to set each path from the Form into the renderer.  Note: schema.Set also converts and validated inputs before setting.
-	for _, element := range step.Form.AllElements() {
-		if element.Path != "" {
-			if err := schema.Set(object, element.Path, request.Form[element.Path]); err != nil {
-				return derp.Wrap(err, location, "Error setting path value", element, request.Form[element.Path])
-			}
-		}
+	// Appy request body to the object (limited and validated by the form schema)
+	stepForm := form.New(renderer.schema(), step.Form)
+	object := renderer.object()
+
+	if err := stepForm.SetAll(object, body, renderer.lookupProvider()); err != nil {
+		return derp.Wrap(err, location, "Error applying request body to model object")
 	}
 
 	// Save the object to the database
-	if err := renderer.service().ObjectSave(object, "Created"); err != nil {
+	if err := renderer.service().ObjectSave(object, "Edited"); err != nil {
 		return derp.Wrap(err, location, "Error saving model object to database")
 	}
 

@@ -275,7 +275,7 @@
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"as-modal", "steps": [
-						{"step":"edit", "form": {
+						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
 							"label":"Manage Folder",
 							"children": [
@@ -292,7 +292,8 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
-					{"step":"delete"}
+					{"step":"delete", "title":"Delete {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
+					{"step":"forward-to", "url":"/@me/inbox"}
 				]}
 			]
 		}

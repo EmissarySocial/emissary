@@ -2,15 +2,20 @@ package service
 
 import (
 	"github.com/benpate/form"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type LookupProvider struct {
-	groupService *Group
+	groupService  *Group
+	folderService *Folder
+	userID        primitive.ObjectID
 }
 
-func NewLookupProvider(groupService *Group) LookupProvider {
+func NewLookupProvider(groupService *Group, folderService *Folder, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		groupService: groupService,
+		groupService:  groupService,
+		folderService: folderService,
+		userID:        userID,
 	}
 }
 
@@ -18,12 +23,11 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
-	case "sharing":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "anonymous", Label: "Everyone (including anonymous visitors)"},
-			form.LookupCode{Value: "authenticated", Label: "Authenticated People Only"},
-			form.LookupCode{Value: "private", Label: "Only Selected Groups"},
-		)
+	case "folders":
+		return NewFolderLookupProvider(service.folderService, service.userID)
+
+	case "groups":
+		return NewGroupLookupProvider(service.groupService)
 
 	case "purgeDurations":
 		return form.NewReadOnlyLookupGroup(
@@ -34,8 +38,12 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Forever", Value: "0"},
 		)
 
-	case "groups":
-		return NewGroupLookupProvider(service.groupService)
+	case "sharing":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "anonymous", Label: "Everyone (including anonymous visitors)"},
+			form.LookupCode{Value: "authenticated", Label: "Authenticated People Only"},
+			form.LookupCode{Value: "private", Label: "Only Selected Groups"},
+		)
 
 	default:
 		return form.NewReadOnlyLookupGroup()

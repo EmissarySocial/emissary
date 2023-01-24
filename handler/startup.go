@@ -17,13 +17,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Startup(fm *server.Factory) echo.HandlerFunc {
+func Startup(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.Startup"
 
 	return func(ctx echo.Context) error {
 
-		factory, err := fm.ByContext(ctx)
+		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error finding domain")
@@ -78,7 +78,7 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		if userCount == 0 {
-			return StartupUsers(fm, factory, ctx)
+			return StartupUsers(serverFactory, factory, ctx)
 		}
 
 		// If there are no streams in the database, then display the STREAMS page
@@ -90,16 +90,16 @@ func Startup(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		if streamCount == 0 {
-			return StartupStreams(fm, factory, ctx)
+			return StartupStreams(serverFactory, factory, ctx)
 		}
 
 		// Fall through..  we're done.  Display "next steps" page
-		return StartupDone(fm, ctx)
+		return StartupDone(serverFactory, ctx)
 	}
 }
 
 // StartupUsers prompts users to create an initial admin account on this server
-func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context) error {
+func StartupUsers(serverFactory *server.Factory, factory *domain.Factory, ctx echo.Context) error {
 
 	s := schema.Schema{
 		Element: schema.Object{
@@ -198,7 +198,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 			},
 		}},
 	}
-	formHTML, err := form.Editor(s, userSetupForm, nil, factory.LookupProvider())
+	formHTML, err := form.Editor(s, userSetupForm, nil, factory.LookupProvider(primitive.NilObjectID))
 
 	if err != nil {
 		return derp.Wrap(err, "handler.GetStartupUsername", "Error generating username form")
@@ -212,7 +212,7 @@ func StartupUsers(fm *server.Factory, factory *domain.Factory, ctx echo.Context)
 
 // StartupStreams prompts the administrator to choose the top-level
 // items on this server.
-func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Context) error {
+func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx echo.Context) error {
 
 	const location = "handler.StartupStreams"
 
@@ -311,7 +311,7 @@ func StartupStreams(fm *server.Factory, factory *domain.Factory, ctx echo.Contex
 		"forum": schema.Boolean{},
 	}})
 
-	formHTML, _ := form.Editor(s, defaultStreamsForm, nil, factory.LookupProvider())
+	formHTML, _ := form.Editor(s, defaultStreamsForm, nil, factory.LookupProvider(primitive.NilObjectID))
 
 	b.WriteString(formHTML)
 	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")
