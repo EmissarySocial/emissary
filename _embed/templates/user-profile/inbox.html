@@ -12,7 +12,7 @@
 				{{- if eq "inbox-folder" (.QueryParam "selected") -}}
 					<button hx-get="/@me/inbox-folder-edit?folderId={{.QueryParam `folderId`}}">Edit</button>
 				{{- end -}}
-				<button hx-get="/@me/pub/following/new">
+				<button hx-get="/@me/following-new">
 					{{icon "add"}} Follow
 				</button>
 			</div>

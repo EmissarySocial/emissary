@@ -416,11 +416,11 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubProfileURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubAvatarURL()).
-		Link(digit.RelationTypeSubscribeRequest, "", service.ActivityPubSubscribeRequestURL(username))
+		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
 
 	return result, nil
 }
 
-func (service *User) ActivityPubSubscribeRequestURL(username string) string {
-	return service.host + "/.ostatus/tunnel"
+func (service *User) RemoteFollowURL() string {
+	return service.host + "/.ostatus/tunnel?uri={uri}"
 }

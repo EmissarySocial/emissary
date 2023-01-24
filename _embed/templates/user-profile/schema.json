@@ -153,7 +153,7 @@
 		},
 		"follow": {
 			"steps": [
-				{"step":"as-modal", "background":"view", "steps":[
+				{"step":"as-modal", "background":"profile", "steps":[
 					{"step":"view-html", "file":"profile-follow"}
 				]}
 			]
@@ -165,8 +165,9 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
-				{"step":"with-following", "steps":[
-					{"step":"as-modal", "steps":[
+				{"step":"as-modal", "background":"view", "steps":[
+					{"step":"with-following", "steps":[
+						{"step":"set-data", "from-url":["url"]},
 						{"step":"edit", "form":{
 							"type":"layout-vertical",
 							"label":"Add a User or URL to Follow",
