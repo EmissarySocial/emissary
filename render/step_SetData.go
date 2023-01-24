@@ -12,12 +12,18 @@ import (
 
 // StepSetData represents an action-step that can update the custom data stored in a Stream
 type StepSetData struct {
-	Paths    []string  // List of paths to pull from form data
+	FromURL  []string  // List of paths to pull from URL data
+	FromForm []string  // List of paths to pull from Form data
 	Values   mapof.Any // values to set directly into the object
 	Defaults mapof.Any // values to set into the object IFF they are currently empty.
 }
 
 func (step StepSetData) Get(renderer Renderer, buffer io.Writer) error {
+
+	if err := step.setURLPaths(renderer); err != nil {
+		return derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL")
+	}
+
 	return nil
 }
 
@@ -30,12 +36,14 @@ func (step StepSetData) Post(renderer Renderer) error {
 
 	const location = "render.StepSetData.Post"
 
-	object := renderer.object()
+	if err := step.setURLPaths(renderer); err != nil {
+		return derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL")
+	}
 
-	// Try to find the schema for this Template
+	object := renderer.object()
 	schema := renderer.schema()
 
-	if len(step.Paths) > 0 {
+	if len(step.FromForm) > 0 {
 
 		inputs := mapof.NewAny()
 
@@ -47,7 +55,7 @@ func (step StepSetData) Post(renderer Renderer) error {
 		}
 
 		// Put approved form data into the stream
-		for _, p := range step.Paths {
+		for _, p := range step.FromForm {
 			if err := schema.Set(object, p, inputs[p]); err != nil {
 				result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
 				derp.SetErrorCode(result, http.StatusBadRequest)
@@ -78,5 +86,25 @@ func (step StepSetData) Post(renderer Renderer) error {
 	}
 
 	// Silence is AU-some
+	return nil
+}
+
+func (step StepSetData) setURLPaths(renderer Renderer) error {
+
+	if len(step.FromURL) > 0 {
+		query := renderer.context().Request().URL.Query()
+		schema := renderer.schema()
+		object := renderer.object()
+		for _, path := range step.FromURL {
+			if value := query.Get(path); value != "" {
+				if err := schema.Set(object, path, value); err != nil {
+					result := derp.Wrap(err, "render.StepSetData.setURLPaths", "Error setting data from URL")
+					derp.SetErrorCode(result, http.StatusBadRequest)
+					return result
+				}
+			}
+		}
+	}
+
 	return nil
 }

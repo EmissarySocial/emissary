@@ -37,7 +37,7 @@
 			"roles": ["self"],
 			"steps": [
 				{"step":"view-html", "file":"edit"},
-				{"step":"set-data", "paths":["document.summary"]},
+				{"step":"set-data", "from-form":["document.summary"]},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"document.imageUrl"},
@@ -50,7 +50,7 @@
 			"steps": [
 				{"step":"as-modal", "steps":[
 					{"step":"view-html", "file":"edit"},
-					{"step":"set-data", "paths":["document.summary"]},
+					{"step":"set-data", "from-form":["document.summary"]},
 					{"step":"save"},
 					{"step":"publish"},
 					{"step":"refresh-page"}

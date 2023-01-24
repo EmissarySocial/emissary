@@ -12,7 +12,7 @@
 	"actions": {
 		"index": {"steps": [
 			{"step": "view-html"},
-			{"step": "set-data", "paths":["label", "bannerUrl", "headerHtml", "footerHtml", "customCss"]},
+			{"step": "set-data", "from-form":["label", "bannerUrl", "headerHtml", "footerHtml", "customCss"]},
 			{"step": "save"},
 			{"step": "forward-to", "url":"/admin/appearance"}
 		]}
