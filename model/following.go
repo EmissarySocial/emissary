@@ -58,6 +58,7 @@ func NewFollowing() Following {
 		FollowingID:   primitive.NewObjectID(),
 		Status:        FollowingStatusNew,
 		Method:        FollowMethodPoll,
+		Links:         make(digit.LinkSet, 0),
 		PollDuration:  24, // default poll interval is 24 hours
 		PurgeDuration: 14, // default purge interval is 14 days
 	}

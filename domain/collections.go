@@ -15,6 +15,9 @@ const CollectionEncryptionKey = "EncryptionKey"
 // CollectionGroup is the database collection where the singleton Domain record is stored
 const CollectionDomain = "Domain"
 
+// CollectionFolder is the database collection where Folder records are stored
+const CollectionFolder = "Folder"
+
 // CollectionFollower is the database collection where Follower records are stored
 const CollectionFollower = "Follower"
 
@@ -24,11 +27,14 @@ const CollectionFollowing = "Following"
 // CollectionGroup is the database collection where Group records are stored
 const CollectionGroup = "Group"
 
-// CollectionFolder is the database collection where Folder records are stored
-const CollectionFolder = "Folder"
+// CollectionInbox is the database colleciton where user's Inbox records are stored
+const CollectionInbox = "Inbox"
 
 // CollectionMention is the database collection where Mention records are stored
 const CollectionMention = "Mention"
+
+// CollectionOutbox is the database collection where user's Outbox records are stored
+const CollectionOutbox = "Outbox"
 
 // CollectionStream is the database collection where Streams are stored
 const CollectionStream = "Stream"

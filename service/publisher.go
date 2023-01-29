@@ -197,6 +197,11 @@ func (publisher Publisher) sendActivityPub(stream *model.Stream, user *model.Use
 	// Notify followers of the Activity via ActivityPub
 	actor := publisher.actorFactory.ActivityPub_Actor()
 	result, err := actor.Send(context.Background(), outboxURL, activity)
-	spew.Dump(result)
-	return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
+	spew.Dump("'SENDING' ActivityPub message", result)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
+	}
+
+	return nil
 }

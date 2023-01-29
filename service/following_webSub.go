@@ -25,8 +25,7 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	following.Secret = random.String(32)
 	following.PollDuration = 30
 
-	// If we're here, then we have successfully imported the RSS feed.
-	// Mark the following as having been polled
+	// "Pending" status means that we're still waiting on the WebSub connection
 	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}

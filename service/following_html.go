@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
+	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/microformats"
 )
 
@@ -26,22 +27,27 @@ func (service *Following) import_HTML(following *model.Following, response *http
 
 func (service *Following) import_HTML_feed(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
-	// Follow links to RSS feeds first
-	for _, link := range following.Links {
-		switch link.MediaType {
+	for _, mediaType := range []string{model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText} {
 
-		case model.MimeTypeJSONFeed:
-			if err := service.poll(following, link, service.import_JSONFeed); err == nil {
-				return nil
-			} else {
-				derp.Report(err)
-			}
+		if link := following.Links.FindBy("type", mediaType); !link.IsEmpty() {
 
-		case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
-			if err := service.poll(following, link, service.import_RSS); err == nil {
-				return nil
-			} else {
-				derp.Report(err)
+			spew.Dump(mediaType)
+
+			switch link.MediaType {
+
+			case model.MimeTypeJSONFeed:
+				if err := service.poll(following, link, service.import_JSONFeed); err == nil {
+					return nil
+				} else {
+					derp.Report(err)
+				}
+
+			case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
+				if err := service.poll(following, link, service.import_RSS); err == nil {
+					return nil
+				} else {
+					derp.Report(err)
+				}
 			}
 		}
 	}

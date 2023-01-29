@@ -11,7 +11,7 @@ func (service Icons) Get(name string) string {
 
 	// App Actions and Behaviors
 	case "add":
-		return service.get("plus")
+		return service.get("plus-large")
 	case "add-circle":
 		return service.get("plus-circle")
 	case "book":
@@ -124,6 +124,10 @@ func (service Icons) Get(name string) string {
 		return service.get("github")
 	case "google":
 		return service.get("google")
+	case "json":
+		return service.get("braces")
+	case "json-fill":
+		return service.get("braces")
 	case "instagram":
 		return service.get("instagram")
 	case "twitter":

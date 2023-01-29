@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/first"
 	htmlTools "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/dyatlov/go-htmlinfo/htmlinfo"
@@ -72,10 +71,9 @@ func rssToActivity_populate(activity *model.Activity) {
 		derp.Report(derp.Wrap(err, location, "Error parsing HTML", activity.Origin.URL))
 		return
 	}
-
 	// Update the activity with data missing from the RSS feed
-	activity.Document.Label = first.String(activity.Document.Label, info.Title)
-	activity.Document.Summary = first.String(activity.Document.Summary, info.Description)
+	// activity.Document.Label = first.String(activity.Document.Label, info.Title)
+	// activity.Document.Summary = first.String(activity.Document.Summary, info.Description)
 
 	if activity.Document.ImageURL == "" {
 		if info.ImageSrcURL != "" {

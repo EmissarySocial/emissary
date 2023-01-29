@@ -33,6 +33,10 @@
 		<div class="space-above">
 			<span class="p-note">{{.StatusMessage}}</span>
 		</div>
+		{{- if ne "" .Location -}}
+			<div class="space-above p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+		{{- end -}}
+
 	</div>
 
 	<hr>
@@ -41,16 +45,12 @@
 
 		{{- $links := .Links -}}
 
-		{{- if or (gt 0 (len $links)) (.UserCan "profile-edit")  -}}
+		{{- if .UserCan "profile-edit"  -}}
 			<div class="float-right">
 				{{- if .UserCan "profile-links" -}}
 					<button hx-get="/@me/profile-links" role="button" class="text-xs vertical-space-none">Edit</button>
 				{{- end -}}
 			</div>
-		{{- end -}}
-
-		{{- if ne "" .Location -}}
-			<div class="p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
 		{{- end -}}
 
 		{{- range $links -}}

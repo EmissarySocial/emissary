@@ -19,7 +19,7 @@ func FollowingSchema() schema.Element {
 			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage": schema.String{MaxLength: 1024},
 			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(24 * 7)},
+			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1)}, //, Maximum: null.NewInt64(24 * 7)}, Removed because WebSub polling may be longer.
 			"purgeDuration": schema.Integer{Minimum: null.NewInt64(0)},
 			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"errorCount":    schema.Integer{Minimum: null.NewInt64(0)},

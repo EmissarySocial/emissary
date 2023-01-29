@@ -32,55 +32,54 @@
 
 					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
 						
-						{{- if eq .Document.Label "" -}}
-							<div class="flex-row">
+						<div class="flex-row">
 
-								{{- if ne .Document.Author.ImageURL "" -}}
-									<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:100px;">
-								{{- end -}}
+							{{- if ne .Document.Author.ImageURL "" -}}
+								<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:64px;">
+							{{- end -}}
 
-								<div>
+							<div>
+								{{- if eq .Document.Label "" -}}
 									<div class="ellipsis">
 										<span class="bold black">{{.Document.Author.Name}}</span>
+										<span class="text-gray nowrap">
+											&nbsp;
+											{{ icon .Origin.Icon }}
+											{{ .PublishDate | tinyDate }}
+										</span>
 									</div>
+									<div>{{.Document.Summary | html}}</div>
+								{{- else -}}
+									<div class="bold black ellipsis">{{.Document.Label}}</div>
 									<div class="text-gray text-sm space-below flex-row">
 										<span class="ellipsis">
 											{{ icon .Origin.Icon }}
 											{{ .Origin.Label }} &middot;
+											{{ .Document.Author.Name }} 
+											&nbsp;&middot;
 										</span>
 										<span class="nowrap">
 											{{ .PublishDate | tinyDate }}
 										</span>
 									</div>
-								</div>
-							</div>
+									<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary | html}}</div>
+								{{- end -}}
 
-						{{- else -}}
-							<div class="bold black ellipsis">{{.Document.Label}}</div>
-							<div class="text-gray text-sm space-below flex-row">
-								<span class="ellipsis">
-									{{ icon .Origin.Icon }}
-									{{ .Origin.Label }} &middot;
-									{{ .Document.Author.Name }} 
-									&nbsp;&middot;
-								</span>
-								<span class="nowrap">
-									{{ .PublishDate | tinyDate }}
-								</span>
-							</div>
-							{{- end -}}
+								{{- if ne .Document.ImageURL "" -}}
+									<div style="width:160px;">
+										<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+											<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+										</div>
+									</div>
+								{{- end -}}
 
-						<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary}}</div>
+							</div>
+	
+	
+						</div>
+
 					</div>
 				
-					{{- if ne .Document.ImageURL "" -}}
-						<div style="width:160px;">
-							<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-								<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
-							</div>
-						</div>
-					{{- end -}}
-
 				</div>
 
 			</div>

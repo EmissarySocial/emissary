@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/data"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/html"
 	"github.com/kr/jsonfeed"
 )
@@ -32,7 +33,7 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		ID:            stream.Token,
 		URL:           stream.Document.URL,
 		Title:         stream.Document.Label,
-		ContentHTML:   stream.Content.HTML,
+		ContentHTML:   first.String(stream.Content.HTML, " "),
 		Summary:       stream.Document.Summary,
 		Image:         stream.Document.ImageURL,
 		DatePublished: time.UnixMilli(stream.PublishDate),
@@ -62,11 +63,7 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
 		Summary:     item.Summary,
 		ImageURL:    item.Image,
 		PublishDate: item.DatePublished.UnixMilli(),
-		Author: model.PersonLink{
-			Name:       item.Author.Name,
-			ProfileURL: item.Author.URL,
-			ImageURL:   item.Author.Avatar,
-		},
+		Author:      JsonFeedToAuthor(feed, item),
 	}
 
 	if item.ContentHTML != "" {
@@ -76,4 +73,23 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
 	}
 
 	return activity
+}
+
+func JsonFeedToAuthor(feed jsonfeed.Feed, item jsonfeed.Item) model.PersonLink {
+
+	result := model.NewPersonLink()
+
+	if feed.Author != nil {
+		result.Name = feed.Author.Name
+		result.ProfileURL = feed.Author.URL
+		result.ImageURL = feed.Author.Avatar
+	}
+
+	if item.Author != nil {
+		result.Name = first.String(item.Author.Name, result.Name)
+		result.ProfileURL = first.String(item.Author.URL, result.ProfileURL)
+		result.ImageURL = first.String(item.Author.Avatar, result.ImageURL)
+	}
+
+	return result
 }

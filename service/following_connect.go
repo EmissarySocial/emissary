@@ -22,12 +22,13 @@ func (service *Following) Connect(following model.Following) error {
 	}
 
 	// If there is an error connecting to the URL, then mark the status as Failure
-	if err := service.connect(following); err != nil {
+	if err := service.connect(&following); err != nil {
+
 		if innerError := service.SetStatus(&following, model.FollowingStatusFailure, err.Error()); err != nil {
 			return derp.Wrap(innerError, location, "Error updating following status", following)
+		} else {
+			return err
 		}
-
-		return err
 	}
 
 	// Otherwise, mark the status as "Connected"
@@ -35,10 +36,13 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error setting status", following)
 	}
 
+	// Finally, look for push services to connect to (WebSub, ActivityPub, etc)
+	service.connect_PushServices(&following)
+
 	return nil
 }
 
-func (service *Following) connect(following model.Following) error {
+func (service *Following) connect(following *model.Following) error {
 
 	const location = "service.Following.connect"
 
@@ -57,7 +61,7 @@ func (service *Following) connect(following model.Following) error {
 	following.Links = discoverLinks(transaction.ResponseObject, &body)
 
 	// Try to discover/connect to ActivityPub resources
-	if success := service.connect_ActivityPub(&following, transaction.ResponseObject, &body); success {
+	if success := service.connect_ActivityPub(following, transaction.ResponseObject, &body); success {
 		return nil
 	}
 
@@ -68,19 +72,19 @@ func (service *Following) connect(following model.Following) error {
 
 	// Handle JSONFeeds directly
 	case model.MimeTypeJSONFeed:
-		if err := service.import_JSONFeed(&following, transaction.ResponseObject, &body); err != nil {
+		if err := service.import_JSONFeed(following, transaction.ResponseObject, &body); err != nil {
 			return derp.Wrap(err, location, "Error importing JSONFeed", following.URL)
 		}
 
 	// Handle Atom and RSS feeds directly
 	case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
-		if err := service.import_RSS(&following, transaction.ResponseObject, &body); err != nil {
+		if err := service.import_RSS(following, transaction.ResponseObject, &body); err != nil {
 			return derp.Wrap(err, location, "Error importing RSS", following.URL)
 		}
 
 	// Parse HTML to find feed links (and look for h-feed microformats)
 	case model.MimeTypeHTML:
-		if err := service.import_HTML(&following, transaction.ResponseObject, &body); err != nil {
+		if err := service.import_HTML(following, transaction.ResponseObject, &body); err != nil {
 			return derp.Wrap(err, location, "Error importing HTML", following.URL)
 		}
 
@@ -88,9 +92,6 @@ func (service *Following) connect(following model.Following) error {
 	default:
 		return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
 	}
-
-	// Finally, look for push services to connect to (WebSub, ActivityPub, etc)
-	service.connect_PushServices(&following)
 
 	return nil
 }
@@ -229,8 +230,10 @@ func (service *Following) connect_PushServices(following *model.Following) {
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
-		if err := service.connect_WebSub(following, hub); err == nil {
+		if err := service.connect_WebSub(following, hub); err != nil {
+		} else {
 			return
 		}
 	}
+
 }
