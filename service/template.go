@@ -116,7 +116,7 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
-	result := make(set.Map[model.Template])
+	result := set.NewMap[model.Template]()
 
 	// For each configured location...
 	for _, location := range service.locations {
@@ -270,7 +270,35 @@ func (service *Template) ListByContainerLimited(containedByRole string, limits [
 }
 
 /******************************************
- * OTHER DATA ACCESS METHODS
+ * Admin Templates
+ ******************************************/
+
+func (service *Template) LoadAdmin(templateID string) (*model.Template, error) {
+
+	templateID = "admin-" + templateID
+
+	// Try to load the template
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Template.LoadAdmin", "Unable to load admin template")
+	}
+
+	// RULE: Validate Template ContainedBy
+	if template.Role != "admin" {
+		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.")
+	}
+
+	if template.ContainedBy.Equal([]string{"admin"}) {
+		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'")
+	}
+
+	// Success!
+	return template, nil
+}
+
+/******************************************
+ * Other Data Access Methods
  ******************************************/
 
 // State returns the detailed State information associated with this Stream

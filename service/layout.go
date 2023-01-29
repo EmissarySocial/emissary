@@ -180,38 +180,6 @@ func (service *Layout) loadLayouts() error {
 }
 
 /******************************************
- * LAYOUT ACCESSORS
- ******************************************/
-
-func (service *Layout) Appearance() *model.Layout {
-	return &service.appearance
-}
-
-func (service *Layout) Connections() *model.Layout {
-	return &service.connections
-}
-
-func (service *Layout) Domain() *model.Layout {
-	return &service.domain
-}
-
-func (service *Layout) Global() *model.Layout {
-	return &service.global
-}
-
-func (service *Layout) Group() *model.Layout {
-	return &service.group
-}
-
-func (service *Layout) Navigation() *model.Layout {
-	return &service.navigation
-}
-
-func (service *Layout) User() *model.Layout {
-	return &service.user
-}
-
-/******************************************
  * HELPER METHODS
  ******************************************/
 

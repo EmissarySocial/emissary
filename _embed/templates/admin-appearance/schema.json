@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-appearance",
-	"role":"admin-appearance",
+	"role":"admin",
+	"model":"domain",
 	"containedBy":["admin"],
 	"schema": {
 		"type":"object",

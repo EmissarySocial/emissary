@@ -1,6 +1,7 @@
 {
 	"templateId":"outbox-message",
 	"role":"outbox-item",
+	"model":"stream",
 	"icon":"message",
 	"label":"Post",
 	"description":"Single comment in the comments section of a page.",

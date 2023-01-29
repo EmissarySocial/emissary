@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-groups",
-	"role":"admin-groups",
+	"role":"admin",
+	"model":"group",
 	"containedBy":["admin"],
 	"label": "Group",
 	"description": "Domain Owners only.  Site Admin",

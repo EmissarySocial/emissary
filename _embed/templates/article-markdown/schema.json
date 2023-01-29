@@ -1,6 +1,7 @@
 {
 	"templateId":"article-markdown",
 	"role":"article",
+	"model":"stream",
 	"containedBy": ["top", "folder"],
 	"label":"Article (Markdown)",
 	"description":"Simple Markdown editor",

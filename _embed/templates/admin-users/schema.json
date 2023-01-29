@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-users",
-	"role":"admin-users",
+	"role":"admin",
+	"model":"user",
 	"containedBy":["admin"],
 	"label": "User",
 	"description": "Manage all users on this website",

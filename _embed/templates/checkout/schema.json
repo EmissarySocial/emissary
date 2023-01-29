@@ -1,15 +1,16 @@
 {
-	"templateId": "checkout",
-	"role": "feature",
-	"label": "Checkout",
-	"description": "Add a 'buy now' option to this stream.",
-	"icon": "shopping-cart",
+	"templateId":"checkout",
+	"role":"feature",
+	"model":"stream",
+	"label":"Checkout",
+	"description":"Add a 'buy now' option to this stream.",
+	"icon":"shopping-cart",
 	"schema": {
-		"type": "object",
+		"type":"object",
 		"properties": {
 			"document": {"type":"object", "properties":{
-				"label": {"type": "string", "default": "Buy Now"},
-				"data": {"type": "any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
+				"label": {"type":"string", "default":"Buy Now"},
+				"data": {"type":"any", "comment":"This is 'any' because the data is validated/controlled by the schema in the stripe-product action."}
 			}}
 		}
 	},
@@ -20,38 +21,38 @@
 	},
 	"roles": {
 		"owner": {
-			"label": "Domain Owner",
-			"decription": "Full control"
+			"label":"Domain Owner",
+			"decription":"Full control"
 			}, 
 		"readonly": {
-			"label": "Read Only Access",
-			"description": "Can read this article, but cannot make changes"
+			"label":"Read Only Access",
+			"description":"Can read this article, but cannot make changes"
 		}, 
 		"anonymous": {
-			"label": "Anonymous / Unauthenticated User",
-			"description": "This is useful because Stripe confirmations come back without cookies."
+			"label":"Anonymous / Unauthenticated User",
+			"description":"This is useful because Stripe confirmations come back without cookies."
 		}
 	},
 	"actions": {
-		"view": {"step": "view-html", "roles":["anonymous"]},
+		"view": {"step":"view-html", "roles":["anonymous"]},
 		"checkout": {
 			"roles": ["anonymous"],
 			"states": ["ready"],
-			"step": "stripe-checkout"
+			"step":"stripe-checkout"
 		},
 		"success": {
 			"roles":["anonymous"],
 			"states": ["ready", "sold-out"],
 			"steps": [
-				{"step": "stripe-complete"},
+				{"step":"stripe-complete"},
 				{"step":"view-html"}
 			]},
 		"edit": {
 			"roles": ["owner"],
 			"steps": [
-				{"step": "as-modal", "steps": [
-					{"step": "stripe-product"},
-					{"step": "save", "message": "Stripe Checkout settings updated by {{.Author}}"}
+				{"step":"as-modal", "steps": [
+					{"step":"stripe-product"},
+					{"step":"save", "message":"Stripe Checkout settings updated by {{.Author}}"}
 				]}
 			]
 		}

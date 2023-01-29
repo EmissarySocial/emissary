@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-connections",
-	"role":"admin-connections",
+	"role":"admin",
+	"model":"domain",
 	"containedBy":["admin"],
 	"label": "Connections",
 	"description": "Domain Owners only.  Site Admin",

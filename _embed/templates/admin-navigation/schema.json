@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-navigation",
 	"role":"admin-navigation",
+	"model":"stream",
 	"containedBy":["admin"],
 	"label": "Top Level",
 	"description": "Manages list of top-level items. (Site Admins Only)",

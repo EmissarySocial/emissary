@@ -17,12 +17,11 @@ import (
 )
 
 type Group struct {
-	layout *model.Layout
-	group  *model.Group
+	group *model.Group
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, actionID string) (Group, error) {
+func NewGroup(factory Factory, ctx *steranko.Context, template *model.Template, group *model.Group, actionID string) (Group, error) {
 
 	const location = "render.NewGroup"
 
@@ -33,10 +32,8 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
 		return Group{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	layout := factory.Layout().Group()
-
 	// Verify the requested action
-	action := layout.Action(actionID)
+	action := template.Action(actionID)
 
 	if action == nil {
 		return Group{}, derp.NewBadRequestError(location, "Invalid action", actionID)
@@ -44,8 +41,7 @@ func NewGroup(factory Factory, ctx *steranko.Context, group *model.Group, action
 
 	return Group{
 		group:  group,
-		layout: layout,
-		Common: NewCommon(factory, ctx, nil, action, actionID),
+		Common: NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -72,7 +68,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Group.View"
 
-	renderer, err := NewGroup(w._factory, w.context(), w.group, actionID)
+	renderer, err := NewGroup(w._factory, w.context(), w._template, w.group, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -118,7 +114,7 @@ func (w Group) service() service.ModelService {
 }
 
 func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
 /******************************************

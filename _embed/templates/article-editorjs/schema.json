@@ -1,6 +1,7 @@
 {
 	"templateId":"article-editorjs",
 	"role":"article",
+	"model":"stream",
 	"containedBy": ["top", "folder", "article"],
 	"label":"Article",
 	"description":"For regular use. Contains text, images, and more.",

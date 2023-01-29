@@ -17,12 +17,11 @@ import (
 )
 
 type User struct {
-	layout *model.Layout
-	user   *model.User
+	user *model.User
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (User, error) {
+func NewUser(factory Factory, ctx *steranko.Context, template *model.Template, user *model.User, actionID string) (User, error) {
 
 	const location = "render.NewGroup"
 
@@ -33,19 +32,16 @@ func NewUser(factory Factory, ctx *steranko.Context, user *model.User, actionID 
 		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	layout := factory.Layout().User()
-
 	// Verify the requested action
-	action := layout.Action(actionID)
+	action := template.Action(actionID)
 
 	if action == nil {
 		return User{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
 	return User{
-		layout: layout,
 		user:   user,
-		Common: NewCommon(factory, ctx, nil, action, actionID),
+		Common: NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -71,7 +67,7 @@ func (w User) Render() (template.HTML, error) {
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewUser(w.factory(), w._context, w.user, actionID)
+	renderer, err := NewUser(w._factory, w._context, w._template, w.user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.User.View", "Error creating renderer")
@@ -117,7 +113,7 @@ func (w User) service() service.ModelService {
 }
 
 func (w User) executeTemplate(writer io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(writer, name, data)
+	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
 /******************************************

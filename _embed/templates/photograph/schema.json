@@ -1,7 +1,8 @@
 {
 	"templateId": "photograph",
-	"label": "Photograph",
+	"model":"stream",
 	"containedBy": ["photo-album"],
+	"label": "Photograph",
 	"description": "Individual photograph or slideshow to include in your photo album.",
 	"icon": "picture",
 	"schema": {

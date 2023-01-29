@@ -15,12 +15,11 @@ import (
 )
 
 type Navigation struct {
-	layout *model.Layout
 	stream *model.Stream
 	Common
 }
 
-func NewNavigation(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Navigation, error) {
+func NewNavigation(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Navigation, error) {
 
 	const location = "render.NewGroup"
 
@@ -31,19 +30,16 @@ func NewNavigation(factory Factory, ctx *steranko.Context, stream *model.Stream,
 		return Navigation{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	layout := factory.Layout().Navigation()
-
 	// Verify the requested action
-	action := layout.Action(actionID)
+	action := template.Action(actionID)
 
 	if action == nil {
 		return Navigation{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
 	return Navigation{
-		layout: layout,
 		stream: stream,
-		Common: NewCommon(factory, ctx, nil, action, actionID),
+		Common: NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -70,7 +66,7 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Navigation.View"
 
-	renderer, err := NewNavigation(w.factory(), w.context(), w.stream, actionID)
+	renderer, err := NewNavigation(w.factory(), w.context(), w._template, w.stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -108,7 +104,7 @@ func (w Navigation) objectType() string {
 }
 
 func (w Navigation) schema() schema.Schema {
-	return w.layout.Schema
+	return w._template.Schema
 }
 
 func (w Navigation) service() service.ModelService {
@@ -116,5 +112,5 @@ func (w Navigation) service() service.ModelService {
 }
 
 func (w Navigation) executeTemplate(wr io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
+	return w._template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }

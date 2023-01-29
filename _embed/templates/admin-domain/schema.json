@@ -1,6 +1,7 @@
 {
 	"templateId":"admin-domain",
-	"role":"admin-domain",
+	"role":"admin",
+	"model":"domain",
 	"containedBy":["admin"],
 	"label": "Domain",
 	"description": "Domain Owners only.  Site Admin",

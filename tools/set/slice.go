@@ -4,11 +4,10 @@ import (
 	"sort"
 
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 // Slice is a simple in-memory slice-based set for arbitrary data.
-type Slice[V Value] sliceof.Object[V]
+type Slice[V Value] []V
 
 // NewSlice returns a new Slice that is populated with the given items.
 func NewSlice[V Value](values ...V) Slice[V] {

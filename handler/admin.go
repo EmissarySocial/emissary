@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
@@ -30,7 +31,6 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 		// Authenticate the page request
 		sterankoContext := ctx.(*steranko.Context)
 
-		// Only domain owners can access admin pages
 		if !isOwner(sterankoContext.Authorization()) {
 			return derp.NewForbiddenError(location, "Unauthorized")
 		}
@@ -42,97 +42,99 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		var renderer render.Renderer
-		var objectID primitive.ObjectID
-		var actionID string
+		// Parse admin parameters
+		templateID, actionID, objectID := renderAdmin_ParsePath(ctx)
 
-		// Parse request arguments
-		controller := first.String(ctx.Param("param1"), "domain")
+		// Try to load the Template
+		templateService := factory.Template()
+		template, err := templateService.LoadAdmin(templateID)
 
-		if id, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
-			actionID = first.String(ctx.Param("param3"), "view")
-			objectID = id
-		} else {
-			actionID = first.String(ctx.Param("param2"), "index")
-			objectID = primitive.NilObjectID
+		if err != nil {
+			return err
 		}
 
-		// Create the correct renderer for this controller
-		switch controller {
+		// Locate and populate the renderer
+		renderer, err := renderAdmin_GetRenderer(factory, sterankoContext, template, actionID, objectID)
 
-		case "appearance":
-			layout := factory.Layout().Appearance()
-			service := factory.Domain()
-			object := model.NewDomain()
-			if err := service.Load(&object); err != nil {
-				return derp.Wrap(err, location, "Error loading Group", objectID)
-			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
-
-		case "connections":
-			layout := factory.Layout().Connections()
-			service := factory.Domain()
-			object := model.NewDomain()
-			if err := service.Load(&object); err != nil {
-				return derp.Wrap(err, location, "Error loading Group", objectID)
-			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
-
-		case "domain":
-			layout := factory.Layout().Domain()
-			service := factory.Domain()
-			object := model.NewDomain()
-			if err := service.Load(&object); err != nil {
-				return derp.Wrap(err, location, "Error loading Group", objectID)
-			}
-			renderer, err = render.NewDomain(factory, sterankoContext, factory.Provider(), layout, &object, actionID)
-
-		case "groups":
-			group := model.NewGroup()
-
-			if !objectID.IsZero() {
-				service := factory.Group()
-				if err := service.LoadByID(objectID, &group); err != nil {
-					return derp.Wrap(err, location, "Error loading Group", objectID)
-				}
-			}
-
-			renderer, err = render.NewGroup(factory, sterankoContext, &group, actionID)
-
-		case "navigation":
-			stream := model.NewStream()
-
-			if !objectID.IsZero() {
-				service := factory.Stream()
-				if err := service.LoadByID(objectID, &stream); err != nil {
-					return derp.Wrap(err, location, "Error loading Navigation stream", objectID)
-				}
-			}
-
-			renderer, err = render.NewNavigation(factory, sterankoContext, &stream, actionID)
-
-		case "users":
-			user := model.NewUser()
-
-			if !objectID.IsZero() {
-				service := factory.User()
-				if err := service.LoadByID(objectID, &user); err != nil {
-					return derp.Wrap(err, location, "Error loading User", objectID)
-				}
-			}
-
-			renderer, err = render.NewUser(factory, sterankoContext, &user, actionID)
-
-		default:
-			return derp.NewNotFoundError(location, "Invalid Arguments", ctx.Param("param1"), ctx.Param("param2"), ctx.Param("param3"))
-		}
-
-		// Error handler for all renderers
 		if err != nil {
 			return derp.Wrap(err, location, "Error generating renderer")
 		}
 
 		// Success!!
 		return renderPage(factory, sterankoContext, renderer, actionMethod)
+	}
+}
+
+func renderAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID) {
+
+	// First parameter is always the templateID
+	templateID := first.String(ctx.Param("param1"), "domain")
+
+	// If the second parameter is an ObjectID, then we parse object/action
+	if objectID, err := primitive.ObjectIDFromHex(ctx.Param("param2")); err == nil {
+		actionID := first.String(ctx.Param("param3"), "view")
+
+		return templateID, actionID, objectID
+	}
+
+	// Otherwise, we just parse action
+	actionID := first.String(ctx.Param("param2"), "index")
+	return templateID, actionID, primitive.NilObjectID
+}
+
+func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, template *model.Template, actionID string, objectID primitive.ObjectID) (render.Renderer, error) {
+
+	const location = "handler.renderAdmin_GetRenderer"
+
+	// Create the correct renderer for this controller
+	switch template.Model {
+
+	case "domain":
+		service := factory.Domain()
+		domain := model.NewDomain()
+		if err := service.Load(&domain); err != nil {
+			return nil, derp.Wrap(err, location, "Error loading Group", objectID)
+		}
+
+		return render.NewDomain(factory, ctx, factory.Provider(), template, &domain, actionID)
+
+	case "group":
+		group := model.NewGroup()
+
+		if !objectID.IsZero() {
+			service := factory.Group()
+			if err := service.LoadByID(objectID, &group); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Group", objectID)
+			}
+		}
+
+		return render.NewGroup(factory, ctx, template, &group, actionID)
+
+	case "stream":
+		stream := model.NewStream()
+
+		if !objectID.IsZero() {
+			service := factory.Stream()
+			if err := service.LoadByID(objectID, &stream); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Navigation stream", objectID)
+			}
+		}
+
+		return render.NewNavigation(factory, ctx, template, &stream, actionID)
+
+	case "user":
+		user := model.NewUser()
+
+		if !objectID.IsZero() {
+			service := factory.User()
+			if err := service.LoadByID(objectID, &user); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading User", objectID)
+			}
+		}
+
+		return render.NewUser(factory, ctx, template, &user, actionID)
+
+	default:
+		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'domain', 'group', 'stream', or 'user'", template.Model)
 	}
 }

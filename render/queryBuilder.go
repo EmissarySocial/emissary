@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 type QueryBuilder[T model.FieldLister] struct {
@@ -115,8 +114,8 @@ func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
  * ACTIONS
  ********************************/
 
-func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
-	result := make(sliceof.Object[T], 0)
+func (builder QueryBuilder[T]) Slice() ([]T, error) {
+	result := make([]T, 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
 	return result, derp.Report(err)
 }
