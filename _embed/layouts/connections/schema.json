@@ -1,4 +1,7 @@
 {
+	"templateId":"admin-connections",
+	"role":"admin-connections",
+	"containedBy":["admin"],
 	"label": "Connections",
 	"description": "Domain Owners only.  Site Admin",
 	"schema": {"type": "object", "properties": {

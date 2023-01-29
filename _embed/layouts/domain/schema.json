@@ -1,4 +1,7 @@
 {
+	"templateId":"admin-domain",
+	"role":"admin-domain",
+	"containedBy":["admin"],
 	"label": "Domain",
 	"description": "Domain Owners only.  Site Admin",
 	"schema": {"type": "object", "properties": {
