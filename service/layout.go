@@ -22,7 +22,7 @@ type Layout struct {
 	domain            model.Layout
 	global            model.Layout
 	group             model.Layout
-	topLevel          model.Layout
+	navigation        model.Layout
 	user              model.Layout
 
 	changed chan bool
@@ -168,7 +168,7 @@ func (service *Layout) loadLayouts() error {
 		return derp.NewInternalError("service.layout.loadFromFilesystem", "Group layout could not be loaded from any location", service.locations)
 	}
 
-	if service.topLevel.HTMLTemplate == nil {
+	if service.navigation.HTMLTemplate == nil {
 		return derp.NewInternalError("service.layout.loadFromFilesystem", "Top Level layout could not be loaded from any location", service.locations)
 	}
 
@@ -203,8 +203,8 @@ func (service *Layout) Group() *model.Layout {
 	return &service.group
 }
 
-func (service *Layout) TopLevel() *model.Layout {
-	return &service.topLevel
+func (service *Layout) Navigation() *model.Layout {
+	return &service.navigation
 }
 
 func (service *Layout) User() *model.Layout {
@@ -240,8 +240,8 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 		service.group = layout
 		return nil
 
-	case "toplevel":
-		service.topLevel = layout
+	case "navigation":
+		service.navigation = layout
 		return nil
 
 	case "users":
@@ -254,5 +254,5 @@ func (service *Layout) setLayout(name string, layout model.Layout) error {
 
 // fileNames returns a list of directories that are owned by the Layout service.
 func (service *Layout) fileNames() []string {
-	return []string{"appearance", "connections", "domain", "global", "groups", "toplevel", "users"}
+	return []string{"appearance", "connections", "domain", "global", "groups", "navigation", "users"}
 }

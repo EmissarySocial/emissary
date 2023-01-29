@@ -162,10 +162,10 @@ func (w Common) Now() int64 {
 	return time.Now().UnixMilli()
 }
 
-// TopLevelID returns the the identifier of the top-most stream in the
+// NavigationID returns the the identifier of the top-most stream in the
 // navigation.  The "common" renderer just returns a default value that
 // other renderers should override.
-func (w Common) TopLevelID() string {
+func (w Common) NavigationID() string {
 	return ""
 }
 
@@ -392,8 +392,8 @@ func (w *Common) getDomain() (*model.Domain, error) {
  * GLOBAL QUERIES
  ******************************************/
 
-// TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() (sliceof.Object[model.StreamSummary], error) {
+// Navigation returns an array of Streams that have a Zero ParentID
+func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
@@ -417,7 +417,7 @@ func (w Common) AdminSections() []form.LookupCode {
 			Label: "Appearance",
 		},
 		{
-			Value: "toplevel",
+			Value: "navigation",
 			Label: "Navigation",
 		},
 		{

@@ -166,12 +166,12 @@ func (w Stream) ParentID() string {
 	return w.stream.ParentID.Hex()
 }
 
-// TopLevelID returns the unique ID of the top-level stream in this stream's hierarchy
-func (w Stream) TopLevelID() string {
-	if w.stream.TopLevelID == "" {
+// NavigationID returns the unique ID of the top-level stream in this stream's hierarchy
+func (w Stream) NavigationID() string {
+	if w.stream.NavigationID == "" {
 		return w.stream.StreamID.Hex()
 	}
-	return w.stream.TopLevelID
+	return w.stream.NavigationID
 }
 
 // PageTitle returns the Label for the stream being rendered

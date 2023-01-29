@@ -76,8 +76,8 @@ func (w Profile) View(actionID string) (template.HTML, error) {
 	return renderer.Render()
 }
 
-// TopLevelID returns the ID to use for highlighing navigation menus
-func (w Profile) TopLevelID() string {
+// NavigationID returns the ID to use for highlighing navigation menus
+func (w Profile) NavigationID() string {
 
 	// TODO: This is returning incorrect values when we CREATE a new outbox item.
 	// Is there a better way to handle this that doesn't just HARDCODE stuff in here?

@@ -80,7 +80,7 @@ func (w User) View(actionID string) (template.HTML, error) {
 	return renderer.Render()
 }
 
-func (w User) TopLevelID() string {
+func (w User) NavigationID() string {
 	return "admin"
 }
 

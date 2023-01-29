@@ -8,7 +8,7 @@
 
 <body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
-	{{- $topID := .TopLevelID -}}
+	{{- $topID := .NavigationID -}}
 
 	{{- if ne "" .DomainHeaderHTML -}}
 		<header>{{.DomainHeaderHTML | html}}</header>
@@ -17,7 +17,7 @@
 	<nav hx-ext="preload" hx-push-url="true">
 		<div class="framed">
 			<div class="left">
-				{{- range .TopLevel -}}
+				{{- range .Navigation -}}
 					<a href="/{{.Token}}" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
 				{{- end -}}
 			</div>

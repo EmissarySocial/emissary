@@ -65,7 +65,7 @@ func (service *Stream) Close() {
  ******************************************/
 
 // New returns a new stream that uses the named template.
-func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) New(navigationID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
 
 	const location = "service.Stream.New"
 
@@ -77,7 +77,7 @@ func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templ
 
 	result := model.NewStream()
 	result.TemplateID = templateID
-	result.TopLevelID = topLevelID
+	result.NavigationID = navigationID
 	result.ParentID = parentID
 	result.AsFeature = template.IsFeature()
 
@@ -293,8 +293,8 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
-func (service *Stream) ListTopLevel() (data.Iterator, error) {
+// ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
+func (service *Stream) ListNavigation() (data.Iterator, error) {
 	return service.List(
 		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
@@ -425,8 +425,8 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 	return nil
 }
 
-// LoadTopLevelByID locates a single stream in the top level of the site hierarchy
-func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *model.Stream) error {
+// LoadNavigationByID locates a single stream in the top level of the site hierarchy
+func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *model.Stream) error {
 
 	criteria := exp.
 		Equal("_id", streamID).
@@ -606,7 +606,7 @@ func (service *Stream) CreateAndSortFeatures(stream *model.Stream, templateIDs [
 
 		// If no matching streams were found, then let's create one now.
 		if !found {
-			newStream, _, err := service.New(stream.TopLevelID, stream.ParentID, templateID)
+			newStream, _, err := service.New(stream.NavigationID, stream.ParentID, templateID)
 
 			if err != nil {
 				return derp.Wrap(err, location, "Error creating new feature")

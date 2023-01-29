@@ -99,17 +99,17 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 
 			renderer, err = render.NewGroup(factory, sterankoContext, &group, actionID)
 
-		case "toplevel":
+		case "navigation":
 			stream := model.NewStream()
 
 			if !objectID.IsZero() {
 				service := factory.Stream()
 				if err := service.LoadByID(objectID, &stream); err != nil {
-					return derp.Wrap(err, location, "Error loading TopLevel stream", objectID)
+					return derp.Wrap(err, location, "Error loading Navigation stream", objectID)
 				}
 			}
 
-			renderer, err = render.NewTopLevel(factory, sterankoContext, &stream, actionID)
+			renderer, err = render.NewNavigation(factory, sterankoContext, &stream, actionID)
 
 		case "users":
 			user := model.NewUser()

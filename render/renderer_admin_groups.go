@@ -81,7 +81,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 	return renderer.Render()
 }
 
-func (w Group) TopLevelID() string {
+func (w Group) NavigationID() string {
 	return "admin"
 }
 

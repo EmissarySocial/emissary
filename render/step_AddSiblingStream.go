@@ -67,7 +67,7 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 	template, err := factory.Template().Load(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Stream.NewTopLevel", "Cannot find template")
+		return derp.Wrap(err, "service.Stream.NewNavigation", "Cannot find template")
 	}
 
 	// Try to load the parent Stream
@@ -85,13 +85,13 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 
 	// Verify that the new child can be placed underneath the parent
 	if !template.CanBeContainedBy(parentTemplate.TemplateID, parentTemplate.Role) {
-		return derp.NewInternalError("service.Stream.NewTopLevel", "Template cannot be placed at top level", templateID)
+		return derp.NewInternalError("service.Stream.NewNavigation", "Template cannot be placed at top level", templateID)
 	}
 
 	// Create the new Stream
 	stream := model.NewStream()
 	stream.ParentID = parent.StreamID
-	stream.TopLevelID = parent.TopLevelID
+	stream.NavigationID = parent.NavigationID
 	// ParentIDs: stream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	stream.TemplateID = templateID
 

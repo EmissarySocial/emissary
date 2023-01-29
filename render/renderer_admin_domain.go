@@ -117,7 +117,7 @@ func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
 	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 
-func (w Domain) TopLevelID() string {
+func (w Domain) NavigationID() string {
 	return "admin"
 }
 

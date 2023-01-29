@@ -11,7 +11,7 @@ func StreamSchema() schema.Element {
 			"streamId":      schema.String{Format: "objectId"},
 			"parentId":      schema.String{Format: "objectId"},
 			"token":         schema.String{Format: "token"},
-			"topLevelId":    schema.String{Format: "objectId"},
+			"navigationId":  schema.String{Format: "objectId"},
 			"templateId":    schema.String{},
 			"stateId":       schema.String{},
 			"permissions":   PermissionSchema(),
@@ -78,8 +78,8 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 		return stream.ParentID.Hex(), true
 	case "token":
 		return stream.Token, true
-	case "topLevelId":
-		return stream.TopLevelID, true
+	case "navigationId":
+		return stream.NavigationID, true
 	case "templateId":
 		return stream.TemplateID, true
 	case "stateId":
@@ -145,8 +145,8 @@ func (stream *Stream) SetString(name string, value string) bool {
 		stream.Token = value
 		return true
 
-	case "topLevelId":
-		stream.TopLevelID = value
+	case "navigationId":
+		stream.NavigationID = value
 		return true
 
 	case "templateId":
