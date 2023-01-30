@@ -23,7 +23,7 @@ type Common struct {
 	_factory  Factory           // Factory interface is required for locating other services.
 	_context  *steranko.Context // Contains request context and authentication data.
 	_template *model.Template   // Template to use for this renderer
-	action    *model.Action     // Action to be performed on the (template or layout)
+	action    *model.Action     // Action to be performed on the Template
 	actionID  string            // Token that identifies the action requested in the URL
 
 	requestData mapof.Any // Temporary data scope for this request

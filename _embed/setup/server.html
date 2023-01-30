@@ -9,9 +9,9 @@
 			<div class="tabs" data-script="install TabContainer">
 
 				<div role="tablist">
-					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">User Templates</button>
-					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Email Templates</button>
-					<button type="button" role="tab" id="tab-layouts" class="tab-label" aria-controls="panel-layouts">System Templates</button>
+					<button type="button" role="tab" id="tab-themes" class="tab-label" aria-controls="panel-themes">Themes</button>
+					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">Templates</button>
+					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Emails</button>
 					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
 					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
 				</div>
@@ -26,9 +26,9 @@
 					<div hx-get="/server/emails" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
-				<div role="tabpanel" id="panel-layouts" aria-labelledby="tab-layouts" hidden="true">
+				<div role="tabpanel" id="panel-themes" aria-labelledby="tab-themes" hidden="true">
 					<p>System Templates define the administrative templates used to control site behavior.</p>
-					<div hx-get="/server/layouts" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+					<div hx-get="/server/themes" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">

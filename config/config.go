@@ -14,7 +14,7 @@ import (
 type Config struct {
 	Domains             set.Slice[Domain]      `json:"domains"`             // Slice of one or more domain configurations
 	Providers           set.Slice[Provider]    `json:"providers"`           // Slice of one or more OAuth client configurations
-	Themes              sliceof.Object[Folder] `json:"layouts"`             // Folders containing all system layouts
+	Themes              sliceof.Object[Folder] `json:"themes"`              // Folders containing all system themes
 	Templates           sliceof.Object[Folder] `json:"templates"`           // Folders containing all stream templates
 	Emails              sliceof.Object[Folder] `json:"emails"`              // Folders containing email templates
 	AttachmentOriginals Folder                 `json:"attachmentOriginals"` // Folder where original attachments will be stored

@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
-// Theme service manages the global site layout that is stored in a particular path of the
+// Theme service manages the global site theme that is stored in a particular path of the
 // filesystem.
 type Theme struct {
 	filesystemService Filesystem
@@ -52,10 +52,10 @@ func (service *Theme) Refresh(locations []config.Folder) {
 		return
 	}
 
-	fmt.Println("Refreshing layout")
+	fmt.Println("Refreshing theme")
 	service.locations = locations
 
-	// Try to load layouts from the filesystems
+	// Try to load themes from the filesystems
 	if err := service.loadThemes(); err != nil {
 		derp.Report(err)
 	}
@@ -104,7 +104,7 @@ func (service *Theme) Watch() {
 	for _, folder := range service.locations {
 
 		// for _, filename := range service.fileNames() {
-		service.filesystemService.Watch(folder, service.changed, service.closed) // Fail silently because many locations may not define all layouts
+		service.filesystemService.Watch(folder, service.changed, service.closed) // Fail silently because many locations may not define all themes
 		// }
 	}
 
@@ -128,12 +128,14 @@ func (service *Theme) loadThemes() error {
 	// For each configured location...
 	for _, location := range service.locations {
 
+		fmt.Println("Searching for themes in: " + location.Location)
+
 		// Get a valid filesystem adapter
 		filesystem, err := service.filesystemService.GetFS(location)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.layout.loadThemes", "Unable to get filesystem adapter", location))
-			continue // If there's an error, it means that this location just doesn't define this part of the layout.  It's OK
+			derp.Report(derp.Wrap(err, "service.Theme.loadThemes", "Unable to get filesystem adapter", location))
+			continue // If there's an error, it means that this location just doesn't define this part of the theme.  It's OK
 		}
 
 		themes, err := fs.ReadDir(filesystem, ".")
@@ -151,26 +153,26 @@ func (service *Theme) loadThemes() error {
 			}
 
 			themeName := themeDirectory.Name()
-			subFilesystem, err := fs.Sub(filesystem, themeName)
+			fmt.Println("... theme: " + themeName)
 
-			fmt.Print("... theme: " + themeName)
+			subFilesystem, err := fs.Sub(filesystem, themeName)
 
 			if err != nil {
 				fmt.Println("... error loading subdirectory.")
-				continue // If there's an error, it means that this location just doesn't define this part of the layout.  It's OK
+				continue // If there's an error, it means that this location just doesn't define this part of the theme.  It's OK
 			}
 
-			layout := model.NewTheme(themeName, service.funcMap)
+			theme := model.NewTheme(themeName, service.funcMap)
 
-			if err := loadHTMLTemplateFromFilesystem(subFilesystem, layout.HTMLTemplate, service.funcMap); err != nil {
+			if err := loadHTMLTemplateFromFilesystem(subFilesystem, theme.HTMLTemplate, service.funcMap); err != nil {
 				fmt.Println("... error reading files.")
-				derp.Report(derp.Wrap(err, "service.layout.loadFromFilesystem", "Error loading Template", location, themeName))
+				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading Template", location, themeName))
 				continue
 			}
 
 			fmt.Println(". Success.")
 
-			service.themes[themeName] = layout
+			service.themes[themeName] = theme
 		}
 	}
 

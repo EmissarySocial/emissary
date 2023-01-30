@@ -13,7 +13,7 @@ func Schema() schema.Schema {
 				"domains":             schema.Array{Items: DomainSchema()},
 				"providers":           schema.Array{Items: ProviderSchema()},
 				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
-				"layouts":             schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
+				"themes":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),

@@ -34,6 +34,7 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap) Domain {
+
 	service := Domain{
 		themeService:    themeService,
 		providerService: providerService,

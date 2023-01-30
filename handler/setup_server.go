@@ -167,7 +167,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			},
 		}, true, nil
 
-	case "layouts":
+	case "themes":
 		return form.Element{
 			Type: "layout-vertical",
 			Children: []form.Element{
