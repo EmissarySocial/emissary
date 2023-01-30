@@ -47,12 +47,7 @@ func StripeWebhook(factoryManager *server.Factory) echo.HandlerFunc {
 		} else {
 
 			// Get the model.Domain for this domain
-			domain := model.NewDomain()
-			domainService := factory.Domain()
-
-			if err := domainService.Load(&domain); err != nil {
-				return derp.Wrap(err, location, "Error loading domain")
-			}
+			domain := factory.Domain().Get()
 
 			stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 

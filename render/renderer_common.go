@@ -375,17 +375,15 @@ func (w Common) getUser() (model.User, error) {
 }
 
 // getDomain retrieves the current domain model object from the domain service cache
-func (w *Common) getDomain() (*model.Domain, error) {
+func (w *Common) getDomain() (model.Domain, error) {
 
-	if w.domain.DomainID.IsZero() {
-		domainService := w.factory().Domain()
+	domainService := w.factory().Domain()
 
-		if err := domainService.Load(&w.domain); err != nil {
-			return nil, derp.Wrap(err, "render.Common.getDomain", "Error loading domain")
-		}
+	if !domainService.Ready() {
+		return model.Domain{}, derp.NewInternalError("render.Common.getDomain", "Domain service not ready", nil)
 	}
 
-	return &w.domain, nil
+	return domainService.Get(), nil
 }
 
 /******************************************

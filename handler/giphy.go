@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
@@ -32,15 +31,8 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetGiphyImages", "Cannot load Domain")
 		}
 
-		// Load the domain
-		domainService := factory.Domain()
-		domain := model.NewDomain()
-
-		if err := domainService.Load(&domain); err != nil {
-			return derp.Wrap(err, "handler.GetGiphyImages", "Cannot load Domain")
-		}
-
 		// Get the Giphy Provider and API Key
+		domain := factory.Domain().Get()
 		giphy, ok := domain.Clients.Get(providers.ProviderTypeGiphy)
 
 		if !ok {

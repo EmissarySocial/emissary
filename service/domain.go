@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 	"html/template"
-	"sync"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/random"
-	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -25,21 +23,24 @@ import (
 type Domain struct {
 	collection      data.Collection
 	configuration   config.Domain
+	themeService    *Theme
 	userService     *User
 	providerService *Provider
 	funcMap         template.FuncMap
-	model           model.Domain
-	lock            *sync.Mutex
+	domain          model.Domain
+	theme           model.Theme
+	ready           bool
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, configuration config.Domain, userService *User, providerService *Provider, funcMap template.FuncMap) Domain {
+func NewDomain(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap) Domain {
 	service := Domain{
+		themeService:    themeService,
 		providerService: providerService,
 		userService:     userService,
 		funcMap:         funcMap,
-		lock:            &sync.Mutex{},
-		model:           model.NewDomain(),
+		domain:          model.NewDomain(),
+		ready:           false,
 	}
 
 	service.Refresh(collection, configuration)
@@ -53,13 +54,53 @@ func NewDomain(collection data.Collection, configuration config.Domain, userServ
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Domain) Refresh(collection data.Collection, configuration config.Domain) {
+
+	if collection == nil {
+		return
+	}
+
 	service.collection = collection
 	service.configuration = configuration
-	service.model = model.NewDomain()
+	service.domain = model.NewDomain()
+
+	if err := service.LoadOrCreateDomain(); err != nil {
+		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record"))
+		return
+	}
+
+	service.theme = service.themeService.GetTheme(service.domain.ThemeID)
+	service.ready = true
 }
 
 // Close stops the following service watcher
 func (service *Domain) Close() {
+}
+
+// Ready returns TRUE if the service is ready to use
+func (service *Domain) Ready() bool {
+	return service.ready
+}
+
+func (service *Domain) LoadOrCreateDomain() error {
+
+	err := service.collection.Load(exp.All(), &service.domain)
+
+	// Loaded the domain successfully
+	if err == nil {
+		return nil
+	}
+
+	// No record present.  Create a new one.
+	if derp.NotFound(err) {
+
+		if err := service.collection.Save(&service.domain, "Created Domain Record"); err != nil {
+			return derp.Wrap(err, "service.Domain.Refresh", "Error creating new domain record")
+		}
+
+		return nil
+	}
+
+	return derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record")
 }
 
 /******************************************
@@ -67,42 +108,8 @@ func (service *Domain) Close() {
  ******************************************/
 
 // Load retrieves an Domain from the database (or in-memory cache)
-func (service *Domain) Load(domain *model.Domain) error {
-
-	// If the value is already cached, then return it
-	if !service.model.DomainID.IsZero() {
-		*domain = service.model
-		return nil
-	}
-
-	// Initialize a new object (to avoid NPE errors)
-	service.lock.Lock()
-	defer service.lock.Unlock()
-
-	service.model = model.NewDomain()
-
-	// If not cached, try to load from database
-	err := service.collection.Load(exp.All(), &service.model)
-
-	// If present in database, return success
-	if err == nil {
-		*domain = service.model
-		return nil
-	}
-
-	// If not in database, try to create a new record
-	if derp.NotFound(err) {
-
-		if err := service.Save(domain, "Create New Domain"); err != nil {
-			return derp.Wrap(err, "service.Domain.Load", "Error creating new domain")
-		}
-
-		*domain = service.model
-		return nil
-	}
-
-	// Otherwise, there's some bigger error happening, fail un-gracefully
-	return derp.Wrap(err, "service.Domain.Load", "Error loading Domain")
+func (service *Domain) Get() model.Domain {
+	return service.domain
 }
 
 // Save updates the value of this domain in the database (and in-memory cache)
@@ -119,7 +126,7 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 	}
 
 	// Update the in-memory cache
-	service.model = *domain
+	service.domain = *domain
 
 	return nil
 }
@@ -157,9 +164,7 @@ func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Opt
 }
 
 func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
-	result := model.NewDomain()
-	err := service.Load(&result)
-	return &result, err
+	return &service.domain, nil
 }
 
 func (service *Domain) ObjectSave(object data.Object, note string) error {
@@ -186,20 +191,21 @@ func (service *Domain) Schema() schema.Schema {
  * Provider Methods
  ******************************************/
 
+func (service *Domain) Theme() *model.Theme {
+	return &service.theme
+}
+
+/******************************************
+ * Provider Methods
+ ******************************************/
+
 // ActiveClients returns all active Clients for this domain
 func (service *Domain) ActiveClients() []model.Client {
 
-	// Try to load the domain from the database
-	domain := model.NewDomain()
-
-	if err := service.Load(&domain); err != nil {
-		return []model.Client{}
-	}
-
 	// List all clients, filtering by "active" ones.
-	result := make([]model.Client, 0, len(domain.Clients))
+	result := make([]model.Client, 0, len(service.domain.Clients))
 
-	for _, client := range domain.Clients {
+	for _, client := range service.domain.Clients {
 		if client.Active {
 			result = append(result, client)
 		}
@@ -211,14 +217,7 @@ func (service *Domain) ActiveClients() []model.Client {
 
 func (service *Domain) Client(providerID string) model.Client {
 
-	// Try to load the domain from the database
-	domain := model.NewDomain()
-
-	if err := service.Load(&domain); err != nil {
-		return model.NewClient(providerID)
-	}
-
-	if client, ok := domain.Clients[providerID]; ok {
+	if client, ok := service.domain.Clients[providerID]; ok {
 		return client
 	}
 
@@ -306,14 +305,8 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
-	// Try to load the domain from the database
-	domain := model.NewDomain()
-	if err := service.Load(&domain); err != nil {
-		return derp.Wrap(err, location, "Error loading domain")
-	}
-
 	// The client must already be set up for this exchange to work.
-	client, ok := domain.Clients.Get(providerID)
+	client, ok := service.domain.Clients.Get(providerID)
 
 	if !ok {
 		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
@@ -339,9 +332,9 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	client.Token = token
 	client.Data = mapof.NewAny()
 	client.Active = true
-	domain.Clients.Put(client)
+	service.domain.SetClient(client)
 
-	if service.Save(&domain, "OAuth Exchange") != nil {
+	if service.Save(&service.domain, "OAuth Exchange") != nil {
 		return derp.NewInternalError(location, "Error saving domain")
 	}
 
@@ -359,22 +352,8 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 
 	const location = "service.Domain.NewOAuthState"
 
-	domain := model.NewDomain()
-
-	if err := service.Load(&domain); err != nil {
-		return model.Client{}, derp.Wrap(err, location, "Error loading domain")
-	}
-
-	if domain.Clients == nil {
-		domain.Clients = make(set.Map[model.Client])
-	}
-
-	// Try to find a matching client
-	client, ok := domain.Clients[providerID]
-
-	if !ok {
-		client = model.NewClient(providerID)
-	}
+	// Find or Create a client for this provider
+	client, _ := service.domain.GetClient(providerID)
 
 	// Try to generate a new state
 	newState, err := random.GenerateString(32)
@@ -392,10 +371,10 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 	// Assign the state to the client and put into the domain
 	client.Data["state"] = newState
 	client.Data["code_challenge"] = codeChallenge
-	domain.Clients[providerID] = client
+	service.domain.SetClient(client)
 
 	// Save the domain
-	if err := service.Save(&domain, "New OAuth State"); err != nil {
+	if err := service.Save(&service.domain, "New OAuth State"); err != nil {
 		return model.Client{}, derp.Wrap(err, location, "Error saving domain")
 	}
 
@@ -404,49 +383,33 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 
 // ReadOAuthState returns the OAuth state for the specified provider WITHOUT changing the current value.
 // THIS SHOULD NOT BE USED TO ACCESS OAUTH TOKENS because they may be expired.  Use GetOAuthToken for that.
-func (service *Domain) ReadOAuthClient(providerID string) (model.Domain, model.Client, error) {
-
-	const location = "service.Domain.NewOAuthState"
-
-	domain := model.NewDomain()
-
-	if err := service.Load(&domain); err != nil {
-		return model.Domain{}, model.Client{}, derp.Wrap(err, location, "Error loading domain")
-	}
-
-	// Try to find a matching client
-	client, ok := domain.Clients[providerID]
-
-	if !ok {
-		return model.Domain{}, model.Client{}, derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
-	}
-
-	return domain, client, nil
+func (service *Domain) ReadOAuthClient(providerID string) (model.Client, bool) {
+	return service.domain.GetClient(providerID)
 }
 
 // GetAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
 // then it is refreshed (and saved) automatically before returning.
-func (service *Domain) GetOAuthToken(providerID string) (model.Domain, model.Client, *oauth2.Token, error) {
+func (service *Domain) GetOAuthToken(providerID string) (model.Client, *oauth2.Token, error) {
 
 	// Get the provider for this OAuth provider
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return model.Domain{}, model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
+		return model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
 	}
 
 	// Try to load the Domain and Client data
-	domain, client, err := service.ReadOAuthClient(providerID)
+	client, ok := service.ReadOAuthClient(providerID)
 
-	if err != nil {
-		return model.Domain{}, model.Client{}, nil, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error reading OAuth client")
+	if !ok {
+		return model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth client")
 	}
 
 	// Retrieve the Token from the client
 	token := client.Token
 
 	if token == nil {
-		return model.Domain{}, model.Client{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
+		return model.Client{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
 	}
 
 	// Use TokenSource to update tokens when they expire.
@@ -456,18 +419,18 @@ func (service *Domain) GetOAuthToken(providerID string) (model.Domain, model.Cli
 	newToken, err := source.Token()
 
 	if err != nil {
-		return model.Domain{}, model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
+		return model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
 	}
 
 	// If the token has changed, save it
 	if token.AccessToken != newToken.AccessToken {
 		client.Token = newToken
-		domain.Clients[providerID] = client
-		if err := service.Save(&domain, "Refresh OAuth Token"); err != nil {
-			return model.Domain{}, model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
+		service.domain.SetClient(client)
+		if err := service.Save(&service.domain, "Refresh OAuth Token"); err != nil {
+			return model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
 		}
 	}
 
 	// Success!
-	return domain, client, newToken, nil
+	return client, newToken, nil
 }

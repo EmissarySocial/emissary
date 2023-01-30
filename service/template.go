@@ -21,24 +21,21 @@ import (
 type Template struct {
 	templates         set.Map[model.Template] // map of all templates available within this domain
 	locations         []config.Folder         // Configuration for template directory
+	filesystemService Filesystem              // Filesystem service
 	funcMap           template.FuncMap        // Map of functions to use in golang templates
 	mutex             sync.RWMutex            // Mutext that locks access to the templates structure
-	templateService   *Layout                 // Pointer to the Layout service
-	filesystemService Filesystem              // Filesystem service
-
-	changed chan bool // Channel that is used to signal that a template has changed
-	closed  chan bool // Channel to notify the watcher to close/reset
+	changed           chan bool               // Channel that is used to signal that a template has changed
+	closed            chan bool               // Channel to notify the watcher to close/reset
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
+func NewTemplate(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
 
 	service := Template{
 		templates:         make(set.Map[model.Template]),
-		funcMap:           funcMap,
 		locations:         make([]config.Folder, 0),
-		templateService:   templateService,
 		filesystemService: filesystemService,
+		funcMap:           funcMap,
 		changed:           make(chan bool),
 		closed:            make(chan bool),
 	}

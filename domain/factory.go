@@ -36,7 +36,7 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	layoutService   *service.Layout
+	themeService    *service.Theme
 	templateService *service.Template
 	contentService  *service.Content
 	providerService *service.Provider
@@ -68,13 +68,13 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, layoutService *service.Layout, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
 	// Base Factory object
 	factory := Factory{
-		layoutService:   layoutService,
+		themeService:    themeService,
 		templateService: templateService,
 		contentService:  contentService,
 		providerService: providerService,
@@ -134,6 +134,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.domainService = service.NewDomain(
 		factory.collection(CollectionDomain),
 		domain,
+		factory.Theme(),
 		factory.User(),
 		factory.Provider(),
 		render.FuncMap(factory.Icons()),
@@ -387,9 +388,9 @@ func (factory *Factory) Group() *service.Group {
  * Render Objects
  ******************************************/
 
-// Layout service manages global website layouts (managed globally by the server.Factory)
-func (factory *Factory) Layout() *service.Layout {
-	return factory.layoutService
+// Theme service manages global website themes (managed globally by the server.Factory)
+func (factory *Factory) Theme() *service.Theme {
+	return factory.themeService
 }
 
 // Template returns a fully populated Template service (managed globally by the server.Factory)
@@ -550,14 +551,7 @@ func (factory *Factory) StripeClient() (client.API, error) {
 
 	const location = "domain.factory.StripeClient"
 
-	domain := model.NewDomain()
-	domainService := factory.Domain()
-
-	// Load the domain from the database
-	if err := domainService.Load(&domain); err != nil {
-		return client.API{}, derp.Wrap(err, location, "Error loading domain record")
-	}
-
+	domain := factory.Domain().Get()
 	stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
 
 	// Confirm that stripe is active

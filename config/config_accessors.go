@@ -37,8 +37,8 @@ func (config *Config) GetObject(name string) (any, bool) {
 	case "templates":
 		return &config.Templates, true
 
-	case "layouts":
-		return &config.Layouts, true
+	case "themes":
+		return &config.Themes, true
 
 	case "emails":
 		return &config.Emails, true

@@ -90,12 +90,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 	switch template.Model {
 
 	case "domain":
-		service := factory.Domain()
-		domain := model.NewDomain()
-		if err := service.Load(&domain); err != nil {
-			return nil, derp.Wrap(err, location, "Error loading Group", objectID)
-		}
-
+		domain := factory.Domain().Get()
 		return render.NewDomain(factory, ctx, factory.Provider(), template, &domain, actionID)
 
 	case "group":

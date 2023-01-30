@@ -38,7 +38,7 @@ func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.
 	}
 
 	// Full Page requests require the layout service to wrap the rendered content
-	htmlTemplate := factory.Layout().Global().HTMLTemplate
+	htmlTemplate := factory.Domain().Theme().HTMLTemplate
 	var buffer bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&buffer, "page", renderer); err != nil {
