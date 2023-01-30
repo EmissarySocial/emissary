@@ -6,7 +6,7 @@ replace github.com/benpate/form => ../../benpate/form
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/aws/aws-sdk-go v1.44.184
+	github.com/aws/aws-sdk-go v1.44.189
 	github.com/benpate/data v0.23.0
 	github.com/benpate/data-mongo v0.23.0
 	github.com/benpate/derp v0.27.0
