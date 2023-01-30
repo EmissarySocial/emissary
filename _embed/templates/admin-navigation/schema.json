@@ -1,6 +1,6 @@
 {
 	"templateId":"admin-navigation",
-	"role":"admin-navigation",
+	"role":"admin",
 	"model":"stream",
 	"containedBy":["admin"],
 	"label": "Top Level",

@@ -12,9 +12,9 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -244,7 +244,7 @@ func (service *Template) ListFeatures() []form.LookupCode {
 func (service *Template) ListByContainer(containedByRole string) []form.LookupCode {
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedByRole)
+		return t.ContainedBy.Contains(containedByRole)
 	}
 
 	return service.List(filter)
@@ -253,14 +253,14 @@ func (service *Template) ListByContainer(containedByRole string) []form.LookupCo
 // ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
 // are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
 // are returned.
-func (service *Template) ListByContainerLimited(containedByRole string, limits []string) []form.LookupCode {
+func (service *Template) ListByContainerLimited(containedByRole string, limits sliceof.String) []form.LookupCode {
 
-	if len(limits) == 0 {
+	if limits.IsEmpty() {
 		return service.ListByContainer(containedByRole)
 	}
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedByRole) && compare.Contains(limits, t.TemplateID)
+		return t.ContainedBy.Contains(containedByRole) && limits.Contains(t.TemplateID)
 	}
 
 	return service.List(filter)
