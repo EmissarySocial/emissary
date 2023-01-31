@@ -65,6 +65,8 @@ github.com/aws/aws-sdk-go v1.44.184 h1:/MggyE66rOImXJKl1HqhLQITvWvqIV7w1Q4MaG6FH
 github.com/aws/aws-sdk-go v1.44.184/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go v1.44.189 h1:9PBrjndH1uL5AN8818qI3duhQ4hgkMuLvqkJlg9MRyk=
 github.com/aws/aws-sdk-go v1.44.189/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.190 h1:QC+Pf/Ooj7Waf2obOPZbIQOqr00hy4h54j3ZK9mvHcc=
+github.com/aws/aws-sdk-go v1.44.190/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/benpate/data v0.23.0 h1:lbTWQgGfqUY+V8ACF2/4YTmETRSr+SzONiw+ECOdnao=
