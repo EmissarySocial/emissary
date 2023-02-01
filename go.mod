@@ -53,7 +53,7 @@ require (
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/net v0.5.0
 	golang.org/x/oauth2 v0.4.0
-	willnorris.com/go/microformats v1.1.1
+	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
 

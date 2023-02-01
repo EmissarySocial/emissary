@@ -807,5 +807,7 @@ rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 willnorris.com/go/microformats v1.1.1 h1:h5tk2luq6KBIRcwMGdksxdeea4GGuWrRFie5460OAbo=
 willnorris.com/go/microformats v1.1.1/go.mod h1:kvVnWrkkEscVAIITCEoiTX66Hcyg59C7q0E49mb9TJ0=
+willnorris.com/go/microformats v1.2.0 h1:73pzJCLJM69kYE5qsLI9OOC/7sImNVOzya9EQ0+1wmM=
+willnorris.com/go/microformats v1.2.0/go.mod h1:RrlwCSvib4qz+JICKiN7rON4phzQ3HAT7j6s4O2cZj4=
 willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0 h1:V5+O+YZHchEwu6ZmPcqT1dQ+mHgE356Q+w9SVOQ+QZg=
 willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0/go.mod h1:DgeruqKIsZtcDXVXNbBHa0YYEm88oAnK7PahkDtuCvw=
