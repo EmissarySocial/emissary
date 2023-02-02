@@ -49,7 +49,7 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.13.0
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
-	github.com/yuin/goldmark v1.5.3
+	github.com/yuin/goldmark v1.5.4
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/net v0.5.0
 	golang.org/x/oauth2 v0.4.0
