@@ -223,6 +223,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	for key := range service.templates {
 		keys = append(keys, key)
 	}
+
 	return nil, derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID, keys)
 }
 

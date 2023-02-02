@@ -56,7 +56,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	}
 
 	// Global Theme service
-	factory.themeService = service.NewTheme(
+	factory.themeService = *service.NewTheme(
 		factory.Filesystem(),
 		factory.FuncMap(),
 		[]config.Folder{},

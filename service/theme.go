@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"sync"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
@@ -23,25 +24,27 @@ type Theme struct {
 	locations         []config.Folder
 	themes            mapof.Object[model.Theme]
 
+	mutex   sync.RWMutex
 	changed chan bool
 	closed  chan bool
 }
 
 // NewTheme returns a fully initialized Theme service.
-func NewTheme(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) Theme {
+func NewTheme(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Theme {
 
 	service := Theme{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
 		locations:         make([]config.Folder, 0),
 		themes:            mapof.NewObject[model.Theme](),
+		mutex:             sync.RWMutex{},
 		changed:           make(chan bool),
 		closed:            make(chan bool),
 	}
 
 	service.Refresh(locations)
 
-	return service
+	return &service
 }
 
 /******************************************
@@ -72,6 +75,9 @@ func (service *Theme) Refresh(locations []config.Folder) {
 
 func (service *Theme) List() []model.Theme {
 
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	// Generate a slice containing all themes
 	result := make([]model.Theme, 0, len(service.themes))
 
@@ -83,6 +89,9 @@ func (service *Theme) List() []model.Theme {
 }
 
 func (service *Theme) GetTheme(themeID string) model.Theme {
+
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
 
 	// Try to return the requested theme.
 	// This should usually happen
@@ -140,6 +149,8 @@ func (service *Theme) Watch() {
 // loadThemes retrieves the template from the disk and parses it into
 func (service *Theme) loadThemes() error {
 
+	result := mapof.NewObject[model.Theme]()
+
 	// For each configured location...
 	for _, location := range service.locations {
 
@@ -189,10 +200,16 @@ func (service *Theme) loadThemes() error {
 				continue
 			}
 
-			service.setTheme(theme)
+			result[theme.ThemeID] = theme
 			fmt.Println(". Success.")
 		}
 	}
+
+	// Apply all themes at once to minimize lock time.
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	service.themes = result
 
 	return nil
 }
@@ -224,8 +241,4 @@ func (service *Theme) loadModel(themeID string, filesystem fs.FS) (model.Theme, 
 
 	// Success!
 	return result, nil
-}
-
-func (service *Theme) setTheme(theme model.Theme) {
-	service.themes[theme.ThemeID] = theme
 }
