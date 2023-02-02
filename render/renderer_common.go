@@ -67,13 +67,6 @@ func (w Common) ActionID() string {
 	return w.actionID
 }
 
-func (w Common) BannerURL() string {
-	if domain, err := w.getDomain(); err == nil {
-		return domain.BannerURL
-	}
-	return ""
-}
-
 /******************************************
  * Page Defaults
  ******************************************/
@@ -222,30 +215,6 @@ func (w Common) DomainLabel() (string, error) {
 		return "", err
 	} else {
 		return domain.Label, nil
-	}
-}
-
-func (w Common) DomainHeaderHTML() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.HeaderHTML, nil
-	}
-}
-
-func (w Common) DomainFooterHTML() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.FooterHTML, nil
-	}
-}
-
-func (w Common) DomainCustomCSS() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.CustomCSS, nil
 	}
 }
 
@@ -408,11 +377,7 @@ func (w Common) AdminSections() []form.LookupCode {
 	return []form.LookupCode{
 		{
 			Value: "domain",
-			Label: "Site",
-		},
-		{
-			Value: "appearance",
-			Label: "Appearance",
+			Label: "Domain",
 		},
 		{
 			Value: "navigation",

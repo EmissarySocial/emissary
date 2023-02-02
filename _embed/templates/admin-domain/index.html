@@ -12,23 +12,6 @@
 		{{- end -}}
 	</div>
 
-	<div>
-		<h3>Let New People Sign Up?</h3>
- 
-		<span role="link" hx-get="/admin/domain/signup">
-			{{- if .SignupForm.Active -}}
-				<div class="toggle-container" value="true">
-					<span class="toggle"><span class="marker"></span></span>
-					<label>YES.  New people CAN make new accounts.</label>
-				</div>
-			{{- else -}}
-			<div class="toggle-container" value="false">
-				<span class="toggle"><span class="marker"></span></span>
-				<label>NO. New people CAN NOT make new accounts.</label>
-			</div>
-			{{- end -}}
-		</span>
-
-	</div>
+	{{.View "form"}}
 
 </div>

@@ -1,0 +1,12 @@
+{
+	"themeId": "codex",
+	"label": "Codex",
+	"description": "Sidebar navigation for content-heavy sites",
+	"rank": 10,
+	"schema": {
+
+	},
+	"actions": {
+		
+	}
+}

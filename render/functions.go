@@ -14,15 +14,19 @@ import (
 func FuncMap(icons icon.Provider) template.FuncMap {
 
 	return template.FuncMap{
+
 		"add": func(a any, b any) int {
 			return convert.Int(a) + convert.Int(b)
 		},
+
 		"subtract": func(a any, b any) int {
 			return convert.Int(a) - convert.Int(b)
 		},
+
 		"icon": func(name string) template.HTML {
 			return template.HTML(icons.Get(name))
 		},
+
 		"dollarFormat": func(value any) string {
 
 			var unitAmount int64

@@ -128,6 +128,7 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 
 	// Update the in-memory cache
 	service.domain = *domain
+	service.theme = service.themeService.GetTheme(service.domain.ThemeID)
 
 	return nil
 }

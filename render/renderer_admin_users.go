@@ -117,7 +117,15 @@ func (w User) executeTemplate(writer io.Writer, name string, data any) error {
 }
 
 /******************************************
- * DATA ACCESSORS
+ * Domain Data
+ ******************************************/
+
+func (w User) SignupForm() model.SignupForm {
+	return w._factory.Domain().Get().SignupForm
+}
+
+/******************************************
+ * User Data
  ******************************************/
 
 func (w User) UserID() string {
@@ -137,7 +145,7 @@ func (w User) ImageURL() string {
 }
 
 /******************************************
- * QUERY BUILDERS
+ * Query Builders
  ******************************************/
 
 func (w User) Users() *QueryBuilder[model.UserSummary] {

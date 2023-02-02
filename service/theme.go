@@ -1,8 +1,11 @@
 package service
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -67,6 +70,18 @@ func (service *Theme) Refresh(locations []config.Folder) {
  * Data Access Methods
  ******************************************/
 
+func (service *Theme) List() []model.Theme {
+
+	// Generate a slice containing all themes
+	result := make([]model.Theme, 0, len(service.themes))
+
+	for _, theme := range service.themes {
+		result = append(result, theme)
+	}
+
+	return result
+}
+
 func (service *Theme) GetTheme(themeID string) model.Theme {
 
 	// Try to return the requested theme.
@@ -82,7 +97,7 @@ func (service *Theme) GetTheme(themeID string) model.Theme {
 	}
 
 	// If the default theme doesn't exist, then return a blank theme.
-	// This should never happen
+	// This should never happen, and it'll probably break when you try to run it.
 	return model.NewTheme("default", service.funcMap)
 }
 
@@ -152,29 +167,65 @@ func (service *Theme) loadThemes() error {
 				continue
 			}
 
-			themeName := themeDirectory.Name()
-			fmt.Println("... theme: " + themeName)
-
-			subFilesystem, err := fs.Sub(filesystem, themeName)
+			themeID := themeDirectory.Name()
+			subFilesystem, err := fs.Sub(filesystem, themeID)
 
 			if err != nil {
-				fmt.Println("... error loading subdirectory.")
-				continue // If there's an error, it means that this location just doesn't define this part of the theme.  It's OK
-			}
-
-			theme := model.NewTheme(themeName, service.funcMap)
-
-			if err := loadHTMLTemplateFromFilesystem(subFilesystem, theme.HTMLTemplate, service.funcMap); err != nil {
-				fmt.Println("... error reading files.")
-				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading Template", location, themeName))
+				derp.Report(derp.NewInternalError("service.theme.loadFromFilesystem", "Error loading subdirectory", location, themeID))
 				continue
 			}
 
-			fmt.Println(". Success.")
+			// Read the theme.json file
+			theme, err := service.loadModel(themeID, subFilesystem)
 
-			service.themes[themeName] = theme
+			if err != nil {
+				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading theme.json", location, themeID))
+				continue
+			}
+
+			// Load HTML templates into the theme
+			if err := loadHTMLTemplateFromFilesystem(subFilesystem, theme.HTMLTemplate, service.funcMap); err != nil {
+				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading Template", location, themeID))
+				continue
+			}
+
+			service.setTheme(theme)
+			fmt.Println(". Success.")
 		}
 	}
 
 	return nil
+}
+
+// loadModel loads a theme.json file from the filesystem and returns a Theme object
+func (service *Theme) loadModel(themeID string, filesystem fs.FS) (model.Theme, error) {
+
+	const location = "service.Theme.loadModel"
+	result := model.NewTheme(themeID, service.funcMap)
+
+	// Try to Oopen the theme.json file
+	file, err := filesystem.Open("theme.json")
+
+	if err != nil {
+		return result, derp.Wrap(err, location, "Unable to open theme.json file", filesystem)
+	}
+
+	// Try to read the file into a buffer
+	var buffer bytes.Buffer
+
+	if _, err := io.Copy(&buffer, file); err != nil {
+		return result, derp.Wrap(err, location, "Unable to read theme.json file", filesystem)
+	}
+
+	// Try to parse the JSON in the buffer into a Theme object
+	if err := json.Unmarshal(buffer.Bytes(), &result); err != nil {
+		return result, derp.Wrap(err, location, "Unable to parse theme.json file", filesystem)
+	}
+
+	// Success!
+	return result, nil
+}
+
+func (service *Theme) setTheme(theme model.Theme) {
+	service.themes[theme.ThemeID] = theme
 }

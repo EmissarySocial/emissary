@@ -131,6 +131,10 @@ func (w Domain) PageTitle() string {
  * Other Data Accessors
  ******************************************/
 
+func (w Domain) ThemeID() string {
+	return w.domain.ThemeID
+}
+
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w.domain.SignupForm

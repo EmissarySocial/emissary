@@ -6,8 +6,8 @@
 	"label": "Domain",
 	"description": "Domain Owners only.  Site Admin",
 	"schema": {"type": "object", "properties": {
-		"label":     {"type":"string", "maxLength":100},
-		"bannerUrl": {"type":"string", "maxLength":255},
+		"themeId": {"type":"string", "maxLength": 100},
+		"label":   {"type":"string", "maxLength":100},
 		"signupForm": {"type":"object", "properties": {
 			"title":   {"type":"string", "format":"no-html", "maxLength":100},
 			"message": {"type":"string", "format":"no-html", "maxLength":100},
@@ -16,6 +16,21 @@
 	}},
 	"actions": {
 		"index": {"step": "view-html"},
+		"form": {
+			"steps": [
+				{"step":"edit",
+					"form": {
+						"type":"layout-vertical", "children":[
+							{"type":"select", "path":"themeId", "label":"Theme", "options": {"provider":"themes"}},
+							{"type":"text", "path":"label", "label":"Label"}
+						]
+					},
+					"options":["cancel-button:hide", "endpoint:/admin/domain/form"]
+				},
+				{"step": "save"},
+				{"step": "reload-page"}
+			]
+		},
 		"signup": {
 			"steps": [{
 				"step": "as-modal", 
