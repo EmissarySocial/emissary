@@ -1,4 +1,5 @@
-<script type="text/hyperscript" src="/.themes/default/hyperscript" rel="preload"></script>
+<link rel="stylesheet" href="/.themes/default/stylesheet" rel="preload">
+
 <!--
 <script type="text/hyperscript" src="/static/date._hs"></script>
 <script type="text/hyperscript" src="/static/forms._hs"></script>
@@ -6,8 +7,12 @@
 <script type="text/hyperscript" src="/static/tabs._hs"></script>
 -->
 
-<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js" rel="preload"></script>
+<!-- This must be in the header to support streams that invoke htmx directly. -->
+<script type="text/javascript" src="/static/htmx/htmx.min.js" rel="preload"></script>
 <script type="text/javascript" src="/.themes/default/javascript" rel="preload"></script>
+
+<script type="text/hyperscript" src="/.themes/default/hyperscript" rel="preload"></script>
+<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js" rel="preload"></script>
 <!--
 <script type="text/javascript" src="/static/preload.js"></script>
 <script type="text/javascript" src="/static/a11y.js"></script>
