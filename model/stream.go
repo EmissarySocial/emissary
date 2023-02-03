@@ -27,7 +27,6 @@ type Stream struct {
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	AsFeature       bool                         `json:"asFeature"           bson:"asFeature"`           // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
 	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:"journal"`

@@ -79,9 +79,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-content":
 		return NewEditContent(stepInfo)
 
-	case "edit-features":
-		return NewEditFeatures(stepInfo)
-
 	case "edit-properties":
 		return NewEditProperties(stepInfo)
 

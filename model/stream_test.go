@@ -43,7 +43,6 @@ func TestStreamSchema(t *testing.T) {
 		{"content.html", "TEST_HTML", nil},
 
 		{"rank", "1234", 1234},
-		{"asFeature", "true", true},
 		{"publishDate", 12345678, int64(12345678)},
 		{"unpublishDate", 123456789, int64(123456789)},
 	}

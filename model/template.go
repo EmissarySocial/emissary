@@ -4,9 +4,9 @@ import (
 	"html/template"
 
 	"github.com/benpate/data/option"
-	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 )
 
@@ -58,22 +58,13 @@ func (template Template) ID() string {
 // Streams using the Template named in the parameters
 func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 
-	// Special carve-out for "feature" templates.  They can go anywhere
-	if template.IsFeature() {
-		return true
-	}
-
 	// Otherwise, this template MUSt list the potential parent Stream's *role* in its ContainedBy list
 	for _, templateRole := range templateRoles {
-		if compare.Contains(template.ContainedBy, templateRole) {
+		if slice.Contains(template.ContainedBy, templateRole) {
 			return true
 		}
 	}
 	return false
-}
-
-func (template *Template) IsFeature() bool {
-	return template.Role == "feature"
 }
 
 // State searches for the State in this Template that matches the provided StateID

@@ -3,14 +3,17 @@
 <head>
 	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
 	<link rel="webmention" href="/.webmention"/>
-	{{template "includes-head" .}}
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="generator" content="Emissary_0.1.0">
+	<link rel="stylesheet" href="/.themes/default/stylesheet" rel="preload">
 </head>
 
 <body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
 	{{- $topID := .NavigationID -}}
 
-	<nav hx-ext="preload" hx-push-url="true">
+	<nav hx-push-url="true">
 		<div class="framed">
 			<div class="left">
 				{{- range .Navigation -}}
@@ -40,6 +43,11 @@
 	
 	<aside></aside>
 
-	{{template "includes-foot" .}}
 </body>
+
+<script type="text/javascript" src="/static/htmx/htmx.min.js" rel="preload"></script>
+<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js" rel="preload"></script>
+<script type="text/javascript" src="/.themes/default/javascript"></script>
+<script type="text/hyperscript" src="/.themes/default/hyperscript"></script>
+
 </html>

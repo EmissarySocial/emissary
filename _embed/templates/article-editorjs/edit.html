@@ -12,10 +12,6 @@
 				<a hx-get="/{{.StreamID}}/properties">Info</a>
 			{{- end -}}
 
-			{{- if .UserCan "features" -}}
-				<a hx-get="/{{.StreamID}}/features">Features</a>
-			{{- end -}}
-
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}

@@ -20,7 +20,6 @@ func StreamSchema() schema.Element {
 			"replyTo":       DocumentLinkSchema(),
 			"content":       ContentSchema(),
 			"rank":          schema.Integer{},
-			"asFeature":     schema.Boolean{},
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
 		},
@@ -39,15 +38,6 @@ func PermissionSchema() schema.Element {
 /*********************************
  * Getter Interfaces
  *********************************/
-
-func (stream *Stream) GetBoolOK(name string) (bool, bool) {
-	switch name {
-	case "asFeature":
-		return stream.AsFeature, true
-	default:
-		return false, false
-	}
-}
 
 func (stream *Stream) GetIntOK(name string) (int, bool) {
 	switch name {
@@ -92,16 +82,6 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 /*********************************
  * Setter Interfaces
  *********************************/
-
-func (stream *Stream) SetBool(name string, value bool) bool {
-	switch name {
-	case "asFeature":
-		stream.AsFeature = value
-		return true
-	default:
-		return false
-	}
-}
 
 func (stream *Stream) SetInt(name string, value int) bool {
 	switch name {

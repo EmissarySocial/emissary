@@ -91,15 +91,6 @@
 				{"step":"save", "comment":"Properties updated by {{.Author}}"}
 			]
 		},
-		"features": {
-			"roles": ["editor", "owner"],
-			"steps": [
-				{"step":"as-modal", "steps": [
-					{"step":"edit-features"},
-					{"step":"save", "comment":"Features updated by {{.Author}}"}
-				]}
-			]
-		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [

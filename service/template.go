@@ -238,16 +238,6 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
  * Custom Queries
  ******************************************/
 
-// ListFeatures returns all templates that are used as "feature" templates
-func (service *Template) ListFeatures() []form.LookupCode {
-
-	filter := func(template *model.Template) bool {
-		return template.IsFeature()
-	}
-
-	return service.List(filter)
-}
-
 // ListByContainer returns all model.Templates that match the provided "containedByRole" value
 func (service *Template) ListByContainer(containedByRole string) []form.LookupCode {
 
