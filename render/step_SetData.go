@@ -64,10 +64,10 @@ func (step StepSetData) Post(renderer Renderer) error {
 		}
 	}
 
-	// Put values from schema.json into the stream
+	// Put values from template.json into the stream
 	for key, value := range step.Values {
 		if err := schema.Set(object, key, value); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from schema.json", key, value)
+			result := derp.Wrap(err, location, "Error setting value from template.json", key, value)
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return result
 		}

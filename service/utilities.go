@@ -73,15 +73,15 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 // loadModelFromFilesystem locates and parses a schema from the filesystem path
 func loadModelFromFilesystem(filesystem fs.FS, model any, location string) error {
 
-	file, err := fs.ReadFile(filesystem, "schema.json")
+	file, err := fs.ReadFile(filesystem, "template.json")
 
 	if err != nil {
-		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: schema.json", location)
+		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: template.json", location)
 	}
 
 	// Unmarshal the file into the schema.
 	if err := json.Unmarshal(file, model); err != nil {
-		return derp.Wrap(err, "service.loadModelFromFilesystem", "Invalid JSON configuration file: schema.json", location)
+		return derp.Wrap(err, "service.loadModelFromFilesystem", "Invalid JSON configuration file: template.json", location)
 	}
 
 	// Return to caller.

@@ -148,7 +148,7 @@ func (service *Template) loadTemplates() error {
 
 			template := model.NewTemplate(directory.Name(), service.funcMap)
 
-			// Load/Parse the model file from the filesystem (schema.json)
+			// Load/Parse the model file from the filesystem (template.json)
 			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory))
 				continue
