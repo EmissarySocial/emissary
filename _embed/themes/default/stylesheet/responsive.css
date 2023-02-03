@@ -1,0 +1,108 @@
+.show {
+	display:inherit;
+}
+
+.hide {
+	display:none;
+}
+
+.framed {
+	position: relative;
+}
+
+/** Extra Small Screens ******/
+@media screen and (max-width:568px) {
+
+	:root{
+		--rhythm: 10px;
+	}
+
+	.framed {
+		width:100%;
+		margin:0px;		
+	}
+
+	.page {
+		border: none;
+		padding: 10px;
+		font-size: 20px;
+		font-weight:400;
+	}
+
+	.show-xs {
+		display:inherit;
+	}
+
+	.hide-xs {
+		display:none;
+	}
+}
+
+@media screen and (min-width:568px) {
+
+	.framed {
+		width:100%;
+	}
+
+	.hide-xs,
+	.show-sm {
+		display:inherit;
+	}
+
+	.hide-sm,
+	.hide-md {
+		display:none;
+	}
+
+}
+
+@media screen and (min-width:768px) {
+
+	.framed {
+		width:90%;
+	}
+
+	.hide-sm,
+	.show-md {
+		display:inherit;
+	}
+
+	.hide-md,
+	.hide-lg {
+		display:none;
+	}
+}
+
+@media screen and (min-width:1024px) {
+
+	.framed {
+		width:85%;
+	}
+
+	.hide-md,
+	.show-lg {
+		display:inherit;
+	}
+
+	.hide-lg,
+	.hide-xl {
+		display:none;
+	}
+}
+
+@media screen and (min-width:1280px) {
+
+	.framed {
+		width:80%;
+		max-width:76em;
+	}
+
+	.hide-lg,
+	.show-xl {
+		display:inherit;
+	}
+
+	.hide-xl {
+		display:none;
+	}
+}

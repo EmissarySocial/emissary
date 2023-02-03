@@ -8,8 +8,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 // notDeleted ensures that a criteria expression does not include soft-deleted items.

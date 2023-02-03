@@ -179,7 +179,7 @@ func (service *Theme) loadThemes() error {
 			}
 
 			themeID := themeDirectory.Name()
-			subFilesystem, err := fs.Sub(filesystem, themeID)
+			subdirectory, err := fs.Sub(filesystem, themeID)
 
 			if err != nil {
 				derp.Report(derp.NewInternalError("service.theme.loadFromFilesystem", "Error loading subdirectory", location, themeID))
@@ -187,7 +187,7 @@ func (service *Theme) loadThemes() error {
 			}
 
 			// Read the theme.json file
-			theme, err := service.loadModel(themeID, subFilesystem)
+			theme, err := service.loadModel(themeID, subdirectory)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading theme.json", location, themeID))
@@ -195,8 +195,14 @@ func (service *Theme) loadThemes() error {
 			}
 
 			// Load HTML templates into the theme
-			if err := loadHTMLTemplateFromFilesystem(subFilesystem, theme.HTMLTemplate, service.funcMap); err != nil {
+			if err := loadHTMLTemplateFromFilesystem(subdirectory, theme.HTMLTemplate, service.funcMap); err != nil {
 				derp.Report(derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading Template", location, themeID))
+				continue
+			}
+
+			// Load all Bundles from the filesystem
+			if err := populateBundles(theme.Bundles, subdirectory); err != nil {
+				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", location))
 				continue
 			}
 

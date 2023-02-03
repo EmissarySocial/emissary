@@ -400,6 +400,11 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
  * Other Global Services
  ****************************/
 
+// Template returns the global template service
+func (factory *Factory) Template() *service.Template {
+	return &factory.templateService
+}
+
 // Theme returns the global theme service
 func (factory *Factory) Theme() *service.Theme {
 	return &factory.themeService

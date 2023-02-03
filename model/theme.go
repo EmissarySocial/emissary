@@ -9,11 +9,11 @@ import (
 
 // Theme represents an HTML template used for rendering all hard-coded application elements (but not dynamic streams)
 type Theme struct {
-	ThemeID      string       `json:"themeID"     bson:"themeID"`     // Internal name/token other objects (like streams) will use to reference this Theme.
-	Label        string       `json:"label"       bson:"label"`       // Human-readable label for this theme
-	Description  string       `json:"description" bson:"description"` // Human-readable description for this theme
-	Rank         int          `json:"rank"        bson:"rank"`        // Sort order for this theme
-	Bundles      mapof.String `json:"bundles"     bson:"bundles"`     // Map of bundles that are required to render this theme
+	ThemeID      string               `json:"themeID"     bson:"themeID"`     // Internal name/token other objects (like streams) will use to reference this Theme.
+	Label        string               `json:"label"       bson:"label"`       // Human-readable label for this theme
+	Description  string               `json:"description" bson:"description"` // Human-readable description for this theme
+	Rank         int                  `json:"rank"        bson:"rank"`        // Sort order for this theme
+	Bundles      mapof.Object[Bundle] `json:"bundles"     bson:"bundles"`     // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
 	HTMLTemplate *template.Template
 }
 
@@ -22,7 +22,7 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 
 	return Theme{
 		ThemeID:      templateID,
-		Bundles:      mapof.NewString(),
+		Bundles:      mapof.NewObject[Bundle](),
 		HTMLTemplate: template.New("").Funcs(funcMap),
 	}
 }

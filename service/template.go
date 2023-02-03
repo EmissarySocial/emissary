@@ -148,14 +148,21 @@ func (service *Template) loadTemplates() error {
 
 			template := model.NewTemplate(directory.Name(), service.funcMap)
 
-			// System locations (except for "static" and "global") have a schema.json file
+			// Load/Parse the model file from the filesystem (schema.json)
 			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory))
 				continue
 			}
 
+			// Load all HTML templates from the filesystem
 			if err := loadHTMLTemplateFromFilesystem(subdirectory, template.HTMLTemplate, service.funcMap); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory))
+				continue
+			}
+
+			// Load all Bundles from the filesystem
+			if err := populateBundles(template.Bundles, subdirectory); err != nil {
+				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", location, directory))
 				continue
 			}
 
