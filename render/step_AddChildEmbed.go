@@ -146,7 +146,7 @@ func (step StepAddChildEmbed) common(renderer Renderer) ([]form.LookupCode, stri
 	streamService := factory.Stream()
 
 	// Create a new child stream
-	child, template, err := streamService.New(renderer.TopLevelID(), renderer.objectID(), templateID)
+	child, template, err := streamService.New(renderer.NavigationID(), renderer.objectID(), templateID)
 
 	if err != nil {
 		return nil, "", nil, derp.Wrap(err, location, "Error creating new child stream")

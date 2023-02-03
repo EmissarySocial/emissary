@@ -1,6 +1,7 @@
 {
 	"templateId":"photo-album",
 	"role":"photo-album",
+	"model":"stream",
 	"containedBy": ["top", "folder"],
 	"label":"Photo Album",
 	"description":"A collection of photographs",

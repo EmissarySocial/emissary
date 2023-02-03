@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
+	<link rel="webmention" href="/.webmention"/>
+	{{ template "includes-head" .}}
+</head>
+
+<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+
+	{{- $topID := .NavigationID -}}
+
+	<nav hx-push-url="true">
+		<div class="framed">
+			<div class="left">
+				{{- range .Navigation -}}
+					<a href="/{{.Token}}" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
+				{{- end -}}
+			</div>
+			<div class="right">
+				{{- if .IsAuthenticated -}}
+					<a href="/@me" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+					<a href="/@me/inbox" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
+					{{- if .IsOwner -}}<a href="/admin/domain"  class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
+					<!--button hx-post="/signout" hx-target="body">Sign Out</button-->
+				{{- else -}}
+					<a href="/signin">Sign In</a>
+				{{- end -}}
+			</div>
+		</div>
+
+	</nav>
+
+	<main>
+		<div id="main" class="framed">
+			{{- .Render -}}
+		</div>
+	</main>
+	
+	<aside></aside>
+
+</body>
+
+{{ template "includes-foot" .}}
+
+</html>

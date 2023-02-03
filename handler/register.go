@@ -33,8 +33,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 		// Find and execute the template
 		var buffer bytes.Buffer
-
-		template := factory.Layout().Global().HTMLTemplate
+		template := factory.Domain().Theme().HTMLTemplate
 
 		if err := template.ExecuteTemplate(&buffer, "register", domain); err != nil {
 			return derp.Report(derp.Wrap(err, location, "Error executing template"))

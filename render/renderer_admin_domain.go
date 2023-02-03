@@ -20,12 +20,11 @@ import (
 
 type Domain struct {
 	externalService *service.Provider
-	layout          *model.Layout
 	domain          *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, layout *model.Layout, domain *model.Domain, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, template *model.Template, domain *model.Domain, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -37,7 +36,7 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 	}
 
 	// Verify the requested action
-	action := layout.Action(actionID)
+	action := template.Action(actionID)
 
 	if action == nil {
 		return Domain{}, derp.NewBadRequestError(location, "Invalid action", actionID)
@@ -45,8 +44,7 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 
 	result := Domain{
 		externalService: externalService,
-		layout:          layout,
-		Common:          NewCommon(factory, ctx, nil, action, actionID),
+		Common:          NewCommon(factory, ctx, template, action, actionID),
 	}
 
 	result.domain = domain
@@ -76,7 +74,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Domain.View"
 
-	renderer, err := NewDomain(w._factory, w._context, w.externalService, w.layout, w.domain, actionID)
+	renderer, err := NewDomain(w._factory, w._context, w.externalService, w._template, w.domain, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -102,7 +100,7 @@ func (w Domain) objectType() string {
 }
 
 func (w Domain) schema() schema.Schema {
-	return w.layout.Schema
+	return w._template.Schema
 }
 
 func (w Domain) service() service.ModelService {
@@ -114,10 +112,10 @@ func (w Domain) domainService() *service.Domain {
 }
 
 func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
+	return w._template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
 
-func (w Domain) TopLevelID() string {
+func (w Domain) NavigationID() string {
 	return "admin"
 }
 
@@ -132,6 +130,10 @@ func (w Domain) PageTitle() string {
 /******************************************
  * Other Data Accessors
  ******************************************/
+
+func (w Domain) ThemeID() string {
+	return w.domain.ThemeID
+}
 
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {

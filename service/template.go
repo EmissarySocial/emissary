@@ -12,33 +12,30 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
 	templates         set.Map[model.Template] // map of all templates available within this domain
 	locations         []config.Folder         // Configuration for template directory
+	filesystemService Filesystem              // Filesystem service
 	funcMap           template.FuncMap        // Map of functions to use in golang templates
 	mutex             sync.RWMutex            // Mutext that locks access to the templates structure
-	templateService   *Layout                 // Pointer to the Layout service
-	filesystemService Filesystem              // Filesystem service
-
-	changed chan bool // Channel that is used to signal that a template has changed
-	closed  chan bool // Channel to notify the watcher to close/reset
+	changed           chan bool               // Channel that is used to signal that a template has changed
+	closed            chan bool               // Channel to notify the watcher to close/reset
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(templateService *Layout, filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
+func NewTemplate(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
 
 	service := Template{
 		templates:         make(set.Map[model.Template]),
-		funcMap:           funcMap,
 		locations:         make([]config.Folder, 0),
-		templateService:   templateService,
 		filesystemService: filesystemService,
+		funcMap:           funcMap,
 		changed:           make(chan bool),
 		closed:            make(chan bool),
 	}
@@ -116,7 +113,7 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
-	result := make(set.Map[model.Template])
+	result := set.NewMap[model.Template]()
 
 	// For each configured location...
 	for _, location := range service.locations {
@@ -151,14 +148,21 @@ func (service *Template) loadTemplates() error {
 
 			template := model.NewTemplate(directory.Name(), service.funcMap)
 
-			// System locations (except for "static" and "global") have a schema.json file
+			// Load/Parse the model file from the filesystem (schema.json)
 			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory))
 				continue
 			}
 
+			// Load all HTML templates from the filesystem
 			if err := loadHTMLTemplateFromFilesystem(subdirectory, template.HTMLTemplate, service.funcMap); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory))
+				continue
+			}
+
+			// Load all Bundles from the filesystem
+			if err := populateBundles(template.Bundles, subdirectory); err != nil {
+				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", location, directory))
 				continue
 			}
 
@@ -226,6 +230,7 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 	for key := range service.templates {
 		keys = append(keys, key)
 	}
+
 	return nil, derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID, keys)
 }
 
@@ -233,21 +238,11 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
  * Custom Queries
  ******************************************/
 
-// ListFeatures returns all templates that are used as "feature" templates
-func (service *Template) ListFeatures() []form.LookupCode {
-
-	filter := func(template *model.Template) bool {
-		return template.IsFeature()
-	}
-
-	return service.List(filter)
-}
-
 // ListByContainer returns all model.Templates that match the provided "containedByRole" value
 func (service *Template) ListByContainer(containedByRole string) []form.LookupCode {
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedByRole)
+		return t.ContainedBy.Contains(containedByRole)
 	}
 
 	return service.List(filter)
@@ -256,21 +251,49 @@ func (service *Template) ListByContainer(containedByRole string) []form.LookupCo
 // ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
 // are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
 // are returned.
-func (service *Template) ListByContainerLimited(containedByRole string, limits []string) []form.LookupCode {
+func (service *Template) ListByContainerLimited(containedByRole string, limits sliceof.String) []form.LookupCode {
 
-	if len(limits) == 0 {
+	if limits.IsEmpty() {
 		return service.ListByContainer(containedByRole)
 	}
 
 	filter := func(t *model.Template) bool {
-		return compare.Contains(t.ContainedBy, containedByRole) && compare.Contains(limits, t.TemplateID)
+		return t.ContainedBy.Contains(containedByRole) && limits.Contains(t.TemplateID)
 	}
 
 	return service.List(filter)
 }
 
 /******************************************
- * OTHER DATA ACCESS METHODS
+ * Admin Templates
+ ******************************************/
+
+func (service *Template) LoadAdmin(templateID string) (*model.Template, error) {
+
+	templateID = "admin-" + templateID
+
+	// Try to load the template
+	template, err := service.Load(templateID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Template.LoadAdmin", "Unable to load admin template", templateID)
+	}
+
+	// RULE: Validate Template ContainedBy
+	if template.Role != "admin" {
+		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.Role)
+	}
+
+	if !template.ContainedBy.Equal([]string{"admin"}) {
+		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+	}
+
+	// Success!
+	return template, nil
+}
+
+/******************************************
+ * Other Data Access Methods
  ******************************************/
 
 // State returns the detailed State information associated with this Stream

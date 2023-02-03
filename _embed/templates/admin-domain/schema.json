@@ -1,0 +1,55 @@
+{
+	"templateId":"admin-domain",
+	"role":"admin",
+	"model":"domain",
+	"containedBy":["admin"],
+	"label": "Domain",
+	"description": "Domain Owners only.  Site Admin",
+	"schema": {"type": "object", "properties": {
+		"themeId": {"type":"string", "maxLength": 100},
+		"label":   {"type":"string", "maxLength":100},
+		"signupForm": {"type":"object", "properties": {
+			"title":   {"type":"string", "format":"no-html", "maxLength":100},
+			"message": {"type":"string", "format":"no-html", "maxLength":100},
+			"active":  {"type":"boolean"}
+		}}
+	}},
+	"actions": {
+		"index": {"step": "view-html"},
+		"form": {
+			"steps": [
+				{"step":"edit",
+					"form": {
+						"type":"layout-vertical", "children":[
+							{"type":"select", "path":"themeId", "label":"Theme", "options": {"provider":"themes"}},
+							{"type":"text", "path":"label", "label":"Label"}
+						]
+					},
+					"options":["cancel-button:hide", "endpoint:/admin/domain/form"]
+				},
+				{"step": "save"},
+				{"step": "reload-page"}
+			]
+		},
+		"signup": {
+			"steps": [{
+				"step": "as-modal", 
+				"steps": [
+					{
+						"step": "edit",
+						"form": {
+							"type": "layout-vertical",
+							"label": "Custom Signup Form",
+							"children": [
+								{"type": "text", "path":"signupForm.title", "label": "Title", "description": "Large text is displayed at the top of the signup page."},
+								{"type": "textarea", "path":"signupForm.message", "label":"Message", "description": "A block of regular text displayed below the title.", "cssClass":"height100"},
+								{"type": "toggle", "path": "signupForm.active", "options":{"true-text":"Activate Form", "false-text": "Activate Form"}}
+							]
+						}
+					}, 
+					{"step": "save"}
+				]
+			}]
+		}
+	}
+}

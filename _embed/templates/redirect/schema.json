@@ -1,7 +1,8 @@
 {
 	"templateId": "redirect",
-	"label": "Redirect",
+	"model":"stream",
 	"containedBy": ["top", "folder"],
+	"label": "Redirect",
 	"description": "Forward your visitors to an external website",
 	"icon": "forward",
 	"childSortType": "label",

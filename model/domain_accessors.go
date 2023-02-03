@@ -8,15 +8,11 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":    schema.String{Format: "objectId"},
-			"label":       schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"headerHtml":  schema.String{Format: "html"},
-			"footerHtml":  schema.String{Format: "html"},
-			"customCss":   schema.String{Format: "css"},
-			"bannerUrl":   schema.String{Format: "url"},
-			"forward":     schema.String{Format: "url"},
-			"signupForm":  SignupFormSchema(),
-			"socialLinks": schema.Boolean{},
+			"domainId":   schema.String{Format: "objectId"},
+			"themeId":    schema.String{MaxLength: 100},
+			"label":      schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"forward":    schema.String{Format: "url"},
+			"signupForm": SignupFormSchema(),
 			// "clients":    ClientSchema(),
 		},
 	}
@@ -25,16 +21,6 @@ func DomainSchema() schema.Element {
 /*********************************
  * Getter Interfaces
  *********************************/
-
-func (domain Domain) GetBoolOK(name string) (bool, bool) {
-
-	switch name {
-	case "socialLinks":
-		return domain.SocialLinks, true
-	}
-
-	return false, false
-}
 
 func (domain *Domain) GetObject(name string) (any, bool) {
 
@@ -53,20 +39,11 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 	case "domainId":
 		return domain.DomainID.Hex(), true
 
+	case "themeId":
+		return domain.ThemeID, true
+
 	case "label":
 		return domain.Label, true
-
-	case "headerHtml":
-		return domain.HeaderHTML, true
-
-	case "footerHtml":
-		return domain.FooterHTML, true
-
-	case "customCss":
-		return domain.CustomCSS, true
-
-	case "bannerUrl":
-		return domain.BannerURL, true
 
 	case "forward":
 		return domain.Forward, true
@@ -79,18 +56,6 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
-func (domain *Domain) SetBool(name string, value bool) bool {
-
-	switch name {
-
-	case "socialLinks":
-		domain.SocialLinks = value
-		return true
-	}
-
-	return false
-}
-
 func (domain *Domain) SetString(name string, value string) bool {
 
 	switch name {
@@ -101,24 +66,12 @@ func (domain *Domain) SetString(name string, value string) bool {
 			return true
 		}
 
+	case "themeId":
+		domain.ThemeID = value
+		return true
+
 	case "label":
 		domain.Label = value
-		return true
-
-	case "headerHtml":
-		domain.HeaderHTML = value
-		return true
-
-	case "footerHtml":
-		domain.FooterHTML = value
-		return true
-
-	case "customCss":
-		domain.CustomCSS = value
-		return true
-
-	case "bannerUrl":
-		domain.BannerURL = value
 		return true
 
 	case "forward":

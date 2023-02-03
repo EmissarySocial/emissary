@@ -28,7 +28,7 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	layoutService   service.Layout
+	themeService    service.Theme
 	templateService service.Template
 	contentService  service.Content
 	providerService service.Provider
@@ -55,8 +55,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		taskQueue:     queue.NewQueue(128, 16),
 	}
 
-	// Global Layout service
-	factory.layoutService = service.NewLayout(
+	// Global Theme service
+	factory.themeService = *service.NewTheme(
 		factory.Filesystem(),
 		factory.FuncMap(),
 		[]config.Folder{},
@@ -64,7 +64,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
-		factory.Layout(),
 		factory.Filesystem(),
 		factory.FuncMap(),
 		[]config.Folder{},
@@ -115,7 +114,7 @@ func (factory *Factory) start() {
 		}
 
 		// Refresh cached values in global services
-		factory.layoutService.Refresh(config.Layouts)
+		factory.themeService.Refresh(config.Themes)
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
@@ -155,7 +154,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		domainConfig,
 		config.Providers,
 		&factory.emailService,
-		&factory.layoutService,
+		&factory.themeService,
 		&factory.templateService,
 		&factory.contentService,
 		&factory.providerService,
@@ -401,9 +400,14 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
  * Other Global Services
  ****************************/
 
-// Layout returns the global layout service
-func (factory *Factory) Layout() *service.Layout {
-	return &factory.layoutService
+// Template returns the global template service
+func (factory *Factory) Template() *service.Template {
+	return &factory.templateService
+}
+
+// Theme returns the global theme service
+func (factory *Factory) Theme() *service.Theme {
+	return &factory.themeService
 }
 
 // FuncMap returns the global funcMap (used by all templates)

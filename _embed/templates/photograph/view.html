@@ -19,10 +19,6 @@
 			{{- if .UserCan "edit" -}}
 				<a hx-get="/{{.Token}}/edit">Info</a>
 			{{- end -}}
-
-			{{- if .UserCan "add-child" -}}
-				<a hx-get="/{{.Token}}/add-child">Features</a>
-			{{- end -}}
 		</div>
 
 		<div class="right">

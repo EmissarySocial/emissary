@@ -1,0 +1,38 @@
+{{- $topID := .NavigationID -}}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{.PageTitle}} &middot; {{.DomainLabel}}</title>
+	<link rel="webmention" href="/.webmention"/>
+	{{ template "includes-head" .}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+
+	<nav>
+		{{- range .Navigation -}}
+			<a href="/{{.Token}}" script="install instaclick" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
+		{{- end -}}
+
+		<br>
+		{{- if .IsAuthenticated -}}
+			<a href="/@me" script="install instaclick" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+			<a href="/@me/inbox" script="install instaclick" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
+			{{- if .IsOwner -}}<a href="/admin/domain" script="install instaclick" class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
+		{{- else -}}
+			<a href="/signin" script="install instaclick">Sign In</a>
+		{{- end -}}
+	</nav>
+
+	<main>
+		{{- .Render -}}
+		<aside></aside>
+
+	</main>
+	
+</body>
+
+{{ template "includes-foot" .}}
+
+</html>

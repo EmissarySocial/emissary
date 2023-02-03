@@ -23,11 +23,11 @@ type Factory interface {
 	Following() *service.Following
 	Follower() *service.Follower
 	Group() *service.Group
-	Layout() *service.Layout
 	Mention() *service.Mention
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
+	Theme() *service.Theme
 	User() *service.User
 
 	// Other data services

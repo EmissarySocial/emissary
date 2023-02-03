@@ -50,7 +50,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 		return derp.Wrap(err, location, "Error creating fullPageRenderer")
 	}
 
-	htmlTemplate := renderer.factory().Layout().Global().HTMLTemplate
+	htmlTemplate := renderer.factory().Domain().Theme().HTMLTemplate
 	var fullPage bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", fullPageRenderer); err != nil {

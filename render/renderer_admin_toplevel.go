@@ -14,13 +14,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type TopLevel struct {
-	layout *model.Layout
+type Navigation struct {
 	stream *model.Stream
 	Common
 }
 
-func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (TopLevel, error) {
+func NewNavigation(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Navigation, error) {
 
 	const location = "render.NewGroup"
 
@@ -28,22 +27,19 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, a
 	authorization := getAuthorization(ctx)
 
 	if !authorization.DomainOwner {
-		return TopLevel{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Navigation{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
-
-	layout := factory.Layout().TopLevel()
 
 	// Verify the requested action
-	action := layout.Action(actionID)
+	action := template.Action(actionID)
 
 	if action == nil {
-		return TopLevel{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+		return Navigation{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
-	return TopLevel{
-		layout: layout,
+	return Navigation{
 		stream: stream,
-		Common: NewCommon(factory, ctx, nil, action, actionID),
+		Common: NewCommon(factory, ctx, template, action, actionID),
 	}, nil
 }
 
@@ -52,7 +48,7 @@ func NewTopLevel(factory Factory, ctx *steranko.Context, stream *model.Stream, a
  ******************************************/
 
 // Render generates the string value for this Stream
-func (w TopLevel) Render() (template.HTML, error) {
+func (w Navigation) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
@@ -66,11 +62,11 @@ func (w TopLevel) Render() (template.HTML, error) {
 }
 
 // View executes a separate view for this Group
-func (w TopLevel) View(actionID string) (template.HTML, error) {
+func (w Navigation) View(actionID string) (template.HTML, error) {
 
-	const location = "render.TopLevel.View"
+	const location = "render.Navigation.View"
 
-	renderer, err := NewTopLevel(w.factory(), w.context(), w.stream, actionID)
+	renderer, err := NewNavigation(w.factory(), w.context(), w._template, w.stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -79,42 +75,42 @@ func (w TopLevel) View(actionID string) (template.HTML, error) {
 	return renderer.Render()
 }
 
-func (w TopLevel) Token() string {
+func (w Navigation) Token() string {
 	return w._context.Param("param1")
 }
 
-func (w TopLevel) TopLevelID() string {
+func (w Navigation) NavigationID() string {
 	return "admin"
 }
 
-func (w TopLevel) PageTitle() string {
+func (w Navigation) PageTitle() string {
 	return "Settings"
 }
 
-func (w TopLevel) Permalink() string {
+func (w Navigation) Permalink() string {
 	return ""
 }
 
-func (w TopLevel) object() data.Object {
+func (w Navigation) object() data.Object {
 	return w.stream
 }
 
-func (w TopLevel) objectID() primitive.ObjectID {
+func (w Navigation) objectID() primitive.ObjectID {
 	return w.stream.StreamID
 }
 
-func (w TopLevel) objectType() string {
+func (w Navigation) objectType() string {
 	return "Stream"
 }
 
-func (w TopLevel) schema() schema.Schema {
-	return w.layout.Schema
+func (w Navigation) schema() schema.Schema {
+	return w._template.Schema
 }
 
-func (w TopLevel) service() service.ModelService {
+func (w Navigation) service() service.ModelService {
 	return w._factory.Stream()
 }
 
-func (w TopLevel) executeTemplate(wr io.Writer, name string, data any) error {
-	return w.layout.HTMLTemplate.ExecuteTemplate(wr, name, data)
+func (w Navigation) executeTemplate(wr io.Writer, name string, data any) error {
+	return w._template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }

@@ -1,0 +1,100 @@
+/******************************************
+ * PAGE LAYOUT CLASSES
+ ******************************************/
+
+* {
+	 box-sizing: border-box;
+}
+
+body {
+	background-color: var(--body-background);
+	color: var(--text-color);
+	overflow-x: hidden;
+}
+
+header {
+	background-color: var(--white);
+	color: var(--gray80);
+}
+
+nav {
+	position:sticky;
+	top:0px;
+	left: 0px;
+	right: 0px;
+	z-index:100;
+
+    color: var(--gray80);
+	font-weight:400;
+	background-color: var(--white);
+	border-bottom: solid 1px var(--gray15);
+	display: flex;
+	justify-content: center;
+	flex-wrap:wrap;
+	overflow-x:auto;
+}
+
+nav .framed {
+	display: flex;
+}
+
+nav .framed div {
+	display: flex;
+	flex-grow:1;
+	justify-content: flex-start;
+}
+
+nav .framed div:last-child {
+	justify-content: flex-end;
+}
+
+nav a,
+nav button {
+    color: var(--gray80);
+	background-color: var(--white);
+    display:inline-block;
+	padding:10px 20px;
+	border-radius: var(--border-radius);
+	margin:10px 0px;
+	overflow-y:hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav b {
+	display:inline-block;
+	color: var(--black);
+	font-weight: 700;
+	padding: 10px 0px;
+	margin:10px 10px 10px 0px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav a:hover,
+nav a:focus,
+nav button:hover,
+nav button:focus {
+    color: var(--gray90);
+    background-color:var(--gray10);
+}
+
+nav a.selected,
+nav a.selected:hover,
+nav a.selected:focus,
+nav button.selected,
+nav button.selected:hover
+nav button.selected:focus {
+	background-color: var(--gray20);
+	color: var(--black);
+}
+
+main {
+	display: flex;
+	justify-content: center;
+	padding-top: 20px;
+}
+
+footer {
+	
+}

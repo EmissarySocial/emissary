@@ -38,17 +38,8 @@ func Startup(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Find/Create new database record for the domain.
-		domainService := factory.Domain()
-		domain := model.NewDomain()
-
-		if err := domainService.Load(&domain); err != nil {
-			if derp.NotFound(err) {
-				if err := domainService.Save(&domain, "Created by startup wizard"); err != nil {
-					return derp.Wrap(err, location, "Error creating domain record")
-				}
-			} else {
-				return derp.Wrap(err, location, "Error searching for domain record")
-			}
+		if err := factory.Domain().LoadOrCreateDomain(); err != nil {
+			return derp.Wrap(err, location, "Error creating a new Domain")
 		}
 
 		// If there are no groups, then add some defaults...

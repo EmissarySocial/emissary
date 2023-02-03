@@ -6,13 +6,15 @@ import (
 )
 
 type LookupProvider struct {
+	themeService  *Theme
 	groupService  *Group
 	folderService *Folder
 	userID        primitive.ObjectID
 }
 
-func NewLookupProvider(groupService *Group, folderService *Folder, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(themeService *Theme, groupService *Group, folderService *Folder, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
+		themeService:  themeService,
 		groupService:  groupService,
 		folderService: folderService,
 		userID:        userID,
@@ -44,6 +46,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "authenticated", Label: "Authenticated People Only"},
 			form.LookupCode{Value: "private", Label: "Only Selected Groups"},
 		)
+
+	case "themes":
+		return NewThemeLookupProvider(service.themeService)
 
 	default:
 		return form.NewReadOnlyLookupGroup()

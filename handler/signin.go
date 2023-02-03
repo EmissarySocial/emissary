@@ -15,8 +15,15 @@ func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Locate the current domain
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.NewInternalError("handler.PostSignIn", "Invalid Domain.")
+		}
+
 		// Get the standard Signin page
-		template := serverFactory.Layout().Global().HTMLTemplate
+		template := factory.Domain().Theme().HTMLTemplate
 
 		// Get a clean version of the URL query parameters
 		queryString := cleanQueryParams(ctx.QueryParams())
@@ -35,6 +42,7 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// Locate the current domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
@@ -113,7 +121,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Return a success message regardless of whether or not the user was found.
-		template := factory.Layout().Global().HTMLTemplate
+		template := factory.Domain().Theme().HTMLTemplate
 
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-confirm", nil); err != nil {
 			return derp.Wrap(err, "handler.GetResetCode", "Error executing template")
@@ -147,7 +155,7 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to render the HTML response
-		template := factory.Layout().Global().HTMLTemplate
+		template := factory.Domain().Theme().HTMLTemplate
 
 		object := mapof.Any{
 			"userId":      userID,

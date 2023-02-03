@@ -17,7 +17,7 @@ func TestStreamSchema(t *testing.T) {
 		{"streamId", "000000000000000000000001", nil},
 		{"parentId", "000000000000000000000002", nil},
 		{"token", "TOKEN", nil},
-		{"topLevelId", "000000000000000000000003", nil},
+		{"navigationId", "000000000000000000000003", nil},
 		{"templateId", "TEMPLATE", nil},
 		{"stateId", "STATE", nil},
 
@@ -43,7 +43,6 @@ func TestStreamSchema(t *testing.T) {
 		{"content.html", "TEST_HTML", nil},
 
 		{"rank", "1234", 1234},
-		{"asFeature", "true", true},
 		{"publishDate", 12345678, int64(12345678)},
 		{"unpublishDate", 123456789, int64(123456789)},
 	}

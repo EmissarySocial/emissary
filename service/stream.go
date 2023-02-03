@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
-	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -65,7 +64,7 @@ func (service *Stream) Close() {
  ******************************************/
 
 // New returns a new stream that uses the named template.
-func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) New(navigationID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
 
 	const location = "service.Stream.New"
 
@@ -77,9 +76,8 @@ func (service *Stream) New(topLevelID string, parentID primitive.ObjectID, templ
 
 	result := model.NewStream()
 	result.TemplateID = templateID
-	result.TopLevelID = topLevelID
+	result.NavigationID = navigationID
 	result.ParentID = parentID
-	result.AsFeature = template.IsFeature()
 
 	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
 
@@ -129,9 +127,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	defaultRoles := template.Default().AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
-
-	// RULE: Copy AsFeature flag from Template into Stream
-	stream.AsFeature = template.IsFeature()
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
@@ -293,8 +288,8 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// ListTopLevel returns all Streams of type FOLDER at the top of the hierarchy
-func (service *Stream) ListTopLevel() (data.Iterator, error) {
+// ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
+func (service *Stream) ListNavigation() (data.Iterator, error) {
 	return service.List(
 		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
@@ -304,53 +299,6 @@ func (service *Stream) ListTopLevel() (data.Iterator, error) {
 // ListByParent returns all Streams that match a particular parentID
 func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
 	return service.List(exp.Equal("parentId", parentID))
-}
-
-// ListFeatures returns all Streams that match a particular parentID
-func (service *Stream) ListFeatures(streamID primitive.ObjectID) (data.Iterator, error) {
-	criteria := exp.Equal("parentId", streamID).AndEqual("asFeature", true)
-	return service.List(criteria, option.SortAsc("rank"))
-}
-
-// ListAllFeaturesBySelectionAndRank returns all features in the system.  Selected features are
-// listed first (according to their sort rank) and unselected features are listed second.  This
-// function also returns a slice of strings that contains the templateIds for all selected features.
-func (service *Stream) ListAllFeaturesBySelectionAndRank(streamID primitive.ObjectID) ([]form.LookupCode, []string, error) {
-
-	const location = "service.Stream.ListAllFeaturesBySelectionAndRank"
-
-	streams, err := service.ListFeatures(streamID)
-
-	if err != nil {
-		return []form.LookupCode{}, []string{}, derp.Wrap(err, location, "Error getting features for this stream", streamID)
-	}
-
-	features := service.templateService.ListFeatures()
-	templateIDs := []string{}
-	selected := []form.LookupCode{}
-
-	stream := model.NewStream()
-	for streams.Next(&stream) {
-
-		for index, feature := range features {
-
-			if feature.Value == stream.TemplateID {
-
-				// copy the selected feature into the selected array
-				selected = append(selected, feature)
-				templateIDs = append(templateIDs, feature.Value)
-
-				// Remove the feature from the list
-				features = append(features[:index], features[index+1:]...)
-				break
-			}
-		}
-
-		stream = model.NewStream()
-	}
-
-	selected = append(selected, features...)
-	return selected, templateIDs, nil
 }
 
 // ListByTemplate returns all `Streams` that use a particular `Template`
@@ -425,8 +373,8 @@ func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) er
 	return nil
 }
 
-// LoadTopLevelByID locates a single stream in the top level of the site hierarchy
-func (service *Stream) LoadTopLevelByID(streamID primitive.ObjectID, result *model.Stream) error {
+// LoadNavigationByID locates a single stream in the top level of the site hierarchy
+func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *model.Stream) error {
 
 	criteria := exp.
 		Equal("_id", streamID).
@@ -542,118 +490,6 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 
 	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Error deleting related duplicate")
-	}
-
-	return nil
-}
-
-// CreateAndRestoreFeatures guarantees that the provided stream will have features matching the
-// provided templateIDs in the correct sort order.  It does guarantee that each feature is unique
-// (by deleting potential duplicates) but it does not remove features that do not match this
-// list (that's somebody else's job).
-func (service *Stream) CreateAndSortFeatures(stream *model.Stream, templateIDs []string) error {
-
-	const location = "service.Stream.CreateOrRestoreFeatures"
-
-	var currentFeatures []model.Stream
-
-	// Get all features (even deleted ones)
-	criteria := notDeleted(exp.Equal("parentId", stream.StreamID).AndEqual("asFeature", true))
-	if err := service.collection.Query(&currentFeatures, criteria); err != nil {
-		return derp.Wrap(err, location, "Error retrieving features from database")
-	}
-
-	for index, templateID := range templateIDs {
-
-		found := false
-
-		// Search all features for matching streams.  If found, "restore" the first one, and delete any duplicates
-		for _, stream := range currentFeatures {
-
-			if stream.TemplateID == templateID {
-
-				if !found {
-
-					// If this stream has been deleted, then undelete it and all of its ancestors
-					if stream.IsDeleted() {
-
-						stream.Journal.DeleteDate = 0
-						if err := service.RestoreDeleted(stream.StreamID); err != nil {
-							return derp.Wrap(err, location, "Error restoring deleted descendants")
-						}
-					}
-
-					// Sort the feature into its new position.
-					stream.Rank = index
-
-					if err := service.Save(&stream, "Touched by CreateOrRestoreFeatures"); err != nil {
-						return derp.Wrap(err, location, "Error touching stream", stream)
-					}
-
-					// Remember that we found one match, in case there are duplicates
-					found = true
-					continue
-
-				}
-
-				// We're here because there's a duplicate feature.
-				// This should never happen, but just in case, delete it now.
-				if err := service.Delete(&stream, "Touched by CreateOrRestoreFeatures"); err != nil {
-					return derp.Wrap(err, location, "Error deleting duplicate feature", stream)
-				}
-			}
-		}
-
-		// If no matching streams were found, then let's create one now.
-		if !found {
-			newStream, _, err := service.New(stream.TopLevelID, stream.ParentID, templateID)
-
-			if err != nil {
-				return derp.Wrap(err, location, "Error creating new feature")
-			}
-
-			// Require that this new stream is a feature.  No hacking...
-			if !newStream.AsFeature {
-				return derp.NewBadRequestError(location, "Template must be a feature", templateID)
-			}
-
-			// Sort this feature correctly.
-			newStream.Rank = index
-
-			if err := service.Save(&newStream, "Created by CreateOrRestoreFeatures"); err != nil {
-				return derp.Wrap(err, location, "Error creating new feature", stream)
-			}
-		}
-	}
-
-	return nil
-}
-
-// DeleteUnusedFeatures soft-deletes all features that are not in the valid template list
-func (service *Stream) DeleteUnusedFeatures(streamID primitive.ObjectID, validTemplateIDs []string) error {
-	const location = "service.Stream.DeleteUnusedFeatures"
-
-	criteria := exp.Equal("parentId", streamID).AndEqual("asFeature", true)
-
-	if len(validTemplateIDs) > 0 {
-		criteria = criteria.AndNotIn("templateId", validTemplateIDs)
-	}
-
-	iterator, err := service.List(criteria)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error listing unused features")
-	}
-
-	stream := model.NewStream()
-
-	for iterator.Next(&stream) {
-
-		if err := service.Delete(&stream, "Unused feature removed"); err != nil {
-			return derp.Wrap(err, location, "Error removing unused feature", stream)
-		}
-
-		stream = model.NewStream()
 	}
 
 	return nil

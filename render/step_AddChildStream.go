@@ -81,7 +81,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	// Create the new child stream
 	child := model.NewStream()
 	child.ParentID = renderer.objectID()
-	child.TopLevelID = renderer.TopLevelID()
+	child.NavigationID = renderer.NavigationID()
 	// ParentIDs: child.ParentIDs = append(parent.ParentIDs, parent.StreamID)
 	child.TemplateID = templateID
 

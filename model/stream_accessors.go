@@ -11,7 +11,7 @@ func StreamSchema() schema.Element {
 			"streamId":      schema.String{Format: "objectId"},
 			"parentId":      schema.String{Format: "objectId"},
 			"token":         schema.String{Format: "token"},
-			"topLevelId":    schema.String{Format: "objectId"},
+			"navigationId":  schema.String{Format: "objectId"},
 			"templateId":    schema.String{},
 			"stateId":       schema.String{},
 			"permissions":   PermissionSchema(),
@@ -20,7 +20,6 @@ func StreamSchema() schema.Element {
 			"replyTo":       DocumentLinkSchema(),
 			"content":       ContentSchema(),
 			"rank":          schema.Integer{},
-			"asFeature":     schema.Boolean{},
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
 		},
@@ -39,15 +38,6 @@ func PermissionSchema() schema.Element {
 /*********************************
  * Getter Interfaces
  *********************************/
-
-func (stream *Stream) GetBoolOK(name string) (bool, bool) {
-	switch name {
-	case "asFeature":
-		return stream.AsFeature, true
-	default:
-		return false, false
-	}
-}
 
 func (stream *Stream) GetIntOK(name string) (int, bool) {
 	switch name {
@@ -78,8 +68,8 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 		return stream.ParentID.Hex(), true
 	case "token":
 		return stream.Token, true
-	case "topLevelId":
-		return stream.TopLevelID, true
+	case "navigationId":
+		return stream.NavigationID, true
 	case "templateId":
 		return stream.TemplateID, true
 	case "stateId":
@@ -92,16 +82,6 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 /*********************************
  * Setter Interfaces
  *********************************/
-
-func (stream *Stream) SetBool(name string, value bool) bool {
-	switch name {
-	case "asFeature":
-		stream.AsFeature = value
-		return true
-	default:
-		return false
-	}
-}
 
 func (stream *Stream) SetInt(name string, value int) bool {
 	switch name {
@@ -145,8 +125,8 @@ func (stream *Stream) SetString(name string, value string) bool {
 		stream.Token = value
 		return true
 
-	case "topLevelId":
-		stream.TopLevelID = value
+	case "navigationId":
+		stream.NavigationID = value
 		return true
 
 	case "templateId":

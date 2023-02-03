@@ -116,7 +116,7 @@ func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
  ********************************/
 
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
-	result := make(sliceof.Object[T], 0)
+	result := make([]T, 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
 	return result, derp.Report(err)
 }

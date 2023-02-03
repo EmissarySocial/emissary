@@ -83,6 +83,11 @@ func WrapForm(endpoint string, content string, options ...string) string {
 
 	optionMap := parseOptions(options...)
 
+	// Allow options to override the endpoint
+	if optionEndpoint := optionMap.GetString("endpoint"); optionEndpoint != "" {
+		endpoint = optionEndpoint
+	}
+
 	b := html.New()
 
 	// Form Wrapper

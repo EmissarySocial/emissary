@@ -16,7 +16,7 @@ type Stream struct {
 	StreamID        primitive.ObjectID           `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID        primitive.ObjectID           `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
 	Token           string                       `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
-	TopLevelID      string                       `json:"topLevelId"          bson:"topLevelId"`          // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
+	NavigationID    string                       `json:"navigationId"          bson:"navigationId"`      // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
 	TemplateID      string                       `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	StateID         string                       `json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	Permissions     mapof.Object[sliceof.String] `json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
@@ -27,7 +27,6 @@ type Stream struct {
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	AsFeature       bool                         `json:"asFeature"           bson:"asFeature"`           // If TRUE, then this stream is a "feature" that is meant to be embedded into other stream views.
 	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:"journal"`
@@ -107,7 +106,7 @@ func (stream *Stream) SetAuthor(user *User) {
 func (stream *Stream) OutboxItem() Stream {
 	result := NewStream()
 	result.Document = stream.Document
-	result.TopLevelID = "outbox"
+	result.NavigationID = "outbox"
 	result.TemplateID = "outbox-item"
 	result.ParentID = stream.Document.Author.InternalID
 

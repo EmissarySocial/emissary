@@ -23,7 +23,7 @@ type Common struct {
 	_factory  Factory           // Factory interface is required for locating other services.
 	_context  *steranko.Context // Contains request context and authentication data.
 	_template *model.Template   // Template to use for this renderer
-	action    *model.Action     // Action to be performed on the (template or layout)
+	action    *model.Action     // Action to be performed on the Template
 	actionID  string            // Token that identifies the action requested in the URL
 
 	requestData mapof.Any // Temporary data scope for this request
@@ -65,13 +65,6 @@ func (w Common) Action() *model.Action {
 
 func (w Common) ActionID() string {
 	return w.actionID
-}
-
-func (w Common) BannerURL() string {
-	if domain, err := w.getDomain(); err == nil {
-		return domain.BannerURL
-	}
-	return ""
 }
 
 /******************************************
@@ -162,10 +155,10 @@ func (w Common) Now() int64 {
 	return time.Now().UnixMilli()
 }
 
-// TopLevelID returns the the identifier of the top-most stream in the
+// NavigationID returns the the identifier of the top-most stream in the
 // navigation.  The "common" renderer just returns a default value that
 // other renderers should override.
-func (w Common) TopLevelID() string {
+func (w Common) NavigationID() string {
 	return ""
 }
 
@@ -222,30 +215,6 @@ func (w Common) DomainLabel() (string, error) {
 		return "", err
 	} else {
 		return domain.Label, nil
-	}
-}
-
-func (w Common) DomainHeaderHTML() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.HeaderHTML, nil
-	}
-}
-
-func (w Common) DomainFooterHTML() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.FooterHTML, nil
-	}
-}
-
-func (w Common) DomainCustomCSS() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.CustomCSS, nil
 	}
 }
 
@@ -375,25 +344,23 @@ func (w Common) getUser() (model.User, error) {
 }
 
 // getDomain retrieves the current domain model object from the domain service cache
-func (w *Common) getDomain() (*model.Domain, error) {
+func (w *Common) getDomain() (model.Domain, error) {
 
-	if w.domain.DomainID.IsZero() {
-		domainService := w.factory().Domain()
+	domainService := w.factory().Domain()
 
-		if err := domainService.Load(&w.domain); err != nil {
-			return nil, derp.Wrap(err, "render.Common.getDomain", "Error loading domain")
-		}
+	if !domainService.Ready() {
+		return model.Domain{}, derp.NewInternalError("render.Common.getDomain", "Domain service not ready", nil)
 	}
 
-	return &w.domain, nil
+	return domainService.Get(), nil
 }
 
 /******************************************
  * GLOBAL QUERIES
  ******************************************/
 
-// TopLevel returns an array of Streams that have a Zero ParentID
-func (w Common) TopLevel() (sliceof.Object[model.StreamSummary], error) {
+// Navigation returns an array of Streams that have a Zero ParentID
+func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
@@ -410,14 +377,10 @@ func (w Common) AdminSections() []form.LookupCode {
 	return []form.LookupCode{
 		{
 			Value: "domain",
-			Label: "Site",
+			Label: "Domain",
 		},
 		{
-			Value: "appearance",
-			Label: "Appearance",
-		},
-		{
-			Value: "toplevel",
+			Value: "navigation",
 			Label: "Navigation",
 		},
 		{

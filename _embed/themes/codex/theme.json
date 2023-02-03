@@ -1,0 +1,20 @@
+{
+	"themeId": "codex",
+	"label": "Codex",
+	"description": "Sidebar navigation for content-heavy sites",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		},
+		"javascript": {
+			"contentType":"text/javascript"
+		},
+		"hyperscript": {
+			"contentType":"text/hyperscript"
+		},
+		"registration": {
+			"contentType":"text/hyperscript"
+		}
+	}
+}

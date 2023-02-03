@@ -1,0 +1,26 @@
+{
+	"templateId":"admin-connections",
+	"role":"admin",
+	"model":"domain",
+	"containedBy":["admin"],
+	"label": "Connections",
+	"description": "Domain Owners only.  Site Admin",
+	"schema": {"type": "object", "properties": {
+		"connections": {"type": "object", "properties": {
+			"stripe_isActive": {"type":"string", "enum":["true", "false"], "default":"false"},
+			"stripe_apiKey": {"type":"string", "format":"token", "minlength":32, "maxlength":32},
+			"stripe_webhook_secret": {"type":"string", "format":"token"}
+		}}
+	}},
+	"actions": {
+		"index": {"step": "view-html"},
+		"edit": {"step": "edit-connection"},
+		"stripe": {"steps": [{"step": "as-modal", "steps": [
+			{"step": "view-html"},
+			{"step": "set-data", "from-form":["connections.stripe_isActive", "connections.stripe_apiKey"]},
+			{"step": "save"},
+			{"step": "stripe-setup"},
+			{"step": "save"}
+		]}]}
+	}
+}

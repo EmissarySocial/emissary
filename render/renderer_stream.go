@@ -3,7 +3,6 @@ package render
 import (
 	"bytes"
 	"html/template"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -166,12 +165,12 @@ func (w Stream) ParentID() string {
 	return w.stream.ParentID.Hex()
 }
 
-// TopLevelID returns the unique ID of the top-level stream in this stream's hierarchy
-func (w Stream) TopLevelID() string {
-	if w.stream.TopLevelID == "" {
+// NavigationID returns the unique ID of the top-level stream in this stream's hierarchy
+func (w Stream) NavigationID() string {
+	if w.stream.NavigationID == "" {
 		return w.stream.StreamID.Hex()
 	}
-	return w.stream.TopLevelID
+	return w.stream.NavigationID
 }
 
 // PageTitle returns the Label for the stream being rendered
@@ -333,54 +332,6 @@ func (w Stream) Roles() []string {
 /******************************************
  * RELATED STREAMS
  ******************************************/
-
-// Features renders the "feature" action for every child stream
-func (w Stream) Features() (template.HTML, error) {
-
-	const location = "renderer.Stream.Features"
-
-	streamService := w.factory().Stream()
-
-	features, err := streamService.ListFeatures(w.stream.StreamID)
-
-	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error getting features from database")
-	}
-
-	stream := model.NewStream()
-
-	var buffer strings.Builder
-
-	// For each feature of this Stream...
-	for features.Next(&stream) {
-
-		// Try to get a renderer for the feature (should always happen)
-		renderer, err := NewStreamWithoutTemplate(w.factory(), w.context(), &stream, "view")
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error getting feature renderer"))
-			continue
-		}
-
-		// Try to render the feature (should always happen)
-		fragment, err := renderer.Render()
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error rendering feature"))
-			continue
-		}
-
-		// Append the feature's HTML fragment to the result
-		buffer.WriteString(`<article class="feature">`)
-		buffer.WriteString(string(fragment))
-		buffer.WriteString(`</article>`)
-
-		// Reset the target object for the next loop
-		stream = model.NewStream()
-	}
-
-	return template.HTML(buffer.String()), nil
-}
 
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent(actionID string) (Stream, error) {

@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/microformats"
 )
 
@@ -30,8 +29,6 @@ func (service *Following) import_HTML_feed(following *model.Following, response 
 	for _, mediaType := range []string{model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText} {
 
 		if link := following.Links.FindBy("type", mediaType); !link.IsEmpty() {
-
-			spew.Dump(mediaType)
 
 			switch link.MediaType {
 
