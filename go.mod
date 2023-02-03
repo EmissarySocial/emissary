@@ -2,10 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/form => ../../benpate/form
-
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/aws/aws-sdk-go v1.44.189
@@ -15,12 +11,12 @@ require (
 	github.com/benpate/digit v0.9.0
 	github.com/benpate/exp v0.6.0
 	github.com/benpate/exp-builder v0.6.0
-	github.com/benpate/form v0.14.1
+	github.com/benpate/form v0.14.2
 	github.com/benpate/html v0.15.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.9.1
 	github.com/benpate/remote v0.10.0
-	github.com/benpate/rosetta v0.11.1
+	github.com/benpate/rosetta v0.11.2
 	github.com/benpate/steranko v0.13.1
 	github.com/benpate/table v0.5.1
 	github.com/davecgh/go-spew v1.1.1
@@ -45,7 +41,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/stripe/stripe-go/v72 v72.122.0
-	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tdewolff/minify/v2 v2.12.4
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
@@ -106,7 +101,6 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
-	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/parse/v2 v2.6.4 // indirect
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
