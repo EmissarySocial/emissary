@@ -38,6 +38,11 @@
 			"decription":"Full control"
 		}
 	},
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	},
 	"actions": {
 		"view": {
 			"steps":[

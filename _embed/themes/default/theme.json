@@ -12,6 +12,9 @@
 		},
 		"hyperscript": {
 			"contentType":"text/hyperscript"
+		},
+		"registration": {
+			"contentType":"text/hyperscript"
 		}
 	}
 }

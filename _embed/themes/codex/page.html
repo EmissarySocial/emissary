@@ -1,45 +1,38 @@
+{{- $topID := .NavigationID -}}
+
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
+	<title>{{.PageTitle}} &middot; {{.DomainLabel}}</title>
 	<link rel="webmention" href="/.webmention"/>
-	{{template "includes-head" .}}
+	{{ template "includes-head" .}}
 </head>
 
-<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
-	{{- $topID := .NavigationID -}}
+	<nav>
+		{{- range .Navigation -}}
+			<a href="/{{.Token}}" script="install instaclick" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
+		{{- end -}}
 
-	<nav hx-ext="preload" hx-push-url="true">
-		<div class="framed">
-			<div class="left">
-				{{- range .Navigation -}}
-					<a href="/{{.Token}}" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
-				{{- end -}}
-			</div>
-			<div class="right">
-				{{- if .IsAuthenticated -}}
-					<a href="/@me" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
-					<a href="/@me/inbox" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
-					{{- if .IsOwner -}}<a href="/admin/domain"  class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
-					<!--button hx-post="/signout" hx-target="body">Sign Out</button-->
-				{{- else -}}
-					<a href="/signin">Sign In</a>
-				{{- end -}}
-			</div>
-		</div>
-
+		<br>
+		{{- if .IsAuthenticated -}}
+			<a href="/@me" script="install instaclick" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+			<a href="/@me/inbox" script="install instaclick" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
+			{{- if .IsOwner -}}<a href="/admin/domain" script="install instaclick" class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
+		{{- else -}}
+			<a href="/signin" script="install instaclick">Sign In</a>
+		{{- end -}}
 	</nav>
 
 	<main>
-		<div id="main" class="framed">
-			{{- .Render -}}
-			<div>CODEX THEME</div>
-		</div>
+		{{- .Render -}}
+		<aside></aside>
+
 	</main>
 	
-	<aside></aside>
-
-	{{template "includes-foot" .}}
 </body>
+
+{{ template "includes-foot" .}}
+
 </html>

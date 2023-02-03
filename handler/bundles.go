@@ -26,8 +26,8 @@ func GetTemplateBundle(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		templateID := ctx.Param("templateID")
-		bundleID := ctx.Param("bundleID")
+		templateID := ctx.Param("templateId")
+		bundleID := ctx.Param("bundleId")
 
 		templateService := serverFactory.Template()
 		template, err := templateService.Load(templateID)

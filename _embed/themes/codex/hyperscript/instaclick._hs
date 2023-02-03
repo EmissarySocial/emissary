@@ -1,0 +1,11 @@
+behavior instaclick
+
+	on mousedown[button==0]
+		trigger click
+	end
+
+	on touchstart
+		trigger click
+	end
+
+end

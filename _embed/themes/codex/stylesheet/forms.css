@@ -1,0 +1,425 @@
+/* Input Elements */
+
+input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input {
+	border: solid 1px var(--input-border);
+	background-color: var(--input-background);
+	color: var(--input-color);
+	padding: 10px 10px;
+	width:100%;
+	box-sizing: border-box;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	border-radius:3px;
+
+    font-size: calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
+}
+
+textarea {
+	line-height: 150%;
+}
+
+textarea.code {
+	font-family: 'Source Code Pro', monospace;
+}
+
+select {
+	background: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0Ljk1IDEwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9LmNscy0ye2ZpbGw6IzQ0NDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmFycm93czwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB3aWR0aD0iNC45NSIgaGVpZ2h0PSIxMCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxLjQxIDQuNjcgMi40OCAzLjE4IDMuNTQgNC42NyAxLjQxIDQuNjciLz48cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMy41NCA1LjMzIDIuNDggNi44MiAxLjQxIDUuMzMgMy41NCA1LjMzIi8+PC9zdmc+) no-repeat 99% 50%;
+	background-color: var(--input-background);
+	-moz-appearance:none;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.input:focus {
+	outline: unset;
+}
+
+input:invalid,
+input.invalid,
+.input.invalid {
+	border: solid 1px var(--input-border-invalid);
+	background-color: var(--input-background-invalid);
+}
+
+input:invalid:focus,
+input.invalid:focus,
+.input.invalid:focus {
+	outline: unset;
+	--outline-color: var(--red70) ;
+}
+
+input:last-child {
+	margin-right:auto;
+}
+
+input[type=checkbox],
+input[type=radio] {
+	margin-right:5px;
+}
+
+
+[role=table] input {
+	border: none;
+}
+
+/******************************************
+ * Toggle Controls
+ ******************************************/
+
+.toggle-container {
+	cursor:pointer;
+	user-select:none;
+	line-height:100%;
+	height:1em;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+}
+
+.toggle {
+	display:inline-block;
+	vertical-align: text-top;
+	box-sizing: content-box;
+	position:relative;
+	border-radius: 1em;
+	width:2em;
+	height:1em;
+	border-style:solid;
+	border-width: 1px;
+	background-color: #e0e0e0;
+	border-color: #c6c6c6;
+}
+
+.toggle-container[value=true] .toggle {
+	background-color: var(--blue50);
+	border-color: var(--blue50);
+}
+
+@media (prefers-color-scheme: dark) {
+	.toggle-container[value=true] .toggle {
+		background-color: var(--blue70);
+		border-color: var(--blue70);
+	}
+}
+
+.toggle-container .marker {
+	display:block;
+	border-radius:0.5em;
+	background-color:white;
+	height: 1em;
+	width: 1em;
+	transition:transform 0.1s ease-in-out;
+}
+
+.toggle .marker {
+	box-shadow:3px 0px 3px 0px rgba(0,0,0,0.15);
+}
+
+.toggle-container[value=true] .marker {
+	box-shadow:-3px 0px 3px 0px rgba(0,0,0,0.15);
+	transform:translateX(100%);
+}
+
+.toggle-container > label {
+	cursor:pointer;
+	padding-left:0.5em;
+}
+
+/****************************************** 
+ * Multi-Select
+ ******************************************/
+
+.multiselect {
+	display:flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+}
+
+.multiselect > .options {
+	display:block;
+	flex-grow:1;
+	border: solid 1px var(--input-border);
+	background-color: var(--input-background);
+	height:auto;
+	margin-right:10px;
+	overflow-y:auto;
+	overflow-x:hidden;
+}
+
+.multiselect > .options > label {
+	display:block;
+	padding:5px;
+	cursor: pointer;
+	border-top: solid 1px rgba(0,0,0,0);
+	border-bottom: solid 1px var(--gray20);
+	transition:background-color 100ms;
+}
+
+.multiselect > .options > label.selected,
+.multiselect > .options > label:focus {
+	background-color: Highlight;
+	color: HighlightText;
+	border-top: solid 1px var(--blue40);
+	border-bottom: solid 1px var(--blue40);
+	outline: 0;
+}
+
+.multiselect > .options > label > input {
+	vertical-align: middle;
+	display:inline-block;
+	margin-right:0.5em;
+	height:1em;
+	width:1em;
+}
+
+.multiselect > .options > label > div {
+	display:inline-block;
+	vertical-align:top;
+}
+
+.multiselect > .buttons {
+	flex-basis:0;
+}
+
+.multiselect > .buttons > button {
+	display:block;
+	margin-bottom:5px;
+	padding:5px 10px;
+}
+
+
+/* Alternate colors for dark mode */
+@media (prefers-color-scheme: dark) {
+
+	input:not([type=checkbox], [type=radio]), textarea {
+		border-color:var(--gray30);
+		background-color:var(--gray10);
+		color:var(--gray90);
+	}
+}
+
+
+/******************************************
+ * Submit Buttons
+ ******************************************/
+
+button,
+.button {
+	font-size:12pt;
+	font-weight:400;
+	margin-top:0px;
+	margin-left:0px;
+	margin-bottom:0px;
+	margin-right:5px;
+	box-sizing:border-box;
+	width:auto;
+	display:inline-block;
+	cursor:pointer;
+	padding:10px 20px;
+	background-color: var(--gray10);
+	border-radius: 5px;
+	border:none;
+	color: var(--gray90);
+	user-select:none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+}
+
+.text-sm button,
+.text-sm .button,
+button.text-sm,
+.button.text-sm {
+	font-size: calc(var(--rhythm) * 1.75);
+	padding: var(--rhythm) calc(var(--rhythm) * 1.5);
+}
+
+.text-xs button,
+.text-xs .button,
+button.text-xs,
+.button.text-xs {
+	font-size: calc(var(--rhythm) * 1.5);
+	padding: calc(var(--rhythm) * 0.5) calc(var(--rhythm) * 1);
+}
+
+button:hover,
+button:focus,
+.button:hover,
+.button:focus {
+	background-color: var(--gray30);
+	color:var(--black);
+}
+
+button.primary,
+.button.primary {
+	background-color: var(--button-primary-background)!important;
+	color: var(--button-primary-color)!important;
+}
+
+button.primary:hover,
+button.primary:focus,
+.button.primary:hover,
+.button.primary:focus {
+	background-color: var(--button-primary-background-hover)!important;
+	color: var(--button-primary-color-hover)!important;
+}
+
+button.warning,
+.button.warning {
+	background-color:var(--red70)!important;
+	color: white;
+}
+
+button.warning:hover,
+button.warning:focus,
+.button.warning:hover,
+.button.warning:focus {
+	background-color:var(--red60)!important;
+	color: white;
+}
+
+button.success,
+.button.success {
+	background-color:var(--green70)!important;
+	color: white;
+}
+
+button.success:hover,
+button.success:focus,
+.button.success:hover,
+.button.success:focus {
+	background-color:var(--green60)!important;
+	color: white!important;
+}
+
+input[disabled],
+button[disabled],
+.button[disabled],
+input[disabled]:hover,
+button[disabled]:hover,
+.button[disabled]:hover {
+	background-color:var(--gray10)!important;
+	color: var(--gray50)!important;
+	cursor: not-allowed;
+}
+
+.button.barberpole,
+.button.primary.barberpole,
+button.barberpole,
+button.primary.barberpole, 
+button[disabled].barberpole
+{
+	background-image: repeating-linear-gradient(
+		-45deg, 
+		var(--blue60), 
+		var(--blue60) 1rem,
+		var(--blue70) 1rem,
+		var(--blue70) 2rem
+	)!important;
+  background-size: 200% 200%;
+  animation: barberpole 3s linear infinite;
+}
+
+/******************************************
+ * Form Layouts
+ ******************************************/
+
+.layout-vertical {
+	display:block;
+}
+
+.layout-title {
+    font-weight:calc(var(--weight) + 300);
+    font-size: calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
+    margin-top:var(--rhythm);
+    margin-bottom:calc(var(--rhythm) * 2);
+    color: var(--heading-color);
+}
+
+#modal .layout-title {
+    font-weight:calc(var(--weight) + 100);
+    font-size: calc(var(--rhythm) * 4);
+    line-height:calc(var(--rhythm) * 6);
+    margin-top:0px;
+    margin-bottom:calc(var(--rhythm) * 2);
+}
+
+
+.layout-description {
+	margin-bottom: calc(var(--rhythm) * 4);
+}
+
+.layout-vertical > .layout-vertical-elements > .layout-vertical-element {
+	margin-bottom:24px;
+}
+
+.layout-vertical > .layout-vertical-elements > .layout-vertical-element > label {
+	margin-bottom:8px;
+	display:block;
+}
+
+.layout-vertical > .layout-vertical-elements > .layout-vertical-element > input {
+	display:block;
+}
+
+.layout-vertical > .layout-vertical-element > input[type=checkbox] {
+	display:inline-block;
+	vertical-align: middle;
+}
+
+.layout-horizontal > .layout-horizontal-elements {
+	display:flex;
+	flex-direction: row;
+	flex-wrap:nowrap;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 24px;
+	width:100%;
+}
+
+.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element {
+	display:block;
+}
+
+.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element > label {
+	margin-bottom:8px;
+	display:block;
+}
+
+/******************************************
+ * Mist Layouts
+ ******************************************/
+
+.height100 {height:100px;}
+.height200 {height:200px;}
+.height300 {height:300px;}
+.height400 {height:400px;}
+.height500 {height:500px;}
+
+
+.htmx-request .htmx-request-hide,
+.htmx-request-show {
+	opacity:0;
+	position:absolute;
+	z-index:-1;
+}
+
+.htmx-request .htmx-request-show {
+	opacity:1;
+	position:initial;
+}
+
+
+/******************************************
+ * Spinner
+ ******************************************/
+
+.spin {
+	display:inline-block;
+	animation-name: spin;
+	animation-duration: 800ms;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}

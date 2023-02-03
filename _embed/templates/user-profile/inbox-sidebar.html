@@ -1,6 +1,8 @@
 {{- $selected := .QueryParam "selected" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 
+<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
+
 <div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
 	<div class="pos-sticky" style="top:100px;">
@@ -40,15 +42,5 @@
 		hx-push-url="false" 
 		hx-target="#inbox-sidebar">
 	</div>
-
-	<style>
-		#inbox-sidebar {
-			margin: -10px 20px -10px -20px;
-			background-color:var(--gray04);
-			padding: 30px 20px 10px 20px;
-			border-right:solid 1px var(--gray15);
-			color:var(--gray80);
-		}
-	</style>
 
 </div>

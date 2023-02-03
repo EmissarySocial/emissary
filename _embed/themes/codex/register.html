@@ -2,26 +2,7 @@
 <html>
 <head>
 	<title>Register - Whisperverse</title>
-
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-
-	<link rel="stylesheet" href="/static/purecss/pure-min.css">
-	<link rel="stylesheet" href="/static/purecss/pure-grids-responsive-min.css">
-	<link rel="stylesheet" href="/static/fontawesome-free-6.0.0/css/all.css">
-	<link rel="stylesheet" href="/static/colors.css">
-
-	<link rel="stylesheet" href="/static/accessibility.css">
-	<link rel="stylesheet" href="/static/animations.css">
-	<link rel="stylesheet" href="/static/cards.css">
-	<link rel="stylesheet" href="/static/content.css">
-	<link rel="stylesheet" href="/static/forms.css">	
-	<link rel="stylesheet" href="/static/layout.css">
-	<link rel="stylesheet" href="/static/modal.css">
-	<link rel="stylesheet" href="/static/responsive.css">	
-	<link rel="stylesheet" href="/static/tables.css">	
-	<link rel="stylesheet" href="/static/typography.css">	
-
-	<script type="text/hyperscript" src="/static/register._hs"></script>
+	{{ template "includes-head" .}}
 </head>
 
 <body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
@@ -81,8 +62,8 @@
 		</div>
 	</main>
 
-	<script type="text/javascript" src="/static/htmx/htmx.min.js"></script>
-	<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js"></script>
+	<script type="text/hyperscript" src="/.themes/codex/registration"></script>
+	{{ template "includes-foot" . }}
 		
 </body>
 </html>

@@ -3,10 +3,7 @@
 <head>
 	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
 	<link rel="webmention" href="/.webmention"/>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="generator" content="Emissary_0.1.0">
-	<link rel="stylesheet" href="/.themes/default/stylesheet" rel="preload">
+	{{ template "includes-head" .}}
 </head>
 
 <body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
@@ -37,7 +34,6 @@
 	<main>
 		<div id="main" class="framed">
 			{{- .Render -}}
-			<div>DEFAULT THEME</div>
 		</div>
 	</main>
 	
@@ -45,9 +41,6 @@
 
 </body>
 
-<script type="text/javascript" src="/static/htmx/htmx.min.js" rel="preload"></script>
-<script type="text/javascript" src="/static/hyperscript/_hyperscript.min.js" rel="preload"></script>
-<script type="text/javascript" src="/.themes/default/javascript"></script>
-<script type="text/hyperscript" src="/.themes/default/hyperscript"></script>
+{{ template "includes-foot" .}}
 
 </html>
