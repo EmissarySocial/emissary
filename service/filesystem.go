@@ -189,7 +189,7 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 	// Watch all sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
-			watcher.Add(uri + "/" + entry.Name())
+			filesystem.watchOS(uri+"/"+entry.Name(), changed, closed)
 		}
 	}
 
