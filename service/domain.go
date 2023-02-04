@@ -28,7 +28,6 @@ type Domain struct {
 	providerService *Provider
 	funcMap         template.FuncMap
 	domain          model.Domain
-	theme           model.Theme
 	ready           bool
 }
 
@@ -69,7 +68,6 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 		return
 	}
 
-	service.theme = service.themeService.GetTheme(service.domain.ThemeID)
 	service.ready = true
 }
 
@@ -128,7 +126,6 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 
 	// Update the in-memory cache
 	service.domain = *domain
-	service.theme = service.themeService.GetTheme(service.domain.ThemeID)
 
 	return nil
 }
@@ -193,8 +190,8 @@ func (service *Domain) Schema() schema.Schema {
  * Provider Methods
  ******************************************/
 
-func (service *Domain) Theme() *model.Theme {
-	return &service.theme
+func (service *Domain) Theme() model.Theme {
+	return service.themeService.GetTheme(service.domain.ThemeID)
 }
 
 /******************************************
