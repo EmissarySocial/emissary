@@ -24,8 +24,8 @@ nav {
 	width:300px;
     color: var(--gray80);
 	font-weight:400;
-	background-color: var(--gray05);
-	border-right: solid 1px var(--gray15);
+	background-color: var(--gray10);
+	border-right: solid 1px var(--gray20);
 	padding: 24px 8px;
 }
 
@@ -53,7 +53,7 @@ nav a:focus,
 nav button:hover,
 nav button:focus {
     color: var(--gray90);
-    background-color:var(--gray10);
+    background-color:var(--gray15);
 }
 
 nav a.selected,
@@ -62,7 +62,7 @@ nav a.selected:focus,
 nav button.selected,
 nav button.selected:hover
 nav button.selected:focus {
-	color: var(--black);
+	color: var(--black)!important;
 	font-weight: 700;
 }
 
@@ -71,4 +71,10 @@ main {
 	flex-grow:999;
 	justify-content: center;
 	padding: 24px;
+}
+
+
+main .page {
+	width:100%;
+	max-width: 800px;
 }
