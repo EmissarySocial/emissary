@@ -207,16 +207,13 @@ func (service *Theme) loadThemes() error {
 			}
 
 			result[theme.ThemeID] = theme
-			fmt.Println(". Success.")
 		}
 	}
 
 	// Apply all themes at once to minimize lock time.
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
-
 	service.themes = result
-
 	return nil
 }
 
