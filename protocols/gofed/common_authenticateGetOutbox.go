@@ -20,6 +20,6 @@ import (
 // request will continue to be processed.
 func (common Common) AuthenticateGetOutbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
 
-	// TODO: CRITICAL: Do we need to authenticate access to the Outbox? (probably)
+	// TODO: HIGH: Do we need to authenticate access to the Outbox?
 	return c, true, nil
 }

@@ -16,31 +16,31 @@ import (
 func (db Database) Update(c context.Context, asType vocab.Type) error {
 
 	// Convert the vocab.Type into a model.Activity
-	updatedActivity, err := ToModel(asType, model.ActivityStreamContainerInbox)
+	updatedActivityStream, err := ToModel(asType, model.ActivityStreamContainerInbox)
 
 	if err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error converting to model object", asType)
 	}
 
 	// Determine the userID, location, and activityStreamID from the URL
-	activityURL := updatedActivity.URL()
+	activityURL := updatedActivityStream.URL()
 	userID, container, activityStreamID, err := ParsePath(activityURL)
 
 	if err != nil {
-		return derp.Wrap(err, "gofed.Database.Update", "Error parsing URL", updatedActivity)
+		return derp.Wrap(err, "gofed.Database.Update", "Error parsing URL", updatedActivityStream)
 	}
 
 	// Try to load the existing activity
-	existingActivity := model.NewActivityStream(container)
-	if err := db.activityStreamService.LoadFromContainer(userID, container, activityStreamID, &existingActivity); err != nil {
-		return derp.Wrap(err, "gofed.Database.Update", "Error finding existing activity", updatedActivity)
+	existingActivityStream := model.NewActivityStream(container)
+	if err := db.activityStreamService.LoadFromContainer(userID, container, activityStreamID, &existingActivityStream); err != nil {
+		return derp.Wrap(err, "gofed.Database.Update", "Error finding existing activity", updatedActivityStream)
 	}
 
 	// Update the existing activity with values from the caller
-	existingActivity.UpdateWithActivityStream(&updatedActivity)
+	existingActivityStream.UpdateWithActivityStream(&updatedActivityStream)
 
 	// Save the activity back to the database.
-	if err := db.activityStreamService.Save(&existingActivity, "Updated by Go-Fed"); err != nil {
+	if err := db.activityStreamService.Save(&existingActivityStream, "Updated by Go-Fed"); err != nil {
 		return derp.Wrap(err, "gofed.Database.Update", "Error saving activity")
 	}
 

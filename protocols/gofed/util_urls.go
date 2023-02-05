@@ -46,18 +46,18 @@ func parsePathWithLocation(url *url.URL, expectedActivityPlace model.ActivityStr
 	return ownerID, itemID, err
 }
 
-// ParsePath splits a URL into its component parts: userID, container, activityID.
-func ParsePath(url *url.URL) (userID primitive.ObjectID, container model.ActivityStreamContainer, activityID primitive.ObjectID, err error) {
+// ParsePath splits a URL into its component parts: userID, container, activityStreamID.
+func ParsePath(url *url.URL) (userID primitive.ObjectID, container model.ActivityStreamContainer, activityStreamID primitive.ObjectID, err error) {
 
 	const location = "service.activitypub.Database.ParsePath"
 
 	userID = primitive.NilObjectID
 	container = model.ActivityStreamContainerUndefined
-	activityID = primitive.NilObjectID
+	activityStreamID = primitive.NilObjectID
 
 	// Split the URL Path into a list.List
 	if !strings.HasPrefix(url.Path, "/@") {
-		return userID, container, activityID, derp.NewBadRequestError(location, "URL must be a recognizable ActivityPub path.", url.String())
+		return userID, container, activityStreamID, derp.NewBadRequestError(location, "URL must be a recognizable ActivityPub path.", url.String())
 	}
 
 	path := list.BySlash(strings.TrimPrefix(url.Path, "/@"))
@@ -72,16 +72,16 @@ func ParsePath(url *url.URL) (userID primitive.ObjectID, container model.Activit
 	userID, err = primitive.ObjectIDFromHex(userIDstring)
 
 	if err != nil {
-		return userID, container, activityID, derp.Wrap(err, location, "Invalid userID", userIDstring)
+		return userID, container, activityStreamID, derp.Wrap(err, location, "Invalid userID", userIDstring)
 	}
 
 	if path.IsEmpty() {
-		return userID, container, activityID, nil
+		return userID, container, activityStreamID, nil
 	}
 
 	// The next item in the list MUST be /pub/
 	if head := path.Head(); head != "pub" {
-		return userID, container, activityID, derp.NewBadRequestError(location, "Path must begin with /@:userID/pub/", url.String())
+		return userID, container, activityStreamID, derp.NewBadRequestError(location, "Path must begin with /@:userID/pub/", url.String())
 	}
 
 	path = path.Tail()
@@ -95,14 +95,14 @@ func ParsePath(url *url.URL) (userID primitive.ObjectID, container model.Activit
 		return userID, container, primitive.NilObjectID, nil
 	}
 
-	// Parse the activityID from the path
-	activityIDstring := path.Head()
-	activityID, err = primitive.ObjectIDFromHex(activityIDstring)
+	// Parse the activityStreamID from the path
+	activityStreamIDstring := path.Head()
+	activityStreamID, err = primitive.ObjectIDFromHex(activityStreamIDstring)
 
 	if err != nil {
-		return userID, container, activityID, derp.Wrap(err, location, "Invalid activityID", activityIDstring)
+		return userID, container, activityStreamID, derp.Wrap(err, location, "Invalid activityStreamID", activityStreamIDstring)
 	}
 
 	// Success.  All values parsed correctly.
-	return userID, container, activityID, nil
+	return userID, container, activityStreamID, nil
 }

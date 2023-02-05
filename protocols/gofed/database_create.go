@@ -12,7 +12,7 @@ import (
 // should be uniquely new to the database when examining its id property, and shouldn't
 // overwrite any existing data.
 //
-// If needed, use streams.Serialize to turn the vocab.Type into literal JSON-LD bytes.
+// If needed, use streams.Serialize to turn the vocab.Type into a map[string]any.
 func (db Database) Create(c context.Context, asType vocab.Type) error {
 
 	const location = "gofed.Database.Create"

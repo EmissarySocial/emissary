@@ -6,12 +6,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/go-fed/activity/streams"
 	"github.com/go-fed/activity/streams/vocab"
 )
 
 // Get fetches the ActivityStreams object with id from the database. The streams.ToType
 // function can turn any arbitrary JSON-LD literal into a vocab.Type for value.
-func (db Database) Get(c context.Context, id *url.URL) (value vocab.Type, err error) {
+func (db Database) Get(ctx context.Context, id *url.URL) (value vocab.Type, err error) {
 
 	const location = "gofed.Database.Get"
 
@@ -29,5 +30,5 @@ func (db Database) Get(c context.Context, id *url.URL) (value vocab.Type, err er
 	}
 
 	// Encode result and return to caller
-	return ToGoFed(&activity)
+	return streams.ToType(ctx, activity.Content)
 }

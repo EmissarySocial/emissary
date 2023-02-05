@@ -261,6 +261,29 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
 }
 
 /******************************************
+ * ActivityStreams Methods
+ ******************************************/
+
+// AsActivityStream returns a map document that conforms to the ActivityStreams 2.0 spec.
+// This map will still need to be marshalled into JSON
+func (stream Stream) AsActivityStream() mapof.Any {
+	return mapof.Any{
+		"type":    stream.Document.Type,
+		"id":      stream.Document.URL,
+		"name":    stream.Document.Label,
+		"summary": stream.Document.Summary,
+		"image":   stream.Document.ImageURL,
+		"author": mapof.Any{
+			"id":    stream.Document.Author.ProfileURL,
+			"name":  stream.Document.Author.Name,
+			"image": stream.Document.Author.ImageURL,
+			"email": stream.Document.Author.EmailAddress,
+		},
+		"published": time.UnixMilli(stream.Document.PublishDate).Format(time.RFC3339),
+	}
+}
+
+/******************************************
  * Other Methods
  ******************************************/
 

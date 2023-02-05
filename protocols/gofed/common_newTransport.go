@@ -80,5 +80,7 @@ func (common Common) NewTransport(c context.Context, actorBoxIRI *url.URL, gofed
 }
 
 func (common Common) getKeysForActorBoxIRI(actorIRI *url.URL) (string, crypto.PrivateKey, error) {
+
+	// TODO: CRITICAL:  Implement Public/Private keys for actors.
 	return "", nil, nil
 }

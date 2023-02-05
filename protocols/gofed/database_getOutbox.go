@@ -5,19 +5,18 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/protocols/gofed/as"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	builder "github.com/benpate/exp-builder"
-	"github.com/go-fed/activityStream/streams"
-	"github.com/go-fed/activityStream/streams/vocab"
+	"github.com/go-fed/activity/streams"
+	"github.com/go-fed/activity/streams/vocab"
 )
 
 // GetOutbox returns the latest page of the inbox corresponding to the outboxIRI.
 //
 // It is similar in behavior to its GetInbox counterpart, but for the actor's Outbox
 // instead. See the similar documentation for GetInbox.
-func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error) {
+func (db Database) GetOutbox(ctx context.Context, outboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error) {
 
 	const location = "gofed.Database.GetOutbox"
 
@@ -45,7 +44,7 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 	items := streams.NewActivityStreamsOrderedItemsProperty()
 	activityStream := model.NewOutboxActivityStream()
 	for it.Next(&activityStream) {
-		if record, err := ToGoFed(&activityStream); err == nil {
+		if record, err := streams.ToType(ctx, activityStream.Content); err == nil {
 			items.AppendType(record)
 		} else {
 			derp.Report(derp.Wrap(err, location, "Error serializing activityStream", activityStream))
@@ -68,7 +67,7 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 		nextPageURL.RawQuery = "document.publishDate=LT:" + activityStream.PublishDateString()
 
 		nextPage := streams.NewActivityStreamsNextProperty()
-		as.SetLink(nextPage, nextPageURL, "Next Page", "Link")
+		SetLink(nextPage, nextPageURL, "Next Page", "Link")
 
 		result.SetActivityStreamsNext(nextPage)
 	}

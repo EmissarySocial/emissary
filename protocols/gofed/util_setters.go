@@ -1,4 +1,4 @@
-package as
+package gofed
 
 import (
 	"net/url"

@@ -1,4 +1,4 @@
-package as
+package gofed
 
 import "github.com/go-fed/activity/streams/vocab"
 
