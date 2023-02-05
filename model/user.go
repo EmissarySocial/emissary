@@ -236,6 +236,10 @@ func (user *User) ActivityPubOutboxURL() string {
 	return user.ProfileURL + "/pub/outbox"
 }
 
+func (user *User) ActivityPubOutbox_NewItemURL() string {
+	return user.ActivityPubOutboxURL() + "/" + primitive.NewObjectID().Hex()
+}
+
 func (user *User) ActivityPubFollowersURL() string {
 	return user.ProfileURL + "/pub/followers"
 }

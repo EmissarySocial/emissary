@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-fed/activity/streams"
 	"github.com/go-fed/activity/streams/vocab"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,12 +19,17 @@ import (
 // Ensure that the newly allocated IRI can properly be fetched in another web handler
 // by peers with proper authorization and authentication, which can be aided with
 // pub.HandlerFunc.
-func (db Database) NewID(c context.Context, t vocab.Type) (id *url.URL, err error) {
+func (db Database) NewID(ctx context.Context, t vocab.Type) (id *url.URL, err error) {
 
-	// TODO: CRITICAL: Do we need to distinguish inbox v. outbox
-	// TODO: CRITICAL: How do we determine the UserID from the vocab.Type ??
-	spew.Dump("database.NewID", t)
+	spew.Dump("database.NewID")
+	userID, err := getSignedInUserID(ctx)
 
-	activityIRI := db.hostname + "/@xxx/inbox/" + primitive.NewObjectID().Hex()
+	if err != nil {
+		return nil, derp.Wrap(err, "gofed.Database.NewID", "Unable to determine UserID from context.Context")
+	}
+
+	spew.Dump(streams.Serialize(t))
+
+	activityIRI := db.hostname + "/@" + userID.Hex() + "/out/" + primitive.NewObjectID().Hex()
 	return url.Parse(activityIRI)
 }

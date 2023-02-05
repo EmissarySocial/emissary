@@ -149,6 +149,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Following Service
 	factory.followingService = service.NewFollowing(
 		factory.collection(CollectionFollowing),
+		&factory,
 		factory.Stream(),
 		factory.User(),
 		factory.Inbox(),
@@ -219,6 +220,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// Refresh cached services
+		factory.activityStreamService.Refresh(factory.collection(CollectionActivityStream))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)

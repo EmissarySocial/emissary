@@ -3,13 +3,16 @@
 
 	<title>{{.DisplayName}}</title>
 
-	<!-- Alternate links for service discovery -->
-	<link rel="self" href="{{.Host}}/@{{.UserID}}"/>
+	<!-- ActivityPub links -->
+	<link rel="http://webfinger.net/rel/profile-page" href="{{.ActivityPubProfileURL}}"/>
+	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/.ostatus/tunnel?uri={uri}">
+	<link rel="self" type="application/activity+json" href="{{.ActivityPubInboxURL}}"/>
+
+	<!-- RSS and WebSub Links -->
 	<link rel="hub" href="{{.Host}}/@{{.UserID}}/websub"/>
 	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/feed?format=rss"/>
 	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/feed?format=atom"/>
 	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/feed?format=json"/>
-	<link rel="alternate" type="application/activity+json" href="{{.Host}}/@{{.UserID}}/pub/outbox"/>
 
 	<div class="page h-card">
 

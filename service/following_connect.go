@@ -61,10 +61,15 @@ func (service *Following) connect(following *model.Following) error {
 	following.Links = discoverLinks(transaction.ResponseObject, &body)
 
 	// Try to discover/connect to ActivityPub resources
-	if success := service.connect_ActivityPub(following, transaction.ResponseObject, &body); success {
+	if success, err := service.connect_ActivityPub(following, transaction.ResponseObject, &body); success {
 		return nil
+	} else if err != nil {
+		return derp.Wrap(err, location, "Error connecting to ActivityPub", following.URL)
 	}
 
+	// Fall through means the remote server does not support ActivityPub.
+
+	// Inspect the Content-Type header to determine how to parse the response.
 	mimeType := transaction.ResponseObject.Header.Get("Content-Type")
 	mediaType, _, _ := mime.ParseMediaType(mimeType)
 
@@ -93,6 +98,7 @@ func (service *Following) connect(following *model.Following) error {
 		return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
 	}
 
+	// Kool-Aid man says "ooooohhh yeah!"
 	return nil
 }
 
@@ -228,6 +234,8 @@ func (service *Following) saveToInbox(following *model.Following, message *model
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following) {
 
+	// ActivityPub is handled before RSS data is parsed because it's the new shiny.
+
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
 		if err := service.connect_WebSub(following, hub); err != nil {
@@ -236,4 +244,6 @@ func (service *Following) connect_PushServices(following *model.Following) {
 		}
 	}
 
+	// RSSCloud is TBD because WebSub seems to have won the war.
+	// TODO: LOW: RSSCloud
 }

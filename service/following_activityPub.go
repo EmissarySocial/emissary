@@ -2,30 +2,73 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
+	"github.com/benpate/digit"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/go-fed/activity/streams"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (service *Following) connect_ActivityPub(following *model.Following, response *http.Response, buffer *bytes.Buffer) bool {
+// connect_ActivityPub attempts to connect to a remote user using ActivityPub.
+// It returns (TRUE, nil) if successful.
+// If there was an error connecting to the remote server, then it returns (FALSE, error)
+// If the remote server does not support ActivityPub, then it returns (FALSE, nil)
+func (service *Following) connect_ActivityPub(following *model.Following, response *http.Response, buffer *bytes.Buffer) (bool, error) {
 
-	return false
-	/*
-		spew.Dump("connect_ActivityPub")
+	const location = "service.Following.connect_ActivityPub"
 
-		self := following.Links.Find(
-			digit.NewLink(digit.RelationTypeSelf, model.MimeTypeActivityPub, ""),
-		)
+	// Search for an ActivityPub link for this resource
+	remoteInbox := following.Links.Find(
+		digit.NewLink(digit.RelationTypeSelf, model.MimeTypeActivityPub, ""),
+	)
 
-		// if no "self"
-		if self.IsEmpty() {
-			return false
-		}
+	// if no ActivityPub link, then exit.
+	if remoteInbox.IsEmpty() {
+		return false, nil
+	}
 
-		spew.Dump(self)
+	// Calculate the URIs for the user's inbox and outbox
+	userInboxURI := service.host + "/@" + following.UserID.Hex() + "/inbox"
+	activityStreamID := service.host + "/@" + following.UserID.Hex() + "/outbox/" + primitive.NewObjectID().Hex()
+	userOutboxURI, _ := url.Parse(service.host + "/@" + following.UserID.Hex() + "/outbox")
 
-		return false
-	*/
+	// Create a follow message
+	jsonLD := mapof.Any{
+		"@context": "https://www.w3.org/ns/activitystreams",
+		"id":       activityStreamID,
+		"type":     "Follow",
+		"actor":    userInboxURI,
+		"object":   remoteInbox.Href,
+	}
+
+	activityStream, err := streams.ToType(context.TODO(), jsonLD)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error converting JSON-LD to Activity Stream", jsonLD)
+	}
+
+	// Send the follow message to the user's outbox (which forwards it to the remote inbox )
+	actor := service.actorFactory.ActivityPub_Actor()
+	actor.Send(context.TODO(), userOutboxURI, activityStream)
+
+	// Mark it as successful (for now)
+	// Update values in the following object
+	following.Method = model.FollowMethodActivityPub
+	following.URL = remoteInbox.Href
+	following.Secret = ""
+	following.PollDuration = 30
+
+	// "Pending" status means that we're still waiting on the WebSub connection
+	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
+		return false, derp.Wrap(err, location, "Error updating following status", following)
+	}
+
+	return true, nil
 }
 
 func (service *Following) disconnect_ActivityPub(following *model.Following) {

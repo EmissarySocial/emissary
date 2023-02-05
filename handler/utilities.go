@@ -52,39 +52,6 @@ func isOwner(claims jwt.Claims, err error) bool {
 	return false
 }
 
-/*
-// getSignedInUserID returns the UserID for the current request.
-// If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
-func getSignedInUserID(ctx echo.Context) (primitive.ObjectID, error) {
-
-	const location = "handler.getSignedInUserID"
-
-	sterankoContext, ok := ctx.(*steranko.Context)
-
-	if !ok {
-		return primitive.NilObjectID, derp.NewUnauthorizedError(, location, "Invalid Authorization")
-	}
-
-	authorization, err := sterankoContext.Authorization()
-
-	if err != nil {
-		err = derp.Wrap(err, location, "Invalid Authorization")
-		derp.SetErrorCode(err, http.StatusUnauthorized)
-		return primitive.NilObjectID, err
-	}
-
-	auth, ok := authorization.(*model.Authorization)
-
-	if !ok {
-		return primitive.NilObjectID, derp.NewUnauthorizedError(, location, "Invalid Authorization", authorization)
-	}
-
-	return auth.UserID, nil
-
-}
-
-*/
-
 // cleanQueryParams returns a "clean" version of a url.Values structure.
 // It truncates all slices into a single string.
 func cleanQueryParams(values url.Values) mapof.String {

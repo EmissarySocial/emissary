@@ -21,12 +21,12 @@
 			<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>
 
 			<div 
-				id="item_{{.ActivityID.Hex}}" 
+				id="item_{{.MessageID.Hex}}" 
 				class="inbox-item" 
 				data-status="{{.Status}}" 
-				data-inboxItemId="{{.ActivityID.Hex}}" 
+				data-inboxItemId="{{.MessageID.Hex}}" 
 				style="max-width:640px; cursor:pointer;" 
-				hx-get="/@me/inbox-item?activityId={{.ActivityID.Hex}}">
+				hx-get="/@me/inbox-item?activityId={{.MessageID.Hex}}">
 
 				<div class="flex-row" hx-push-url="true">
 

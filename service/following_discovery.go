@@ -142,7 +142,7 @@ func discoverLinks_HTML(result *digit.LinkSet, response *http.Response, body *by
 			model.MimeTypeXMLText:
 
 			result.Apply(digit.Link{
-				RelationType: model.LinkRelationAlternate,
+				RelationType: relationType,
 				MediaType:    mediaType,
 				Href:         href,
 			})
