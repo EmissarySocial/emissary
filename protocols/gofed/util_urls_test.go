@@ -13,31 +13,31 @@ func TestParsePath(t *testing.T) {
 
 	{
 		value, _ := url.Parse("http://host/@123456781234567812345678")
-		userID, place, activityID, err := ParsePath(value)
+		userID, container, activityID, err := ParsePath(value)
 
 		require.Nil(t, err)
 		require.Equal(t, knownObjectID("123456781234567812345678"), userID)
-		require.Equal(t, model.ActivityPlaceUndefined, place)
+		require.Equal(t, model.ActivityStreamContainerUndefined, container)
 		require.Equal(t, primitive.NilObjectID, activityID)
 	}
 
 	{
 		value, _ := url.Parse("http://host/@123456781234567812345678/pub/inbox")
-		userID, place, activityID, err := ParsePath(value)
+		userID, container, activityID, err := ParsePath(value)
 
 		require.Nil(t, err)
 		require.Equal(t, knownObjectID("123456781234567812345678"), userID)
-		require.Equal(t, model.ActivityPlaceInbox, place)
+		require.Equal(t, model.ActivityStreamContainerInbox, container)
 		require.Equal(t, primitive.NilObjectID, activityID)
 	}
 
 	{
 		value, _ := url.Parse("http://host/@123456781234567812345678/pub/inbox/876543218765432187654321")
-		userID, place, activityID, err := ParsePath(value)
+		userID, container, activityID, err := ParsePath(value)
 
 		require.Nil(t, err)
 		require.Equal(t, knownObjectID("123456781234567812345678"), userID)
-		require.Equal(t, model.ActivityPlaceInbox, place)
+		require.Equal(t, model.ActivityStreamContainerInbox, container)
 		require.Equal(t, knownObjectID("876543218765432187654321"), activityID)
 	}
 }

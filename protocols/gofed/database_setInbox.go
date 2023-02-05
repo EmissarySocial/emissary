@@ -21,7 +21,7 @@ func (db Database) SetInbox(c context.Context, inbox vocab.ActivityStreamsOrdere
 
 	for iterator := items.Begin(); iterator != items.End(); iterator = iterator.Next() {
 		item := iterator.GetType()
-		activity, err := ToModel(item, model.ActivityPlaceInbox)
+		activity, err := ToModel(item, model.ActivityStreamContainerInbox)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error converting inbox item", item)

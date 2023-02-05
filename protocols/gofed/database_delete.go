@@ -14,20 +14,20 @@ func (db Database) Delete(c context.Context, id *url.URL) error {
 	const location = "gofed.Database.Delete"
 
 	// Validate the provided URL
-	ownerID, _, _, err := ParsePath(id)
+	userID, container, activityStreamID, err := ParsePath(id)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing URL", id)
 	}
 
 	// Try to load the existing activity
-	activity := model.NewActivity()
-	if err := db.activityService.LoadByURL(ownerID, id.String(), &activity); err != nil {
+	activity := model.NewActivityStream(model.ActivityStreamContainerUndefined)
+	if err := db.activityStreamService.LoadFromContainer(userID, container, activityStreamID, &activity); err != nil {
 		return derp.Wrap(err, location, "Error loading activity", id)
 	}
 
 	// Try to delete the existing activity
-	if err := db.activityService.Delete(&activity, "Deleted by go-fed"); err != nil {
+	if err := db.activityStreamService.Delete(&activity, "Deleted by go-fed"); err != nil {
 		return derp.Wrap(err, location, "Error deleting activity", id)
 	}
 

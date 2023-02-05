@@ -45,7 +45,7 @@ func (service *ActivityStream) Close() {
 
 // New creates a newly initialized ActivityStream that is ready to use
 func (service *ActivityStream) New() model.ActivityStream {
-	return model.NewActivityStream()
+	return model.NewActivityStream(model.ActivityStreamContainerUndefined)
 }
 
 // Query returns a slice of ActivityStreams that math the provided criteria
@@ -108,7 +108,7 @@ func (service *ActivityStream) ObjectType() string {
 
 // New returns a fully initialized model.Group as a data.Object.
 func (service *ActivityStream) ObjectNew() data.Object {
-	result := model.NewActivityStream()
+	result := model.NewActivityStream(model.ActivityStreamContainerUndefined)
 	return &result
 }
 
@@ -130,7 +130,7 @@ func (service *ActivityStream) ObjectList(criteria exp.Expression, options ...op
 }
 
 func (service *ActivityStream) ObjectLoad(criteria exp.Expression) (data.Object, error) {
-	result := model.NewActivityStream()
+	result := model.NewActivityStream(model.ActivityStreamContainerUndefined)
 	err := service.Load(criteria, &result)
 	return &result, err
 }
@@ -161,41 +161,33 @@ func (service *ActivityStream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *ActivityStream) QueryByUserID(userID primitive.ObjectID) ([]model.ActivityStream, error) {
-	return service.Query(exp.Equal("userId", userID), option.SortAsc("label"))
+func (service *ActivityStream) ListByContainer(userID primitive.ObjectID, container model.ActivityStreamContainer, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria.AndEqual("userId", userID).AndEqual("container", container), options...)
 }
 
-func (service *ActivityStream) LoadByLabel(userID primitive.ObjectID, label string, result *model.ActivityStream) error {
-
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("label", label)
-
-	return service.Load(criteria, result)
+func (service *ActivityStream) ListInbox(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.ListByContainer(userID, model.ActivityStreamContainerInbox, criteria, options...)
 }
 
-// LoadByToken locates a single stream that matches the provided token
-func (service *ActivityStream) LoadByToken(userID primitive.ObjectID, token string, result *model.ActivityStream) error {
-
-	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
-
-		criteria := exp.And(
-			exp.Equal("_id", folderID),
-			exp.Equal("userId", userID),
-		)
-
-		return service.Load(criteria, result)
-	}
-
-	return derp.NewBadRequestError("service.ActivityStream", "Invalid token", token)
+func (service *ActivityStream) ListOutbox(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.ListByContainer(userID, model.ActivityStreamContainerOutbox, criteria, options...)
 }
 
-// LoadBySource locates a single stream that matches the provided OriginURL
-func (service *ActivityStream) LoadByOriginURL(userID primitive.ObjectID, originURL string, result *model.ActivityStream) error {
+func (service *ActivityStream) LoadFromContainer(userID primitive.ObjectID, container model.ActivityStreamContainer, activityStreamID primitive.ObjectID, activityStream *model.ActivityStream) error {
 
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("origin.url", originURL)
+	criteria := exp.And(
+		exp.Equal("_id", activityStreamID),
+		exp.Equal("userId", userID),
+		exp.Equal("container", container),
+	)
 
-	return service.Load(criteria, result)
+	return service.Load(criteria, activityStream)
+}
+
+func (service *ActivityStream) LoadFromInbox(activityStreamID primitive.ObjectID, userID primitive.ObjectID, activityStream *model.ActivityStream) error {
+	return service.LoadFromContainer(userID, model.ActivityStreamContainerInbox, activityStreamID, activityStream)
+}
+
+func (service *ActivityStream) LoadFromOutbox(activityStreamID primitive.ObjectID, userID primitive.ObjectID, activityStream *model.ActivityStream) error {
+	return service.LoadFromContainer(userID, model.ActivityStreamContainerOutbox, activityStreamID, activityStream)
 }

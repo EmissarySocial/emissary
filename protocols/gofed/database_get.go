@@ -16,15 +16,15 @@ func (db Database) Get(c context.Context, id *url.URL) (value vocab.Type, err er
 	const location = "gofed.Database.Get"
 
 	// Parse the URL
-	ownerID, _, _, err := ParsePath(id)
+	userID, container, activityStreamID, err := ParsePath(id)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing URL", id)
 	}
 
 	// Try to load the Activity from the database
-	activity := model.NewActivity()
-	if err := db.activityService.LoadByURL(ownerID, id.String(), &activity); err != nil {
+	activity := model.NewActivityStream(model.ActivityStreamContainerUndefined)
+	if err := db.activityStreamService.LoadFromContainer(userID, container, activityStreamID, &activity); err != nil {
 		return nil, derp.Wrap(err, location, "Error loading activity", id)
 	}
 

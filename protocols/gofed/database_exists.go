@@ -14,15 +14,15 @@ func (db Database) Exists(c context.Context, id *url.URL) (exists bool, err erro
 	const location = "gofed.Database.Exists"
 
 	// Validate the provided URL
-	ownerID, activityType, activityID, err := ParsePath(id)
+	userID, container, activityStreamID, err := ParsePath(id)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error parsing URL", id)
 	}
 
 	// Try to load the existing activity
-	activity := model.NewActivity()
-	err = db.activityService.LoadByID(ownerID, activityType, activityID, &activity)
+	activity := model.NewActivityStream(model.ActivityStreamContainerUndefined)
+	err = db.activityStreamService.LoadFromContainer(userID, container, activityStreamID, &activity)
 
 	// No error means EXISTS
 	if err == nil {

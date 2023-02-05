@@ -18,17 +18,18 @@ func (db Database) Create(c context.Context, asType vocab.Type) error {
 	const location = "gofed.Database.Create"
 
 	// Convert the vocab.Type into a model.Activity
-	activity, err := ToModel(asType, model.ActivityPlaceInbox)
+	activity, err := ToModel(asType, model.ActivityStreamContainerInbox)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error converting Type", asType)
 	}
 
 	// TODO: CRITICAL: What about other properties, like UserID???
+	// TODO: CRITICAL: This will create duplicates / error out because the service isn't not searching for existing URLs.
 	// Guessing this is only used for INBOUND activities..
 
 	// Save the Activity to the database.
-	if err := db.activityService.Save(&activity, "Created by Go-Fed"); err != nil {
+	if err := db.activityStreamService.Save(&activity, "Created by Go-Fed"); err != nil {
 		return derp.Wrap(err, location, "Error saving activity", activity)
 	}
 

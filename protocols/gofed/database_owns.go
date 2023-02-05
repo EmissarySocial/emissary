@@ -24,5 +24,5 @@ func (db Database) Owns(c context.Context, id *url.URL) (owns bool, err error) {
 		return false, derp.Wrap(err, "gofed.Database.Owns", "Error parsing URL", id)
 	}
 
-	return (location != model.ActivityPlaceInbox), nil
+	return (location != model.ActivityStreamContainerInbox), nil
 }

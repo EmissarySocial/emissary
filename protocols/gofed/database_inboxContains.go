@@ -35,17 +35,17 @@ func (db Database) InboxContains(c context.Context, inbox *url.URL, id *url.URL)
 		return false, nil
 	}
 
-	if inboxLocation != model.ActivityPlaceInbox {
+	if inboxLocation != model.ActivityStreamContainerInbox {
 		return false, derp.NewInternalError("InboxContains", "Inbox URL is not an Inbox", inbox.String())
 	}
 
-	if activityLocation != model.ActivityPlaceInbox {
+	if activityLocation != model.ActivityStreamContainerInbox {
 		return false, derp.NewInternalError("InboxContains", "Activity URL is not an Inbox", inbox.String())
 	}
 
-	// Try to load the Activity from the database
-	activity := model.NewInboxActivity()
-	err = db.activityService.LoadFromInbox(inboxUserID, activityID, &activity)
+	// Try to load the ActivityStream from the database
+	activity := model.NewInboxActivityStream()
+	err = db.activityStreamService.LoadFromInbox(inboxUserID, activityID, &activity)
 
 	// If NO error, then EXISTS
 	if err == nil {

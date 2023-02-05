@@ -3,15 +3,14 @@ package gofed
 import (
 	"context"
 	"net/url"
-	"strconv"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/protocols/gofed/as"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	builder "github.com/benpate/exp-builder"
-	"github.com/go-fed/activity/streams"
-	"github.com/go-fed/activity/streams/vocab"
+	"github.com/go-fed/activityStream/streams"
+	"github.com/go-fed/activityStream/streams/vocab"
 )
 
 // GetOutbox returns the latest page of the inbox corresponding to the outboxIRI.
@@ -36,7 +35,7 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 	criteria := builder.Evaluate(outboxIRI.Query())
 
 	// Query the database
-	it, err := db.activityService.ListOutbox(userID, criteria, option.MaxRows(60))
+	it, err := db.activityStreamService.ListOutbox(userID, criteria, option.MaxRows(60))
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")
@@ -44,14 +43,14 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 
 	// Build the list of items
 	items := streams.NewActivityStreamsOrderedItemsProperty()
-	activity := model.NewOutboxActivity()
-	for it.Next(&activity) {
-		if record, err := ToGoFed(&activity); err == nil {
+	activityStream := model.NewOutboxActivityStream()
+	for it.Next(&activityStream) {
+		if record, err := ToGoFed(&activityStream); err == nil {
 			items.AppendType(record)
 		} else {
-			derp.Report(derp.Wrap(err, location, "Error serializing activity", activity))
+			derp.Report(derp.Wrap(err, location, "Error serializing activityStream", activityStream))
 		}
-		activity = model.NewOutboxActivity()
+		activityStream = model.NewOutboxActivityStream()
 	}
 
 	if err := it.Error(); err != nil {
@@ -63,10 +62,10 @@ func (db Database) GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab
 	result.SetActivityStreamsOrderedItems(items)
 
 	// Add "Next Page" link (if more than zero results)
-	if !activity.IsNew() {
+	if !activityStream.IsNew() {
 
 		nextPageURL, _ := url.Parse(outboxIRI.String())
-		nextPageURL.RawQuery = "document.publishDate=LT:" + strconv.FormatInt(activity.Document.PublishDate, 10)
+		nextPageURL.RawQuery = "document.publishDate=LT:" + activityStream.PublishDateString()
 
 		nextPage := streams.NewActivityStreamsNextProperty()
 		as.SetLink(nextPage, nextPageURL, "Next Page", "Link")
