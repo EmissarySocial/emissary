@@ -6,10 +6,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-func TestActivitySchema(t *testing.T) {
+func TestMessageSchema(t *testing.T) {
 
-	activity := NewActivity()
-	s := schema.New(ActivitySchema())
+	activity := NewMessage()
+	s := schema.New(MessageSchema())
 
 	table := []tableTestItem{
 		{"activityId", "123456781234567812345678", nil},

@@ -27,9 +27,9 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	for _, item := range feed.Items {
-		activity := convert.JsonFeedToActivity(feed, item)
-		if err := service.saveActivity(following, &activity); err != nil {
-			return derp.Wrap(err, location, "Error saving activity", following, activity)
+		message := convert.JsonFeedToActivity(feed, item)
+		if err := service.saveToInbox(following, &message); err != nil {
+			return derp.Wrap(err, location, "Error saving message", following, message)
 		}
 	}
 

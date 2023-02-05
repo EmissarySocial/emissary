@@ -47,19 +47,20 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	attachmentService  service.Attachment
-	groupService       service.Group
-	domainService      service.Domain
-	emailService       service.DomainEmail
-	folderService      service.Folder
-	followerService    service.Follower
-	followingService   service.Following
-	activityService    service.Activity
-	mentionService     service.Mention
-	streamService      service.Stream
-	streamDraftService service.StreamDraft
-	realtimeBroker     RealtimeBroker
-	userService        service.User
+	activityStreamService service.ActivityStream
+	attachmentService     service.Attachment
+	groupService          service.Group
+	domainService         service.Domain
+	emailService          service.DomainEmail
+	folderService         service.Folder
+	followerService       service.Follower
+	followingService      service.Following
+	inboxService          service.Inbox
+	mentionService        service.Mention
+	streamService         service.Stream
+	streamDraftService    service.StreamDraft
+	realtimeBroker        RealtimeBroker
+	userService           service.User
 
 	// real-time watchers
 	streamUpdateChannel chan model.Stream
@@ -141,8 +142,8 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	)
 
 	// Start the Activity Service
-	factory.activityService = service.NewActivity(
-		factory.collection(CollectionActivity),
+	factory.inboxService = service.NewInbox(
+		factory.collection(CollectionInbox),
 	)
 
 	// Start the Following Service
@@ -150,7 +151,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollowing),
 		factory.Stream(),
 		factory.User(),
-		factory.Activity(),
+		factory.Inbox(),
 		factory.Host())
 
 	factory.followerService = service.NewFollower(
@@ -161,7 +162,12 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 
 	factory.folderService = service.NewFolder(
 		factory.collection(CollectionFolder),
-		factory.Activity(),
+		factory.Inbox(),
+	)
+
+	// Start the ActivityPub Service
+	factory.activityStreamService = service.NewActivityStream(
+		factory.collection(CollectionActivityStream),
 	)
 
 	go factory.followingService.Start()
@@ -219,7 +225,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.emailService.Refresh(domain)
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.activityService.Refresh(factory.collection(CollectionActivity))
+		factory.inboxService.Refresh(factory.collection(CollectionActivityStream))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
@@ -309,11 +315,16 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 		return factory.Following(), nil
 
 	case "activity":
-		return factory.Activity(), nil
+		return factory.Inbox(), nil
 
 	}
 
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
+}
+
+// ActivityStream returns a fully populated ActivityStream service
+func (factory *Factory) ActivityStream() *service.ActivityStream {
+	return &factory.activityStreamService
 }
 
 // Attachment returns a fully populated Attachment service
@@ -353,9 +364,9 @@ func (factory *Factory) Folder() *service.Folder {
 	return &factory.folderService
 }
 
-// Activity returns a fully populated Activity service
-func (factory *Factory) Activity() *service.Activity {
-	return &factory.activityService
+// Inbox returns a fully populated Inbox service
+func (factory *Factory) Inbox() *service.Inbox {
+	return &factory.inboxService
 }
 
 // Mention returns a fully populated Mention service
@@ -419,7 +430,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.User(), factory.Activity(), factory.Follower(), factory.Following(), factory.Hostname())
+	return gofed.NewDatabase(factory.ActivityStream(), factory.Follower(), factory.Following(), factory.User(), factory.Hostname())
 }
 
 func (factory *Factory) ActivityPub_Clock() gofed.Clock {

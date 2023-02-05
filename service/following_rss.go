@@ -34,9 +34,9 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	for _, rssItem := range rssFeed.Items {
-		activity := convert.RSSToActivity(rssFeed, rssItem)
-		if err := service.saveActivity(following, &activity); err != nil {
-			return derp.Wrap(err, location, "Error updating local activity")
+		message := convert.RSSToActivity(rssFeed, rssItem)
+		if err := service.saveToInbox(following, &message); err != nil {
+			return derp.Wrap(err, location, "Error updating local message")
 		}
 	}
 

@@ -24,22 +24,22 @@ import (
 //     Collection, to facilitate implementations that want to develop their own
 //     caching capability.
 type Database struct {
-	userService      *service.User
-	activityService  *service.Activity
-	followerService  *service.Follower
-	followingService *service.Following
-	hostname         string
+	activityStreamService *service.ActivityStream
+	followerService       *service.Follower
+	followingService      *service.Following
+	userService           *service.User
+	hostname              string
 
 	locks *locker.Locker
 }
 
-func NewDatabase(userService *service.User, activityService *service.Activity, followerService *service.Follower, followingService *service.Following, hostname string) Database {
+func NewDatabase(activityStreamService *service.ActivityStream, followerService *service.Follower, followingService *service.Following, userService *service.User, hostname string) Database {
 	return Database{
-		userService:      userService,
-		activityService:  activityService,
-		followerService:  followerService,
-		followingService: followingService,
-		hostname:         hostname,
+		activityStreamService: activityStreamService,
+		followerService:       followerService,
+		followingService:      followingService,
+		userService:           userService,
+		hostname:              hostname,
 
 		locks: locker.New(),
 	}

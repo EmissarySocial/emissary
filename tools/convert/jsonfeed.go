@@ -47,17 +47,17 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 	}
 }
 
-func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
+func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 
-	activity := model.NewInboxActivity()
+	message := model.NewMessage()
 
-	activity.Origin = model.OriginLink{
+	message.Origin = model.OriginLink{
 		Label:    feed.Title,
 		URL:      feed.HomePageURL,
 		ImageURL: feed.Icon,
 	}
 
-	activity.Document = model.DocumentLink{
+	message.Document = model.DocumentLink{
 		URL:         item.URL,
 		Label:       item.Title,
 		Summary:     item.Summary,
@@ -67,12 +67,12 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Activity {
 	}
 
 	if item.ContentHTML != "" {
-		activity.ContentHTML = item.ContentHTML
+		message.ContentHTML = item.ContentHTML
 	} else if item.ContentText != "" {
-		activity.ContentHTML = html.FromText(item.ContentText)
+		message.ContentHTML = html.FromText(item.ContentText)
 	}
 
-	return activity
+	return message
 }
 
 func JsonFeedToAuthor(feed jsonfeed.Feed, item jsonfeed.Item) model.PersonLink {

@@ -19,24 +19,24 @@ const followingMimeStack = "application/feed+json; q=1.0, application/json; q=0.
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	collection      data.Collection
-	streamService   *Stream
-	userService     *User
-	activityService *Activity
-	host            string
-	closed          chan bool
+	collection    data.Collection
+	streamService *Stream
+	userService   *User
+	inboxService  *Inbox
+	host          string
+	closed        chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, streamService *Stream, userService *User, activityService *Activity, host string) Following {
+func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, host string) Following {
 
 	service := Following{
-		collection:      collection,
-		streamService:   streamService,
-		userService:     userService,
-		activityService: activityService,
-		host:            host,
-		closed:          make(chan bool),
+		collection:    collection,
+		streamService: streamService,
+		userService:   userService,
+		inboxService:  inboxService,
+		host:          host,
+		closed:        make(chan bool),
 	}
 
 	service.Refresh(collection)
@@ -102,7 +102,7 @@ func (service *Following) Start() {
 
 				// Poll each following for new items.
 				service.Connect(following)
-				service.PurgeActivity(following)
+				service.PurgeInbox(following)
 			}
 
 			following = model.NewFollowing()
@@ -123,8 +123,8 @@ func (service *Following) New() model.Following {
 }
 
 // Query returns an iterator containing all of the Following who match the provided criteria
-func (service *Following) Query(criteria exp.Expression, options ...option.Option) ([]model.Activity, error) {
-	result := make([]model.Activity, 0)
+func (service *Following) Query(criteria exp.Expression, options ...option.Option) ([]model.Following, error) {
+	result := make([]model.Following, 0)
 	err := service.collection.Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
@@ -325,13 +325,13 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
  * Custom Actions
  ******************************************/
 
-// PurgeActivity removes all inbox items that are past their expiration date
-func (service *Following) PurgeActivity(following model.Following) error {
+// PurgeInbox removes all inbox items that are past their expiration date
+func (service *Following) PurgeInbox(following model.Following) error {
 
 	const location = "service.Following.PurgeFollowing"
 
 	// Check each following for expired items.
-	items, err := service.activityService.QueryPurgeable(&following)
+	items, err := service.inboxService.QueryPurgeable(&following)
 
 	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
@@ -340,7 +340,7 @@ func (service *Following) PurgeActivity(following model.Following) error {
 
 	// Purge each item that has expired
 	for _, item := range items {
-		if err := service.activityService.Delete(&item, "Purged"); err != nil {
+		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
 			return derp.Wrap(err, location, "Error purging item", item)
 		}
 	}

@@ -186,43 +186,43 @@ func (service *Following) poll(following *model.Following, link digit.Link, impo
 	return nil
 }
 
-// saveActivity adds/updates an individual Activity based on an RSS item
-func (service *Following) saveActivity(following *model.Following, activity *model.Activity) error {
+// saveToInbox adds/updates an individual Message based on an RSS item
+func (service *Following) saveToInbox(following *model.Following, message *model.Message) error {
 
-	const location = "service.Following.saveActivity"
+	const location = "service.Following.saveToInbox"
 
-	original := model.NewInboxActivity()
-	activity.UpdateWithFollowing(following)
+	original := model.NewMessage()
+	message.UpdateWithFollowing(following)
 
-	// Search for an existing Activity that matches the parameter
-	err := service.activityService.LoadFromInboxByURL(following.UserID, activity.Document.URL, &original)
+	// Search for an existing Message that matches the parameter
+	err := service.inboxService.LoadByURL(following.UserID, message.Document.URL, &original)
 
 	switch {
 
-	// If this activity IS NOT FOUND in the database, then save the new record to the database
+	// If this message IS NOT FOUND in the database, then save the new record to the database
 	case derp.NotFound(err):
 
-		if err := service.activityService.Save(activity, "Activity Imported"); err != nil {
-			return derp.Wrap(err, location, "Error saving activity")
+		if err := service.inboxService.Save(message, "Message Imported"); err != nil {
+			return derp.Wrap(err, location, "Error saving message")
 		}
 
 		return nil
 
-	// If this activity IS FOUND in the database, then try to update it
+	// If this message IS FOUND in the database, then try to update it
 	case err == nil:
 
 		// Otherwise, update the original and save
-		original.UpdateWithActivity(activity)
+		original.UpdateWithMessage(message)
 
-		if err := service.activityService.Save(&original, "Activity Updated"); err != nil {
-			return derp.Wrap(err, location, "Error saving activity")
+		if err := service.inboxService.Save(&original, "Message Updated"); err != nil {
+			return derp.Wrap(err, location, "Error saving message")
 		}
 
 		return nil
 	}
 
 	// Otherwise, it's a legitimate error, so let's shut this whole thing down.
-	return derp.Wrap(err, location, "Error loading local activity")
+	return derp.Wrap(err, location, "Error loading local message")
 }
 
 // connect_PushServices tries to connect to the best available push service

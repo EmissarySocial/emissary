@@ -5,11 +5,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ActivitySchema returns a JSON Schema that describes this object
-func ActivitySchema() schema.Element {
+// MessageSchema returns a JSON Schema that describes this object
+func MessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"activityId":  schema.String{Format: "objectId"},
+			"messageId":   schema.String{Format: "objectId"},
 			"userId":      schema.String{Format: "objectId"},
 			"origin":      OriginLinkSchema(),
 			"document":    DocumentLinkSchema(),
@@ -25,34 +25,34 @@ func ActivitySchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (activity *Activity) GetInt64OK(name string) (int64, bool) {
+func (message *Message) GetInt64OK(name string) (int64, bool) {
 	switch name {
 
 	case "readDate":
-		return activity.ReadDate, true
+		return message.ReadDate, true
 
 	default:
 		return 0, false
 	}
 }
 
-func (activity *Activity) GetStringOK(name string) (string, bool) {
+func (message *Message) GetStringOK(name string) (string, bool) {
 	switch name {
 
-	case "activityId":
-		return activity.ActivityID.Hex(), true
+	case "messageId":
+		return message.MessageID.Hex(), true
 
 	case "userId":
-		return activity.UserID.Hex(), true
+		return message.UserID.Hex(), true
 
 	case "folderId":
-		return activity.FolderID.Hex(), true
+		return message.FolderID.Hex(), true
 
 	case "contentHtml":
-		return activity.ContentHTML, true
+		return message.ContentHTML, true
 
 	case "contentJson":
-		return activity.ContentJSON, true
+		return message.ContentJSON, true
 
 	default:
 		return "", false
@@ -63,11 +63,11 @@ func (activity *Activity) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (activity *Activity) SetInt64(name string, value int64) bool {
+func (message *Message) SetInt64(name string, value int64) bool {
 	switch name {
 
 	case "readDate":
-		activity.ReadDate = value
+		message.ReadDate = value
 		return true
 
 	default:
@@ -75,34 +75,34 @@ func (activity *Activity) SetInt64(name string, value int64) bool {
 	}
 }
 
-func (activity *Activity) SetString(name string, value string) bool {
+func (message *Message) SetString(name string, value string) bool {
 	switch name {
 
-	case "activityId":
+	case "messageId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.ActivityID = objectID
+			message.MessageID = objectID
 			return true
 		}
 
 	case "userId":
 
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.UserID = objectID
+			message.UserID = objectID
 			return true
 		}
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.FolderID = objectID
+			message.FolderID = objectID
 			return true
 		}
 
 	case "contentHtml":
-		activity.ContentHTML = value
+		message.ContentHTML = value
 		return true
 
 	case "contentJson":
-		activity.ContentJSON = value
+		message.ContentJSON = value
 		return true
 
 	}
@@ -114,14 +114,14 @@ func (activity *Activity) SetString(name string, value string) bool {
  * Tree Traversal Methods
  ******************************************/
 
-func (activity *Activity) GetObject(name string) (any, bool) {
+func (message *Message) GetObject(name string) (any, bool) {
 	switch name {
 
 	case "origin":
-		return &activity.Origin, true
+		return &message.Origin, true
 
 	case "document":
-		return &activity.Document, true
+		return &message.Document, true
 
 	default:
 		return nil, false

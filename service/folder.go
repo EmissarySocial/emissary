@@ -12,15 +12,15 @@ import (
 
 // Folder manages all interactions with a user's Folder
 type Folder struct {
-	collection      data.Collection
-	activityService *Activity
+	collection   data.Collection
+	inboxService *Inbox
 }
 
 // NewFolder returns a fully populated Folder service
-func NewFolder(collection data.Collection, activityService *Activity) Folder {
+func NewFolder(collection data.Collection, inboxService *Inbox) Folder {
 	service := Folder{
-		collection:      collection,
-		activityService: activityService,
+		collection:   collection,
+		inboxService: inboxService,
 	}
 
 	service.Refresh(collection)
@@ -91,7 +91,7 @@ func (service *Folder) Save(folder *model.Folder, note string) error {
 // Delete removes an Folder from the database (virtual delete)
 func (service *Folder) Delete(folder *model.Folder, note string) error {
 
-	if err := service.activityService.DeleteByFolder(folder.UserID, folder.FolderID); err != nil {
+	if err := service.inboxService.DeleteByFolder(folder.UserID, folder.FolderID); err != nil {
 		return derp.Wrap(err, "service.Folder", "Error deleting Folder activities", folder, note)
 	}
 

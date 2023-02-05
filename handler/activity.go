@@ -8,9 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Activity_MarkRead(serverFactory *server.Factory) echo.HandlerFunc {
+func Inbox_MarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.Activity_MarkRead"
+	const location = "handler.Inbox_MarkRead"
 
 	return func(ctx echo.Context) error {
 
@@ -29,15 +29,15 @@ func Activity_MarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to load the inboxItem from the database
-		activityService := factory.Activity()
+		inboxService := factory.Inbox()
 
-		return activityService.SetReadDate(userID, ctx.Param("item"), time.Now().Unix())
+		return inboxService.SetReadDate(userID, ctx.Param("item"), time.Now().Unix())
 	}
 }
 
-func Activity_MarkUnRead(serverFactory *server.Factory) echo.HandlerFunc {
+func Inbox_MarkUnRead(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.Activity_MarkRead"
+	const location = "handler.Inbox_MarkRead"
 
 	return func(ctx echo.Context) error {
 
@@ -56,8 +56,8 @@ func Activity_MarkUnRead(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to load the inboxItem from the database
-		activityService := factory.Activity()
+		inboxService := factory.Inbox()
 
-		return activityService.SetReadDate(userID, ctx.Param("item"), 0)
+		return inboxService.SetReadDate(userID, ctx.Param("item"), 0)
 	}
 }

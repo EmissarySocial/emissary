@@ -245,10 +245,10 @@ func (w Profile) ActivityPubPublicKeyURL() string {
  * QUERY BUILDERS
  ******************************************/
 
-func (w Profile) Inbox() ([]model.Activity, error) {
+func (w Profile) Inbox() ([]model.Message, error) {
 
 	if !w.IsAuthenticated() {
-		return []model.Activity{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
+		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
 	}
 
 	factory := w._factory
@@ -260,12 +260,12 @@ func (w Profile) Inbox() ([]model.Activity, error) {
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 
-	return factory.Activity().QueryInbox(w.AuthenticatedID(), criteria, option.MaxRows(10), option.SortAsc("publishDate"))
+	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
-func (w Profile) IsInboxEmpty(inbox []model.Activity) bool {
+func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
 	if len(inbox) > 0 {
 		return false
 	}
@@ -277,26 +277,26 @@ func (w Profile) IsInboxEmpty(inbox []model.Activity) bool {
 	return true
 }
 
-func (w Profile) Activity() (model.Activity, error) {
+func (w Profile) Activity() (model.Message, error) {
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {
-		return model.Activity{}, derp.NewForbiddenError("render.Profile.Activity", "Not authenticated")
+		return model.Message{}, derp.NewForbiddenError("render.Profile.Activity", "Not authenticated")
 	}
 
-	// Try to parse the activityID from the URL
-	activityID, err := primitive.ObjectIDFromHex(w._context.QueryParam("activityId"))
+	// Try to parse the messageID from the URL
+	messageID, err := primitive.ObjectIDFromHex(w._context.QueryParam("messageId"))
 
 	if err != nil {
-		return model.Activity{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid activityId", w._context.QueryParam("activityId"))
+		return model.Message{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid messageId", w._context.QueryParam("messageId"))
 	}
 
 	// Try to load an Activity record from the Inbox
-	result := model.NewInboxActivity()
-	activityService := w._factory.Activity()
+	result := model.NewMessage()
+	inboxService := w._factory.Inbox()
 
-	if err := activityService.LoadFromInbox(w.AuthenticatedID(), activityID, &result); err != nil {
-		return model.Activity{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
+	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &result); err != nil {
+		return model.Message{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
 	}
 
 	// Success!

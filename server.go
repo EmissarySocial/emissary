@@ -199,8 +199,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
 
 	// ME-ONLY PAGES
-	e.POST("/@me/pub/inbox/:item/mark-read", handler.Activity_MarkRead(factory))
-	e.POST("/@me/pub/inbox/:item/mark-unread", handler.Activity_MarkUnRead(factory))
+	e.POST("/@me/pub/inbox/:item/mark-read", handler.Inbox_MarkRead(factory))
+	e.POST("/@me/pub/inbox/:item/mark-unread", handler.Inbox_MarkUnRead(factory))
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
