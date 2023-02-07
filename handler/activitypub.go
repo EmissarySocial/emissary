@@ -1,11 +1,42 @@
 package handler
 
 import (
+	"net/http"
+
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/go-fed/activity/pub"
 	"github.com/labstack/echo/v4"
 )
+
+func ActivityPub_GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.ActivityPub_GetProfile"
+
+	return func(ctx echo.Context) error {
+
+		// Find the factory for this hostname
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.Report(derp.Wrap(err, location, "Error creating ActivityStreamsHandler"))
+		}
+
+		// Try to load the user from the database
+		user := model.NewUser()
+		username := ctx.Param("userId")
+		userService := factory.User()
+
+		if err := userService.LoadByToken(username, &user); err != nil {
+			return derp.Report(derp.Wrap(err, location, "Error loading user", username))
+		}
+
+		// Send response to the client
+		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
+		return ctx.JSON(http.StatusOK, user.ActivityPubProfile())
+	}
+}
 
 func ActivityPub_GetInbox(serverFactory *server.Factory) echo.HandlerFunc {
 

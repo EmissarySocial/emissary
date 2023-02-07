@@ -187,6 +187,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/avatar", handler.GetProfileAvatar(factory))
 
 	// ActivityPub Routes
+	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))
 	e.GET("/@:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 	e.GET("/@:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))

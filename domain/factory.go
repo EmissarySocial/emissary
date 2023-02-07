@@ -432,7 +432,7 @@ func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol 
 }
 
 func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.ActivityStream(), factory.Follower(), factory.Following(), factory.User(), factory.Hostname())
+	return gofed.NewDatabase(factory.ActivityStream(), factory.Follower(), factory.Following(), factory.User(), factory.Host())
 }
 
 func (factory *Factory) ActivityPub_Clock() gofed.Clock {
@@ -499,8 +499,8 @@ func (factory *Factory) Email() *service.DomainEmail {
 }
 
 // Key returns an instance of the Key Manager Service (KMS)
-func (factory *Factory) Key() service.Key {
-	return service.Key{}
+func (factory *Factory) JWT() service.JWT {
+	return service.JWT{}
 }
 
 // Icons returns the icon manager service, which manages
@@ -533,7 +533,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 	return steranko.New(
 		service.NewSterankoUserService(factory.User(), factory.Email()),
-		factory.Key(),
+		factory.JWT(),
 		steranko.Config{
 			PasswordSchema: schema.Schema{Element: schema.String{}},
 		},

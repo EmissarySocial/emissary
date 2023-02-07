@@ -3,9 +3,8 @@ package gofed
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-fed/activity/streams"
 	"github.com/go-fed/activity/streams/vocab"
 )
 
@@ -15,22 +14,33 @@ import (
 // then modify the actual underlying inbox to reflect the change in this page.
 func (db Database) SetInbox(c context.Context, inbox vocab.ActivityStreamsOrderedCollectionPage) error {
 
-	const location = "gofed.Database.SetInbox"
+	// TODO: CRITICAL: Actually write this function
+	spew.Dump("SetInbox")
+	spew.Dump(streams.Serialize(inbox))
+	return nil
 
-	items := inbox.GetActivityStreamsOrderedItems()
+	/*
 
-	for iterator := items.Begin(); iterator != items.End(); iterator = iterator.Next() {
-		item := iterator.GetType()
-		activity, err := ToModel(item, model.ActivityStreamContainerInbox)
+		const location = "gofed.Database.SetInbox"
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error converting inbox item", item)
+		items := inbox.GetActivityStreamsOrderedItems()
+
+		for iterator := items.Begin(); iterator != items.End(); iterator = iterator.Next() {
+
+			item := iterator.GetType()
+			activityStream, err := ToModel(item, model.ActivityStreamContainerInbox)
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error converting inbox item", item)
+			}
+
+			activityStream.Container = model.ActivityStreamContainerInbox
+
+			if err := db.activityStreamService.Save(&activityStream, "Created"); err != nil {
+				return derp.Wrap(err, location, "Error saving ActivityStream", activityStream)
+			}
 		}
 
-		spew.Dump("I should eventually insert this..", activity)
-
-		// TODO: CRITICAL: How to identify duplicates?
-	}
-
-	return nil
+		return nil
+	*/
 }

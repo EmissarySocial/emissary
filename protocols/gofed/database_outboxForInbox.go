@@ -21,7 +21,7 @@ func (db Database) OutboxForInbox(c context.Context, inboxIRI *url.URL) (outboxI
 
 	// Generate the new outboxIRI
 	result, _ := url.Parse(inboxIRI.String())
-	result.Path = "/@" + ownerID.Hex() + "/outbox"
+	result.Path = "/@" + ownerID.Hex() + "/pub/outbox"
 
 	return result, nil
 }

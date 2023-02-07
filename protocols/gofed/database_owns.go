@@ -13,7 +13,7 @@ import (
 func (db Database) Owns(c context.Context, id *url.URL) (owns bool, err error) {
 
 	// Eliminate external URLs
-	if !IsLocalURL(db.hostname, id) {
+	if !IsLocalURL(db.host, id) {
 		return false, nil
 	}
 

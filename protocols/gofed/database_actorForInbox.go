@@ -18,8 +18,8 @@ func (db Database) ActorForInbox(c context.Context, inboxIRI *url.URL) (actorIRI
 		return nil, derp.Wrap(err, "gofed.Database", "Error parsing outbox IRI", inboxIRI)
 	}
 
-	result, _ := url.Parse(actorIRI.String())
-	result.Path = "/@" + ownerID.Hex()
+	result, _ := url.Parse(inboxIRI.String())
+	result.Path = "/@" + ownerID.Hex() + "/pub"
 
 	return result, nil
 }

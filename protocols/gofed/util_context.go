@@ -3,14 +3,22 @@ package gofed
 import (
 	"context"
 
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type ContextKey string
+
+const ContextKeyAuthorization = ContextKey("authorization")
 
 // getSignedInUserID returns the UserID for the current request.
 // If the authorization is not valid or not present, then the error contains http.StatusUnauthorized
 func getSignedInUserID(ctx context.Context) (primitive.ObjectID, error) {
 
 	const location = "handler.getSignedInUserID"
+
+	authorization := ctx.Value(ContextKeyAuthorization)
+	spew.Dump("getSignedInUserID >>>>>>>>>>>>>>>>>>>", ctx, authorization)
 
 	/*
 		sterankoContext, ok := ctx.(*steranko.Context)

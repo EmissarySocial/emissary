@@ -5,6 +5,7 @@ import "github.com/EmissarySocial/emissary/service"
 type Common struct {
 	database             Database
 	userService          *service.User
+	jwtService           *service.JWT
 	encryptionKeyService *service.EncryptionKey
 	host                 string
 }

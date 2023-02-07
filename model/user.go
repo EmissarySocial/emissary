@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,22 +15,24 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`            // Unique identifier for this user.
-	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
-	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
-	DisplayName     string                     `json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
-	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
-	Location        string                     `json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
-	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
-	ProfileURL      string                     `json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string                     `json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
-	Username        string                     `json:"username"        bson:"username"`       // This is the primary public identifier for the user.
-	Password        string                     `                       bson:"password"`       // This password should be encrypted with BCrypt.
-	FollowerCount   int                        `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
-	FollowingCount  int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
-	BlockCount      int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
-	IsOwner         bool                       `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
-	PasswordReset   PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
+	UserID         primitive.ObjectID         `json:"userId"          bson:"_id"`            // Unique identifier for this user.
+	GroupIDs       id.Slice                   `json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
+	ImageID        primitive.ObjectID         `json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
+	DisplayName    string                     `json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
+	StatusMessage  string                     `json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
+	Location       string                     `json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
+	Links          sliceof.Object[PersonLink] `json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
+	ProfileURL     string                     `json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress   string                     `json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
+	Username       string                     `json:"username"        bson:"username"`       // This is the primary public identifier for the user.
+	Password       string                     `json:"-"               bson:"password"`       // This password should be encrypted with BCrypt.
+	Keys           KeyPair                    `json:"-"               bson:"keys"`           // Public/Private key pair for this user
+	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
+	FollowingCount int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
+	BlockCount     int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
+	IsOwner        bool                       `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	PasswordReset  PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
+
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
@@ -210,15 +213,37 @@ func (user *User) Roles(authorization *Authorization) []string {
 }
 
 /******************************************
- * URLs
+ * ActivityPub
  ******************************************/
+
+func (user *User) ActivityPubProfile() mapof.Any {
+
+	return mapof.Any{
+		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
+		"id":                user.ActivityPubURL(),
+		"type":              "Person",
+		"url":               user.ProfileURL,
+		"name":              user.DisplayName,
+		"preferredUsername": user.Username,
+		"summary":           user.StatusMessage,
+		"icon":              user.ActivityPubAvatarURL(),
+		"inbox":             user.ActivityPubInboxURL(),
+		"outbox":            user.ActivityPubOutboxURL(),
+		"following":         user.ActivityPubFollowingURL(),
+		"followers":         user.ActivityPubFollowersURL(),
+		"liked":             user.ActivityPubLikedURL(),
+		"blocked":           user.ActivityPubBlockedURL(),
+
+		"publicKey": mapof.Any{
+			"id":           user.ActivityPubURL() + "#main-key",
+			"owner":        user.ActivityPubURL(),
+			"publicKeyPem": user.Keys.PublicKey,
+		},
+	}
+}
 
 func (user *User) ActivityPubProfileURL() string {
 	return user.ProfileURL
-}
-
-func (user *User) ActivityPubURL() string {
-	return user.ProfileURL + "/pub"
 }
 
 func (user *User) ActivityPubAvatarURL() string {
@@ -226,6 +251,14 @@ func (user *User) ActivityPubAvatarURL() string {
 		return ""
 	}
 	return user.ProfileURL + "/avatar"
+}
+
+func (user *User) ActivityPubURL() string {
+	return user.ProfileURL + "/pub"
+}
+
+func (user *User) ActivityPubBlockedURL() string {
+	return user.ProfileURL + "/pub/blocked"
 }
 
 func (user *User) ActivityPubInboxURL() string {
@@ -237,7 +270,7 @@ func (user *User) ActivityPubOutboxURL() string {
 }
 
 func (user *User) ActivityPubOutbox_NewItemURL() string {
-	return user.ActivityPubOutboxURL() + "/" + primitive.NewObjectID().Hex()
+	return user.ProfileURL + "/pub/outbox/" + primitive.NewObjectID().Hex()
 }
 
 func (user *User) ActivityPubFollowersURL() string {

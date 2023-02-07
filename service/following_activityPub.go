@@ -33,16 +33,16 @@ func (service *Following) connect_ActivityPub(following *model.Following, respon
 	}
 
 	// Calculate the URIs for the user's inbox and outbox
-	userInboxURI := service.host + "/@" + following.UserID.Hex() + "/inbox"
-	activityStreamID := service.host + "/@" + following.UserID.Hex() + "/outbox/" + primitive.NewObjectID().Hex()
-	userOutboxURI, _ := url.Parse(service.host + "/@" + following.UserID.Hex() + "/outbox")
+	actorURL := service.host + "/@" + following.UserID.Hex() + "/pub"
+	actorOutboxURL := actorURL + "/outbox"
+	activityStreamID := actorOutboxURL + "/" + primitive.NewObjectID().Hex()
 
 	// Create a follow message
 	jsonLD := mapof.Any{
 		"@context": "https://www.w3.org/ns/activitystreams",
 		"id":       activityStreamID,
 		"type":     "Follow",
-		"actor":    userInboxURI,
+		"actor":    actorURL,
 		"object":   remoteInbox.Href,
 	}
 
@@ -54,7 +54,8 @@ func (service *Following) connect_ActivityPub(following *model.Following, respon
 
 	// Send the follow message to the user's outbox (which forwards it to the remote inbox )
 	actor := service.actorFactory.ActivityPub_Actor()
-	actor.Send(context.TODO(), userOutboxURI, activityStream)
+	actorOutboxURLParsed, _ := url.Parse(actorOutboxURL)
+	actor.Send(context.TODO(), actorOutboxURLParsed, activityStream)
 
 	// Mark it as successful (for now)
 	// Update values in the following object

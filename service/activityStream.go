@@ -71,27 +71,29 @@ func (service *ActivityStream) Load(criteria exp.Expression, result *model.Activ
 }
 
 // Save adds/updates an ActivityStream in the database
-func (service *ActivityStream) Save(folder *model.ActivityStream, note string) error {
+func (service *ActivityStream) Save(activityStream *model.ActivityStream, note string) error {
 
 	// Clean the value before saving
-	if err := service.Schema().Clean(folder); err != nil {
-		return derp.Wrap(err, "service.ActivityStream.Save", "Error cleaning ActivityStream", folder)
+	if err := service.Schema().Clean(activityStream); err != nil {
+		return derp.Wrap(err, "service.ActivityStream.Save", "Error cleaning ActivityStream", activityStream)
 	}
 
+	// TODO: CRITICAL: How to identify duplicates?
+
 	// Save the value to the database
-	if err := service.collection.Save(folder, note); err != nil {
-		return derp.Wrap(err, "service.ActivityStream", "Error saving ActivityStream", folder, note)
+	if err := service.collection.Save(activityStream, note); err != nil {
+		return derp.Wrap(err, "service.ActivityStream", "Error saving ActivityStream", activityStream, note)
 	}
 
 	return nil
 }
 
 // Delete removes an ActivityStream from the database (virtual delete)
-func (service *ActivityStream) Delete(folder *model.ActivityStream, note string) error {
+func (service *ActivityStream) Delete(activityStream *model.ActivityStream, note string) error {
 
 	// Delete ActivityStream record last.
-	if err := service.collection.Delete(folder, note); err != nil {
-		return derp.Wrap(err, "service.ActivityStream", "Error deleting ActivityStream", folder, note)
+	if err := service.collection.Delete(activityStream, note); err != nil {
+		return derp.Wrap(err, "service.ActivityStream", "Error deleting ActivityStream", activityStream, note)
 	}
 
 	return nil
@@ -114,8 +116,8 @@ func (service *ActivityStream) ObjectNew() data.Object {
 
 func (service *ActivityStream) ObjectID(object data.Object) primitive.ObjectID {
 
-	if folder, ok := object.(*model.ActivityStream); ok {
-		return folder.ActivityStreamID
+	if activityStream, ok := object.(*model.ActivityStream); ok {
+		return activityStream.ActivityStreamID
 	}
 
 	return primitive.NilObjectID
@@ -136,15 +138,15 @@ func (service *ActivityStream) ObjectLoad(criteria exp.Expression) (data.Object,
 }
 
 func (service *ActivityStream) ObjectSave(object data.Object, comment string) error {
-	if folder, ok := object.(*model.ActivityStream); ok {
-		return service.Save(folder, comment)
+	if activityStream, ok := object.(*model.ActivityStream); ok {
+		return service.Save(activityStream, comment)
 	}
 	return derp.NewInternalError("service.ActivityStream.ObjectSave", "Invalid object type", object)
 }
 
 func (service *ActivityStream) ObjectDelete(object data.Object, comment string) error {
-	if folder, ok := object.(*model.ActivityStream); ok {
-		return service.Delete(folder, comment)
+	if activityStream, ok := object.(*model.ActivityStream); ok {
+		return service.Delete(activityStream, comment)
 	}
 	return derp.NewInternalError("service.ActivityStream.ObjectDelete", "Invalid object type", object)
 }

@@ -6,9 +6,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/go-fed/activity/streams"
 	"github.com/go-fed/activity/streams/vocab"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // NewID allocates a new IRI for the Go-Fed library to use.  The library is in the
@@ -22,14 +20,31 @@ import (
 func (db Database) NewID(ctx context.Context, t vocab.Type) (id *url.URL, err error) {
 
 	spew.Dump("database.NewID")
-	userID, err := getSignedInUserID(ctx)
 
-	if err != nil {
-		return nil, derp.Wrap(err, "gofed.Database.NewID", "Unable to determine UserID from context.Context")
+	// If the object already has an ID, then just use that.
+	if id := t.GetJSONLDId(); id != nil {
+		return id.Get(), nil
 	}
 
-	spew.Dump(streams.Serialize(t))
+	// TODO: CRITICAL: otherwise, we need to make one based on the vocab type.
+	switch t.GetTypeName() {
+	case "Follow":
 
-	activityIRI := db.hostname + "/@" + userID.Hex() + "/out/" + primitive.NewObjectID().Hex()
-	return url.Parse(activityIRI)
+	}
+
+	return nil, derp.NewInternalError("gofed.Database.NewID", "Unable to determine IRI for vocab.Type", t.GetTypeName())
+
+	/*
+		userID, err := getSignedInUserID(ctx)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "gofed.Database.NewID", "Unable to determine UserID from context.Context")
+		}
+
+		spew.Dump(streams.Serialize(t))
+
+		activityIRI := db.hostname + "/@" + userID.Hex() + "/out/" + primitive.NewObjectID().Hex()
+		spew.Dump("activityIRI", activityIRI)
+		return url.Parse(activityIRI)
+	*/
 }

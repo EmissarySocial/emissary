@@ -28,18 +28,18 @@ type Database struct {
 	followerService       *service.Follower
 	followingService      *service.Following
 	userService           *service.User
-	hostname              string
+	host                  string
 
 	locks *locker.Locker
 }
 
-func NewDatabase(activityStreamService *service.ActivityStream, followerService *service.Follower, followingService *service.Following, userService *service.User, hostname string) Database {
+func NewDatabase(activityStreamService *service.ActivityStream, followerService *service.Follower, followingService *service.Following, userService *service.User, host string) Database {
 	return Database{
 		activityStreamService: activityStreamService,
 		followerService:       followerService,
 		followingService:      followingService,
 		userService:           userService,
-		hostname:              hostname,
+		host:                  host,
 
 		locks: locker.New(),
 	}

@@ -3,6 +3,9 @@ package gofed
 import (
 	"context"
 	"net/http"
+
+	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // AuthenticateGetOutbox determines whether the request is for a GET call to the Actor's Outbox. The out Context is
@@ -20,6 +23,16 @@ import (
 // request will continue to be processed.
 func (common Common) AuthenticateGetOutbox(c context.Context, w http.ResponseWriter, r *http.Request) (out context.Context, authenticated bool, err error) {
 
+	authorization, err := getAuthorization(r, common.jwtService)
+
+	if err != nil {
+		return c, false, derp.Wrap(err, "gofed.AuthenticateGetOutbox", "Unable to get authorization")
+	}
+
+	result := context.WithValue(c, ContextKeyAuthorization, authorization)
+
+	spew.Dump("AuthenticateGetOutbox", authorization, authorization.IsAuthenticated())
+
 	// TODO: HIGH: Do we need to authenticate access to the Outbox?
-	return c, true, nil
+	return result, authorization.IsAuthenticated(), nil
 }
