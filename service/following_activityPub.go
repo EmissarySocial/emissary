@@ -2,16 +2,13 @@ package service
 
 import (
 	"bytes"
-	"context"
 	"net/http"
-	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/protocols/activitypub"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/rosetta/mapof"
-	"github.com/go-fed/activity/streams"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // connect_ActivityPub attempts to connect to a remote user using ActivityPub.
@@ -22,56 +19,81 @@ func (service *Following) connect_ActivityPub(following *model.Following, respon
 
 	const location = "service.Following.connect_ActivityPub"
 
+	spew.Dump("connect_ActivityPub", following)
+
 	// Search for an ActivityPub link for this resource
-	remoteInbox := following.Links.Find(
+	remoteProfile := following.Links.Find(
 		digit.NewLink(digit.RelationTypeSelf, model.MimeTypeActivityPub, ""),
 	)
 
+	spew.Dump(remoteProfile)
+
 	// if no ActivityPub link, then exit.
-	if remoteInbox.IsEmpty() {
+	if remoteProfile.IsEmpty() {
 		return false, nil
 	}
 
-	// Calculate the URIs for the user's inbox and outbox
-	actorURL := service.host + "/@" + following.UserID.Hex() + "/pub"
-	actorOutboxURL := actorURL + "/outbox"
-	activityStreamID := actorOutboxURL + "/" + primitive.NewObjectID().Hex()
-
-	// Create a follow message
-	jsonLD := mapof.Any{
-		"@context": "https://www.w3.org/ns/activitystreams",
-		"id":       activityStreamID,
-		"type":     "Follow",
-		"actor":    actorURL,
-		"object":   remoteInbox.Href,
+	// Try to load the user from the database to use as the ActivityPub "actor"
+	user := model.NewUser()
+	if err := service.userService.LoadByID(following.UserID, &user); err != nil {
+		return false, derp.Wrap(err, location, "Error loading user", following.UserID)
 	}
 
-	activityStream, err := streams.ToType(context.TODO(), jsonLD)
-
+	// Try to get the Actor (with encryption keys)
+	actor, err := service.ActivityPubActor(&user)
 	if err != nil {
-		return false, derp.Wrap(err, location, "Error converting JSON-LD to Activity Stream", jsonLD)
+		return false, derp.Wrap(err, location, "Error getting ActivityPub actor", user)
 	}
 
-	// Send the follow message to the user's outbox (which forwards it to the remote inbox )
-	actor := service.actorFactory.ActivityPub_Actor()
-	actorOutboxURLParsed, _ := url.Parse(actorOutboxURL)
-	actor.Send(context.TODO(), actorOutboxURLParsed, activityStream)
+	// Try to send the ActivityPub follow request
+	status, err := activitypub.PostFollowRequest(actor, following.FollowingID.Hex(), remoteProfile.Href)
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error sending follow request", following)
+	}
 
-	// Mark it as successful (for now)
-	// Update values in the following object
+	// Update the "Following" record
+	following.Status = status
+	following.StatusMessage = ""
 	following.Method = model.FollowMethodActivityPub
-	following.URL = remoteInbox.Href
+	following.URL = remoteProfile.Href
 	following.Secret = ""
 	following.PollDuration = 30
 
-	// "Pending" status means that we're still waiting on the WebSub connection
-	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
-		return false, derp.Wrap(err, location, "Error updating following status", following)
+	// Save the "Following" record to the database
+	if err := service.Save(following, "Subscribed to ActivityPub"); err != nil {
+		return false, derp.Wrap(err, location, "Error saving following", following)
 	}
 
+	// Success!
 	return true, nil
 }
 
 func (service *Following) disconnect_ActivityPub(following *model.Following) {
 	// NOOP (for now)
+}
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided user.
+func (service *Following) ActivityPubActor(user *model.User) (activitypub.Actor, error) {
+
+	// Try to load the user's keys from the database
+	encryptionKey := model.NewEncryptionKey()
+	if err := service.keyService.LoadByID(user.UserID, &encryptionKey); err != nil {
+		return activitypub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error loading encryption key", user.UserID)
+	}
+
+	// Extract the Private Key from the Encryption Key
+	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
+
+	if err != nil {
+		return activitypub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error extracting private key", encryptionKey)
+	}
+
+	// Return the ActivityPub Actor
+	return activitypub.Actor{
+		ActorID:     user.ActivityPubURL(),
+		PublicKeyID: user.ActivityPubPublicKeyURL(),
+		PublicKey:   privateKey.PublicKey,
+		PrivateKey:  privateKey,
+	}, nil
 }

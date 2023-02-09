@@ -46,6 +46,7 @@
 	"actions": {
 		"view": {
 			"steps":[
+				{"step":"if-activitypub", "view":"object"},
 				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
 				{"step":"view-html", "file":"profile"}
 			]

@@ -209,6 +209,10 @@ func (w Profile) Links() []model.PersonLink {
 	return w.user.Links
 }
 
+func (w Profile) ActivityPubURL() string {
+	return w.user.ActivityPubURL()
+}
+
 func (w Profile) ActivityPubProfileURL() string {
 	return w.user.ActivityPubProfileURL()
 }

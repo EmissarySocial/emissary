@@ -26,7 +26,6 @@ type User struct {
 	EmailAddress   string                     `json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
 	Username       string                     `json:"username"        bson:"username"`       // This is the primary public identifier for the user.
 	Password       string                     `json:"-"               bson:"password"`       // This password should be encrypted with BCrypt.
-	Keys           KeyPair                    `json:"-"               bson:"keys"`           // Public/Private key pair for this user
 	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
 	FollowingCount int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
 	BlockCount     int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
@@ -213,10 +212,10 @@ func (user *User) Roles(authorization *Authorization) []string {
 }
 
 /******************************************
- * ActivityPub
+ * ActivityPub Interfaces
  ******************************************/
 
-func (user *User) ActivityPubProfile() mapof.Any {
+func (user User) GetJSONLD() mapof.Any {
 
 	return mapof.Any{
 		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
@@ -233,16 +232,15 @@ func (user *User) ActivityPubProfile() mapof.Any {
 		"followers":         user.ActivityPubFollowersURL(),
 		"liked":             user.ActivityPubLikedURL(),
 		"blocked":           user.ActivityPubBlockedURL(),
-
-		"publicKey": mapof.Any{
-			"id":           user.ActivityPubURL() + "#main-key",
-			"owner":        user.ActivityPubURL(),
-			"publicKeyPem": user.Keys.PublicKey,
-		},
+		"publicKey":         user.ActivityPubPublicKeyURL(),
 	}
 }
 
 func (user *User) ActivityPubProfileURL() string {
+	return user.ProfileURL
+}
+
+func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
@@ -251,10 +249,6 @@ func (user *User) ActivityPubAvatarURL() string {
 		return ""
 	}
 	return user.ProfileURL + "/avatar"
-}
-
-func (user *User) ActivityPubURL() string {
-	return user.ProfileURL + "/pub"
 }
 
 func (user *User) ActivityPubBlockedURL() string {
@@ -280,12 +274,13 @@ func (user *User) ActivityPubFollowersURL() string {
 func (user *User) ActivityPubFollowingURL() string {
 	return user.ProfileURL + "/pub/following"
 }
+
 func (user *User) ActivityPubLikedURL() string {
 	return user.ProfileURL + "/pub/liked"
 }
 
 func (user *User) ActivityPubPublicKeyURL() string {
-	return user.ProfileURL + "/pub/keys"
+	return user.ProfileURL + "/pub/key"
 }
 
 func (user *User) JSONFeedURL() string {

@@ -166,6 +166,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	// EXTERNAL CONNECTIONS
 
+	case "if-activitypub":
+		return NewIfActivityPub(stepInfo)
+
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 

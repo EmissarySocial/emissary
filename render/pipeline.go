@@ -27,8 +27,14 @@ func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Write
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		// Fall through implies GET
 		if err := ExecutableStep(step).Get(renderer, buffer); err != nil {
+
+			// ErrorCode 200 == StatusOK, which means everything is fine, we just want to halt execution of this pipeline
+			if derp.ErrorCode(err) == 200 {
+				break
+			}
+
+			// Everything else is a legitimate error, so FAIL
 			return derp.Wrap(err, location, "Error GET-ing from step")
 		}
 	}
@@ -54,4 +60,8 @@ func (pipeline Pipeline) Post(factory Factory, renderer Renderer) error {
 
 func (pipeline Pipeline) IsEmpty() bool {
 	return len(pipeline) == 0
+}
+
+func HaltPipeline() error {
+	return derp.New(200, "FAKE ERROR TO HALT EXECUTION", "")
 }

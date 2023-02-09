@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserSchema(t *testing.T) {
@@ -35,4 +36,10 @@ func TestUserSchema(t *testing.T) {
 
 	//TODO: Include DefaultAllow?
 
+}
+
+func TestUserJSONLD(t *testing.T) {
+	user := NewUser()
+	getter := any(user).(JSONLDGetter)
+	require.NotNil(t, getter.GetJSONLD())
 }

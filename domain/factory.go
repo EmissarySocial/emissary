@@ -52,6 +52,7 @@ type Factory struct {
 	groupService          service.Group
 	domainService         service.Domain
 	emailService          service.DomainEmail
+	encryptionKeyService  service.EncryptionKey
 	folderService         service.Folder
 	followerService       service.Follower
 	followingService      service.Following
@@ -93,6 +94,8 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.mentionService = service.NewMention(factory.collection(CollectionMention))
 
 	factory.emailService = service.NewDomainEmail(serverEmail, domain)
+
+	factory.encryptionKeyService = service.NewEncryptionKey(factory.collection(CollectionEncryptionKey))
 
 	// Start the Group Service
 	factory.groupService = service.NewGroup(
@@ -153,6 +156,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.Stream(),
 		factory.User(),
 		factory.Inbox(),
+		factory.EncryptionKey(),
 		factory.Host())
 
 	factory.followerService = service.NewFollower(
@@ -222,9 +226,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Refresh cached services
 		factory.activityStreamService.Refresh(factory.collection(CollectionActivityStream))
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
-		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
+		factory.encryptionKeyService.Refresh(factory.collection(CollectionEncryptionKey))
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.inboxService.Refresh(factory.collection(CollectionActivityStream))
@@ -347,8 +351,7 @@ func (factory *Factory) Domain() *service.Domain {
 
 // EncryptionKey returns a fully populated EncryptionKey service
 func (factory *Factory) EncryptionKey() *service.EncryptionKey {
-	service := service.NewEncryptionKey(factory.collection(CollectionEncryptionKey))
-	return &service
+	return &factory.encryptionKeyService
 }
 
 // Follower returns a fully populated Follower service

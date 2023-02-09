@@ -187,17 +187,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/avatar", handler.GetProfileAvatar(factory))
 
 	// ActivityPub Routes
-	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))
-	e.GET("/@:userId/pub/inbox", handler.ActivityPub_GetInbox(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
-	e.GET("/@:userId/pub/inbox/:item", handler.ActivityPub_GenericHandler(factory))
 	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutbox(factory))
-	e.POST("/@:userId/pub/outbox", handler.ActivityPub_PostOutbox(factory))
-	e.GET("/@:userId/pub/outbox/:item", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@:userId/pub/outbox/:item", handler.ActivityPub_GetOutboxItem(factory))
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
-	e.GET("/@:userId/pub/followers", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/@:userId/pub/following", handler.ActivityPub_GenericHandler(factory))
-	e.GET("/@:userId/pub/likes", handler.ActivityPub_GenericHandler(factory))
+	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowers(factory))
+	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowing(factory))
+	e.GET("/@:userId/pub/likes", handler.ActivityPub_GetLikes(factory))
+	e.GET("/@:userId/pub/blocks", handler.ActivityPub_GetBlocks(factory))
 
 	// ME-ONLY PAGES
 	e.POST("/@me/pub/inbox/:item/mark-read", handler.Inbox_MarkRead(factory))

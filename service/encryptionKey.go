@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -82,95 +81,34 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 }
 
 /******************************************
- * Model Service Methods
- ******************************************/
-
-// ObjectType returns the type of object that this service manages
-func (service *EncryptionKey) ObjectType() string {
-	return "EncryptionKey"
-}
-
-// New returns a fully initialized model.Group as a data.Object.
-func (service *EncryptionKey) ObjectNew() data.Object {
-	result := model.NewEncryptionKey()
-	return &result
-}
-
-func (service *EncryptionKey) ObjectID(object data.Object) primitive.ObjectID {
-
-	if mention, ok := object.(*model.EncryptionKey); ok {
-		return mention.EncryptionKeyID
-	}
-
-	return primitive.NilObjectID
-}
-
-func (service *EncryptionKey) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
-}
-
-func (service *EncryptionKey) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
-func (service *EncryptionKey) ObjectLoad(criteria exp.Expression) (data.Object, error) {
-	result := model.NewEncryptionKey()
-	err := service.Load(criteria, &result)
-	return &result, err
-}
-
-func (service *EncryptionKey) ObjectSave(object data.Object, comment string) error {
-	if encryptionKey, ok := object.(*model.EncryptionKey); ok {
-		return service.Save(encryptionKey, comment)
-	}
-	return derp.NewInternalError("service.EncryptionKey.ObjectSave", "Invalid Object Type", object)
-}
-
-func (service *EncryptionKey) ObjectDelete(object data.Object, comment string) error {
-	if encryptionKey, ok := object.(*model.EncryptionKey); ok {
-		return service.Delete(encryptionKey, comment)
-	}
-	return derp.NewInternalError("service.EncryptionKey.ObjectDelete", "Invalid Object Type", object)
-}
-
-func (service *EncryptionKey) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.EncryptionKey", "Not Authorized")
-}
-
-func (service *EncryptionKey) Schema() schema.Schema {
-	return schema.New(model.EncryptionKeySchema())
-}
-
-/******************************************
  * Custom Queries
  ******************************************/
 
-func (service *EncryptionKey) GetPrivateKey(userID primitive.ObjectID) (*rsa.PrivateKey, error) {
+func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
-	// Load the encryption key
-	encryptionKey := model.NewEncryptionKey()
-	criteria := exp.Equal("userID", userID)
+	err := service.Load(exp.Equal("userID", userID), encryptionKey)
 
-	if err := service.Load(criteria, &encryptionKey); err != nil {
-		return nil, derp.Wrap(err, "service.EncryptionKey.GetPrivateKey", "Error loading encryption key", userID)
+	if err == nil {
+		return err
 	}
 
-	// Decode the private key
-	return service.getPrivateKey(&encryptionKey)
-}
+	// "Not Found" means we should create a new encryption key
+	if derp.NotFound(err) {
 
-func (service *EncryptionKey) GetPublicKey(userID primitive.ObjectID) (*rsa.PublicKey, error) {
+		if newKey, err := service.Create(userID); err == nil {
+			*encryptionKey = newKey
+		} else {
+			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", userID)
+		}
 
-	// Load the encryption key
-	encryptionKey := model.NewEncryptionKey()
-	criteria := exp.Equal("userID", userID)
+		if err := service.Save(encryptionKey, "Created new encryption key"); err != nil {
+			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error saving new EncryptionKey", userID)
+		}
 
-	if err := service.Load(criteria, &encryptionKey); err != nil {
-		return nil, derp.Wrap(err, "service.EncryptionKey.GetPrivateKey", "Error loading encryption key", userID)
+		return nil
 	}
 
-	// Decode the private key
-	return service.getPublicKey(&encryptionKey)
+	return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", userID)
 }
 
 /******************************************
@@ -197,35 +135,13 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 	return encryptionKey, nil
 }
 
-/******************************
+/******************************************
  * Data Accessors
- ******************************/
+ ******************************************/
 
-func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.EncryptionKey) ([]byte, error) {
+func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (*rsa.PublicKey, error) {
 
-	privateKey, err := service.getPrivateKey(encryptionKey)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Error getting private key", encryptionKey.EncryptionKeyID)
-	}
-
-	return rsa.SignPKCS1v15(rand.Reader, privateKey, 0, message)
-}
-
-func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptionKey *model.EncryptionKey) error {
-
-	publicKey, err := service.getPublicKey(encryptionKey)
-
-	if err != nil {
-		return derp.Wrap(err, "model.EncryptionKey.Validate", "Error getting public key", encryptionKey.EncryptionKeyID)
-	}
-
-	return rsa.VerifyPKCS1v15(publicKey, 0, message, signature)
-}
-
-func (service *EncryptionKey) getPublicKey(encryptionKey *model.EncryptionKey) (*rsa.PublicKey, error) {
-
-	privateKey, err := service.getPrivateKey(encryptionKey)
+	privateKey, err := service.GetPrivateKey(encryptionKey)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "model.EncryptionKey.PublicKey", "Error getting private key", encryptionKey.EncryptionKeyID)
@@ -234,7 +150,7 @@ func (service *EncryptionKey) getPublicKey(encryptionKey *model.EncryptionKey) (
 	return &privateKey.PublicKey, nil
 }
 
-func (service *EncryptionKey) getPrivateKey(encryptionKey *model.EncryptionKey) (*rsa.PrivateKey, error) {
+func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) (*rsa.PrivateKey, error) {
 
 	// Decode PEM block
 	block, _ := pem.Decode([]byte(encryptionKey.PrivatePEM))
@@ -249,9 +165,31 @@ func (service *EncryptionKey) getPrivateKey(encryptionKey *model.EncryptionKey) 
 	return privateKey, nil
 }
 
-/******************************
+func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.EncryptionKey) ([]byte, error) {
+
+	privateKey, err := service.GetPrivateKey(encryptionKey)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Error getting private key", encryptionKey.EncryptionKeyID)
+	}
+
+	return rsa.SignPKCS1v15(rand.Reader, privateKey, 0, message)
+}
+
+func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptionKey *model.EncryptionKey) error {
+
+	publicKey, err := service.GetPublicKey(encryptionKey)
+
+	if err != nil {
+		return derp.Wrap(err, "model.EncryptionKey.Validate", "Error getting public key", encryptionKey.EncryptionKeyID)
+	}
+
+	return rsa.VerifyPKCS1v15(publicKey, 0, message, signature)
+}
+
+/******************************************
  * Helper Methods
- ******************************/
+ ******************************************/
 
 func (service *EncryptionKey) encodePrivatePEM(privateKey *rsa.PrivateKey) string {
 
