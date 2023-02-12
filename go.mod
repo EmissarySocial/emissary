@@ -2,7 +2,7 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/remote => ../../benpate/remote
+replace github.com/benpate/hannibal => ../../benpate/hannibal
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
@@ -14,10 +14,11 @@ require (
 	github.com/benpate/exp v0.6.0
 	github.com/benpate/exp-builder v0.6.0
 	github.com/benpate/form v0.14.2
+	github.com/benpate/hannibal v0.1.0
 	github.com/benpate/html v0.15.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.9.1
-	github.com/benpate/remote v0.10.0
+	github.com/benpate/remote v0.10.1
 	github.com/benpate/rosetta v0.11.2
 	github.com/benpate/steranko v0.13.1
 	github.com/benpate/table v0.5.1
@@ -28,7 +29,6 @@ require (
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-fed/activity v1.0.0
-	github.com/go-fed/httpsig v1.1.0
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20230121173733-dbeb399a1b7b
@@ -37,7 +37,6 @@ require (
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.22
 	github.com/mmcdole/gofeed v1.2.0
-	github.com/moby/locker v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.3
 	github.com/spf13/pflag v1.0.5
@@ -73,6 +72,7 @@ require (
 	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
+	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.0 // indirect
 	github.com/go-git/go-git/v5 v5.5.2 // indirect
@@ -86,6 +86,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/karlseguin/ccache/v3 v3.0.3 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

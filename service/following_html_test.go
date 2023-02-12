@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
-	"github.com/davecgh/go-spew/spew"
 	"willnorris.com/go/microformats"
 )
 
@@ -21,5 +20,5 @@ func TestMicroformats(t *testing.T) {
 
 	data := microformats.Parse(&body, txn.RequestObject.URL)
 
-	spew.Dump(data)
+	t.Log(data)
 }

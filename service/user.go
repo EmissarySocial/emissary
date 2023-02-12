@@ -14,6 +14,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,14 +28,16 @@ type User struct {
 	blocks        data.Collection
 	streamService *Stream
 	emailService  *DomainEmail
+	keyService    *EncryptionKey
 	host          string
 }
 
 // NewUser returns a fully populated User service
-func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, emailService *DomainEmail, host string) User {
+func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, host string) User {
 	service := User{
 		streamService: streamService,
 		emailService:  emailService,
+		keyService:    keyService,
 		host:          host,
 	}
 
@@ -209,6 +213,23 @@ func (service *User) ListByGroup(group string) (data.Iterator, error) {
 func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) error {
 	criteria := exp.Equal("_id", userID)
 	return service.Load(criteria, result)
+}
+
+func (service *User) LoadByProfileURL(profileURL string, result *model.User) error {
+
+	// Try to extract the UserID from the profileURL
+	token := profileAsUserID(profileURL)
+
+	if err := service.LoadByToken(token, result); err != nil {
+		return derp.Wrap(err, "service.User.LoadByProfileURL", "Error loading User by Profile URL", profileURL)
+	}
+
+	// RULE: Confirm that the profile URL matches the requested value
+	if result.ProfileURL != profileURL {
+		return derp.NewNotFoundError("service.User.LoadByProfileURL", "Invalid Profile URL", profileURL)
+	}
+
+	return nil
 }
 
 // LoadByUsername loads a single model.User object that matches the provided username
@@ -391,6 +412,36 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
 }
 
 /******************************************
+ * ActivityPub Methods
+ ******************************************/
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided user.
+func (service *User) ActivityPubActor(user *model.User) (pub.Actor, error) {
+
+	// Try to load the user's keys from the database
+	encryptionKey := model.NewEncryptionKey()
+	if err := service.keyService.LoadByID(user.UserID, &encryptionKey); err != nil {
+		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error loading encryption key", user.UserID)
+	}
+
+	// Extract the Private Key from the Encryption Key
+	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
+
+	if err != nil {
+		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error extracting private key", encryptionKey)
+	}
+
+	// Return the ActivityPub Actor
+	return pub.Actor{
+		ActorID:     user.ActivityPubURL(),
+		PublicKeyID: user.ActivityPubPublicKeyURL(),
+		PublicKey:   privateKey.PublicKey,
+		PrivateKey:  privateKey,
+	}, nil
+}
+
+/******************************************
  * WebFinger Behavior
  ******************************************/
 
@@ -423,4 +474,19 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
 func (service *User) RemoteFollowURL() string {
 	return service.host + "/.ostatus/tunnel?uri={uri}"
+}
+
+/******************************************
+ * Helper Utilities
+ ******************************************/
+
+func profileAsUserID(profileURL string) string {
+
+	if strings.HasPrefix(profileURL, "@") {
+		profileURL = strings.TrimPrefix(profileURL, "@")
+		return list.First(profileURL, '@')
+	}
+
+	profileURL = strings.TrimSuffix(profileURL, "/")
+	return list.Tail(profileURL, '@')
 }

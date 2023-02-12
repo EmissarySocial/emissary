@@ -20,7 +20,6 @@ const followingMimeStack = "application/feed+json; q=1.0, application/json; q=0.
 // Following manages all interactions with the Following collection
 type Following struct {
 	collection    data.Collection
-	actorFactory  ActorFactory
 	streamService *Stream
 	userService   *User
 	inboxService  *Inbox
@@ -30,11 +29,10 @@ type Following struct {
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, actorFactory ActorFactory, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, host string) Following {
+func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, host string) Following {
 
 	service := Following{
 		collection:    collection,
-		actorFactory:  actorFactory,
 		streamService: streamService,
 		userService:   userService,
 		inboxService:  inboxService,

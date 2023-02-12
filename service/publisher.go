@@ -1,17 +1,11 @@
 package service
 
 import (
-	"context"
 	"math"
-	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/go-fed/activity/pub"
-	"github.com/go-fed/activity/streams"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,15 +13,13 @@ type Publisher struct {
 	streamService   *Stream
 	followerService *Follower
 	userService     *User
-	actorFactory    ActorFactory
 }
 
-func NewPublisher(streamService *Stream, followerService *Follower, userService *User, actorFactory ActorFactory) Publisher {
+func NewPublisher(streamService *Stream, followerService *Follower, userService *User) Publisher {
 	return Publisher{
 		streamService:   streamService,
 		followerService: followerService,
 		userService:     userService,
-		actorFactory:    actorFactory,
 	}
 }
 
@@ -154,54 +146,18 @@ func (publisher Publisher) notifyFollowers(stream *model.Stream) error {
 
 // sendActivityPub_Create sends a "Create" message to the outbox of the given user
 func (publisher Publisher) sendActivityPub_Create(stream *model.Stream, user *model.User) error {
-	return publisher.sendActivityPub(stream, user, streams.NewActivityStreamsCreate())
+	// TODO: CRITICAL: Send ActivityPub Create message to the outbox of all followers
+	return nil
 }
 
 // sendActivityPub_Update sends an "Update" message to the outbox of the given user
 func (publisher Publisher) sendActivityPub_Update(stream *model.Stream, user *model.User) error {
-	return publisher.sendActivityPub(stream, user, streams.NewActivityStreamsUpdate())
+	// TODO: CRITICAL: Send ActivityPub Update message to the outbox of all followers
+	return nil
 }
 
 // sendActivityPub_Delete sends a "Delete" message to the outbox of the given user
 func (publisher Publisher) sendActivityPub_Delete(stream *model.Stream, user *model.User) error {
-	return publisher.sendActivityPub(stream, user, streams.NewActivityStreamsDelete())
-}
-
-// sendActivityPub sends a message to the outbox of the given user
-func (publisher Publisher) sendActivityPub(stream *model.Stream, user *model.User, activity pub.Activity) error {
-
-	// Get the outbox URL for the user
-	outboxURL, err := url.Parse(user.ActivityPubOutboxURL())
-
-	if err != nil {
-		return derp.Wrap(err, "service.Publisher.Publish", "Error parsing outbox URL", user.ActivityPubOutboxURL())
-	}
-
-	// Generate the ActivityPub message
-	message, err := convert.StreamToActivityPub(stream)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Publisher.Publish", "Error generating ActivityPub message", stream)
-	}
-
-	// Set the "object" property of the Activity
-	objectProperty := streams.NewActivityStreamsObjectProperty()
-	objectProperty.AppendType(message)
-	activity.SetActivityStreamsObject(objectProperty)
-
-	// Set the "to" property of the Activity
-	toProperty := streams.NewActivityStreamsToProperty()
-	followersURL, _ := url.Parse(user.ActivityPubFollowersURL())
-	toProperty.AppendIRI(followersURL)
-
-	// Notify followers of the Activity via ActivityPub
-	actor := publisher.actorFactory.ActivityPub_Actor()
-	result, err := actor.Send(context.Background(), outboxURL, activity)
-	spew.Dump("'SENDING' ActivityPub message", result)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
-	}
-
+	// TODO: CRITICAL: Send ActivityPub Delete message to the outbox of all followers
 	return nil
 }

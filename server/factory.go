@@ -13,6 +13,7 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/cache"
 	"github.com/benpate/icon"
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
@@ -34,6 +35,7 @@ type Factory struct {
 	providerService service.Provider
 	emailService    service.ServerEmail
 	taskQueue       *queue.Queue
+	httpCache       *cache.Cache
 	embeddedFiles   embed.FS
 
 	attachmentOriginals afero.Fs
@@ -53,6 +55,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
+		httpCache:     cache.NewDefaultCache(),
 	}
 
 	// Global Theme service
@@ -159,6 +162,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.contentService,
 		&factory.providerService,
 		factory.taskQueue,
+		factory.httpCache,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 	)

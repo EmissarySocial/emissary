@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/jsonld"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -186,7 +187,7 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 }
 
 /******************************************
- * ActivityPub Queries
+ * ActivityPub
  ******************************************/
 
 // ListActivityPub returns an iterator containing all of the Followers of specific parentID
@@ -197,6 +198,30 @@ func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ..
 		AndEqual("method", model.FollowMethodActivityPub)
 
 	return service.List(criteria, options...)
+}
+
+func (service *Follower) NewActivityPubFollower(user *model.User, activity jsonld.Reader) error {
+
+	// Try to create a new Follower record
+
+	follower := model.NewFollower()
+	follower.Type = model.FollowerTypeUser
+	follower.Method = model.FollowMethodActivityPub
+	follower.ParentID = user.UserID
+
+	actor := activity.Get("actor").Load()
+	follower.Actor = model.PersonLink{
+		Name:         actor.Get("name").AsString(),
+		ProfileURL:   actor.Get("id").AsString(),
+		EmailAddress: actor.Get("email").AsString(),
+		ImageURL:     actor.Get("image").AsString(),
+	}
+
+	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {
+		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error saving new follower", follower)
+	}
+
+	return nil
 }
 
 /******************************************

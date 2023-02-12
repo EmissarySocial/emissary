@@ -3,8 +3,6 @@ package service
 import (
 	"bytes"
 	"testing"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func TestAtomLinks(t *testing.T) {
@@ -60,7 +58,7 @@ func TestAtomLinks(t *testing.T) {
 	
 	  </feed>`)
 
-	spew.Dump(discoverLinks_RSS(nil, &body))
+	t.Log(discoverLinks_RSS(nil, &body))
 }
 
 func TestRSSLinks(t *testing.T) {
@@ -116,6 +114,6 @@ func TestRSSLinks(t *testing.T) {
 	  </channel>
 	</rss>`)
 
-	spew.Dump(discoverLinks_RSS(nil, &body))
+	t.Log(discoverLinks_RSS(nil, &body))
 
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/protocols/gofed"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
@@ -18,11 +17,12 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/cache"
+	"github.com/benpate/hannibal/jsonld"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/go-fed/activity/pub"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -41,6 +41,7 @@ type Factory struct {
 	contentService  *service.Content
 	providerService *service.Provider
 	taskQueue       *queue.Queue
+	httpCache       *cache.Cache
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -70,7 +71,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, httpCache *cache.Cache, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -81,6 +82,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		contentService:  contentService,
 		providerService: providerService,
 		taskQueue:       taskQueue,
+		httpCache:       httpCache,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -130,6 +132,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionFollowing),
 		factory.collection(CollectionBlock),
 		factory.Stream(),
+		factory.EncryptionKey(),
 		factory.Email(),
 		factory.Host(),
 	)
@@ -152,7 +155,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Following Service
 	factory.followingService = service.NewFollowing(
 		factory.collection(CollectionFollowing),
-		&factory,
 		factory.Stream(),
 		factory.User(),
 		factory.Inbox(),
@@ -415,34 +417,6 @@ func (factory *Factory) Template() *service.Template {
 }
 
 /******************************************
- * ActivityPub
- ******************************************/
-
-func (factory *Factory) ActivityPub_Actor() pub.FederatingActor {
-	return pub.NewFederatingActor(
-		factory.ActivityPub_CommonBehavior(),
-		factory.ActivityPub_FederatingProtocol(),
-		factory.ActivityPub_Database(),
-		factory.ActivityPub_Clock())
-}
-
-func (factory *Factory) ActivityPub_CommonBehavior() pub.CommonBehavior {
-	return gofed.NewCommonBehavior(factory.ActivityPub_Database(), factory.User(), factory.EncryptionKey(), factory.Host())
-}
-
-func (factory *Factory) ActivityPub_FederatingProtocol() pub.FederatingProtocol {
-	return gofed.NewFederatingProtocol(factory.ActivityPub_Database())
-}
-
-func (factory *Factory) ActivityPub_Database() gofed.Database {
-	return gofed.NewDatabase(factory.ActivityStream(), factory.Follower(), factory.Following(), factory.User(), factory.Host())
-}
-
-func (factory *Factory) ActivityPub_Clock() gofed.Clock {
-	return gofed.NewClock()
-}
-
-/******************************************
  * Real-Time Update Channels
  ******************************************/
 
@@ -492,6 +466,10 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * Other Non-Model Services
  ******************************************/
 
+func (factory *Factory) JSONLDClient() jsonld.Client {
+	return jsonld.New(factory.httpCache)
+}
+
 // Content returns the Content transformation service
 func (factory *Factory) Content() *service.Content {
 	return factory.contentService
@@ -523,7 +501,7 @@ func (factory *Factory) Locator() service.Locator {
 // Publisher returns the Publisher service, which contains
 // all of the business rules for publishing a stream to the federated Interwebs.
 func (factory *Factory) Publisher() service.Publisher {
-	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User(), factory)
+	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User())
 }
 
 // Queue returns the Queue service, which manages background jobs
