@@ -6,7 +6,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/jsonld"
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -105,7 +107,7 @@ func (service *Follower) Delete(follower *model.Follower, note string) error {
 
 // ObjectType returns the type of object that this service manages
 func (service *Follower) ObjectType() string {
-	return "Follow"
+	return "Follower"
 }
 
 // New returns a fully initialized model.Group as a data.Object.
@@ -163,6 +165,28 @@ func (service *Follower) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Follower) LoadOrCreate(parentID primitive.ObjectID, actorID string) (model.Follower, error) {
+
+	result := model.NewFollower()
+
+	err := service.LoadByActor(parentID, actorID, &result)
+
+	// No error means the record was found
+	if err == nil {
+		return result, nil
+	}
+
+	// NotFound error means we should create a new record
+	if derp.NotFound(err) {
+		result.ParentID = parentID
+		result.Actor.ProfileURL = actorID
+		return result, nil
+	}
+
+	// Other error is bad.  Return the error
+	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Error loading Follower", parentID, actorID)
+}
+
 func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, follower *model.Follower) error {
 	followerID, err := primitive.ObjectIDFromHex(token)
 
@@ -171,6 +195,12 @@ func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, 
 	}
 
 	criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
+	return service.Load(criteria, follower)
+}
+
+func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
+
+	criteria := exp.Equal("parentId", parentID).AndEqual("actor.profileUrl", actorID)
 	return service.Load(criteria, follower)
 }
 
@@ -184,44 +214,6 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 	}
 
 	return result, nil
-}
-
-/******************************************
- * ActivityPub
- ******************************************/
-
-// ListActivityPub returns an iterator containing all of the Followers of specific parentID
-func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
-
-	criteria := exp.
-		Equal("parentId", parentID).
-		AndEqual("method", model.FollowMethodActivityPub)
-
-	return service.List(criteria, options...)
-}
-
-func (service *Follower) NewActivityPubFollower(user *model.User, activity jsonld.Reader) error {
-
-	// Try to create a new Follower record
-
-	follower := model.NewFollower()
-	follower.Type = model.FollowerTypeUser
-	follower.Method = model.FollowMethodActivityPub
-	follower.ParentID = user.UserID
-
-	actor := activity.Get("actor").Load()
-	follower.Actor = model.PersonLink{
-		Name:         actor.Get("name").AsString(),
-		ProfileURL:   actor.Get("id").AsString(),
-		EmailAddress: actor.Get("email").AsString(),
-		ImageURL:     actor.Get("image").AsString(),
-	}
-
-	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error saving new follower", follower)
-	}
-
-	return nil
 }
 
 /******************************************
@@ -273,4 +265,85 @@ func (service *Follower) LoadByWebSubUnique(objectType string, parentID primitiv
 
 	// If REAL ERROR, then derp
 	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Error loading follower", parentID, callback)
+}
+
+/******************************************
+ * ActivityPub Queries
+ ******************************************/
+
+// ListActivityPub returns an iterator containing all of the Followers of specific parentID
+func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowMethodActivityPub)
+
+	return service.List(criteria, options...)
+}
+
+func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.Document) error {
+
+	// Create a new Follower record
+	follower := model.NewFollower()
+
+	// Try to find an existing follower record
+	if err := service.LoadByActor(user.UserID, actor.ID(), &follower); err != nil {
+		if !derp.NotFound(err) {
+			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading existing follower", actor)
+		}
+	}
+
+	// Set/Update follower data from the activity
+	follower.Type = model.FollowerTypeUser
+	follower.Method = model.FollowMethodActivityPub
+	follower.ParentID = user.UserID
+
+	follower.Actor = model.PersonLink{
+		ProfileURL:   actor.ID(),
+		Name:         actor.Name(),
+		ImageURL:     actor.Image().AsString(),
+		InboxURL:     actor.Get("inbox").AsString(),
+		EmailAddress: actor.Get("email").AsString(),
+	}
+
+	// Try to save the new follower to the database
+	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {
+		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error saving new follower", follower)
+	}
+
+	// Salút!
+	return nil
+}
+
+func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, followerURL string, follower *model.Follower) error {
+
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowMethodActivityPub).
+		AndEqual("actor.profileUrl", followerURL)
+
+	return service.Load(criteria, follower)
+}
+
+/******************************************
+ * ActivityPub Methods
+ ******************************************/
+
+func (service *Follower) ActivityPubID(follower *model.Follower) string {
+	return service.host + "/@" + follower.ParentID.Hex() + "/pub/follower/" + follower.FollowerID.Hex()
+}
+
+func (service *Follower) ActivityPubObjectID(follower *model.Follower) string {
+	return service.host + "/@" + follower.ParentID.Hex()
+}
+
+func (service *Follower) AsJSONLD(follower *model.Follower) mapof.Any {
+
+	return mapof.Any{
+		"@context": vocab.ContextTypeActivityStreams,
+		"id":       service.ActivityPubID(follower),
+		"type":     vocab.ActivityTypeFollow,
+		"actor":    follower.Actor.ProfileURL,
+		"object":   service.ActivityPubObjectID(follower),
+	}
 }

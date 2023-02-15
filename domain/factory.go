@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/cache"
-	"github.com/benpate/hannibal/jsonld"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
@@ -466,8 +465,8 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * Other Non-Model Services
  ******************************************/
 
-func (factory *Factory) JSONLDClient() jsonld.Client {
-	return jsonld.New(factory.httpCache)
+func (factory *Factory) HTTPCache() *cache.Cache {
+	return factory.httpCache
 }
 
 // Content returns the Content transformation service

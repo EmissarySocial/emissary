@@ -213,10 +213,6 @@ func (w Profile) ActivityPubURL() string {
 	return w.user.ActivityPubURL()
 }
 
-func (w Profile) ActivityPubProfileURL() string {
-	return w.user.ActivityPubProfileURL()
-}
-
 func (w Profile) ActivityPubAvatarURL() string {
 	return w.user.ActivityPubAvatarURL()
 }

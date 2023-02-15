@@ -97,7 +97,7 @@ func (service *Block) Delete(block *model.Block, note string) error {
 
 // ObjectType returns the type of object that this service manages
 func (service *Block) ObjectType() string {
-	return "Follow"
+	return "Block"
 }
 
 // New returns a fully initialized model.Group as a data.Object.

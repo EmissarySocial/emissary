@@ -61,7 +61,7 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 		}
 
 		// Success!!
-		return renderPage(factory, sterankoContext, renderer, actionMethod)
+		return renderHTML(factory, sterankoContext, renderer, actionMethod)
 	}
 }
 

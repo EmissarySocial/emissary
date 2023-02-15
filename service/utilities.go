@@ -4,13 +4,105 @@ import (
 	"encoding/json"
 	"html/template"
 	"io/fs"
+	"net/url"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
+
+	// Parse the value into a URL
+	urlValue, err = url.Parse(value)
+
+	if err != nil {
+		return nil, primitive.NilObjectID, "", primitive.NilObjectID, derp.Wrap(err, "service.ParseURL", "Cannot parse value", value)
+	}
+
+	// View the path as a "/" delimited list
+	path := list.BySlash(urlValue.Path).Tail()
+
+	// First item in the path must be @<objectID>
+	// Strip the "@" sign and convert to a primitive.ObjectID
+	username, path := path.Split()
+
+	if !strings.HasPrefix(username, "@") {
+		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must begin with '@'", value)
+	}
+
+	username = strings.TrimPrefix(username, "@")
+
+	userID, err = primitive.ObjectIDFromHex(username)
+
+	if err != nil {
+		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must be a valid hex string", value)
+	}
+
+	// If this is the end of the path, then we're done.
+	if path.IsEmpty() {
+		return urlValue, userID, "", primitive.NilObjectID, nil
+	}
+
+	// Second item in the path must be "/pub/"
+	pub, path := path.Split()
+
+	if pub != "pub" {
+		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Path must contain with '/pub/'", value)
+	}
+
+	if path.IsEmpty() {
+		return urlValue, userID, "", primitive.NilObjectID, nil
+	}
+
+	// Third item in the path must be the object type (followers, following, blocks, etc.)
+	objectType, path = path.Split()
+
+	if path.IsEmpty() {
+		return urlValue, userID, objectType, primitive.NilObjectID, nil
+	}
+
+	// Fourth item in the path must be the objectID for the underlying record.
+	// Extract it and convert to a primitive.ObjectID
+	objectName, path := path.Split()
+
+	objectID, err = primitive.ObjectIDFromHex(objectName)
+
+	if err != nil {
+		return urlValue, userID, objectType, primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "ObjectID must be a valid hex string", value)
+	}
+
+	// This should be the end of the path.
+	if path.IsEmpty() {
+		return urlValue, userID, objectType, objectID, nil
+	}
+
+	// But if we get here, then there are unrecognized values in the path.
+	return urlValue, userID, objectType, objectID, derp.NewBadRequestError("service.ParseURL", "Path contains unrecognized values", value)
+}
+
+func ParseProfileURL_UserID(value string) (primitive.ObjectID, error) {
+	_, userID, _, _, err := ParseProfileURL(value)
+	return userID, err
+}
+
+func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.ObjectID, error) {
+	_, userID, objectType, objectID, err := ParseProfileURL(value)
+
+	if err != nil {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.ParseProfileURL_AsFollowing", "Unable to parse profile URL", value)
+	}
+
+	if objectType != "following" {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
+	}
+
+	return userID, objectID, nil
+}
 
 // notDeleted ensures that a criteria expression does not include soft-deleted items.
 func notDeleted(criteria exp.Expression) exp.Expression {

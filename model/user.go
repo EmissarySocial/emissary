@@ -219,7 +219,7 @@ func (user User) GetJSONLD() mapof.Any {
 
 	return mapof.Any{
 		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
-		"id":                user.ActivityPubURL(),
+		"id":                user.GetProfileURL(),
 		"type":              "Person",
 		"url":               user.ProfileURL,
 		"name":              user.DisplayName,
@@ -236,11 +236,7 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 }
 
-func (user *User) ActivityPubProfileURL() string {
-	return user.ProfileURL
-}
-
-func (user *User) ActivityPubURL() string {
+func (user *User) GetProfileURL() string {
 	return user.ProfileURL
 }
 
@@ -249,6 +245,10 @@ func (user *User) ActivityPubAvatarURL() string {
 		return ""
 	}
 	return user.ProfileURL + "/avatar"
+}
+
+func (user *User) ActivityPubURL() string {
+	return user.ProfileURL
 }
 
 func (user *User) ActivityPubBlockedURL() string {

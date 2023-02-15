@@ -72,6 +72,12 @@ func (slice *Slice) SetValue(value any) error {
 		}
 		return nil
 
+	case primitive.ObjectID:
+		return slice.SetValue([]primitive.ObjectID{typed})
+
+	case string:
+		return slice.SetValue([]string{typed})
+
 	default:
 		return derp.NewBadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
 	}

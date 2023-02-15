@@ -11,8 +11,8 @@
 
 				<div role="tablist" class="underlined" hx-push-url="true">
 					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
-					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
 					<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
+					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
 					<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
 				</div>
 

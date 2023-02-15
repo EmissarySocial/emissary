@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"time"
 
@@ -85,7 +86,7 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 func (service *User) Save(user *model.User, note string) error {
 
 	// RULE: Set ProfileURL to the hostname + the username
-	user.ProfileURL = service.host + "/@" + user.Username
+	user.ProfileURL = service.host + "/@" + user.UserID.Hex()
 
 	// RULE: If password reset has already expired, then clear the reset code
 	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
@@ -213,23 +214,6 @@ func (service *User) ListByGroup(group string) (data.Iterator, error) {
 func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) error {
 	criteria := exp.Equal("_id", userID)
 	return service.Load(criteria, result)
-}
-
-func (service *User) LoadByProfileURL(profileURL string, result *model.User) error {
-
-	// Try to extract the UserID from the profileURL
-	token := profileAsUserID(profileURL)
-
-	if err := service.LoadByToken(token, result); err != nil {
-		return derp.Wrap(err, "service.User.LoadByProfileURL", "Error loading User by Profile URL", profileURL)
-	}
-
-	// RULE: Confirm that the profile URL matches the requested value
-	if result.ProfileURL != profileURL {
-		return derp.NewNotFoundError("service.User.LoadByProfileURL", "Invalid Profile URL", profileURL)
-	}
-
-	return nil
 }
 
 // LoadByUsername loads a single model.User object that matches the provided username
@@ -415,14 +399,64 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
  * ActivityPub Methods
  ******************************************/
 
+// ParseProfileURL parses (or looks up) the correct UserID from a given URL.
+// Unlike the package-level ParseProfileURL, this method can resolve usernames into objectIDs
+// because it has access to the database server.
+func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
+
+	// Parse the URL to get the path
+	urlValue, err := url.Parse(value)
+
+	if err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, "service.User", "Error parsing profile URL", value)
+	}
+
+	// RULE: server must be the same as the server we're running on
+	if urlValue.Scheme+"://"+urlValue.Host != service.host {
+		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User", "Profile URL must exist on this server", urlValue, value, service.host)
+	}
+
+	// Extract the username from the URL
+	path := list.BySlash(urlValue.Path).Tail()
+	username := path.Head()
+
+	if !strings.HasPrefix(username, "@") {
+		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User", "Username must begin with an '@'", value)
+	}
+
+	username = strings.TrimPrefix(username, "@")
+
+	// If the username is already an objectID, then we can just return it.
+	if userID, err := primitive.ObjectIDFromHex(username); err == nil {
+		return userID, nil
+	}
+
+	// Otherwise, look it up in the database
+	user := model.NewUser()
+
+	if err := service.LoadByUsername(username, &user); err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, "service.User", "Error loading user by username", username)
+	}
+
+	return user.UserID, nil
+}
+
+func (service *User) ActivityPubURL(userID primitive.ObjectID) string {
+	return service.host + "/@" + userID.Hex()
+}
+
+func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
+	return service.host + "/@" + userID.Hex() + "/pub/key"
+}
+
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided user.
-func (service *User) ActivityPubActor(user *model.User) (pub.Actor, error) {
+func (service *User) ActivityPubActor(userID primitive.ObjectID) (pub.Actor, error) {
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByID(user.UserID, &encryptionKey); err != nil {
-		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error loading encryption key", user.UserID)
+	if err := service.keyService.LoadByID(userID, &encryptionKey); err != nil {
+		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error loading encryption key", userID)
 	}
 
 	// Extract the Private Key from the Encryption Key
@@ -434,8 +468,8 @@ func (service *User) ActivityPubActor(user *model.User) (pub.Actor, error) {
 
 	// Return the ActivityPub Actor
 	return pub.Actor{
-		ActorID:     user.ActivityPubURL(),
-		PublicKeyID: user.ActivityPubPublicKeyURL(),
+		ActorID:     service.ActivityPubURL(userID),
+		PublicKeyID: service.ActivityPubPublicKeyURL(userID),
 		PublicKey:   privateKey.PublicKey,
 		PrivateKey:  privateKey,
 	}, nil
@@ -454,18 +488,21 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 	// Trim @domain.name suffix if present
 	username = strings.TrimSuffix(username, "@"+domain.NameOnly(service.host))
 
+	// Trim path suffix if present
+	username = list.First(username, '/')
+
 	// Try to load the user from the database
 	user := model.NewUser()
-	if err := service.LoadByUsername(username, &user); err != nil {
+	if err := service.LoadByToken(username, &user); err != nil {
 		return digit.Resource{}, derp.Wrap(err, "service.Stream.LoadWebFinger", "Error loading user", username)
 	}
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+username).
-		Alias(user.ActivityPubProfileURL()).
+		Alias(user.GetProfileURL()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubProfileURL()).
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.GetProfileURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubAvatarURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
 
@@ -474,19 +511,4 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
 func (service *User) RemoteFollowURL() string {
 	return service.host + "/.ostatus/tunnel?uri={uri}"
-}
-
-/******************************************
- * Helper Utilities
- ******************************************/
-
-func profileAsUserID(profileURL string) string {
-
-	if strings.HasPrefix(profileURL, "@") {
-		profileURL = strings.TrimPrefix(profileURL, "@")
-		return list.First(profileURL, '@')
-	}
-
-	profileURL = strings.TrimSuffix(profileURL, "/")
-	return list.Tail(profileURL, '@')
 }

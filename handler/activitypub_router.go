@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/jsonld"
+	"github.com/benpate/hannibal/streams"
 )
 
 /******************************************
@@ -23,7 +23,7 @@ type ActivityPubRouter struct {
 // ActivityPubRouteHandler is a function that handles a specific type of ActivityPub activity.
 // ActivityPubRouteHandlers are registered with the Router object along with the names of the activity
 // types that they correspond to.
-type ActivityPubRouteHandler func(factory *domain.Factory, activity jsonld.Reader) error
+type ActivityPubRouteHandler func(factory *domain.Factory, activity streams.Document) error
 
 // NewActivityPubRouter creates a new Router object
 func NewActivityPubRouter() ActivityPubRouter {
@@ -48,7 +48,7 @@ func (router *ActivityPubRouter) Add(activityType string, objectType string, rou
 }
 
 // Handle takes an ActivityPub activity and routes it to the appropriate handler
-func (router *ActivityPubRouter) Handle(factory *domain.Factory, activity jsonld.Reader) error {
+func (router *ActivityPubRouter) Handle(factory *domain.Factory, activity streams.Document) error {
 
 	activityType := activity.Type()
 	objectType := activity.Object().Type()

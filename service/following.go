@@ -9,7 +9,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -140,7 +142,7 @@ func (service *Following) List(criteria exp.Expression, options ...option.Option
 func (service *Following) Load(criteria exp.Expression, result *model.Following) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Following", "Error loading Following", criteria)
+		return derp.Wrap(err, "service.Following.Load", "Error loading Following", criteria)
 	}
 
 	return nil
@@ -162,7 +164,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
-		return derp.Wrap(err, "service.Following", "Error saving Following", following, note)
+		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -179,11 +181,11 @@ func (service *Following) Save(following *model.Following, note string) error {
 func (service *Following) Delete(following *model.Following, note string) error {
 
 	if err := service.collection.Delete(following, note); err != nil {
-		return derp.Wrap(err, "service.Following", "Error deleting Following", following, note)
+		return derp.Wrap(err, "service.Following.Delete", "Error deleting Following", following, note)
 	}
 
 	if err := service.streamService.DeleteByOrigin(following.FollowingID, "Deleting with Follow"); err != nil {
-		return derp.Wrap(err, "service.Following", "Error deleting streams for Following", following, note)
+		return derp.Wrap(err, "service.Following.Delete", "Error deleting streams for Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -238,18 +240,18 @@ func (service *Following) ObjectSave(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Save(following, note)
 	}
-	return derp.NewInternalError("service.Following", "ObjectSave", "Invalid object type", object)
+	return derp.NewInternalError("service.Following.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Following) ObjectDelete(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Delete(following, note)
 	}
-	return derp.NewInternalError("service.Following", "ObjectDelete", "Invalid object type", object)
+	return derp.NewInternalError("service.Following.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Following) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Following", "Not Authorized")
+	return derp.NewUnauthorizedError("service.Following.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Following) Schema() schema.Schema {
@@ -323,6 +325,15 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 	return service.LoadByID(userID, followingID, result)
 }
 
+// LoadByURL loads an infividual following using the target URL that is being followed
+func (service *Following) LoadByURL(parentID primitive.ObjectID, url string, result *model.Following) error {
+
+	criteria := exp.Equal("parentId", parentID).
+		AndEqual("url", url)
+
+	return service.Load(criteria, result)
+}
+
 /******************************************
  * Custom Actions
  ******************************************/
@@ -352,4 +363,27 @@ func (service *Following) PurgeInbox(following model.Following) error {
 
 func (service *Following) CallbackURL() string {
 	return service.host + "/.websub"
+}
+
+/******************************************
+ * ActivityPub Methods
+ ******************************************/
+
+func (service *Following) ActivityPubID(following *model.Following) string {
+	return service.host + "/@" + following.UserID.Hex() + "/pub/following/" + following.FollowingID.Hex()
+}
+
+func (service *Following) ActivityPubActorID(following *model.Following) string {
+	return service.host + "/@" + following.UserID.Hex()
+}
+
+func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
+
+	return mapof.Any{
+		"@context": vocab.ContextTypeActivityStreams,
+		"id":       service.ActivityPubID(following),
+		"type":     vocab.ActivityTypeFollow,
+		"actor":    service.ActivityPubActorID(following),
+		"object":   following.URL,
+	}
 }

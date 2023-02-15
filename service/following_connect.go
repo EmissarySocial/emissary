@@ -60,13 +60,6 @@ func (service *Following) connect(following *model.Following) error {
 	// Look for Links to ActivityPub/Feeds/Hubs
 	following.Links = discoverLinks(transaction.ResponseObject, &body)
 
-	// Try to discover/connect to ActivityPub resources
-	if success, err := service.connect_ActivityPub(following, transaction.ResponseObject, &body); success {
-		return nil
-	} else if err != nil {
-		return derp.Wrap(err, location, "Error connecting to ActivityPub", following.URL)
-	}
-
 	// Fall through means the remote server does not support ActivityPub.
 
 	// Inspect the Content-Type header to determine how to parse the response.
@@ -74,6 +67,11 @@ func (service *Following) connect(following *model.Following) error {
 	mediaType, _, _ := mime.ParseMediaType(mimeType)
 
 	switch mediaType {
+
+	// NO-OP for ActivityPub here.  We will subscribe as a "push service"
+	// at the end of the connect method
+	case model.MimeTypeActivityPub:
+		return nil
 
 	// Handle JSONFeeds directly
 	case model.MimeTypeJSONFeed:
@@ -95,7 +93,7 @@ func (service *Following) connect(following *model.Following) error {
 
 	// Otherwise, we can't find a valid feed, so report an error.
 	default:
-		return derp.New(derp.CodeInternalError, location, "Unsupported content type", mimeType)
+		return derp.New(derp.CodeInternalError, location, "Unsupported content type: "+mimeType)
 	}
 
 	// Kool-Aid man says "ooooohhh yeah!"
@@ -162,7 +160,7 @@ func (service *Following) SetStatus(following *model.Following, status string, s
 
 	// Try to save the Following to the database
 	if err := service.collection.Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following", "Error updating following status", following)
+		return derp.Wrap(err, "service.Following.SetStatus", "Error updating following status", following)
 	}
 
 	// Success!!
@@ -234,11 +232,18 @@ func (service *Following) saveToInbox(following *model.Following, message *model
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following) {
 
-	// ActivityPub is handled before RSS data is parsed because it's the new shiny.
+	// ActivityPub is handled first because it is the highest fidelity connection
+	if success, err := service.connect_ActivityPub(following); success {
+		return
+	} else if err != nil {
+		derp.Report(err)
+	}
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
+	// TODO: LOW: Implement Fat Pings
 	if hub := following.GetLink("rel", model.LinkRelationHub); !hub.IsEmpty() {
 		if err := service.connect_WebSub(following, hub); err != nil {
+			derp.Report(err)
 		} else {
 			return
 		}

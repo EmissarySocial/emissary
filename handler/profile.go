@@ -112,6 +112,11 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 
 		// Try to load the User's Outbox
 		actionID := first.String(context.Param("action"), "view")
+
+		if ok, err := handleJSONLD(context, &user); ok {
+			return derp.Wrap(err, location, "Error rendering JSON-LD")
+		}
+
 		renderer, err := render.NewProfile(factory, sterankoContext, &user, actionID)
 
 		if err != nil {
@@ -119,7 +124,7 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 		}
 
 		// Forward to the standard page renderer to complete the job
-		return renderPage(factory, sterankoContext, renderer, actionMethod)
+		return renderHTML(factory, sterankoContext, renderer, actionMethod)
 	}
 }
 

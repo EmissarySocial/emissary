@@ -10,10 +10,10 @@ import (
 	"github.com/benpate/steranko"
 )
 
-// renderPage collects the logic to render complete vs. partial HTML pages.
-func renderPage(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
+// renderHTML collects the logic to render complete vs. partial HTML pages.
+func renderHTML(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
 
-	const location = "handler.renderPage"
+	const location = "handler.renderHTML"
 
 	// If this is a POST, then execute the action pipeline
 	if actionMethod == render.ActionMethodPost {

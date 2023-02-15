@@ -66,7 +66,7 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 		}
 
-		if err := renderPage(factory, sterankoContext, &renderer, actionMethod); err != nil {
+		if err := renderHTML(factory, sterankoContext, &renderer, actionMethod); err != nil {
 			return derp.Wrap(err, location, "Error rendering page")
 		}
 

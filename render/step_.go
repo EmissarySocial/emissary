@@ -60,9 +60,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ForwardTo:
 		return StepForwardTo(s)
 
-	case step.IfActivityPub:
-		return StepIfActivityPub(s)
-
 	case step.IfCondition:
 		return StepIfCondition(s)
 

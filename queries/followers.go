@@ -12,7 +12,7 @@ import (
 
 // CountFollowers returns the total number of followers for a given user
 func CountFollowers(ctx context.Context, followersCollection data.Collection, userID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("journal.deleteDate", 0)
+	criteria := exp.Equal("parentId", userID).AndEqual("journal.deleteDate", 0)
 	return CountRecords(ctx, followersCollection, criteria)
 }
 

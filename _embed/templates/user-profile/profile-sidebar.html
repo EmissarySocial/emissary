@@ -1,6 +1,6 @@
 <div id="profile-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4">
 	<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
-	<link rel="canonical" class="u-url" href="{{.ActivityPubProfileURL}}"></link>
+	<link rel="canonical" class="u-url" href="{{.ProfileURL}}"></link>
 
 	<div hx-get="/@{{.Username}}" hx-push-url="true" role="link" class="hover-trigger space-below" style="position:relative;">
 		{{- if .UserCan "profile-photo" -}}
