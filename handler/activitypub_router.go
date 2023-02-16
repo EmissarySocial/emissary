@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"sync"
+
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -15,9 +17,12 @@ import (
  * with the database.
  ******************************************/
 
+var inboxRouter ActivityPubRouter
+
 // ActivityPubRouter is a simple object that routes incoming ActivityPub activities to the appropriate handler
 type ActivityPubRouter struct {
 	routes map[string]ActivityPubRouteHandler
+	mutex  sync.Mutex
 }
 
 // ActivityPubRouteHandler is a function that handles a specific type of ActivityPub activity.
@@ -44,6 +49,17 @@ func NewActivityPubRouter() ActivityPubRouter {
 // So, you should add all routes before starting the server, for
 // instance, in your app's `init` functions.
 func (router *ActivityPubRouter) Add(activityType string, objectType string, routeHandler ActivityPubRouteHandler) {
+
+	// Lock the router for writing
+	router.mutex.Lock()
+	defer router.mutex.Unlock()
+
+	// Guarantee that the router is initialized
+	if router.routes == nil {
+		router.routes = make(map[string]ActivityPubRouteHandler)
+	}
+
+	// Append the route to the router.
 	router.routes[activityType+"/"+objectType] = routeHandler
 }
 

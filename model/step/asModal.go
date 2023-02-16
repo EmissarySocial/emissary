@@ -9,7 +9,6 @@ import (
 type AsModal struct {
 	SubSteps   []Step
 	Options    []string
-	Class      string
 	Background string
 }
 
@@ -25,7 +24,6 @@ func NewAsModal(stepInfo mapof.Any) (AsModal, error) {
 	return AsModal{
 		SubSteps:   subSteps,
 		Options:    stepInfo.GetSliceOfString("options"),
-		Class:      stepInfo.GetString("class"),
 		Background: stepInfo.GetString("background"),
 	}, nil
 }

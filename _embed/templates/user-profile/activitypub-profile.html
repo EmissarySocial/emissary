@@ -1,0 +1,22 @@
+
+<div class="flex-row">
+	{{- if ne "" .IconURL -}}
+		<div style="width:72px">
+			<img src="{{.IconURL}}" class="circle" style="width:64px;">
+		</div>
+	{{- end -}}
+
+	<div>
+		<h1>{{.Name}}</h1>
+	</div>
+</div>
+
+<div>
+	{{.Summary}}<br>
+	<a href="{{.ID}}" target="_blank">{{icon "link"}} View Profile</a>
+</div>
+
+
+<div class="space-above">
+	<button script="on click send closeModal">Close Window</button>
+</div>

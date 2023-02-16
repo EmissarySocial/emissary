@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {
@@ -19,7 +18,6 @@ func init() {
 func undoFollow(factory *domain.Factory, activity streams.Document) error {
 
 	const location = "handler.activityPub_HandleRequest_Undo_Follow"
-	spew.Dump("undoFollow", activity.Value())
 
 	// Try to load the existing follower record
 	followerService := factory.Follower()

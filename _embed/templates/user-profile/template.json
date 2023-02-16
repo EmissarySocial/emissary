@@ -270,7 +270,7 @@
 		},
 		"inbox-item": {
 			"roles": ["self"],
-			"steps": [{"step":"as-modal", "class":"huge", "steps": [
+			"steps": [{"step":"as-modal", "options":["class:large"], "steps": [
 				{"step":"view-html"}
 			]}]
 		},
@@ -298,6 +298,14 @@
 				{"step":"with-folder", "steps": [
 					{"step":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
 					{"step":"forward-to", "url":"/@me/inbox"}
+				]}
+			]
+		},
+		"activitypub-profile": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"view-activitypub", "file":"activitypub-profile"}
 				]}
 			]
 		}

@@ -59,6 +59,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "sort":
 		return NewSort(stepInfo)
 
+	case "view-activitypub":
+		return NewViewActivityPub(stepInfo)
+
 	case "view-html":
 		return NewViewHTML(stepInfo)
 

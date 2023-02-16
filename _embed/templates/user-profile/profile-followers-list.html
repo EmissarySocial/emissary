@@ -11,17 +11,20 @@
 
 		{{ range $followers }}
 			<tr role="button">
-				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
-					{{icon .MethodIcon }} 
+				<td hx-get="/@me/activitypub-profile?uri={{.Actor.ProfileURL}}" style="width:32px;">
+					<img src="{{.Actor.ImageURL}}" class="circle" style="width:24px;">
 				</td>
-				<td hx-get="/@me/pub/followers/{{.FollowerID.Hex}}">
-					{{ if ne "" .Actor.Name }} 
-						{{- .Actor.Name -}}
-					{{- else if ne "" .Actor.ProfileURL -}}
-						{{- .Actor.ProfileURL -}}
-					{{- else -}}
-						{{- .Actor.InboxURL -}}
-					{{- end -}}
+				<td hx-get="/@me/activitypub-profile?uri={{.Actor.ProfileURL}}">
+					<div>
+						{{ if ne "" .Actor.Name }} 
+							{{- .Actor.Name -}}
+						{{- else if ne "" .Actor.ProfileURL -}}
+							{{- .Actor.ProfileURL -}}
+						{{- else -}}
+							{{- .Actor.InboxURL -}}
+						{{- end -}}
+						{{icon .MethodIcon }}
+					</div>
 				</td>
 				<td class="align-right">
 					{{- if $canBlock -}}

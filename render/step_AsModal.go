@@ -13,7 +13,6 @@ import (
 type StepAsModal struct {
 	SubSteps   []step.Step
 	Options    []string
-	Class      string
 	Background string
 }
 

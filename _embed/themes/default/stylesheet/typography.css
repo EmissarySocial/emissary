@@ -363,11 +363,15 @@ hr {
 }
 
 code {
-    display:block;
     background-color:var(--gray10);
     border:solid 1px var(--gray-20);
     padding:5px 10px;
     white-space:pre-wrap;
+}
+
+pre code,
+code.block {
+    display:block;
 }
 
 code.inline {

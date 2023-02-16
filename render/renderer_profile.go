@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -13,6 +14,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -277,7 +279,21 @@ func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
-func (w Profile) Activity() (model.Message, error) {
+// Message uses the `messageId` URL parameter to load an individual message from the Inbox
+func (w Profile) Message() (model.Message, error) {
+
+	operator := "="
+	param := w.context().QueryParam("messageId")
+
+	if strings.HasPrefix("LT:", param) {
+		operator = "<"
+		param = strings.TrimPrefix("LT:", param)
+	} else if strings.HasPrefix("GT:", param) {
+		operator = ">"
+		param = strings.TrimPrefix("GT:", param)
+	}
+
+	spew.Dump(operator, param)
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {

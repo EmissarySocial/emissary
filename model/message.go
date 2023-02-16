@@ -16,10 +16,8 @@ type Message struct {
 	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Message
 	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Message
 	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
-
-	// Inbox-specific fields
-	FolderID primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"` // Unique ID of the Folder where this Message is stored
-	ReadDate int64              `json:"readDate"     bson:"readDate"`           // Unix timestamp of the date/time when this Message was read by the user
+	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
+	ReadDate    int64              `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read by the user
 
 	journal.Journal `json:"-" bson:"journal"`
 }

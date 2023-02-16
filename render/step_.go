@@ -129,6 +129,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.UploadAttachment:
 		return StepUploadAttachment(s)
 
+	case step.ViewActivityPub:
+		return StepViewActivityPub(s)
+
 	case step.ViewHTML:
 		return StepViewHTML(s)
 

@@ -38,6 +38,9 @@ func init() {
 		// Populate our "Following" record with the NAME and AVATAR of the remote Actor
 		remoteActor := activity.Actor()
 
+		spew.Dump(remoteActor.Value())
+		spew.Dump(remoteActor.IconURL(), remoteActor.ImageURL())
+
 		// Upgrade the "Following" record to ActivityPub
 		following.Label = remoteActor.Name()
 		following.ImageURL = first.String(remoteActor.IconURL(), remoteActor.ImageURL())

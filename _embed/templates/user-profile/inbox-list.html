@@ -9,7 +9,7 @@
 {{- else -}}
 
 	{{- if eq 0 (len $inbox) -}}
-		<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>
+		<hr/>
 
 	{{- else -}}
 
@@ -18,7 +18,7 @@
 		<div hx-get="/@me/inbox-list?document.publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
 		{{- range $inbox -}}
-			<hr style="height:0px; border:none; border-top:solid 1px var(--gray20); margin:24px 0px;"></hr>
+			<hr/>
 
 			<div 
 				id="item_{{.MessageID.Hex}}" 
@@ -26,7 +26,7 @@
 				data-status="{{.Status}}" 
 				data-inboxItemId="{{.MessageID.Hex}}" 
 				style="max-width:640px; cursor:pointer;" 
-				hx-get="/@me/inbox-item?activityId={{.MessageID.Hex}}">
+				hx-get="/@me/inbox-item?messageId={{.MessageID.Hex}}">
 
 				<div class="flex-row" hx-push-url="true">
 
@@ -62,7 +62,7 @@
 											{{ .PublishDate | tinyDate }}
 										</span>
 									</div>
-									<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary | html}}</div>
+									<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary}}</div>
 								{{- end -}}
 
 								{{- if ne .Document.ImageURL "" -}}
@@ -74,7 +74,6 @@
 								{{- end -}}
 
 							</div>
-	
 	
 						</div>
 

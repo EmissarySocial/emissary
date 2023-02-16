@@ -9,12 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var inboxRouter ActivityPubRouter
-
-func init() {
-	inboxRouter = NewActivityPubRouter()
-}
-
 func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_PostInbox"

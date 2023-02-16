@@ -8,13 +8,10 @@ import (
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(factory *domain.Factory, activity streams.Document) error {
-
-		spew.Dump("Received >>>>>>>>>>>>> Follow", activity.Value())
 
 		// Look up the requested user account
 		userService := factory.User()
@@ -56,7 +53,6 @@ func init() {
 		}
 
 		// Send an "Accept" to the requester (queued)
-		spew.Dump("Sending >>>>>>>>>>>>> Accept", activity.Value())
 		queue := factory.Queue()
 		queue.Run(pub.SendAcceptQueueTask(actor, activity))
 

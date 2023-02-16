@@ -8,8 +8,10 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -298,13 +300,17 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 	follower.Method = model.FollowMethodActivityPub
 	follower.ParentID = user.UserID
 
+	spew.Dump("NewActivityPubFollower", actor)
+
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),
 		Name:         actor.Name(),
-		ImageURL:     actor.Image().AsString(),
+		ImageURL:     first.String(actor.IconURL(), actor.ImageURL()),
 		InboxURL:     actor.Get("inbox").AsString(),
 		EmailAddress: actor.Get("email").AsString(),
 	}
+
+	spew.Dump(follower)
 
 	// Try to save the new follower to the database
 	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {
