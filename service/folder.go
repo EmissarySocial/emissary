@@ -205,3 +205,58 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
 
 	return service.Load(criteria, result)
 }
+
+/******************************************
+ * Other Behaviors
+ ******************************************/
+
+func (service *Folder) CreateDefaultFolders(userID primitive.ObjectID) error {
+
+	defaultFolders := []model.Folder{
+		{
+			Label:  "Family",
+			Filter: model.FolderFilterUnread,
+			Layout: model.FolderLayoutChat,
+			Icon:   "people",
+			Group:  1,
+		},
+		{
+			Label:  "Friends",
+			Filter: model.FolderFilterUnread,
+			Layout: model.FolderLayoutSocial,
+			Icon:   "shield",
+			Group:  1,
+		},
+		{
+			Label:  "Social",
+			Filter: model.FolderFilterUnread,
+			Layout: model.FolderLayoutSocial,
+			Icon:   "folder",
+			Group:  1,
+		},
+		{
+			Label:  "News",
+			Filter: model.FolderFilterUnread,
+			Layout: model.FolderLayoutMagazine,
+			Icon:   "inbox",
+			Group:  1,
+		},
+		{
+			Label:  "Archive",
+			Filter: model.FolderFilterAll,
+			Layout: model.FolderLayoutNewspaper,
+			Icon:   "archive",
+			Group:  2,
+		},
+	}
+
+	for index, folder := range defaultFolders {
+		folder.UserID = userID
+		folder.Rank = index
+		if err := service.Save(&folder, "Create default folder"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

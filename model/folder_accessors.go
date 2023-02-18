@@ -37,11 +37,20 @@ func (folder *Folder) GetStringOK(name string) (string, bool) {
 	case "folderId":
 		return folder.FolderID.Hex(), true
 
-	case "userId":
-		return folder.UserID.Hex(), true
+	case "filter":
+		return folder.Filter, true
+
+	case "icon":
+		return folder.Icon, true
 
 	case "label":
 		return folder.Label, true
+
+	case "layout":
+		return folder.Layout, true
+
+	case "userId":
+		return folder.UserID.Hex(), true
 	}
 
 	return "", false
@@ -65,21 +74,33 @@ func (folder *Folder) SetInt(name string, value int) bool {
 func (folder *Folder) SetString(name string, value string) bool {
 	switch name {
 
+	case "filter":
+		folder.Filter = value
+		return true
+
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			folder.FolderID = objectID
 			return true
 		}
 
+	case "icon":
+		folder.Icon = value
+		return true
+
+	case "label":
+		folder.Label = value
+		return true
+
+	case "layout":
+		folder.Layout = value
+		return true
+
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			folder.UserID = objectID
 			return true
 		}
-
-	case "label":
-		folder.Label = value
-		return true
 	}
 
 	return false

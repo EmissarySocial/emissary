@@ -1,0 +1,27 @@
+.button-group {
+	margin-right:8px;
+}
+
+.button-group > button {
+	margin:0px!important;
+	border-radius:0px;
+	border-top: solid 1px var(--gray20);
+	border-right: solid 1px var(--gray20);
+	border-bottom: solid 1px var(--gray20);
+}
+
+.button-group > button:first-child {
+	border-top-left-radius:5px;
+	border-bottom-left-radius:5px;
+	border-left: solid 1px var(--gray20);
+}
+
+.button-group > button:last-child {
+	border-top-right-radius:5px;
+	border-bottom-right-radius:5px;
+}
+
+.button-group > button.selected {
+	background-color: var(--gray50);;
+	color: var(--white);;
+}

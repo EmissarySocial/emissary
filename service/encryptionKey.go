@@ -101,10 +101,6 @@ func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey 
 			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", userID)
 		}
 
-		if err := service.Save(encryptionKey, "Created new encryption key"); err != nil {
-			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error saving new EncryptionKey", userID)
-		}
-
 		return nil
 	}
 
@@ -131,6 +127,10 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 
 	encryptionKey.PrivatePEM = service.encodePrivatePEM(privateKey)
 	encryptionKey.PublicPEM = service.encodePublicPEM(privateKey)
+
+	if err := service.Save(&encryptionKey, "Created"); err != nil {
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", userID)
+	}
 
 	return encryptionKey, nil
 }

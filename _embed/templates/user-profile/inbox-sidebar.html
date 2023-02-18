@@ -1,37 +1,27 @@
-{{- $selected := .QueryParam "selected" -}}
+{{- $folders := .Folders -}}
 {{- $folderID := .QueryParam "folderId" -}}
+{{- if eq "" $folderID -}}
+	{{- $folderID = (index $folders 0).FolderID.Hex -}}
+{{- end -}}
 
 <link rel="stylesheet" href="/.templates/user-profile/stylesheet">
 
-<div id="inbox-sidebar" class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+<div id="inbox-sidebar" class="app-sidebar" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
 	<div class="pos-sticky" style="top:100px;">
-		{{- if eq $selected "inbox" -}}
-			<div role="link" hx-get="/@me/inbox" class="bold">{{icon "folder"}} Unread</div>
-		{{- else -}}
-			<div role="link" hx-get="/@me/inbox">{{icon "folder"}} Unread</div>
-		{{- end -}}
-
-		{{- if eq $selected "inbox-all" -}}
-			<div role="link" hx-get="/@me/inbox-all" class="bold">{{icon "folder"}} All Posts</div>
-		{{- else -}}
-			<div role="link" hx-get="/@me/inbox-all">{{icon "folder"}} All Posts</div>
-		{{- end -}}
-
-		<hr>
 
 		{{- range .Folders -}}
 
-			{{- if and (eq $selected "inbox-folder")  (eq .FolderID.Hex $folderID) -}}
-				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}" class="bold ellipsis">{{icon "folder"}} {{.Label}}</div>
+			{{- if (eq .FolderID.Hex $folderID) -}}
+				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="bold ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- else -}}
-				<div role="link" hx-get="/@me/inbox-folder?folderId={{.FolderID.Hex}}" class="ellipsis">{{icon "folder"}} {{.Label}}</div>
+				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- end -}}
 
 		{{- end -}}
-		<div role="button" hx-get="/@me/inbox-folder-edit?folderId=new">{{icon "add"}} Add a Folder</div>
+		<div role="button" hx-get="/@me/inbox-add">{{icon "add"}} Add a Folder</div>
 		<hr>
-		<div role="button" hx-get="/@me/following-new">{{icon "add"}} Add a Follow</div>
+		<div role="button" hx-get="/@me/following-add">{{icon "add"}} Add a Follow</div>
 		<div role="button" hx-get="/@me/following">{{icon "settings"}} Manage Follows</div>
 	</div>
 

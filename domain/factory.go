@@ -133,6 +133,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.Stream(),
 		factory.EncryptionKey(),
 		factory.Email(),
+		factory.Folder(),
 		factory.Host(),
 	)
 

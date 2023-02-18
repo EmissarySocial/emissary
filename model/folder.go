@@ -11,6 +11,10 @@ type Folder struct {
 	FolderID primitive.ObjectID `json:"folderId" bson:"_id"`    // Unique ID for this folder
 	UserID   primitive.ObjectID `json:"userId"   bson:"userId"` // ID of the User who owns this folder
 	Label    string             `json:"label"    bson:"label"`  // Label of the folder
+	Icon     string             `json:"icon"     bson:"icon"`   // Icon of the folder
+	Layout   string             `json:"layout"   bson:"layout"` // Layout type of the folder
+	Filter   string             `json:"filter"   bson:"filter"` // Filter type of the folder
+	Group    int                `json:"group"    bson:"group"`  // Group number of the folder (starting with 1)
 	Rank     int                `json:"rank"     bson:"rank"`   // Sort order of the folder
 
 	journal.Journal `json:"-" bson:"journal"`

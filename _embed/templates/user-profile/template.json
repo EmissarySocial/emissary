@@ -167,7 +167,7 @@
 
 		"following": {"step":"view-html", "file":"profile-following"},
 		"following-list": {"step":"view-html", "file":"profile-following-list"},
-		"following-new":{
+		"following-add":{
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
@@ -241,28 +241,11 @@
 
 		"inbox": {
 			"roles": ["self"],
-			"steps": [
-				{"step":"set-query-param", "selected":"inbox", "readDate":"0"},
-				{"step":"view-html", "file":"inbox"}
-			]
+			"step": "view-html"
 		},
 		"inbox-sidebar": {
 			"roles": ["self"],
 			"step":"view-html"
-		},
-		"inbox-all": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"set-query-param", "selected":"inbox-all"},
-				{"step":"view-html", "file":"inbox"}
-			]
-		},
-		"inbox-folder": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"set-query-param", "selected":"inbox-folder", "readDate":"0"},
-				{"step":"view-html", "file":"inbox"}
-			]
 		},
 		"inbox-list": {
 			"roles": ["self"],
@@ -273,6 +256,25 @@
 			"steps": [{"step":"as-modal", "options":["class:large"], "steps": [
 				{"step":"view-html"}
 			]}]
+		},
+		"inbox-folder-add": {
+			"roles":["self"],
+			"steps": [
+				{"step":"set-query-param", "folderId":"new"},
+				{"step":"with-folder", "steps": [
+					{"step":"as-modal", "steps": [
+						{"step":"edit", "form": {
+							"type":"layout-vertical",
+							"label":"Add a Folder",
+							"children": [
+								{"type":"text", "path":"label", "label":"Name"}
+							]}
+						},
+						{"step":"save"}
+					]},
+					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+				]}
+			]
 		},
 		"inbox-folder-edit": {
 			"roles":["self"],

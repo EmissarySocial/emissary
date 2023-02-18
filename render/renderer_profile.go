@@ -329,7 +329,7 @@ func (w Profile) Folders() ([]model.Folder, error) {
 	return folderService.QueryByUserID(w.AuthenticatedID())
 }
 
-func (w Profile) Folder() (model.Folder, error) {
+func (w Profile) Folder(folderID string) (model.Folder, error) {
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {
@@ -338,7 +338,6 @@ func (w Profile) Folder() (model.Folder, error) {
 
 	// Try to load the record from the database
 	folder := model.NewFolder()
-	folderID := w._context.QueryParam("folderId")
 	folderService := w._factory.Folder()
 
 	err := folderService.LoadByToken(w.AuthenticatedID(), folderID, &folder)

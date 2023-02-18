@@ -1,32 +1,31 @@
 <div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 
-	<div class="page h-card">
+	<div class="app h-card">
 
-		<div class="pure-g">
+		{{ .View "profile-sidebar" }}
 
-			{{ .View "profile-sidebar" }}
+		<div class="app-content">
 
-			<div class="pure-u-1 pure-u-md-2-3 pure-u-lg-3-4">
-
-				<div role="tablist" class="underlined" hx-push-url="true">
-					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
-					<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
-					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
-					<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
-				</div>
-
-				<br>
-
-				{{- if .UserCan "profile-edit" -}}
-					<div class="table">
-						<div class="link" role="button" hx-get="/@me/following-new">{{icon "add-circle"}} Follow a Person or Website</div>
-					</div>
-				{{- end -}}
-
-				{{.View "following-list"}}
-						
+			<div role="tablist" class="underlined" hx-push-url="true">
+				<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
+				<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
+				<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
+				<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
 			</div>
+
+			<br>
+
+			{{- if .UserCan "profile-edit" -}}
+				<div class="table">
+					<div class="link" role="button" hx-get="/@me/following-add">{{icon "add-circle"}} Follow a Person or Website</div>
+				</div>
+			{{- end -}}
+
+			{{.View "following-list"}}
+					
 		</div>
+
 	</div>
+
 </div>

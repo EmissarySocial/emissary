@@ -29,15 +29,17 @@ type User struct {
 	blocks        data.Collection
 	streamService *Stream
 	emailService  *DomainEmail
+	folderService *Folder
 	keyService    *EncryptionKey
 	host          string
 }
 
 // NewUser returns a fully populated User service
-func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, host string) User {
+func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) User {
 	service := User{
 		streamService: streamService,
 		emailService:  emailService,
+		folderService: folderService,
 		keyService:    keyService,
 		host:          host,
 	}
@@ -85,6 +87,8 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
 
+	isNew := user.IsNew()
+
 	// RULE: Set ProfileURL to the hostname + the username
 	user.ProfileURL = service.host + "/@" + user.UserID.Hex()
 
@@ -101,6 +105,20 @@ func (service *User) Save(user *model.User, note string) error {
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User", "Error saving User", user, note)
+	}
+
+	// RULE: Take these actions when setting up a new user
+	if isNew {
+
+		// RULE: Create a new encryption key for this user
+		if _, err := service.keyService.Create(user.UserID); err != nil {
+			return derp.Wrap(err, "service.User", "Error creating encryption key for User", user, note)
+		}
+
+		// RULE: Create default folders for this user
+		if err := service.folderService.CreateDefaultFolders(user.UserID); err != nil {
+			return derp.Wrap(err, "service.User", "Error creating default folders for User", user, note)
+		}
 	}
 
 	// RULE: If the user has not yet been sent their password, then try to send it now.
