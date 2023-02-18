@@ -24,6 +24,17 @@
 	color:var(--gray80);
 }
 
+.app-sidebar [role=button]:hover,
+.app-sidebar [role=link]:hover {
+	background-color: var(--gray15);
+	color: var(--gray90);
+}
+
+.app-sidebar .selected {
+	font-weight:bold;
+	color: var(--black);
+}
+
 .app-content {
 	flex-grow:1;
 	flex-shrink:1;

@@ -12,7 +12,7 @@ func FollowingSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"followingId":   schema.String{Format: "objectId"},
 			"userId":        schema.String{Format: "objectId"},
-			"folderId":      schema.String{Format: "objectId"},
+			"folderId":      schema.String{Format: "objectId", Required: true},
 			"label":         schema.String{MaxLength: 128},
 			"url":           schema.String{Format: "url", Required: true, MaxLength: 1024},
 			"method":        schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},

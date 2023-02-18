@@ -12,15 +12,14 @@
 
 	<div class="app-content">
 
-		<h1>{{$folder.Label }}</h1>
+		<h1 hx-get="/@me/inbox-folder-edit?folderId={{$folderId}}" role="button" class="hover-trigger">
+			{{$folder.Label}}
+			<span class="link text-lg hover-reveal">{{icon "settings"}}</span>
+		</h1>
 
 		<div class="text-sm space-below">
 			<span class="button-group">
 				<button class="primary" hx-get="/@me/following-add?folderId={{$folderId}}">{{icon "add"}} Follow</button>
-			</span>
-
-			<span class="button-group">
-				<button hx-get="/@me/inbox-folder-edit?folderId={{$folderId}}">Edit Folder</button>
 			</span>
 
 			<span class="button-group">
@@ -57,9 +56,9 @@
 				{{- end -}}
 
 				{{- if eq "UNREAD" $folder.Filter -}}
-					<button type="button" class="selected">Unread</button>
+					<button type="button" class="selected">New</button>
 				{{- else -}}
-					<button>Unread</button>
+					<button>New</button>
 				{{- end -}}
 			</span>
 

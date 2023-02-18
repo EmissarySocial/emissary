@@ -22,6 +22,6 @@
 }
 
 .button-group > button.selected {
-	background-color: var(--gray50);;
-	color: var(--white);;
+	background-color: var(--gray40);;
+	color: var(--white);
 }

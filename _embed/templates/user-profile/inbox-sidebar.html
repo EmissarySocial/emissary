@@ -13,7 +13,7 @@
 		{{- range .Folders -}}
 
 			{{- if (eq .FolderID.Hex $folderID) -}}
-				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="bold ellipsis">{{icon "folder"}} {{.Label}}</div>
+				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="selected ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- else -}}
 				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- end -}}

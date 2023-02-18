@@ -173,7 +173,7 @@
 				{"step":"set-query-param", "followingId":"new"},
 				{"step":"as-modal", "background":"view", "steps":[
 					{"step":"with-following", "steps":[
-						{"step":"set-data", "from-url":["url"]},
+						{"step":"set-data", "from-url":["url", "folderId"]},
 						{"step":"edit", "form":{
 							"type":"layout-vertical",
 							"label":"Follow a Person or Website",
@@ -283,7 +283,7 @@
 					{"step":"as-modal", "steps": [
 						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
-							"label":"Manage Folder",
+							"label":"Edit Folder",
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"}
 							]}
