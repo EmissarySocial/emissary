@@ -294,6 +294,25 @@
 				]}
 			]
 		},
+		"inbox-folder-update":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-folder", "steps":[
+					{"step":"edit", "form": {
+						"type":"layout-vertical",
+						"label":"Edit Folder",
+						"children": [
+							{"type":"text", "path":"label", "label":"Name"},
+							{"type":"text", "path":"layout", "label":"Layout"},
+							{"type":"text", "path":"filter", "label":"Filter"}
+						]}
+					},
+					{"step":"save"}
+				]},
+				{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"},
+				{"step":"trigger-event", "event":{"refreshPage":true}}
+			]
+		},
 		"inbox-folder-delete": {
 			"roles":["self"],
 			"steps": [

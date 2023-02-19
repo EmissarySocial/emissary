@@ -1,0 +1,48 @@
+{{- range . -}}
+<hr/>
+
+<div 
+	id="item_{{.MessageID.Hex}}" 
+	class="inbox-item" 
+	data-status="{{.Status}}" 
+	data-inboxItemId="{{.MessageID.Hex}}" 
+	style="max-width:640px; cursor:pointer;" 
+	hx-get="/@me/inbox-item?messageId={{.MessageID.Hex}}">
+
+	<div class="flex-row" hx-push-url="true">
+
+		<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
+			
+			<div class="flex-row">
+
+				<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:64px;">
+
+				<div>
+					<div class="ellipsis">
+						<span class="bold black">{{.Document.Author.Name}}</span>
+						<span class="text-gray nowrap">
+							&nbsp;
+							{{ icon .Origin.Icon }}
+							{{ .PublishDate | tinyDate }}
+						</span>
+					</div>
+					<div>{{.Document.Summary | html}}</div>
+
+					{{- if ne .Document.ImageURL "" -}}
+						<div style="width:160px;">
+							<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+								<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+							</div>
+						</div>
+					{{- end -}}
+
+				</div>
+
+			</div>
+
+		</div>
+	
+	</div>
+
+</div>
+{{- end -}}

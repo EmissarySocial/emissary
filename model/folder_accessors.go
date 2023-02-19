@@ -12,6 +12,9 @@ func FolderSchema() schema.Element {
 			"folderId": schema.String{Format: "objectId"},
 			"userId":   schema.String{Format: "objectId"},
 			"label":    schema.String{MaxLength: 100},
+			"layout":   schema.String{MaxLength: 100},
+			"filter":   schema.String{MaxLength: 100},
+			"icon":     schema.String{MaxLength: 100},
 			"rank":     schema.Integer{},
 		},
 	}

@@ -1,92 +1,41 @@
+{{- $folderId := .QueryParam "folderId" -}}
+{{- if eq "" $folderId -}}
+	{{- $folders := .Folders -}}
+	{{- $folderId = (index .Folders 0).FolderID.Hex -}}
+{{- end -}}
+
+{{- $folder := .Folder $folderId}}
+
 {{- $inbox := .Inbox -}}
 {{ $isReallyEmpty := .IsInboxEmpty $inbox}}
 
+
 {{- if $isReallyEmpty -}}
 
-	<h2>There are no posts in this inbox.</h2>
-	<button hx-get="/@me/following-add">Follow a Person or Website...</button>
+	<hr>
+	<h2 style="color:var(--gray50);">There are no posts in this inbox.</h2>
+
+{{- else if eq 0 (len $inbox) -}}
+	<hr/>
 
 {{- else -}}
 
-	{{- if eq 0 (len $inbox) -}}
-		<hr/>
+	{{- $lastIndex := subtract (len $inbox) 1 -}}
+	{{- $last := index $inbox $lastIndex -}}
+	<div hx-get="/@me/inbox-list?document.publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
 
-	{{- else -}}
-
-		{{- $lastIndex := subtract (len $inbox) 1 -}}
-		{{- $last := index $inbox $lastIndex -}}
-		<div hx-get="/@me/inbox-list?document.publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
-
-		{{- range $inbox -}}
-			<hr/>
-
-			<div 
-				id="item_{{.MessageID.Hex}}" 
-				class="inbox-item" 
-				data-status="{{.Status}}" 
-				data-inboxItemId="{{.MessageID.Hex}}" 
-				style="max-width:640px; cursor:pointer;" 
-				hx-get="/@me/inbox-item?messageId={{.MessageID.Hex}}">
-
-				<div class="flex-row" hx-push-url="true">
-
-					<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-						
-						<div class="flex-row">
-
-							{{- if ne .Document.Author.ImageURL "" -}}
-								<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:64px;">
-							{{- end -}}
-
-							<div>
-								{{- if eq .Document.Label "" -}}
-									<div class="ellipsis">
-										<span class="bold black">{{.Document.Author.Name}}</span>
-										<span class="text-gray nowrap">
-											&nbsp;
-											{{ icon .Origin.Icon }}
-											{{ .PublishDate | tinyDate }}
-										</span>
-									</div>
-									<div>{{.Document.Summary | html}}</div>
-								{{- else -}}
-									<div class="bold black ellipsis">{{.Document.Label}}</div>
-									<div class="text-gray text-sm space-below flex-row">
-										<span class="ellipsis">
-											{{ icon .Origin.Icon }}
-											{{ .Origin.Label }} &middot;
-											{{ .Document.Author.Name }} 
-											&nbsp;&middot;
-										</span>
-										<span class="nowrap">
-											{{ .PublishDate | tinyDate }}
-										</span>
-									</div>
-									<div class="text-gray ellipsis-block" style="max-height:6em;">{{.Document.Summary}}</div>
-								{{- end -}}
-
-								{{- if ne .Document.ImageURL "" -}}
-									<div style="width:160px;">
-										<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-											<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
-										</div>
-									</div>
-								{{- end -}}
-
-							</div>
-	
-						</div>
-
-					</div>
-				
-				</div>
-
-			</div>
-		{{- end -}}
-
-		<!-- Trigger to load more records at the end of this-->
-		<div id="loading">Just a sec.  Loading more...</div>
-	
+	{{- if eq "SOCIAL" $folder.Layout -}}
+		{{- template "inbox-list-social" $inbox -}}
+	{{- else if eq "CHAT" $folder.Layout -}}
+		{{- template "inbox-list-chat" $inbox -}}
+	{{- else if eq "NEWSPAPER" $folder.Layout -}}
+		{{- template "inbox-list-newspaper" $inbox -}}
+	{{- else if eq "MAGAZINE" $folder.Layout -}}
+		{{- template "inbox-list-magazine" $inbox -}}
 	{{- end -}}
+
+
+	<!-- Trigger to load more records at the end of this-->
+	<div id="loading">Just a sec.  Loading more...</div>
 
 {{- end -}}

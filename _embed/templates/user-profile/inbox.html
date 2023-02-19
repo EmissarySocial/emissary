@@ -6,7 +6,7 @@
 
 {{- $folder := .Folder $folderId}}
 
-<div class="app" hx-get="{{.URL}}" hx-swap="outerHTML" hx-trigger="refreshPage from:window" hx-target="this">
+<div id="app" class="app" hx-get="{{.URL}}" hx-swap="morph:outerHTML" hx-trigger="refreshPage from:window" hx-target="#app" hx-ext="morph">
 
 	{{ .View "inbox-sidebar" }}
 
@@ -22,43 +22,43 @@
 				<button class="primary" hx-get="/@me/following-add?folderId={{$folderId}}">{{icon "add"}} Follow</button>
 			</span>
 
-			<span class="button-group">
+			<span id="layouts" class="button-group">
 				{{- if eq "SOCIAL" $folder.Layout -}}
-					<button type="button" class="selected">{{icon "layout-social"}}</button>
+					<button id="layoutSocial" class="selected">{{icon "layout-social"}}</button>
 				{{- else -}}
-					<button>{{icon "layout-social"}}</button>
+					<button id="layoutSocial" class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"layout":"SOCIAL"}'>{{icon "layout-social"}}</button>
 				{{- end -}}
 
 				{{- if eq "CHAT" $folder.Layout -}}
-					<button type="button" class="selected">{{icon "layout-chat"}}</button>
+					<button id="layoutChat" class="selected">{{icon "layout-chat"}}</button>
 				{{- else -}}
-					<button>{{icon "layout-chat"}}</button>
+					<button id="layoutChat" class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"layout":"CHAT"}'>{{icon "layout-chat"}}</button>
 				{{- end -}}
 
 				{{- if eq "NEWSPAPER" $folder.Layout -}}
-					<button type="button" class="selected">{{icon "layout-newspaper"}}</button>
+					<button id="layoutNewspaper" class="selected">{{icon "layout-newspaper"}}</button>
 				{{- else -}}
-					<button>{{icon "layout-newspaper"}}</button>
+					<button id="layoutNewspaper" class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"layout":"NEWSPAPER"}'>{{icon "layout-newspaper"}}</button>
 				{{- end -}}
 
 				{{- if eq "MAGAZINE" $folder.Layout -}}
-					<button type="button" class="selected">{{icon "layout-magazine"}}</button>
+					<button id="layoutMagazine" class="selected">{{icon "layout-magazine"}}</button>
 				{{- else -}}
-					<button>{{icon "layout-magazine"}}</button>
+					<button id="layoutMagazine" class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"layout":"MAGAZINE"}'>{{icon "layout-magazine"}}</button>
 				{{- end -}}
 			</span>
 
 			<span class="button-group">
 				{{- if eq "ALL" $folder.Filter -}}
-					<button type="button" class="selected">All</button>
+					<button class="selected">All</button>
 				{{- else -}}
-					<button>All</button>
+					<button class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"filter":"ALL"}'>All</button>
 				{{- end -}}
 
 				{{- if eq "UNREAD" $folder.Filter -}}
-					<button type="button" class="selected">New</button>
+					<button class="selected">New</button>
 				{{- else -}}
-					<button>New</button>
+					<button class="" hx-post="/@me/inbox-folder-update?folderId={{$folderId}}" hx-vals='{"filter":"UNREAD"}'>New</button>
 				{{- end -}}
 			</span>
 
@@ -67,6 +67,8 @@
 		{{ .View "inbox-list"}}
 	</div>
 	
+	<script type="application/javascript" src="https://unpkg.com/idiomorph/dist/idiomorph-ext.min.js" defer></script>
+
 	<script type="text/hyperscript">
 		on scroll from window debounced at 500ms
 			tell <div.inbox-item[data-status=Unread] /> in me
@@ -85,3 +87,4 @@
 	</script>
 
 </div>
+
