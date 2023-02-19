@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -300,8 +299,6 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 	follower.Method = model.FollowMethodActivityPub
 	follower.ParentID = user.UserID
 
-	spew.Dump("NewActivityPubFollower", actor)
-
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),
 		Name:         actor.Name(),
@@ -309,8 +306,6 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 		InboxURL:     actor.Get("inbox").AsString(),
 		EmailAddress: actor.Get("email").AsString(),
 	}
-
-	spew.Dump(follower)
 
 	// Try to save the new follower to the database
 	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {

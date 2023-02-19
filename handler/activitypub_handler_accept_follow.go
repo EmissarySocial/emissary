@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/first"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {
@@ -16,8 +15,6 @@ func init() {
 	// This funciton handles ActivityPub "Accept/Follow" activities, meaning that
 	// it is called with a remote server accepts our follow request.
 	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, func(factory *domain.Factory, activity streams.Document) error {
-
-		spew.Dump("Received >>>>>>>>>>>>> Accept/Follow", activity.Value())
 
 		followingService := factory.Following()
 
@@ -37,9 +34,6 @@ func init() {
 
 		// Populate our "Following" record with the NAME and AVATAR of the remote Actor
 		remoteActor := activity.Actor()
-
-		spew.Dump(remoteActor.Value())
-		spew.Dump(remoteActor.IconURL(), remoteActor.ImageURL())
 
 		// Upgrade the "Following" record to ActivityPub
 		following.Label = remoteActor.Name()
