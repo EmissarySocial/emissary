@@ -11,7 +11,6 @@
 	<div class="pos-sticky" style="top:100px;">
 
 		{{- range .Folders -}}
-
 			{{- if (eq .FolderID.Hex $folderID) -}}
 				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="selected ellipsis">{{icon "folder"}} {{.Label}}</div>
 			{{- else -}}
