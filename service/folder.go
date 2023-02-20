@@ -168,7 +168,7 @@ func (service *Folder) Schema() schema.Schema {
  ******************************************/
 
 func (service *Folder) QueryByUserID(userID primitive.ObjectID) ([]model.Folder, error) {
-	return service.Query(exp.Equal("userId", userID), option.SortAsc("group"), option.SortAsc("rank"))
+	return service.Query(exp.Equal("userId", userID), option.SortAsc("rank"))
 }
 
 func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, result *model.Folder) error {
