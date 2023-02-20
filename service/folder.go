@@ -251,6 +251,7 @@ func (service *Folder) CreateDefaultFolders(userID primitive.ObjectID) error {
 	}
 
 	for index, folder := range defaultFolders {
+		folder.FolderID = primitive.NewObjectID()
 		folder.UserID = userID
 		folder.Rank = index
 		if err := service.Save(&folder, "Create default folder"); err != nil {
