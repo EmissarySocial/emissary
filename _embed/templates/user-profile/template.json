@@ -203,23 +203,44 @@
 				{"step":"with-following", "steps":[
 					{"step":"as-modal", "steps":[
 						{"step":"edit", "options":"delete:/@me/following-delete?followingId={{.ObjectID}}", "form":{
-							"type":"layout-vertical",
+							"type": "layout-tabs",
 							"label":"Edit Follow Settings",
-							"children": [
-								{
+							"children":[{
+								"type":"layout-vertical",
+								"label":"Settings",
+								"children": [
+									{
+										"type":"text",
+										"label":"Fediverse Address or Website URL",
+										"path":"url",
+										"description":"Enter the URL of the website you want to subscribe to."
+									},
+									{
+										"type":"select",
+										"label":"Folder",
+										"path":"folderId",
+										"options":{"provider": "folders"},
+										"description": "Automatically add items to this folder."
+									}
+								]
+							}, {
+								"type":"layout-vertical",
+								"label":"Info",
+								"readOnly":true,
+								"children":[{
 									"type":"text",
-									"label":"Fediverse Address or Website URL",
-									"path":"url",
-									"description":"Enter the URL of the website you want to subscribe to."
-								},
-								{
-									"type":"select",
-									"label":"Folder",
-									"path":"folderId",
-									"options":{"provider": "folders"},
-									"description": "Automatically add items to this folder."
-								}
-							]
+									"label":"Method",
+									"path":"method"
+								}, {
+									"type":"text",
+									"label":"Status",
+									"path":"status"
+								}, {
+									"type":"text",
+									"label":"Notes",
+									"path":"statusMessag"
+								}]
+							}]
 						}}
 					]}
 				]}
