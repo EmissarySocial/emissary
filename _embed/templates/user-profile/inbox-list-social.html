@@ -11,39 +11,33 @@
 	hx-get="/@me/inbox-item?messageId={{.MessageID.Hex}}"
 	hx-push-url="true">
 
-	<div class="flex-row" style="max-width:800px;">
+	<div style="max-width:600px;">
 
-		<div style="height:64px; width:64px; flex-grow:0; flex-shrink:0;">
+		<div class="ellipsis">
 			{{- if ne "" .Document.Author.ImageURL -}}
-				<img src="{{.Document.Author.ImageURL}}" class="circle" style="width:64px;">
-			{{- end -}}
-		</div>
-
-		<div style="flex-grow:1;">
-
-			<div class="ellipsis">
-				<span class="bold black">{{.Document.Author.Name}}</span>
-				<span class="text-gray nowrap">
-					&nbsp;
-					{{ icon .Origin.Icon }}
-					{{ .PublishDate | tinyDate }}
-				</span>
-			</div>
-
-			<div>
-				{{- .Document.Summary | html -}}
-			</div>
-
-			{{- if ne .Document.ImageURL "" -}}
-				<div class="space-above" style="max-width:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-					<img src="{{.Document.ImageURL}}" loading="lazy" style="max-width:400x; max-height:300px; object-fit:cover;"/>
-				</div>
+				<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1em;">
 			{{- end -}}
 
+			<span class="bold black">{{.Document.Author.Name}}</span>
+			<span class="text-gray nowrap">
+				&nbsp;
+				{{ icon .Origin.Icon }}
+				{{ .PublishDate | tinyDate }}
+			</span>
 		</div>
-	
+
+		<div>
+			{{- .Document.Summary | html -}}
+		</div>
+
+		{{- if ne .Document.ImageURL "" -}}
+			<div class="space-above" style="position:relative;">
+				<img src="{{.Document.ImageURL}}" loading="lazy" style="max-width:600px; max-height:400px; object-fit:contain;"/>
+			</div>
+		{{- end -}}
+
 	</div>
-
+	
 </div>
 
 {{- end -}}
