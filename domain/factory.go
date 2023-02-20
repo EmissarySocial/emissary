@@ -233,7 +233,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.encryptionKeyService.Refresh(factory.collection(CollectionEncryptionKey))
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.inboxService.Refresh(factory.collection(CollectionActivityStream))
+		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
