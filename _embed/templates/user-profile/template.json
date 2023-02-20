@@ -267,7 +267,8 @@
 							"type":"layout-vertical",
 							"label":"Add a Folder",
 							"children": [
-								{"type":"text", "path":"label", "label":"Name"}
+								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
 						{"step":"save"}
@@ -285,7 +286,8 @@
 							"type":"layout-vertical",
 							"label":"Edit Folder",
 							"children": [
-								{"type":"text", "path":"label", "label":"Name"}
+								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
 						{"step":"save"}

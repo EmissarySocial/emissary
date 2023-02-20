@@ -12,12 +12,14 @@
 
 	<div class="app-content">
 
-		<h1 hx-get="/@me/inbox-folder-edit?folderId={{$folderId}}" role="button" class="hover-trigger">
-			{{$folder.Label}}
-			<span class="link text-lg hover-reveal">{{icon "settings"}}</span>
-		</h1>
+		<div class="float-right">
+			<button class="primary" hx-get="/@me/following-add?folderId={{$folderId}}">{{icon "add"}} Follow</button>
+			<button hx-get="/@me/inbox-folder-edit?folderId={{$folderId}}">Edit Folder</button>
+		</div>
 
-		<div class="text-sm space-below">
+		<h1 style="margin-top:0px;">{{$folder.Label}}</h1>
+
+		<!--div class="text-sm space-below">
 			<span class="button-group">
 				<button class="primary" hx-get="/@me/following-add?folderId={{$folderId}}">{{icon "add"}} Follow</button>
 			</span>
@@ -62,7 +64,7 @@
 				{{- end -}}
 			</span>
 
-		</div>
+		</div-->
 
 		{{ .View "inbox-list"}}
 	</div>
