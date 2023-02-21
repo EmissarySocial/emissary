@@ -13,7 +13,7 @@
 	<div class="text-lg bold black ellipsis">{{$message.Document.Label}}</div>
 
 	{{- if ne $message.Document.ImageURL "" -}}
-		<div class="space-below" style="width:100%; max-width:800px; max-height:600px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+		<div class="space-below" style="width:100%; max-width:800px; max-height:600px;">
 			<img src="{{$message.Document.ImageURL}}" {{if gt $index 3}} loading="lazy" {{end}} style="width:100%; object-fit:cover;"/>
 		</div>
 	{{- end -}}

@@ -4,9 +4,9 @@
 	{{- $folderID = (index $folders 0).FolderID.Hex -}}
 {{- end -}}
 
-<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
+<div id="app-sidebar" class="app-sidebar" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
-<div id="inbox-sidebar" class="app-sidebar" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
+	<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
 
 	<div class="pos-sticky" style="top:100px;">
 
@@ -28,7 +28,7 @@
 		hx-swap="outerHTML" 
 		hx-trigger="refreshSidebar from:body" 
 		hx-push-url="false" 
-		hx-target="#inbox-sidebar">
+		hx-target="#app-sidebar">
 	</div>
 
 </div>
