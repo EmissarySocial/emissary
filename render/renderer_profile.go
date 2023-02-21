@@ -262,7 +262,6 @@ func (w Profile) Inbox() ([]model.Message, error) {
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 
-	spew.Dump("Inbox", criteria)
 	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
 }
 
