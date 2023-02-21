@@ -53,9 +53,9 @@ nav button {
     color: var(--gray80);
 	background-color: var(--white);
     display:inline-block;
-	padding:10px 20px;
+	padding:8px 16px;
 	border-radius: var(--border-radius);
-	margin:10px 0px;
+	margin:8px 0px;
 	overflow-y:hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -65,7 +65,7 @@ nav b {
 	display:inline-block;
 	color: var(--black);
 	font-weight: 700;
-	padding: 10px 0px;
+	padding: 8px 0px;
 	margin:10px 10px 10px 0px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
