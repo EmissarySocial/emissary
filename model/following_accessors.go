@@ -10,19 +10,20 @@ import (
 func FollowingSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"followingId":   schema.String{Format: "objectId"},
-			"userId":        schema.String{Format: "objectId"},
-			"folderId":      schema.String{Format: "objectId", Required: true},
-			"label":         schema.String{MaxLength: 128},
-			"url":           schema.String{Format: "url", Required: true, MaxLength: 1024},
-			"method":        schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusPending, FollowingStatusSuccess, FollowingStatusFailure}},
-			"statusMessage": schema.String{MaxLength: 1024},
-			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1)}, //, Maximum: null.NewInt64(24 * 7)}, Removed because WebSub polling may be longer.
-			"purgeDuration": schema.Integer{Minimum: null.NewInt64(0)},
-			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"errorCount":    schema.Integer{Minimum: null.NewInt64(0)},
+			"followingId":    schema.String{Format: "objectId"},
+			"userId":         schema.String{Format: "objectId"},
+			"folderId":       schema.String{Format: "objectId", Required: true},
+			"label":          schema.String{MaxLength: 128},
+			"url":            schema.String{Format: "url", Required: true, MaxLength: 1024},
+			"method":         schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
+			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusPending, FollowingStatusSuccess, FollowingStatusFailure}},
+			"statusMessage":  schema.String{MaxLength: 1024},
+			"lastPolled":     schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"pollDuration":   schema.Integer{Minimum: null.NewInt64(1)}, //, Maximum: null.NewInt64(24 * 7)}, Removed because WebSub polling may be longer.
+			"purgeDuration":  schema.Integer{Minimum: null.NewInt64(0)},
+			"nextPoll":       schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"errorCount":     schema.Integer{Minimum: null.NewInt64(0)},
+			"doMoveMessages": schema.Boolean{},
 		},
 	}
 }
@@ -30,6 +31,16 @@ func FollowingSchema() schema.Element {
 /******************************************
  * Getter Interfaces
  ******************************************/
+
+func (following Following) GetBoolOK(name string) (bool, bool) {
+
+	switch name {
+	case "doMoveMessages":
+		return following.DoMoveMessages, true
+	}
+
+	return false, false
+}
 
 func (following Following) GetIntOK(name string) (int, bool) {
 
@@ -100,6 +111,17 @@ func (following Following) GetStringOK(name string) (string, bool) {
 /******************************************
  * Setter Interfaces
  ******************************************/
+
+func (following *Following) SetBool(name string, value bool) bool {
+
+	switch name {
+	case "doMoveMessages":
+		following.DoMoveMessages = value
+		return true
+	}
+
+	return false
+}
 
 func (following *Following) SetInt(name string, value int) bool {
 

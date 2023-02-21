@@ -6,30 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// FollowMethodActivityPub represents the ActivityPub subscription
-const FollowMethodActivityPub = "ACTIVITYPUB"
-
-// FollowMethodPoll represents a subscription that must be polled for updates
-const FollowMethodPoll = "POLL"
-
-// FollowMethodWebSub represents a WebSub subscription
-const FollowMethodWebSub = "WEBSUB"
-
-// FollowingStatusNew represents a new following that has not yet been polled
-const FollowingStatusNew = "NEW"
-
-// FollowingStatusLoading represents a following that is currently loading
-const FollowingStatusLoading = "LOADING"
-
-// FollowingStatusPending represents a following that has been partially connected (e.g. WebSub)
-const FollowingStatusPending = "PENDING"
-
-// FollowingStatusSuccess represents a following that has successfully loaded
-const FollowingStatusSuccess = "SUCCESS"
-
-// FollowingStatusFailure represents a following that has failed to load
-const FollowingStatusFailure = "FAILURE"
-
 // Following is a model object that represents a user's following to an external data feed.
 // Currently, the only supported feed types are: RSS, Atom, and JSON Feed.  Others may be added in the future.
 type Following struct {
@@ -49,6 +25,8 @@ type Following struct {
 	NextPoll      int64              `json:"nextPoll"       bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
 	PurgeDuration int                `json:"purgeDuration"  bson:"purgeDuration"` // Time (in days) to wait before purging old messages
 	ErrorCount    int                `json:"errorCount"     bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
+
+	DoMoveMessages bool `json:"-" bson:"-"` // Flag that indicates whether or not to move messages from the old folder to the new folder
 
 	journal.Journal `json:"-" bson:"journal"`
 }

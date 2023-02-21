@@ -3,7 +3,7 @@
 
 <div 
 	id="item_{{.MessageID.Hex}}" 
-	class="inbox-item" 
+	class="inbox-item space-below" 
 	data-status="{{.Status}}" 
 	data-inboxItemId="{{.MessageID.Hex}}" 
 	style="max-width:640px; cursor:pointer;" 
@@ -35,5 +35,7 @@
 	</div>
 
 </div>
+
+<div class="space-below">&nbsp;</div>
 
 {{- end -}}

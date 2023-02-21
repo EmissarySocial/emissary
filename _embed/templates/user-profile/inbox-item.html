@@ -24,6 +24,13 @@
 <hr/>
 
 <div class="content">
+
+	{{- if ne "" $message.Document.ImageURL -}}
+		<div class="space-below">
+			<img src="{{$message.Document.ImageURL}}" style="max-width:100%">
+		</div>
+	{{- end -}}
+
 	<div>{{$message.Document.Summary}}</div>
 	<div>{{$message.ContentHTML | html}}</div>
 </div>

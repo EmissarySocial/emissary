@@ -111,6 +111,27 @@ func (service *Inbox) Delete(message *model.Message, note string) error {
 	return nil
 }
 
+// DeleteMany removes all child streams from the provided stream (virtual delete)
+func (service *Inbox) DeleteMany(criteria exp.Expression, note string) error {
+
+	it, err := service.List(criteria)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Message.Delete", "Error listing streams to delete", criteria)
+	}
+
+	message := model.NewMessage()
+
+	for it.Next(&message) {
+		if err := service.Delete(&message, note); err != nil {
+			return derp.Wrap(err, "service.Message.Delete", "Error deleting message", message)
+		}
+		message = model.NewMessage()
+	}
+
+	return nil
+}
+
 /******************************************
  * Generic Data Methods
  ******************************************/
@@ -189,7 +210,7 @@ func (service *Inbox) ListByFolder(userID primitive.ObjectID, folderID primitive
 
 func (service *Inbox) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("origin.InternalID", followingID)
+		AndEqual("origin.internalId", followingID)
 
 	return service.List(criteria)
 }
@@ -211,6 +232,29 @@ func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *m
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {
+
+	it, err := service.ListByFollowingID(userID, followingID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot list Activities by following", userID, followingID))
+		return
+	}
+
+	message := model.NewMessage()
+	for it.Next(&message) {
+		message.FolderID = folderID
+		if err := service.Save(&message, "UpdateInboxFolders"); err != nil {
+			derp.Report(derp.Wrap(err, "service.Inbox", "Cannot save Inbox Message", message))
+		}
+		message = model.NewMessage()
+	}
+}
+
+func (service *Inbox) DeleteByOrigin(internalID primitive.ObjectID, note string) error {
+	return service.DeleteMany(exp.Equal("origin.internalId", internalID), note)
+}
 
 func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {
 

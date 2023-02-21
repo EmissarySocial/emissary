@@ -207,17 +207,19 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 // DeleteMany removes all child streams from the provided stream (virtual delete)
 func (service *Stream) DeleteMany(criteria exp.Expression, note string) error {
 
-	var stream model.Stream
 	it, err := service.List(notDeleted(criteria))
 
 	if err != nil {
 		return derp.Wrap(err, "service.Stream.Delete", "Error listing streams to delete", criteria)
 	}
 
+	stream := model.NewStream()
+
 	for it.Next(&stream) {
 		if err := service.Delete(&stream, note); err != nil {
 			return derp.Wrap(err, "service.Stream.Delete", "Error deleting stream", stream)
 		}
+		stream = model.NewStream()
 	}
 
 	return nil
@@ -477,10 +479,6 @@ func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expressio
 
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
-}
-
-func (service *Stream) DeleteByOrigin(internalID primitive.ObjectID, note string) error {
-	return service.DeleteMany(exp.Equal("origin.internalId", internalID), note)
 }
 
 // Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.

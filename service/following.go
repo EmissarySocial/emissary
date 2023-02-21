@@ -2,6 +2,7 @@ package service
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -157,6 +158,15 @@ func (service *Following) Save(following *model.Following, note string) error {
 	following.StatusMessage = ""
 	following.ErrorCount = 0
 
+	// RULE: Hacky way to make the URL valid.  This should
+	// probably be handled in the schema URL validation.
+	switch {
+	case strings.HasPrefix(following.URL, "https://"):
+	case strings.HasPrefix(following.URL, "http://"):
+	default:
+		following.URL = "https://" + following.URL
+	}
+
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error cleaning Following", following)
@@ -165,6 +175,11 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
+	}
+
+	// RULE: Update messages if requested by the UX
+	if following.DoMoveMessages {
+		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
 	}
 
 	// Recalculate the follower count for this user
@@ -184,7 +199,7 @@ func (service *Following) Delete(following *model.Following, note string) error 
 		return derp.Wrap(err, "service.Following.Delete", "Error deleting Following", following, note)
 	}
 
-	if err := service.streamService.DeleteByOrigin(following.FollowingID, "Deleting with Follow"); err != nil {
+	if err := service.inboxService.DeleteByOrigin(following.FollowingID, "Parent record deleted"); err != nil {
 		return derp.Wrap(err, "service.Following.Delete", "Error deleting streams for Following", following, note)
 	}
 
@@ -338,7 +353,8 @@ func (service *Following) LoadByURL(parentID primitive.ObjectID, url string, res
  * Custom Actions
  ******************************************/
 
-// PurgeInbox removes all inbox items that are past their expiration date
+// PurgeInbox removes all inbox items that are past their expiration date.
+// TODO: LOW: Should this be in the Inbox service?
 func (service *Following) PurgeInbox(following model.Following) error {
 
 	const location = "service.Following.PurgeFollowing"

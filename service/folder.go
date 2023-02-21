@@ -66,7 +66,7 @@ func (service *Folder) List(criteria exp.Expression, options ...option.Option) (
 func (service *Folder) Load(criteria exp.Expression, result *model.Folder) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Report(derp.Wrap(err, "service.Folder.Load", "Error loading Folder", criteria))
+		return derp.Wrap(err, "service.Folder.Load", "Error loading Folder", criteria)
 	}
 
 	return nil

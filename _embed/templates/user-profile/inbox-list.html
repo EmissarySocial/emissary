@@ -9,7 +9,6 @@
 {{- $inbox := .Inbox -}}
 {{ $isReallyEmpty := .IsInboxEmpty $inbox}}
 
-
 {{- if $isReallyEmpty -}}
 
 	<hr>
@@ -22,7 +21,13 @@
 
 	{{- $lastIndex := subtract (len $inbox) 1 -}}
 	{{- $last := index $inbox $lastIndex -}}
-	<div hx-get="/@me/inbox-list?document.publishDate=GT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
+	<div 
+		hx-get="/@me/inbox-list?folderId={{$folderId}}&document.publishDate=GT:{{$last.PublishDate}}" 
+		hx-push-url="false" 
+		hx-trigger="intersect once" 
+		hx-target="#loading" 
+		hx-swap="outerHTML">
+	</div>
 
 	{{- if eq "SOCIAL" $folder.Layout -}}
 		{{- template "inbox-list-social" $inbox -}}
@@ -32,6 +37,8 @@
 		{{- template "inbox-list-newspaper" $inbox -}}
 	{{- else if eq "MAGAZINE" $folder.Layout -}}
 		{{- template "inbox-list-magazine" $inbox -}}
+	{{- else -}}
+		{{- template "inbox-list-social" $inbox -}}
 	{{- end -}}
 
 

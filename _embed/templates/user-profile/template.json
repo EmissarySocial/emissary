@@ -221,6 +221,12 @@
 										"path":"folderId",
 										"options":{"provider": "folders"},
 										"description": "Automatically add items to this folder."
+									},
+									{
+										"type":"toggle",
+										"label":"Update Messages?",
+										"path":"doMoveMessages",
+										"options":{"true-text":"Yes.  Move all messages to the folder selected above.", "false-text":"No.  Leave messages untouched."}
 									}
 								]
 							}, {
