@@ -2,15 +2,29 @@
 
 <div class="table">
 {{- range $following -}}
-	<div hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}" role="button">
-		<span class="{{.StatusClass}}">{{icon .StatusIcon}}</span>
-		<span>
-		{{- if ne "" .Label -}}
-			{{- .Label -}}
-		{{- else -}}
-			{{- .URL -}}
-		{{- end -}}
-		</span>
+	<div class="flex-row" style="align-items:center" hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}" role="button">
+
+		<div style="width:2em; height:2em;">
+			{{- if ne "" .ImageURL -}}
+				<img src="{{.ImageURL}}" class="circle" style="width:2em;"/>
+			{{- end -}}
+		</div>
+
+		<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
+		<div style="flex-grow:1;">
+			{{- if ne "" .Label -}}
+				{{- .Label -}}
+			{{- else -}}
+				{{- .URL -}}
+			{{- end -}}
+		</div>
+		<div class="align-right">
+			{{- if eq "SUCCESS" .Status -}}
+				{{.Method}} 
+			{{- else -}}
+				<span class="red">{{.Status}}</span>
+			{{- end -}}
+		</div>
 	</div>
 {{- end -}}
 </div>

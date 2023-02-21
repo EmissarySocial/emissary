@@ -18,6 +18,10 @@ const LinkRelationBookmark = "bookmark"
 // https://www.w3.org/TR/websub/#discovery
 const LinkRelationHub = "hub"
 
+// LinkRelationIcon indicates an icon for the current document
+// https://html.spec.whatwg.org/multipage/links.html#rel-icon
+const LinkRelationIcon = "icon"
+
 // LinkRelationInReplyTo indicates that this document is a reply to another document
 // https://www.rfc-editor.org/rfc/rfc4685.html
 const LinkRelationInReplyTo = "in-reply-to"

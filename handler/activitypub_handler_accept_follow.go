@@ -33,11 +33,15 @@ func init() {
 		}
 
 		// Populate our "Following" record with the NAME and AVATAR of the remote Actor
-		remoteActor := activity.Actor()
+		remoteActor, err := activity.Actor().AsObject()
+
+		if err != nil {
+			return derp.Wrap(err, "handler.inboxRouter.Accept.Follow", "Error parsing remote actor", activity.Actor())
+		}
 
 		// Upgrade the "Following" record to ActivityPub
 		following.Label = remoteActor.Name()
-		following.ImageURL = first.String(remoteActor.IconURL(), remoteActor.ImageURL())
+		following.ImageURL = first.String(remoteActor.IconURL(), remoteActor.ImageURL(), following.ImageURL)
 		following.Method = model.FollowMethodActivityPub
 		following.Secret = ""
 		following.PollDuration = 30

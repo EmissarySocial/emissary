@@ -241,6 +241,7 @@ func (user *User) GetProfileURL() string {
 }
 
 func (user *User) ActivityPubAvatarURL() string {
+
 	if user.ImageID.IsZero() {
 		return ""
 	}

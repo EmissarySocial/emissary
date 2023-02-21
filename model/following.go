@@ -37,7 +37,7 @@ type Following struct {
 	UserID        primitive.ObjectID `json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
 	FolderID      primitive.ObjectID `json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
 	Label         string             `json:"label"          bson:"label"`         // Label of this "following" record
-	ImageURL      string             `json:"imageUrl" bson:"imageUrl"`            // URL of an image that represents this "following"
+	ImageURL      string             `json:"imageUrl"       bson:"imageUrl"`      // URL of an image that represents this "following"
 	URL           string             `json:"url"            bson:"url"`           // Human-Facing URL that is being followed.
 	Links         digit.LinkSet      `json:"links"          bson:"links"`         // List of links can be used to update this following.
 	Method        string             `json:"method"         bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)

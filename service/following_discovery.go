@@ -106,7 +106,7 @@ func discoverLinks_HTML(result *digit.LinkSet, response *http.Response, body *by
 		return derp.Wrap(err, location, "Error parsing HTML document")
 	}
 
-	links := htmlDocument.Find("[rel=alternate],[rel=self],[rel=hub]").Nodes
+	links := htmlDocument.Find("[rel=alternate],[rel=self],[rel=hub],[rel=icon]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {
@@ -117,6 +117,14 @@ func discoverLinks_HTML(result *digit.LinkSet, response *http.Response, body *by
 
 		// Special case for WebSub relation types
 		switch relationType {
+		case model.LinkRelationIcon:
+
+			result.Apply(digit.Link{
+				RelationType: model.LinkRelationIcon,
+				Href:         href,
+			})
+			continue
+
 		case model.LinkRelationHub:
 
 			result.Apply(digit.Link{

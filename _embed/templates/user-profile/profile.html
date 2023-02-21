@@ -3,6 +3,9 @@
 
 	<title>{{.DisplayName}}</title>
 
+	<!-- Metadata -->
+	<link rel="icon" href="{{.ImageURL}}"/>
+
 	<!-- ActivityPub links -->
 	<link rel="http://webfinger.net/rel/profile-page" href="{{.ProfileURL}}"/>
 	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/.ostatus/tunnel?uri={uri}">

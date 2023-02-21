@@ -38,6 +38,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Wrap result as a modal dialog
 	io.WriteString(buffer, result)
+
 	return nil
 }
 
