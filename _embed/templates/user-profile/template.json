@@ -262,7 +262,29 @@
 			]
 		},
 
-		"blocks": {"step":"view-html", "file":"profile-blocks"},
+		"blocks": {
+			"roles":["self"],
+			"step":"view-html", 
+			"file":"profile-blocks"
+		},
+		"block-new": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html", "file":"block"}
+				]}
+			]
+		},
+		"block-edit": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"view-html", "file":"block"}
+					]}
+				]}
+			]
+		},
 		"feed": {"step":"view-feed"},
 		"websub": {"step":"websub"},
 
