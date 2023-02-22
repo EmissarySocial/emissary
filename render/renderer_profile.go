@@ -301,6 +301,7 @@ func (w Profile) Inbox(folderID primitive.ObjectID) ([]model.Message, error) {
 	factory := w._factory
 
 	expBuilder := builder.NewBuilder().
+		ObjectID("origin.internalId").
 		Int("readDate").
 		Int("document.publishDate")
 
@@ -348,6 +349,28 @@ func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
 	}
 
 	return true
+}
+
+// FIlteredByFollowing returns the Following record that is being used to filter the Inbox
+func (w Profile) FilteredByFollowing() model.Following {
+
+	result := model.NewFollowing()
+
+	if !w.IsAuthenticated() {
+		return result
+	}
+
+	token := w._context.QueryParam("origin.internalId")
+
+	if followingID, err := primitive.ObjectIDFromHex(token); err == nil {
+		followingService := w._factory.Following()
+
+		if err := followingService.LoadByID(w.AuthenticatedID(), followingID, &result); err == nil {
+			return result
+		}
+	}
+
+	return result
 }
 
 // Message uses the `messageId` URL parameter to load an individual message from the Inbox

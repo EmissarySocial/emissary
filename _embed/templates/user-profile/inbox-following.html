@@ -1,6 +1,6 @@
 {{- $folders := .Folders -}}
 
-<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="true">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 
 	<div class="app h-card">

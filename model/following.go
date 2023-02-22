@@ -102,3 +102,7 @@ func (following *Following) SetLinks(newLinks ...digit.Link) {
 		following.Links.Apply(newLink)
 	}
 }
+
+func (following Following) IsZero() bool {
+	return (following.UserID == primitive.NilObjectID) && (following.FolderID == primitive.NilObjectID)
+}

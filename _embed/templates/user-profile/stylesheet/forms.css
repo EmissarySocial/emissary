@@ -22,7 +22,7 @@
 	border-bottom-right-radius:5px;
 }
 
-.button-group > button.selected {
+button.selected {
 	background-color: var(--gray40);;
 	color: var(--white);
 }

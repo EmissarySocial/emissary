@@ -1,6 +1,6 @@
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected -}}
-
+{{- $filter := .FilteredByFollowing -}}
 <div id="app" class="app" hx-get="{{.URL}}" hx-swap="morph:outerHTML" hx-trigger="refreshPage from:window" hx-target="#app">
 
 	<!-- Sidebar Content -->
@@ -11,8 +11,12 @@
 
 		<div class="float-right text-sm">
 			<button class="primary" hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}">{{icon "add"}} Follow</button>
-			<button class="text-center" title="Load Older Items">&uarr;</button>
-			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}">{{icon "settings"}}</button>
+			{{- if $filter.IsZero -}}
+				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}">{{icon "filter"}} Apply Filters</button>
+			{{- else -}}
+				<button href="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}" class="selected ellipsis" style="max-width:240px;">{{icon "filter-fill"}} Filter: {{$filter.Label}}</button>
+			{{- end -}}
+			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}">{{icon "settings"}} Edit Folder</button>
 		</div>
 
 		<h1 style="margin-top:0px;">{{$folder.Label}}</h1>

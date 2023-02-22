@@ -2,7 +2,7 @@
 
 <div class="table">
 {{- range $following -}}
-	<div class="flex-row" style="align-items:center" role="button">
+	<div class="flex-row" style="align-items:center" role="button" hx-push-url="true">
 
 		<div class="flex-row" style="flex-grow:1">
 
@@ -13,7 +13,7 @@
 			</div>
 
 			<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
-			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="flex-grow:1;">
+			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.internalId={{.FollowingID.Hex}}" style="flex-grow:1;">
 				<div class="ellipsis-block" style="max-height:1.75em;">
 					{{- if ne "" .Label -}}
 						<span class="black bold">{{- .Label -}}</span>
