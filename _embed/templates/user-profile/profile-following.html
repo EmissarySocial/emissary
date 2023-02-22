@@ -14,9 +14,11 @@
 				<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
 			</div>
 
-			<div class="space-below">
-				<button hx-get="/@me/following-add" class="text-sm primary">{{icon "add"}} Follow</button>
-			</div>
+			{{- if .UserCan "following-add" -}}
+				<div class="space-below">
+					<button hx-get="/@me/following-add" class="text-sm primary">{{icon "add"}} Follow</button>
+				</div>
+			{{- end -}}
 
 			{{.View "following-list"}}
 					

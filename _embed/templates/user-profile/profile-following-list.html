@@ -1,42 +1,30 @@
 {{- $following := .Following -}}
+{{- $userCan_FollowingEdit := .UserCan "following-edit" -}}
 
 <div class="table">
 {{- range $following -}}
-	<div class="flex-row" style="align-items:center" role="button">
+	<div class="flex-row" style="align-items:center;" role="button">
 
-		<div class="flex-row" style="flex-grow:1">
-
-			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
-				{{- if ne "" .ImageURL -}}
-					<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
-				{{- end -}}
-			</div>
-
-			<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
-			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="flex-grow:1;">
-				<div class="ellipsis-block" style="max-height:1.75em;">
-					{{- if ne "" .Label -}}
-						<span class="black bold">{{- .Label -}}</span>
-					{{- else -}}
-						{{- .URL -}}
-					{{- end -}}
-				</div>
-				<div class="text-xs text-gray" style="margin:0px;">
-					{{ if eq "SUCCESS" .Status -}}
-						{{ .LastPolled | tinyDate}} &middot;
-						{{.Method}} 
-					{{- else if eq "LOADING" .Status -}}
-						<span class="green">{{.Status}}</span>
-					{{- else -}}
-						<span class="red">{{.Status}}</span>
-					{{- end -}}
-				</div>
-			</div>
+		<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
+			{{- if ne "" .ImageURL -}}
+				<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
+			{{- end -}}
 		</div>
 
-		<div class="align-right">
-			<button hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
+		<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
+		<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" class="ellipsis-block" style="flex-grow:1;">
+			{{- if ne "" .Label -}}
+				{{- .Label -}}
+			{{- else -}}
+				{{- .URL -}}
+			{{- end -}}
 		</div>
+
+		{{- if $userCan_FollowingEdit -}}
+			<div class="align-right">
+				<button hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
+			</div>
+		{{- end -}}
 	</div>
 {{- end -}}
 </div>
