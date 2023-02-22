@@ -1,24 +1,31 @@
 {{$message := .Message}}
 
-<div class="float-right text-xs" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
+<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 	<button script="on click send closeModal">Close</button>
 </div>
 <h1>{{$message.Document.Label}}</h1>
 
 <div class="text-gray space-below">
-	{{ icon $message.Origin.Icon }}
-	{{$message.Document.Author.Name}} &middot; {{ $message.Document.PublishDate | tinyDate }}
+	<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
+		{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
+	</a>
+	&middot; 
+	{{ $message.Document.PublishDate | tinyDate -}}
 </div>
 
 <div class="text-sm">
 
-	<!--
-	<button id="previous" hx-get="/@me/inbox-item?messageId=LT:{{$message.MessageID}}">Previous</button>
-	<button id="next" hx-get="/@me/inbox-item?messageId=GT:{{$message.MessageID}}">Next</button>
-	-->
-	<button data-script="on click go to url '{{$message.Document.URL}}' in new window then trigger closeModal">Visit Website</button>
-	&nbsp; &nbsp; &nbsp;
-	<button hx-get="/@me/block?messageId={{$message.MessageID}}">Block</button>
+	<span class="button-group">
+		<button id="previous" hx-get="/@me/inbox-item?messageId=LT:{{$message.MessageID}}">&laquo; Prev</button>
+		<button id="next" hx-get="/@me/inbox-item?messageId=GT:{{$message.MessageID}}">Next &raquo;</button>
+	</span>
+
+	<span class="button-group">
+		<button data-script="on click go to url '{{$message.Document.URL}}' in new window then trigger closeModal">Visit</button>
+		<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
+		<button hx-get="/@me/block-new?messageId={{$message.MessageID}}">Block</button>
+	</span>
+
 </div>
 
 <hr/>

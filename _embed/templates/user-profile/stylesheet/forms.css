@@ -1,5 +1,6 @@
 .button-group {
 	margin-right:8px;
+	display:inline-flex;
 }
 
 .button-group > button {

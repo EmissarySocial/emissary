@@ -32,7 +32,7 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Message {
 	message.Document = model.DocumentLink{
 		URL:         rssItem.Link,
 		Label:       htmlTools.ToText(rssItem.Title),
-		Summary:     htmlTools.ToText(rssItem.Description),
+		Summary:     rssSummary(rssItem),
 		ImageURL:    rssImageURL(rssItem),
 		Author:      rssAuthor(feed, rssItem),
 		PublishDate: rssDate(rssItem.PublishedParsed),
@@ -85,6 +85,15 @@ func rssToActivity_populate(message *model.Message) {
 
 	// TODO: MEDIUM: Maybe implement h-feed in here?
 	// https://indieweb.org/h-feed
+}
+
+func rssSummary(rssItem *gofeed.Item) string {
+
+	if rssItem.Description != "" {
+		htmlTools.ToText(rssItem.Description)
+	}
+
+	return ""
 }
 
 // rssAuthor returns all information about the actor of an RSS item

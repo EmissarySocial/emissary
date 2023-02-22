@@ -1,11 +1,6 @@
 {{- range $index, $message := . -}}
-<div class="hover-trigger space-below">
+<div class="space-below">
 	<hr/>
-
-	<div class="float-right text-xs hover-reveal">
-		<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
-		<button hx-get="/@me/block-new">Block</button>
-	</div>
 
 	<div 
 		id="item_{{$message.MessageID.Hex}}" 
