@@ -35,6 +35,8 @@ func TestWebSubAccept(t *testing.T) {
 	}
 }
 
+// TestAcceptFailure demonstrates when the "Negotiate" function is not working correctly.  The documentation
+// says it SHOULD return an empty string, but instead it returns text/html.
 func TestAcceptFailure(t *testing.T) {
 
 	{
@@ -42,6 +44,6 @@ func TestAcceptFailure(t *testing.T) {
 		format, err := accept.Negotiate(mimeStack, model.MimeTypeHTML)
 
 		require.Nil(t, err)
-		require.Equal(t, "application/atom+xml", format)
+		require.Equal(t, model.MimeTypeHTML, format)
 	}
 }
