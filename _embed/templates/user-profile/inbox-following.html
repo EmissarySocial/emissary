@@ -1,0 +1,24 @@
+{{- $folders := .Folders -}}
+
+<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
+	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
+
+	<div class="app h-card">
+
+		{{- template "inbox-sidebar" $folders -}}
+
+		<div class="app-content">
+
+			<div class="text-sm float-right">
+				<button hx-get="/@me/following-add" class="primary">{{icon "add"}} Follow</button>
+			</div>
+
+			<h1>Manage Follows</h1>
+
+			{{- template "inbox-following-list" . -}}
+					
+		</div>
+
+	</div>
+
+</div>

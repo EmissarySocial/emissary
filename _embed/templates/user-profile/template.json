@@ -306,6 +306,14 @@
 				{"step":"view-html"}
 			]}]
 		},
+		"inbox-following": {
+			"roles":["self"],
+			"step":"view-html"
+		},
+		"inbox-following-list": {
+			"roles":["self"],
+			"step":"view-html"
+		},
 		"inbox-folder-add": {
 			"roles":["self"],
 			"steps": [
@@ -333,7 +341,7 @@
 					{"step":"as-modal", "steps": [
 						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
-							"label":"Edit Folder",
+							"label":"Folder Settings",
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"},
 								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
@@ -351,7 +359,6 @@
 				{"step":"with-folder", "steps":[
 					{"step":"edit", "form": {
 						"type":"layout-vertical",
-						"label":"Edit Folder",
 						"children": [
 							{"type":"text", "path":"label", "label":"Name"},
 							{"type":"text", "path":"layout", "label":"Layout"},

@@ -391,63 +391,47 @@ func (w Profile) Message() (model.Message, error) {
 }
 
 // Folders returns a slice of all folders owned by the current User
-func (w Profile) Folders() ([]model.Folder, error) {
+func (w Profile) Folders() (model.FolderList, error) {
+
+	result := model.NewFolderList()
 
 	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
-		return []model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
+		return result, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
 	}
 
 	folderService := w._factory.Folder()
-	return folderService.QueryByUserID(w.AuthenticatedID())
+	folders, err := folderService.QueryByUserID(w.AuthenticatedID())
+
+	if err != nil {
+		return result, derp.Wrap(err, "render.Profile.Folders", "Error loading folders")
+	}
+
+	result.Folders = folders
+	return result, nil
 }
 
-// FolderID retrieves the folderID from the URL parameter.  If this param is
-// missing or invalid, then FolderID returns the first folder in the user's list.
-func (w Profile) FolderID() primitive.ObjectID {
+func (w Profile) FoldersWithSelection() (model.FolderList, error) {
 
-	// User must be authenticated to view a folder
-	if !w.IsAuthenticated() {
-		return primitive.NilObjectID
+	// Get Folder List
+	result, err := w.Folders()
+
+	if err != nil {
+		return result, derp.Wrap(err, "render.Profile.FoldersWithSelection", "Error loading folders")
 	}
 
-	// Get the FolderID from the URL query string
-	folderID := w._context.QueryParam("folderId")
+	// Get Selected FolderID
+	token := w._context.QueryParam("folderId")
 
-	if id, err := primitive.ObjectIDFromHex(folderID); err == nil {
-		return id
+	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
+		result.SelectedID = folderID
+		return result, nil
 	}
 
-	// Fall through means that we have an invalid folder param.
-	// In this case, look through the user's folders for the first one.
-	folderService := w._factory.Folder()
-
-	if it, err := folderService.ListByUserID(w.AuthenticatedID()); err != nil {
-		return primitive.NilObjectID
-	} else {
-		folder := model.NewFolder()
-		for it.Next(&folder) {
-			return folder.FolderID
-		}
+	if len(result.Folders) > 0 {
+		result.SelectedID = result.Folders[0].FolderID
+		return result, nil
 	}
 
-	// If there are no folders for this user, return nil.
-	// The UX will need to handle this as an "empty" case.
-	return primitive.NilObjectID
-}
-
-// Folder returns a single folder for the current User
-func (w Profile) Folder(folderID primitive.ObjectID) (model.Folder, error) {
-
-	// Guarantee that the user is signed in
-	if !w.IsAuthenticated() {
-		return model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
-	}
-
-	// Try to load the record from the database
-	folder := model.NewFolder()
-	folderService := w._factory.Folder()
-
-	err := folderService.LoadByID(w.AuthenticatedID(), folderID, &folder)
-	return folder, err
+	return result, derp.NewInternalError("render.Profile.FoldersWithSelection", "No folders found", nil)
 }

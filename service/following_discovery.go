@@ -50,6 +50,7 @@ func discoverLinks_Headers(result *digit.LinkSet, response *http.Response) {
 	for _, link := range linkHeaders {
 
 		switch link.Rel {
+
 		case model.LinkRelationHub:
 			result.Append(digit.Link{
 				MediaType:    model.MagicMimeTypeWebSub,
@@ -57,12 +58,11 @@ func discoverLinks_Headers(result *digit.LinkSet, response *http.Response) {
 				Href:         link.URL,
 			})
 
-		case model.LinkRelationSelf:
+		default:
 			result.Append(digit.Link{
 				RelationType: link.Rel,
 				Href:         link.URL,
 			})
-
 		}
 	}
 }

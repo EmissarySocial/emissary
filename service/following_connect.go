@@ -74,7 +74,7 @@ func (service *Following) connect(following *model.Following) error {
 		return nil
 
 	// Handle JSONFeeds directly
-	case model.MimeTypeJSONFeed:
+	case model.MimeTypeJSONFeed, model.MimeTypeJSON:
 		if err := service.import_JSONFeed(following, transaction.ResponseObject, &body); err != nil {
 			return derp.Wrap(err, location, "Error importing JSONFeed", following.URL)
 		}

@@ -18,7 +18,7 @@ import (
 )
 
 // followingMimeStack lists the preferred mime types for follows
-const followingMimeStack = "application/feed+json; q=1.0, application/json; q=0.9, application/atom+xml; q=0.8, application/rss+xml; q=0.7, application/xml; q=0.6, text/xml; q=0.5, text/html; q=0.4, */*; q=0.1"
+const followingMimeStack = "text/html; q=1.0, application/activity+json; q=0.9, application/feed+json; q=0.8, application/atom+xml; q=0.7, application/rss+xml; q=0.6, text/xml; q=0.5, */*; q=0.1"
 
 // Following manages all interactions with the Following collection
 type Following struct {

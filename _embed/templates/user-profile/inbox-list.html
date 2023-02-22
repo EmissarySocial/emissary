@@ -1,7 +1,7 @@
-{{- $folderID := .FolderID -}}
-{{- $folder := .Folder $folderID}}
+{{- $folders := .FoldersWithSelection}}
+{{- $folder := $folders.Selected}}
 
-{{- $inbox := .Inbox $folderID -}}
+{{- $inbox := .Inbox $folders.SelectedID -}}
 {{ $isReallyEmpty := .IsInboxEmpty $inbox}}
 
 {{- if $isReallyEmpty -}}
@@ -17,7 +17,7 @@
 	{{- $lastIndex := subtract (len $inbox) 1 -}}
 	{{- $last := index $inbox $lastIndex -}}
 	<div 
-		hx-get="/@me/inbox-list?folderId={{$folderID.Hex}}&document.publishDate=GT:{{$last.PublishDate}}" 
+		hx-get="/@me/inbox-list?folderId={{$folders.SelectedID.Hex}}&document.publishDate=GT:{{$last.PublishDate}}" 
 		hx-push-url="false" 
 		hx-trigger="intersect once" 
 		hx-target="#loading" 

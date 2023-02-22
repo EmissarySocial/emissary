@@ -1,9 +1,4 @@
-{{- $folders := .Folders -}}
-{{- $folderID := .QueryParam "folderId" -}}
-{{- if eq "" $folderID -}}
-	{{- $folderID = (index $folders 0).FolderID.Hex -}}
-{{- end -}}
-
+{{- $selectedID := .SelectedID -}}
 <div id="app-sidebar" class="app-sidebar" hx-target="#main" hx-swap="innerHTML" hx-push-url="true">
 
 	<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
@@ -13,7 +8,7 @@
 		<form class="sortable" hx-post="/@me/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
-				{{- if (eq .FolderID.Hex $folderID) -}}
+				{{- if eq $selectedID .FolderID -}}
 					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="selected ellipsis hover-trigger folder">
 						{{icon "folder-fill"}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
@@ -29,10 +24,15 @@
 			{{- end -}}
 
 		</form>
-
 		<div role="button" hx-get="/@me/inbox-folder-add">{{icon "add"}} Add a Folder</div>
+
 		<hr>
-		<div role="button" hx-get="/@me/following">{{icon "settings"}} Manage Follows</div>
+
+		{{- if .HasSelection -}}
+			<div role="button" hx-get="/@me/inbox-following">{{icon "settings"}} Following</div>
+		{{- else -}}
+			<div role="button" hx-get="/@me/inbox-following" class="selected">{{icon "settings-fill"}} Following</div>
+		{{- end -}}
 	</div>
 
 	<div 

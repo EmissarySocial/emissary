@@ -7,20 +7,16 @@
 
 		<div class="app-content">
 
-			{{- if .UserCan "profile-edit" -}}
-				<div role="tablist" class="underlined space-below" hx-push-url="true" hx-ext="morph">
-					<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
-					<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
-					<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
-					<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
-				</div>
-			{{- end -}}
+			<div role="tablist" class="underlined space-below" hx-push-url="true" hx-ext="morph">
+				<span role="tab" hx-get="/@{{.UserID}}">{{icon "outbox"}} Posts</span>
+				<span role="tab" aria-selected="true">{{icon "star-fill"}} Following</span>
+				<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
+				<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
+			</div>
 
-			{{- if .UserCan "profile-edit" -}}
-				<div class="table">
-					<div class="link" role="button" hx-get="/@me/following-add">{{icon "add-circle"}} Follow a Person or Website</div>
-				</div>
-			{{- end -}}
+			<div class="space-below">
+				<button hx-get="/@me/following-add" class="text-sm primary">{{icon "add"}} Follow</button>
+			</div>
 
 			{{.View "following-list"}}
 					

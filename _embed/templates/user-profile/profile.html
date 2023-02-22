@@ -33,8 +33,8 @@
 			{{- end -}}
 
 			{{if .UserCan "outbox-add" -}}
-				<div hx-target="this" hx-swap="outerHTML">
-					<button hx-get="/@me/outbox-add" class="text-sm primary">New Post</button>
+				<div hx-target="this" hx-swap="outerHTML" class="text-sm">
+					<button hx-get="/@me/outbox-add" class="primary">New Post</button>
 				</div>
 			{{- end -}}
 

@@ -82,6 +82,10 @@ func (service Icons) Get(name string) string {
 		return service.get("file-earmark")
 	case "file-fill":
 		return service.get("file-earmark-fill")
+	case "filter":
+		return service.get("filter-circle")
+	case "filter-fill":
+		return service.get("filter-circle-fill")
 	case "flag":
 		return service.get("flag")
 	case "flag-fill":
