@@ -10,17 +10,17 @@
 
 	<div class="pos-sticky" style="top:100px;">
 
-		<form class="sortable" hx-post="/@me/inbox-folder-sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+		<form class="sortable" hx-post="/@me/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
 				{{- if (eq .FolderID.Hex $folderID) -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="selected ellipsis hover-trigger folder">
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="selected ellipsis hover-trigger folder">
 						{{icon "folder-fill"}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">
 					</div>
 				{{- else -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="ellipsis hover-trigger folder">
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="ellipsis hover-trigger folder">
 						{{icon "folder"}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">

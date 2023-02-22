@@ -10,8 +10,8 @@
 	<div class="app-content">
 
 		<div class="float-right">
-			<button class="primary" hx-get="/@me/following-add?folderId={{$folderID}}">{{icon "add"}} Follow</button>
-			<button hx-get="/@me/inbox-folder-edit?folderId={{$folderID}}">Edit Folder</button>
+			<button class="primary" hx-get="/@me/following-add?folderId={{$folderID.Hex}}">{{icon "add"}} Follow</button>
+			<button hx-get="/@me/inbox-folder-edit?folderId={{$folderID.Hex}}">Edit Folder</button>
 		</div>
 
 		<h1 style="margin-top:0px;">{{$folder.Label}}</h1>

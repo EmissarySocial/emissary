@@ -80,6 +80,9 @@ func (step StepSort) Post(renderer Renderer) error {
 
 	}
 
+	// Do not swap on the client side.  We don't want to reload the entire page.
+	renderer.context().Response().Header().Set("HX-Reswap", "none")
+
 	// Done.  Nothing more to do here.
 	return nil
 }
