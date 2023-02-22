@@ -17,13 +17,13 @@
 					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="selected ellipsis hover-trigger folder">
 						{{icon "folder-fill"}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
-						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">
+						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
 					</div>
 				{{- else -}}
 					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="ellipsis hover-trigger folder">
 						{{icon "folder"}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
-						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">
+						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
 					</div>
 				{{- end -}}
 			{{- end -}}
