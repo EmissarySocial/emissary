@@ -292,7 +292,7 @@ func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...
 func (service *Following) QueryByUserID(userID primitive.ObjectID) ([]model.FollowingSummary, error) {
 	result := make([]model.FollowingSummary, 0)
 	criteria := exp.Equal("userId", userID)
-	err := service.collection.Query(&result, notDeleted(criteria))
+	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortDesc("lastPolled"))
 	return result, err
 }
 

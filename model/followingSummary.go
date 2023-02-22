@@ -6,16 +6,16 @@ type FollowingSummary struct {
 	FollowingID primitive.ObjectID `bson:"_id"`
 	URL         string             `bson:"url"`
 	Label       string             `bson:"label"`
+	FolderID    primitive.ObjectID `bson:"folderId"`
 	ImageURL    string             `bson:"imageUrl"`
 	Method      string             `bson:"method"`
 	Status      string             `bson:"status"`
 	LastPolled  int64              `bson:"lastPolled"`
-	NextPoll    int64              `bson:"nextPoll"`
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary
 func FollowingSummaryFields() []string {
-	return []string{"_id", "url", "label", "imageUrl", "method", "status", "lastPolled", "nextPoll"}
+	return []string{"_id", "url", "label", "folderId", "imageUrl", "method", "status", "lastPolled"}
 }
 
 func (summary FollowingSummary) Fields() []string {

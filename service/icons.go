@@ -195,8 +195,10 @@ func (service Icons) Get(name string) string {
 		return service.get("view-stacked")
 
 		// Services
-	case "activity-pub":
-		return service.get("cloud")
+	case "activitypub":
+		return service.get("code-slash")
+	case "activitypub-fill":
+		return service.get("code-slash")
 	case "facebook":
 		return service.get("facebook")
 	case "github":
