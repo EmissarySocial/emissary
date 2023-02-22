@@ -167,20 +167,27 @@ func (service *Folder) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// ListByUserID returns an iterator containing all of the Folders for a given user
+func (service *Folder) ListByUserID(userID primitive.ObjectID) (data.Iterator, error) {
+	return service.List(exp.Equal("userId", userID), option.SortAsc("rank"))
+}
+
+// QueryByUserID returns all folders for a given user
 func (service *Folder) QueryByUserID(userID primitive.ObjectID) ([]model.Folder, error) {
 	return service.Query(exp.Equal("userId", userID), option.SortAsc("rank"))
 }
 
-func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, result *model.Folder) error {
+// LoadByID loads a single stream that matches the provided ID
+func (service *Folder) LoadByID(userID primitive.ObjectID, folderID primitive.ObjectID, result *model.Folder) error {
 
 	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("label", label)
+		Equal("_id", folderID).
+		AndEqual("userId", userID)
 
 	return service.Load(criteria, result)
 }
 
-// LoadByToken locates a single stream that matches the provided token
+// LoadByToken loads a single stream that matches the provided token
 func (service *Folder) LoadByToken(userID primitive.ObjectID, token string, result *model.Folder) error {
 
 	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
@@ -194,6 +201,16 @@ func (service *Folder) LoadByToken(userID primitive.ObjectID, token string, resu
 	}
 
 	return derp.NewBadRequestError("service.Folder", "Invalid token", token)
+}
+
+// LoadByLabel loads a single stream that matches the provided label
+func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, result *model.Folder) error {
+
+	criteria := exp.
+		Equal("userId", userID).
+		AndEqual("label", label)
+
+	return service.Load(criteria, result)
 }
 
 // LoadBySource locates a single stream that matches the provided OriginURL

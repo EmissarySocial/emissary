@@ -68,6 +68,8 @@ func (service Icons) Get(name string) string {
 		return service.get("trash")
 	case "delete-fill":
 		return service.get("trash-fill")
+	case "drag-handle":
+		return service.get("grip-vertical")
 	case "edit":
 		return service.get("pencil-square")
 	case "edit-fill":

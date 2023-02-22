@@ -3,5 +3,11 @@
 }
 
 .content img {
-    width:100%;
+    max-width:100%;
+    margin:0px;
+}
+
+.content figure {
+    margin: 0px;
+    max-width: 100%;
 }

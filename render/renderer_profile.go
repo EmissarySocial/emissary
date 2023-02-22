@@ -149,7 +149,7 @@ func (w Profile) UserCan(actionID string) bool {
 }
 
 /******************************************
- * DATA ACCESSORS
+ * Data Accessors
  ******************************************/
 
 func (w Profile) UserID() string {
@@ -181,10 +181,6 @@ func (w Profile) FollowingCount() int {
 
 func (w Profile) BlockCount() int {
 	return w.user.BlockCount
-}
-
-func (w Profile) FolderID() string {
-	return w.context().QueryParam("folderId")
 }
 
 func (w Profile) DisplayName() string {
@@ -244,11 +240,60 @@ func (w Profile) ActivityPubPublicKeyURL() string {
 }
 
 /******************************************
- * QUERY BUILDERS
+ * Profile / Outbox Methods
  ******************************************/
 
-func (w Profile) Inbox() ([]model.Message, error) {
+func (w Profile) Outbox() *QueryBuilder[model.StreamSummary] {
 
+	queryBuilder := builder.NewBuilder().
+		Int("publishDate")
+
+	criteria := exp.And(
+		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("parentId", w.AuthenticatedID()),
+	)
+
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+
+	return &result
+}
+
+func (w Profile) Followers() *QueryBuilder[model.FollowerSummary] {
+
+	queryBuilder := builder.NewBuilder().
+		String("displayName")
+
+	criteria := exp.And(
+		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("parentId", w.AuthenticatedID()),
+	)
+
+	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+
+	return &result
+}
+
+func (w Profile) Following() ([]model.FollowingSummary, error) {
+
+	userID := w.AuthenticatedID()
+
+	if userID.IsZero() {
+		return nil, derp.NewUnauthorizedError("render.Profile.Following", "Must be signed in to view following")
+	}
+
+	followingService := w._factory.Following()
+
+	return followingService.QueryByUserID(userID)
+}
+
+/******************************************
+ * Inbox Methods
+ ******************************************/
+
+// Inbox returns a slice of messages in the current User's inbox
+func (w Profile) Inbox(folderID primitive.ObjectID) ([]model.Message, error) {
+
+	// Must be authenticated to view any Inbox messages
 	if !w.IsAuthenticated() {
 		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
 	}
@@ -256,18 +301,44 @@ func (w Profile) Inbox() ([]model.Message, error) {
 	factory := w._factory
 
 	expBuilder := builder.NewBuilder().
-		ObjectID("folderId").
 		Int("readDate").
 		Int("document.publishDate")
 
-	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
+	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folderID)
 
 	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
 }
 
+/*
+
+// Inbox returns a slice of messages in the current User's inbox
+func (w Profile) Inbox(folder *model.Folder) ([]model.Message, error) {
+
+	// RULE: Must be authenticated to view any Inbox messages
+	if !w.IsAuthenticated() {
+		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
+	}
+
+	// RULE: Users can only view their own inboxes
+	if folder.UserID != w.AuthenticatedID() {
+		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Folder does not belong to authenticated user")
+	}
+
+	factory := w._factory
+
+	expBuilder := builder.NewBuilder().
+		Int("readDate").
+		Int("document.publishDate")
+
+	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folder.FolderID)
+
+	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
+}*/
+
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
 func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
+
 	if len(inbox) > 0 {
 		return false
 	}
@@ -319,8 +390,10 @@ func (w Profile) Message() (model.Message, error) {
 	return result, nil
 }
 
+// Folders returns a slice of all folders owned by the current User
 func (w Profile) Folders() ([]model.Folder, error) {
 
+	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
 		return []model.Folder{}, derp.NewForbiddenError("render.Profile.Folders", "Not authenticated")
 	}
@@ -329,7 +402,42 @@ func (w Profile) Folders() ([]model.Folder, error) {
 	return folderService.QueryByUserID(w.AuthenticatedID())
 }
 
-func (w Profile) Folder(folderID string) (model.Folder, error) {
+// FolderID retrieves the folderID from the URL parameter.  If this param is
+// missing or invalid, then FolderID returns the first folder in the user's list.
+func (w Profile) FolderID() primitive.ObjectID {
+
+	// User must be authenticated to view a folder
+	if !w.IsAuthenticated() {
+		return primitive.NilObjectID
+	}
+
+	// Get the FolderID from the URL query string
+	folderID := w._context.QueryParam("folderId")
+
+	if id, err := primitive.ObjectIDFromHex(folderID); err == nil {
+		return id
+	}
+
+	// Fall through means that we have an invalid folder param.
+	// In this case, look through the user's folders for the first one.
+	folderService := w._factory.Folder()
+
+	if it, err := folderService.ListByUserID(w.AuthenticatedID()); err != nil {
+		return primitive.NilObjectID
+	} else {
+		folder := model.NewFolder()
+		for it.Next(&folder) {
+			return folder.FolderID
+		}
+	}
+
+	// If there are no folders for this user, return nil.
+	// The UX will need to handle this as an "empty" case.
+	return primitive.NilObjectID
+}
+
+// Folder returns a single folder for the current User
+func (w Profile) Folder(folderID primitive.ObjectID) (model.Folder, error) {
 
 	// Guarantee that the user is signed in
 	if !w.IsAuthenticated() {
@@ -340,49 +448,6 @@ func (w Profile) Folder(folderID string) (model.Folder, error) {
 	folder := model.NewFolder()
 	folderService := w._factory.Folder()
 
-	err := folderService.LoadByToken(w.AuthenticatedID(), folderID, &folder)
+	err := folderService.LoadByID(w.AuthenticatedID(), folderID, &folder)
 	return folder, err
-}
-
-func (w Profile) Outbox() *QueryBuilder[model.StreamSummary] {
-
-	queryBuilder := builder.NewBuilder().
-		Int("publishDate")
-
-	criteria := exp.And(
-		queryBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("parentId", w.AuthenticatedID()),
-	)
-
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
-
-	return &result
-}
-
-func (w Profile) Followers() *QueryBuilder[model.FollowerSummary] {
-
-	queryBuilder := builder.NewBuilder().
-		String("displayName")
-
-	criteria := exp.And(
-		queryBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("parentId", w.AuthenticatedID()),
-	)
-
-	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
-
-	return &result
-}
-
-func (w Profile) Following() ([]model.FollowingSummary, error) {
-
-	userID := w.AuthenticatedID()
-
-	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Profile.Following", "Must be signed in to view following")
-	}
-
-	followingService := w._factory.Following()
-
-	return followingService.QueryByUserID(userID)
 }

@@ -10,11 +10,11 @@
 	hx-get="/@me/inbox-item?messageId={{$message.MessageID.Hex}}"
 	hx-push-url="true">
 
-	<div class="text-lg bold black ellipsis">{{$message.Document.Label}}</div>
+	<h2 class="black ellipsis">{{$message.Document.Label}}</h2>
 
 	{{- if ne $message.Document.ImageURL "" -}}
 		<div class="space-below" style="width:100%; max-width:800px; max-height:600px;">
-			<img src="{{$message.Document.ImageURL}}" {{if gt $index 3}} loading="lazy" {{end}} style="width:100%; object-fit:cover;"/>
+			<img src="{{$message.Document.ImageURL}}" {{if gt $index 3}} loading="lazy" {{end}} style="width:100%; object-fit:cover; border:solid 1px var(--gray20);"/>
 		</div>
 	{{- end -}}
 
@@ -22,7 +22,7 @@
 		{{- $message.Document.Summary -}}
 	</div>
 
-	<div class="text-gray text-sm space-below flex-row">
+	<div class="text-sm space-below flex-row">
 		<span class="ellipsis">
 			{{- icon $message.Origin.Icon }}
 			{{ $message.Origin.Label }} &middot;

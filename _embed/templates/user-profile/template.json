@@ -351,6 +351,14 @@
 				]}
 			]
 		},
+		"inbox-folder-sort":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-folder", "steps":[
+					{"step":"sort"}
+				]}
+			]
+		},
 		"activitypub-profile": {
 			"roles": ["self"],
 			"steps": [

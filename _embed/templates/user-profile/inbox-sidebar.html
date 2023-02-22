@@ -10,14 +10,26 @@
 
 	<div class="pos-sticky" style="top:100px;">
 
-		{{- range .Folders -}}
-			{{- if (eq .FolderID.Hex $folderID) -}}
-				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="selected ellipsis">{{icon "folder"}} {{.Label}}</div>
-			{{- else -}}
-				<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="ellipsis">{{icon "folder"}} {{.Label}}</div>
+		<form class="sortable" hx-post="/@me/inbox-folder-sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+
+			{{- range .Folders -}}
+				{{- if (eq .FolderID.Hex $folderID) -}}
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="selected ellipsis hover-trigger folder">
+						{{icon "folder-fill"}} {{.Label}}
+						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
+						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">
+					</div>
+				{{- else -}}
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" class="ellipsis hover-trigger folder">
+						{{icon "folder"}} {{.Label}}
+						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
+						<input type="hidden" name="folderId" value="{{.FolderID.Hex}}">
+					</div>
+				{{- end -}}
 			{{- end -}}
 
-		{{- end -}}
+		</form>
+
 		<div role="button" hx-get="/@me/inbox-folder-add">{{icon "add"}} Add a Folder</div>
 		<hr>
 		<div role="button" hx-get="/@me/following">{{icon "settings"}} Manage Follows</div>
@@ -30,5 +42,18 @@
 		hx-push-url="false" 
 		hx-target="#app-sidebar">
 	</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+	<script>
+        var sortables = document.querySelectorAll(".sortable");
+        for (var node of sortables) {
+            new Sortable(node, {
+                animation: 150,
+				handle: '.folder-handle',
+                whisperClass: 'folder-whisper'
+            });
+        }
+    </script>
 
 </div>

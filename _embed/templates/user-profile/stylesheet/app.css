@@ -19,9 +19,16 @@
 	max-width: 300px;
 	box-sizing: border-box;
 	background-color:var(--gray04);
-	padding: 12px 24px 24px 24px;
+	padding: 12px 8px;
 	border-right:solid 1px var(--gray15);
 	color:var(--gray80);
+}
+
+.app-sidebar [role=button],
+.app-sidebar [role=link] {
+	display:block;
+	padding: 1px 32px 1px 8px;
+	border-radius:4px;
 }
 
 .app-sidebar [role=button]:hover,
@@ -39,7 +46,7 @@
 	flex-grow:1;
 	flex-shrink:1;
 	min-height:400px;
-	padding:12px 12px;
+	padding:12px 12px 12px 24px;
 }
 
 /******************************************
