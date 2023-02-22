@@ -12,7 +12,7 @@ func TestMessageSchema(t *testing.T) {
 	s := schema.New(MessageSchema())
 
 	table := []tableTestItem{
-		{"activityId", "123456781234567812345678", nil},
+		{"messageId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
 		{"document.label", "DOCUMENT LABEL", nil},
 		{"document.summary", "DOCUMENT SUMMARY", nil},
