@@ -15,16 +15,15 @@
 					<img src="{{.Actor.ImageURL}}" class="circle" style="width:24px;">
 				</td>
 				<td hx-get="/@me/activitypub-profile?uri={{.Actor.ProfileURL}}">
-					<div>
-						{{ if ne "" .Actor.Name }} 
-							{{- .Actor.Name -}}
-						{{- else if ne "" .Actor.ProfileURL -}}
-							{{- .Actor.ProfileURL -}}
-						{{- else -}}
-							{{- .Actor.InboxURL -}}
-						{{- end -}}
-						{{icon .MethodIcon }}
-					</div>
+					{{ if ne "" .Actor.Name }} 
+						{{- .Actor.Name -}}
+					{{- else if ne "" .Actor.ProfileURL -}}
+						{{- .Actor.ProfileURL -}}
+					{{- else -}}
+						{{- .Actor.InboxURL -}}
+					{{- end -}}
+					&nbsp;
+					{{- icon .MethodIcon -}}
 				</td>
 				<td class="align-right">
 					{{- if $canBlock -}}

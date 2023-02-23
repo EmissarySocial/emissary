@@ -1,0 +1,35 @@
+{{ $folderID := .QueryParam "folderId" -}}
+{{- $filterID := .QueryParam "filterId" -}}
+{{- $following := .FollowingByFolder $folderID -}}
+
+<div script="install menu(selected:'{{$filterID}}')">
+
+	<h1>
+		{{- if eq "" $filterID -}}
+			{{- icon "filter" -}}
+		{{- else -}}
+			{{- icon "filter-fill" -}}
+		{{- end }}
+	
+		Filter By Source
+	</h1>
+
+	<div class="space-below">
+
+		<div role="button" class="menu-option" data-filterId="" href="/@me/inbox?folderId={{$folderID}}">
+			<span class="circle" style="background-color:var(--gray30); width:32px; height:32px; margin-right:8px;"></span>
+			All Sources
+		</div>
+
+		{{- range $following -}}
+			{{- $filterID := .FollowingID.Hex -}}
+			<div role="button" class="menu-option" data-filterId="{{$filterID}}" href="/@me/inbox?folderId={{$folderID}}&origin.internalId={{$filterID}}">
+				<img src="{{.ImageURL}}" class="circle" style="width:32px; height:32px; margin-right:8px;">
+				{{.Label}}
+			</div>
+		{{- end -}}
+	</div>
+
+	<button type="button" script="on click send closeModal">Close Window</button>
+
+</div>

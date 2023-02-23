@@ -41,6 +41,9 @@
 	"bundles": {
 		"stylesheet": {
 			"contentType":"text/css"
+		},
+		"hyperscript": {
+			"contentType":"text/hyperscript"
 		}
 	},
 	"actions": {
@@ -290,7 +293,7 @@
 
 		"inbox": {
 			"roles": ["self"],
-			"step": "view-html"
+		"step": "view-html"
 		},
 		"inbox-sidebar": {
 			"roles": ["self"],
@@ -299,6 +302,14 @@
 		"inbox-list": {
 			"roles": ["self"],
 			"step":"view-html"
+		},
+		"inbox-filter":{
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
 		},
 		"inbox-item": {
 			"roles": ["self"],

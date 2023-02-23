@@ -288,10 +288,18 @@ func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...
  * Custom Queries
  ******************************************/
 
-// QueryByUserID returns a slice of all following for a given user
-func (service *Following) QueryByUserID(userID primitive.ObjectID) ([]model.FollowingSummary, error) {
+// QueryByUser returns a slice of all following for a given user
+func (service *Following) QueryByUser(userID primitive.ObjectID) ([]model.FollowingSummary, error) {
 	result := make([]model.FollowingSummary, 0)
 	criteria := exp.Equal("userId", userID)
+	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
+	return result, err
+}
+
+// QueryByFolder returns a slice of all following for a given user
+func (service *Following) QueryByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) ([]model.FollowingSummary, error) {
+	result := make([]model.FollowingSummary, 0)
+	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID)
 	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
 	return result, err
 }
@@ -302,7 +310,7 @@ func (service *Following) ListPollable() (data.Iterator, error) {
 	return service.List(criteria, option.SortAsc("lastPolled"))
 }
 
-// ListByUserID returns an iterator of all following for a given user
+// ListByUserID returns an iterator of all following for a given userID
 func (service *Following) ListByUserID(userID primitive.ObjectID) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID)
 	return service.List(criteria, option.SortAsc("lastPolled"))

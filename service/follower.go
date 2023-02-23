@@ -166,6 +166,16 @@ func (service *Follower) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Follower) ListActivityPubFollowers(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodActivityPub)
+	return service.List(criteria, options...)
+}
+
+func (service *Follower) ListWebSubFollowers(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodWebSub)
+	return service.List(criteria, options...)
+}
+
 func (service *Follower) LoadOrCreate(parentID primitive.ObjectID, actorID string) (model.Follower, error) {
 
 	result := model.NewFollower()

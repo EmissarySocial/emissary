@@ -283,7 +283,29 @@ func (w Profile) Following() ([]model.FollowingSummary, error) {
 
 	followingService := w._factory.Following()
 
-	return followingService.QueryByUserID(userID)
+	return followingService.QueryByUser(userID)
+}
+
+func (w Profile) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
+
+	// Get the UserID from the authentication scope
+	userID := w.AuthenticatedID()
+
+	if userID.IsZero() {
+		return nil, derp.NewUnauthorizedError("render.Profile.FollowingByFolder", "Must be signed in to view following")
+	}
+
+	// Get the followingID from the token
+	followingID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "render.Profile.FollowingByFolder", "Invalid following ID", token)
+	}
+
+	// Try to load the matching records
+	followingService := w._factory.Following()
+	return followingService.QueryByFolder(userID, followingID)
+
 }
 
 /******************************************

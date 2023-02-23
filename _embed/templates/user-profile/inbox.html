@@ -12,9 +12,9 @@
 		<div class="float-right text-sm">
 			<button class="primary" hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}">{{icon "add"}} Follow</button>
 			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}">{{icon "filter"}} Apply Filters</button>
+				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}">{{icon "filter"}} Filter</button>
 			{{- else -}}
-				<button href="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}" class="selected ellipsis" style="max-width:240px;">{{icon "filter-fill"}} Filter: {{$filter.Label}}</button>
+				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}&filterId={{$filter.FollowingID.Hex}}" class="selected ellipsis" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
 			{{- end -}}
 			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}">{{icon "settings"}} Edit Folder</button>
 		</div>
@@ -45,3 +45,4 @@
 
 </div>
 
+<script type="text/hyperscript" src="/.templates/user-profile/hyperscript"></script>
