@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.205

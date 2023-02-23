@@ -15,7 +15,7 @@ func init() {
 
 // undoFollow handles "Undo/Follow" and "Delete/Follow" activitites, which means
 // that this code is called when a remote user unfollows an actor on this server.
-func undoFollow(factory *domain.Factory, activity streams.Document) error {
+func undoFollow(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
 	const location = "handler.activityPub_HandleRequest_Undo_Follow"
 

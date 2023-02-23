@@ -17,6 +17,7 @@ type Message struct {
 	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Message
 	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
 	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
+	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
 	ReadDate    int64              `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read by the user
 
 	journal.Journal `json:"-" bson:"journal"`
@@ -69,11 +70,6 @@ func (activity *Message) Status() string {
 // this server, and is not federated via another server.
 func (activity *Message) IsInternal() bool {
 	return !activity.Origin.InternalID.IsZero()
-}
-
-// PublishDate returns the date that this activity was published.
-func (activity *Message) PublishDate() int64 {
-	return activity.Document.PublishDate
 }
 
 // URL returns the parsed, canonical URL for this Message (as stored in the document)

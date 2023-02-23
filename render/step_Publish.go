@@ -1,9 +1,12 @@
 package render
 
 import (
+	"fmt"
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
 )
 
@@ -52,24 +55,29 @@ func (step StepPublish) publish(renderer *Stream) error {
 	stream := renderer.stream
 
 	publisherService := renderer.factory().Publisher()
-	publisherService.Publish(stream, renderer.AuthenticatedID())
-
-	step.sendWebMentions(renderer)
+	publisherService.Publish(stream, renderer.AuthenticatedID(), step.Role)
 
 	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// sendWebMentionds sends WebMention updates to external websites that are
+// mentioned in this stream.
+// TODO: LOW: Should this be moved to the Publisher service?
 func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
 	const location = "render.StepPublish.sendWebMentions"
 
-	/*
-		// RULE: Don't send mentions on items that require login
-		if !renderer.UserCan(model.MagicRoleAnonymous) {
-			fmt.Println("Skipping mentions because this content is protected by a password")
-			return nil
-		}*/
+	// RULE: Don't send mentions on localhost items
+	if domain.IsLocalhost(renderer.Permalink()) {
+		fmt.Println("Skipping mentions because this content is hosted on localhost")
+		return nil
+	}
+
+	// RULE: Don't send mentions on items that require login
+	if !renderer.UserCan(model.MagicRoleAnonymous) {
+		fmt.Println("Skipping mentions because this content is protected by a password")
+		return nil
+	}
 
 	// Get full HTML for this Stream
 	html, err := renderer.View("view")

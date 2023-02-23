@@ -11,21 +11,20 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(factory *domain.Factory, activity streams.Document) error {
+	inboxRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
 		// Look up the requested user account
 		userService := factory.User()
 
-		// Try to load the user's account
-		user := model.NewUser()
+		// Try to verify the User
 		userID, err := service.ParseProfileURL_UserID(activity.ObjectID())
 
 		if err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Invalid User URL", activity.ObjectID())
 		}
 
-		if err := userService.LoadByID(userID, &user); err != nil {
-			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading user", userID)
+		if userID != user.UserID {
+			return derp.New(500, "handler.activityPub_HandleRequest_Follow", "Invalid User ID", userID, user.UserID)
 		}
 
 		// TODO: CRITICAL: Enforce blocks here.
@@ -41,7 +40,7 @@ func init() {
 
 		// Try to create a new follower record
 		followerService := factory.Follower()
-		if err := followerService.NewActivityPubFollower(&user, follower); err != nil {
+		if err := followerService.NewActivityPubFollower(user, follower); err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error creating new follower", user)
 		}
 

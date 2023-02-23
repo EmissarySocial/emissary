@@ -26,6 +26,12 @@ func (service *Following) connect_ActivityPub(following *model.Following) (bool,
 		return false, nil
 	}
 
+	// Update the Following record with the remote URL
+	following.ProfileURL = remoteProfile.Href
+	if err := service.SetStatus(following, model.FollowingStatusLoading, ""); err != nil {
+		return false, derp.Wrap(err, location, "Error saving following", following)
+	}
+
 	// Try to get the Actor (with encryption keys)
 	actor, err := service.userService.ActivityPubActor(following.UserID)
 

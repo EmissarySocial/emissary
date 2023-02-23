@@ -7,7 +7,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
-	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,14 +26,12 @@ func NewPublisher(streamService *Stream, followerService *Follower, userService 
 	}
 }
 
-func (service Publisher) Publish(stream *model.Stream, userID primitive.ObjectID) error {
+func (service Publisher) Publish(stream *model.Stream, userID primitive.ObjectID, objectType string) error {
 
-	var activity string
-	if stream.PublishDate == 0 {
-		activity = "CREATE"
-	} else {
-		activity = "UPDATE"
-	}
+	spew.Dump("PUBLISH ----------------------", stream, objectType)
+
+	// Determine what we're doing with the published stream (Create/Update/Delete)
+	activityType := service.guessActivityType(stream)
 
 	// Get the current User record
 	user := model.NewUser()
@@ -40,20 +39,25 @@ func (service Publisher) Publish(stream *model.Stream, userID primitive.ObjectID
 		return derp.Wrap(err, "service.Publisher.Publish", "Error loading user", userID)
 	}
 
-	// RULE: Update the stream (if necessary)
-	if err := service.setPublishedData(stream, &user); err != nil {
+	// RULE: Update the stream
+	if err := service.setPublished(stream, &user); err != nil {
 		return derp.Wrap(err, "service.Publisher.Publish", "Error setting published data", stream.ID)
 	}
 
-	// RULE: Send notifications (if necessary)
-	if err := service.notifyFollowers(stream, activity); err != nil {
-		return derp.Wrap(err, "service.Publisher.Publish", "Error sending notifications", stream)
+	// RULE: Send ActivityPub notifications (if necessary)
+	if err := service.notifyFollowers_ActivityPub(stream, activityType, objectType); err != nil {
+		return derp.Wrap(err, "service.Publisher.notifyFollowers", "Error sending ActivityPub notifications", stream)
+	}
+
+	// RULE: Send WebSub notifications (if necessary)
+	if err := service.notifyFollowers_WebSub(stream); err != nil {
+		return derp.Wrap(err, "service.Publisher.notifyFollowers", "Error sending WebSub notifications", stream)
 	}
 
 	return nil
 }
 
-func (service Publisher) Unpublish(stream *model.Stream, userID primitive.ObjectID) error {
+func (service Publisher) Unpublish(stream *model.Stream, userID primitive.ObjectID, objectType string) error {
 
 	// RULE: Set the "UnPublish" date
 	stream.UnPublishDate = time.Now().Unix()
@@ -68,7 +72,7 @@ func (service Publisher) Unpublish(stream *model.Stream, userID primitive.Object
 	}
 
 	// RULE: Send ActivityPub Delete messages to federated peers
-	if err := service.notifyFollowers_ActivityPub(stream, "DELETE"); err != nil {
+	if err := service.notifyFollowers_ActivityPub(stream, vocab.ActivityTypeDelete, objectType); err != nil {
 		return derp.Wrap(err, "service.Publisher.Unpublish", "Error sending ActivityPub messages", stream)
 	}
 
@@ -76,8 +80,8 @@ func (service Publisher) Unpublish(stream *model.Stream, userID primitive.Object
 	return nil
 }
 
-// setPublishData marks this stream as "published"
-func (service Publisher) setPublishedData(stream *model.Stream, user *model.User) error {
+// setPublished marks this stream as "published"
+func (service Publisher) setPublished(stream *model.Stream, user *model.User) error {
 
 	// RULE: IF this stream is not yet published, then set the publish date
 	if stream.PublishDate > time.Now().Unix() {
@@ -100,22 +104,7 @@ func (service Publisher) setPublishedData(stream *model.Stream, user *model.User
 	return nil
 }
 
-// notifyFollowers creates an "outbox-item" `Stream` and sends
-// notifications to all followers of the stream's author
-func (service Publisher) notifyFollowers(stream *model.Stream, action string) error {
-
-	if err := service.notifyFollowers_ActivityPub(stream, action); err != nil {
-		return derp.Wrap(err, "service.Publisher.notifyFollowers", "Error sending ActivityPub notifications", stream)
-	}
-
-	if err := service.notifyFollowers_WebSub(stream); err != nil {
-		return derp.Wrap(err, "service.Publisher.notifyFollowers", "Error sending WebSub notifications", stream)
-	}
-
-	return nil
-}
-
-func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, action string) error {
+func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activityType string, objectType string) error {
 
 	// Load the ActivityPub Actor for this Stream
 	actor, err := service.userService.ActivityPubActor(stream.Document.Author.InternalID)
@@ -125,48 +114,51 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, actio
 	}
 
 	// Get the iterator of followers to notify
-	followers, err := service.followerService.ListActivityPubFollowers(stream.ParentID)
+	followers, err := service.followerService.ListActivityPub(stream.ParentID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Publisher.Publish", "Error loading followers", stream)
 	}
 
 	// Create the document to be sent
-	activityStream := streams.NewDocument(stream.AsActivityStream(), nil)
+	activityStream := stream.AsActivityStream()
+	activityStream["type"] = objectType
 
-	switch action {
-
-	case "CREATE":
-
-		follower := model.NewFollower()
-		for followers.Next(&follower) {
-			derp.Report(pub.SendCreate(actor, activityStream, follower.Actor.ProfileURL))
-			follower = model.NewFollower()
+	follower := model.NewFollower()
+	for followers.Next(&follower) {
+		spew.Dump("Sending ActivityPub message to", follower.Actor.ProfileURL)
+		if err := pub.SendActivity(actor, activityType, activityStream, follower.Actor.ProfileURL); err != nil {
+			return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
 		}
-
-	case "UPDATE":
-
-		follower := model.NewFollower()
-		for followers.Next(&follower) {
-			derp.Report(pub.SendUpdate(actor, activityStream, follower.Actor.ProfileURL))
-			follower = model.NewFollower()
-		}
-
-	case "DELETE":
-
-		follower := model.NewFollower()
-		for followers.Next(&follower) {
-			derp.Report(pub.SendDelete(actor, activityStream, follower.Actor.ProfileURL))
-			follower = model.NewFollower()
-		}
-
-	default:
-		return derp.NewInternalError("service.Publisher.notifyFollowers_ActivityPub", "Unknown action", action)
+		follower = model.NewFollower()
 	}
 
 	return nil
 }
 
+// notifyFOllowers_WebSub sends a WebSub notification to all followers
 func (service Publisher) notifyFollowers_WebSub(stream *model.Stream) error {
+
+	/*
+		followers, err := service.followerService.ListWebSub(stream.ParentID)
+
+		if err != nil {
+			return derp.Wrap(err, "service.Publisher.Publish", "Error loading followers", stream)
+		}
+	*/
+
 	return nil
+}
+
+func (service Publisher) guessActivityType(stream *model.Stream) string {
+
+	if stream.Journal.DeleteDate > 0 {
+		return vocab.ActivityTypeDelete
+	}
+
+	if stream.PublishDate > time.Now().Unix() {
+		return vocab.ActivityTypeCreate
+	}
+
+	return vocab.ActivityTypeUpdate
 }

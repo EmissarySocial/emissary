@@ -35,14 +35,13 @@
 			]
 		},
 		"create":{
-			"roles": ["self"],
 			"steps": [
 				{"step":"view-html", "file":"edit"},
 				{"step":"set-data", "from-form":["document.summary"]},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"document.imageUrl"},
-				{"step":"publish"},
+				{"step":"publish", "role":"Note"},
 				{"step":"refresh-page"}
 			]
 		},
@@ -53,7 +52,7 @@
 					{"step":"view-html", "file":"edit"},
 					{"step":"set-data", "from-form":["document.summary"]},
 					{"step":"save"},
-					{"step":"publish"},
+					{"step":"publish", "role":"Note"},
 					{"step":"refresh-page"}
 				]}
 			]
@@ -62,7 +61,7 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
-				{"step":"publish"},
+				{"step":"unpublish", "role":"Note"},
 				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]
 		}

@@ -33,13 +33,13 @@ func MicroformatToMessage(feed *microformats.Microformat, entry *microformats.Mi
 	// Get the publish date from the entry
 	if published := MicroformatPropertyToString(entry, "published"); published != "" {
 		if publishDate, err := time.Parse(time.RFC3339, published); err == nil {
-			message.Document.PublishDate = publishDate.Unix()
+			message.PublishDate = publishDate.Unix()
 		}
 	}
 
 	// Default PublishDate just in case
-	if message.Document.PublishDate == 0 {
-		message.Document.PublishDate = time.Now().Unix()
+	if message.PublishDate == 0 {
+		message.PublishDate = time.Now().Unix()
 	}
 
 	return message

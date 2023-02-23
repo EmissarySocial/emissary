@@ -90,7 +90,7 @@
 				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step":"set-state", "state":"published"},
 				{"step":"save", "message":"Published by {{.Author}}"},
-				{"step":"publish", "role":"article"},
+				{"step":"publish", "role":"Article"},
 				{"step":"refresh-page"}
 			]
 		},
@@ -110,7 +110,7 @@
 			"steps": [
 				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step":"promote-draft"},
-				{"step":"publish", "role":"article"},
+				{"step":"publish", "role":"Article"},
 				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
 		},
@@ -148,7 +148,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"delete", "title":"Delete this Article?", "message":"All content and comments will be lost.  There is NO UNDO."},
-				{"step":"unpublish"},
+				{"step":"unpublish", "role":"Article"},
 				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		}

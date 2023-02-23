@@ -7,7 +7,7 @@
 		{{- if .UserCan "profile-photo" -}}
 			<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
 			<link rel="stylesheet" href="/static/nebula/uploader.css"/>
-			<button hx-get="/@me/profile-photo" role="button" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
+			<button type="button" hx-get="/@me/profile-photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
 		{{- if ne "" .ActivityPubAvatarURL -}}
@@ -50,7 +50,7 @@
 		{{- if .UserCan "profile-edit"  -}}
 			<div class="float-right">
 				{{- if .UserCan "profile-links" -}}
-					<button hx-get="/@me/profile-links" role="button" class="text-xs vertical-space-none">Edit</button>
+					<button type="button" hx-get="/@me/profile-links" class="text-xs vertical-space-none">Edit</button>
 				{{- end -}}
 			</div>
 		{{- end -}}

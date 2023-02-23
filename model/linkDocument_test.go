@@ -4,81 +4,28 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDocumentLink(t *testing.T) {
 
-	document := NewDocumentLink()
+	origin := NewDocumentLink()
+
 	s := schema.New(DocumentLinkSchema())
 
-	require.Nil(t, s.Set(&document, "internalId", "000000000000000000000001"))
-	require.Nil(t, s.Set(&document, "author.name", "PERSON"))
-	require.Nil(t, s.Set(&document, "url", "http://document.url"))
-	require.Nil(t, s.Set(&document, "type", "TYPE"))
-	require.Nil(t, s.Set(&document, "label", "LABEL"))
-	require.Nil(t, s.Set(&document, "summary", "SUMMARY"))
-	require.Nil(t, s.Set(&document, "imageUrl", "http://image.url"))
-	require.Nil(t, s.Set(&document, "publishDate", "1"))
-	require.Nil(t, s.Set(&document, "updateDate", "2"))
-	require.NotNil(t, s.Set(&document, "missing", "missing"))
-
-	{
-		value, err := s.Get(&document, "internalId")
-		require.Nil(t, err)
-		require.Equal(t, "000000000000000000000001", value)
+	table := []tableTestItem{
+		{"internalId", "123412341234123412341234", nil},
+		{"author.name", "TEST-AUTHOR", nil},
+		{"author.profileUrl", "https://test.author.url", nil},
+		{"author.imageUrl", "https://test.author.image.url", nil},
+		{"url", "https://test.url", nil},
+		{"type", "TEST-TYPE", nil},
+		{"label", "TEST-LABEL", nil},
+		{"summary", "TEST-SUMMARY", nil},
+		{"imageUrl", "https://test.image.url", nil},
+		{"publishDate", int64(1234567890), nil},
+		{"unpublishDate", int64(1234567890), nil},
+		{"updateDate", int64(1234567890), nil},
 	}
 
-	{
-		value, err := s.Get(&document, "author.name")
-		require.Nil(t, err)
-		require.Equal(t, "PERSON", value)
-	}
-
-	{
-		value, err := s.Get(&document, "url")
-		require.Nil(t, err)
-		require.Equal(t, "http://document.url", value)
-	}
-
-	{
-		value, err := s.Get(&document, "type")
-		require.Nil(t, err)
-		require.Equal(t, "TYPE", value)
-	}
-
-	{
-		value, err := s.Get(&document, "label")
-		require.Nil(t, err)
-		require.Equal(t, "LABEL", value)
-	}
-
-	{
-		value, err := s.Get(&document, "summary")
-		require.Nil(t, err)
-		require.Equal(t, "SUMMARY", value)
-	}
-
-	{
-		value, err := s.Get(&document, "imageUrl")
-		require.Nil(t, err)
-		require.Equal(t, "http://image.url", value)
-	}
-
-	{
-		value, err := s.Get(&document, "publishDate")
-		require.Nil(t, err)
-		require.Equal(t, int64(1), value)
-	}
-
-	{
-		value, err := s.Get(&document, "updateDate")
-		require.Nil(t, err)
-		require.Equal(t, int64(2), value)
-	}
-
-	{
-		_, err := s.Get(&document, "missing")
-		require.NotNil(t, err)
-	}
+	tableTest_Schema(t, &s, &origin, table)
 }

@@ -15,15 +15,14 @@ const DocumentTypeLike = "Like"
 const DocumentTypeFollow = "Follow"
 
 type DocumentLink struct {
-	InternalID  primitive.ObjectID `json:"internalId"  bson:"internalId,omitempty"`  // Unique ID of a document in this database
-	Author      PersonLink         `json:"author"      bson:"author,omitempty"`      // Author of this document
-	URL         string             `json:"url"         bson:"url,omitempty"`         // URL of the original document
-	Type        string             `json:"type"        bson:"type,omitempty"`        // ActivityStream type of document (e.g. "Article", "Note", "Image", etc.)
-	Label       string             `json:"label"       bson:"label,omitempty"`       // Label/Title of the document
-	Summary     string             `json:"summary"     bson:"summary,omitempty"`     // Brief summary of the document
-	ImageURL    string             `json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
-	PublishDate int64              `json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this document was first published
-	UpdateDate  int64              `json:"updateDate"  bson:"updateDate,omitempty"`  // Unix timestamp of the date/time when this document was last updated
+	InternalID primitive.ObjectID `json:"internalId"    bson:"internalId,omitempty"` // Unique ID of a document in this database
+	Author     PersonLink         `json:"author"        bson:"author,omitempty"`     // Author of this document
+	URL        string             `json:"url"           bson:"url,omitempty"`        // URL of the original document
+	Type       string             `json:"type"          bson:"type,omitempty"`       // ActivityStream type of document (e.g. "Article", "Note", "Image", etc.)
+	Label      string             `json:"label"         bson:"label,omitempty"`      // Label/Title of the document
+	Summary    string             `json:"summary"       bson:"summary,omitempty"`    // Brief summary of the document
+	ImageURL   string             `json:"imageUrl"      bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
+	UpdateDate int64              `json:"updateDate"    bson:"updateDate,omitempty"` // Unix timestamp of the date/time when this document was last updated
 }
 
 func NewDocumentLink() DocumentLink {

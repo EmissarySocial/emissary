@@ -61,7 +61,7 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 	return &feeds.JSONItem{
 		Id:            url,
 		Url:           url,
-		ExternalUrl:   stream.Origin.URL,
+		ExternalUrl:   url,
 		Title:         stream.Document.Label,
 		Summary:       stream.Document.Summary,
 		Image:         stream.Document.ImageURL,

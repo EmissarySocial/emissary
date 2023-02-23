@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 )
@@ -28,7 +29,7 @@ type ActivityPubRouter struct {
 // ActivityPubRouteHandler is a function that handles a specific type of ActivityPub activity.
 // ActivityPubRouteHandlers are registered with the Router object along with the names of the activity
 // types that they correspond to.
-type ActivityPubRouteHandler func(factory *domain.Factory, activity streams.Document) error
+type ActivityPubRouteHandler func(factory *domain.Factory, user *model.User, activity streams.Document) error
 
 // NewActivityPubRouter creates a new Router object
 func NewActivityPubRouter() ActivityPubRouter {
@@ -64,25 +65,25 @@ func (router *ActivityPubRouter) Add(activityType string, objectType string, rou
 }
 
 // Handle takes an ActivityPub activity and routes it to the appropriate handler
-func (router *ActivityPubRouter) Handle(factory *domain.Factory, activity streams.Document) error {
+func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
 	activityType := activity.Type()
 	objectType := activity.Object().Type()
 
 	if routeHandler, ok := router.routes[activityType+"/"+objectType]; ok {
-		return routeHandler(factory, activity)
+		return routeHandler(factory, user, activity)
 	}
 
 	if routeHandler, ok := router.routes[activityType+"/*"]; ok {
-		return routeHandler(factory, activity)
+		return routeHandler(factory, user, activity)
 	}
 
 	if routeHandler, ok := router.routes["*/"+objectType]; ok {
-		return routeHandler(factory, activity)
+		return routeHandler(factory, user, activity)
 	}
 
 	if routeHandler, ok := router.routes["*/*"]; ok {
-		return routeHandler(factory, activity)
+		return routeHandler(factory, user, activity)
 	}
 
 	return derp.NewBadRequestError("pub.Router.Handle", "No route found for activity", activity.Value())

@@ -17,6 +17,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"folderId", "876543218765432187654321", nil},
 		{"label", "LABEL", nil},
 		{"url", "http://url.url", nil},
+		{"profileUrl", "https://other.url", nil},
 		{"method", "METHOD", nil},
 		{"status", "STATUS", nil},
 		{"statusMessage", "STATUS-MESSAGE", nil},

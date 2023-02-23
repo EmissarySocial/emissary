@@ -349,10 +349,10 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 }
 
 // LoadByURL loads an infividual following using the target URL that is being followed
-func (service *Following) LoadByURL(parentID primitive.ObjectID, url string, result *model.Following) error {
+func (service *Following) LoadByURL(parentID primitive.ObjectID, profileUrl string, result *model.Following) error {
 
-	criteria := exp.Equal("parentId", parentID).
-		AndEqual("url", url)
+	criteria := exp.Equal("userId", parentID).
+		AndEqual("profileUrl", profileUrl)
 
 	return service.Load(criteria, result)
 }

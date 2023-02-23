@@ -24,15 +24,13 @@
 	color:var(--gray80);
 }
 
-.app-sidebar [role=button],
-.app-sidebar [role=link] {
+.app-sidebar .menu-item {
 	display:block;
 	padding: 1px 32px 1px 8px;
 	border-radius:4px;
 }
 
-.app-sidebar [role=button]:hover,
-.app-sidebar [role=link]:hover {
+.app-sidebar .menu-item:hover {
 	background-color: var(--gray15);
 	color: var(--gray90);
 }

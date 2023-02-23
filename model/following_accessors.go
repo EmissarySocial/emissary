@@ -15,6 +15,7 @@ func FollowingSchema() schema.Element {
 			"folderId":       schema.String{Format: "objectId", Required: true},
 			"label":          schema.String{MaxLength: 128},
 			"url":            schema.String{Format: "url", Required: true, MaxLength: 1024},
+			"profileUrl":     schema.String{Format: "url", MaxLength: 1024},
 			"method":         schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusPending, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage":  schema.String{MaxLength: 1024},
@@ -93,6 +94,9 @@ func (following Following) GetStringOK(name string) (string, bool) {
 
 	case "url":
 		return following.URL, true
+
+	case "profileUrl":
+		return following.ProfileURL, true
 
 	case "method":
 		return following.Method, true
@@ -186,6 +190,10 @@ func (following *Following) SetString(name string, value string) bool {
 
 	case "url":
 		following.URL = value
+		return true
+
+	case "profileUrl":
+		following.ProfileURL = value
 		return true
 
 	case "method":

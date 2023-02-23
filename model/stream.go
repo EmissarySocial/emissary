@@ -16,14 +16,13 @@ type Stream struct {
 	StreamID        primitive.ObjectID           `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID        primitive.ObjectID           `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
 	Token           string                       `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
-	NavigationID    string                       `json:"navigationId"        bson:"navigationId"`        // Unique identifier of the "top-level" stream. (NOT USED PUBLICLY)
+	NavigationID    string                       `json:"navigationId"        bson:"navigationId"`        // Unique identifier of the "top-level" Stream that this record falls within. (NOT USED PUBLICLY)
 	TemplateID      string                       `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
 	StateID         string                       `json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	Permissions     mapof.Object[sliceof.String] `json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
 	DefaultAllow    id.Slice                     `json:"defaultAllow"        bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	Document        DocumentLink                 `json:"document"            bson:"document"`            // Summary content of this document
 	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
-	Origin          OriginLink                   `json:"origin,omitempty"    bson:"origin,omitempty"`    // If this stream is imported from an external service, this is a link to the original document
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
@@ -268,18 +267,19 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
 // This map will still need to be marshalled into JSON
 func (stream Stream) AsActivityStream() mapof.Any {
 	return mapof.Any{
-		"type":    stream.Document.Type,
 		"id":      stream.Document.URL,
+		"type":    stream.Document.Type,
+		"url":     stream.Document.URL,
 		"name":    stream.Document.Label,
 		"summary": stream.Document.Summary,
 		"image":   stream.Document.ImageURL,
-		"author": mapof.Any{
+		"attributedTo": mapof.Any{
 			"id":    stream.Document.Author.ProfileURL,
 			"name":  stream.Document.Author.Name,
 			"image": stream.Document.Author.ImageURL,
-			"email": stream.Document.Author.EmailAddress,
 		},
-		"published": time.UnixMilli(stream.Document.PublishDate).Format(time.RFC3339),
+		"content":   stream.Content.HTML,
+		"published": time.UnixMilli(stream.PublishDate).Format(time.RFC3339),
 	}
 }
 

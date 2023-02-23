@@ -161,9 +161,6 @@ func (stream *Stream) GetObject(name string) (any, bool) {
 	case "replyTo":
 		return &stream.InReplyTo, true
 
-	case "origin":
-		return &stream.Origin, true
-
 	case "content":
 		return &stream.Content, true
 

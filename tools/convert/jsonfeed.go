@@ -58,19 +58,15 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 	}
 
 	message.Document = model.DocumentLink{
-		URL:         item.URL,
-		Label:       item.Title,
-		Summary:     item.Summary,
-		ImageURL:    item.Image,
-		PublishDate: item.DatePublished.UnixMilli(),
-		Author:      JsonFeedToAuthor(feed, item),
+		URL:      item.URL,
+		Label:    item.Title,
+		Summary:  item.Summary,
+		ImageURL: item.Image,
+		Author:   JsonFeedToAuthor(feed, item),
 	}
 
-	if item.ContentHTML != "" {
-		message.ContentHTML = item.ContentHTML
-	} else if item.ContentText != "" {
-		message.ContentHTML = html.FromText(item.ContentText)
-	}
+	message.PublishDate = item.DatePublished.UnixMilli()
+	message.ContentHTML = JsonFeedToContentHTML(item)
 
 	return message
 }
@@ -92,4 +88,17 @@ func JsonFeedToAuthor(feed jsonfeed.Feed, item jsonfeed.Item) model.PersonLink {
 	}
 
 	return result
+}
+
+func JsonFeedToContentHTML(item jsonfeed.Item) string {
+
+	var result string
+
+	if item.ContentHTML != "" {
+		result = item.ContentHTML
+	} else if item.ContentText != "" {
+		result = html.FromText(item.ContentText)
+	}
+
+	return SanitizeHTML(result)
 }

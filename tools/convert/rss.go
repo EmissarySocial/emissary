@@ -30,14 +30,15 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Message {
 	}
 
 	message.Document = model.DocumentLink{
-		URL:         rssItem.Link,
-		Label:       htmlTools.ToText(rssItem.Title),
-		Summary:     rssSummary(rssItem),
-		ImageURL:    rssImageURL(rssItem),
-		Author:      rssAuthor(feed, rssItem),
-		PublishDate: rssDate(rssItem.PublishedParsed),
-		UpdateDate:  time.Now().Unix(),
+		URL:        rssItem.Link,
+		Label:      htmlTools.ToText(rssItem.Title),
+		Summary:    rssSummary(rssItem),
+		ImageURL:   rssImageURL(rssItem),
+		Author:     rssAuthor(feed, rssItem),
+		UpdateDate: time.Now().Unix(),
 	}
+
+	message.PublishDate = rssDate(rssItem.PublishedParsed)
 	message.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 
 	// If there are fields missing from the RSS feed, try to fill them in from the web page
