@@ -2,28 +2,22 @@
 {{- $filterID := .QueryParam "filterId" -}}
 {{- $following := .FollowingByFolder $folderID -}}
 
-<div script="install menu(selected:'{{$filterID}}')">
+<div>
 
-	<h1>
-		{{- if eq "" $filterID -}}
-			{{- icon "filter" -}}
-		{{- else -}}
-			{{- icon "filter-fill" -}}
-		{{- end }}
-	
-		Filter By Source
-	</h1>
+	<h1>{{ icon "filter" }} Filter By Source</h1>
 
-	<div class="space-below">
+	<div class="space-below" hx-target="#app" hx-swap="outerHTML">
 
-		<div role="button" class="menu-option" data-filterId="" href="/@me/inbox?folderId={{$folderID}}">
+		{{$selected := eq "" $filterID}}
+		<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}" script="on click send closeModal">
 			<span class="circle" style="background-color:var(--gray30); width:32px; height:32px; margin-right:8px;"></span>
 			All Sources
 		</div>
 
 		{{- range $following -}}
-			{{- $filterID := .FollowingID.Hex -}}
-			<div role="button" class="menu-option" data-filterId="{{$filterID}}" href="/@me/inbox?folderId={{$folderID}}&origin.internalId={{$filterID}}">
+			{{- $selected := eq $filterID .FollowingID.Hex -}}
+
+			<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}&origin.internalId={{.FollowingID.Hex}}" script="on click send closeModal">
 				<img src="{{.ImageURL}}" class="circle" style="width:32px; height:32px; margin-right:8px;">
 				{{.Label}}
 			</div>

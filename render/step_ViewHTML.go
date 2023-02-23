@@ -45,7 +45,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 	header := context.Response().Header()
 
 	header.Set("Vary", "Cookie, HX-Request")
-	header.Set("Cache-Control", "private")
+	// header.Set("Cache-Control", "private")
 
 	// TODO: LOW: We can do a better job with caching.  If a page is public, then caching should be public, too.
 
