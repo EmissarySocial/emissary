@@ -96,7 +96,10 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 
 	factory.emailService = service.NewDomainEmail(serverEmail, domain)
 
-	factory.encryptionKeyService = service.NewEncryptionKey(factory.collection(CollectionEncryptionKey))
+	factory.encryptionKeyService = service.NewEncryptionKey(
+		factory.collection(CollectionEncryptionKey),
+		factory.Host(),
+	)
 
 	// Start the Group Service
 	factory.groupService = service.NewGroup(

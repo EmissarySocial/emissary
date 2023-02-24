@@ -17,11 +17,14 @@ import (
 // EncryptionKey defines a service that tracks the (possibly external) accounts an internal User is encryptionKey.
 type EncryptionKey struct {
 	collection data.Collection
+	host       string
 }
 
 // NewEncryptionKey returns a fully initialized EncryptionKey service
-func NewEncryptionKey(collection data.Collection) EncryptionKey {
-	service := EncryptionKey{}
+func NewEncryptionKey(collection data.Collection, host string) EncryptionKey {
+	service := EncryptionKey{
+		host: host,
+	}
 	service.Refresh(collection)
 	return service
 }
@@ -185,6 +188,20 @@ func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptio
 	}
 
 	return rsa.VerifyPKCS1v15(publicKey, 0, message, signature)
+}
+
+/******************************************
+ * Other Key Metadata
+ ******************************************/
+
+// OwnerID returns the publicly accessible URL of the Actor who owns this EncryptionKey
+func (service *EncryptionKey) OwnerID(encryptionKey *model.EncryptionKey) string {
+	return service.host + "/@" + encryptionKey.UserID.Hex()
+}
+
+// KeyID returns the publicly accessible URL of this EncryptionKey
+func (service *EncryptionKey) KeyID(encryptionKey *model.EncryptionKey) string {
+	return service.OwnerID(encryptionKey) + "/pub/key"
 }
 
 /******************************************
