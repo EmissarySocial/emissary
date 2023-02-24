@@ -1,7 +1,7 @@
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
-<div id="app" class="app" hx-get="{{.URL}}" hx-swap="morph:outerHTML" hx-trigger="refreshPage from:window" hx-target="#app">
+<div id="app" class="app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="#app" hx-swap="outerHTML">
 
 	<!-- Sidebar Content -->
 	{{- template "inbox-sidebar" $folders -}}

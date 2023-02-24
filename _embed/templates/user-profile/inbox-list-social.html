@@ -13,14 +13,13 @@
 
 	<div style="max-width:600px;">
 
-		<div class="ellipsis">
+		<div class="ellipsis flex-row">
 			{{- if ne "" .Document.Author.ImageURL -}}
-				<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1em;">
+				<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
 			{{- end -}}
 
 			<span class="bold black">{{.Document.Author.Name}}</span>
-			<span class="text-gray nowrap">
-				&nbsp;
+			<span class="text-gray nowrap" style="flex-grow:1">
 				{{ icon .Origin.Icon }}
 				{{ .PublishDate | tinyDate }}
 			</span>
