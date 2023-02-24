@@ -31,7 +31,7 @@ require (
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20230220140403-320e504a60e2
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.10.1
+	github.com/labstack/echo/v4 v4.10.2
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.22
 	github.com/mmcdole/gofeed v1.2.0
