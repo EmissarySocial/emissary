@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.207
+	github.com/aws/aws-sdk-go v1.44.205
 	github.com/benpate/data v0.23.0
 	github.com/benpate/data-mongo v0.23.0
 	github.com/benpate/derp v0.27.0
@@ -26,17 +26,16 @@ require (
 	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/go-fed/activity v1.0.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20230220140403-320e504a60e2
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.10.2
+	github.com/labstack/echo/v4 v4.10.1
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.22
 	github.com/mmcdole/gofeed v1.2.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/spf13/afero v1.9.4
+	github.com/spf13/afero v1.9.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/stripe/stripe-go/v72 v72.122.0
