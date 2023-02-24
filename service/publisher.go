@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,8 +26,6 @@ func NewPublisher(streamService *Stream, followerService *Follower, userService 
 }
 
 func (service Publisher) Publish(stream *model.Stream, userID primitive.ObjectID, objectType string) error {
-
-	spew.Dump("PUBLISH ----------------------", stream, objectType)
 
 	// Determine what we're doing with the published stream (Create/Update/Delete)
 	activityType := service.guessActivityType(stream)
@@ -126,7 +123,6 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activ
 
 	follower := model.NewFollower()
 	for followers.Next(&follower) {
-		spew.Dump("Sending ActivityPub message to", follower.Actor.ProfileURL)
 		if err := pub.SendActivity(actor, activityType, activityStream, follower.Actor.ProfileURL); err != nil {
 			return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
 		}

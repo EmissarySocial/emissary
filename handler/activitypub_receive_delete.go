@@ -6,13 +6,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.Any, func(factory *domain.Factory, user *model.User, document streams.Document) error {
-
-		spew.Dump(document.Value())
 
 		object := document.Object()
 
