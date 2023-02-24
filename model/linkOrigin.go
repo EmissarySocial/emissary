@@ -59,7 +59,7 @@ func (origin OriginLink) Icon() string {
 	switch origin.Type {
 
 	case OriginTypeActivityPub:
-		return "code-slash"
+		return "activitypub"
 	case OriginTypeInternal:
 		return "star"
 	case OriginTypePoll:

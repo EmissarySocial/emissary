@@ -41,22 +41,31 @@
 
 	</div>
 
-	<hr>
-
 	<div class="space-above align-left">
 
 		{{- $links := .Links -}}
 
-		{{- if .UserCan "profile-edit"  -}}
-			<div class="float-right">
-				{{- if .UserCan "profile-links" -}}
-					<button type="button" hx-get="/@me/profile-links" class="text-xs vertical-space-none">Edit</button>
-				{{- end -}}
-			</div>
-		{{- end -}}
+		{{- if eq 0 (len $links) -}}
 
-		{{- range $links -}}
-			<div><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
+			{{- if .UserCan "profile-edit" -}}
+				<hr>
+			<button type="button" hx-get="/@me/profile-links">Add Links</button>
+			{{- end -}}
+
+		{{- else -}}
+
+			{{- if .UserCan "profile-edit"  -}}
+				<hr>
+				<div class="float-right">
+					{{- if .UserCan "profile-links" -}}
+						<button type="button" hx-get="/@me/profile-links" class="text-xs vertical-space-none">Edit</button>
+					{{- end -}}
+				</div>
+			{{- end -}}
+
+			{{- range $links -}}
+				<div><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
+			{{- end -}}
 		{{- end -}}
 
 	</div>

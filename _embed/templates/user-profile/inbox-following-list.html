@@ -12,7 +12,7 @@
 				{{- end -}}
 			</div>
 
-			<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
+			<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
 			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.internalId={{.FollowingID.Hex}}" style="flex-grow:1;">
 				<div class="ellipsis-block" style="max-height:1.75em;">
 					{{- if ne "" .Label -}}
@@ -23,8 +23,8 @@
 				</div>
 				<div class="text-xs text-gray" style="margin:0px;">
 					{{ if eq "SUCCESS" .Status -}}
-						{{ .LastPolled | tinyDate}} &middot;
-						{{.Method}} 
+						{{ icon .Icon }} 
+						{{ .LastPolled | tinyDate }}
 					{{- else if eq "LOADING" .Status -}}
 						<span class="green">{{.Status}}</span>
 					{{- else -}}

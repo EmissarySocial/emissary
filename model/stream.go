@@ -148,6 +148,11 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 		}
 	}
 
+	// If this Stream is in the current User's outbox, then they also have "self" permissions
+	if stream.ParentID == authorization.UserID {
+		result = append(result, MagicRoleMyself)
+	}
+
 	// Otherwise, append all roles matched from the permissions
 	result = append(result, stream.PermissionRoles(authorization.AllGroupIDs()...)...)
 

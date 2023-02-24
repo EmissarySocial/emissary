@@ -12,8 +12,6 @@ type ViewActivityPub struct {
 // NewViewActivityPub returns a fully initialized ViewActivityPub object
 func NewViewActivityPub(stepInfo mapof.Any) (ViewActivityPub, error) {
 
-	const location = "NewViewActivityPub"
-
 	return ViewActivityPub{
 		File: stepInfo.GetString("file"),
 	}, nil

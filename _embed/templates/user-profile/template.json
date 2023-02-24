@@ -308,12 +308,6 @@
 				]}
 			]
 		},
-		"inbox-item": {
-			"roles": ["self"],
-			"steps": [{"step":"as-modal", "options":["class:large"], "steps": [
-				{"step":"view-html"}
-			]}]
-		},
 		"inbox-following": {
 			"roles":["self"],
 			"step":"view-html"
@@ -403,6 +397,19 @@
 					{"step":"view-activitypub", "file":"activitypub-profile"}
 				]}
 			]
+		},
+		"message": {
+			"roles": ["self"],
+			"steps": [{"step":"as-modal", "options":["class:large"], "steps": [
+				{"step":"view-html"}
+			]}]
+		},
+		"message-delete": {
+			"roles": ["self"],
+			"steps": [{"step":"with-message", "steps": [
+				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+				{"step":"reload-page"}
+			]}]
 		}
 	}
 }	

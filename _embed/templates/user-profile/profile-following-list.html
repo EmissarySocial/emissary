@@ -11,7 +11,7 @@
 			{{- end -}}
 		</div>
 
-		<!--span class="{{.StatusClass}}">{{icon .StatusIcon}}</span-->
+		<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
 		<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" class="ellipsis-block" style="flex-grow:1;">
 			{{- if ne "" .Label -}}
 				{{- .Label -}}

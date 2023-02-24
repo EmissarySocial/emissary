@@ -4,11 +4,11 @@
 
 <div 
 	id="item_{{.MessageID.Hex}}" 
-	class="inbox-item" 
+	class="message" 
 	data-status="{{.Status}}" 
 	data-inboxItemId="{{.MessageID.Hex}}" 
 	style="max-width:640px; cursor:pointer;" 
-	hx-get="/@me/inbox-item?messageId={{.MessageID.Hex}}"
+	hx-get="/@me/message?messageId={{.MessageID.Hex}}"
 	hx-push-url="true">
 
 	<div style="max-width:600px;">

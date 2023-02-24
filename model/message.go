@@ -41,6 +41,24 @@ func (activity *Message) ID() string {
 }
 
 /******************************************
+ * RoleStateEnumerator Methods
+ ******************************************/
+
+// State returns the current state of this Stream.  It is
+// part of the implementation of the RoleStateEmulator interface
+func (message *Message) State() string {
+	if message.ReadDate == 0 {
+		return "UNREAD"
+	}
+	return "READ"
+}
+
+// Roles returns a list of all roles that match the provided authorization
+func (message *Message) Roles(authorization *Authorization) []string {
+	return []string{MagicRoleMyself}
+}
+
+/******************************************
  * Other Methods
  ******************************************/
 

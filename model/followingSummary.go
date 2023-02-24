@@ -22,7 +22,7 @@ func (summary FollowingSummary) Fields() []string {
 	return FollowingSummaryFields()
 }
 
-func (summary FollowingSummary) StatusIcon() string {
+func (summary FollowingSummary) Icon() string {
 
 	var icon string
 

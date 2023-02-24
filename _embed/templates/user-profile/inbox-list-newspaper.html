@@ -3,11 +3,11 @@
 
 <div 
 	id="item_{{$message.MessageID.Hex}}" 
-	class="inbox-item" 
+	class="message" 
 	data-status="{{$message.Status}}" 
 	data-inboxItemId="{{$message.MessageID.Hex}}" 
 	style="max-width:640px; cursor:pointer;" 
-	hx-get="/@me/inbox-item?messageId={{$message.MessageID.Hex}}">
+	hx-get="/@me/message?messageId={{$message.MessageID.Hex}}">
 
 	<div class="flex-row" style="justify-content:space-between;" hx-push-url="true">
 

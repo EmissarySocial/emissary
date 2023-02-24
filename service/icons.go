@@ -200,9 +200,9 @@ func (service Icons) Get(name string) string {
 
 		// Services
 	case "activitypub":
-		return service.get("code-slash")
+		return service.get("globe2")
 	case "activitypub-fill":
-		return service.get("code-slash")
+		return service.get("globe2")
 	case "facebook":
 		return service.get("facebook")
 	case "github":

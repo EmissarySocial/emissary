@@ -10,20 +10,21 @@
 		{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
 	</a>
 	&middot; 
-	{{ $message.Document.PublishDate | tinyDate -}}
+	{{ $message.PublishDate | tinyDate -}}
 </div>
 
 <div class="text-sm">
 
 	<span class="button-group">
-		<button id="previous" hx-get="/@me/inbox-item?messageId=LT:{{$message.MessageID}}">&laquo; Prev</button>
-		<button id="next" hx-get="/@me/inbox-item?messageId=GT:{{$message.MessageID}}">Next &raquo;</button>
+		<button id="previous" hx-get="/@me/message?messageId=LT:{{$message.MessageID}}">&laquo; Prev</button>
+		<button id="next" hx-get="/@me/message?messageId=GT:{{$message.MessageID}}">Next &raquo;</button>
 	</span>
 
 	<span class="button-group">
 		<button data-script="on click go to url '{{$message.Document.URL}}' in new window then trigger closeModal">Visit</button>
 		<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
-		<button hx-get="/@me/block-new?messageId={{$message.MessageID}}">Block</button>
+		<button hx-get="/@me/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
+		<button hx-get="/@me/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
 	</span>
 
 </div>
