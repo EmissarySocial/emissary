@@ -91,7 +91,7 @@ func rssToActivity_populate(message *model.Message) {
 func rssSummary(rssItem *gofeed.Item) string {
 
 	if rssItem.Description != "" {
-		htmlTools.ToText(rssItem.Description)
+		return htmlTools.ToText(rssItem.Description)
 	}
 
 	return ""
@@ -115,6 +115,27 @@ func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 	if rssItem.Author != nil {
 		result.Name = htmlTools.ToText(rssItem.Author.Name)
 		result.EmailAddress = rssItem.Author.Email
+	} else {
+		result.Name = htmlTools.ToText(feed.Title)
+	}
+
+	// Look in the feed.Image object for an author image
+	if feed.Image != nil {
+		result.ImageURL = feed.Image.URL
+	}
+
+	// If we STILL don't have an author image, then try the "webfeeds" extension...
+	if result.ImageURL == "" {
+		if webfeeds, ok := feed.Extensions["webfeeds"]; ok {
+			if icon, ok := webfeeds["icon"]; ok {
+				for _, element := range icon {
+					if element.Name == "icon" {
+						result.ImageURL = element.Value
+						break
+					}
+				}
+			}
+		}
 	}
 
 	return result
