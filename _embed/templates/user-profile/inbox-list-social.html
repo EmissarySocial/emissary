@@ -1,42 +1,44 @@
-{{- range . -}}
+<div style="max-width:560px;">
+	{{- range . -}}
 
-<hr/>
+	<hr/>
 
-<div 
-	id="item_{{.MessageID.Hex}}" 
-	class="message" 
-	data-status="{{.Status}}" 
-	data-inboxItemId="{{.MessageID.Hex}}" 
-	style="max-width:640px; cursor:pointer;" 
-	hx-get="/@me/message?messageId={{.MessageID.Hex}}"
-	hx-push-url="true">
+	<div 
+		id="item_{{.MessageID.Hex}}" 
+		role="button"
+		class="message" 
+		data-status="{{.Status}}" 
+		data-inboxItemId="{{.MessageID.Hex}}" 
+		hx-get="/@me/message?messageId={{.MessageID.Hex}}"
+		hx-push-url="true">
 
-	<div style="max-width:600px;">
+		<div style="max-width:600px;">
 
-		<div class="ellipsis flex-row">
-			{{- if ne "" .Document.Author.ImageURL -}}
-				<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+			<div class="ellipsis flex-row">
+				{{- if ne "" .Document.Author.ImageURL -}}
+					<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+				{{- end -}}
+
+				<span class="bold black">{{.Document.Author.Name}}</span>
+				<span class="text-gray nowrap" style="flex-grow:1">
+					{{ icon .Origin.Icon }}
+					{{ .PublishDate | tinyDate }}
+				</span>
+			</div>
+
+			<div>
+				{{- .Document.Summary | html -}}
+			</div>
+
+			{{- if ne .Document.ImageURL "" -}}
+				<div class="space-above" style="position:relative;">
+					<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%;"/>
+				</div>
 			{{- end -}}
 
-			<span class="bold black">{{.Document.Author.Name}}</span>
-			<span class="text-gray nowrap" style="flex-grow:1">
-				{{ icon .Origin.Icon }}
-				{{ .PublishDate | tinyDate }}
-			</span>
 		</div>
-
-		<div>
-			{{- .Document.Summary | html -}}
-		</div>
-
-		{{- if ne .Document.ImageURL "" -}}
-			<div class="space-above" style="position:relative;">
-				<img src="{{.Document.ImageURL}}" loading="lazy" style="max-width:600px; max-height:400px; object-fit:contain;"/>
-			</div>
-		{{- end -}}
-
+		
 	</div>
-	
-</div>
 
-{{- end -}}
+	{{- end -}}
+</div>
