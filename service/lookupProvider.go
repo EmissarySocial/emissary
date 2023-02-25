@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,6 +28,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "folders":
 		return NewFolderLookupProvider(service.folderService, service.userID)
+
+	case "folder-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)

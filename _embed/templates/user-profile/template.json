@@ -327,6 +327,7 @@
 							"label":"Add a Folder",
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
 								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
@@ -346,6 +347,7 @@
 							"label":"Folder Settings",
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
 								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},

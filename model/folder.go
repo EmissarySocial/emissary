@@ -24,6 +24,7 @@ type Folder struct {
 func NewFolder() Folder {
 	return Folder{
 		FolderID: primitive.NewObjectID(),
+		Icon:     "folder",
 	}
 }
 

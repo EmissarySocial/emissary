@@ -27,6 +27,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(icons.Get(name))
 		},
 
+		"iconFilled": func(name string) template.HTML {
+			return template.HTML(icons.Get(name + "-fill"))
+		},
+
 		"dollarFormat": func(value any) string {
 
 			var unitAmount int64
