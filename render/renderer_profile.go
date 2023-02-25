@@ -366,7 +366,7 @@ func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
 		return false
 	}
 
-	if w._context.Request().URL.Query().Get("document.publishDate") != "" {
+	if w._context.Request().URL.Query().Get("publishDate") != "" {
 		return false
 	}
 
