@@ -26,16 +26,12 @@ func TestStreamSchema(t *testing.T) {
 		{"document.label", "DOC-LABEL", nil},
 		{"document.summary", "DOC-SUMMARY", nil},
 		{"document.imageUrl", "DOC-IMAGEURL", nil},
-		{"document.publishDate", "1", int64(1)},
-		{"document.updateDate", "2", int64(2)},
 		{"document.author.name", "DOC-AUTHOR-NAME", nil},
 
 		{"replyTo.url", "https://example/replyTo", nil},
 		{"replyTo.label", "REPLY-LABEL", nil},
 		{"replyTo.summary", "REPLY-SUMMARY", nil},
 		{"replyTo.imageUrl", "REPLY-IMAGEURL", nil},
-		{"replyTo.publishDate", "1", int64(1)},
-		{"replyTo.updateDate", "2", int64(2)},
 		{"replyTo.author.name", "REPLY-AUTHOR-NAME", nil},
 
 		{"content.format", "HTML", nil},

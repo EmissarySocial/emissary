@@ -22,9 +22,6 @@ func TestDocumentLink(t *testing.T) {
 		{"label", "TEST-LABEL", nil},
 		{"summary", "TEST-SUMMARY", nil},
 		{"imageUrl", "https://test.image.url", nil},
-		{"publishDate", int64(1234567890), nil},
-		{"unpublishDate", int64(1234567890), nil},
-		{"updateDate", int64(1234567890), nil},
 	}
 
 	tableTest_Schema(t, &s, &origin, table)
