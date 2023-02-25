@@ -17,7 +17,7 @@
 	{{- $lastIndex := subtract (len $inbox) 1 -}}
 	{{- $last := index $inbox $lastIndex -}}
 	<div 
-		hx-get="/@me/inbox-list?folderId={{$folders.SelectedID.Hex}}&document.publishDate=GT:{{$last.PublishDate}}" 
+		hx-get="/@me/inbox-list?folderId={{$folders.SelectedID.Hex}}&publishDate=GT:{{$last.PublishDate}}" 
 		hx-push-url="false" 
 		hx-trigger="intersect once" 
 		hx-target="#loading" 

@@ -325,7 +325,7 @@ func (w Profile) Inbox(folderID primitive.ObjectID) ([]model.Message, error) {
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.internalId").
 		Int("readDate").
-		Int("document.publishDate")
+		Int("publishDate")
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folderID)
 
