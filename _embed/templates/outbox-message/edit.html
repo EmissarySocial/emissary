@@ -24,7 +24,7 @@
 
 </script>
 
-<form id="outbox-message" hx-post="/@me/outbox-add?templateId=outbox-message" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data"
+<form id="outbox-message" hx-post="{{.QueryParam `postTo`}}" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data"
 	data-script="
 		on htmx:configRequest(parameters)
 			set parameters['document.summary'] to Autolinker.link(#summaryHTML.innerText, $autolinkerOptions)">

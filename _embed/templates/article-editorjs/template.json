@@ -13,6 +13,11 @@
 			"document": {"type":"object", "properties": {
 				"label": {"type":"string"},
 				"summary": {"type":"string"}
+			}},
+			"content":{"type":"object", "properties": {
+				"type": {"type":"string"},
+				"raw": {"type":"string"},
+				"html": {"type":"string", "format":"html"}
 			}}
 		}
 	},
@@ -90,7 +95,7 @@
 				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step":"set-state", "state":"published"},
 				{"step":"save", "message":"Published by {{.Author}}"},
-				{"step":"publish", "role":"Article"},
+				{"step":"publish", "role":"Article", "mentions":["document.summary","content.html"]},
 				{"step":"refresh-page"}
 			]
 		},
@@ -110,7 +115,8 @@
 			"steps": [
 				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step":"promote-draft"},
-				{"step":"publish", "role":"Article"},
+				{"step":"publish", "role":"Article", "mentions":["document.summary","content.html"]},
+				{"step":"refresh-page"},
 				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
 		},

@@ -284,7 +284,7 @@ func (stream Stream) AsActivityStream() mapof.Any {
 			"image": stream.Document.Author.ImageURL,
 		},
 		"content":   stream.Content.HTML,
-		"published": time.UnixMilli(stream.PublishDate).Format(time.RFC3339),
+		"published": time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
 	}
 }
 

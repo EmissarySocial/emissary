@@ -110,7 +110,10 @@ func (w Common) Method() string {
 
 // Returns the designated request parameter
 func (w Common) QueryParam(param string) string {
-	return w.context().QueryParam(param)
+	urlValue := w.context().Request().URL.Query()[param]
+	// NOTE: we're getting the QueryParam value this way because the context.QueryParam() method
+	// doesn't seem to get updates when we change the URL via the SetQueryParam() step.
+	return convert.String(urlValue)
 }
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.

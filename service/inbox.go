@@ -229,6 +229,24 @@ func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *m
 	return service.Load(criteria, result)
 }
 
+func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result *model.Message) error {
+
+	err := service.LoadByURL(userID, url, result)
+
+	if err == nil {
+		return nil
+	}
+
+	if derp.NotFound(err) {
+		*result = model.NewMessage()
+		result.UserID = userID
+		result.Document.URL = url
+		return nil
+	}
+
+	return derp.Wrap(err, "service.Inbox", "Error loading Inbox", userID, url)
+}
+
 /******************************************
  * Custom Behaviors
  ******************************************/

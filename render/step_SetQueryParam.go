@@ -2,14 +2,12 @@ package render
 
 import (
 	"io"
-
-	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/mapof"
+	"text/template"
 )
 
 // StepSetQueryParam represents an action-step that sets values to the request query string
 type StepSetQueryParam struct {
-	Values mapof.Any
+	Values map[string]*template.Template
 }
 
 // Get displays a form where users can update stream data
@@ -30,7 +28,8 @@ func (step StepSetQueryParam) Do(renderer Renderer) error {
 	query := renderer.context().Request().URL.Query()
 
 	for key, value := range step.Values {
-		query.Set(key, convert.String(value))
+		queryValue := executeTemplate(value, renderer)
+		query.Set(key, queryValue)
 	}
 
 	renderer.context().Request().URL.RawQuery = query.Encode()

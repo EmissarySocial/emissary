@@ -1,18 +1,19 @@
 package render
 
 import (
-	"fmt"
+	"bytes"
 	"io"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tasks"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
+	"willnorris.com/go/webmention"
 )
 
 // StepPublish represents an action-step that can update a stream's PublishDate with the current time.
 type StepPublish struct {
-	Role string
+	Role     string
+	Mentions []string
 }
 
 func (step StepPublish) Get(renderer Renderer, _ io.Writer) error {
@@ -34,6 +35,7 @@ func (step StepPublish) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error publishing stream")
 	}
 
+	// Push the "send webmention" task onto the queue
 	if err := step.sendWebMentions(streamRenderer); err != nil {
 		return derp.Wrap(err, location, "Error sending web mentions")
 	}
@@ -65,33 +67,37 @@ func (step StepPublish) publish(renderer *Stream) error {
 // TODO: LOW: Should this be moved to the Publisher service?
 func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
-	const location = "render.StepPublish.sendWebMentions"
+	var bodyReader bytes.Buffer
 
-	// RULE: Don't send mentions on localhost items
-	if domain.IsLocalhost(renderer.Permalink()) {
-		fmt.Println("Skipping mentions because this content is hosted on localhost")
-		return nil
+	factory := renderer.factory()
+	schema := renderer.schema()
+
+	// Collect all content fields from the schema
+	for _, fieldName := range step.Mentions {
+		if content, err := schema.Get(renderer.stream, fieldName); err != nil {
+			bodyReader.WriteString(convert.String(content))
+		}
 	}
 
-	// RULE: Don't send mentions on items that require login
-	if !renderer.UserCan(model.MagicRoleAnonymous) {
-		fmt.Println("Skipping mentions because this content is protected by a password")
-		return nil
-	}
-
-	// Get full HTML for this Stream
-	html, err := renderer.View("view")
+	// Discover all webmention links in the content
+	links, err := webmention.DiscoverLinksFromReader(&bodyReader, renderer.Permalink(), "")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error rendering HTML", html)
+		return derp.Wrap(err, "mention.SendWebMention.Run", "Error discovering webmention links", renderer.Permalink())
 	}
 
-	// Push the "send webmention" task onto the queue
-	mentionService := renderer.factory().Mention()
-	queue := renderer.factory().Queue()
-	task := tasks.NewSendWebMention(mentionService, renderer.Permalink(), string(html))
-	queue.Run(task)
+	// If no links, peace out.
+	if len(links) == 0 {
+		return nil
+	}
 
-	// Hello darkness, my old friend...
+	// Add background tasks to TRY sending webmentions to every link we found
+	queue := factory.Queue()
+
+	for _, link := range links {
+		queue.Run(tasks.NewSendWebMention(renderer.Permalink(), link))
+	}
+
+	// Accept your success with grace.
 	return nil
 }

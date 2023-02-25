@@ -36,12 +36,13 @@
 		},
 		"create":{
 			"steps": [
+				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
 				{"step":"view-html", "file":"edit"},
 				{"step":"set-data", "from-form":["document.summary"]},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"document.imageUrl"},
-				{"step":"publish", "role":"Note"},
+				{"step":"publish", "role":"Note", "mentions":["document.summary"]},
 				{"step":"refresh-page"}
 			]
 		},
@@ -49,10 +50,11 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
+					{"step":"set-query-param", "postTo":"/{{.StreamID}}/edit"},
 					{"step":"view-html", "file":"edit"},
 					{"step":"set-data", "from-form":["document.summary"]},
 					{"step":"save"},
-					{"step":"publish", "role":"Note"},
+					{"step":"publish", "role":"Note", "mentions":["document.summary"]},
 					{"step":"refresh-page"}
 				]}
 			]

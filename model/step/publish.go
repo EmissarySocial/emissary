@@ -4,13 +4,15 @@ import "github.com/benpate/rosetta/mapof"
 
 // Publish represents an action-step that can update a stream's PublishDate with the current time.
 type Publish struct {
-	Role string
+	Role     string
+	Mentions []string
 }
 
 // NewPublish returns a fully initialized Publish object
 func NewPublish(stepInfo mapof.Any) (Publish, error) {
 	return Publish{
-		Role: stepInfo.GetString("role"),
+		Role:     stepInfo.GetString("role"),
+		Mentions: stepInfo.GetSliceOfString("mentions"),
 	}, nil
 }
 
