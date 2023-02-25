@@ -16,13 +16,6 @@
 
 	{{- $lastIndex := subtract (len $inbox) 1 -}}
 	{{- $last := index $inbox $lastIndex -}}
-	<div 
-		hx-get="/@me/inbox-list?folderId={{$folders.SelectedID.Hex}}&publishDate=GT:{{$last.PublishDate}}" 
-		hx-push-url="false" 
-		hx-trigger="intersect once" 
-		hx-target="#loading" 
-		hx-swap="outerHTML">
-	</div>
 
 	{{- if eq "SOCIAL" $folder.Layout -}}
 		{{- template "inbox-list-social" $inbox -}}
@@ -37,6 +30,14 @@
 	{{- end -}}
 
 	<!-- Trigger to load more records at the end of this-->
-	<div id="loading">Just a sec.  Loading more...</div>
+	<div 
+		hx-get="/@me/inbox-list?folderId={{$folders.SelectedID.Hex}}&publishDate=GT:{{$last.PublishDate}}" 
+		hx-push-url="false" 
+		hx-trigger="intersect once" 
+		hx-target="this" 
+		hx-swap="outerHTML">
+		<hr>
+		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+	</div>
 
 {{- end -}}
