@@ -26,12 +26,12 @@
 				</span>
 			</div>
 
-			<div>
+			<div class="space-above">
 				{{- .Document.Summary | html -}}
 			</div>
 
 			{{- if ne .Document.ImageURL "" -}}
-				<div class="space-above" style="position:relative;">
+				<div style="position:relative;">
 					<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%;"/>
 				</div>
 			{{- end -}}
