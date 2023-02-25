@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -120,6 +121,8 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activ
 	// Create the document to be sent
 	activityStream := stream.AsActivityStream()
 	activityStream["type"] = objectType
+
+	spew.Dump("SENDING ACTIVITY", activityStream)
 
 	follower := model.NewFollower()
 	for followers.Next(&follower) {

@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,6 +44,8 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		if err != nil {
 			return derp.Report(derp.Wrap(err, location, "Error parsing ActivityPub request"))
 		}
+
+		spew.Dump("ACTIVITYPUB RECEIVE", activity)
 
 		// Handle the ActivityPub request
 		if err := inboxRouter.Handle(factory, &user, activity); err != nil {
