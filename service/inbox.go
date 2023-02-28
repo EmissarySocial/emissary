@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -81,15 +82,9 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
 	}
 
-	// TODO: In what circumstances should this trigger additional events?
-	if message.Document.InternalID.IsZero() {
-		switch message.Document.Type {
-		case model.DocumentTypeArticle:
-		case model.DocumentTypeNote:
-		case model.DocumentTypeBlock:
-		case model.DocumentTypeFollow:
-		case model.DocumentTypeLike:
-		}
+	// Calculate the rank for this message, using the number of messages with an identical PublishDate
+	if err := service.CalculateRank(message); err != nil {
+		return derp.Wrap(err, "service.Inbox.Save", "Error calculating rank", message)
 	}
 
 	// Save the value to the database
@@ -222,6 +217,24 @@ func (service *Inbox) LoadByID(userID primitive.ObjectID, messageID primitive.Ob
 	return service.Load(criteria, result)
 }
 
+func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.ObjectID, rankExpression exp.Expression, result *model.Message, options ...option.Option) error {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID).
+		And(rankExpression)
+
+	it, err := service.List(criteria, options...)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error loading Inbox", userID, folderID, rankExpression)
+	}
+
+	for it.Next(result) {
+		return nil
+	}
+
+	return derp.NewNotFoundError("service.Inbox", "Inbox message not found", userID, folderID, rankExpression)
+}
+
 func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("document.url", url)
@@ -250,6 +263,18 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+func (service *Inbox) CalculateRank(message *model.Message) error {
+
+	count, err := queries.CountMessages(service.collection, message.UserID, message.FolderID, message.PublishDate)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error calculating rank", message)
+	}
+
+	message.Rank = (message.PublishDate * 1000) + int64(count)
+	return nil
+}
 
 func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {
 

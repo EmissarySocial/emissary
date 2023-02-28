@@ -19,6 +19,7 @@ type Message struct {
 	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
 	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
 	ReadDate    int64              `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read by the user
+	Rank        int64              `json:"rankDate" bson:"rank"`                      // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
