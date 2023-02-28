@@ -408,6 +408,15 @@
 				]
 			}]
 		},
+		"message-social": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+
 		"message-delete": {
 			"roles": ["self"],
 			"steps": [{"step":"with-message", "steps": [

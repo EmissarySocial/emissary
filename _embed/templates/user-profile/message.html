@@ -16,12 +16,11 @@
 <div class="text-sm">
 
 	<span class="button-group">
-		<button id="previous" hx-get="/@me/message?messageId=LT:{{$message.MessageID}}">&laquo; Prev</button>
-		<button id="next" hx-get="/@me/message?messageId=GT:{{$message.MessageID}}">Next &raquo;</button>
+		<button id="previous" hx-get="/@me/message?rank=LT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
+		<button id="next" hx-get="/@me/message?rank=GT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
 	</span>
 
 	<span class="button-group">
-		<button data-script="on click go to url '{{$message.Document.URL}}' in new window then trigger closeModal">Visit</button>
 		<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
 		<button hx-get="/@me/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
 		<button hx-get="/@me/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
@@ -42,20 +41,3 @@
 	<div>{{$message.Document.Summary}}</div>
 	<div>{{$message.ContentHTML | html}}</div>
 </div>
-
-<script type="text/hyperscript">
-	init
-		fetch `/@me/pub/inbox/{{$message.MessageID.Hex}}/mark-read` with method:"POST"
-	end
-
-	on keydown[key=="ArrowLeft"] from window
-		halt the event
-		send click to #previous
-		log event
-	
-	on keydown[key=="ArrowRight"] from window
-		halt the event
-		send click to #next
-		
-</script>
-
