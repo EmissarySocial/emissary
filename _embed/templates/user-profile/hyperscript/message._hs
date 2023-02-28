@@ -6,10 +6,11 @@ behavior message
 
 	on keydown[key=="ArrowLeft"] from window
 		halt the event
-		send click to #previous
-		log event
+		send click to #previous in me
+	end
 	
 	on keydown[key=="ArrowRight"] from window
 		halt the event
-		send click to #next
-		
+		send click to #next in me
+	end
+end

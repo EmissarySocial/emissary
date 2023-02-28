@@ -41,6 +41,9 @@
 	"bundles": {
 		"stylesheet": {
 			"contentType":"text/css"
+		},
+		"hyperscript":{
+			"contentType":"text/hyperscript"
 		}
 	},
 	"actions": {

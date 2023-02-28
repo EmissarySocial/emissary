@@ -1,41 +1,59 @@
-{{- range $index, $message := . -}}
-<hr/>
+{{- if gt (len .) 0 -}}
 
-<div 
-	id="item_{{$message.MessageID.Hex}}" 
-	class="message" 
-	data-status="{{$message.Status}}" 
-	data-inboxItemId="{{$message.MessageID.Hex}}" 
-	style="max-width:640px; cursor:pointer;" 
-	hx-get="/@me/message?messageId={{$message.MessageID.Hex}}">
+	{{- $lastMessage := index . (subtract (len .) 1) -}}
 
-	<div class="flex-row" style="justify-content:space-between;" hx-push-url="true">
+	{{- range $index, $message := . -}}
 
-		<div style="width:160px; flex-grow:0; flex-shrink:0">
-			{{- if ne "" .Document.ImageURL -}}
-				<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-					<img src="{{$message.Document.ImageURL}}" {{ if gt $index 3 }} loading="lazy" {{ end }} style="width:140px; max-height:140px; object-fit:cover;"/>
+	<hr/>
+
+		<div 
+			id="item_{{$message.MessageID.Hex}}" 
+			class="message" 
+			data-status="{{$message.Status}}" 
+			data-inboxItemId="{{$message.MessageID.Hex}}" 
+			style="max-width:640px; cursor:pointer;" 
+			hx-get="/@me/message?messageId={{$message.MessageID.Hex}}">
+
+			<div class="flex-row" style="justify-content:space-between;" hx-push-url="true">
+
+				<div style="width:160px; flex-grow:0; flex-shrink:0">
+					{{- if ne "" .Document.ImageURL -}}
+						<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+							<img src="{{$message.Document.ImageURL}}" {{ if gt $index 3 }} loading="lazy" {{ end }} style="width:140px; max-height:140px; object-fit:cover;"/>
+						</div>
+					{{- end -}}
 				</div>
-			{{- end -}}
-		</div>
 
-		<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-			<div class="bold black ellipsis">{{$message.Document.Label}}</div>
-			<div class="text-gray text-sm space-below flex-row">
-				<span class="ellipsis">
-					{{ icon .Origin.Icon }}
-					{{ .Origin.Label }} &middot;
-					{{ .Document.Author.Name }} 
-					&nbsp;&middot;
-				</span>
-				<span class="nowrap">
-					{{ .PublishDate | tinyDate }}
-				</span>
+				<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
+					<div class="bold black ellipsis">{{$message.Document.Label}}</div>
+					<div class="text-gray text-sm space-below flex-row">
+						<span class="ellipsis">
+							{{ icon .Origin.Icon }}
+							{{ .Origin.Label }} &middot;
+							{{ .Document.Author.Name }} 
+							&nbsp;&middot;
+						</span>
+						<span class="nowrap">
+							{{ .PublishDate | tinyDate }}
+						</span>
+					</div>
+					<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{$message.Document.Summary}}</div>
+				</div>
+
 			</div>
-			<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{$message.Document.Summary}}</div>
+
 		</div>
 
+	{{- end -}}
+
+	<div 
+		hx-get="/@me/inbox-list?folderId=&rank=GT:{{$lastMessage.Rank}}" 
+		hx-push-url="false" 
+		hx-trigger="intersect once" 
+		hx-target="this" 
+		hx-swap="outerHTML">
+		<hr>
+		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
 
-</div>
 {{- end -}}

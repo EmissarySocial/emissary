@@ -1,43 +1,47 @@
 {{$message := .Message}}
 
-<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
-	<button script="on click send closeModal">Close</button>
-</div>
-<h1>{{$message.Document.Label}}</h1>
+<div script="install message">
 
-<div class="text-gray space-below">
-	<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
-		{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
-	</a>
-	&middot; 
-	{{ $message.PublishDate | tinyDate -}}
-</div>
+	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
+		<button script="on click send closeModal">Close</button>
+	</div>
+	<h1>{{$message.Document.Label}}</h1>
 
-<div class="text-sm">
+	<div class="text-gray space-below">
+		<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
+			{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
+		</a>
+		&middot; 
+		{{ $message.PublishDate | tinyDate -}}
+	</div>
 
-	<span class="button-group">
-		<button id="previous" hx-get="/@me/message?rank=LT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
-		<button id="next" hx-get="/@me/message?rank=GT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
-	</span>
+	<div class="text-sm">
 
-	<span class="button-group">
-		<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
-		<button hx-get="/@me/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
-		<button hx-get="/@me/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
-	</span>
+		<span class="button-group">
+			<button id="previous" hx-get="/@me/message?rank=LT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
+			<button id="next" hx-get="/@me/message?rank=GT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
+		</span>
 
-</div>
+		<span class="button-group">
+			<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
+			<button hx-get="/@me/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
+			<button hx-get="/@me/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
+		</span>
 
-<hr/>
+	</div>
 
-<div class="content">
+	<hr/>
 
-	{{- if ne "" $message.Document.ImageURL -}}
-		<div class="space-below">
-			<img src="{{$message.Document.ImageURL}}" style="max-width:100%">
-		</div>
-	{{- end -}}
+	<div class="content">
 
-	<div>{{$message.Document.Summary}}</div>
-	<div>{{$message.ContentHTML | html}}</div>
+		{{- if ne "" $message.Document.ImageURL -}}
+			<div class="space-below">
+				<img src="{{$message.Document.ImageURL}}" style="max-width:100%">
+			</div>
+		{{- end -}}
+
+		<div>{{$message.Document.Summary}}</div>
+		<div>{{$message.ContentHTML | html}}</div>
+	</div>
+
 </div>

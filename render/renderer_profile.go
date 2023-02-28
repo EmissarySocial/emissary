@@ -14,7 +14,6 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -324,39 +323,12 @@ func (w Profile) Inbox(folderID primitive.ObjectID) ([]model.Message, error) {
 
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.internalId").
-		Int("readDate").
 		Int("publishDate")
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folderID)
 
 	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
 }
-
-/*
-
-// Inbox returns a slice of messages in the current User's inbox
-func (w Profile) Inbox(folder *model.Folder) ([]model.Message, error) {
-
-	// RULE: Must be authenticated to view any Inbox messages
-	if !w.IsAuthenticated() {
-		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
-	}
-
-	// RULE: Users can only view their own inboxes
-	if folder.UserID != w.AuthenticatedID() {
-		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Folder does not belong to authenticated user")
-	}
-
-	factory := w._factory
-
-	expBuilder := builder.NewBuilder().
-		Int("readDate").
-		Int("document.publishDate")
-
-	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folder.FolderID)
-
-	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
-}*/
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
@@ -366,7 +338,7 @@ func (w Profile) IsInboxEmpty(inbox []model.Message) bool {
 		return false
 	}
 
-	if w._context.Request().URL.Query().Get("publishDate") != "" {
+	if w._context.Request().URL.Query().Get("rank") != "" {
 		return false
 	}
 
@@ -393,46 +365,6 @@ func (w Profile) FilteredByFollowing() model.Following {
 	}
 
 	return result
-}
-
-// Message uses the `messageId` URL parameter to load an individual message from the Inbox
-func (w Profile) Message() (model.Message, error) {
-
-	operator := "="
-	param := w.context().QueryParam("messageId")
-
-	if strings.HasPrefix("LT:", param) {
-		operator = "<"
-		param = strings.TrimPrefix("LT:", param)
-	} else if strings.HasPrefix("GT:", param) {
-		operator = ">"
-		param = strings.TrimPrefix("GT:", param)
-	}
-
-	spew.Dump(operator, param)
-
-	// Guarantee that the user is signed in
-	if !w.IsAuthenticated() {
-		return model.Message{}, derp.NewForbiddenError("render.Profile.Activity", "Not authenticated")
-	}
-
-	// Try to parse the messageID from the URL
-	messageID, err := primitive.ObjectIDFromHex(w._context.QueryParam("messageId"))
-
-	if err != nil {
-		return model.Message{}, derp.NewBadRequestError("render.Profile.Activity", "Invalid messageId", w._context.QueryParam("messageId"))
-	}
-
-	// Try to load an Activity record from the Inbox
-	result := model.NewMessage()
-	inboxService := w._factory.Inbox()
-
-	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &result); err != nil {
-		return model.Message{}, derp.Wrap(err, "render.Profile.Activity", "Error loading inbox item")
-	}
-
-	// Success!
-	return result, nil
 }
 
 // Folders returns a slice of all folders owned by the current User
@@ -479,4 +411,60 @@ func (w Profile) FoldersWithSelection() (model.FolderList, error) {
 	}
 
 	return result, derp.NewInternalError("render.Profile.FoldersWithSelection", "No folders found", nil)
+}
+
+// Message uses the `messageId` URL parameter to load an individual message from the Inbox
+func (w Profile) Message() (model.Message, error) {
+
+	const location = "render.Profile.Message"
+
+	result := model.NewMessage()
+
+	// Guarantee that the user is signed in
+	if !w.IsAuthenticated() {
+		return result, derp.NewForbiddenError(location, "Not authenticated")
+	}
+
+	// Get Inbox Service
+	inboxService := w._factory.Inbox()
+
+	// Try to parse the messageID from the URL
+	if messageID, err := primitive.ObjectIDFromHex(w._context.QueryParam("messageId")); err == nil {
+
+		// Try to load an Activity record from the Inbox
+		if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &result); err != nil {
+			return result, derp.Wrap(err, location, "Error loading inbox item")
+		}
+
+		return result, nil
+	}
+
+	// Otherwise, look for folder/rank search parameters
+	if folderToken := w._context.QueryParam("folderId"); folderToken != "" {
+		if folderID, err := primitive.ObjectIDFromHex(folderToken); err == nil {
+
+			var sort option.Option
+
+			if strings.HasPrefix(w._context.QueryParam("rank"), "GT:") {
+				sort = option.SortAsc("rank")
+			} else {
+				sort = option.SortDesc("rank")
+			}
+
+			expBuilder := builder.NewBuilder().
+				ObjectID("origin.internalId").
+				Int("rank")
+
+			rank := expBuilder.Evaluate(w._context.Request().URL.Query())
+
+			if err := inboxService.LoadByRank(w.AuthenticatedID(), folderID, rank, &result, sort); err != nil {
+				return result, derp.Wrap(err, location, "Error loading inbox item")
+			}
+
+			return result, nil
+		}
+	}
+
+	// Fall through means no valid parameters were found
+	return result, derp.NewBadRequestError(location, "Invalid message ID", w._context.QueryParam("messageId"))
 }
