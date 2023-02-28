@@ -1,10 +1,6 @@
 behavior Modal
 
 	init
-		measure #modal-window
-		set delta to Math.floor(it's top / 3)
-		-- set #modal-window's *transform to `translateY(-${delta}px)`
-
 		add [@role="dialog"]
 		set title to the first <h1,h2,h3/> in me
 
