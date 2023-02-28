@@ -1,0 +1,15 @@
+behavior message
+
+	init
+		fetch `/@me/pub/inbox/{{$message.MessageID.Hex}}/mark-read` with method:"POST"
+	end
+
+	on keydown[key=="ArrowLeft"] from window
+		halt the event
+		send click to #previous
+		log event
+	
+	on keydown[key=="ArrowRight"] from window
+		halt the event
+		send click to #next
+		
