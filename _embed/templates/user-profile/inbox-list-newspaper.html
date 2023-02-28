@@ -1,8 +1,11 @@
-{{- if gt (len .) 0 -}}
+{{- $inbox := .Inbox -}}
+{{- $internalID := .QueryParam "origin.internalId" -}}
 
-	{{- $lastMessage := index . (subtract (len .) 1) -}}
+{{- if gt (len $inbox) 0 -}}
 
-	{{- range $index, $message := . -}}
+	{{- $lastMessage := index $inbox (subtract (len $inbox) 1) -}}
+
+	{{- range $index, $message := $inbox -}}
 
 	<hr/>
 
@@ -12,7 +15,7 @@
 			data-status="{{$message.Status}}" 
 			data-inboxItemId="{{$message.MessageID.Hex}}" 
 			style="max-width:640px; cursor:pointer;" 
-			hx-get="/@me/message?messageId={{$message.MessageID.Hex}}">
+			hx-get="/@me/message?messageId={{$message.MessageID.Hex}}&origin.internalId={{$internalID}}">
 
 			<div class="flex-row" style="justify-content:space-between;" hx-push-url="true">
 
@@ -56,4 +59,6 @@
 		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
 
+{{- else -}}
+	{{- template "inbox-empty" . -}}
 {{- end -}}

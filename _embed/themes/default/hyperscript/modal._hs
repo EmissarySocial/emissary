@@ -59,7 +59,6 @@ behavior Modal
 
 	on htmx:beforeSwap from window
 		if event.detail.target is the first <aside/> then
-			log "gotcha"
 			make a RegExp from "^<div " called firstDiv
 			set event.detail.serverResponse to event.detail.serverResponse.replace(firstDiv, "<div class='ready' ")
 		end

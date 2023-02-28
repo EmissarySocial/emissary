@@ -1,6 +1,7 @@
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
+
 <div id="app" class="app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="#app" hx-swap="outerHTML">
 
 	<script src="/.templates/user-profile/hyperscript" type="text/hyperscript"></script>
@@ -23,7 +24,18 @@
 
 		<h1 style="margin-top:0px;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
 
-		{{ .View "inbox-list"}}
+		{{- if eq "SOCIAL" $folder.Layout -}}
+			{{- template "inbox-list-social" . -}}
+		{{- else if eq "CHAT" $folder.Layout -}}
+			{{- template "inbox-list-chat" . -}}
+		{{- else if eq "NEWSPAPER" $folder.Layout -}}
+			{{- template "inbox-list-newspaper" . -}}
+		{{- else if eq "MAGAZINE" $folder.Layout -}}
+			{{- template "inbox-list-magazine" . -}}
+		{{- else -}}
+			{{- template "inbox-list-social" . -}}
+		{{- end -}}
+	
 	</div>
 	
 

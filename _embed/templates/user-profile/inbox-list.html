@@ -1,29 +1,14 @@
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected}}
 
-{{- $inbox := .Inbox $folders.SelectedID -}}
-{{ $isReallyEmpty := .IsInboxEmpty $inbox}}
-
-{{- if $isReallyEmpty -}}
-
-	<hr>
-	<h2 style="color:var(--gray50);">There are no posts in this inbox.</h2>
-
-{{- else if eq 0 (len $inbox) -}}
-	<hr/>
-
+{{- if eq "SOCIAL" $folder.Layout -}}
+	{{- template "inbox-list-social" . -}}
+{{- else if eq "CHAT" $folder.Layout -}}
+	{{- template "inbox-list-chat" . -}}
+{{- else if eq "NEWSPAPER" $folder.Layout -}}
+	{{- template "inbox-list-newspaper" . -}}
+{{- else if eq "MAGAZINE" $folder.Layout -}}
+	{{- template "inbox-list-magazine" . -}}
 {{- else -}}
-
-	{{- if eq "SOCIAL" $folder.Layout -}}
-		{{- template "inbox-list-social" $inbox -}}
-	{{- else if eq "CHAT" $folder.Layout -}}
-		{{- template "inbox-list-chat" $inbox -}}
-	{{- else if eq "NEWSPAPER" $folder.Layout -}}
-		{{- template "inbox-list-newspaper" $inbox -}}
-	{{- else if eq "MAGAZINE" $folder.Layout -}}
-		{{- template "inbox-list-magazine" $inbox -}}
-	{{- else -}}
-		{{- template "inbox-list-social" $inbox -}}
-	{{- end -}}
-
+	{{- template "inbox-list-social" . -}}
 {{- end -}}

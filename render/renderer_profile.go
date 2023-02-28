@@ -312,22 +312,21 @@ func (w Profile) FollowingByFolder(token string) ([]model.FollowingSummary, erro
  ******************************************/
 
 // Inbox returns a slice of messages in the current User's inbox
-func (w Profile) Inbox(folderID primitive.ObjectID) ([]model.Message, error) {
+func (w Profile) Inbox() ([]model.Message, error) {
 
 	// Must be authenticated to view any Inbox messages
 	if !w.IsAuthenticated() {
 		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
 	}
 
-	factory := w._factory
-
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.internalId").
+		ObjectID("folderId").
 		Int("publishDate")
 
-	criteria := expBuilder.Evaluate(w._context.Request().URL.Query()).AndEqual("folderId", folderID)
+	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 
-	return factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
+	return w._factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
