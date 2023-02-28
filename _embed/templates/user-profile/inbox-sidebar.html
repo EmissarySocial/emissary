@@ -9,13 +9,13 @@
 
 			{{- range .Folders -}}
 				{{- if eq $selectedID .FolderID -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item selected ellipsis hover-trigger folder">
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" script="install turboclick" class="menu-item selected ellipsis hover-trigger folder">
 						{{iconFilled .Icon }} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
 					</div>
 				{{- else -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder">
+					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" script="install turboclick" class="menu-item ellipsis hover-trigger folder">
 						{{icon .Icon}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
@@ -24,14 +24,14 @@
 			{{- end -}}
 
 		</form>
-		<div role="button" hx-get="/@me/inbox-folder-add" class="menu-item">{{icon "add"}} Add a Folder</div>
+		<div role="button" hx-get="/@me/inbox-folder-add" script="install turboclick" class="menu-item">{{icon "add"}} Add a Folder</div>
 
 		<hr>
 
 		{{- if .HasSelection -}}
-			<div role="button" hx-get="/@me/inbox-following" class="menu=item">{{icon "settings"}} Following</div>
+			<div role="button" hx-get="/@me/inbox-following" class="menu-item" script="install turboclick">{{icon "settings"}} Following</div>
 		{{- else -}}
-			<div role="button" hx-get="/@me/inbox-following" class="selected menu-item">{{icon "settings-fill"}} Following</div>
+			<div role="button" hx-get="/@me/inbox-following" class="selected menu-item" script="install turboclick">{{icon "settings-fill"}} Following</div>
 		{{- end -}}
 	</div>
 

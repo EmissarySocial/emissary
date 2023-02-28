@@ -1,0 +1,10 @@
+behavior turboclick
+
+	on mousedown or touchstart
+		if event.target is not me then 
+			exit
+		end
+
+		send click to me
+	end
+end
