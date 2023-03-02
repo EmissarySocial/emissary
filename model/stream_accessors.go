@@ -19,15 +19,28 @@ func StreamSchema() schema.Element {
 			"author":        PersonLinkSchema(),
 			"replyTo":       DocumentLinkSchema(),
 			"content":       ContentSchema(),
+			"widgets":       WidgetSchema(),
 			"rank":          schema.Integer{},
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
+
+			// TODO: This is a temporary solution to allow arbitrary data to be stored in a stream.
+			// "data":          schema.Object{Wildcard: schema.Any{}},
+
+		},
+	}
+}
+
+// WidgetSchema defines the structure for the "widgets" container.
+func WidgetSchema() schema.Element {
+	return schema.Object{
+		Wildcard: schema.Array{
+			Items: schema.String{Format: "token"},
 		},
 	}
 }
 
 func PermissionSchema() schema.Element {
-
 	return schema.Object{
 		Wildcard: schema.Array{
 			Items: schema.String{Format: "objectId"},
@@ -40,40 +53,54 @@ func PermissionSchema() schema.Element {
  *********************************/
 
 func (stream *Stream) GetIntOK(name string) (int, bool) {
+
 	switch name {
+
 	case "rank":
 		return stream.Rank, true
+
 	default:
 		return 0, false
 	}
 }
 
 func (stream *Stream) GetInt64OK(name string) (int64, bool) {
+
 	switch name {
+
 	case "publishDate":
 		return stream.PublishDate, true
+
 	case "unpublishDate":
 		return stream.UnPublishDate, true
+
 	default:
 		return 0, false
 	}
 }
 
 func (stream *Stream) GetStringOK(name string) (string, bool) {
+
 	switch name {
 
 	case "streamId":
 		return stream.StreamID.Hex(), true
+
 	case "parentId":
 		return stream.ParentID.Hex(), true
+
 	case "token":
 		return stream.Token, true
+
 	case "navigationId":
 		return stream.NavigationID, true
+
 	case "templateId":
 		return stream.TemplateID, true
+
 	case "stateId":
 		return stream.StateID, true
+
 	default:
 		return "", false
 	}
@@ -84,29 +111,37 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
  *********************************/
 
 func (stream *Stream) SetInt(name string, value int) bool {
+
 	switch name {
+
 	case "rank":
 		stream.Rank = value
 		return true
+
 	default:
 		return false
 	}
 }
 
 func (stream *Stream) SetInt64(name string, value int64) bool {
+
 	switch name {
+
 	case "publishDate":
 		stream.PublishDate = value
 		return true
+
 	case "unpublishDate":
 		stream.UnPublishDate = value
 		return true
+
 	default:
 		return false
 	}
 }
 
 func (stream *Stream) SetString(name string, value string) bool {
+
 	switch name {
 
 	case "streamId":
@@ -152,9 +187,6 @@ func (stream *Stream) GetObject(name string) (any, bool) {
 	case "permissions":
 		return &stream.Permissions, true
 
-	case "defaultAllow":
-		return &stream.DefaultAllow, true
-
 	case "document":
 		return &stream.Document, true
 
@@ -163,6 +195,9 @@ func (stream *Stream) GetObject(name string) (any, bool) {
 
 	case "content":
 		return &stream.Content, true
+
+	case "widgets":
+		return &stream.Widgets, true
 
 	case "data":
 		return &stream.Data, true
