@@ -13,21 +13,22 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID        primitive.ObjectID           `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
-	ParentID        primitive.ObjectID           `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	Token           string                       `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
-	NavigationID    string                       `json:"navigationId"        bson:"navigationId"`        // Unique identifier of the "top-level" Stream that this record falls within. (NOT USED PUBLICLY)
-	TemplateID      string                       `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
-	StateID         string                       `json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	Permissions     mapof.Object[sliceof.String] `json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
-	DefaultAllow    id.Slice                     `json:"defaultAllow"        bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
-	Document        DocumentLink                 `json:"document"            bson:"document"`            // Summary content of this document
-	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
-	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this stream.
-	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate   int64                        `json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	StreamID        primitive.ObjectID                      `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
+	ParentID        primitive.ObjectID                      `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	Token           string                                  `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
+	NavigationID    string                                  `json:"navigationId"        bson:"navigationId"`        // Unique identifier of the "top-level" Stream that this record falls within. (NOT USED PUBLICLY)
+	TemplateID      string                                  `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	StateID         string                                  `json:"stateId"             bson:"stateId"`             // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	Permissions     mapof.Object[sliceof.String]            `json:"permissions"         bson:"permissions"`         // Permissions for which users can access this stream.
+	DefaultAllow    id.Slice                                `json:"defaultAllow"        bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
+	Document        DocumentLink                            `json:"document"            bson:"document"`            // Summary information (url, title, summary) for this Stream
+	InReplyTo       DocumentLink                            `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	Content         Content                                 `json:"content"             bson:"content,omitempty"`   // Content objects for this Stream.
+	Widgets         mapof.Object[sliceof.Object[mapof.Any]] `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
+	Data            mapof.Any                               `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Rank            int                                     `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	PublishDate     int64                                   `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
+	UnPublishDate   int64                                   `json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:"journal"`
 }
 

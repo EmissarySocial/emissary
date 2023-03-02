@@ -1,0 +1,21 @@
+{
+	"label":"Children",
+	"description":"Adds a list of children to this Stream",
+	"schema":{
+		"type":"object",
+		"properties":{
+			"depth":{
+				"type":"number",
+				"minimum":1,
+				"maximum":3,
+				"default":1
+			}
+		}
+	},
+	"form":{
+		"type":"layout-vertical",
+		"children":[
+			{"type":"text", "label":"Depth", "name":"depth", "path":"depth"}
+		]
+	}
+}

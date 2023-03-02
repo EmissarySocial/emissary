@@ -9,7 +9,6 @@
 			<div class="tabs" data-script="install TabContainer">
 
 				<div role="tablist">
-					<button type="button" role="tab" id="tab-themes" class="tab-label" aria-controls="panel-themes">Themes</button>
 					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">Templates</button>
 					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Emails</button>
 					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
@@ -17,18 +16,13 @@
 				</div>
 
 				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
-					<p>User Templates define all of the different kinds of media that users can include on their sites.</p>
+					<p>User Templates define all of the themes, templates, and widgets that users can include on their sites.</p>
 					<div hx-get="/server/templates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 				<div role="tabpanel" id="panel-emails" aria-labelledby="tab-emails" hidden="true">
 					<p>Email Templates contain all of the emails that are sent by websites.</p>
 					<div hx-get="/server/emails" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-themes" aria-labelledby="tab-themes" hidden="true">
-					<p>System Templates define the administrative templates used to control site behavior.</p>
-					<div hx-get="/server/themes" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">

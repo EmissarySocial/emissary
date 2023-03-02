@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"html/template"
 	"io/fs"
 	"net/url"
@@ -162,22 +161,39 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 	return nil
 }
 
-// loadModelFromFilesystem locates and parses a schema from the filesystem path
-func loadModelFromFilesystem(filesystem fs.FS, model any, location string) error {
+// DefinitionEmail marks a filesystem that contains an Email definition.
+const DefinitionEmail = "EMAIL"
 
-	file, err := fs.ReadFile(filesystem, "template.json")
+// DefinitionEmail marks a filesystem that contains a stream Template definition.
+const DefinitionTemplate = "TEMPLATE"
 
-	if err != nil {
-		return derp.Wrap(err, "service.loadModelFromFilesystem", "Cannot read file: template.json", location)
+// DefinitionEmail marks a filesystem that contains a domain Theme definition.
+const DefinitionTheme = "THEME"
+
+// DefinitionWidget marks a filesystem that contains a Widget definition.
+const DefinitionWidget = "WIDGET"
+
+// findDefinition locates a definition JSON file and returns its type and contents
+func findDefinition(filesystem fs.FS) (string, []byte, error) {
+
+	// If this directory contains a "theme.json" file, then it's a theme.
+	if file, err := fs.ReadFile(filesystem, "theme.json"); err == nil {
+		return DefinitionTheme, file, nil
 	}
 
-	// Unmarshal the file into the schema.
-	if err := json.Unmarshal(file, model); err != nil {
-		return derp.Wrap(err, "service.loadModelFromFilesystem", "Invalid JSON configuration file: template.json", location)
+	// If this directory contains a "template.json" file, then it's a template.
+	if file, err := fs.ReadFile(filesystem, "template.json"); err == nil {
+		return DefinitionTemplate, file, nil
 	}
 
-	// Return to caller.
-	return nil
+	// If this directory contains a "widget.json" file, then it's a widget.
+	if file, err := fs.ReadFile(filesystem, "widget.json"); err == nil {
+		return DefinitionWidget, file, nil
+	}
+
+	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
+
+	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
 }
 
 func value[T any](value T, _ bool) T {

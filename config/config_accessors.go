@@ -13,7 +13,6 @@ func Schema() schema.Schema {
 				"domains":             schema.Array{Items: DomainSchema()},
 				"providers":           schema.Array{Items: ProviderSchema()},
 				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
-				"themes":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"emails":              schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),
@@ -36,9 +35,6 @@ func (config *Config) GetObject(name string) (any, bool) {
 
 	case "templates":
 		return &config.Templates, true
-
-	case "themes":
-		return &config.Themes, true
 
 	case "emails":
 		return &config.Emails, true

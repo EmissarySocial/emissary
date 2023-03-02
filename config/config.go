@@ -14,7 +14,6 @@ import (
 type Config struct {
 	Domains             set.Slice[Domain]      `json:"domains"`             // Slice of one or more domain configurations
 	Providers           set.Slice[Provider]    `json:"providers"`           // Slice of one or more OAuth client configurations
-	Themes              sliceof.Object[Folder] `json:"themes"`              // Folders containing all system themes
 	Templates           sliceof.Object[Folder] `json:"templates"`           // Folders containing all stream templates
 	Emails              sliceof.Object[Folder] `json:"emails"`              // Folders containing email templates
 	AttachmentOriginals Folder                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
@@ -40,7 +39,6 @@ func DefaultConfig() Config {
 		Domains: set.Slice[Domain]{},
 
 		// File Locations
-		Themes:              []Folder{{Adapter: "EMBED", Location: "themes"}},
 		Templates:           []Folder{{Adapter: "EMBED", Location: "templates"}},
 		Emails:              []Folder{{Adapter: "EMBED", Location: "emails"}},
 		AttachmentOriginals: Folder{Adapter: "FILE", Location: ".emissary/attachments"},

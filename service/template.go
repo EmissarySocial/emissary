@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -22,6 +23,8 @@ type Template struct {
 	templates         set.Map[model.Template] // map of all templates available within this domain
 	locations         []config.Folder         // Configuration for template directory
 	filesystemService Filesystem              // Filesystem service
+	themeService      *Theme                  // Theme Service
+	widgetService     *Widget                 // Widget Service
 	funcMap           template.FuncMap        // Map of functions to use in golang templates
 	mutex             sync.RWMutex            // Mutext that locks access to the templates structure
 	changed           chan bool               // Channel that is used to signal that a template has changed
@@ -29,12 +32,14 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) *Template {
+func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []config.Folder) *Template {
 
 	service := Template{
 		templates:         make(set.Map[model.Template]),
 		locations:         make([]config.Folder, 0),
 		filesystemService: filesystemService,
+		themeService:      themeService,
+		widgetService:     widgetService,
 		funcMap:           funcMap,
 		changed:           make(chan bool),
 		closed:            make(chan bool),
@@ -113,8 +118,6 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
-	result := set.NewMap[model.Template]()
-
 	// For each configured location...
 	for _, location := range service.locations {
 
@@ -139,44 +142,71 @@ func (service *Template) loadTemplates() error {
 				continue
 			}
 
-			subdirectory, err := fs.Sub(filesystem, directory.Name())
+			directoryName := directory.Name()
+			fmt.Println("Inspecting: " + directoryName)
+			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location))
 				continue
 			}
 
-			template := model.NewTemplate(directory.Name(), service.funcMap)
+			definitionType, file, err := findDefinition(subdirectory)
 
-			// Load/Parse the model file from the filesystem (template.json)
-			if err := loadModelFromFilesystem(subdirectory, &template, directory.Name()); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Schema", location, directory))
+			if err != nil {
+				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Invalid definition", location))
 				continue
 			}
 
-			// Load all HTML templates from the filesystem
-			if err := loadHTMLTemplateFromFilesystem(subdirectory, template.HTMLTemplate, service.funcMap); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Template", location, directory))
-				continue
+			switch definitionType {
+
+			// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
+
+			case DefinitionTheme:
+				service.themeService.Add(directoryName, subdirectory, file)
+
+			case DefinitionWidget:
+				service.widgetService.Add(directoryName, subdirectory, file)
+
+			case DefinitionTemplate:
+				service.Add(directoryName, subdirectory, file)
+
+			default:
+				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Invalid definition", location))
 			}
-
-			// Load all Bundles from the filesystem
-			if err := populateBundles(template.Bundles, subdirectory); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", location, directory))
-				continue
-			}
-
-			fmt.Println("... template: " + template.TemplateID)
-
-			result[template.TemplateID] = template
 		}
 	}
 
-	// Lock service and update templates
+	return nil
+}
+
+func (service *Template) Add(templateID string, filesystem fs.FS, definition []byte) error {
+
+	const location = "service.template.Add"
+
+	template := model.NewTemplate(templateID, service.funcMap)
+
+	// Unmarshal the file into the schema.
+	if err := json.Unmarshal(definition, &template); err != nil {
+		return derp.Wrap(err, location, "Error loading Schema", templateID)
+	}
+
+	// Load all HTML templates from the filesystem
+	if err := loadHTMLTemplateFromFilesystem(filesystem, template.HTMLTemplate, service.funcMap); err != nil {
+		return derp.Wrap(err, location, "Error loading Template", templateID)
+	}
+
+	// Load all Bundles from the filesystem
+	if err := populateBundles(template.Bundles, filesystem); err != nil {
+		return derp.Wrap(err, location, "Error loading Bundles", templateID)
+	}
+
+	fmt.Println("... adding template: " + template.TemplateID)
+	// Add the template into the service library
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
-	service.templates = result
+	service.templates[template.TemplateID] = template
 
 	return nil
 }

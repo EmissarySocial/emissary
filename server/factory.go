@@ -31,6 +31,7 @@ type Factory struct {
 	// Server-level services
 	themeService    service.Theme
 	templateService service.Template
+	widgetService   service.Widget
 	contentService  service.Content
 	providerService service.Provider
 	emailService    service.ServerEmail
@@ -60,14 +61,18 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 	// Global Theme service
 	factory.themeService = *service.NewTheme(
-		factory.Filesystem(),
 		factory.FuncMap(),
-		[]config.Folder{},
+	)
+
+	factory.widgetService = *service.NewWidget(
+		factory.FuncMap(),
 	)
 
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
 		factory.Filesystem(),
+		factory.Theme(),
+		factory.Widget(),
 		factory.FuncMap(),
 		[]config.Folder{},
 	)
@@ -117,7 +122,6 @@ func (factory *Factory) start() {
 		}
 
 		// Refresh cached values in global services
-		factory.themeService.Refresh(config.Themes)
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
@@ -412,6 +416,11 @@ func (factory *Factory) Template() *service.Template {
 // Theme returns the global theme service
 func (factory *Factory) Theme() *service.Theme {
 	return &factory.themeService
+}
+
+// Widget returns the global widget service
+func (factory *Factory) Widget() *service.Widget {
+	return &factory.widgetService
 }
 
 // FuncMap returns the global funcMap (used by all templates)
