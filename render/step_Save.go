@@ -2,13 +2,14 @@ package render
 
 import (
 	"io"
+	"text/template"
 
 	"github.com/benpate/derp"
 )
 
 // StepSave represents an action-step that can save changes to any object
 type StepSave struct {
-	Comment string
+	Comment *template.Template
 }
 
 func (step StepSave) Get(renderer Renderer, _ io.Writer) error {
@@ -24,8 +25,10 @@ func (step StepSave) Post(renderer Renderer) error {
 
 	object := renderer.object()
 
+	comment := executeTemplate(step.Comment, renderer)
+
 	// Try to update the stream
-	if err := renderer.service().ObjectSave(object, step.Comment); err != nil {
+	if err := renderer.service().ObjectSave(object, comment); err != nil {
 		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object")
 	}
 
