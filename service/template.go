@@ -143,7 +143,6 @@ func (service *Template) loadTemplates() error {
 			}
 
 			directoryName := directory.Name()
-			fmt.Println("Inspecting: " + directoryName)
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {

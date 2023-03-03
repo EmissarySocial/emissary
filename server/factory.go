@@ -163,6 +163,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.emailService,
 		&factory.themeService,
 		&factory.templateService,
+		&factory.widgetService,
 		&factory.contentService,
 		&factory.providerService,
 		factory.taskQueue,

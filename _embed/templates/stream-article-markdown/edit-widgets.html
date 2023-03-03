@@ -1,3 +1,5 @@
+<script type="text/javascript" src="/.templates/article-markdown/javascript"></script>
+
 <script type="text/hyperscript">
 	def saveDraft(promote)
 		send save to #markdownForm
@@ -13,13 +15,14 @@
 <div class="page">
 
 	<div id="menu-bar">
+
 		<div class="left">
 			{{- if .UserCan "edit" -}}
-				<a hx-get="/{{.StreamID}}/edit" class="bold">Content</a>
+				<a hx-get="/{{.StreamID}}/edit" hx-push-url="true">Content</a>
 			{{- end -}}
 
 			{{- if .UserCan "widgets" -}}
-				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true">Widgets</a>
+				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true" class="bold">Widgets</a>
 			{{- end -}}
 
 			{{- if .UserCan "properties" -}}
@@ -48,8 +51,8 @@
 	</div>
 
 	<article>
-		<form id="markdownForm" hx-post="/{{.StreamID}}/edit" hx-trigger="save" hx-swap="none">
-			<textarea name="content" style="width:100%; min-height:600px;">{{.ContentRaw}}</textarea>
+		<form hx-post="/{{.StreamID}}/widgets" hx-trigger="change, save" hx-swap="none" id="markdownForm">
+			{{.WidgetEditor}}
 		</form>
 	</article>
 	

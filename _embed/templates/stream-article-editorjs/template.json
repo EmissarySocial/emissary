@@ -6,6 +6,18 @@
 	"label":"Article",
 	"description":"For regular use. Contains text, images, and more.",
 	"icon":"article",
+	"widget-locations": ["LEFT", "TOP", "RIGHT", "BOTTOM"],
+	"bundles": {
+		"stylesheet": {
+			"content-type":"text/css"
+		},
+		"javascript":{
+			"content-type":"text/javascript"
+		},
+		"hyperscript": {
+			"content-type":"text/hyperscript"
+		}
+	},
 	"schema": {
 		"type":"object",
 		"properties": {
@@ -68,6 +80,15 @@
 			"steps": [
 				{"step":"with-draft", "steps": [
 					{"step":"edit-content", "file":"edit", "format":"EDITORJS"}
+				]}
+			]
+		},
+		"widgets": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"with-draft", "steps": [
+					{"step":"edit-widgets", "file":"edit-widgets"},
+					{"step":"save", "message":"Widgets updated by {{.Author}}"}
 				]}
 			]
 		},

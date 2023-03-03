@@ -1,0 +1,40 @@
+.content {
+	display:flex;
+	flex-direction:row;	
+	flex-wrap:nowrap;
+	width:100%;
+}
+
+.content > .content-main {
+	flex-grow:1;
+}
+
+.widgets {
+	background-color:var(--gray20);
+	border:solid 1px var(--gray30);
+	padding:24px;
+}
+
+.widgets.TOP {
+	margin-bottom:16px;
+}
+
+.widgets.LEFT {
+	width:25%;
+	max-width:300px;
+	margin-right:16px;
+	flex-grow:0;
+	flex-shrink:0;
+}
+
+.widgets.RIGHT {
+	width:25%;
+	max-width:300px;
+	margin-left:16px;
+	flex-grow:0;
+	flex-shrink:0;
+}
+
+.widgets.BOTTOM {
+	margin-top:16px;
+}

@@ -306,15 +306,15 @@ func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
 func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
 
 	result := criteria.
-		And(exp.Equal("journal.deleteDate", 0)).                 // Stream must not be deleted
-		And(exp.LessThan("publishDate", time.Now().UnixMilli())) // Stream must be published
+		And(exp.Equal("journal.deleteDate", 0)) // Stream must not be deleted
 
 	// If the user IS NOT a domain owner, then we must also
 	// check their permission to VIEW this stream
 	authorization := w.authorization()
 
 	if !authorization.DomainOwner {
-		result = result.And(exp.In("defaultAllow", authorization.AllGroupIDs()))
+		result = result.And(exp.In("defaultAllow", authorization.AllGroupIDs())).
+			And(exp.LessThan("publishDate", time.Now().UnixMilli())) // Stream must be published
 	}
 
 	return result

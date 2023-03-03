@@ -9,12 +9,15 @@ import (
 type Step interface {
 	Get(Renderer, io.Writer) error
 	Post(Renderer) error
-	UseGlobalWrapper() bool
-	// isWrapped() bool // Returns true if this step can be wrapped by the global frame.
+	UseGlobalWrapper() bool // TODO: should have a better solution for using/skipping the global wrapper than this function
 }
 
 // ExecutableStep uses an Step object to create a new action
 func ExecutableStep(stepInfo step.Step) Step {
+
+	// These actual action steps require access to more of the application than is available in the model package.
+	// Model objects are only concerned with the data that they contain, and not with the actual rendering of that data.
+	// So, we convert the model object into a "render step" that CAN access the rendering context.
 
 	switch s := stepInfo.(type) {
 
@@ -51,11 +54,14 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditContent:
 		return StepEditContent(s)
 
+	case step.EditModelObject:
+		return StepEditModelObject(s)
+
 	case step.EditProperties:
 		return StepEditProperties(s)
 
-	case step.EditModelObject:
-		return StepEditModelObject(s)
+	case step.EditWidgets:
+		return StepEditWidgets(s)
 
 	case step.ForwardTo:
 		return StepForwardTo(s)

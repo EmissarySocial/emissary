@@ -211,6 +211,7 @@ func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string)
 
 	// Copy data from draft to production
 	stream.Document = draft.Document
+	stream.Widgets = draft.Widgets
 	stream.Content = draft.Content
 	stream.Data = draft.Data
 	stream.StateID = stateID

@@ -2,12 +2,14 @@
 
 	<div id="menu-bar">
 		<div class="left">
-			<button script="on click saveDraft(true)" class="button primary">Promote</button>
-			<button script="on click saveDraft(false)">Save Draft</button>
-			<button hx-get="/{{.StreamID}}/discard-draft">Discard Draft</button>
-		</div>
+			{{- if .UserCan "edit" -}}
+				<a hx-get="/{{.StreamID}}/edit" class="bold">Content</a>
+			{{- end -}}
 
-		<div class="right">
+			{{- if .UserCan "widgets" -}}
+				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true">Widgets</a>
+			{{- end -}}
+
 			{{- if .UserCan "properties" -}}
 				<a hx-get="/{{.StreamID}}/properties">Info</a>
 			{{- end -}}
@@ -15,6 +17,12 @@
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}
+		</div>
+
+		<div class="right">
+			<button script="on click saveDraft(true)" class="button primary">Promote</button>
+			<button script="on click saveDraft(false)">Save Draft</button>
+			<button hx-get="/{{.StreamID}}/discard-draft">Discard Draft</button>
 
 			{{- if .UserCan "delete" -}}
 				<a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>

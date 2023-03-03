@@ -37,6 +37,7 @@ type Factory struct {
 	// services (from server)
 	themeService    *service.Theme
 	templateService *service.Template
+	widgetService   *service.Widget
 	contentService  *service.Content
 	providerService *service.Provider
 	taskQueue       *queue.Queue
@@ -70,7 +71,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, httpCache *cache.Cache, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, httpCache *cache.Cache, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -78,6 +79,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory := Factory{
 		themeService:    themeService,
 		templateService: templateService,
+		widgetService:   widgetService,
 		contentService:  contentService,
 		providerService: providerService,
 		taskQueue:       taskQueue,
@@ -374,6 +376,11 @@ func (factory *Factory) Folder() *service.Folder {
 	return &factory.folderService
 }
 
+// Group returns a fully populated Group service
+func (factory *Factory) Group() *service.Group {
+	return &factory.groupService
+}
+
 // Inbox returns a fully populated Inbox service
 func (factory *Factory) Inbox() *service.Inbox {
 	return &factory.inboxService
@@ -400,9 +407,9 @@ func (factory *Factory) User() *service.User {
 	return &factory.userService
 }
 
-// Group returns a fully populated Group service
-func (factory *Factory) Group() *service.Group {
-	return &factory.groupService
+// Widget returns a fully populated Widget service
+func (factory *Factory) Widget() *service.Widget {
+	return factory.widgetService
 }
 
 /******************************************

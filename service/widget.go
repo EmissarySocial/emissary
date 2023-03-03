@@ -9,6 +9,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
+	"golang.org/x/exp/slices"
 )
 
 // Widget service manages the global, in-memory library of widget templates that can
@@ -62,9 +64,30 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 }
 
 // Get returns a widget definition from the in-memory library.
-func (service *Widget) Get(widgetID string) model.Widget {
+func (service *Widget) Get(widgetID string) (model.Widget, bool) {
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
 
-	return service.widgets[widgetID]
+	result, ok := service.widgets[widgetID]
+	return result, ok
+}
+
+func (service *Widget) List() []form.LookupCode {
+
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	result := make([]form.LookupCode, 0, len(service.widgets))
+
+	for _, widget := range service.widgets {
+		result = append(result, form.LookupCode{
+			Value:       widget.WidgetID,
+			Label:       widget.Label,
+			Description: widget.Description,
+		})
+	}
+
+	slices.SortFunc(result, form.SortLookupCodeByLabel)
+
+	return result
 }

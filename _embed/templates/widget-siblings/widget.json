@@ -1,0 +1,5 @@
+{
+	"widgetId": "siblings",
+	"label": "Sibling List",
+	"description":"Displays a list of all siblings for this stream"
+}

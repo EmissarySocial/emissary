@@ -30,6 +30,7 @@ type Factory interface {
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User
+	Widget() *service.Widget
 
 	// Other data services
 	Config() config.Domain

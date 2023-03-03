@@ -1,6 +1,8 @@
 <div hx-sse="connect:/{{.StreamID}}/sse">
 <div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
+	<link rel="stylesheet" href="/.templates/article-markdown/stylesheet"/>
+
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<a href="/{{.StreamID}}/edit">Edit Content</a>
@@ -25,8 +27,14 @@
 	<h1 class="p-name">{{.Label}}</h1>
 	<div class="p-summary">{{.Summary}}</div>
 
-	<article class="content space-after e-content">
-		{{- .ContentHTML -}}
+	<article class="content">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			{{- .Widgets "TOP" -}}
+			<div class="e-content">{{- .ContentHTML -}}</div>
+			{{- .Widgets "BOTTOM" -}}
+		</div>
+		{{- .Widgets "RIGHT" -}}
 	</article>
 
 </div>

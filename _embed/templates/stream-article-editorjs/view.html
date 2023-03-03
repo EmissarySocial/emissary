@@ -1,33 +1,38 @@
-<div hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
 
-	<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
+	<link rel="stylesheet" href="/.templates/article-editorjs/stylesheet"/>
 
-		{{- if .UserCan "edit" -}}
-			<div id="menu-bar">
-				<a href="/{{.StreamID}}/edit">Edit Content</a>
+	{{- if .UserCan "edit" -}}
+		<div id="menu-bar">
+			<a href="/{{.StreamID}}/edit">Edit Content</a>
 
-				{{- if .UserCan "sharing" -}}
-					<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
+			{{- end -}}
+
+			<div class="right">
+				{{- if .UserCan "publish" -}}
+					<a hx-get="/{{.StreamID}}/publish" hx-push-url="false" class="button">Publish</a>
 				{{- end -}}
 
-				<div class="right">
-					{{- if .UserCan "publish" -}}
-						<a hx-get="/{{.StreamID}}/publish" hx-push-url="false" class="button">Publish</a>
-					{{- end -}}
-
-					{{- if .UserCan "unpublish" -}}
-						<a hx-get="/{{.StreamID}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
-					{{- end -}}
-				</div>
-
+				{{- if .UserCan "unpublish" -}}
+					<a hx-get="/{{.StreamID}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
+				{{- end -}}
 			</div>
-		{{- end -}}
 
-		{{.View "heading"}}
-	
-		<article class="content space-after e-content">
-			{{- .ContentHTML -}}
-		</article>
+		</div>
+	{{- end -}}
 
-	</div>
+	{{- .View "heading" -}}
+
+	<article class="content space-after">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			{{- .Widgets "TOP" -}}
+			<div class="e-content">{{- .ContentHTML -}}</div>
+			{{- .Widgets "BOTTOM" -}}
+		</div>
+		{{- .Widgets "RIGHT" -}}
+	</article>
+
 </div>

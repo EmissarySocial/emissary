@@ -8,10 +8,12 @@ import (
 )
 
 type Widget struct {
-	WidgetID     string
-	HTMLTemplate *template.Template
-	Bundles      mapof.Object[Bundle]
-	Form         form.Form
+	WidgetID     string               // Unique identifier for this widget
+	Label        string               // Human-readable label for this widget
+	Description  string               // Human-readable description for this widget
+	HTMLTemplate *template.Template   // HTML template for this widget
+	Bundles      mapof.Object[Bundle] // List of bundles that this widget uses
+	Form         form.Form            // Property/Settings form for this widget
 }
 
 func NewWidget(widgetID string, funcMap template.FuncMap) Widget {

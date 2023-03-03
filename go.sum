@@ -76,8 +76,6 @@ github.com/benpate/exp v0.6.0 h1:upJ6F8NNLTPPqMwxksn+PvGpWfUJOyDeolp9x0P9eKQ=
 github.com/benpate/exp v0.6.0/go.mod h1:+eTsvQVuAobL6efQ1KMwzQLK5Trm679Oiq+n8IflrFU=
 github.com/benpate/exp-builder v0.6.0 h1:SzPqSfBjPieR0eyz/SxZsdm5gOThHr1wuNs+bg5jX9A=
 github.com/benpate/exp-builder v0.6.0/go.mod h1:Z5F0Pf++Zb91+Gx50QU/2723lIBncKecXiEuCJYBg20=
-github.com/benpate/form v0.14.4 h1:s5uKACUTMg95TCVtlP2aUUXAbaqcfHVJ288P1A17IA8=
-github.com/benpate/form v0.14.4/go.mod h1:sYP6p9AgQgrhVDftaNqPXT31axs6twBI4EdZYDWXChA=
 github.com/benpate/hannibal v0.2.3 h1:jEoyHCqfO1jfjy4/OFZZmYSc2ne2GsFk5uC1igXwKnk=
 github.com/benpate/hannibal v0.2.3/go.mod h1:PVzoIRePcxouf95x41BOFqqhikQxe21E7DnbuMd226k=
 github.com/benpate/html v0.15.0 h1:E8ePO2XMf2P/WgTRSaEI1H3Rb4EzvrfbU4wTW6Svq3s=
@@ -88,8 +86,6 @@ github.com/benpate/mediaserver v0.9.1 h1:Sv7Ce4TyeYNduLBrijqCJ2qW1M9xv3DNRMvBgk8
 github.com/benpate/mediaserver v0.9.1/go.mod h1:7qVVvW/sTfA/pM4CAbESv5tJemsvUZ39VQdpgU35Qmw=
 github.com/benpate/remote v0.10.1 h1:S6Wd4k+oLmYfqt8vf7L3Vxm2tWYQHmXr+equjaxk178=
 github.com/benpate/remote v0.10.1/go.mod h1:+EIbMo6207fEfjHvvEWMEC0Q50zXBozS20muUv7UiTM=
-github.com/benpate/rosetta v0.11.2 h1:mbxjindlEzK8rVZcO6+YravIpsCx9OjsFolX0wn8RyA=
-github.com/benpate/rosetta v0.11.2/go.mod h1:nEsQ0fLnoo/RgelVB0e+V/nyaLJE8TBFaEsNUKIW1y4=
 github.com/benpate/steranko v0.13.1 h1:ZJ29rqXlqI7Bat/lTzhqeumYYXYkgDopsopw0/jfy14=
 github.com/benpate/steranko v0.13.1/go.mod h1:giY7UZ42WW4yF1cJLhl9bSan05c+1KuqsBsMbjY+NuA=
 github.com/benpate/table v0.5.1 h1:Qcs2IsZUOZsFeYVllIIv3ZCfiOrrHpdnDnOHqkPIw6g=
@@ -437,6 +433,8 @@ golang.org/x/exp v0.0.0-20191227195350-da58074b4299/go.mod h1:2RIsYlXP63K8oxa1u0
 golang.org/x/exp v0.0.0-20200119233911-0405dc783f0a/go.mod h1:2RIsYlXP63K8oxa1u096TMicItID8zy7Y6sNkU49FU4=
 golang.org/x/exp v0.0.0-20200207192155-f17229e696bd/go.mod h1:J/WKrq2StrnmMY6+EHIKF9dgMWnmCNThgcyBT1FY9mM=
 golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6/go.mod h1:3jZMyOhIsHpP37uCMkUooju7aAi5cS1Q23tOzKc+0MU=
+golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 h1:Jvc7gsqn21cJHCmAWx0LiimpP18LZmUxkT5Mp7EZ1mI=
+golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=

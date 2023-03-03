@@ -24,6 +24,7 @@ type Template struct {
 	ChildSortType      string               `json:"childSortType"      bson:"childSortType"`      // SortType used to display children
 	ChildSortDirection string               `json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
 	URL                string               `json:"url"                bson:"url"`                // URL where this template is published
+	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
 	Roles              mapof.Object[Role]   `json:"roles"              bson:"roles"`              // Map of custom roles defined by this Template.
@@ -41,6 +42,7 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		ContainedBy:        make([]string, 0),
 		ChildSortType:      "rank",
 		ChildSortDirection: option.SortDirectionAscending,
+		WidgetLocations:    make(sliceof.String, 0),
 		States:             make(map[string]State),
 		Roles:              make(map[string]Role),
 		Actions:            make(map[string]Action),

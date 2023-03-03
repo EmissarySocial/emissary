@@ -23,10 +23,7 @@ func StreamSchema() schema.Element {
 			"rank":          schema.Integer{},
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
-
-			// TODO: This is a temporary solution to allow arbitrary data to be stored in a stream.
-			// "data":          schema.Object{Wildcard: schema.Any{}},
-
+			"data":          schema.Object{Wildcard: schema.Any{}},
 		},
 	}
 }

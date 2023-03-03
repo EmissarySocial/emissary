@@ -43,6 +43,7 @@ func NewStream() Stream {
 		ParentID:      primitive.NilObjectID,
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
+		Widgets:       mapof.NewObject[sliceof.String](),
 		Data:          mapof.NewAny(),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,

@@ -15,8 +15,11 @@ import (
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/exp/slices"
 )
 
 // Stream wraps a model.Stream object and provides functions that make it easy to render an HTML template with it.
@@ -330,7 +333,77 @@ func (w Stream) Roles() []string {
 }
 
 /******************************************
- * RELATED STREAMS
+ * Widgets
+ ******************************************/
+
+func (w Stream) ListWidgets() []form.LookupCode {
+	widgetService := w._factory.Widget()
+	return widgetService.List()
+}
+
+func (w Stream) Widgets(location string) (template.HTML, error) {
+
+	list := w.stream.Widgets[location]
+
+	if len(list) == 0 {
+		return template.HTML(""), nil
+	}
+
+	widgetService := w._factory.Widget()
+	var buffer bytes.Buffer
+	buffer.WriteString(`<div class="widgets ` + location + `">`)
+	for _, widgetID := range list {
+		if widget, ok := widgetService.Get(widgetID); ok {
+			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", w); err != nil {
+				derp.Report(derp.Wrap(err, "renderer.Stream.Widgets", "Error executing widget template", widgetID))
+			}
+		}
+	}
+	buffer.WriteString(`</div>`)
+
+	return template.HTML(buffer.String()), nil
+}
+
+func (w Stream) WidgetEditor() (template.HTML, error) {
+
+	spew.Dump(w.stream.Widgets)
+
+	t := w.template()
+	s := schema.New(model.StreamSchema())
+
+	f := form.New(s, form.Element{
+		Type: "layout-vertical",
+		Children: slice.Map(t.WidgetLocations, func(location string) form.Element {
+
+			selected := w.stream.Widgets[location]
+			less := form.SortLookupCodesBySelectedValues(selected)
+			widgets := w._factory.Widget().List()
+			slices.SortStableFunc(widgets, less)
+
+			return form.Element{
+				Type:  "multiselect",
+				Label: location,
+				Path:  "widgets." + location,
+				Options: map[string]any{
+					"enum":      widgets,
+					"maxHeight": 200,
+					"sort":      true,
+				},
+			}
+		}),
+	})
+
+	result, err := f.Editor(w.stream, nil)
+
+	if err != nil {
+		return template.HTML(""), derp.Wrap(err, "renderer.Stream.WidgetEditor", "Error creating widget editor")
+	}
+
+	return template.HTML(result), nil
+}
+
+/******************************************
+ * Related Streams
  ******************************************/
 
 // Parent returns a Stream containing the parent of the current stream

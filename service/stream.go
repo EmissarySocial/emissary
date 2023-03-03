@@ -264,6 +264,7 @@ func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) 
 }
 
 func (service *Stream) ObjectSave(object data.Object, note string) error {
+
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(stream, note)
 	}
@@ -283,7 +284,9 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 
 func (service *Stream) Schema() schema.Schema {
 	// TODO: HIGH: Implement
-	return schema.New(model.StreamSchema())
+	result := schema.New(model.StreamSchema())
+	result.ID = "https://emissary.social/schemas/stream"
+	return result
 }
 
 /******************************************

@@ -1,0 +1,5 @@
+{
+	"widgetId":"title",
+	"label":"Title Block",
+	"description":"Displays a semantically meaningful title for this stream"
+}

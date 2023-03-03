@@ -46,9 +46,8 @@ func TestStreamSchema(t *testing.T) {
 		{"widgets.XYZ.0", "THIRD VALUE", nil},
 		{"widgets.XYZ.1", "FOURTH VALUE", nil},
 
-		// TODO: LOW: Should be able to validate data here, too, but "Wildcard" is not working.
-		// {"data.ABC", "FIRST VALUE", nil},
-		// {"data.XYZ", "SECOND VALUE", nil},
+		{"data.ABC", "FIRST VALUE", nil},
+		{"data.XYZ", "SECOND VALUE", nil},
 
 		{"rank", "1234", 1234},
 		{"publishDate", 12345678, int64(12345678)},

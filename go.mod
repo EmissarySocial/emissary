@@ -4,6 +4,10 @@ go 1.19
 
 // replace github.com/benpate/hannibal => ../../benpate/hannibal
 
+replace github.com/benpate/form => ../../benpate/form
+
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.205
@@ -49,6 +53,7 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.4
 	go.mongodb.org/mongo-driver v1.11.2
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	golang.org/x/net v0.7.0
 	golang.org/x/oauth2 v0.5.0
 	willnorris.com/go/microformats v1.2.0
