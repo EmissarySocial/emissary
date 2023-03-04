@@ -1,0 +1,12 @@
+<div class="widget h-card flex-row space-below">
+	{{- if ne "" .Document.Author.ImageURL -}}
+		<img src="{{.Document.Author.ImageURL}}" class="circle u-photo" style="height:2em; width:2em;">
+	{{- end -}}
+	{{- if ne "" .Document.Author.ProfileURL -}}
+		<a href="{{.Document.Author.ProfileURL}}" class="p-name">{{.Document.Author.Name}}</a>
+	{{- else -}}
+		<span class="p-name">{{.Document.Author.Name}}</span>
+	{{- end -}}
+	&middot; Published
+	<span class="dt-published">{{.PublishDateUnix.Format "Jan 2, 2006"}}</span>
+</div>

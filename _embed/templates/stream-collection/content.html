@@ -1,0 +1,41 @@
+{{- $children := .Children.All.ByRank.Slice -}}
+
+<div class="flex-row">
+	{{- if .Data "showSidebar" -}}
+		<div class="sidebar">
+			<div>
+				{{- if ne 0 (len $children) -}}
+					<div>
+						{{- range $children -}}
+							<a href="#{{.StreamID}}" class="block sidebar-item ellipsis">{{.Label}}</a>
+						{{- end -}}
+					</div>
+
+					{{- if .UserCan "add-child" -}}
+						<div class="space-above text-xs">
+							<br>
+							<button hx-get="/{{.Token}}/add-child">
+								{{- icon "plus"}} Add Another
+							</button>
+						</div>
+					{{- end -}}
+				{{- end -}}
+			</div>
+		</div>
+	{{- end -}}
+
+	<div style="flex-grow:1;">
+		{{- range $children -}}
+			<div id="{{.StreamID}}" hx-get="/{{.StreamID}}" hx-trigger="revealed" hx-target="this"></div>
+		{{- end -}}
+
+		{{- if .UserCan "add-child" -}}
+			<div>
+				<button hx-get="/{{.Token}}/add-child">
+					{{- icon "plus"}} Add an Item
+				</button>
+			</div>
+		{{- end -}}
+	</div>
+
+</div>

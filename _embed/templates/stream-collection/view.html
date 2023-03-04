@@ -1,63 +1,19 @@
-{{- $children := .Children.All.ByRank.Slice -}}
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
-<div hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window">
+	<link rel="stylesheet" href="/.templates/collection/stylesheet">
 
-	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
+	{{.View "heading"}}
 
-		{{.View "heading"}}
-	
-		<div class="flex-row">
-			{{- if .Data "showSidebar" -}}
-				<div class="sidebar">
-					{{- if ne 0 (len $children) -}}
-						<div>
-							{{- range $children -}}
-								<a href="#{{.StreamID}}" class="block sidebar-item ellipsis">{{.Label}}</a>
-							{{- end -}}
-						</div>
+	<article class="content">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			{{- .Widgets "TOP" -}}
 
-						{{- if .UserCan "add-child" -}}
-							<div class="space-above text-xs">
-								<br>
-								<button hx-get="/{{.Token}}/add-child">
-									{{- icon "plus"}} Add Another
-								</button>
-							</div>
-						{{- end -}}
-					{{- end -}}
-				</div>
-			{{- end -}}
+			{{- template "content" . -}}
 
-			<div style="width:100%">
-				{{- range $children -}}
-					<div id="{{.StreamID}}" hx-get="/{{.StreamID}}" hx-trigger="revealed" hx-target="this"></div>
-				{{- end -}}
-		
-				{{- if .UserCan "add-child" -}}
-					<div>
-						<button hx-get="/{{.Token}}/add-child">
-							{{- icon "plus"}} Add an Item
-						</button>
-					</div>
-				{{- end -}}
-			</div>
-
+			{{- .Widgets "BOTTOM" -}}
 		</div>
-		
-	</div>
-
-	<style>
-		.sidebar {
-			width:20%;
-			margin-right:20px;
-			position:relative;
-		}
-
-		.sidebar > div {
-			position:-webkit-sticky;
-			position:sticky;
-			top:100px;
-		}
-	</style>
-
+		{{- .Widgets "RIGHT" -}}
+	</article>	
+	
 </div>

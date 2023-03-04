@@ -1,0 +1,11 @@
+.sidebar {
+	width:20%;
+	margin-right:20px;
+	position:relative;
+}
+
+.sidebar > div {
+	position:-webkit-sticky;
+	position:sticky;
+	top:100px;
+}

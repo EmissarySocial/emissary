@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -284,6 +285,10 @@ func (w Stream) PublishDate() int64 {
 	return w.stream.CreateDate
 }
 
+func (w Stream) PublishDateUnix() time.Time {
+	return time.Unix(w.PublishDate(), 0)
+}
+
 // UpdateDate returns the UpdateDate of the stream being rendered
 func (w Stream) UpdateDate() int64 {
 	return w.stream.UpdateDate
@@ -508,6 +513,16 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 /******************************************
  * RELATED RESULTSETS
  ******************************************/
+
+// Ancestors returns all Streams that have the same "parent" as the current Stream's parent
+func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
+	var parent model.Stream
+
+	streamService := w.factory().Stream()
+	streamService.LoadParent(w.stream, &parent)
+
+	return w.makeStreamQueryBuilder(exp.Equal("parentId", parent.ParentID))
+}
 
 // Siblings returns all Streams that have the same "parent" as the current Stream
 func (w Stream) Siblings() QueryBuilder[model.StreamSummary] {
