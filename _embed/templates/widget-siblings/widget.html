@@ -1,1 +1,16 @@
-<div class="widget">SIBLINGS</div>
+{{- $siblings := .Siblings.Slice -}}
+{{- $streamID := .StreamID -}}
+<div class="widget widget-siblings">
+	{{- range $index, $sibling := $siblings -}}
+		{{- if eq $streamID $sibling.StreamID -}}
+			<div class="bold">{{.Label}}</div>
+		{{- else -}}
+			<div><a href="/{{$sibling.StreamID}}">{{.Label}}</a></div>
+		{{- end -}}
+	{{- end -}}
+
+	{{- if .UserCan "add-sibling" -}}
+		<div><a hx-get="/{{.StreamID}}/add-Sibling">Add a Stream</a></div>
+	{{- end -}}
+
+</div>

@@ -56,9 +56,9 @@
 		"add-child":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-child", "label":"Add Item to Collection", "with-child":[
+				{"step":"add-child", "title":"Add Item to Collection", "with-child":[
 					{"step":"save"},
-					{"step":"redirect-to", "url":"/{{.StreamID}}/edit"}
+					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 				]}
 			]
 		},

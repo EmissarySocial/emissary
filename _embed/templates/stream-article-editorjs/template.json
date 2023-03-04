@@ -171,6 +171,15 @@
 				]
 			}]
 		},
+		"add-child":{
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"add-child", "title":"Add Sub-Page", "with-child":[
+					{"step":"save"},
+					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				]}
+			]
+		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [

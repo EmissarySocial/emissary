@@ -2,7 +2,7 @@
 	"templateId":"article-markdown",
 	"role":"article",
 	"model":"stream",
-	"containedBy": ["top", "folder"],
+	"containedBy": ["top", "folder", "article"],
 	"label":"Article (Markdown)",
 	"description":"Simple Markdown editor",
 	"icon":"markdown",
@@ -170,6 +170,15 @@
 					{"step":"save", "comment":"Properties updated by {{.Author}}"}
 				]
 			}]
+		},
+		"add-child":{
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"add-child", "title":"Add a Stream", "with-child":[
+					{"step":"save"},
+					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				]}
+			]
 		},
 		"delete": {
 			"roles": ["owner"],
