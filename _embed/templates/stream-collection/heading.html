@@ -1,6 +1,8 @@
 {{- if .UserCan "edit" -}}
 <div id="menu-bar">
-    <a href="/{{.Token}}/edit">Edit / Sort</a>
+    <a href="/{{.Token}}" class="bold">View</a>
+    <a href="/{{.Token}}/edit">Edit</a>
+    <a href="/{{.Token}}/widgets">Widgets</a>
     <a hx-get="/{{.Token}}/properties">Properties</a>
 
     {{- if .UserCan "sharing" -}}

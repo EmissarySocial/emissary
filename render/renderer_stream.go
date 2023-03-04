@@ -372,7 +372,7 @@ func (w Stream) WidgetEditor() (template.HTML, error) {
 	s := schema.New(model.StreamSchema())
 
 	f := form.New(s, form.Element{
-		Type: "layout-vertical",
+		Type: "layout-tabs",
 		Children: slice.Map(t.WidgetLocations, func(location string) form.Element {
 
 			selected := w.stream.Widgets[location]
@@ -381,13 +381,18 @@ func (w Stream) WidgetEditor() (template.HTML, error) {
 			slices.SortStableFunc(widgets, less)
 
 			return form.Element{
-				Type:  "multiselect",
+				Type:  "layout-vertical",
 				Label: location,
-				Path:  "widgets." + location,
-				Options: map[string]any{
-					"enum":      widgets,
-					"maxHeight": 200,
-					"sort":      true,
+				Children: []form.Element{
+					{
+						Type: "multiselect",
+						Path: "widgets." + location,
+						Options: map[string]any{
+							"enum":      widgets,
+							"maxHeight": 200,
+							"sort":      true,
+						},
+					},
 				},
 			}
 		}),

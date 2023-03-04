@@ -1,0 +1,42 @@
+<script type="text/javascript" src="/.templates/article-markdown/javascript"></script>
+
+<script type="text/hyperscript">
+	def saveDraft(promote)
+		send save to #markdownForm
+		wait for htmx:afterOnLoad from #markdownForm
+		if promote then
+			fetch /{{.StreamID}}/promote-draft with method:"POST"
+		end
+
+		set window.location to "/{{.StreamID}}"
+	end
+</script>
+
+<div class="page">
+
+	{{- if .UserCan "edit" -}}
+	<div id="menu-bar">
+		<a href="/{{.Token}}">View</a>
+		<a href="/{{.Token}}/edit">Edit</a>
+		<a href="/{{.Token}}/widgets" class="bold">Widgets</a>
+		<a hx-get="/{{.Token}}/properties">Properties</a>
+	
+		{{- if .UserCan "sharing" -}}
+			<a hx-get="/{{.Token}}/sharing">Sharing</a>
+		{{- end -}}
+	
+		<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+		</div>
+	</div>
+	{{- end -}}
+	
+	<article>
+		<form hx-post="/{{.StreamID}}/widgets" hx-trigger="change, save" hx-swap="none" id="markdownForm">
+			{{.WidgetEditor}}
+		</form>
+	</article>
+	
+</div>
