@@ -69,6 +69,10 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 	return false
 }
 
+func (template *Template) IsWidgetLocationValid(location string) bool {
+	return slice.Contains(template.WidgetLocations, location)
+}
+
 // State searches for the State in this Template that matches the provided StateID
 // If found, it is returned along with a TRUE
 // If not found, an empty state is returned along with a FALSE

@@ -162,13 +162,19 @@ func (service *Template) loadTemplates() error {
 			// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
 			case DefinitionTheme:
-				service.themeService.Add(directoryName, subdirectory, file)
+				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+				}
 
 			case DefinitionWidget:
-				service.widgetService.Add(directoryName, subdirectory, file)
+				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding widget"))
+				}
 
 			case DefinitionTemplate:
-				service.Add(directoryName, subdirectory, file)
+				if err := service.Add(directoryName, subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding template"))
+				}
 
 			default:
 				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Invalid definition", location))

@@ -1,0 +1,49 @@
+behavior widgetEditor(url)
+
+	init 
+		tell <.widget-editor-sortable /> in me
+			
+			set location to your[@data-location]
+			set options to {
+				group:"all-widgets", 
+				animation:150, 
+				ghostClass:"widget-ghost",
+				dragClass:"widget-dragging"
+			}
+
+			if location is "NONE"
+				set options["group"] to {
+					name:"all-widgets",
+					pull:"clone",
+					put:true,
+					revertClone:true
+				}
+			end
+
+			make a Sortable from yourself, options
+		end
+	end
+
+	on sort throttled at 100ms
+
+		tell <.widget-editor-sortable /> in me
+			set location to your[@data-location]
+			set widgetIds to []
+
+			for widget in <.widget /> in you
+				log widget
+				widgetIds.push(widget[@data-widgetId])
+			end
+
+			tell first <input[type=hidden][name=${location}] /> in me
+				set your @value to widgetIds.join(",")
+			end
+		end
+
+		log "RESULTS ----------"
+		for input in <input[type=hidden] />
+			log input
+		end
+		trigger editor:save
+	end
+end

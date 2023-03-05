@@ -60,9 +60,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditProperties:
 		return StepEditProperties(s)
 
-	case step.EditWidgets:
-		return StepEditWidgets(s)
-
 	case step.ForwardTo:
 		return StepForwardTo(s)
 
@@ -83,6 +80,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.Save:
 		return StepSave(s)
+
+	case step.ServerRedirect:
+		return StepServerRedirect(s)
 
 	case step.SetData:
 		return StepSetData(s)
@@ -107,6 +107,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SortAttachments:
 		return StepSortAttachments(s)
+
+	case step.SortWidgets:
+		return StepSortWidgets(s)
 
 	case step.StreamPromoteDraft:
 		return StepStreamPromoteDraft(s)

@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -24,7 +25,7 @@ type Stream struct {
 	Document        DocumentLink                 `json:"document"            bson:"document"`            // Summary information (url, title, summary) for this Stream
 	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this Stream.
-	Widgets         mapof.Object[sliceof.String] `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
+	Widgets         sliceof.Object[StreamWidget] `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
@@ -43,7 +44,7 @@ func NewStream() Stream {
 		ParentID:      primitive.NilObjectID,
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
-		Widgets:       mapof.NewObject[sliceof.String](),
+		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,
@@ -53,6 +54,10 @@ func NewStream() Stream {
 // NewStreamPermissions returns a fully initialized Permissions object
 func NewStreamPermissions() mapof.Object[sliceof.String] {
 	return make(mapof.Object[sliceof.String])
+}
+
+func NewStreamWidgets() sliceof.Object[StreamWidget] {
+	return sliceof.NewObject[StreamWidget]()
 }
 
 /******************************************
@@ -67,6 +72,24 @@ func (stream *Stream) ID() string {
 /******************************************
  * Other Data Accessors
  ******************************************/
+
+func (stream *Stream) WidgetsByLocation(location string) []StreamWidget {
+
+	return slice.Filter(stream.Widgets, func(widget StreamWidget) bool {
+		return widget.Location == location
+	})
+}
+
+func (stream *Stream) WidgetByID(streamWidgetID primitive.ObjectID) StreamWidget {
+
+	for _, widget := range stream.Widgets {
+		if widget.StreamWidgetID == streamWidgetID {
+			return widget
+		}
+	}
+
+	return StreamWidget{}
+}
 
 // GetSort returns the sortable value for this stream, based onthe provided fieldName
 func (stream *Stream) GetSort(fieldName string) any {

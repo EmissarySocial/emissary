@@ -85,8 +85,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-properties":
 		return NewEditProperties(stepInfo)
 
-	case "edit-widgets":
-		return NewEditWidgets(stepInfo)
+	case "sort-widgets":
+		return NewSortWidgets(stepInfo)
 
 	case "view-feed":
 		return NewViewFeed(stepInfo)
@@ -145,6 +145,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "redirect-to":
 		return NewRedirectTo(stepInfo)
+
+	case "server-redirect":
+		return NewServerRedirect(stepInfo)
 
 	case "with-block":
 		return NewWithBlock(stepInfo)

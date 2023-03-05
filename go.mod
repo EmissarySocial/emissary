@@ -5,7 +5,7 @@ go 1.19
 // replace github.com/benpate/hannibal => ../../benpate/hannibal
 
 replace github.com/benpate/form => ../../benpate/form
-
+replace github.com/benpate/html => ../../benpate/html
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
