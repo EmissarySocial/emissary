@@ -2,10 +2,13 @@ package render
 
 import (
 	"io"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,23 +31,32 @@ func (step StepSortWidgets) Post(renderer Renderer) error {
 		return derp.NewInternalError("render.StepSortWidgets.Post", "edit-widgets can only be used on Stream data")
 	}
 
-	context := streamRenderer.context()
-	request := context.Request()
+	// Collect required services
+	factory := streamRenderer._factory
+	context := streamRenderer._context
+	widgetService := factory.Widget()
 
-	if err := request.ParseForm(); err != nil {
-		return derp.Wrap(err, "render.StepSortWidgets.Post", "Error parsing form data")
+	// Collect data from form POST
+	data := mapof.NewString()
+
+	if err := context.Bind(&data); err != nil {
+		return derp.Wrap(err, "render.StepSortWidgets.Post", "Error binding form data")
 	}
 
+	// Set up some variables
 	stream := streamRenderer.stream
 	template := streamRenderer.template()
 	newWidgets := sliceof.NewObject[model.StreamWidget]()
 
+	// Find and organize the selected widgets
 	for _, location := range template.WidgetLocations {
-		for _, value := range request.Form[location] {
+
+		widgetTypes := strings.Split(data.GetString(location), ",")
+		for _, widgetType := range widgetTypes {
 			var widget model.StreamWidget
 
 			// Move existing widgets
-			if widgetID, err := primitive.ObjectIDFromHex(value); err == nil {
+			if widgetID, err := primitive.ObjectIDFromHex(widgetType); err == nil {
 				if widget = stream.WidgetByID(widgetID); !widget.IsNew() {
 					widget.Location = location
 					newWidgets.Append(widget)
@@ -53,14 +65,20 @@ func (step StepSortWidgets) Post(renderer Renderer) error {
 			}
 
 			// Create new widgets
-			widget.StreamWidgetID = primitive.NewObjectID()
-			widget.Location = location
-			widget.Type = value
-			widget.Label = ""
+			if template.IsWidgetLocationValid(location) {
+				if widgetDefinition, ok := widgetService.Get(widgetType); ok {
+					widget.StreamWidgetID = primitive.NewObjectID()
+					widget.Location = location
+					widget.Type = widgetType
+					widget.Label = widgetDefinition.Label
 
-			newWidgets.Append(widget)
+					newWidgets.Append(widget)
+				}
+			}
 		}
 	}
+
+	spew.Dump(newWidgets)
 
 	// Apply the new data structure to the stream
 	stream.Widgets = newWidgets

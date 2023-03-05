@@ -6,11 +6,11 @@ import (
 )
 
 type StreamWidget struct {
-	StreamWidgetID primitive.ObjectID
-	Type           string
-	Location       string
-	Label          string
-	Data           mapof.Any
+	StreamWidgetID primitive.ObjectID `json:"streamWidgetId" bson:"streamWidgetId"`
+	Type           string             `json:"type"           bson:"type"`
+	Location       string             `json:"location"       bson:"location"`
+	Label          string             `json:"label"          bson:"label"`
+	Data           mapof.Any          `json:"data"           bson:"data"`
 }
 
 func NewStreamWidget(widgetType string, label string, location string) StreamWidget {

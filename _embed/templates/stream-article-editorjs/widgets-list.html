@@ -1,10 +1,10 @@
-<form hx-post="/{{.StreamID}}/widgets" hx-trigger="editor:save" hx-target="#main" hx-swap="innerHTML">
+{{- $streamID := .StreamID -}}
+<form hx-post="/{{$streamID}}/widgets" hx-trigger="editor:save" hx-target="#main" hx-swap="innerHTML">
 
-	<div class="widget-editor-title">Edit Widgets</div>
-	<div class="widget-editor" script="install widgetEditor(url:'/{{.StreamID}}/widgets')">
+	<div class="widget-editor" script="install widgetEditor(url:'/{{$streamID}}/widgets')">
 
 		<div class="widget-editor-NONE">
-			<div class="widget-label">Available</div>
+			<div class="widget-label">Available Widgets</div>
 			<div class="widget-editor-sortable" data-location="NONE">
 				{{- range .ListAllWidgets -}}
 					<div class="widget" data-widgetId="{{.Value}}">
@@ -22,10 +22,10 @@
 				<div class="widget-editor-sortable" data-location="LEFT">
 					<input type="hidden" name="LEFT" value="">
 					{{- range .ListWidgetsByLocation "LEFT" -}}
-						<div class="widget" data-widgetId="{{.WidgetID}}">
+						<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
 							<span class="widget-handle">{{icon "drag-handle"}}</span> 
 							{{.Label}}
-							<button hx-get="/{{.StreamID}}/widget?widgetId={{.WidgetID}}">Edit</button>
+							<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
 						</div>
 					{{- end -}}
 				</div>
@@ -37,17 +37,17 @@
 					<div class="widget-editor-sortable" data-location="TOP">
 						<input type="hidden" name="TOP" value="">
 						{{- range .ListWidgetsByLocation "TOP" -}}
-							<div class="widget" data-widgetId="{{.WidgetID}}">
+							<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
 								<span class="widget-handle">{{icon "drag-handle"}}</span> 
 								{{.Label}}
-								<button hx-get="/{{.StreamID}}/widget?widgetId={{.WidgetID}}">Edit</button>
+								<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
 							</div>
 						{{- end -}}
 					</div>
 				</div>
 				
 				<div class="widget-editor-MAIN">
-					<div class="widget-label">Main Page Contents</div>
+					<div class="widget-label">... Stream Content Here ...</div>
 				</div>
 
 				<div class="widget-editor-BOTTOM">
@@ -55,10 +55,10 @@
 					<div class="widget-editor-sortable" data-location="BOTTOM">
 						<input type="hidden" name="BOTTOM" value="">
 						{{- range .ListWidgetsByLocation "BOTTOM" -}}
-							<div class="widget" data-widgetId="{{.WidgetID}}">
+							<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
 								<span class="widget-handle">{{icon "drag-handle"}}</span> 
 								{{.Label}}
-								<button hx-get="/{{.StreamID}}/widget?widgetId={{.WidgetID}}">Edit</button>
+								<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
 							</div>
 						{{- end -}}
 					</div>
@@ -70,10 +70,10 @@
 				<div class="widget-editor-sortable" data-location="RIGHT">
 					<input type="hidden" name="RIGHT" value="">
 					{{- range .ListWidgetsByLocation "RIGHT" -}}
-						<div class="widget" data-widgetId="{{.WidgetID}}">
+						<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
 							<span class="widget-handle">{{icon "drag-handle"}}</span> 
 							{{.Label}}
-							<button hx-get="/{{.StreamID}}/widget?widgetId={{.WidgetID}}">Edit</button>
+							<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
 						</div>
 					{{- end -}}
 				</div>

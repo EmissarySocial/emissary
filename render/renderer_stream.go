@@ -349,7 +349,7 @@ func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 }
 
 // RenderWidgets reutrns HTML for all the widgets in the specified location
-func (w Stream) RenderWidgets(location string) (template.HTML, error) {
+func (w Stream) Widgets(location string) (template.HTML, error) {
 
 	list := w.ListWidgetsByLocation(location)
 

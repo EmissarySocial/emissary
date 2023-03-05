@@ -306,7 +306,9 @@ func (service *Following) QueryByFolder(userID primitive.ObjectID, folderID prim
 
 // ListPollable returns an iterator of all following that are ready to be polled
 func (service *Following) ListPollable() (data.Iterator, error) {
-	criteria := exp.LessThan("nextPoll", time.Now().Unix())
+	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
+		AndNotEqual("method", model.FollowMethodActivityPub) // Don't poll ActivityPub
+
 	return service.List(criteria, option.SortAsc("lastPolled"))
 }
 
