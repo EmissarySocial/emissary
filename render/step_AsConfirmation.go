@@ -23,12 +23,12 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
 	b := html.New()
 
 	// Modal Content
-	b.H1().InnerHTML(step.Title).Close()
-	b.Div().Class("space-below").InnerHTML(step.Message).Close()
+	b.H1().InnerText(step.Title).Close()
+	b.Div().Class("space-below").InnerText(step.Message).Close()
 
 	b.Div()
-	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerHTML(step.Submit).Close()
-	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerText(step.Submit).Close()
+	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 
 	// Done
 	b.CloseAll()

@@ -20,16 +20,16 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 
 	b := html.New()
 
-	b.H1().InnerHTML(executeTemplate(step.Title, renderer)).Close()
-	b.Div().Class("space-below").InnerHTML(executeTemplate(step.Message, renderer)).Close()
+	b.H1().InnerText(executeTemplate(step.Title, renderer)).Close()
+	b.Div().Class("space-below").InnerText(executeTemplate(step.Message, renderer)).Close()
 
 	b.Button().Class("warning").
 		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
-		InnerHTML(step.Submit).
+		InnerText(step.Submit).
 		Close()
 
-	b.Button().Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
 	result := WrapModal(renderer.context().Response(), b.String())

@@ -78,8 +78,8 @@ github.com/benpate/exp-builder v0.6.0 h1:SzPqSfBjPieR0eyz/SxZsdm5gOThHr1wuNs+bg5
 github.com/benpate/exp-builder v0.6.0/go.mod h1:Z5F0Pf++Zb91+Gx50QU/2723lIBncKecXiEuCJYBg20=
 github.com/benpate/hannibal v0.2.3 h1:jEoyHCqfO1jfjy4/OFZZmYSc2ne2GsFk5uC1igXwKnk=
 github.com/benpate/hannibal v0.2.3/go.mod h1:PVzoIRePcxouf95x41BOFqqhikQxe21E7DnbuMd226k=
-github.com/benpate/html v0.15.0 h1:E8ePO2XMf2P/WgTRSaEI1H3Rb4EzvrfbU4wTW6Svq3s=
-github.com/benpate/html v0.15.0/go.mod h1:i5RSHmjum4SB9Xa1nGlDRZVmu7313iBBd80boQiLxFw=
+github.com/benpate/html v0.16.0 h1:n+O0JbnlG/aM6iW889soFS8a3F9EPZqWaEN2chG4+TM=
+github.com/benpate/html v0.16.0/go.mod h1:ud21gMylifTKhQI443PtHO9D66HUrnShOhQpcV4Bu5I=
 github.com/benpate/icon v0.4.0 h1:HWOMaYwxPsLb3OPX02+j05FwCq376rcAfeGG1kfDXyc=
 github.com/benpate/icon v0.4.0/go.mod h1:JL7rWluHtCL11byJ/5mfJdpql/Wx8w0A+gXge83MmA4=
 github.com/benpate/mediaserver v0.9.1 h1:Sv7Ce4TyeYNduLBrijqCJ2qW1M9xv3DNRMvBgk8Xhm4=
@@ -346,8 +346,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
+github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stripe/stripe-go/v72 v72.122.0 h1:eRXWqnEwGny6dneQ5BsxGzUCED5n180u8n665JHlut8=
 github.com/stripe/stripe-go/v72 v72.122.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKFdsykV9ZepRWwo0=
 github.com/tdewolff/minify/v2 v2.12.4 h1:kejsHQMM17n6/gwdw53qsi6lg0TGddZADVyQOz1KMdE=

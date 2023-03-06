@@ -48,7 +48,7 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 			}
 			b.Close() // DIV
 
-			b.Div().Class("vertical-space-none", "text-sm").InnerHTML(template.Label).Close()
+			b.Div().Class("vertical-space-none", "text-sm").InnerText(template.Label).Close()
 
 			b.Close() // A
 

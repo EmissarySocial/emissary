@@ -10,7 +10,7 @@ func pageHeader(ctx echo.Context, b *html.Builder, title string) {
 	if ctx.Request().Header.Get("HX-Request") == "" {
 		b.Container("html")
 		b.Container("head")
-		b.Container("title").InnerHTML(title).Close()
+		b.Container("title").InnerText(title).Close()
 
 		b.Stylesheet("/static/purecss/pure-min.css")
 		b.Stylesheet("/static/purecss/pure-grids-responsive-min.css")

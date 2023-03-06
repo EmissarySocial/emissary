@@ -101,7 +101,7 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 
 	b.H2()
 	b.I("ti", "ti-plus").Close()
-	b.Span().InnerHTML(title).Close()
+	b.Span().InnerText(title).Close()
 	b.Close()
 
 	b.Table().Class("table space-below")
@@ -115,8 +115,8 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 			b.Close()
 
 			b.TD().Style("width:100%")
-			b.Div().Class("bold").InnerHTML(template.Label).Close()
-			b.Div().Class("gray60").InnerHTML(template.Description).Close()
+			b.Div().Class("bold").InnerText(template.Label).Close()
+			b.Div().Class("gray60").InnerText(template.Description).Close()
 			b.Close()
 		}
 		b.Close()

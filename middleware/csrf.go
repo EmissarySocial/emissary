@@ -34,7 +34,7 @@ func AllowCSR(next echo.HandlerFunc) echo.HandlerFunc {
 				b.Container("meta").Attr("http-equiv", "refresh").Attr("content", "0;url="+urlString)
 				b.Close()
 				b.Container("body")
-				b.A(urlString).InnerHTML("Redirecting Now. Click here to continue...").Close()
+				b.A(urlString).InnerText("Redirecting Now. Click here to continue...").Close()
 				b.CloseAll()
 
 				// Return success.

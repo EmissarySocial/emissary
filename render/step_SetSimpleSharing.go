@@ -37,8 +37,8 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	b := html.New()
 
 	// Heading
-	b.H2().InnerHTML(step.Title).Close()
-	b.H3().InnerHTML(step.Message).Close()
+	b.H2().InnerText(step.Title).Close()
+	b.H3().InnerText(step.Message).Close()
 
 	// Form
 	b.Form("", "").
@@ -50,8 +50,8 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 
 	b.WriteString(formHTML)
 	b.Div()
-	b.Button().Type("submit").Class("primary").InnerHTML("Save Changes").Close()
-	b.Button().Type("button").Script("on click trigger closeModal").InnerHTML("Cancel").Close()
+	b.Button().Type("submit").Class("primary").InnerText("Save Changes").Close()
+	b.Button().Type("button").Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
 	// Write it to the output buffer and quit

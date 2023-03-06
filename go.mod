@@ -5,7 +5,7 @@ go 1.19
 // replace github.com/benpate/hannibal => ../../benpate/hannibal
 
 replace github.com/benpate/form => ../../benpate/form
-replace github.com/benpate/html => ../../benpate/html
+
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
@@ -19,7 +19,7 @@ require (
 	github.com/benpate/exp-builder v0.6.0
 	github.com/benpate/form v0.14.4
 	github.com/benpate/hannibal v0.2.3
-	github.com/benpate/html v0.15.0
+	github.com/benpate/html v0.16.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.9.1
 	github.com/benpate/remote v0.10.1
@@ -43,7 +43,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.3
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/tdewolff/minify/v2 v2.12.4
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09

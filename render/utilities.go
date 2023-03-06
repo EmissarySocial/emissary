@@ -74,7 +74,7 @@ func WrapModalWithCloseButton(response *echo.Response, content string, options .
 	b := html.New()
 
 	b.Div()
-	b.Button().Script("on click trigger closeModal").InnerHTML("Close Window")
+	b.Button().Script("on click trigger closeModal").InnerText("Close Window")
 
 	return WrapModal(response, content+b.String())
 }
@@ -106,19 +106,19 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	b.Div()
 
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
-		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerHTML("Delete").Close()
+		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerText("Delete").Close()
 		b.Space()
 	}
 
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
-	b.Button().Type("submit").Class("htmx-request-hide primary").InnerHTML(submitLabel).Close()
-	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerHTML(savingLabel).Close()
+	b.Button().Type("submit").Class("htmx-request-hide primary").InnerText(submitLabel).Close()
+	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerText(savingLabel).Close()
 
 	if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
 		cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
 		b.Space()
-		b.Button().Type("button").Script("on click trigger closeModal").InnerHTML(cancelLabel).Close()
+		b.Button().Type("button").Script("on click trigger closeModal").InnerText(cancelLabel).Close()
 		b.Space()
 	}
 

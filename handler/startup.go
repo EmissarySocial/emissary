@@ -146,7 +146,7 @@ func StartupUsers(serverFactory *server.Factory, factory *domain.Factory, ctx ec
 	pageHeader(ctx, b, "Let's Get Started")
 
 	b.Div().Class("align-center")
-	b.H1().InnerHTML("Let's Set Up Your Emissary Server").Close()
+	b.H1().InnerText("Let's Set Up Your Emissary Server").Close()
 	b.Div().Class("space-below", "gray20")
 	icons.Write("flag", b)
 	b.Close()
@@ -156,8 +156,8 @@ func StartupUsers(serverFactory *server.Factory, factory *domain.Factory, ctx ec
 	b.Div().Class("pure-u-md-1-6", "pure-u-lg-1-4").Close()
 	b.Div().Class("pure-u-1", " pure-u-md-2-3", "pure-u-lg-1-2")
 
-	b.H2().InnerHTML("Step 1/3 - Create an Administrator Account").Close()
-	b.Div().Class("space-below").InnerHTML("Create an account for yourself that you'll use to sign in and manage your server.")
+	b.H2().InnerText("Step 1/3 - Create an Administrator Account").Close()
+	b.Div().Class("space-below").InnerText("Create an account for yourself that you'll use to sign in and manage your server.")
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
 
@@ -196,7 +196,7 @@ func StartupUsers(serverFactory *server.Factory, factory *domain.Factory, ctx ec
 	}
 
 	b.WriteString(formHTML)
-	b.Button().Type("submit").Class("primary").InnerHTML("Create My Account &raquo;").Close()
+	b.Button().Type("submit").Class("primary").InnerText("Create My Account").Close()
 
 	return ctx.HTML(http.StatusOK, b.String())
 }
@@ -268,10 +268,10 @@ func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx 
 	pageHeader(ctx, b, "Let's Get Started")
 
 	b.Div().Class("card")
-	b.Div().Class("bold").InnerHTML("Step 2 of 3")
-	b.H1().InnerHTML("How Do You Want To Use This Server?").Close()
+	b.Div().Class("bold").InnerText("Step 2 of 3")
+	b.H1().InnerText("How Do You Want To Use This Server?").Close()
 
-	b.H3().InnerHTML("Choose which starter pages to put in your navigation bar.  You can always make changes later.").Close()
+	b.H3().InnerText("Choose which starter pages to put in your navigation bar.  You can always make changes later.").Close()
 
 	b.Form(http.MethodPost, "/startup").EndBracket()
 
@@ -305,7 +305,7 @@ func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx 
 	formHTML, _ := form.Editor(s, defaultStreamsForm, nil, factory.LookupProvider(primitive.NilObjectID))
 
 	b.WriteString(formHTML)
-	b.Button().Type("submit").Class("primary").InnerHTML("Set Up Initial Apps")
+	b.Button().Type("submit").Class("primary").InnerText("Set Up Initial Apps")
 
 	return ctx.HTML(http.StatusOK, b.String())
 }
@@ -323,8 +323,8 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	b.Div().Class("space-below", "text-gray", "text-2xl").EndBracket()
 	icons.Write("check-circle", b)
 	b.Close()
-	b.H1().InnerHTML("Setup Is Complete").Close()
-	b.H2().Class("gray70").InnerHTML("Here are some next steps you can take.").Close()
+	b.H1().InnerText("Setup Is Complete").Close()
+	b.H2().Class("gray70").InnerText("Here are some next steps you can take.").Close()
 	b.Close()
 
 	b.Table().Class("table", "space-above")
@@ -334,8 +334,8 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	icons.Write("home", b)
 	b.Close()
 	b.TD().Style("width:100%")
-	b.Div().Class("bold").InnerHTML("Visit Your New Home Page")
-	b.Div().Class("gray70").InnerHTML("Start editing your new server.")
+	b.Div().Class("bold").InnerText("Visit Your New Home Page")
+	b.Div().Class("gray70").InnerText("Start editing your new server.")
 	b.Close()
 
 	b.TR().Role("link").Script("on click set window.location to '/admin/users'")
@@ -343,8 +343,8 @@ func StartupDone(factory *server.Factory, ctx echo.Context) error {
 	icons.Write("users", b)
 	b.Close()
 	b.TD().Style("width:100%")
-	b.Div().Class("bold").InnerHTML("Invite People")
-	b.Div().Class("gray70").InnerHTML("Send invitiations for other people to sign in and collaborate with you.")
+	b.Div().Class("bold").InnerText("Invite People")
+	b.Div().Class("gray70").InnerText("Send invitiations for other people to sign in and collaborate with you.")
 	b.Close()
 
 	return ctx.HTML(http.StatusOK, b.String())
