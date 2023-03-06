@@ -26,7 +26,6 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
 
 	// Load the Template
 	templateService := factory.Template()
-
 	template, err := templateService.Load("user-profile")
 
 	if err != nil {
@@ -34,9 +33,9 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
 	}
 
 	// Verify the requested action is valid for this template
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return Profile{}, derp.NewBadRequestError("render.NewProfile", "Invalid action", actionID)
 	}
 
@@ -136,9 +135,9 @@ func (w Profile) templateRole() string {
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Profile) UserCan(actionID string) bool {
 
-	action := w.template().Action(actionID)
+	action, ok := w._template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return false
 	}
 

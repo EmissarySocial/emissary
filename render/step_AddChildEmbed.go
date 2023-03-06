@@ -98,14 +98,16 @@ func (step StepAddChildEmbed) Post(renderer Renderer) error {
 	}
 
 	// Get the "create" action from the template
-	action := childRenderer.template().Action("create")
+	factory := renderer.factory()
+	template := childRenderer.template()
+	action, ok := template.Action("create")
 
-	if action == nil {
+	if !ok {
 		return derp.NewInternalError(location, "No 'create' action found in template", childRenderer.template().TemplateID)
 	}
 
 	// Execute the "CREATE" pipeline to save the new stream.
-	if err := Pipeline(action.Steps).Execute(renderer.factory(), childRenderer, renderer.context().Response(), ActionMethodPost); err != nil {
+	if err := Pipeline(action.Steps).Execute(factory, childRenderer, renderer.context().Response(), ActionMethodPost); err != nil {
 		return derp.Wrap(err, location, "Error executing pipeline")
 	}
 

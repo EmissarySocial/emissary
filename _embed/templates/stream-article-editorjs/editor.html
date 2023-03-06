@@ -1,46 +1,4 @@
-<div class="page">
-
-	<script type="text/javascript" src="/.templates/article-editorjs/javascript"></script>
-	<script type="text/hyperscript" src="/.templates/article-editorjs/hyperscript"></script>
-
-	<div id="menu-bar">
-		<div class="left">
-			{{- if .UserCan "edit" -}}
-				<a hx-get="/{{.StreamID}}/edit" class="bold">Content</a>
-			{{- end -}}
-
-			{{- if .UserCan "widgets" -}}
-				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true">Widgets</a>
-			{{- end -}}
-
-			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.StreamID}}/properties">Info</a>
-			{{- end -}}
-
-			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
-			{{- end -}}
-		</div>
-
-		<div class="right">
-			<button script="on click saveDraft(true)" class="button primary">Promote</button>
-			<button script="on click saveDraft(false)">Save Draft</button>
-			<button hx-get="/{{.StreamID}}/discard-draft">Discard Draft</button>
-
-			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>
-			{{- end -}}
-		</div>
-
-	</div>
-
-	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage">
-		{{.View "heading"}}
-	</div>
-
-	<article id="content-editor" data-content="{{.ContentRaw}}" style="max-width:752px"></article>
-	
-</div>
+<article id="content-editor" data-content="{{.ContentRaw}}" style="max-width:752px"></article>	
 
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/paragraph@latest"></script>

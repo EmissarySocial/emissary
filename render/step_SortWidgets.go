@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -65,7 +64,7 @@ func (step StepSortWidgets) Post(renderer Renderer) error {
 			}
 
 			// Create new widgets
-			if template.IsWidgetLocationValid(location) {
+			if template.IsValidWidgetLocation(location) {
 				if widgetDefinition, ok := widgetService.Get(widgetType); ok {
 					widget.StreamWidgetID = primitive.NewObjectID()
 					widget.Location = location
@@ -77,8 +76,6 @@ func (step StepSortWidgets) Post(renderer Renderer) error {
 			}
 		}
 	}
-
-	spew.Dump(newWidgets)
 
 	// Apply the new data structure to the stream
 	stream.Widgets = newWidgets

@@ -92,7 +92,7 @@ func (service *Widget) List() []form.LookupCode {
 	return result
 }
 
-func (service *Widget) IsWidgetTypeValid(widgetType string) bool {
+func (service *Widget) IsValidWidgetType(widgetType string) bool {
 	_, ok := service.widgets[widgetType]
 	return ok
 }

@@ -19,11 +19,15 @@ type Model struct {
 	Common
 }
 
-func NewModel(factory Factory, ctx *steranko.Context, modelService service.ModelService, object data.Object, template *model.Template, actionID string) (Model, error) {
+func NewModel(factory Factory, ctx *steranko.Context, modelService service.ModelService, object data.Object, template model.Template, actionID string) (Model, error) {
 
 	const location = "render.NewModel"
 
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
+
+	if !ok {
+		return Model{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	}
 
 	// Verify user's authorization to perform this Action on this Stream
 	authorization := getAuthorization(ctx)

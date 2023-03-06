@@ -33,7 +33,7 @@ type Renderer interface {
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page
 	ActionID() string                    // Token that identifies the action requested via the URL.
-	Action() *model.Action               // The pipeline action to be taken by this renderer
+	Action() model.Action                // The pipeline action to be taken by this renderer
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
 	IsPartialRequest() bool              // Returns TRUE if this is an HTMX request for a page fragment
 	UseGlobalWrapper() bool              // Returns TRUE if this renderer uses the common site chrome.
@@ -55,7 +55,7 @@ type Renderer interface {
 	context() *steranko.Context          // The request context embedded in the Renderer
 	service() service.ModelService       // The abstracted ModelService the backs this Renderer
 	templateRole() string                // Returns the role that the current template plays in the system. Used for choosing child template.
-	template() *model.Template           // The template used for this renderer (if any)
+	template() model.Template            // The template used for this renderer (if any)
 	objectType() string                  // The type of object being rendered
 	authorization() model.Authorization  // retrieves the user's authorization data from the context
 	schema() schema.Schema               // Schema to use to validate this Object

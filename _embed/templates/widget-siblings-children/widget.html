@@ -6,10 +6,12 @@
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="bold">{{.Label}}</div>
 
-			{{- range $index, $child := $children -}}
-				<div><a href="/{{$child.StreamID}}">- {{.Label}}</a></div>
+			{{if gt (len $children) 0 -}}
+				{{- range $index, $child := $children -}}
+					<div><a href="/{{$child.StreamID}}">- {{.Label}}</a></div>
+				{{- end -}}
+				<br>
 			{{- end -}}
-			<br>
 
 		{{- else -}}
 			<div><a href="/{{$sibling.StreamID}}">{{.Label}}</a></div>

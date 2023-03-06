@@ -64,14 +64,14 @@ func (service *Stream) Close() {
  ******************************************/
 
 // New returns a new stream that uses the named template.
-func (service *Stream) New(navigationID string, parentID primitive.ObjectID, templateID string) (model.Stream, *model.Template, error) {
+func (service *Stream) New(navigationID string, parentID primitive.ObjectID, templateID string) (model.Stream, model.Template, error) {
 
 	const location = "service.Stream.New"
 
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, location, "Invalid template", templateID)
+		return model.Stream{}, template, derp.Wrap(err, location, "Invalid template", templateID)
 	}
 
 	result := model.NewStream()
@@ -125,7 +125,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
-	defaultRoles := template.Default().AllowedRoles(stream.StateID)
+	defaultTemplate := template.Default()
+	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
 
 	// RULE: Calculate rank

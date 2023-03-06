@@ -182,7 +182,7 @@ func useGlobalWrapper(steps []step.Step) bool {
 // - executes the correct "init" action for this template
 // - saves the stream (if not already saved by "init")
 // - executes any additional "with-stream" steps
-func finalizeAddStream(factory Factory, context *steranko.Context, stream *model.Stream, template *model.Template, pipeline Pipeline) error {
+func finalizeAddStream(factory Factory, context *steranko.Context, stream *model.Stream, template model.Template, pipeline Pipeline) error {
 
 	const location = "render.finalizeAddStream"
 
@@ -200,7 +200,7 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	// TODO: MEDIUM: Set Stream order??
 
 	// If there is an "init" step for the stream's template, then execute it now
-	if action := template.Action("init"); action != nil {
+	if action, ok := template.Actions["init"]; ok {
 		if err := Pipeline(action.Steps).Post(factory, &renderer); err != nil {
 			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
 		}

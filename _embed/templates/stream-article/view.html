@@ -1,7 +1,6 @@
-<div hx-sse="connect:/{{.StreamID}}/sse">
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
 
-	<link rel="stylesheet" href="/.templates/article-markdown/stylesheet"/>
+	<link rel="stylesheet" href="/.templates/article/stylesheet"/>
 
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
@@ -20,11 +19,10 @@
 					<a hx-get="/{{.StreamID}}/unpublish" hx-push-url="false" class="button">Un-Publish</a>
 				{{- end -}}
 			</div>
-
 		</div>
 	{{- end -}}
 
-	<article class="content">
+	<article class="content space-after">
 		{{- .Widgets "LEFT" -}}
 		<div class="content-main">
 			{{- .Widgets "TOP" -}}
@@ -34,5 +32,4 @@
 		{{- .Widgets "RIGHT" -}}
 	</article>
 
-</div>
 </div>

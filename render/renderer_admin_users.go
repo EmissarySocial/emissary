@@ -21,7 +21,7 @@ type User struct {
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, template *model.Template, user *model.User, actionID string) (User, error) {
+func NewUser(factory Factory, ctx *steranko.Context, template model.Template, user *model.User, actionID string) (User, error) {
 
 	const location = "render.NewGroup"
 
@@ -33,9 +33,9 @@ func NewUser(factory Factory, ctx *steranko.Context, template *model.Template, u
 	}
 
 	// Verify the requested action
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return User{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 

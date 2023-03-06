@@ -182,6 +182,13 @@ func (service *Template) loadTemplates() error {
 		}
 	}
 
+	// Handle inheritance for each template
+	for _, template := range service.templates {
+		if len(template.Extends) > 0 {
+			service.calculateInheritance(template)
+		}
+	}
+
 	return nil
 }
 
@@ -207,13 +214,35 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	}
 
 	fmt.Println("... adding template: " + template.TemplateID)
-	// Add the template into the service library
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
 
-	service.templates[template.TemplateID] = template
+	// Add the template into the service library
+	service.set(template)
 
 	return nil
+}
+
+func (service *Template) set(template model.Template) {
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+	service.templates[template.TemplateID] = template
+}
+
+func (service *Template) calculateInheritance(template model.Template) model.Template {
+
+	if len(template.Extends) == 0 {
+		return template
+	}
+
+	for _, parentID := range template.Extends {
+		if parent, err := service.Load(parentID); err == nil {
+			parent = service.calculateInheritance(parent)
+			template.Inherit(&parent)
+		}
+	}
+
+	service.set(template)
+
+	return template
 }
 
 /******************************************
@@ -249,7 +278,7 @@ func (service *Template) List(filter func(*model.Template) bool) []form.LookupCo
 }
 
 // Load retrieves an Template from the database
-func (service *Template) Load(templateID string) (*model.Template, error) {
+func (service *Template) Load(templateID string) (model.Template, error) {
 
 	// READ Mutex to make multi-threaded access safe.
 	service.mutex.RLock()
@@ -257,16 +286,10 @@ func (service *Template) Load(templateID string) (*model.Template, error) {
 
 	// Look in the local cache first
 	if template, ok := service.templates[templateID]; ok {
-		return &template, nil
+		return template, nil
 	}
 
-	// Collect keys for error report:
-	keys := make([]string, 0)
-	for key := range service.templates {
-		keys = append(keys, key)
-	}
-
-	return nil, derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID, keys)
+	return model.NewTemplate(templateID, nil), derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID)
 }
 
 /******************************************
@@ -303,7 +326,7 @@ func (service *Template) ListByContainerLimited(containedByRole string, limits s
  * Admin Templates
  ******************************************/
 
-func (service *Template) LoadAdmin(templateID string) (*model.Template, error) {
+func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	templateID = "admin-" + templateID
 
@@ -311,16 +334,16 @@ func (service *Template) LoadAdmin(templateID string) (*model.Template, error) {
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Template.LoadAdmin", "Unable to load admin template", templateID)
+		return template, derp.Wrap(err, "service.Template.LoadAdmin", "Unable to load admin template", templateID)
 	}
 
 	// RULE: Validate Template ContainedBy
 	if template.Role != "admin" {
-		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.Role)
+		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.Role)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {
-		return nil, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}
 
 	// Success!
@@ -364,24 +387,4 @@ func (service *Template) Schema(templateID string) (schema.Schema, error) {
 
 	// Return the Schema defined in this template.
 	return template.Schema, nil
-}
-
-// ActionConfig returns the action definition that matches the stream and type provided
-func (service *Template) Action(templateID string, actionID string) (*model.Action, error) {
-
-	// Try to find the Template used by this Stream
-	template, err := service.Load(templateID)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "service.Template.Action", "Invalid Template", templateID)
-	}
-
-	// Try to find the action in the Template
-	action := template.Action(actionID)
-
-	if action == nil {
-		return action, derp.NewNotFoundError("service.Template.Action", "Unrecognized action", templateID, actionID)
-	}
-
-	return action, nil
 }

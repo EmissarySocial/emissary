@@ -21,7 +21,7 @@ type Group struct {
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, template *model.Template, group *model.Group, actionID string) (Group, error) {
+func NewGroup(factory Factory, ctx *steranko.Context, template model.Template, group *model.Group, actionID string) (Group, error) {
 
 	const location = "render.NewGroup"
 
@@ -33,9 +33,9 @@ func NewGroup(factory Factory, ctx *steranko.Context, template *model.Template, 
 	}
 
 	// Verify the requested action
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return Group{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 

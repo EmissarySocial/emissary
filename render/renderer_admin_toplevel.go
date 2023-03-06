@@ -19,7 +19,7 @@ type Navigation struct {
 	Common
 }
 
-func NewNavigation(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Navigation, error) {
+func NewNavigation(factory Factory, ctx *steranko.Context, template model.Template, stream *model.Stream, actionID string) (Navigation, error) {
 
 	const location = "render.NewGroup"
 
@@ -31,9 +31,9 @@ func NewNavigation(factory Factory, ctx *steranko.Context, template *model.Templ
 	}
 
 	// Verify the requested action
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return Navigation{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 

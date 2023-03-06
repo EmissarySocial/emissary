@@ -24,7 +24,7 @@ type Domain struct {
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, template *model.Template, domain *model.Domain, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, template model.Template, domain *model.Domain, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -36,9 +36,9 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 	}
 
 	// Verify the requested action
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return Domain{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 

@@ -82,7 +82,7 @@ func renderAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID
 	return templateID, actionID, primitive.NilObjectID
 }
 
-func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, template *model.Template, actionID string, objectID primitive.ObjectID) (render.Renderer, error) {
+func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (render.Renderer, error) {
 
 	const location = "handler.renderAdmin_GetRenderer"
 

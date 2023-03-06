@@ -1,18 +1,18 @@
-<script type="text/javascript" src="/.templates/article-markdown/javascript"></script>
-
-<script type="text/hyperscript">
-	def saveDraft(promote)
-		send save to #markdownForm
-		wait for htmx:afterOnLoad from #markdownForm
-		if promote then
-			fetch /{{.StreamID}}/promote-draft with method:"POST"
-		end
-
-		set window.location to "/{{.StreamID}}"
-	end
-</script>
-
 <div class="page">
+
+	<link rel="stylesheet" href="/.templates/article/stylesheet-editor">
+	<script type="text/javascript" src="/.templates/article/javascript"></script>
+	<script type="text/hyperscript" src="/.templates/article/hyperscript"></script>
+	
+	<script type="text/hyperscript">
+		def saveDraft(promote)
+			if promote then
+				fetch /{{.StreamID}}/promote-draft with method:"POST"
+			end
+	
+			set window.location to "/{{.StreamID}}"
+		end
+	</script>
 
 	<div id="menu-bar">
 
@@ -32,6 +32,7 @@
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}
+
 		</div>
 
 		<div class="right">
@@ -46,14 +47,10 @@
 
 	</div>
 
-	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage">
-		{{.View "heading"}}
+	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage from:window">
+		{{- .View "heading" -}}
 	</div>
 
-	<article>
-		<form hx-post="/{{.StreamID}}/widgets" hx-trigger="change, save" hx-swap="none" id="markdownForm">
-			{{.WidgetEditor}}
-		</form>
-	</article>
-	
+	{{- .View "widgets-list" -}}
+
 </div>

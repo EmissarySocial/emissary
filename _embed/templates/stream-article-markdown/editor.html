@@ -1,0 +1,18 @@
+<script type="text/hyperscript">
+	def saveDraft(promote)
+		send save to #markdownForm
+		wait for htmx:afterOnLoad from #markdownForm
+		if promote then
+			fetch /{{.StreamID}}/promote-draft with method:"POST"
+		end
+
+		set window.location to "/{{.StreamID}}"
+	end
+</script>
+
+<article>
+	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none">
+		<textarea name="content" style="width:100%; min-height:600px;">{{.ContentRaw}}</textarea>
+	</form>
+</article>
+

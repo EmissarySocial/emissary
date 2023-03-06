@@ -22,8 +22,8 @@ import (
 type Common struct {
 	_factory  Factory           // Factory interface is required for locating other services.
 	_context  *steranko.Context // Contains request context and authentication data.
-	_template *model.Template   // Template to use for this renderer
-	action    *model.Action     // Action to be performed on the Template
+	_template model.Template    // Template to use for this renderer
+	action    model.Action      // Action to be performed on the Template
 	actionID  string            // Token that identifies the action requested in the URL
 
 	requestData mapof.Any // Temporary data scope for this request
@@ -32,7 +32,7 @@ type Common struct {
 	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
-func NewCommon(factory Factory, context *steranko.Context, template *model.Template, action *model.Action, actionID string) Common {
+func NewCommon(factory Factory, context *steranko.Context, template model.Template, action model.Action, actionID string) Common {
 	return Common{
 		_factory:    factory,
 		_context:    context,
@@ -59,7 +59,7 @@ func (w Common) context() *steranko.Context {
 }
 
 // Action returns the model.Action configured into this renderer
-func (w Common) Action() *model.Action {
+func (w Common) Action() model.Action {
 	return w.action
 }
 
@@ -132,12 +132,6 @@ func (w Common) IsPartialRequest() bool {
 // UseGlobalWrapper returns TRUE if every step in this request uses the common site chrome.
 // It returns FALSE if any of its sub-steps must not use the common wrapper.
 func (w Common) UseGlobalWrapper() bool {
-
-	// Nil check just in case
-	if w.action == nil {
-		return true
-	}
-
 	return useGlobalWrapper(w.action.Steps)
 }
 
@@ -294,10 +288,6 @@ func (w Common) lookupProvider() form.LookupProvider {
 }
 
 func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
-	if w._template == nil {
-		return derp.NewBadRequestError("render.Common.executeTemplate", "No template specified")
-	}
-
 	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
@@ -320,7 +310,7 @@ func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
 	return result
 }
 
-func (w Common) template() *model.Template {
+func (w Common) template() model.Template {
 	return w._template
 }
 

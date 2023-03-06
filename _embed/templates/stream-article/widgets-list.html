@@ -25,6 +25,7 @@
 						<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
 							<span class="widget-handle">{{icon "drag-handle"}}</span> 
 							{{.Label}}
+							<!-- // TODO: CRITICAL: Widget Editing -->
 							<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
 						</div>
 					{{- end -}}

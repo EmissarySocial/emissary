@@ -1,0 +1,136 @@
+.widget-editor-layout {
+	display: flex;
+	flex-direction:row;
+	align-items: stretch;
+	min-height:500px;
+}
+
+.widget-editor-title {
+	font-size: 24px;
+	font-weight: 500;
+	color: var(--gray80);
+}
+
+.widget-editor-LEFT {
+	width: 25%;
+	flex-grow:0;
+	flex-shrink:0;
+	margin-right:16px;
+	border-right:solid 1px var(--gray20);
+	padding:8px;
+	padding-right:16px;
+	position:relative;
+}
+
+.widget-editor-CENTER {
+	display:flex;
+	flex-direction:column;
+	align-items: stretch;
+	flex-grow:1;
+	flex-shrink:1;
+	padding:0px;
+}
+
+.widget-editor-RIGHT {
+	width: 25%;
+	flex-grow:0;
+	flex-shrink:0;
+	margin-left:16px;
+	border-left:solid 1px var(--gray20);
+	padding:8px;
+	padding-left:16px;
+	position:relative;
+}
+
+.widget-editor-TOP {
+	flex-grow:1;
+	flex-shrink:1;
+	margin-bottom:16px;
+	padding:8px;
+	position:relative;
+}
+
+.widget-editor-MAIN {
+	flex-grow:2;
+	flex-shrink:1;
+	background-color:var(--gray05);
+	border:solid 1px var(--gray15);
+	padding:8px;
+	display:flex;
+	flex-direction:column;
+	align-items: center;
+	justify-content:center;
+}
+
+.widget-editor-BOTTOM {
+	flex-grow:1;
+	flex-shrink:1;
+	margin-top:16px;
+	padding:8px;
+	position:relative;
+}
+
+.widget-label {
+	font-size: 12px;
+	color: var(--gray60);
+	text-transform: uppercase;
+}
+
+.widget-editor-sortable {
+	height:100%;
+}
+
+.widget-editor-sortable .widget {
+	cursor:grab;
+}
+
+.widget {
+	background-color:var(--gray10);
+	border:solid 1px var(--gray20);
+	padding:8px;
+	margin-bottom:8px;
+	position:relative;
+}
+
+.widget button {
+	position:absolute;
+	top:8px;
+	right:4px;
+	font-size:12px;
+	padding:4px 8px;
+	border:solid 1px var(--gray30);
+	background:var(--gray20);
+	cursor:pointer;
+}
+
+.widget.widget-dragging {
+	cursor:grabbing!important;
+}
+
+.widget.widget-ghost {
+	background-color:var(--blue10);
+	border:solid 1px var(--blue20);
+}
+
+.widget-editor-NONE {
+	display:block;
+	margin-bottom:16px;
+	padding:8px;
+	background-color:var(--gray05);
+	border:solid 1px var(--gray15);
+}
+
+.widget-editor-NONE .widget-editor-sortable {
+	display:flex;
+	flex-direction:row;
+	flex-wrap:wrap;
+}
+
+.widget-editor-NONE .widget {
+	margin-right:16px;
+}
+
+.widget-editor-NONE button {
+	display:none;
+}
+

@@ -13,6 +13,7 @@ import (
 // Template represents an HTML template used for rendering Streams
 type Template struct {
 	TemplateID         string               `json:"templateId"         bson:"templateId"`         // Internal name/token other objects (like streams) will use to reference this Template.
+	Extends            []string             `json:"extends"            bson:"extends"`            // List of templates that this template extends.  The first template in the list is the most important, and the last template in the list is the least important.
 	Role               string               `json:"role"               bson:"role"`               // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
 	Model              string               `json:"model"              bson:"model"`              // Type of model object that this template works with. (Stream, User, Group, Domain, etc.)
 	Label              string               `json:"label"              bson:"label"`              // Human-readable label used in management UI.
@@ -69,7 +70,7 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 	return false
 }
 
-func (template *Template) IsWidgetLocationValid(location string) bool {
+func (template *Template) IsValidWidgetLocation(location string) bool {
 	return slice.Contains(template.WidgetLocations, location)
 }
 
@@ -82,16 +83,66 @@ func (template *Template) State(stateID string) (State, bool) {
 }
 
 // Action returns the action object for a specified name
-func (template *Template) Action(actionID string) *Action {
-
-	if action, ok := template.Actions[actionID]; ok {
-		return &action
-	}
-
-	return nil
+func (template *Template) Action(actionID string) (Action, bool) {
+	action, ok := template.Actions[actionID]
+	return action, ok
 }
 
 // Default returns the default Action for this Template.
-func (template *Template) Default() *Action {
-	return template.Action(template.DefaultAction)
+func (template *Template) Default() Action {
+	return template.Actions[template.DefaultAction]
+}
+
+func (template *Template) Inherit(parent *Template) {
+
+	// Null check.
+	if parent == nil {
+		return
+	}
+
+	// Inherit schema items from the parent (if not already defined)
+	template.Schema.Inherit(parent.Schema)
+
+	// Inherit WidgetLocations (if not already defined)
+	if len(template.WidgetLocations) == 0 {
+		template.WidgetLocations = parent.WidgetLocations
+	}
+
+	// Inherit Role (if not already defined)
+	if template.Role == "" {
+		template.Role = parent.Role
+	}
+
+	// Inherit Model (if not already defined)
+	if template.Model == "" {
+		template.Model = parent.Model
+	}
+
+	// Inherit Roles from the parent (if not already defined)
+	for roleID, role := range parent.Roles {
+		if _, ok := template.Roles[roleID]; !ok {
+			template.Roles[roleID] = role
+		}
+	}
+
+	// Inherit States from the parent (if not already defined)
+	for stateID, state := range parent.States {
+		if _, ok := template.States[stateID]; !ok {
+			template.States[stateID] = state
+		}
+	}
+
+	// Inherit Actions from the parent (if not already defined)
+	for actionID, action := range parent.Actions {
+		if _, ok := template.Actions[actionID]; !ok {
+			template.Actions[actionID] = action
+		}
+	}
+
+	// Inherit HTMLTemplates from the parent (if not already defined)
+	for _, templateName := range parent.HTMLTemplate.Templates() {
+		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
+			template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree)
+		}
+	}
 }

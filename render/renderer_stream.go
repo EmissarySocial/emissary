@@ -33,14 +33,14 @@ type Stream struct {
  ******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, template *model.Template, stream *model.Stream, actionID string) (Stream, error) {
+func NewStream(factory Factory, ctx *steranko.Context, template model.Template, stream *model.Stream, actionID string) (Stream, error) {
 
 	const location = "render.NewStream"
 
 	// Verify the requested action
-	action := template.Action(actionID)
+	action, ok := template.Action(actionID)
 
-	if action == nil {
+	if !ok {
 		return Stream{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
@@ -68,18 +68,10 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 
 	// Use the template service to look up the correct template
 	templateService := factory.Template()
-
 	template, err := templateService.Load(stream.TemplateID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, "render.NewStreamWithoutTemplate", "Error loading Template", stream)
-	}
-
-	// And look up a valid action (cannot be empty)
-	action := template.Action(actionID)
-
-	if action == nil {
-		return Stream{}, derp.NewNotFoundError("render.NewStreamWithoutTemplate", "Unrecognized Action", actionID)
 	}
 
 	// Return a fully populated service
@@ -571,9 +563,18 @@ func (w Stream) Following() ([]model.Following, error) {
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {
 
-	action := w.template().Action(actionID)
+	factory := w._factory
+	templateService := factory.Template()
+	template, err := templateService.Load(w.stream.TemplateID)
 
-	if action == nil {
+	if err != nil {
+		return false
+	}
+
+	// Try to find the requested Action in the Template
+	action, ok := template.Action(actionID)
+
+	if !ok {
 		return false
 	}
 
