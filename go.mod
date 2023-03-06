@@ -35,7 +35,7 @@ require (
 	github.com/labstack/echo/v4 v4.10.1
 	github.com/labstack/gommon v0.4.0
 	github.com/microcosm-cc/bluemonday v1.0.22
-	github.com/mmcdole/gofeed v1.2.0
+	github.com/mmcdole/gofeed v1.2.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.3
 	github.com/spf13/pflag v1.0.5
@@ -90,7 +90,7 @@ require (
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mmcdole/goxpp v1.0.0 // indirect
+	github.com/mmcdole/goxpp v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
