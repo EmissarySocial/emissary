@@ -14,33 +14,33 @@
 		<div class="framed">
 			<div class="left">
 				{{- range .Navigation -}}
-					<a href="/{{.Token}}" script="install turboclick" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
+					<a href="/{{.Token}}" class="turboclick {{ if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
 				{{- end -}}
 			</div>
 			<div class="right">
 				{{- if .IsAuthenticated -}}
 					{{- if eq $topID "inbox" -}}
-						<a href="/@me/inbox" script="install turboclick" class="selected">{{icon "email-fill"}} Inbox</a>
+						<a href="/@me/inbox" class="selected turboclick">{{icon "email-fill"}} Inbox</a>
 					{{- else -}}
-						<a href="/@me/inbox" script="install turboclick" class="">{{icon "email"}} Inbox</a>
+						<a href="/@me/inbox" class="turboclick">{{icon "email"}} Inbox</a>
 					{{- end -}}
 
 					{{- if eq $topID "profile" -}}
-						<a href="/@me" script="install turboclick" class="selected">{{icon "person-fill"}} Profile</a>
+						<a href="/@me" class="selected turboclick">{{icon "person-fill"}} Profile</a>
 					{{- else -}}
-						<a href="/@me" script="install turboclick" class="">{{icon "person"}} Profile</a>
+						<a href="/@me" class="turboclick">{{icon "person"}} Profile</a>
 					{{- end -}}
 
 					{{- if .IsOwner -}}
 						{{- if eq $topID "admin" -}}
-							<a href="/admin/domain" script="install turboclick" class="selected">{{icon "settings-fill"}} Settings</a>
+							<a href="/admin/domain" class="selected turboclick">{{icon "settings-fill"}} Settings</a>
 						{{- else -}}
-							<a href="/admin/domain" script="install turboclick" class="">{{icon "settings"}} Settings</a>
+							<a href="/admin/domain" class="turboclick">{{icon "settings"}} Settings</a>
 						{{- end -}}
 					{{- end -}}
 
 					{{- else -}}
-					<a href="/signin" script="install turboclick">Sign In</a>
+					<a href="/signin" class="turboclick">Sign In</a>
 				{{- end -}}
 			</div>
 		</div>

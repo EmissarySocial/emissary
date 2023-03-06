@@ -1,15 +1,8 @@
-behavior turboclick
+on mousedown from .turboclick
 
-	on mousedown or touchstart
-
-		if event.target is not me then 
-			exit
-		end
-
-		if event.button is not 0 then 
-			exit
-		end
-
-		send click to me
+	if event.button is not 0 then 
+		exit
 	end
+
+	send click to event.target
 end

@@ -8,13 +8,13 @@
 
 			{{if gt (len $children) 0 -}}
 				{{- range $index, $child := $children -}}
-					<div><a href="/{{$child.StreamID}}">- {{.Label}}</a></div>
+					<div><a href="/{{$child.StreamID}}" class="turboclick">- {{.Label}}</a></div>
 				{{- end -}}
 				<br>
 			{{- end -}}
 
 		{{- else -}}
-			<div><a href="/{{$sibling.StreamID}}">{{.Label}}</a></div>
+			<div><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 

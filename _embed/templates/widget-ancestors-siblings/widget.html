@@ -5,19 +5,19 @@
 <div class="widget widget-ancestors-siblings">
 	{{- range $index, $ancestor := $ancestors -}}
 		{{- if eq $parentID $ancestor.StreamID -}}
-			<div><a href="/{{$ancestor.StreamID}}">{{.Label}}</a></div>
+			<div><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
 
 			{{- range $index, $sibling := $siblings -}}
 				{{- if eq $streamID $sibling.StreamID -}}
 					<div class="bold">- {{.Label}}</div>
 				{{- else -}}
-					<div><a href="/{{$sibling.StreamID}}">- {{.Label}}</a></div>
+					<div><a href="/{{$sibling.StreamID}}" class="turboclick">- {{.Label}}</a></div>
 				{{- end -}}
 			{{- end -}}
 			<br>
 			
 		{{- else -}}
-			<div><a href="/{{$ancestor.StreamID}}">{{.Label}}</a></div>
+			<div><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 

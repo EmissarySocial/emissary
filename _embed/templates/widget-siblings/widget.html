@@ -5,7 +5,7 @@
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="bold">{{.Label}}</div>
 		{{- else -}}
-			<div><a href="/{{$sibling.StreamID}}">{{.Label}}</a></div>
+			<div><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 

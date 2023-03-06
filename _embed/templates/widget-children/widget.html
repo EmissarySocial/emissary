@@ -2,7 +2,7 @@
 {{- $streamID := .StreamID -}}
 <div class="widget widget-children">
 	{{- range $index, $sibling := $children -}}
-		<div><a href="/{{$sibling.StreamID}}">{{.Label}}</a></div>
+		<div><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 	{{- end -}}
 	{{- if .UserCan "add-child" -}}
 		<div><a hx-get="/{{.StreamID}}/add-child">Add a Stream</a></div>
