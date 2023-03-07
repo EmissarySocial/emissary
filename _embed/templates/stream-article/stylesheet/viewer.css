@@ -19,16 +19,16 @@
 }
 
 .widgets.LEFT {
-	width:25%;
-	max-width:300px;
+	width:20%;
+	max-width:200px;
 	margin-right:16px;
 	flex-grow:0;
 	flex-shrink:0;
 }
 
 .widgets.RIGHT {
-	width:25%;
-	max-width:300px;
+	width:20%;
+	max-width:200px;
 	margin-left:16px;
 	flex-grow:0;
 	flex-shrink:0;
