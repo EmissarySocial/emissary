@@ -1,5 +1,5 @@
 {
 	"widgetId": "ancestors-siblings",
-	"label": "Ancestors and Siblings List",
-	"description":"Displays a two-tiered list of parent-level streams and siblings."
+	"label": "List: Ancestors + Siblings",
+	"description":"Displays a two-tiered list containing this stream's parent, all of the parent's siblings, and all of this stream's siblings."
 }

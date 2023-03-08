@@ -1,5 +1,6 @@
 {
 	"templateId":"article-markdown",
+	"role":"article",
 	"extends":["article"],
 	"containedBy": ["top", "folder", "article"],
 	"label":"Article (Markdown)",

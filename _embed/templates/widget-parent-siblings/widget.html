@@ -1,6 +1,13 @@
 {{- $siblings := .Siblings.Slice -}}
+{{- $parentID := .ParentID -}}
 {{- $streamID := .StreamID -}}
-<div class="widget widget-siblings">
+<div class="widget widget-ancestors-siblings">
+
+	{{- if .HasParent }}
+		{{- $parent := .Parent "view" -}}
+		<div class="ellipsis"><a href="/{{$parent.StreamID}}" class="turboclick">{{$parent.Label}}</a></div>
+	{{- end -}}
+
 	{{- range $index, $sibling := $siblings -}}
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>
@@ -10,7 +17,7 @@
 	{{- end -}}
 
 	{{- if .UserCan "add-sibling" -}}
-		<div class="ellipsis"><a hx-get="/{{.StreamID}}/add-sibling">+ Add a Stream</a></div>
+		<div class="ellipsis space-above"><a hx-get="/{{.StreamID}}/add-sibling">+ Add a Stream</a></div>
 	{{- end -}}
 
 </div>

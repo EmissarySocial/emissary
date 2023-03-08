@@ -1,0 +1,5 @@
+{
+	"widgetId": "parent-siblings",
+	"label":"List: Parent + Siblings",
+	"description":"Displays a single-tiered list containing this stream's parent, and this stream's siblings."
+}

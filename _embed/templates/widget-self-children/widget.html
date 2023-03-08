@@ -1,0 +1,17 @@
+{{- $children := .Children.Slice -}}
+{{- $streamID := .StreamID -}}
+<div class="widget widget-siblings-children">
+	<div class="ellipsis bold">{{.Label}}</div>
+
+	{{if gt (len $children) 0 -}}
+		{{- range $index, $child := $children -}}
+			<div class="ellipsis"><a href="/{{$child.StreamID}}" class="turboclick">{{.Label}}</a></div>
+		{{- end -}}
+		<br>
+	{{- end -}}
+
+	{{- if .UserCan "add-child" -}}
+		<div class="ellipsis"><a hx-get="/{{.StreamID}}/add-child">+ Add a Stream</a></div>
+	{{- end -}}
+
+</div>

@@ -1,5 +1,5 @@
 {
-	"widgetId": "siblings-children",
-	"label": "Siblings and Children List",
-	"description":"Displays a two-tiered list of all siblings and children."
+	"widgetId":"siblings-children",
+	"label":"List: Siblings + Children",
+	"description":"Displays a two-tiered list containing all siblings and children."
 }

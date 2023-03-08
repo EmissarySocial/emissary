@@ -34,7 +34,7 @@ func (step StepAddSiblingStream) Get(renderer Renderer, buffer io.Writer) error 
 	}
 
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, streamRenderer.URL(), streamRenderer.TemplateID(), step.TemplateIDs)
+	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, streamRenderer.URL(), streamRenderer.templateRole(), step.TemplateIDs)
 
 	return nil
 }

@@ -1,6 +1,7 @@
 {
-	"label":"Children",
-	"description":"Adds a list of children to this Stream",
+	"widgetId":"children",
+	"label":"List: Children",
+	"description":"Displays a list of this stream's children",
 	"schema":{
 		"type":"object",
 		"properties":{

@@ -1,5 +1,6 @@
 {
 	"templateId":"article",
+	"role":"article",
 	"model":"Stream",
 	"label":"Article (BASE TEMPLATE)",
 	"description":"Base Template, extended by article-editorjs and article-markdown",
@@ -192,7 +193,16 @@
 		"add-child":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-child", "title":"Add Sub-Page", "with-child":[
+				{"step":"add-child", "title":"+ Add a Stream", "with-child":[
+					{"step":"save"},
+					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				]}
+			]
+		},
+		"add-sibling":{
+			"roles": ["owner"],
+			"steps": [
+				{"step":"add-sibling", "title":"+ Add a Stream", "with-sibling":[
 					{"step":"save"},
 					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 				]}
