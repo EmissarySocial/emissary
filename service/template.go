@@ -203,6 +203,9 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Error loading Schema", templateID)
 	}
 
+	// All template schemas also inherit from the main stream schema
+	template.Schema.Inherit(schema.New(model.StreamSchema()))
+
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, template.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, location, "Error loading Template", templateID)
