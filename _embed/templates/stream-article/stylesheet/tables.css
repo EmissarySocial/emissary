@@ -1,0 +1,23 @@
+.e-content table {
+	border-collapse: collapse;
+	border: solid 1px var(--gray40);
+}
+
+.e-content thead th {
+	padding: 4px 12px;
+	border: solid 1px var(--gray40);
+	background-color:var(--gray40);
+	text-align:left;
+	font-weight:500;
+	color:var(--white);
+}
+
+.e-content table td {
+	padding:4px 12px;
+	border-bottom: solid 1px var(--gray40);
+	text-align:left;
+}
+
+.e-content tbody tr:nth-child(even) {
+	background-color: var(--gray10);
+}
