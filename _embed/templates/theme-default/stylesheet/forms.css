@@ -248,7 +248,7 @@ button:focus,
 .button:hover,
 .button:focus {
 	background-color: var(--gray30);
-	color:var(--black);
+	color:var(--black)!important;
 }
 
 button.primary,
