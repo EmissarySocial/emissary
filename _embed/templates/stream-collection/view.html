@@ -2,7 +2,13 @@
 
 	<link rel="stylesheet" href="/.templates/collection/stylesheet">
 
-	{{.View "heading"}}
+	{{- if .UserCan "edit" -}}
+		<div style="position:absolute; top:4px; right:8px;">
+			<a class="text-xs button" href="/{{.StreamID}}/edit">Edit &rarr;</a>
+		</div>
+	{{- end -}}
+
+	<h1>{{- .Label -}}</h1>
 
 	<article class="content">
 		{{- .Widgets "LEFT" -}}

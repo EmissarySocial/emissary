@@ -4,14 +4,12 @@
 	
 	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
-		<div id="menu-bar">			
-			<a href="/{{.Token}}">View</a>
-
+        <div id="menu-bar">
+            <a href="/{{.Token}}">&larr; View</a>
             <a href="/{{.Token}}/edit" class="bold">Edit</a>
             <a href="/{{.Token}}/widgets">Widgets</a>
-
             <a hx-get="/{{.Token}}/properties">Properties</a>
-
+        
             {{- if .UserCan "sharing" -}}
                 <a hx-get="/{{.Token}}/sharing">Sharing</a>
             {{- end -}}
@@ -22,7 +20,7 @@
                 {{- end -}}
             </div>
         </div>
-		
+                
 		<h1 class="p-name">{{.Label}}</h1>
 				
 		<br>
