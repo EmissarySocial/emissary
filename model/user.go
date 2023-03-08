@@ -61,7 +61,7 @@ func (user *User) PersonLink() PersonLink {
 	return PersonLink{
 		InternalID:   user.UserID,
 		Name:         user.DisplayName,
-		EmailAddress: user.Username,
+		EmailAddress: user.EmailAddress,
 		ProfileURL:   user.ProfileURL,
 		ImageURL:     user.ActivityPubAvatarURL(),
 	}
