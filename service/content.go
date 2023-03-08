@@ -8,6 +8,7 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 type Content struct {
@@ -43,7 +44,12 @@ func (service *Content) New(format string, raw string) model.Content {
 		// TODO: Enable markdown plugins (tables, etc)
 		// https://github.com/yuin/goldmark#built-in-extensions
 		var buffer bytes.Buffer
-		if err := goldmark.Convert([]byte(raw), &buffer); err != nil {
+
+		md := goldmark.New(
+			goldmark.WithExtensions(extension.Table, extension.Linkify, extension.Typographer, extension.DefinitionList),
+		)
+
+		if err := md.Convert([]byte(raw), &buffer); err != nil {
 			derp.Report(err)
 		}
 		html = buffer.String()
