@@ -8,11 +8,11 @@
 			<button script="on click saveDraft(false)">&larr; View</button>
 
 			{{- if .UserCan "edit" -}}
-				<a hx-get="/{{.StreamID}}/edit" class="bold">Edit</a>
+				<a href="/{{.StreamID}}/edit" class="bold">Edit</a>
 			{{- end -}}
 
 			{{- if .UserCan "widgets" -}}
-				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true">Widgets</a>
+				<a href="/{{.StreamID}}/widgets">Widgets</a>
 			{{- end -}}
 
 			{{- if .UserCan "properties" -}}

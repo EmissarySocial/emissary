@@ -1,9 +1,5 @@
 <div class="page">
 
-	<link rel="stylesheet" href="/.templates/article/stylesheet-editor">
-	<script type="text/javascript" src="/.templates/article/javascript"></script>
-	<script type="text/hyperscript" src="/.templates/article/hyperscript"></script>
-	
 	<script type="text/hyperscript">
 		def saveDraft(promote)
 			if promote then
@@ -19,11 +15,11 @@
 		<div class="left">
 			<button script="on click saveDraft(false)">&larr; View</button>
 			{{- if .UserCan "edit" -}}
-				<a hx-get="/{{.StreamID}}/edit" hx-push-url="true">Edit</a>
+				<a href="/{{.StreamID}}/edit">Edit</a>
 			{{- end -}}
 
 			{{- if .UserCan "widgets" -}}
-				<a hx-get="/{{.StreamID}}/widgets" hx-push-url="true" class="bold">Widgets</a>
+				<a href="/{{.StreamID}}/widgets" class="bold">Widgets</a>
 			{{- end -}}
 
 			{{- if .UserCan "properties" -}}
@@ -47,10 +43,6 @@
 
 	</div>
 
-	<div hx-get="/{{.StreamID}}/heading" hx-trigger="refreshPage from:window">
-		{{- .View "heading" -}}
-	</div>
-
-	{{- .View "widgets-list" -}}
+	{{- template "widgets-list" . -}}
 
 </div>

@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 )
 
 type Widget struct {
@@ -13,6 +14,7 @@ type Widget struct {
 	Description  string               // Human-readable description for this widget
 	HTMLTemplate *template.Template   // HTML template for this widget
 	Bundles      mapof.Object[Bundle] // List of bundles that this widget uses
+	Schema       schema.Schema        // Custom data schema to use for this widget
 	Form         form.Form            // Property/Settings form for this widget
 }
 

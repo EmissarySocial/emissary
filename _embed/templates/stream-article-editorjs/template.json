@@ -1,7 +1,7 @@
 {
 	"templateId":"article-editorjs",
 	"role":"article",
-	"extends": ["article"],
+	"extends": ["base-article"],
 	"containedBy": ["top", "folder", "article"],
 	"label":"Article (WYSIWYG)",
 	"description":"For regular use. Contains text, images, and more.",

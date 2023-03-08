@@ -1,22 +1,14 @@
 {
-	"templateId":"article",
+	"templateId":"base-article",
 	"role":"article",
 	"model":"Stream",
+	"extends":["base-widget-editor"],
 	"label":"Article (BASE TEMPLATE)",
 	"description":"Base Template, extended by article-editorjs and article-markdown",
 	"widget-locations": ["LEFT", "TOP", "RIGHT", "BOTTOM"],
 	"bundles": {
 		"stylesheet": {
 			"content-type":"text/css"
-		},
-		"stylesheet-editor": {
-			"content-type":"text/css"
-		},
-		"javascript":{
-			"content-type":"text/javascript"
-		},
-		"hyperscript": {
-			"content-type":"text/hyperscript"
 		}
 	},
 	"schema": {

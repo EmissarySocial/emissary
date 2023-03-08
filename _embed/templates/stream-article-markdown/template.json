@@ -1,7 +1,7 @@
 {
 	"templateId":"article-markdown",
 	"role":"article",
-	"extends":["article"],
+	"extends":["base-article"],
 	"containedBy": ["top", "folder", "article"],
 	"label":"Article (Markdown)",
 	"description":"Simple Markdown editor",
