@@ -11,7 +11,7 @@
 			"steps": [
 				{"step":"set-data", "values": {
 					"document.label":"New Article", 
-					"content.type":"editorjs", 
+					"content.format":"editorjs", 
 					"content.raw":"{}"
 				}},
 				{"step":"set-state", "state":"unpublished"}

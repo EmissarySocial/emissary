@@ -11,7 +11,7 @@
 			"steps": [
 				{"step":"set-data", "values": {
 					"document.label":"New Article (Markdown)", 
-					"content.type":"markdown", 
+					"content.format":"markdown", 
 					"content.raw":"# New Article"
 				}},
 				{"step":"set-state", "state":"unpublished"}
