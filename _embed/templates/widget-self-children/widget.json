@@ -1,5 +1,5 @@
 {
 	"widgetId": "self-children",
 	"label": "List: Self + Children",
-	"description":"Displays a single-tiered list containing this stream and all of its children."
+	"description":"Displays a single-tiered list containing this stream and its children."
 }

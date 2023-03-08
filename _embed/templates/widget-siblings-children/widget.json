@@ -1,5 +1,5 @@
 {
 	"widgetId":"siblings-children",
 	"label":"List: Siblings + Children",
-	"description":"Displays a two-tiered list containing all siblings and children."
+	"description":"Displays a two-tiered list containing this stream's siblings and a sub-menu containing this stream's children."
 }
