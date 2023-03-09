@@ -200,6 +200,9 @@ func (service *Template) loadTemplates() error {
 		service.templates[templateID] = template
 	}
 
+	// Clear out the existing prep area
+	service.templatePrep = make(set.Map[model.Template])
+
 	return nil
 }
 
