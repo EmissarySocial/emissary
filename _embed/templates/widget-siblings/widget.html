@@ -1,16 +1,11 @@
 {{- $siblings := .Siblings.Slice -}}
 {{- $streamID := .StreamID -}}
-<div class="widget widget-siblings">
+<div class="widget widget-siblings" hx-target="#main" hx-push-url="true">
 	{{- range $index, $sibling := $siblings -}}
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a href="/{{.$sibling.StreamID}}" hx-get="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
-
-	{{- if .UserCan "add-sibling" -}}
-		<div class="ellipsis space-above"><a hx-get="/{{.StreamID}}/add-sibling">+ Add a Stream</a></div>
-	{{- end -}}
-
 </div>

@@ -1,29 +1,20 @@
 {{- $siblings := .Siblings.Slice -}}
 {{- $children := .Children.Slice -}}
 {{- $streamID := .StreamID -}}
-<div class="widget widget-siblings-children">
+<div class="widget widget-siblings-children" hx-target="#main" hx-push-url="true">
 	{{- range $index, $sibling := $siblings -}}
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>
 
 			{{if gt (len $children) 0 -}}
 				{{- range $index, $child := $children -}}
-					<div class="ellipsis"><a href="/{{$child.StreamID}}" class="turboclick">- {{.Label}}</a></div>
+					<div class="ellipsis"><a href="/{{$child.StreamID}}" hx-get="/{{$child.StreamID}}" class="turboclick">- {{.Label}}</a></div>
 				{{- end -}}
-
-				{{- if .UserCan "add-sibling" -}}
-					<div class="ellipsis space-above"><a hx-get="/{{.StreamID}}/add-child">+ Add a Stream</a></div>
-				{{- end -}}
-				<br>
 			{{- end -}}
 
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a href="/{{$sibling.StreamID}}" hx-get="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
-	{{- end -}}
-
-	{{- if .UserCan "add-sibling" -}}
-		<div class="space-above ellipsis"><a hx-get="/{{.StreamID}}/add-sibling">+ Add a Stream</a></div>
 	{{- end -}}
 
 </div>
