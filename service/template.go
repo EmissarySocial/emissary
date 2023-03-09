@@ -21,6 +21,7 @@ import (
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
 	templates         set.Map[model.Template] // map of all templates available within this domain
+	templatePrep      set.Map[model.Template] // temporary map of templates that are being prepared
 	locations         []config.Folder         // Configuration for template directory
 	filesystemService Filesystem              // Filesystem service
 	themeService      *Theme                  // Theme Service
@@ -36,6 +37,7 @@ func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetServic
 
 	service := Template{
 		templates:         make(set.Map[model.Template]),
+		templatePrep:      make(set.Map[model.Template]),
 		locations:         make([]config.Folder, 0),
 		filesystemService: filesystemService,
 		themeService:      themeService,
@@ -118,6 +120,8 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
+	service.templatePrep = make(set.Map[model.Template])
+
 	// For each configured location...
 	for _, location := range service.locations {
 
@@ -183,10 +187,17 @@ func (service *Template) loadTemplates() error {
 	}
 
 	// Handle inheritance for each template
-	for _, template := range service.templates {
+	for _, template := range service.templatePrep {
 		if len(template.Extends) > 0 {
 			service.calculateInheritance(template)
 		}
+	}
+
+	// Assign the prep area to live
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+	for templateID, template := range service.templatePrep {
+		service.templates[templateID] = template
 	}
 
 	return nil
@@ -219,16 +230,10 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	fmt.Println("... adding template: " + template.TemplateID)
 
-	// Add the template into the service library
-	service.set(template)
+	// Add the template into the prep library
+	service.templatePrep[template.TemplateID] = template
 
 	return nil
-}
-
-func (service *Template) set(template model.Template) {
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
-	service.templates[template.TemplateID] = template
 }
 
 func (service *Template) calculateInheritance(template model.Template) model.Template {
@@ -238,14 +243,13 @@ func (service *Template) calculateInheritance(template model.Template) model.Tem
 	}
 
 	for _, parentID := range template.Extends {
-		if parent, err := service.Load(parentID); err == nil {
+		if parent, ok := service.templatePrep[parentID]; ok {
 			parent = service.calculateInheritance(parent)
 			template.Inherit(&parent)
 		}
 	}
 
-	service.set(template)
-
+	service.templatePrep[template.TemplateID] = template
 	return template
 }
 
