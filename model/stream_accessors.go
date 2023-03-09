@@ -53,6 +53,9 @@ func (stream *Stream) GetIntOK(name string) (int, bool) {
 
 	switch name {
 
+	case "depth":
+		return stream.Depth, true
+
 	case "rank":
 		return stream.Rank, true
 
@@ -110,6 +113,10 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 func (stream *Stream) SetInt(name string, value int) bool {
 
 	switch name {
+
+	case "depth":
+		stream.Depth = value
+		return true
 
 	case "rank":
 		stream.Rank = value
@@ -180,6 +187,9 @@ func (stream *Stream) SetString(name string, value string) bool {
 func (stream *Stream) GetObject(name string) (any, bool) {
 
 	switch name {
+
+	case "parentIds":
+		return &stream.ParentIDs, true
 
 	case "permissions":
 		return &stream.Permissions, true
