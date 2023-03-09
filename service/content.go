@@ -6,8 +6,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/davidscottmills/goeditorjs"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 )
 
@@ -46,7 +46,15 @@ func (service *Content) New(format string, raw string) model.Content {
 		var buffer bytes.Buffer
 
 		md := goldmark.New(
-			goldmark.WithExtensions(extension.Table, extension.Linkify, extension.Typographer, extension.DefinitionList),
+			goldmark.WithExtensions(
+				extension.Table,
+				extension.Linkify,
+				extension.Typographer,
+				extension.DefinitionList,
+				highlighting.NewHighlighting(
+					highlighting.WithStyle("github"),
+				),
+			),
 		)
 
 		if err := md.Convert([]byte(raw), &buffer); err != nil {
@@ -56,7 +64,7 @@ func (service *Content) New(format string, raw string) model.Content {
 	}
 
 	// Sanitize all HTML, no matter what source format
-	html = bluemonday.UGCPolicy().Sanitize(html)
+	// html = bluemonday.UGCPolicy().Sanitize(html)
 
 	// Create the result object
 	return model.Content{

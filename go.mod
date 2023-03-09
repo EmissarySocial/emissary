@@ -46,6 +46,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.1
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.4
+	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20220924101305-151362477c87
 	go.mongodb.org/mongo-driver v1.11.2
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
 	golang.org/x/net v0.8.0
@@ -59,12 +60,14 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
+	github.com/alecthomas/chroma/v2 v2.5.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/cloudflare/circl v1.3.2 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
+	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect

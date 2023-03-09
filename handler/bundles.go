@@ -40,6 +40,24 @@ func GetTemplateBundle(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+func GetWidgetBundle(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		widgetID := ctx.Param("widgetId")
+		bundleID := ctx.Param("bundleId")
+
+		widgetService := serverFactory.Widget()
+		widget, ok := widgetService.Get(widgetID)
+
+		if !ok {
+			return derp.NewNotFoundError("handler.GetWidgetBundle", "Widget not found", widgetID)
+		}
+
+		return getBundle(widget.Bundles, bundleID, ctx.Response())
+	}
+}
+
 func getBundle(bundles mapof.Object[model.Bundle], bundleID string, response *echo.Response) error {
 
 	bundle, ok := bundles[bundleID]

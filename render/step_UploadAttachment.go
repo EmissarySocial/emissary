@@ -44,8 +44,13 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 
 	attachmentService := factory.Attachment()
 
-	objectType := renderer.service().ObjectType()
 	objectID := renderer.objectID()
+	objectType := renderer.service().ObjectType()
+
+	// Special case:  If we're uploading a draft, then we need to attach the document to the parent stream.
+	if objectType == "StreamDraft" {
+		objectType = "Stream"
+	}
 
 	for index, fileHeader := range files {
 
@@ -82,9 +87,12 @@ func (step StepUploadAttachment) Post(renderer Renderer) error {
 			response := mapof.Any{
 				"success": 1,
 				"file": mapof.Any{
-					"url":    attachment.URL(),
+					"url":    renderer.Host() + attachment.URL(),
 					"height": attachment.Height,
 					"width":  attachment.Width,
+				},
+				"data": mapof.Any{
+					"filePath": renderer.Host() + attachment.URL(),
 				},
 			}
 

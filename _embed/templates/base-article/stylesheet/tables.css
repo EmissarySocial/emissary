@@ -3,17 +3,20 @@
 	border: solid 1px var(--gray40);
 }
 
-.e-content thead th {
-	padding: 4px 12px;
+.e-content thead {
 	border: solid 1px var(--gray40);
-	background-color:var(--gray40);
+	background-color:var(--gray30);
+}
+
+.e-content thead th {
+	padding: 8px 16px;
 	text-align:left;
 	font-weight:500;
-	color:var(--white);
+	color:var(--black);
 }
 
 .e-content table td {
-	padding:4px 12px;
+	padding:8px 16px;
 	border-bottom: solid 1px var(--gray40);
 	text-align:left;
 }

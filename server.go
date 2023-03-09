@@ -147,6 +147,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Built-In Service  Routes
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))
+	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
