@@ -1,5 +1,7 @@
 # Emissary 🏴‍☠️
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/EmissarySocial/emissary.svg)](https://pkg.go.dev/github.com/EmissarySocial/emissary)
+
 Emissary is an open-source project to make a different kind of distributed social medium that is friendly, safe, and welcoming to everyone.
 
 Emissary will give each person a customizable, private space [in the Fediverse](#enter-the-fediverse) where they can create, share, and collaborate with the groups of people who matter most to them, both big and small.
