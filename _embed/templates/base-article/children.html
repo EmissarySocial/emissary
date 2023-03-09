@@ -1,25 +1,15 @@
 <div class="page">
 
-	<script type="text/hyperscript">
-		def saveDraft(promote)
-			if promote then
-				fetch /{{.StreamID}}/promote-draft with method:"POST"
-			end
-	
-			set window.location to "/{{.StreamID}}"
-		end
-	</script>
-
 	<div id="menu-bar">
-
 		<div class="left">
-			<button script="on click saveDraft(false)">&larr; View</button>
+			<a href="/{{.StreamID}}">&larr; View</a>
+
 			{{- if .UserCan "edit" -}}
-				<a href="/{{.StreamID}}/edit">Edit</a>
+				<a href="/{{.StreamID}}/edit" class="bold">Edit</a>
 			{{- end -}}
 
 			{{- if .UserCan "widgets" -}}
-				<a href="/{{.StreamID}}/widgets" class="bold">Widgets</a>
+				<a href="/{{.StreamID}}/widgets">Widgets</a>
 			{{- end -}}
 
 			{{- if .UserCan "children" -}}
@@ -33,7 +23,6 @@
 			{{- if .UserCan "sharing" -}}
 				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
 			{{- end -}}
-
 		</div>
 
 		<div class="right">
@@ -47,6 +36,6 @@
 
 	</div>
 
-	{{- template "widgets-list" . -}}
-
+	{{- template "children-sort" . -}}
+	
 </div>

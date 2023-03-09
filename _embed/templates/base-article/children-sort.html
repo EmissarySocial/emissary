@@ -1,0 +1,60 @@
+{{- $children := .Children.Slice -}}
+
+{{- if gt (len $children) 0 -}}
+
+	<script src="/.templates/base-widget-editor/javascript" type="application/javascript"></script>
+
+	<script type="text/hyperscript">
+		init 
+			make a Sortable from #sortable
+		end
+	</script>
+
+	<style>
+		.drag-handle{
+			cursor:grab;
+		}
+	</style>
+
+	<form hx-post="{{.URL}}" hx-trigger="sort" hx-swap="none">
+		<table class="table space-below">
+			<tbody id="sortable">
+			{{- range $children -}}
+				<tr>
+					<td>
+						<div class="drag-handle">
+							<span>{{icon "drag-handle"}}&nbsp;</span>
+							<input type="hidden" name="keys" value="{{.StreamID}}">
+							{{.Label}}
+						</div>
+					</td>
+					<td class="align-right">
+						<a href="/{{.StreamID}}/edit" class="button text-sm" style="margin:0px">Edit</a>
+						<a hx-get="/{{.StreamID}}/delete" class="button text-sm text-red" style="margin:0px">Delete</a>
+					</td>
+				</tr>
+			{{- end -}}
+			</tbody>
+		</table>
+	</form>
+
+	<div>
+		<a href="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add Another</a>
+	</div>
+
+{{- else if .UserCan "add-child" -}}
+
+	<div class="align-center">
+		<div style="max-width:500px; margin:auto;">
+			<h1 class="text-gray">Add a Child Stream</h1>
+			<h2 class="text-gray">Place additional pages under this one in the site map, then organize them with the sort tool.</h2>
+			<br>
+			<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add a Stream</a>
+		</div>
+	</div>
+
+{{- else -}}
+
+There are no child streams underneath this one.<br>
+Ask the owner of this stream to add a child stream.<br>
+{{- end -}}

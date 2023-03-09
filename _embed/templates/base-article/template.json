@@ -103,6 +103,13 @@
 				]}
 			]
 		},
+		"children": {
+			"roles:": ["owner", "editor"],
+			"steps": [
+				{"step":"view-html"},
+				{"step":"sort", "keys":"_id", "values":"rank"}
+			]
+		},
 		"upload-image": {
 			"roles": ["owner", "editor"],
 			"steps": [
@@ -203,7 +210,7 @@
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"delete", "title":"Delete this Article?", "message":"All content and comments will be lost.  There is NO UNDO."},
+				{"step":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
 				{"step":"unpublish", "role":"Article"},
 				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
