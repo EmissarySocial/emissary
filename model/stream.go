@@ -16,6 +16,7 @@ import (
 type Stream struct {
 	StreamID        primitive.ObjectID           `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentID        primitive.ObjectID           `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	ParentIDs       id.Slice                     `json:"parentIds"           bson:"parentIds"`           // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
 	Token           string                       `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
 	NavigationID    string                       `json:"navigationId"        bson:"navigationId"`        // Unique identifier of the "top-level" Stream that this record falls within. (NOT USED PUBLICLY)
 	TemplateID      string                       `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
@@ -27,6 +28,7 @@ type Stream struct {
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this Stream.
 	Widgets         sliceof.Object[StreamWidget] `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	Depth           int                          `json:"depth"               bson:"depth"`               // Number of parents in the ParentIDs list.  This is used to generate "breadcrumbs" for the Stream.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	PublishDate     int64                        `json:"publishDate"         bson:"publishDate"`         // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"       bson:"unpublishDate"`       // Unix timestemp of the date/time when this document will no longer be available on the domain.
@@ -42,6 +44,7 @@ func NewStream() Stream {
 		StreamID:      streamID,
 		Token:         streamID.Hex(),
 		ParentID:      primitive.NilObjectID,
+		ParentIDs:     id.NewSlice(),
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
 		Widgets:       NewStreamWidgets(),

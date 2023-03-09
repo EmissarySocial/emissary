@@ -467,6 +467,15 @@ func (w Stream) Mentions() ([]model.Mention, error) {
  * RELATED RESULTSETS
  ******************************************/
 
+func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
+	streamService := w.factory().Stream()
+
+	return streamService.QuerySummary(
+		exp.In("_id", w.stream.ParentIDs),
+		option.SortAsc("depth"),
+	)
+}
+
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	var parent model.Stream

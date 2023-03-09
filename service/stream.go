@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/domain"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -156,6 +157,16 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	if err := template.Schema.Clean(stream); err != nil {
 		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using TemplateSchema", stream)
 	}
+
+	// RULE: If this stream does not have ParentIDs, then calculate them now.
+	if len(stream.ParentIDs) == 0 {
+		if err := service.CalcParentIDs(stream); err != nil {
+			return derp.Wrap(err, location, "Error calculating parent IDs", stream)
+		}
+	}
+
+	// RULE: Calculate the depth of this stream
+	stream.Depth = len(stream.ParentIDs)
 
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
@@ -537,6 +548,41 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 		return derp.Wrap(err, location, "Error purging soft-deleted streams")
 	}
 
+	return nil
+}
+
+// CalcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
+// of all of this Stream's parents
+func (service *Stream) CalcParentIDs(stream *model.Stream) error {
+
+	// If this stream has no parent, then it has no parent IDs
+	if stream.ParentID == primitive.NilObjectID {
+		stream.ParentIDs = id.NewSlice()
+		return nil
+	}
+
+	// Otherwise, load the Parent stream and try to use its parentIDs
+	parentStream := model.NewStream()
+	if err := service.LoadByID(stream.ParentID, &parentStream); err != nil {
+		return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to load Parent stream", stream.ParentID)
+	}
+
+	// If the parent has no parentIDs, then try to calculate them
+	if len(parentStream.ParentIDs) == 0 {
+		if err := service.CalcParentIDs(&parentStream); err != nil {
+			return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
+		}
+
+		// If the parent has been changed, then save that calculation.
+		if len(parentStream.ParentIDs) > 0 {
+			if err := service.Save(&parentStream, "CalcParentIDs"); err != nil {
+				return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to save Parent stream", stream.ParentID)
+			}
+		}
+	}
+
+	// Save the ParentIDs to the current stream
+	stream.ParentIDs = append(parentStream.ParentIDs, parentStream.StreamID)
 	return nil
 }
 
