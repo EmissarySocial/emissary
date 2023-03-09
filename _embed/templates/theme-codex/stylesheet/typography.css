@@ -372,6 +372,7 @@ code {
 pre code,
 code.block {
     display:block;
+    tab-size:24px;
 }
 
 code.inline {
