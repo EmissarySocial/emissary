@@ -26,7 +26,7 @@ func NewWidget(funcMap template.FuncMap) *Widget {
 	return &Widget{
 		widgets: make(map[string]model.Widget),
 		mutex:   sync.RWMutex{},
-		funcMap: template.FuncMap{},
+		funcMap: funcMap,
 	}
 }
 
