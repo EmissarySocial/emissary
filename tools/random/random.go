@@ -1,3 +1,6 @@
+// Package random contains some nifty tools for generating rantom numbers.  It was
+// lightly modified from an original blog article by Matt Silverlock (@elithrar@mastodon.social)
+// posted here: https://blog.questionable.services/article/generating-secure-random-numbers-crypto-rand/
 package random
 
 import (
@@ -7,7 +10,7 @@ import (
 )
 
 /******************************************
- * Modified from original source code (MIT licensed) at:
+ * Modified from original source code by Matt Silverlock (MIT licensed) at:
  * https://blog.questionable.services/article/generating-secure-random-numbers-crypto-rand/
  ******************************************/
 

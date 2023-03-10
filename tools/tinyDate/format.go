@@ -1,3 +1,4 @@
+// Package tinyDate provides a nifty way to format dates, just like those fancy tech-bro's do in Silicon Valley.
 package tinyDate
 
 import (

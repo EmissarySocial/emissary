@@ -1,3 +1,8 @@
+/*
+Package queue implements a simple queue for passing asynchronous
+tasks to a pool of workers.  This will probably get expanded or
+replaced in the future by a more robust queueing system.
+*/
 package queue
 
 import (

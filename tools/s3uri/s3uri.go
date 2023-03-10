@@ -1,7 +1,6 @@
-// s3uri parses and generates URI strings for Amazon S3 resources.
+// Package s3uri parses and generates URI strings for Amazon S3 resources.
 // it is based on this original Gist by https://github.com/kwilczynski
 // https://gist.github.com/kwilczynski/f6e626990d6d2395b42a12721b165b86
-
 package s3uri
 
 import (

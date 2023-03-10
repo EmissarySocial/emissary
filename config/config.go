@@ -1,3 +1,7 @@
+/*
+Package config includes definitions for the Emissary configuration file, along with
+adapters for reading/writing from the filesystem or a mongodb database.
+*/
 package config
 
 import (

@@ -12,6 +12,9 @@ import (
 // RealtimeBroker is a singleton. It is responsible
 // for keeping a list of which clients (browsers) are currently attached
 // and broadcasting events (messages) to those clients.
+//
+// TODO: MEDIUM: Should the realtime broker be a service?
+// Is there a reason to have multiple instances of the realtime broker, or should it be a GLOBAL service?
 type RealtimeBroker struct {
 
 	// FollowerService for WebSub notifications

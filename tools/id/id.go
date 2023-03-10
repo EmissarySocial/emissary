@@ -1,3 +1,7 @@
+// Package id provides some nifty tools for manipulating mongodb objectIDs.
+// They are not baked into rosetta (where they belong, conceptually) because
+// it would introduce a dependency on the mongodb driver, which does not
+// make sense for rosetta.  So, they're here.  Deal with it :)
 package id
 
 import (
