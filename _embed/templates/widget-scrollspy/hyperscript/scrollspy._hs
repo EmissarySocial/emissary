@@ -1,0 +1,61 @@
+behavior scrollspy
+
+init
+	set nodes to <h1, h2, h3, h4, h5, h6 /> in document
+
+	log nodes
+
+	for node in  <h1, h2, h3, h4, h5, h6 /> 
+		set anchor to "<div><a href="#${node.id}">${scrollspy_indent(node)}${node.textContent}</a></div>"
+		put anchor into me
+	end
+
+	log me
+end
+
+def scrollspy_indent(node)
+
+	if node.tagName is "H1"
+		return ""
+	end
+
+	if node.tagName is "H2"
+		return " ".repeat(2)
+	end
+
+	if node.tagName is "H3"
+		return " ".repeat(4)
+	end
+
+	if node.tagName is "H4"
+		return " ".repeat(6)
+	end
+
+	if node.tagName is "H5"
+		return " ".repeat(8)
+	end
+
+	if node.tagName is "H6"
+		return " ".repeat(10)
+	end
+
+	return 6
+end
+-- on scroll from window, click from 
+--	call scrollspy()
+-- end
+
+-- on click from < .scrollspy a />
+--	call scrollspy()
+-- end
+
+def old_scrollspy() 
+	for node in <.scrollspy-target/>
+		measure the node
+		if (result.top < window.innerHeight) and (result.bottom >= 0)
+			set hash to "#" + node.id
+			take .selected from <.scrollspy a/> for <.scrollspy a[href="${hash}"]/>
+			exit
+		end
+	end
+end
