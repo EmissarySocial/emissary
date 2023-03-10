@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
@@ -26,7 +27,7 @@ type Stream struct {
 	Document        DocumentLink                 `json:"document"            bson:"document"`            // Summary information (url, title, summary) for this Stream
 	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
 	Content         Content                      `json:"content"             bson:"content,omitempty"`   // Content objects for this Stream.
-	Widgets         sliceof.Object[StreamWidget] `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
+	Widgets         set.Slice[StreamWidget]      `json:"widgets"             bson:"widgets"`             // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data"                bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Depth           int                          `json:"depth"               bson:"depth"`               // Number of parents in the ParentIDs list.  This is used to generate "breadcrumbs" for the Stream.
 	Rank            int                          `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
@@ -59,8 +60,9 @@ func NewStreamPermissions() mapof.Object[sliceof.String] {
 	return make(mapof.Object[sliceof.String])
 }
 
-func NewStreamWidgets() sliceof.Object[StreamWidget] {
-	return sliceof.NewObject[StreamWidget]()
+// NewStreamWidgets returns a fully initialized StreamWidget slice
+func NewStreamWidgets() set.Slice[StreamWidget] {
+	return make(set.Slice[StreamWidget], 0)
 }
 
 /******************************************

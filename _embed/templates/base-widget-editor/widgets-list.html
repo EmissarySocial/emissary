@@ -2,6 +2,8 @@
 <script type="text/javascript" src="/.templates/base-widget-editor/javascript"></script>
 <script type="text/hyperscript" src="/.templates/base-widget-editor/hyperscript"></script>
 
+
+
 {{- $streamID := .StreamID -}}
 <form hx-post="/{{$streamID}}/widgets" hx-trigger="editor:save" hx-target="#main" hx-swap="innerHTML">
 
@@ -26,12 +28,7 @@
 				<div class="widget-editor-sortable" data-location="LEFT">
 					<input type="hidden" name="LEFT" value="">
 					{{- range .ListWidgetsByLocation "LEFT" -}}
-						<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
-							<span class="widget-handle">{{icon "drag-handle"}}</span> 
-							{{.Label}}
-							<!-- // TODO: CRITICAL: Widget Editing -->
-							<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
-						</div>
+						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
 			</div>
@@ -42,11 +39,7 @@
 					<div class="widget-editor-sortable" data-location="TOP">
 						<input type="hidden" name="TOP" value="">
 						{{- range .ListWidgetsByLocation "TOP" -}}
-							<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
-								<span class="widget-handle">{{icon "drag-handle"}}</span> 
-								{{.Label}}
-								<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
-							</div>
+							{{- template "widget" . -}}
 						{{- end -}}
 					</div>
 				</div>
@@ -60,11 +53,7 @@
 					<div class="widget-editor-sortable" data-location="BOTTOM">
 						<input type="hidden" name="BOTTOM" value="">
 						{{- range .ListWidgetsByLocation "BOTTOM" -}}
-							<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
-								<span class="widget-handle">{{icon "drag-handle"}}</span> 
-								{{.Label}}
-								<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
-							</div>
+							{{- template "widget" . -}}
 						{{- end -}}
 					</div>
 				</div>
@@ -75,11 +64,7 @@
 				<div class="widget-editor-sortable" data-location="RIGHT">
 					<input type="hidden" name="RIGHT" value="">
 					{{- range .ListWidgetsByLocation "RIGHT" -}}
-						<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
-							<span class="widget-handle">{{icon "drag-handle"}}</span> 
-							{{.Label}}
-							<button hx-get="/{{$streamID}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
-						</div>
+						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
 			</div>

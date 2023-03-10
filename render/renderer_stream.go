@@ -337,7 +337,21 @@ func (w Stream) ListAllWidgets() []form.LookupCode {
 }
 
 func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
-	return w.stream.WidgetsByLocation(location)
+
+	result := w.stream.WidgetsByLocation(location)
+
+	if len(result) == 0 {
+		return result
+	}
+
+	widgetService := w._factory.Widget()
+	for index := range result {
+		widget, _ := widgetService.Get(result[index].Type)
+		result[index].Stream = w.stream
+		result[index].Widget = widget
+	}
+
+	return result
 }
 
 // RenderWidgets reutrns HTML for all the widgets in the specified location
@@ -354,7 +368,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	buffer.WriteString(`<div class="widgets ` + location + `">`)
 	for _, streamWidget := range list {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
-			widgetRenderer := NewWidget(w, streamWidget)
+			widgetRenderer := NewWidget(&w, streamWidget)
 			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetRenderer); err != nil {
 				derp.Report(derp.Wrap(err, "renderer.Stream.Widgets", "Error executing widget template", widget))
 			}

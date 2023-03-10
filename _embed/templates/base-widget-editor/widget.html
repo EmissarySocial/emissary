@@ -1,0 +1,7 @@
+<div class="widget" data-widgetId="{{.StreamWidgetID.Hex}}">
+	<span class="widget-handle">{{icon "drag-handle"}}</span> 
+	{{.Label}}
+	{{- if .Widget.IsEditable -}}
+		<button hx-get="/{{.Stream.StreamID.Hex}}/widget?widgetId={{.StreamWidgetID.Hex}}">Edit</button>
+	{{- end -}}
+</div>

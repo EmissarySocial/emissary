@@ -124,3 +124,11 @@ func (set Slice[V]) Length() int {
 func (set *Slice[V]) Remove(name string) {
 	set.Delete(name)
 }
+
+/******************************************
+ * Other Slilce Methods
+ ******************************************/
+
+func (set *Slice[V]) Append(value V) {
+	*set = append(*set, value)
+}

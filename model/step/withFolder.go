@@ -14,7 +14,7 @@ type WithFolder struct {
 // NewWithFolder returns a fully initialized WithFolder object
 func NewWithFolder(stepInfo mapof.Any) (WithFolder, error) {
 
-	const location = "NewWithFolder"
+	const location = "model.step.NewWithFolder"
 
 	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 

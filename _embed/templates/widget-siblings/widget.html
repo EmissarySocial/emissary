@@ -1,11 +1,10 @@
-{{- $siblings := .Siblings.Slice -}}
 {{- $streamID := .StreamID -}}
 <div class="widget widget-siblings" hx-target="#main" hx-push-url="true">
-	{{- range $index, $sibling := $siblings -}}
-		{{- if eq $streamID $sibling.StreamID -}}
+	{{- range .Siblings.Slice -}}
+		{{- if eq $streamID .StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{.$sibling.StreamID}}" hx-get="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a href="/{{.StreamID}}" hx-get="/{{.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 </div>

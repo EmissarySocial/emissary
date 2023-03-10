@@ -95,6 +95,15 @@
 				]}
 			]
 		},
+		"widget": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"with-draft", "steps": [
+					{"step":"edit-widget", "file":"edit", "format":"EDITORJS"},
+					{"step":"save", "comment":"Widget updated by {{.Author}}"}
+				]}
+			]
+		},
 		"widgets-list": {
 			"roles": ["owner", "editor"],
 			"steps": [

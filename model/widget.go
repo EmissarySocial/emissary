@@ -9,13 +9,13 @@ import (
 )
 
 type Widget struct {
-	WidgetID     string               // Unique identifier for this widget
-	Label        string               // Human-readable label for this widget
-	Description  string               // Human-readable description for this widget
-	HTMLTemplate *template.Template   // HTML template for this widget
-	Bundles      mapof.Object[Bundle] // List of bundles that this widget uses
-	Schema       schema.Schema        // Custom data schema to use for this widget
-	Form         form.Form            // Property/Settings form for this widget
+	WidgetID     string               `json:"widgetId"     bson:"widgetId"`     // Unique identifier for this widget
+	Label        string               `json:"label"        bson:"label"`        // Human-readable label for this widget
+	Description  string               `json:"description"  bson:"description"`  // Human-readable description for this widget
+	HTMLTemplate *template.Template   `json:"htmlTemplate" bson:"htmlTemplate"` // HTML template for this widget
+	Bundles      mapof.Object[Bundle] `json:"bundles"      bson:"bundles"`      // List of bundles that this widget uses
+	Schema       schema.Schema        `json:"schema"       bson:"schema"`       // Custom data schema to use for this widget
+	Form         form.Element         `json:"form"         bson:"form"`         // Property/Settings form for this widget
 }
 
 func NewWidget(widgetID string, funcMap template.FuncMap) Widget {
@@ -24,4 +24,9 @@ func NewWidget(widgetID string, funcMap template.FuncMap) Widget {
 		HTMLTemplate: template.New("").Funcs(funcMap),
 		Bundles:      make(mapof.Object[Bundle]),
 	}
+}
+
+func (widget Widget) IsEditable() bool {
+	// TODO: LOW: These should rules be IsEmpty() accessors in the schema and form packages
+	return (widget.Schema.Element != nil) && (len(widget.Form.Children) > 0)
 }

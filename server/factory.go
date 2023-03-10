@@ -64,6 +64,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		factory.FuncMap(),
 	)
 
+	// Global Widget Service
 	factory.widgetService = *service.NewWidget(
 		factory.FuncMap(),
 	)

@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -45,7 +44,7 @@ func (step StepSortWidgets) Post(renderer Renderer) error {
 	// Set up some variables
 	stream := streamRenderer.stream
 	template := streamRenderer.template()
-	newWidgets := sliceof.NewObject[model.StreamWidget]()
+	newWidgets := model.NewStreamWidgets()
 
 	// Find and organize the selected widgets
 	for _, location := range template.WidgetLocations {
