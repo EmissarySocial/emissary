@@ -10,11 +10,11 @@
 			<button type="button" hx-get="/@me/profile-photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
-		{{- if ne "" .ActivityPubAvatarURL -}}
-			<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="width:90%; max-width:200px;">
-		{{- else -}}
-			<div class="circle aspect-square placeholder-gray" style="width:90%; max-width:200px;"></div>
-		{{- end -}}
+		<div class="circle placeholder-gray" style="width:90%; max-width:200px;">
+			{{- if ne "" .ActivityPubAvatarURL -}}
+				<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="height:100%; width:100%;" onerror="this.style.display='none'">
+			{{- end -}}
+		</div>
 	</div>
 
 	<div class="space-below">

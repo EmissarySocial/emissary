@@ -67,7 +67,7 @@
 							{"type":"textarea", "path":"statusMessage", "label":"Message"}
 						]
 					}},
-					{"step":"save", "comment":"Profile updated by {{.Author}}"}
+					{"step":"save", "comment":"Profile updated by me"}
 				]}
 			]
 		},
@@ -79,7 +79,7 @@
 					{"step":"delete-attachments", "all":true},
 					{"step":"upload-attachments", "maximum":1},
 					{"step":"set-thumbnail", "path":"imageId"},
-					{"step":"save", "comment":"Profile photo updated by {{.Author}}"}
+					{"step":"save", "comment":"Profile photo updated by me"}
 				]},
 				{"step":"reload-page"}
 			]
@@ -102,7 +102,7 @@
 						{"type":"text", "path":"profileUrl", "label":"URL"}
 					]
 				}},
-				{"step":"save", "comment":"Links updated by {{.Author}}"}
+				{"step":"save", "comment":"Links updated by me"}
 			]
 		},
 		"profile-photo-preview": {
@@ -114,7 +114,7 @@
 			"steps":[
 				{"step":"delete-attachments", "all":true},
 				{"step":"set-thumbnail", "path":"imageId"},
-				{"step":"save", "comment":"Profile photo deleted by {{.Author}}"},
+				{"step":"save", "comment":"Profile photo deleted by me"},
 				{"step":"reload-page"}
 			]
 		},
