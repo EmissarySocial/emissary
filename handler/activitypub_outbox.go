@@ -22,6 +22,6 @@ func ActivityPub_GetOutboxItem(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		// TODO: CRITICAL: Implement this
-		return nil
+		return derp.NewBadRequestError(location, "Not implemented")
 	}
 }
