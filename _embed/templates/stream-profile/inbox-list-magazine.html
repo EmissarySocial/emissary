@@ -8,44 +8,40 @@
 		
 	{{- range $index, $message := $inbox -}}
 
-		<div class="space-below">
-			<hr/>
+		<div 
+			id="item_{{$message.MessageID.Hex}}" 
+			class="message space-below clickable" 
+			style="max-width:640px;" 
+			hx-get="/@me/message?messageId={{$message.MessageID.Hex}}&origin.internalId={{$internalID}}"
+			hx-push-url="true">
 
-			<div 
-				id="item_{{$message.MessageID.Hex}}" 
-				class="message space-below clickable" 
-				data-status="{{$message.Status}}" 
-				data-inboxItemId="{{$message.MessageID.Hex}}" 
-				style="max-width:640px;" 
-				hx-get="/@me/message?messageId={{$message.MessageID.Hex}}&origin.internalId={{$internalID}}"
-				hx-push-url="true">
+			<h2 class="black ellipsis">{{$message.Document.Label}}</h2>
 
-				<h2 class="black ellipsis">{{$message.Document.Label}}</h2>
-
-				{{- if ne $message.Document.ImageURL "" -}}
-					<div class="space-below" style="width:100%; max-width:800px;">
-						<img src="{{$message.Document.ImageURL}}" {{if gt $index 3}} loading="lazy" {{end}} style="width:100%; border:solid 1px var(--gray20);"/>
-					</div>
-				{{- end -}}
-
-				<div class="text-gray ellipsis-block" style="max-height:6em;">
-					{{- $message.Document.Summary -}}
+			{{- if ne $message.Document.ImageURL "" -}}
+				<div class="space-below" style="width:100%; max-width:800px;">
+					<img src="{{$message.Document.ImageURL}}" {{if gt $index 3}} loading="lazy" {{end}} style="width:100%; border:solid 1px var(--gray20);"/>
 				</div>
+			{{- end -}}
 
-				<div class="text-sm space-below flex-row">
-					<span class="ellipsis">
-						{{- icon $message.Origin.Icon }}
-						{{ $message.Origin.Label }} &middot;
-						{{ $message.Document.Author.Name -}}
-						&nbsp;&middot;
-					</span>
-					<span class="nowrap">
-						{{- $message.PublishDate | tinyDate -}}
-					</span>
-				</div>
-
+			<div class="text-gray ellipsis-block" style="max-height:6em;">
+				{{- $message.Document.Summary -}}
 			</div>
+
+			<div class="text-sm space-below flex-row">
+				<span class="ellipsis">
+					{{- icon $message.Origin.Icon }}
+					{{ $message.Origin.Label }} &middot;
+					{{ $message.Document.Author.Name -}}
+					&nbsp;&middot;
+				</span>
+				<span class="nowrap">
+					{{- $message.PublishDate | tinyDate -}}
+				</span>
+			</div>
+
 		</div>
+	
+		<hr>
 
 	{{- end -}}
 
@@ -57,6 +53,12 @@
 		hx-swap="outerHTML">
 		<hr>
 		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+	</div>
+
+	<div
+		hx-post="/@me/pub/folder/readDate?folderId={{$folderID}}&readDate={{$lastMessage.Rank}}"
+		hx-push-url="false"
+		hx-trigger="intersect once">
 	</div>
 
 {{- else -}}

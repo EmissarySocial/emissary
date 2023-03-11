@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -227,40 +228,46 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
  * Other Behaviors
  ******************************************/
 
+// UpdateReadDate uses an optimized query to update the read date of a particular folder **IF** the
+// new readDate is greater than the current readDate.
+func (service *Folder) UpdateReadDate(userID primitive.ObjectID, folderID primitive.ObjectID, readDate int64) error {
+
+	if err := queries.UpdateFolderReadDate(service.collection, userID, folderID, readDate); err != nil {
+		return derp.Wrap(err, "service.Folder", "Error updating folder read date", userID, folderID, readDate)
+	}
+
+	return nil
+}
+
 func (service *Folder) CreateDefaultFolders(userID primitive.ObjectID) error {
 
 	defaultFolders := []model.Folder{
 		{
 			Label:  "Family",
-			Filter: model.FolderFilterUnread,
 			Layout: model.FolderLayoutChat,
 			Icon:   "people",
 			Group:  1,
 		},
 		{
 			Label:  "Friends",
-			Filter: model.FolderFilterUnread,
 			Layout: model.FolderLayoutSocial,
 			Icon:   "shield",
 			Group:  1,
 		},
 		{
 			Label:  "Social",
-			Filter: model.FolderFilterUnread,
 			Layout: model.FolderLayoutSocial,
 			Icon:   "folder",
 			Group:  1,
 		},
 		{
 			Label:  "News",
-			Filter: model.FolderFilterUnread,
 			Layout: model.FolderLayoutMagazine,
 			Icon:   "inbox",
 			Group:  1,
 		},
 		{
 			Label:  "Archive",
-			Filter: model.FolderFilterAll,
 			Layout: model.FolderLayoutNewspaper,
 			Icon:   "archive",
 			Group:  2,

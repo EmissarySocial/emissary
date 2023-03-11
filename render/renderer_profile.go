@@ -325,7 +325,7 @@ func (w Profile) Inbox() ([]model.Message, error) {
 
 	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
 
-	return w._factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(12), option.SortAsc("publishDate"))
+	return w._factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(3), option.SortAsc("publishDate"))
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
@@ -395,20 +395,28 @@ func (w Profile) FoldersWithSelection() (model.FolderList, error) {
 		return result, derp.Wrap(err, "render.Profile.FoldersWithSelection", "Error loading folders")
 	}
 
-	// Get Selected FolderID
+	// Guarantee that we have at least one folder
+	if len(result.Folders) == 0 {
+		return result, derp.NewInternalError("render.Profile.FoldersWithSelection", "No folders found", nil)
+	}
+
+	// Find/Mark the Selected FolderID
 	token := w._context.QueryParam("folderId")
 
 	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
 		result.SelectedID = folderID
-		return result, nil
-	}
-
-	if len(result.Folders) > 0 {
+	} else {
 		result.SelectedID = result.Folders[0].FolderID
-		return result, nil
 	}
 
-	return result, derp.NewInternalError("render.Profile.FoldersWithSelection", "No folders found", nil)
+	// Update the query string to reflect the selected folder
+	w.setQuery("folderId", result.SelectedID.Hex())
+	if w._context.QueryParam("rank") == "" {
+		w.setQuery("rank", "GT:"+result.Selected().ReadDateString())
+	}
+
+	// Return the result
+	return result, nil
 }
 
 // Message uses the `messageId` URL parameter to load an individual message from the Inbox

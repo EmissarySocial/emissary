@@ -318,41 +318,8 @@ func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primiti
 	return nil
 }
 
-// SetReadDate updates the readDate for a single Inbox IF it is not already read
-func (service *Inbox) SetReadDate(userID primitive.ObjectID, token string, readDate int64) error {
-
-	const location = "service.Inbox.SetReadDate"
-
-	// Convert the string to an ObjectID
-	messageID, err := primitive.ObjectIDFromHex(token)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Cannot parse messageID", token)
-	}
-
-	// Try to load the Inbox from the database
-	message := model.NewMessage()
-	if err := service.LoadByID(userID, messageID, &message); err != nil {
-		return derp.Wrap(err, location, "Cannot load Inbox", userID, token)
-	}
-
-	// RULE: If the Inbox is already marked as read, then we don't need to update it.  Return success.
-	if message.ReadDate > 0 {
-		return nil
-	}
-
-	// Update the readDate and save the Inbox
-	message.ReadDate = readDate
-
-	if err := service.Save(&message, "Mark Read"); err != nil {
-		return derp.Wrap(err, location, "Cannot save Inbox", message)
-	}
-
-	// Actual success here.
-	return nil
-}
-
 // QueryPurgeable returns a list of Inboxs that are older than the purge date for this following
+// TODO: HIGH: ReadDate is gone.  Need another way to purge messages.
 func (service *Inbox) QueryPurgeable(following *model.Following) ([]model.Message, error) {
 
 	// Purge date is X days before the current date

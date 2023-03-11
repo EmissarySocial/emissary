@@ -1,7 +1,7 @@
-behavior message
+behavior message(folderId, readDate)
 
 	init
-		fetch `/@me/pub/inbox/{{$message.MessageID.Hex}}/mark-read` with method:"POST"
+		fetch `/@me/pub/folder/readDate?folderId=${folderId}&readDate=${readDate}` with method:"POST"
 	end
 
 	on keydown[key=="ArrowLeft"] from window

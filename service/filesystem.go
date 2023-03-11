@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 
@@ -100,11 +101,14 @@ func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
 
 	// Detect S3 filesystem type
 	case config.FolderAdapterS3:
+		// uri, err := url.Parse(folder.Location)
 		uri, err := s3uri.ParseString(folder.Location)
 
 		if err != nil {
 			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error parsing S3 URI", uri)
 		}
+
+		spew.Dump("GetAfero.S3", uri)
 
 		// Read session configuration
 		config := aws.Config{Region: uri.Region}
@@ -113,6 +117,8 @@ func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
 			config.Credentials = credentials.NewStaticCredentials(uri.GetCredentials())
 		}
 
+		spew.Dump(config)
+
 		// Try to make an S3 session
 		session, err := session.NewSession(&config)
 
@@ -120,17 +126,20 @@ func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
 			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", uri)
 		}
 
+		spew.Dump("success??")
+
 		// Create an S3 filesystem
 		return s3.NewFs(*uri.Bucket, session), nil
-
-		// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
-		// * Git? https://github.com/go-git/go-git
-		// * Dropbox?  https://github.com/fclairamb/afero-dropbox
-		// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
-		// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
-		// * Azure?
-		// * etc...
 	}
+
+	// TODO: Implement other Afero adapters to link to other cloud storage providers?
+	// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
+	// * Git? https://github.com/go-git/go-git
+	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
+	// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
+	// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
+	// * Azure?
+	// * etc...
 
 	return nil, derp.NewInternalError("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
 }

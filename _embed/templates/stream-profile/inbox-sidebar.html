@@ -24,14 +24,14 @@
 			{{- end -}}
 
 		</form>
-		<div role="button" hx-get="/@me/inbox-folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
 
 		<hr>
+		<div role="button" hx-get="/@me/inbox-folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
 
 		{{- if .HasSelection -}}
-			<div role="button" hx-get="/@me/inbox-following" class="menu-item turboclick">{{icon "settings"}} Following</div>
+			<div role="button" hx-get="/@me/inbox-following" class="menu-item turboclick">{{icon "settings"}} Edit Following</div>
 		{{- else -}}
-			<div role="button" hx-get="/@me/inbox-following" class="selected menu-item turboclick">{{icon "settings-fill"}} Following</div>
+			<div role="button" hx-get="/@me/inbox-following" class="selected menu-item turboclick">{{icon "settings-fill"}} Edit Following</div>
 		{{- end -}}
 	</div>
 

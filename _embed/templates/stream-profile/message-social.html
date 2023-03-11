@@ -1,29 +1,23 @@
 {{$message := .Message}}
 
-<div script="install message">
+<div script="install message(folderId:'{{$message.FolderID.Hex}}', readDate:'{{$message.Rank}}')">
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
 
-	<div class="ellipsis flex-row text-lg">
-		{{- if ne "" $message.Document.Author.ImageURL -}}
-			<img src="{{$message.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
-		{{- end -}}
+	<div class="ellipsis text-lg">
+		<a href="{{$message.Document.Author.ProfileURL}}" class="flex-row">
+			{{- if ne "" $message.Document.Author.ImageURL -}}
+				<img src="{{$message.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+			{{- end -}}
 
-		<div>
-			<div class="bold black">
-				{{$message.Document.Author.Name}} 
-				<span class="text-gray">
-					{{ icon $message.Origin.Icon }}
-					{{ $message.PublishDate | tinyDate }}
-				</span>
-			</div>
-			<div class="text-sm">
-				<a href="{{$message.Document.Author.ProfileURL}}" class="text-gray">
-					{{$message.Document.Author.ProfileURL}}
-				</a>
-			</div>
-		</div>
+			<span class="bold black">{{$message.Document.Author.Name}}</span>
+			<span class="text-gray">
+				&nbsp;
+				{{ icon $message.Origin.Icon }}
+				{{ $message.PublishDate | tinyDate }}
+			</span>
+		</a>
 	</div>
 
 	<div class="text-sm">

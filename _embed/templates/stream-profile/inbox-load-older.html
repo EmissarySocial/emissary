@@ -1,0 +1,10 @@
+{{- if gt .ReadDate 0 -}}
+
+	<div role="link" hx-get="/@me/inbox-list-before?date={{.ReadDate}}" style="border-top:solid 2px red;">
+		<div style="margin:auto; width:min-content; white-space: nowrap;">
+			<div class="text-sm text-red" style="margin:0px;">
+				New &bull; {{ .ReadDateSeconds | longDate }}</div>
+		</div>
+	</div>
+
+{{- end -}}

@@ -128,6 +128,8 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 	}
 }
 
+// profileUsername returns a string version of the UserID.
+// if the username is "me" then this function returns the currently authenticated user's ID.
 func profileUsername(context echo.Context) (string, error) {
 
 	userIDString := context.Param("userId")
@@ -140,6 +142,8 @@ func profileUsername(context echo.Context) (string, error) {
 	return userIDString, nil
 }
 
+// AuthenticatedID returns the UserID of the currently authenticated user.
+// If the user is not signed in, then this function returns an error.
 func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
 
 	sterankoContext := context.(*steranko.Context)

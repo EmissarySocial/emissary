@@ -14,15 +14,17 @@
 
 		<div class="float-right text-sm">
 			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}">{{icon "filter"}} Filter</button>
+				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "filter"}} Filter</button>
 			{{- else -}}
-				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}&filterId={{$filter.FollowingID.Hex}}" class="selected ellipsis" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
+				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}&filterId={{$filter.FollowingID.Hex}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
 			{{- end -}}
-			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}">{{icon "settings"}} Edit Folder</button>
-			<button class="primary" hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}">{{icon "add"}} Follow</button>
+			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
+			<button hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}" class="primary turboclick">{{icon "add"}} Follow</button>
 		</div>
 
 		<h1 style="margin-top:0px;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
+
+		{{- template "inbox-load-older" $folder -}}
 
 		{{- if eq "SOCIAL" $folder.Layout -}}
 			{{- template "inbox-list-social" . -}}
@@ -37,25 +39,6 @@
 		{{- end -}}
 	
 	</div>
-	
 
-	<!-- Auto-Archive Feature
-	<script type="text/hyperscript">
-		on scroll from window debounced at 500ms
-			tell <div.message[data-status=Unread] /> in me
-		
-				set offsetBottom to your offsetTop
-				increment offsetBottom by your offsetHeight
-				if (offsetBottom) - (window.scrollY) > 0 then
-					exit
-				end
-	
-				set url to "/@me/pub/inbox/" + [@data-inboxItemId] + "/mark-read"
-				fetch `${url}` with method:"POST"
-				set your [@data-status] to "Read"
-			end
-		end
-	</script>
-	 -->
 
 </div>

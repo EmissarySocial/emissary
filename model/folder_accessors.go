@@ -13,7 +13,6 @@ func FolderSchema() schema.Element {
 			"userId":   schema.String{Format: "objectId"},
 			"label":    schema.String{MaxLength: 100, Required: true},
 			"layout":   schema.String{MaxLength: 100, Required: true},
-			"filter":   schema.String{MaxLength: 100},
 			"icon":     schema.String{MaxLength: 100},
 			"rank":     schema.Integer{},
 		},
@@ -39,9 +38,6 @@ func (folder *Folder) GetStringOK(name string) (string, bool) {
 
 	case "folderId":
 		return folder.FolderID.Hex(), true
-
-	case "filter":
-		return folder.Filter, true
 
 	case "icon":
 		return folder.Icon, true
@@ -76,10 +72,6 @@ func (folder *Folder) SetInt(name string, value int) bool {
 
 func (folder *Folder) SetString(name string, value string) bool {
 	switch name {
-
-	case "filter":
-		folder.Filter = value
-		return true
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {

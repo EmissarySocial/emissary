@@ -1,3 +1,8 @@
+/*
+Package main is the entry point for the application.  It reads the server
+configuration info,  initializes the server.Factory, wires up routes to
+the appropriate handlers, then starts the HTTP/HTTPS server.
+*/
 package main
 
 import (
@@ -199,8 +204,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/blocks", handler.ActivityPub_GetBlocks(factory))
 
 	// ME-ONLY PAGES
-	e.POST("/@me/pub/inbox/:item/mark-read", handler.Inbox_MarkRead(factory))
-	e.POST("/@me/pub/inbox/:item/mark-unread", handler.Inbox_MarkUnRead(factory))
+	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))
 
 	// DOMAIN ADMIN PAGES
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
@@ -288,7 +292,7 @@ func errorHandler(err error, ctx echo.Context) {
 }
 
 /** AUTOCERT HOST POLICY
-TODO: Move this into Factory, or somewhere that can listen to configuration changes...
+TODO: MEDIUM: Move this into Factory, or somewhere that can listen to configuration changes.  This isn't necessary for now because DigitalOcean handles HTTPS for us.
 
 	// Find all NON-LOCAL domain names
 	domains := slice.Filter(c.DomainNames(), isRemoteDomain)

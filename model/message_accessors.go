@@ -16,7 +16,7 @@ func MessageSchema() schema.Element {
 			"contentHtml": schema.String{Format: "html"},
 			"contentJson": schema.String{Format: "json"},
 			"folderId":    schema.String{Format: "objectId"},
-			"readDate":    schema.Integer{BitSize: 64},
+			"rank":        schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -28,8 +28,8 @@ func MessageSchema() schema.Element {
 func (message *Message) GetInt64OK(name string) (int64, bool) {
 	switch name {
 
-	case "readDate":
-		return message.ReadDate, true
+	case "rank":
+		return message.Rank, true
 
 	default:
 		return 0, false
@@ -66,8 +66,8 @@ func (message *Message) GetStringOK(name string) (string, bool) {
 func (message *Message) SetInt64(name string, value int64) bool {
 	switch name {
 
-	case "readDate":
-		message.ReadDate = value
+	case "rank":
+		message.Rank = value
 		return true
 
 	default:

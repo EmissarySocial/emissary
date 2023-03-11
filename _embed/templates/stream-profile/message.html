@@ -1,13 +1,13 @@
 {{$message := .Message}}
 
-<div script="install message">
+<div script="install message(folderId:'{{$message.FolderID.Hex}}', readDate:'{{$message.Rank}}')">
 
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1>{{$message.Document.Label}}</h1>
+	<h1 class="ellipsis">{{$message.Document.Label}}</h1>
 
-	<div class="text-gray space-below">
+	<div class="text-gray space-below ellipsis">
 		<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
 			{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
 		</a>

@@ -89,5 +89,13 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 			return tinyDate.FormatDiff(time.Unix(valueInt, 0), time.Now())
 		},
+
+		"longDate": func(value any) string {
+			valueInt := convert.Int64(value)
+			if valueInt == 0 {
+				return ""
+			}
+			return time.Unix(valueInt, 0).Format("Monday, January 2, 2006")
+		},
 	}
 }

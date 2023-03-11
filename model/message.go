@@ -18,7 +18,6 @@ type Message struct {
 	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
 	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
 	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
-	ReadDate    int64              `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read by the user
 	Rank        int64              `json:"rankDate" bson:"rank"`                      // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
@@ -48,10 +47,7 @@ func (activity *Message) ID() string {
 // State returns the current state of this Stream.  It is
 // part of the implementation of the RoleStateEmulator interface
 func (message *Message) State() string {
-	if message.ReadDate == 0 {
-		return "UNREAD"
-	}
-	return "READ"
+	return ""
 }
 
 // Roles returns a list of all roles that match the provided authorization
@@ -75,14 +71,6 @@ func (activity *Message) UpdateWithMessage(other *Message) {
 	activity.Origin = other.Origin
 	activity.Document = other.Document
 	activity.ContentHTML = other.ContentHTML
-}
-
-// Status returns a string indicating whether this activity has been read or not
-func (activity *Message) Status() string {
-	if activity.ReadDate == 0 {
-		return "Unread"
-	}
-	return "Read"
 }
 
 // IsInternal returns true if this activity is "owned" by
