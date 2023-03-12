@@ -1,5 +1,5 @@
 {{- $streamID := .StreamID -}}
-<div class="widget widget-siblings" hx-target="#main" hx-push-url="true">
+<div class="widget widget-siblings" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 	{{- range .Siblings.Slice -}}
 		{{- if eq $streamID .StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>

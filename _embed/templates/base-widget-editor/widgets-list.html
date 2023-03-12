@@ -5,7 +5,7 @@
 
 
 {{- $streamID := .StreamID -}}
-<form hx-post="/{{$streamID}}/widgets" hx-trigger="editor:save" hx-target="#main" hx-swap="innerHTML">
+<form hx-post="/{{$streamID}}/widgets" hx-trigger="editor:save" hx-target="main" hx-swap="innerHTML">
 
 	<div class="widget-editor" script="install widgetEditor(url:'/{{$streamID}}/widgets')">
 

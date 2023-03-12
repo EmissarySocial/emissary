@@ -17,7 +17,7 @@
 		--rhythm: 10px;
 	}
 
-	.framed {
+	.framed, .page {
 		width:100%;
 		margin:0px;		
 	}
@@ -40,7 +40,7 @@
 
 @media screen and (min-width:568px) {
 
-	.framed {
+	.framed, .page {
 		width:100%;
 	}
 
@@ -58,7 +58,7 @@
 
 @media screen and (min-width:768px) {
 
-	.framed {
+	.framed, .page {
 		width:90%;
 	}
 
@@ -75,7 +75,7 @@
 
 @media screen and (min-width:1024px) {
 
-	.framed {
+	.framed, .page {
 		width:85%;
 	}
 
@@ -92,7 +92,7 @@
 
 @media screen and (min-width:1280px) {
 
-	.framed {
+	.framed, .page {
 		width:80%;
 		max-width:76em;
 	}

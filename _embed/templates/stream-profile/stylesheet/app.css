@@ -2,7 +2,19 @@
  * Page
  ******************************************/
 
- .app {
+body {
+	min-height:100vh;
+}
+
+main {
+	min-height:100vh;
+}
+
+.fullscreen {
+	width:100%;
+}
+
+.app {
 	display:flex;
 	flex-direction:row;
 	align-items:stretch;
@@ -10,13 +22,13 @@
     padding: 0px;
     position:relative;
 	line-height:150%;
-	border: solid 1px var(--page-border);
 }
 
 .app-sidebar {
 	flex-grow: 0;
-	min-width:200px;
-	max-width: 300px;
+	width:25%;
+	min-width:160px;
+	max-width:240px;
 	box-sizing: border-box;
 	background-color:var(--gray04);
 	padding: 12px 8px;
@@ -44,5 +56,5 @@
 	flex-grow:1;
 	flex-shrink:1;
 	min-height:400px;
-	padding:12px 12px 12px 24px;
+	padding:0px 12px 12px 24px;
 }

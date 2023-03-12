@@ -2,7 +2,7 @@
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
 
-<div id="app" class="app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="#app" hx-swap="outerHTML">
+<div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="#app" hx-swap="outerHTML">
 
 	<script src="/.templates/user-profile/hyperscript" type="text/hyperscript"></script>
 
@@ -12,17 +12,18 @@
 	<!-- Main App Content -->
 	<div class="app-content">
 
-		<div class="float-right text-sm">
-			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "filter"}} Filter</button>
-			{{- else -}}
-				<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}&filterId={{$filter.FollowingID.Hex}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
-			{{- end -}}
-			<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
-			<button hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}" class="primary turboclick">{{icon "add"}} Follow</button>
+		<div class="pos-sticky flex-row" style="padding:8px 0px; top:56px; width:100%; background-color:var(--page-background);">
+			<h1 style="margin-top:0px; flex-grow:1;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
+			<div class="text-sm">
+				{{- if $filter.IsZero -}}
+					<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "filter"}} Filter</button>
+				{{- else -}}
+					<button hx-get="/@me/inbox-filter?folderId={{$folder.FolderID.Hex}}&filterId={{$filter.FollowingID.Hex}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
+				{{- end -}}
+				<button hx-get="/@me/inbox-folder-edit?folderId={{$folder.FolderID.Hex}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
+				<button hx-get="/@me/following-add?folderId={{$folder.FolderID.Hex}}" class="primary turboclick">{{icon "add"}} Follow</button>
+			</div>
 		</div>
-
-		<h1 style="margin-top:0px;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
 
 		{{- template "inbox-load-older" $folder -}}
 

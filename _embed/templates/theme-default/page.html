@@ -6,7 +6,7 @@
 	{{ template "includes-head" .}}
 </head>
 
-<body hx-target="#main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="true" hx-ext="a11y">
 
 	{{- $topID := .NavigationID -}}
 
@@ -47,10 +47,8 @@
 
 	</nav>
 
-	<main>
-		<div id="main" class="framed">
-			{{- .Render -}}
-		</div>
+	<main id="main">
+		{{- .Render -}}
 	</main>
 	
 	<aside></aside>

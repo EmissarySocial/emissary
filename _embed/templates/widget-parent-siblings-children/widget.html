@@ -3,7 +3,7 @@
 {{- $parentID := .ParentID -}}
 {{- $streamID := .StreamID -}}
 
-<div class="widget widget-ancestors-siblings" hx-target="#main" hx-push-url="true">
+<div class="widget widget-ancestors-siblings" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 
 	{{- if .HasParent }}
 		{{- $parent := .Parent "view" -}}

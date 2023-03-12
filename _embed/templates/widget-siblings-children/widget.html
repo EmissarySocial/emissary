@@ -1,7 +1,7 @@
 {{- $siblings := .Siblings.Slice -}}
 {{- $children := .Children.Slice -}}
 {{- $streamID := .StreamID -}}
-<div class="widget widget-siblings-children" hx-target="#main" hx-push-url="true">
+<div class="widget widget-siblings-children" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 	{{- range $index, $sibling := $siblings -}}
 		{{- if eq $streamID $sibling.StreamID -}}
 			<div class="ellipsis bold">{{.Label}}</div>

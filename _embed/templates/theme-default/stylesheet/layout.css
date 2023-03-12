@@ -12,16 +12,12 @@ body {
 	overflow-x: hidden;
 }
 
-header {
-	background-color: var(--white);
-	color: var(--gray80);
-}
-
 nav {
-	position:sticky;
+	position:fixed;
 	top:0px;
 	left: 0px;
 	right: 0px;
+	height:56px;
 	z-index:100;
 
     color: var(--gray80);
@@ -91,10 +87,7 @@ nav button.selected:focus {
 
 main {
 	display: flex;
+	flex-direction:row;
 	justify-content: center;
-	padding-top: 20px;
-}
-
-footer {
-	
+	padding-top:56px;
 }

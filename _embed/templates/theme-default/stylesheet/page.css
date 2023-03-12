@@ -7,6 +7,7 @@
     padding: 16px 24px;
     position:relative;
 	line-height:150%;
+	margin-top:24px;
 	margin-bottom: 64px;
 	border: solid 1px var(--page-border);
 }
