@@ -10,15 +10,15 @@ import (
 // Message represents a single item in a User's inbox or outbox.  It is loosely modelled on the MessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
-	MessageID   primitive.ObjectID `json:"activityId"   bson:"_id"`                   // Unique ID of the Message
-	UserID      primitive.ObjectID `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
-	Origin      OriginLink         `json:"origin"       bson:"origin,omitempty"`      // Link to the origin of this Message
-	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Message
-	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Message
-	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
-	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
-	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
-	Rank        int64              `json:"rankDate" bson:"rank"`                      // Sort rank for this message (publishDate * 1000 + sequence number)
+	MessageID   primitive.ObjectID `json:"messageId"   bson:"_id"`                   // Unique ID of the Message
+	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
+	Origin      OriginLink         `json:"origin"      bson:"origin,omitempty"`      // Link to the origin of this Message
+	Document    DocumentLink       `json:"document"    bson:"document,omitempty"`    // Document that is the subject of this Message
+	ContentHTML string             `json:"contentHtml" bson:"contentHtml,omitempty"` // HTML Content of the Message
+	ContentJSON string             `json:"contentJson" bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
+	FolderID    primitive.ObjectID `json:"folderId"    bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
+	PublishDate int64              `json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
+	Rank        int64              `json:"rank"        bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -32,12 +32,20 @@ func NewMessage() Message {
 	}
 }
 
+func MessageFields() []string {
+	return []string{"_id", "userId", "origin", "document", "contentHtml", "folderId", "publishDate", "rank"}
+}
+
+func (summary Message) Fields() []string {
+	return MessageFields()
+}
+
 /******************************************
  * data.Object Interface
  ******************************************/
 
-func (activity *Message) ID() string {
-	return activity.MessageID.Hex()
+func (message Message) ID() string {
+	return message.MessageID.Hex()
 }
 
 /******************************************
@@ -46,12 +54,12 @@ func (activity *Message) ID() string {
 
 // State returns the current state of this Stream.  It is
 // part of the implementation of the RoleStateEmulator interface
-func (message *Message) State() string {
+func (message Message) State() string {
 	return ""
 }
 
 // Roles returns a list of all roles that match the provided authorization
-func (message *Message) Roles(authorization *Authorization) []string {
+func (message Message) Roles(authorization *Authorization) []string {
 	return []string{MagicRoleMyself}
 }
 
@@ -59,28 +67,32 @@ func (message *Message) Roles(authorization *Authorization) []string {
  * Other Methods
  ******************************************/
 
-// UpdateWithFollowing updates the contents of this activity with a Following record
-func (activity *Message) UpdateWithFollowing(following *Following) {
-	activity.UserID = following.UserID
-	activity.FolderID = following.FolderID
-	activity.Origin = following.Origin()
+func (message Message) RankSeconds() int64 {
+	return message.Rank / 1000
 }
 
-// UpdateWithMessage updates the contents of this activity with another Message record
-func (activity *Message) UpdateWithMessage(other *Message) {
-	activity.Origin = other.Origin
-	activity.Document = other.Document
-	activity.ContentHTML = other.ContentHTML
+// UpdateWithFollowing updates the contents of this message with a Following record
+func (message *Message) UpdateWithFollowing(following *Following) {
+	message.UserID = following.UserID
+	message.FolderID = following.FolderID
+	message.Origin = following.Origin()
 }
 
-// IsInternal returns true if this activity is "owned" by
+// UpdateWithMessage updates the contents of this message with another Message record
+func (message *Message) UpdateWithMessage(other *Message) {
+	message.Origin = other.Origin
+	message.Document = other.Document
+	message.ContentHTML = other.ContentHTML
+}
+
+// IsInternal returns true if this message is "owned" by
 // this server, and is not federated via another server.
-func (activity *Message) IsInternal() bool {
-	return !activity.Origin.InternalID.IsZero()
+func (message *Message) IsInternal() bool {
+	return !message.Origin.InternalID.IsZero()
 }
 
 // URL returns the parsed, canonical URL for this Message (as stored in the document)
-func (activity *Message) URL() *url.URL {
-	result, _ := url.Parse(activity.Document.URL)
+func (message *Message) URL() *url.URL {
+	result, _ := url.Parse(message.Document.URL)
 	return result
 }

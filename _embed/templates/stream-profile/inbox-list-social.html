@@ -1,69 +1,23 @@
-{{- $inbox := .Inbox -}}
-{{- $folderID := .QueryParam "folderId" -}}
-{{- $internalID := .QueryParam "origin.internalId" -}}
+<div class="ellipsis flex-row">
+	{{- if ne "" .Document.Author.ImageURL -}}
+		<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+	{{- end -}}
 
-{{- if gt (len  $inbox) 0 -}}
+	<span class="bold black">{{.Document.Author.Name}}</span>
+	<span class="text-gray nowrap" style="flex-grow:1">
+		{{ icon .Origin.Icon }}
+		{{ .PublishDate | tinyDate }}
+	</span>
+</div>
 
-	{{- $lastMessage := index  $inbox (subtract (len  $inbox) 1) -}}
+<div class="space-above">
+	{{- .Document.Summary | html -}}
+</div>
 
-	{{- range $index, $message :=  $inbox -}}
-
-		<div 
-			id="item_{{$message.MessageID.Hex}}" 
-			role="button"
-			class="message" 
-			style="max-width:560px;"
-			hx-get="/@me/message-social?messageId={{$message.MessageID.Hex}}&origin.internalId={{$internalID}}"
-			hx-push-url="true">
-
-			<div style="max-width:600px;">
-
-				<div class="ellipsis flex-row">
-					{{- if ne "" .Document.Author.ImageURL -}}
-						<img src="{{$message.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
-					{{- end -}}
-
-					<span class="bold black">{{$message.Document.Author.Name}}</span>
-					<span class="text-gray nowrap" style="flex-grow:1">
-						{{ icon .Origin.Icon }}
-						{{ .PublishDate | tinyDate }}
-					</span>
-				</div>
-
-				<div class="space-above">
-					{{- .Document.Summary | html -}}
-				</div>
-
-				{{- if ne .Document.ImageURL "" -}}
-					<div class="space-above" style="position:relative;">
-						<img src="{{$message.Document.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
-					</div>
-				{{- end -}}
-
-			</div>
-			
-		</div>
-
-		<hr/>
-
-		{{- end -}}
-
-	<div 
-		hx-get="/@me/inbox-list?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}" 
-		hx-push-url="false" 
-		hx-trigger="intersect once" 
-		hx-target="this" 
-		hx-swap="outerHTML">
-		<hr>
-		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+{{- if ne .Document.ImageURL "" -}}
+	<div class="space-above" style="position:relative;">
+		<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 	</div>
-
-	<div
-		hx-post="/@me/pub/folder/readDate?folderId={{$folderID}}&readDate={{$lastMessage.Rank}}"
-		hx-push-url="false"
-		hx-trigger="intersect once">
-	</div>
-
-{{- else -}}
-	{{- template "inbox-empty" . -}}
 {{- end -}}
+
+<hr/>

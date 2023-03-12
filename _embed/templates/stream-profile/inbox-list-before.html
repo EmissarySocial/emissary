@@ -1,0 +1,59 @@
+{{- $inbox := .Inbox.Top12.ByRank.Reverse.Slice.Reverse -}}
+
+{{- if gt (len  $inbox) 0 -}}
+
+	{{- $firstMessage := $inbox.First -}}
+	{{- $folders := .FoldersWithSelection}}
+	{{- $folder := $folders.Selected}}
+	{{- $folderID := $folder.FolderID.Hex -}}
+
+	{{- $internalID := .QueryParam "origin.internalId" -}}
+	{{- $layout := $folder.Layout | lowerCase -}}
+
+	<div 
+		hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$firstMessage.Rank}}"
+		hx-target="this"
+		hx-swap="outerHTML"
+		hx-push-url="false"
+		role="button"
+		class="space-below">
+			<div class="text-sm text-gray" style="margin:0px;">
+				&uarr; Read Posts &bull; click to view
+			</div>
+			<div style="border-top:solid 2px red;"></div>
+			<div class="text-sm text-red" style="margin:0px;">
+				&darr; New Posts &bull; {{ $firstMessage.RankSeconds | longDate }}
+			</div>
+		</div>
+	</div>
+
+	{{- range $index, $message := $inbox -}}
+
+		<div 
+			id="item_{{.MessageID.Hex}}" 
+			role="button"
+			class="message" 
+			style="max-width:640px;"
+			hx-get="/@me/message-{{$layout}}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
+			hx-push-url="false">
+
+			{{- if eq "SOCIAL" $folder.Layout -}}
+				{{- template "inbox-list-social" $message -}}
+			{{- else if eq "CHAT" $folder.Layout -}}
+				{{- template "inbox-list-chat" $message -}}
+			{{- else if eq "NEWSPAPER" $folder.Layout -}}
+				{{- template "inbox-list-newspaper" $message -}}
+			{{- else if eq "MAGAZINE" $folder.Layout -}}
+				{{- template "inbox-list-magazine" $message -}}
+			{{- else -}}
+				{{- template "inbox-list-social" $message -}}
+			{{- end -}}
+			
+		</div>
+
+	{{- end -}}
+
+{{- end -}}
+
+
+

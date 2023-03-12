@@ -241,7 +241,7 @@ func (w Profile) ActivityPubPublicKeyURL() string {
  * Profile / Outbox Methods
  ******************************************/
 
-func (w Profile) Outbox() *QueryBuilder[model.StreamSummary] {
+func (w Profile) Outbox() QueryBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		Int("publishDate")
@@ -253,10 +253,10 @@ func (w Profile) Outbox() *QueryBuilder[model.StreamSummary] {
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
-	return &result
+	return result
 }
 
-func (w Profile) Followers() *QueryBuilder[model.FollowerSummary] {
+func (w Profile) Followers() QueryBuilder[model.FollowerSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		String("displayName")
@@ -268,7 +268,7 @@ func (w Profile) Followers() *QueryBuilder[model.FollowerSummary] {
 
 	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
 
-	return &result
+	return result
 }
 
 func (w Profile) Following() ([]model.FollowingSummary, error) {
@@ -311,11 +311,18 @@ func (w Profile) FollowingByFolder(token string) ([]model.FollowingSummary, erro
  ******************************************/
 
 // Inbox returns a slice of messages in the current User's inbox
-func (w Profile) Inbox() ([]model.Message, error) {
+func (w Profile) Inbox() (QueryBuilder[model.Message], error) {
 
-	// Must be authenticated to view any Inbox messages
-	if !w.IsAuthenticated() {
-		return []model.Message{}, derp.NewForbiddenError("render.Profile.Inbox", "Not authenticated")
+	userID := w.AuthenticatedID()
+
+	if userID.IsZero() {
+		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("render.Profile.Inbox", "Must be signed in to view inbox")
+	}
+
+	folderID, err := primitive.ObjectIDFromHex(w.context().Request().URL.Query().Get("folderId"))
+
+	if err != nil {
+		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Profile.Inbox", "Invalid folderId", w.context().QueryParam("folderId"))
 	}
 
 	expBuilder := builder.NewBuilder().
@@ -323,9 +330,13 @@ func (w Profile) Inbox() ([]model.Message, error) {
 		ObjectID("folderId").
 		Int("rank")
 
-	criteria := expBuilder.Evaluate(w._context.Request().URL.Query())
+	criteria := exp.And(
+		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("folderId", folderID),
+		expBuilder.Evaluate(w._context.Request().URL.Query()),
+	)
 
-	return w._factory.Inbox().QueryByUserID(w.AuthenticatedID(), criteria, option.MaxRows(3), option.SortAsc("publishDate"))
+	return NewQueryBuilder[model.Message](w._factory.Inbox(), criteria), nil
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied

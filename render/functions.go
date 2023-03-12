@@ -3,6 +3,7 @@ package render
 import (
 	"encoding/json"
 	"html/template"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
@@ -29,6 +30,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"iconFilled": func(name string) template.HTML {
 			return template.HTML(icons.Get(name + "-fill"))
+		},
+
+		"lowerCase": func(name any) string {
+			return strings.ToLower(convert.String(name))
 		},
 
 		"dollarFormat": func(value any) string {

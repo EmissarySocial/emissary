@@ -303,6 +303,10 @@
 			"roles": ["self"],
 			"step":"view-html"
 		},
+		"inbox-list-before": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
 		"inbox-filter":{
 			"roles":["self"],
 			"steps":[
@@ -403,7 +407,23 @@
 				]}
 			]
 		},
-		"message": {
+		"message-chat": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-magazine": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-newspaper": {
 			"roles": ["self"],
 			"steps": [
 					{"step":"as-modal", "options":["class:large"], "steps": [
