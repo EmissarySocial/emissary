@@ -4,8 +4,8 @@
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 
 <article>
-	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save, save-throttled throttle:10s" hx-swap="none">
-		<textarea id="markdownContent" name="content" xstyle="width:100%; min-height:600px;">{{.ContentRaw}}</textarea>
+	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none">
+		<textarea id="markdownContent" name="content">{{.ContentRaw}}</textarea>
 	</form>
 </article>
 
@@ -16,10 +16,6 @@
 		uploadImage:true,
 		imageUploadEndpoint:"/{{.StreamID}}/upload-image",
 		imagePathAbsolute:true,
-	});
-
-	easyMDE.codemirror.on("change", function() {
-		saveDraft(false)
 	});
 
 	easyMDE.codemirror.on("blur", function() {
