@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.216
+	github.com/aws/aws-sdk-go v1.44.219
 	github.com/benpate/data v0.23.1
 	github.com/benpate/data-mongo v0.23.1
 	github.com/benpate/derp v0.27.0
@@ -24,6 +24,7 @@ require (
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
+	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -69,7 +70,6 @@ require (
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c // indirect
-	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
