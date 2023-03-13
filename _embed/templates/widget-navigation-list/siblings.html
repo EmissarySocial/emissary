@@ -1,0 +1,31 @@
+{{- $configSiblings := .Widget.Data.GetString "siblings" -}}
+{{- $configChildren := .Widget.Data.GetString "children" -}}
+{{- $root := . -}}
+
+{{- if eq $configSiblings "All" -}}
+
+	{{- $streamID := .StreamID -}}
+	{{- $siblings := .Siblings.Slice -}}
+
+	{{- range $index, $sibling := $siblings -}}
+		{{- if eq $streamID $sibling.StreamID -}}
+			<div class="bold ellipsis">{{.Label}}</div>
+
+			{{- if ne "Hidden" $configChildren -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+			{{- end -}}
+
+		{{- else -}}
+			<div class="ellipsis"><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+		{{- end -}}
+	{{- end -}}
+
+{{- else if eq $configSiblings "Self Only" -}}
+
+	<div class="bold ellipsis">{{.Label}}</div>
+
+	{{- if ne "Hidden" $configChildren -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+	{{- end -}}
+	
+{{- end -}}

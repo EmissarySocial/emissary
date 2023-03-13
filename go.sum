@@ -95,8 +95,8 @@ github.com/benpate/mediaserver v0.9.1 h1:Sv7Ce4TyeYNduLBrijqCJ2qW1M9xv3DNRMvBgk8
 github.com/benpate/mediaserver v0.9.1/go.mod h1:7qVVvW/sTfA/pM4CAbESv5tJemsvUZ39VQdpgU35Qmw=
 github.com/benpate/remote v0.10.2 h1:WqcCFYCV0BiYHujFOqz8YBgCOv8U3bRmpy/sy6zng7k=
 github.com/benpate/remote v0.10.2/go.mod h1:mf2Xp5M8UGs3ItMOekW7NQDf616A7QZvYaIAAelNbw8=
-github.com/benpate/rosetta v0.12.1 h1:2bhc45oQ3ICtZ7uFw0H1ATvKDirQn3eIo7K/PpGBNjc=
-github.com/benpate/rosetta v0.12.1/go.mod h1:Eif3VINVIcFQnaQrlSsik0RqDdjtwbKrDU2RrTRxXW8=
+github.com/benpate/rosetta v0.12.2 h1:eiGcEin4daBf4vUHXGuOf4DAn9mC3IXM37pmDVb8Fug=
+github.com/benpate/rosetta v0.12.2/go.mod h1:Eif3VINVIcFQnaQrlSsik0RqDdjtwbKrDU2RrTRxXW8=
 github.com/benpate/steranko v0.13.1 h1:ZJ29rqXlqI7Bat/lTzhqeumYYXYkgDopsopw0/jfy14=
 github.com/benpate/steranko v0.13.1/go.mod h1:giY7UZ42WW4yF1cJLhl9bSan05c+1KuqsBsMbjY+NuA=
 github.com/benpate/table v0.5.1 h1:Qcs2IsZUOZsFeYVllIIv3ZCfiOrrHpdnDnOHqkPIw6g=

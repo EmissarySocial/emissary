@@ -1,0 +1,17 @@
+<div class="widget widget-navigation" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
+
+	{{- if not (.Widget.Data.IsZeroValue "parents") -}}
+
+		{{- template "parents" . -}}
+
+	{{- else if not (.Widget.Data.IsZeroValue "siblings") -}}
+	
+		{{- template "siblings" . -}}
+
+	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
+
+		{{- template "children" . -}}
+
+	{{- end -}}
+
+</div>

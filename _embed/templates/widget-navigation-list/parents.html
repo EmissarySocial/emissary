@@ -1,0 +1,47 @@
+{{- $root := . -}}
+{{- $configParents := .Widget.Data.GetString "parents" -}}
+
+{{- if eq $configParents "All"  -}}
+
+	{{- $ancestors := .Ancestors.Slice -}}
+	{{- $parentID := .ParentID -}}
+	{{- $streamID := .StreamID -}}
+
+	{{- range $index, $ancestor := $ancestors -}}
+
+		{{- if eq $parentID $ancestor.StreamID -}}
+
+			<div class="ellipsis"><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
+
+			{{- if not ($root.Widget.Data.IsZeroValue "siblings")  -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
+			{{- else if not ($root.Widget.Data.IsZeroValue "children") -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+			{{- end -}}
+			
+		{{- else -}}
+			<div class="ellipsis"><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
+		{{- end -}}
+
+	{{- end -}}
+
+{{- else -}} 
+
+	{{- if eq $configParents "Parent Only" -}}
+
+		{{- if .HasParent -}}
+			{{- $parent := .Parent "view" -}}
+			<div class="ellipsis">
+				<a href="/{{$parent.StreamID}}" hx-get="/{{$parent.StreamID}}" class="turboclick">{{- $parent.Label -}}</a>
+			</div>
+		{{- end -}}
+
+	{{- end -}}
+
+	{{- if not (.Widget.Data.IsZeroValue "siblings") -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
+	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+	{{- end -}}
+
+{{- end -}}

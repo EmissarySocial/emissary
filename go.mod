@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
+// replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.216
@@ -17,13 +19,14 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.9.1
 	github.com/benpate/remote v0.10.2
-	github.com/benpate/rosetta v0.12.1
+	github.com/benpate/rosetta v0.12.2
 	github.com/benpate/steranko v0.13.1
 	github.com/benpate/table v0.5.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/dyatlov/go-htmlinfo v0.0.0-20180517114536-d9417c75de65
+	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -69,7 +72,6 @@ require (
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c // indirect
-	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/dyatlov/go-readability v0.0.0-20220519115547-c2dce56b8cdd // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect

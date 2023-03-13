@@ -1,34 +1,4 @@
-<script type="text/hyperscript">
-
-init
-	set nodes to <h1, h2, h3, h4 />
-
-	log nodes
-
-	for node in  <h1, h2, h3, h4 /> 
-		set anchor to `<div class="scrollspy-item ${scrollspy_indent(node)}"><a href="#${node.id}">${node.textContent}</a></div>`
-		put anchor at the end of #scrollspy
-	end
-
-end
-	
-def scrollspy_indent(node)
-
-	if node.tagName is "H1"
-		return "level-1"
-	end
-
-	if node.tagName is "H2"
-		return "level-2"
-	end
-
-	if node.tagName is "H3"
-		return "level-3"
-	end
-
-	return "level-4"
-end
-</script>
+<script type="text/hyperscript" src="/.widgets/scrollspy/hyperscript"></script>
 
 <style>
 	#scrollspy .scrollspy-item {

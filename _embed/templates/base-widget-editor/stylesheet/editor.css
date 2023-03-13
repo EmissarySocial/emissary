@@ -71,7 +71,6 @@
 }
 
 .widget-label {
-	font-size: 12px;
 	color: var(--gray60);
 	text-transform: uppercase;
 }
@@ -94,9 +93,9 @@
 
 .widget button {
 	position:absolute;
-	top:8px;
-	right:4px;
 	font-size:12px;
+	top:9px;
+	right:4px;
 	padding:4px 8px;
 	border:solid 1px var(--gray30);
 	background:var(--gray20);
@@ -114,6 +113,7 @@
 
 .widget-editor-NONE {
 	display:block;
+	font-size:12px;
 	margin-bottom:16px;
 	padding:8px;
 	background-color:var(--gray05);
@@ -127,7 +127,8 @@
 }
 
 .widget-editor-NONE .widget {
-	margin-right:16px;
+	padding:4px 8px;
+	margin-right:4px;
 }
 
 .widget-editor-NONE button {

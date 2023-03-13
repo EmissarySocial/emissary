@@ -1,8 +1,15 @@
 init
-	set contentNode to first from < .e-content />
-	set nodes to <h1, h2, h3, h4 /> in contentNode
+	log "hey-oh"
+	exit
+	set contentNodes to < .e-content />
+	log contentNodes
+	set contentNode to first from contentNodes
+	log contentNode
+	set nodes to <h1, h2, h3, h4 />
 
-	for node in nodes
+	log nodes
+	exit
+	for node in  <h1, h2, h3, h4 /> 
 		set anchor to `<div class="scrollspy-item ${scrollspy_indent(node)}"><a href="#${node.id}">${node.textContent}</a></div>`
 		put anchor at the end of #scrollspy
 	end
