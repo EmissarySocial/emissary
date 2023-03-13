@@ -14,6 +14,7 @@ func OriginLinkSchema() schema.Element {
 			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeTwitter}},
 			"url":        schema.String{Format: "url"},
 			"label":      schema.String{MaxLength: 128},
+			"summary":    schema.String{MaxLength: 1024},
 			"imageUrl":   schema.String{Format: "url"},
 		},
 	}
@@ -37,6 +38,9 @@ func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 
 	case "label":
 		return origin.Label, true
+
+	case "summary":
+		return origin.Summary, true
 
 	case "imageUrl":
 		return origin.ImageURL, true
@@ -69,6 +73,10 @@ func (origin *OriginLink) SetString(name string, value string) bool {
 
 	case "label":
 		origin.Label = value
+		return true
+
+	case "summary":
+		origin.Summary = value
 		return true
 
 	case "imageUrl":

@@ -298,9 +298,9 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
  * ActivityStreams Methods
  ******************************************/
 
-// AsActivityStream returns a map document that conforms to the ActivityStreams 2.0 spec.
+// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
-func (stream Stream) AsActivityStream() mapof.Any {
+func (stream Stream) GetJSONLD() mapof.Any {
 	return mapof.Any{
 		"id":      stream.Document.URL,
 		"type":    stream.Document.Type,

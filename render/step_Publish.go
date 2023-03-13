@@ -55,6 +55,7 @@ func (step StepPublish) publish(renderer *Stream) error {
 
 	// Use the publisher service to execute publishing rules
 	stream := renderer.stream
+	stream.Document.Type = step.Role
 
 	publisherService := renderer.factory().Publisher()
 	publisherService.Publish(stream, renderer.AuthenticatedID(), step.Role)
@@ -74,7 +75,7 @@ func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
 	// Collect all content fields from the schema
 	for _, fieldName := range step.Mentions {
-		if content, err := schema.Get(renderer.stream, fieldName); err != nil {
+		if content, err := schema.Get(renderer.stream, fieldName); err == nil {
 			bodyReader.WriteString(convert.String(content))
 		}
 	}

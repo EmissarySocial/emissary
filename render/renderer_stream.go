@@ -278,6 +278,10 @@ func (w Stream) PublishDateUnix() time.Time {
 	return time.Unix(w.PublishDate(), 0)
 }
 
+func (w Stream) PublishDateRFC3339() string {
+	return w.PublishDateUnix().Format(time.RFC3339)
+}
+
 // UpdateDate returns the UpdateDate of the stream being rendered
 func (w Stream) UpdateDate() int64 {
 	return w.stream.UpdateDate

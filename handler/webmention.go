@@ -33,7 +33,7 @@ func PostWebMention(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Run the rest of the process asynchronously
-		task := tasks.NewReceiveWebMention(factory.Stream(), factory.Mention(), body.Source, body.Target)
+		task := tasks.NewReceiveWebMention(factory.Stream(), factory.Mention(), factory.User(), body.Source, body.Target)
 
 		queue := factory.Queue()
 		queue.Run(task)

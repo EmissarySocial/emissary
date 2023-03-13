@@ -1,0 +1,25 @@
+{{ $mentions := .Mentions}}
+
+{{- if gt (len $mentions) 0 -}}
+	<div class="widget mentions space-above">
+		<h3>Mentions</h3>
+		{{- range .Mentions -}}
+			<div class="flex-row" script="on click go to url '{{.Origin.URL}}' in new window" role="link">
+				<div style="width:24px;">
+					{{- if ne "" .Author.ImageURL -}}
+						<img src="{{.Author.ImageURL}}" class="circle" style="height:24px; width:24px;">
+					{{- else if ne "" .Origin.ImageURL -}}
+						<img src="{{.Origin.ImageURL}}" class="circle" style="height:24px; width:24px;">
+					{{- end -}}
+				</div>
+				<div class="ellipsis">
+					{{- if ne "" .Author.Name -}}
+						{{.Author.Name}}
+					{{- else -}}
+						{{.Origin.Label}}
+					{{- end -}}
+				</div>
+			</div>
+		{{- end -}}
+	</div>
+{{- end -}}

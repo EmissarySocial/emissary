@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -52,6 +51,10 @@ func (service Publisher) Publish(stream *model.Stream, userID primitive.ObjectID
 		return derp.Wrap(err, "service.Publisher.notifyFollowers", "Error sending WebSub notifications", stream)
 	}
 
+	// RULE: WebMentions are handled in the "Publish" action step
+	// because it requires knowledge about which fields in the stream contain URLs.
+
+	// Success!
 	return nil
 }
 
@@ -119,10 +122,10 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activ
 	}
 
 	// Create the document to be sent
-	activityStream := stream.AsActivityStream()
+	activityStream := stream.GetJSONLD()
 	activityStream["type"] = objectType
 
-	spew.Dump("SENDING ACTIVITY", activityStream)
+	// spew.Dump("SENDING ACTIVITY", activityStream)
 
 	follower := model.NewFollower()
 	for followers.Next(&follower) {

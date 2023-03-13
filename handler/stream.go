@@ -54,6 +54,10 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
 
+		if ok, err := handleJSONLD(ctx, &stream); ok {
+			return derp.Wrap(err, location, "Error rendering JSON-LD")
+		}
+
 		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
 
 		if err != nil {

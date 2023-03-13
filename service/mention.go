@@ -1,23 +1,24 @@
 package service
 
 import (
+	"bytes"
 	"io"
 	"net/url"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/sherlock"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/tomnomnom/linkheader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"willnorris.com/go/microformats"
 )
 
 /*********************
@@ -35,11 +36,14 @@ import (
 // Mention defines a service that can send and receive mention data
 type Mention struct {
 	collection data.Collection
+	host       string
 }
 
 // NewMention returns a fully initialized Mention service
-func NewMention(collection data.Collection) Mention {
-	service := Mention{}
+func NewMention(collection data.Collection, host string) Mention {
+	service := Mention{
+		host: host,
+	}
 	service.Refresh(collection)
 	return service
 }
@@ -103,7 +107,7 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 // Delete removes an Mention from the database (virtual delete)
 func (service *Mention) Delete(mention *model.Mention, note string) error {
 
-	criteria := exp.Equal("_id", mention.StreamID)
+	criteria := exp.Equal("_id", mention.MentionID)
 
 	// Delete this Mention
 	if err := service.collection.HardDelete(criteria); err != nil {
@@ -177,6 +181,39 @@ func (service *Mention) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// LoadByOrigin loads an existing Mention by its type/objectID/origin URL
+func (service *Mention) LoadByOrigin(objectType string, objectID primitive.ObjectID, originURL string, result *model.Mention) error {
+
+	criteria := exp.Equal("type", objectType).
+		AndEqual("objectId", objectID).
+		AndEqual("origin.url", originURL)
+
+	return service.Load(criteria, result)
+}
+
+// LoadOrCreate loads an existing Mention or creates a new one if it doesn't exist
+func (service *Mention) LoadOrCreate(objectType string, objectID primitive.ObjectID, originURL string) (model.Mention, error) {
+
+	result := model.NewMention()
+	err := service.LoadByOrigin(objectType, objectID, originURL, &result)
+
+	// No error means the record was found
+	if err == nil {
+		return result, nil
+	}
+
+	// NotFound error means we should create a new record
+	if derp.NotFound(err) {
+		result.Type = objectType
+		result.ObjectID = objectID
+		result.Origin.URL = originURL
+		return result, nil
+	}
+
+	// Other error is bad.  Return the error
+	return result, derp.Wrap(err, "service.Mention.LoadOrCreate", "Error loading Mention", objectType, objectID, originURL)
+}
+
 func (service *Mention) QueryByObjectID(objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
 	return service.Query(exp.Equal("objectId", objectID), options...)
 }
@@ -184,6 +221,43 @@ func (service *Mention) QueryByObjectID(objectID primitive.ObjectID, options ...
 /******************************************
  * Web-Mention Helpers
  ******************************************/
+
+// TODO: LOW: This should just use the Locator service.
+// ParseURL inspects a target URL and determines what kind of object it is and what the token is.
+func (service *Mention) ParseURL(target string) (objectType string, token string, err error) {
+
+	const location = "service.Mention.ParseURL"
+
+	// RULE: If the target URL doesn't start with the service's host, then it
+	// doesn't belong on this server
+	if !strings.HasPrefix(target, service.host) {
+		return "", "", derp.New(derp.CodeNotFoundError, location, "Target URL is not on this server", target)
+	}
+
+	// Parse the URL to ensure that it's valid
+	targetURL, err := url.Parse(target)
+
+	if err != nil {
+		return "", "", derp.Wrap(err, location, "Error parsing target URL", target)
+	}
+
+	// Get the first item in the path.  That's the token we want
+	path := list.BySlash(targetURL.Path).Tail()
+	token = path.Head()
+
+	// Tokens that begin with "@" are User URLs
+	if strings.HasPrefix(token, "@") {
+		return model.MentionTypeUser, token[1:], nil
+	}
+
+	// Empty tokens reference the Home stream.
+	if token == "" {
+		return model.MentionTypeStream, "home", nil
+	}
+
+	// All other tokens are Stream URLs
+	return model.MentionTypeStream, token, nil
+}
 
 func (service *Mention) FindLinks(body string) []string {
 
@@ -308,95 +382,32 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 	return derp.NewNotFoundError(location, "Target link not found", source, target)
 }
 
-func (service *Mention) ParseMicroformats(source io.Reader, originURL string) model.Mention {
+// TODO: HIGH: This should use a common service to get URL data from Microformats, OpenGraph, JSON-LD, etc.
+func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mention *model.Mention) error {
 
-	mention := model.NewMention()
-	mention.OriginURL = originURL
+	mention.Origin.URL = originURL
 
-	parsedURL, err := url.Parse(originURL)
+	// Inspect the source document for metadata (microformats, opengraph, etc.)
+	page, err := sherlock.Parse(originURL, body)
 
 	if err != nil {
-		return mention
+		return derp.Wrap(err, "service.Mention.ParseMicroformats", "Error parsing page", originURL)
 	}
 
-	// Try to parse microformats in the source document...
-	if mf := microformats.Parse(source, parsedURL); mf != nil {
-		populateMention(mf, &mention)
+	// Copy the page data into the mention
+	mention.Origin.Label = page.Title
+	mention.Origin.URL = page.CanonicalURL
+
+	if len(page.Authors) > 0 {
+		author := page.Authors[0]
+		mention.Author.Name = author.Name
+		mention.Author.ProfileURL = author.URL
+		mention.Author.EmailAddress = author.Email
+		mention.Author.ImageURL = author.Image.URL
 	}
 
 	// No errors
-	return mention
-}
-
-func populateMention(mf *microformats.Data, mention *model.Mention) {
-
-	for _, item := range mf.Items {
-
-		for _, itemType := range item.Type {
-
-			switch itemType {
-
-			// Parse author information [https://microformats.org/wiki/h-card]
-			case "h-card":
-
-				if mention.AuthorName == "" {
-					mention.AuthorName = convert.String(item.Properties["name"])
-				}
-
-				if mention.AuthorName == "" {
-					mention.AuthorPhotoURL = convert.String(item.Properties["given-name"])
-				}
-
-				if mention.AuthorName == "" {
-					mention.AuthorPhotoURL = convert.String(item.Properties["nickname"])
-				}
-
-				if mention.AuthorWebsiteURL == "" {
-					mention.AuthorWebsiteURL = convert.String(item.Properties["url"])
-				}
-
-				if mention.AuthorEmail == "" {
-					mention.AuthorEmail = convert.String(item.Properties["email"])
-				}
-
-				if mention.AuthorPhotoURL == "" {
-					mention.AuthorPhotoURL = convert.String(item.Properties["photo"])
-				}
-
-				if mention.AuthorPhotoURL == "" {
-					mention.AuthorPhotoURL = convert.String(item.Properties["logo"])
-				}
-
-				if mention.AuthorStatus == "" {
-					mention.AuthorStatus = convert.String(item.Properties["note"])
-				}
-
-				continue
-
-			// Parse entry data
-			case "h-entry": // [https://microformats.org/wiki/h-entry]
-
-				if mention.EntryName == "" {
-					mention.EntryName = convert.String(item.Properties["name"])
-				}
-
-				if mention.EntrySummary == "" {
-					mention.EntrySummary = convert.String(item.Properties["summary"])
-				}
-
-				if mention.EntryPhotoURL == "" {
-					mention.EntryPhotoURL = convert.String(item.Properties["photo"])
-				}
-			}
-		}
-	}
-
-	// Last, scan global values for data that may not have been found in the h-entry
-	if mention.AuthorWebsiteURL == "" {
-		if me, ok := mf.Rels["me"]; ok {
-			mention.AuthorWebsiteURL = convert.String(me)
-		}
-	}
+	return nil
 }
 
 // getHrefFromNode returns the [href] value for a given goquery selection

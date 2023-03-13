@@ -5,25 +5,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Mention represents a single hyperlink from an external source to an internal object.
+// Mentions are created by WebMentions or by ActivityPub "Mention" records
 type Mention struct {
-	MentionID        primitive.ObjectID `json:"mentionId"        bson:"_id"`
-	StreamID         primitive.ObjectID `json:"streamId"         bson:"streamId"`
-	OriginURL        string             `json:"originUrl"        bson:"originUrl"`
-	AuthorName       string             `json:"authorName"       bson:"authorName"`
-	AuthorEmail      string             `json:"authorEmail"      bson:"authorEmail"`
-	AuthorWebsiteURL string             `json:"authorWebsiteUrl" bson:"authorWebsiteUrl"`
-	AuthorPhotoURL   string             `json:"authorPhotoUrl"   bson:"authorPhotoUrl"`
-	AuthorStatus     string             `json:"authorStatus"     bson:"authorStatus"`
-	EntryName        string             `json:"entryName"        bson:"entryName"`
-	EntrySummary     string             `json:"entrySummary"     bson:"entrySummary"`
-	EntryPhotoURL    string             `json:"entryPhotoUrl"    bson:"entryPhotoUrl"`
+	MentionID primitive.ObjectID `json:"mentionId" bson:"_id"`      // Unique ID for this record
+	ObjectID  primitive.ObjectID `json:"objectId"  bson:"objectId"` // Unique ID of the internal object that was mentioned
+	Type      string             `json:"type"      bson:"type"`     // Type of object that was mentioned (Stream, User)
+	Status    string             `json:"status"    bson:"status"`   // State of this mention (Validated, Pending, Invalid)
+	Origin    OriginLink         `json:"origin"    bson:"origin"`   // Origin information of the site that mentions this object
+	Author    PersonLink         `json:"author"    bson:"author"`   // Author information of the person who mentioned this object
 
 	journal.Journal `json:"journal" bson:"journal"`
 }
 
+// NewMention returns a fully initialized Mention object
 func NewMention() Mention {
 	return Mention{
 		MentionID: primitive.NewObjectID(),
+		Origin:    NewOriginLink(),
+		Author:    NewPersonLink(),
 	}
 }
 
@@ -31,6 +31,8 @@ func NewMention() Mention {
  * data.Object Interface
  ******************************************/
 
+// ID returns a string representation of the Mention's unique id.
+// This method implements the data.Object interface.
 func (mention Mention) ID() string {
 	return mention.MentionID.Hex()
 }

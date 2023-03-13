@@ -94,7 +94,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
-	factory.mentionService = service.NewMention(factory.collection(CollectionMention))
+	factory.mentionService = service.NewMention(factory.collection(CollectionMention), factory.Host())
 
 	factory.emailService = service.NewDomainEmail(serverEmail, domain)
 
@@ -388,8 +388,7 @@ func (factory *Factory) Inbox() *service.Inbox {
 
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
-	result := service.NewMention(factory.collection(CollectionMention))
-	return &result
+	return &factory.mentionService
 }
 
 // Stream returns a fully populated Stream service

@@ -6,19 +6,22 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ReceiveWebMention struct {
 	streamService  *service.Stream
 	mentionService *service.Mention
+	userService    *service.User
 	source         string
 	target         string
 }
 
-func NewReceiveWebMention(streamService *service.Stream, mentionService *service.Mention, source string, target string) ReceiveWebMention {
+func NewReceiveWebMention(streamService *service.Stream, mentionService *service.Mention, userService *service.User, source string, target string) ReceiveWebMention {
 	return ReceiveWebMention{
 		streamService:  streamService,
 		mentionService: mentionService,
+		userService:    userService,
 		source:         source,
 		target:         target,
 	}
@@ -30,20 +33,50 @@ func (task ReceiveWebMention) Run() error {
 
 	var content bytes.Buffer
 
-	stream := model.NewStream()
-
-	// Try to load the stream, to validate that the mention points to an eligible stream
-	if err := task.streamService.LoadByURL(task.target, &stream); err != nil {
-		return derp.Wrap(err, location, "Cannot load stream", task.target)
-	}
-
-	// Validate that the WebMention source actually links to the stream
+	// Validate that the WebMention source actually links to the targetURL
 	if err := task.mentionService.Verify(task.source, task.target, &content); err != nil {
 		return derp.Wrap(err, location, "Source does not link to target", task.source, task.target)
 	}
 
-	// Parse the WebMention source into a Mention object
-	mention := task.mentionService.ParseMicroformats(&content, task.target)
+	// Parse the target URL into an object type and token
+	objectType, token, err := task.mentionService.ParseURL(task.target)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing URL", task.target)
+	}
+
+	var objectID primitive.ObjectID
+
+	// Validate the internal record that the mention is pointing to
+	switch objectType {
+
+	case model.MentionTypeStream:
+		stream := model.NewStream()
+		if err := task.streamService.LoadByToken(token, &stream); err != nil {
+			return derp.Wrap(err, location, "Cannot load stream", task.target)
+		}
+		objectID = stream.StreamID
+
+	case model.MentionTypeUser:
+		user := model.NewUser()
+		if err := task.userService.LoadByToken(token, &user); err != nil {
+			return derp.Wrap(err, location, "Cannot load user", token)
+		}
+		objectID = user.UserID
+
+	default:
+		return derp.NewInternalError(location, "Unknown Mention Type.  This should never happen", objectType)
+	}
+
+	// Check the database for an existing Mention record
+	mention, err := task.mentionService.LoadOrCreate(objectType, objectID, task.source)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading mention", objectType, token)
+	}
+
+	// Parse the WebMention source into the Mention object
+	task.mentionService.GetPageInfo(&content, task.source, &mention)
 
 	// Try to save the mention to the database
 	if err := task.mentionService.Save(&mention, "Created"); err != nil {

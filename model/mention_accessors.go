@@ -8,24 +8,19 @@ import (
 func MentionSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"mentionId":        schema.String{Format: "objectId"},
-			"streamId":         schema.String{Format: "objectId"},
-			"originUrl":        schema.String{Format: "uri"},
-			"authorName":       schema.String{MaxLength: 50},
-			"authorEmail":      schema.String{Format: "email"},
-			"authorWebsiteUrl": schema.String{Format: "uri"},
-			"authorPhotoUrl":   schema.String{Format: "uri"},
-			"authorStatus":     schema.String{MaxLength: 500},
-			"entryName":        schema.String{MaxLength: 50},
-			"entrySummary":     schema.String{MaxLength: 500},
-			"entryPhotoUrl":    schema.String{Format: "uri"},
+			"mentionId": schema.String{Format: "objectId"},
+			"objectId":  schema.String{Format: "objectId"},
+			"type":      schema.String{Enum: []string{MentionTypeStream, MentionTypeUser}},
+			"status":    schema.String{Enum: []string{MentionStatusValidated, MentionStatusPending, MentionStatusInvalid}},
+			"origin":    OriginLinkSchema(),
+			"author":    PersonLinkSchema(),
 		},
 	}
 }
 
-/*********************************
+/******************************************
  * Getter Interfaces
- *********************************/
+ ******************************************/
 
 func (mention *Mention) GetStringOK(name string) (string, bool) {
 	switch name {
@@ -33,42 +28,22 @@ func (mention *Mention) GetStringOK(name string) (string, bool) {
 	case "mentionId":
 		return mention.MentionID.Hex(), true
 
-	case "streamId":
-		return mention.StreamID.Hex(), true
+	case "objectId":
+		return mention.ObjectID.Hex(), true
 
-	case "originUrl":
-		return mention.OriginURL, true
+	case "type":
+		return mention.Type, true
 
-	case "authorName":
-		return mention.AuthorName, true
-
-	case "authorEmail":
-		return mention.AuthorEmail, true
-
-	case "authorWebsiteUrl":
-		return mention.AuthorWebsiteURL, true
-
-	case "authorPhotoUrl":
-		return mention.AuthorPhotoURL, true
-
-	case "authorStatus":
-		return mention.AuthorStatus, true
-
-	case "entryName":
-		return mention.EntryName, true
-
-	case "entrySummary":
-		return mention.EntrySummary, true
-
-	case "entryPhotoUrl":
-		return mention.EntryPhotoURL, true
+	case "status":
+		return mention.Status, true
 	}
+
 	return "", false
 }
 
-/*********************************
+/******************************************
  * Setter Interfaces
- *********************************/
+ ******************************************/
 
 func (mention *Mention) SetString(name string, value string) bool {
 	switch name {
@@ -79,49 +54,38 @@ func (mention *Mention) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "streamId":
+	case "objectId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			mention.StreamID = objectID
+			mention.ObjectID = objectID
 			return true
 		}
 
-	case "originUrl":
-		mention.OriginURL = value
+	case "type":
+		mention.Type = value
 		return true
 
-	case "authorName":
-		mention.AuthorName = value
+	case "status":
+		mention.Status = value
 		return true
-
-	case "authorEmail":
-		mention.AuthorEmail = value
-		return true
-
-	case "authorWebsiteUrl":
-		mention.AuthorWebsiteURL = value
-		return true
-
-	case "authorPhotoUrl":
-		mention.AuthorPhotoURL = value
-		return true
-
-	case "authorStatus":
-		mention.AuthorStatus = value
-		return true
-
-	case "entryName":
-		mention.EntryName = value
-		return true
-
-	case "entrySummary":
-		mention.EntrySummary = value
-		return true
-
-	case "entryPhotoUrl":
-		mention.EntryPhotoURL = value
-		return true
-
 	}
 
 	return false
+}
+
+/******************************************
+ * Tree Traversal  Interfaces
+ ******************************************/
+
+func (mention *Mention) GetObject(name string) (any, bool) {
+
+	switch name {
+
+	case "origin":
+		return &mention.Origin, true
+
+	case "author":
+		return &mention.Author, true
+	}
+
+	return nil, false
 }

@@ -81,9 +81,9 @@ func getObjectFromURL(value *url.URL) (string, string) {
 	path := strings.TrimPrefix(value.Path, "/")
 	token := list.Slash(path).First()
 
-	// Empty token is an error
+	// Empty token the default page
 	if token == "" {
-		return "", ""
+		return "Stream", "home"
 	}
 
 	// Token starting with "@" is a user
