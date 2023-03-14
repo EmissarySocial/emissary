@@ -5,7 +5,7 @@
 			<a href="/{{.StreamID}}">&larr; View</a>
 
 			{{- if .UserCan "edit" -}}
-				<a href="/{{.StreamID}}/edit" class="bold">Edit</a>
+				<a href="/{{.StreamID}}/edit">Edit</a>
 			{{- end -}}
 
 			{{- if .UserCan "widgets" -}}
@@ -13,7 +13,7 @@
 			{{- end -}}
 
 			{{- if .UserCan "children" -}}
-				<a href="/{{.StreamID}}/children">Children</a>
+				<a href="/{{.StreamID}}/children" class="bold">Children</a>
 			{{- end -}}
 
 			{{- if .UserCan "properties" -}}
