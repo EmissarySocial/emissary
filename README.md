@@ -5,7 +5,6 @@
 [![Codecov](https://img.shields.io/codecov/c/github/EmissarySocial/emissary.svg?style=flat-square)](https://codecov.io/gh/EmissarySocial/emissary)
 [![Go Report Card](https://goreportcard.com/badge/github.com/EmissarySocial/emissary?style=flat-square)](https://goreportcard.com/report/github.com/EmissarySocial/emissary)
 [![Version](https://img.shields.io/github/v/release/EmissarySocial/emissary?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/EmissarySocial/emissary/releases)
-![Lines of Code](https://shields.io/tokei/lines/github.com/EmissarySocial/emissary)
 
 
 Emissary is an open-source project to make a different kind of distributed social medium that is friendly, safe, and welcoming to everyone.
