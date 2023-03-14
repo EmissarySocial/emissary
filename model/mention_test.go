@@ -14,7 +14,8 @@ func TestMention(t *testing.T) {
 
 	table := []tableTestItem{
 		{"mentionId", "123412341234123412341234", nil},
-		{"streamId", "123456781234567812345678", nil},
+		{"objectId", "123456781234567812345678", nil},
+		{"type", "Stream", nil},
 		{"origin.type", "TYPE", nil},
 		{"origin.label", "LABEL", nil},
 		{"origin.url", "https://source.url", nil},
