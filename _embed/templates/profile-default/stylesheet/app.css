@@ -58,3 +58,7 @@ main {
 	min-height:400px;
 	padding:0px 12px 12px 24px;
 }
+
+.app.page .app-content {
+	padding-top:12px;
+}
