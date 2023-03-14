@@ -306,6 +306,21 @@ func (w Profile) FollowingByFolder(token string) ([]model.FollowingSummary, erro
 
 }
 
+func (w Profile) Blocks() QueryBuilder[model.Block] {
+
+	queryBuilder := builder.NewBuilder()
+	// .String("displayName")
+
+	criteria := exp.And(
+		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+
+	return result
+}
+
 /******************************************
  * Inbox Methods
  ******************************************/

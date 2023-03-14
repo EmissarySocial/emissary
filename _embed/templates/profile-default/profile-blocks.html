@@ -15,8 +15,11 @@
 			</div>
 		{{- end -}}
 			
+		<button hx-get="/@me/add-block">Add Block</button>
+
+
 		<div>
-			Blocks will be listed here...
+			{{.Blocks.Slice}}
 		</div>
 	</div>
 

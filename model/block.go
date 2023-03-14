@@ -51,6 +51,19 @@ func (block Block) ID() string {
 	return block.BlockID.Hex()
 }
 
+func (block Block) Fields() []string {
+	return []string{
+		"_id",
+		"userId",
+		"source",
+		"type",
+		"trigger",
+		"comment",
+		"isPublic",
+		"isActive",
+	}
+}
+
 /******************************************
  * RoleStateEnumerator Interface
  ******************************************/
