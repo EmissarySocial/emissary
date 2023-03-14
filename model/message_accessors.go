@@ -16,6 +16,7 @@ func MessageSchema() schema.Element {
 			"contentHtml": schema.String{Format: "html"},
 			"contentJson": schema.String{Format: "json"},
 			"folderId":    schema.String{Format: "objectId"},
+			"publishDate": schema.Integer{BitSize: 64},
 			"rank":        schema.Integer{BitSize: 64},
 		},
 	}
@@ -27,6 +28,9 @@ func MessageSchema() schema.Element {
 
 func (message *Message) GetInt64OK(name string) (int64, bool) {
 	switch name {
+
+	case "publishDate":
+		return message.PublishDate, true
 
 	case "rank":
 		return message.Rank, true
@@ -65,6 +69,10 @@ func (message *Message) GetStringOK(name string) (string, bool) {
 
 func (message *Message) SetInt64(name string, value int64) bool {
 	switch name {
+
+	case "publishDate":
+		message.PublishDate = value
+		return true
 
 	case "rank":
 		message.Rank = value
