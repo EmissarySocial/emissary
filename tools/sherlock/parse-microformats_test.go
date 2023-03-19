@@ -1,4 +1,4 @@
-//go:build local
+//go:build localonly
 
 package sherlock
 
@@ -24,7 +24,7 @@ func TestMicroformats(t *testing.T) {
 
 	result := NewPage()
 
-	parseMicroFormats(uri, &body, &result)
+	ParseMicroFormats(uri, &body, &result)
 
 	spew.Dump(result)
 }

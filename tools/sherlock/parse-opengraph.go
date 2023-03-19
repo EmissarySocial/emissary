@@ -7,7 +7,7 @@ import (
 	"github.com/dyatlov/go-opengraph/opengraph"
 )
 
-func parseOpenGraph(url string, reader io.Reader, data *Page) {
+func ParseOpenGraph(url string, reader io.Reader, data *Page) {
 
 	ogInfo := opengraph.NewOpenGraph()
 

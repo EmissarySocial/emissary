@@ -2,6 +2,6 @@ package sherlock
 
 import "io"
 
-func parseOEmbed(reader io.Reader, data *Page) bool {
+func ParseOEmbed(reader io.Reader, data *Page) bool {
 	return false
 }

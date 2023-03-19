@@ -9,7 +9,7 @@ import (
 	"willnorris.com/go/microformats"
 )
 
-func parseMicroFormats(uri *url.URL, reader io.Reader, data *Page) {
+func ParseMicroFormats(uri *url.URL, reader io.Reader, data *Page) {
 
 	mf := microformats.Parse(reader, uri)
 

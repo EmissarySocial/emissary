@@ -53,13 +53,13 @@ func Parse(target string, body *bytes.Buffer) (Page, error) {
 	bodyBytes := body.Bytes()
 
 	// Try OpenGraph (via HTMLInfo)
-	parseOpenGraph(target, bytes.NewReader(bodyBytes), &result)
+	ParseOpenGraph(target, bytes.NewReader(bodyBytes), &result)
 
 	// Try Microformats2
-	parseMicroFormats(parsedURL, bytes.NewReader(bodyBytes), &result)
+	ParseMicroFormats(parsedURL, bytes.NewReader(bodyBytes), &result)
 
-	// Look for linked JSON-LD
-	parseLocalJSONLD(body, &result)
+	// Look for JSON-LD embedded in the docuemnt
+	ParseJSONLD(body, &result)
 
 	// If we don't have a canonical URL, then use the target URL
 	if result.CanonicalURL == "" {
@@ -71,13 +71,13 @@ func Parse(target string, body *bytes.Buffer) (Page, error) {
 		return result, nil
 	}
 
-	// Otherwise, look for linked JSON-LD result
-	if ok := parseLinkedJSONLD(body, &result); ok {
+	// Otherwise, look links to an external JSON-LD result
+	if ok := ParseLinkedJSONLD(body, &result); ok {
 		return result, nil
 	}
 
-	// Otherwise, continue looking for linked oEmbed result
-	if ok := parseOEmbed(bytes.NewReader(bodyBytes), &result); ok {
+	// Otherwise, look for an oEmbed provider for this document
+	if ok := ParseOEmbed(bytes.NewReader(bodyBytes), &result); ok {
 		return result, nil
 	}
 
