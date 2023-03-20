@@ -8,14 +8,14 @@ import (
 func BlockSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"blockId":  schema.String{Format: "objectId"},
-			"userId":   schema.String{Format: "objectId"},
-			"source":   schema.String{Enum: []string{BlockSourceInternal, BlockSourceActivityPub}},
-			"type":     schema.String{Enum: []string{BlockTypeURL, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
-			"trigger":  schema.String{},
+			"blockId":  schema.String{Required: true, Format: "objectId"},
+			"userId":   schema.String{Required: true, Format: "objectId"},
+			"type":     schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
+			"trigger":  schema.String{Required: true},
+			"behavior": schema.String{Required: true, Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
 			"comment":  schema.String{},
+			"origin":   OriginLinkSchema(),
 			"isPublic": schema.Boolean{},
-			"isActive": schema.Boolean{},
 		},
 	}
 }
@@ -30,9 +30,6 @@ func (block *Block) GetBoolOK(name string) (bool, bool) {
 
 	case "isPublic":
 		return block.IsPublic, true
-
-	case "isActive":
-		return block.IsActive, true
 	}
 
 	return false, false
@@ -48,14 +45,14 @@ func (block *Block) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return block.UserID.Hex(), true
 
-	case "source":
-		return block.Source, true
-
 	case "type":
 		return block.Type, true
 
 	case "trigger":
 		return block.Trigger, true
+
+	case "behavior":
+		return block.Behavior, true
 
 	case "comment":
 		return block.Comment, true
@@ -75,11 +72,6 @@ func (block *Block) SetBool(name string, value bool) bool {
 	case "isPublic":
 		block.IsPublic = value
 		return true
-
-	case "isActive":
-		block.IsActive = value
-		return true
-
 	}
 
 	return false
@@ -101,16 +93,16 @@ func (block *Block) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "source":
-		block.Source = value
-		return true
-
 	case "type":
 		block.Type = value
 		return true
 
 	case "trigger":
 		block.Trigger = value
+		return true
+
+	case "behavior":
+		block.Behavior = value
 		return true
 
 	case "comment":
@@ -120,4 +112,15 @@ func (block *Block) SetString(name string, value string) bool {
 	}
 
 	return false
+}
+
+func (block *Block) GetObject(name string) (any, bool) {
+
+	switch name {
+
+	case "origin":
+		return &block.Origin, true
+	}
+
+	return nil, false
 }

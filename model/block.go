@@ -5,34 +5,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// BlockSourceInternal represents a block that was created directly by the owner
-const BlockSourceInternal = "INTERNAL"
-
-// BlockSourceActivityPub represents a block that was created by an external ActivityPub server
-const BlockSourceActivityPub = "ACTIVITYPUB"
-
-// BlockTypeURL blocks all messages that link to a specific domain or URL prefix
-const BlockTypeURL = "URL"
-
-// BlockTypeUser blocks all messages from a specific user
-const BlockTypeActor = "ACTOR"
-
-// BlockTypeUser blocks all messages that contain a particular phrase (hashtag)
-const BlockTypeContent = "CONTENT"
-
-// BlockTypeExternal passes messages to an external block service (TBD) for analysis.
-const BlockTypeExternal = "EXTERNAL"
-
 // Block represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Block struct {
 	BlockID  primitive.ObjectID `json:"blockId" bson:"_id"`       // Unique identifier of this Block
 	UserID   primitive.ObjectID `json:"userId"  bson:"userId"`    // Unique identifier of the User who owns this Block
-	Source   string             `json:"source"  bson:"source"`    // Source of the Block (e.g. "INTERNAL", "ACTIVITYPUB")
 	Type     string             `json:"type"    bson:"type"`      // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
 	Trigger  string             `json:"trigger" bson:"trigger"`   // Parameter for this block type)
+	Behavior string             `json:"behavior" bson:"behavior"` // Behavior for this block type (e.g. "BLOCK", "MUTE", "ALLOW")
 	Comment  string             `json:"comment" bson:"comment"`   // Optional comment describing why this block exists
 	IsPublic bool               `json:"isPublic" bson:"isPublic"` // If TRUE, this record is visible publicly
-	IsActive bool               `json:"isActive" bson:"isActive"` // If TRUE, this record is active
+	Origin   OriginLink         `json:"origin" bson:"origin"`     // Internal or External service where this block originated (used for subscriptions)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -55,7 +37,6 @@ func (block Block) Fields() []string {
 	return []string{
 		"_id",
 		"userId",
-		"source",
 		"type",
 		"trigger",
 		"comment",
