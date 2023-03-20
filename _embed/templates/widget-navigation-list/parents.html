@@ -11,7 +11,7 @@
 
 		{{- if eq $parentID $ancestor.StreamID -}}
 
-			<div class="ellipsis"><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a hx-get="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
 
 			{{- if not ($root.Widget.Data.IsZeroValue "siblings")  -}}
 				<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
@@ -20,7 +20,7 @@
 			{{- end -}}
 			
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a hx-get="/{{$ancestor.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 
 	{{- end -}}

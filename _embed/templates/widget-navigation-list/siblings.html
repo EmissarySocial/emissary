@@ -16,7 +16,7 @@
 			{{- end -}}
 
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a hx-get="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 

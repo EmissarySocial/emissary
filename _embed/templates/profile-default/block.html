@@ -1,9 +1,81 @@
-<h1>Block This Source...</h1>
+<div class="tabs" data-script="install TabContainer">
 
-[TODO]<br>
-By User<br>
-By Domain<br>
-By Keywords<br>
+	<div role="tablist">
+		<button type="button" role="tab" id="tab-user" aria-controls="panel-user" tabIndex="0" aria-selected="true">Block Person</button>
+		<button type="button" role="tab" id="tab-domain" aria-controls="panel-domain" tabIndex="0">Block Domain</button>
+		<button type="button" role="tab" id="tab-keyword" aria-controls="panel-keywords" tabIndex="0">Block Content</button>
+		<button type="button" role="tab" id="tab-external" aria-controls="panel-external" tabIndex="0">External Blocker</button>
+	</div>
 
-<br>
-<button script="on click send closeModal">Close Window</button>
+	<div id="panel-user" role="tabpanel" aria-labelledby="tab-user" hidden="false">
+		<form hx-post="/@me/add-block">
+			<input type="hidden" name="type" value="ACTOR">
+			<div class="layout layout-vertical">
+				<div class="layout-title">Block or Mute an Individual</div>
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<label for="block-trigger">Email Address, Web Page, or Fediverse ID</label>
+						<input id="block-trigger" name="trigger" type="text" tabIndex="0" placeholder="" />
+						<div class="text-sm gray40">Something like: john@server.com or https://server.com/@john</div>
+					</div>
+				</div>
+			</div>
+
+			<button class="primary" type="button">Add Block</button>
+			<button script="on click send closeModal">Close Window</button>
+			
+		</form>
+
+	</div>
+
+	<div id="panel-domain" role="tabpanel" aria-labelledby="tab-domain" hidden="true">
+
+		<form hx-post="/@me/add-block">
+			<input type="hidden" name="type" value="DOMAIN">
+			<div class="layout layout-vertical">
+				<div class="layout-title">Block or Mute an Entire Domain</div>
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<label for="block-trigger">Domain Name</label>
+						<input id="block-trigger" name="trigger" type="text" tabIndex="0" placeholder="" />
+						<div class="text-sm gray40">Something like: badwebsite.com or that.badwebsite.com</div>
+					</div>
+					<div class="layout-vertical-element">
+						<label for="block-">Domain Name</label>
+						<input id="block-trigger" name="trigger" type="text" tabIndex="0" placeholder="" />
+						<div class="text-sm gray40">Something like: badwebsite.com or that.badwebsite.com</div>
+					</div>
+				</div>
+			</div>
+
+			<button class="primary" type="button">Add Block</button>
+			<button script="on click send closeModal">Close Window</button>
+			
+		</form>
+
+		<h2>Block or Mute an Entire Domain</h2>
+		<div class="space-above">
+			<button class="primary" type="button">Add Block</button>
+			<button script="on click send closeModal">Close Window</button>
+		</div>
+	</div>
+
+	<div id="panel-keywords" role="tabpanel" aria-labelledby="tab-keywords" hidden="true">
+		<h2>Block Tags &amp; Keywords</h2>
+
+		<div class="space-above">
+			<button class="primary" type="button">Add Block</button>
+			<button script="on click send closeModal">Close Window</button>
+		</div>
+	</div>
+
+	<div id="panel-external" role="tabpanel" aria-labelledby="tab-external" hidden="true">
+		<h2>Use External Service</h2>
+
+		<div class="space-above">
+			<button class="primary" type="button">Add Block</button>
+			<button script="on click send closeModal">Close Window</button>
+		</div>	
+	</div>
+
+</div>
