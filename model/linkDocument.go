@@ -4,16 +4,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const DocumentTypeArticle = "Article"
-
-const DocumentTypeNote = "Note"
-
-const DocumentTypeBlock = "Block"
-
-const DocumentTypeLike = "Like"
-
-const DocumentTypeFollow = "Follow"
-
 type DocumentLink struct {
 	InternalID primitive.ObjectID `json:"internalId"    bson:"internalId,omitempty"` // Unique ID of a document in this database
 	Author     PersonLink         `json:"author"        bson:"author,omitempty"`     // Author of this document

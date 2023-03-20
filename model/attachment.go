@@ -10,10 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const AttachmentTypeStream = "Stream"
-
-const AttachmentTypeUser = "User"
-
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
 	AttachmentID primitive.ObjectID `bson:"_id"`        // ID of this Attachment

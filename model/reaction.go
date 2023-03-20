@@ -7,12 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const ReactionTypeLike = "LIKE"
-
-const ReactionTypeDislike = "DISLIKE"
-
-const ReactionTypeVote = "VOTE"
-
 type Reaction struct {
 	ReactionID primitive.ObjectID `json:"reactionId" bson:"_id"`    // Unique identifier for this Reaction
 	Method     string             `json:"method"     bson:"method"` // Method of following (e.g. "RSS", "RSSCloud", "ActivityPub".)
