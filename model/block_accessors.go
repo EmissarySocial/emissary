@@ -8,14 +8,15 @@ import (
 func BlockSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"blockId":  schema.String{Required: true, Format: "objectId"},
-			"userId":   schema.String{Required: true, Format: "objectId"},
-			"type":     schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
-			"trigger":  schema.String{Required: true},
-			"behavior": schema.String{Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
-			"comment":  schema.String{},
-			"origin":   OriginLinkSchema(),
-			"isPublic": schema.Boolean{},
+			"blockId":     schema.String{Required: true, Format: "objectId"},
+			"userId":      schema.String{Required: true, Format: "objectId"},
+			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
+			"trigger":     schema.String{Required: true},
+			"behavior":    schema.String{Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
+			"comment":     schema.String{},
+			"origin":      OriginLinkSchema(),
+			"isPublic":    schema.Boolean{},
+			"publishDate": schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -33,6 +34,17 @@ func (block *Block) GetBoolOK(name string) (bool, bool) {
 	}
 
 	return false, false
+}
+
+func (block *Block) GetInt64OK(name string) (int64, bool) {
+
+	switch name {
+
+	case "publishDate":
+		return block.PublishDate, true
+	}
+
+	return 0, false
 }
 
 func (block *Block) GetStringOK(name string) (string, bool) {
@@ -71,6 +83,18 @@ func (block *Block) SetBool(name string, value bool) bool {
 
 	case "isPublic":
 		block.IsPublic = value
+		return true
+	}
+
+	return false
+}
+
+func (block *Block) SetInt64(name string, value int64) bool {
+
+	switch name {
+
+	case "publishDate":
+		block.PublishDate = value
 		return true
 	}
 

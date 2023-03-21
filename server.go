@@ -201,7 +201,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowers(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowing(factory))
 	e.GET("/@:userId/pub/likes", handler.ActivityPub_GetLikes(factory))
-	e.GET("/@:userId/pub/blocks", handler.ActivityPub_GetBlocks(factory))
+	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlocked(factory))
 
 	// ME-ONLY PAGES
 	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))

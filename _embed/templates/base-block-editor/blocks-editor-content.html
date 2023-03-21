@@ -1,0 +1,27 @@
+{{- $blocks := (.BlocksByType "CONTENT").Slice -}}
+
+<div role="tablist" class="pills">
+	<div hx-get="/@me/blocks?tab=ACTOR" role="tab">People</div>
+	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab">Domains</div>
+	<div hx-get="/@me/blocks?tab=CONTENT" role="tab" aria-selected="true">Tags & Keywords</div>
+	<div hx-get="/@me/blocks?tab=EXTERNAL" role="tab">External Services</div>
+</div>
+
+<table class="table">
+	<tr hx-get="/@me/block-keywords" role="button" class="link">
+		<td class="text-lg">
+			{{icon "add"}}
+		</td>
+		<td style="vertical-align:middle; width:100%;">
+			Block Tags &amp; Keywords
+		</td>
+		<td>&nbsp;</td>
+	</tr>
+
+	{{- template "blocks-list" $blocks -}}
+</table>
+
+<div class="bold space-above">
+	If you receive a post containing any of the
+	words or tags in this list, it will be rejected or hidden from your timeline.
+</div>

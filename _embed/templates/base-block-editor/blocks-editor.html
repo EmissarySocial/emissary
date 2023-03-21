@@ -1,0 +1,11 @@
+{{- $tab := .QueryParam "tab" -}}
+
+{{- if eq "DOMAIN" $tab -}}
+	{{- template "blocks-editor-domain" . -}}
+{{- else if eq "CONTENT" $tab -}}
+	{{- template "blocks-editor-content" . -}}
+{{- else if eq "EXTERNAL" $tab -}}
+	{{- template "blocks-editor-external" . -}}
+{{- else -}}
+	{{- template "blocks-editor-actor" . -}}
+{{- end -}}

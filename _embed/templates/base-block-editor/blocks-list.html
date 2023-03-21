@@ -1,7 +1,6 @@
 {{- range . -}}
 	<tr hx-get="/@me/block-edit?blockId={{.BlockID.Hex}}" role="button">
 		<td class="text-xl">
-
 			{{- if eq "BLOCK" .Behavior -}}
 				<span title="Block">{{icon "block"}}</span>
 			{{- else if eq "MUTE" .Behavior -}}
@@ -10,9 +9,11 @@
 				<span title="Allow">{{icon "thumbs-up"}}</span>
 			{{- end }}
 		</td>
-		<td style="width:100%">
-			<div class="bold">{{.Trigger}}</div>
-			<div class="text-sm text-gray ellipsis" style="margin:0px;">{{.Comment}}</div>
+		<td style="width:100%; vertical-align: middle;">
+			<div class="ellipsis">
+				{{.Trigger}} &nbsp;
+				<span class="text-sm text-gray">{{.Comment}}</span>
+			</div>
 		</td>
 		<td class="text-xl align-right" nowrap>
 			&nbsp;

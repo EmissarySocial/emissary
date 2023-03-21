@@ -1,0 +1,27 @@
+{{- $blocks := (.BlocksByType "ACTOR").Slice -}}
+
+<div role="tablist" class="pills">
+	<div hx-get="/@me/blocks?tab=ACTOR" role="tab" aria-selected="true">People</div>
+	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab">Domains</div>
+	<div hx-get="/@me/blocks?tab=CONTENT" role="tab">Tags & Keywords</div>
+	<div hx-get="/@me/blocks?tab=EXTERNAL" role="tab">External Services</div>
+</div>
+
+<table class="table">
+	<tr hx-get="/@me/block-actor" role="button" class="link">
+		<td class="text-lg">
+			{{icon "add"}}
+		</td>
+		<td style="vertical-align:middle; width:100%;">
+			Block a Person
+		</td>
+		<td>&nbsp;</td>
+	</tr>
+
+	{{- template "blocks-list" $blocks -}}
+</table>
+
+<div class="bold space-above">
+	If you receive a post is from a person in this list,
+	it will be rejected or hidden from your timeline.
+</div>

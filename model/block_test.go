@@ -19,6 +19,7 @@ func TestBlockSchema(t *testing.T) {
 		{"behavior", "BLOCK", nil},
 		{"comment", "COMMENT", nil},
 		{"isPublic", "true", true},
+		{"publishDate", int64(1234567890), nil},
 		{"origin.internalId", "123456781234567812345678", nil},
 		{"origin.type", "INTERNAL", nil},
 		{"origin.url", "https://example.com", nil},

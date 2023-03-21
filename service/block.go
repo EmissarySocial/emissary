@@ -65,10 +65,25 @@ func (service *Block) Load(criteria exp.Expression, block *model.Block) error {
 // Save adds/updates an Block in the database
 func (service *Block) Save(block *model.Block, note string) error {
 
-	// RULE: Default behavior if not specified
-	if block.Type != model.BlockTypeExternal {
-		if block.Behavior == "" {
-			block.Behavior = model.BlockBehaviorBlock
+	if block.IsNew() {
+		var err error
+
+		switch block.Type {
+		case model.BlockTypeActor:
+			err = service.ValidateNewActor(block)
+
+		case model.BlockTypeDomain:
+			err = service.ValidateNewDomain(block)
+
+		case model.BlockTypeContent:
+			err = service.ValidateNewContent(block)
+
+		case model.BlockTypeExternal:
+			err = service.ValidateNewExternal(block)
+		}
+
+		if err != nil {
+			return derp.Wrap(err, "service.Block.Save", "Error validating new Block", block)
 		}
 	}
 
@@ -159,6 +174,50 @@ func (service *Block) ObjectUserCan(object data.Object, authorization model.Auth
 
 func (service *Block) Schema() schema.Schema {
 	return schema.New(model.BlockSchema())
+}
+
+/******************************************
+ * Initial Validations
+ ******************************************/
+
+func (service *Block) ValidateNewActor(block *model.Block) error {
+
+	if block.Behavior == "" {
+		block.Behavior = model.BlockBehaviorBlock
+	}
+	return nil
+}
+
+func (service *Block) ValidateNewDomain(block *model.Block) error {
+
+	if block.Behavior == "" {
+		block.Behavior = model.BlockBehaviorBlock
+	}
+	return nil
+}
+
+func (service *Block) ValidateNewContent(block *model.Block) error {
+
+	if block.Behavior == "" {
+		block.Behavior = model.BlockBehaviorBlock
+	}
+	return nil
+}
+
+func (service *Block) ValidateNewExternal(block *model.Block) error {
+	return nil
+}
+
+/******************************************
+ * Block Publishing Rules
+ ******************************************/
+
+func (service *Block) Publish(block *model.Block) {
+
+}
+
+func (service *Block) Unpublish(block *model.Block) {
+
 }
 
 /******************************************

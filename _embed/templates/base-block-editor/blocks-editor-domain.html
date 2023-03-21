@@ -1,0 +1,27 @@
+{{- $blocks := (.BlocksByType "DOMAIN").Slice -}}
+
+<div role="tablist" class="pills">
+	<div hx-get="/@me/blocks?tab=ACTOR" role="tab">People</div>
+	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab" aria-selected="true">Domains</div>
+	<div hx-get="/@me/blocks?tab=CONTENT" role="tab">Tags & Keywords</div>
+	<div hx-get="/@me/blocks?tab=EXTERNAL" role="tab">External Services</div>
+</div>
+
+<table class="table">
+	<tr hx-get="/@me/block-domain" role="button" class="link">
+		<td class="text-lg">
+			{{icon "add"}}
+		</td>
+		<td style="vertical-align:middle; width:100%;">
+			Block a Domain
+		</td>
+		<td>&nbsp;</td>
+	</tr>
+
+	{{- template "blocks-list" $blocks -}}
+</table>
+
+<div class="bold space-above">
+	If you receive a post is from a domain in this list, it
+	will be rejected or hidden from your timeline.
+</div>
