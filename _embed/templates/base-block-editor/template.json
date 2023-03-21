@@ -11,9 +11,8 @@
 		"block-actor": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
 						{"step":"edit", "form":{
 							"type":"layout-vertical", 
 							"label":"Block a Person",
@@ -33,9 +32,8 @@
 		"block-domain": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
 						{"step":"edit", "form":{
 							"type":"layout-vertical", 
 							"label":"Block a Domain",
@@ -55,9 +53,8 @@
 		"block-keywords": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
 						{"step":"edit", "form":{
 							"type":"layout-vertical", 
 							"label":"Block Tags & Keywords",
@@ -77,9 +74,8 @@
 		"block-service": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
 						{"step":"edit", "form":{
 							"type":"layout-vertical", 
 							"label":"Use a Block Service",
@@ -96,8 +92,8 @@
 		"block-edit": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"with-block", "steps":[
+				{"step":"with-block", "steps":[
+					{"step":"as-modal", "steps":[
 						{"step":"edit", "form":{
 							"type":"layout-vertical", 
 							"label":"Block Settings",
@@ -107,7 +103,7 @@
 								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
 								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
 							]
-						}}
+						}, "options":["delete:/@me/block-delete?blockId={{.ObjectID}}"]}
 					]}
 				]}
 			]

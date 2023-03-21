@@ -268,7 +268,7 @@ button.primary:focus,
 button.warning,
 .button.warning {
 	background-color:var(--red70)!important;
-	color: white;
+	color: white!important;
 }
 
 button.warning:hover,
@@ -276,13 +276,13 @@ button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
 	background-color:var(--red60)!important;
-	color: white;
+	color: white!important;
 }
 
 button.success,
 .button.success {
 	background-color:var(--green70)!important;
-	color: white;
+	color: white!important;
 }
 
 button.success:hover,

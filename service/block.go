@@ -65,6 +65,13 @@ func (service *Block) Load(criteria exp.Expression, block *model.Block) error {
 // Save adds/updates an Block in the database
 func (service *Block) Save(block *model.Block, note string) error {
 
+	// RULE: Default behavior if not specified
+	if block.Type != model.BlockTypeExternal {
+		if block.Behavior == "" {
+			block.Behavior = model.BlockBehaviorBlock
+		}
+	}
+
 	// Clean the value before saving
 	if err := service.Schema().Clean(block); err != nil {
 		return derp.Wrap(err, "service.Block.Save", "Error cleaning Block", block)

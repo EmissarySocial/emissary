@@ -106,7 +106,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	b.Div()
 
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
-		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).InnerText("Delete").Close()
+		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).Attr("hx-push-url", "false").InnerText("Delete").Close()
 		b.Space()
 	}
 

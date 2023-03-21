@@ -26,6 +26,7 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 	b.Button().Class("warning").
 		Attr("hx-post", renderer.URL()).
 		Attr("hx-swap", "none").
+		Attr("hx-push-url", "false").
 		InnerText(step.Submit).
 		Close()
 
@@ -49,6 +50,8 @@ func (step StepDelete) Post(renderer Renderer) error {
 	if err := renderer.service().ObjectDelete(renderer.object(), "Deleted"); err != nil {
 		return derp.Wrap(err, "render.StepDelete.Post", "Error deleting stream")
 	}
+
+	CloseModal(renderer.context(), "")
 
 	return nil
 }
