@@ -12,7 +12,7 @@ func BlockSchema() schema.Element {
 			"userId":   schema.String{Required: true, Format: "objectId"},
 			"type":     schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
 			"trigger":  schema.String{Required: true},
-			"behavior": schema.String{Required: true, Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
+			"behavior": schema.String{Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
 			"comment":  schema.String{},
 			"origin":   OriginLinkSchema(),
 			"isPublic": schema.Boolean{},

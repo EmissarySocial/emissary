@@ -43,7 +43,7 @@ func (step StepWithFollower) doStep(renderer Renderer, buffer io.Writer, actionM
 	follower.ParentID = renderer.AuthenticatedID()
 
 	// If we have a real ID, then try to load the follower from the database
-	if followerToken != "new" {
+	if (followerToken != "") && (followerToken != "new") {
 		if err := followerService.LoadByToken(renderer.AuthenticatedID(), followerToken, &follower); err != nil {
 			if actionMethod == ActionMethodGet {
 				return derp.Wrap(err, location, "Unable to load Follower", followerToken)

@@ -15,27 +15,7 @@
 			</div>
 		{{- end -}}
 			
-		<div class="table">
-			<div>
-				<h2>People</h2>
-				<button hx-get="/@me/block-actor">Block a Person</button>
-			</div>
-
-			<div>
-				<h2>Domains</h2>
-				<button hx-get="/@me/block-domain">Block a Domain</button>
-			</div>
-
-			<div>
-				<h2>Tags & Keywords</h2>
-				<button hx-get="/@me/block-keywords">Block Tags &amp; Keywords</button>
-			</div>
-
-			<div>
-				<h2>External Services</h2>
-				<button hx-get="/@me/block-service">Use a Block Service</button>
-			</div>
-		</div>
+		{{- template "block-editor" . -}}
 
 	</div>
 

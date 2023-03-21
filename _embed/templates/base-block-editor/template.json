@@ -1,0 +1,125 @@
+{
+	"templateId":"base-block-editor",
+	"role":"",
+	"model":"Profile",
+	"label":"Profile Block Editor (BASE TEMPLATE)",
+	"actions": {
+
+		"blocks-modeal": {"roles":["self"], "step":"view-html"},
+		"blocks-list": {"roles":["self"], "step":"view-html"},
+
+		"block-actor": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"set-query-param", "blockId":"new"},
+					{"step":"with-block", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical", 
+							"label":"Block a Person",
+							"children":[
+								{"type":"hidden", "path":"type", "options":{"value":"ACTOR"}},
+								{"type":"text", "path":"trigger", "label":"Enter the Person's Fediverse Address", "description":"Something like @blocked-user@domain.com or https://domain.com/@blocked-user"},
+								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this person"},
+								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+
+		"block-domain": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"set-query-param", "blockId":"new"},
+					{"step":"with-block", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical", 
+							"label":"Block a Domain",
+							"children":[
+								{"type":"hidden", "path":"type", "options":{"value":"DOMAIN"}},
+								{"type":"text", "path":"trigger", "label":"Enter the Domain to Block", "description":"Something like blocked-domain.com"},
+								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this domain"},
+								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+
+		"block-keywords": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"set-query-param", "blockId":"new"},
+					{"step":"with-block", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical", 
+							"label":"Block Tags & Keywords",
+							"children":[
+								{"type":"hidden", "path":"type", "options":{"value":"CONTENT"}},
+								{"type":"text", "path":"trigger", "label":"Enter the Tags and Keywords to Block", "description":"Enter one or more words, separated by spaces."},
+								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking these tag or keyword"},
+								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+
+		"block-service": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"set-query-param", "blockId":"new"},
+					{"step":"with-block", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical", 
+							"label":"Use a Block Service",
+							"children":[
+								{"type":"hidden", "path":"type", "options":{"value":"EXTERNAL"}},
+								{"type":"text", "path":"trigger", "label":"Service Address", "description":"Enter your unique address provided by the block service."}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+
+		"block-edit": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"with-block", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical", 
+							"label":"Block Settings",
+							"children":[
+								{"type":"text", "path":"trigger", "label":"Blocking", "readOnly":true, "options":{"class":"bold"}},
+								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this person"},
+								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+
+		"block-delete": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"delete", "title":"Stop Blocking {{.Label}}?", "message":"Removing this block will allow blocked messages from this source to be displayed."}
+				]}
+			]
+		}
+	}
+}	

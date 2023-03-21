@@ -43,7 +43,7 @@ func (step StepWithFolder) doStep(renderer Renderer, buffer io.Writer, actionMet
 	folder.UserID = renderer.AuthenticatedID()
 
 	// If we have a real ID, then try to load the folder from the database
-	if folderToken != "new" {
+	if (folderToken != "") && (folderToken != "new") {
 		if err := folderService.LoadByToken(renderer.AuthenticatedID(), folderToken, &folder); err != nil {
 			if actionMethod == ActionMethodGet {
 				return derp.Wrap(err, location, "Unable to load Folder", folderToken)

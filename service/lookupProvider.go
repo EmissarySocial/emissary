@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,6 +26,21 @@ func NewLookupProvider(themeService *Theme, groupService *Group, folderService *
 func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
+
+	case "block-behaviors":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "BLOCK - Reject all messages from this person.", Value: model.BlockBehaviorBlock},
+			form.LookupCode{Label: "MUTE - Accept messages from this person, but do not notify me.", Value: model.BlockBehaviorMute},
+			form.LookupCode{Label: "ALLOW - Temporarily deactivate this block", Value: model.BlockBehaviorAllow},
+		)
+
+	case "block-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "Block a Person", Value: model.BlockTypeActor},
+			form.LookupCode{Label: "Block a Domain", Value: model.BlockTypeDomain},
+			form.LookupCode{Label: "Block Tags & Keywords", Value: model.BlockTypeContent},
+			form.LookupCode{Label: "Use Block Service", Value: model.BlockTypeExternal},
+		)
 
 	case "folders":
 		return NewFolderLookupProvider(service.folderService, service.userID)

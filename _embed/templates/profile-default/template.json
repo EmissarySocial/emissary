@@ -5,6 +5,7 @@
 	"label":"User Profile",
 	"description":"Profile displays everything about a user, including their inbox and outbox information",
 	"icon":"inbox",
+	"extends":["base-block-editor"],
 	"containedBy": [],
 	"schema": {
 		"title":"User Profile",
@@ -271,116 +272,13 @@
 			"file":"profile-blocks"
 		},
 
-		"block-actor": {
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
-						{"step":"edit", "form":{
-							"type":"layout-vertical", 
-							"label":"Block a Person",
-							"children":[
-								{"type":"hidden", "path":"type", "options":{"value":"ACTOR"}},
-								{"type":"text", "path":"trigger", "label":"Enter the Person's Fediverse Address", "description":"Something like @blocked-user@domain.com or https://domain.com/@blocked-user"},
-								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this person"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"enum":[
-									{"value":"BLOCK","label":"BLOCK - Reject all messages from this person."},
-									{"value":"MUTE","label":"MUTE - Accept messages from this person, but do not notify me."},
-									{"value":"ALLOW","label":"ALLOW - Temporarily deactivate this block"}
-								]}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Published for others to see and follow", "false-text":"NO: This block is only visible to me."}}
-							]
-						}}
-					]}
-				]}
-			]
-		},
-		"block-domain": {
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
-						{"step":"edit", "form":{
-							"type":"layout-vertical", 
-							"label":"Block a Domain",
-							"children":[
-								{"type":"hidden", "path":"type", "options":{"value":"DOMAIN"}},
-								{"type":"text", "path":"trigger", "label":"Enter the Domain to Block", "description":"Something like blocked-domain.com"},
-								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this domain"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"enum":[
-									{"value":"BLOCK","label":"BLOCK - Reject all messages from this person."},
-									{"value":"MUTE","label":"MUTE - Accept messages from this person, but do not notify me."},
-									{"value":"ALLOW","label":"ALLOW - Temporarily deactivate this block"}
-								]}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Published for others to see and follow", "false-text":"NO: This block is only visible to me."}}
-							]
-						}}
-					]}
-				]}
-			]
-		},
-		"block-keywords": {
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
-						{"step":"edit", "form":{
-							"type":"layout-vertical", 
-							"label":"Block Tags & Keywords",
-							"children":[
-								{"type":"hidden", "path":"type", "options":{"value":"CONTENT"}},
-								{"type":"text", "path":"trigger", "label":"Enter the Tags and Keywords to Block", "description":"Enter one or more words, separated by spaces."},
-								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking these tag or keyword"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"enum":[
-									{"value":"BLOCK","label":"BLOCK - Reject all messages from this person."},
-									{"value":"MUTE","label":"MUTE - Accept messages from this person, but do not notify me."},
-									{"value":"ALLOW","label":"ALLOW - Temporarily deactivate this block"}
-								]}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Published for others to see and follow", "false-text":"NO: This block is only visible to me."}}
-							]
-						}}
-					]}
-				]}
-			]
-		},
-		"block-service": {
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "blockId":"new"},
-					{"step":"with-block", "steps":[
-						{"step":"set-data", "values":{"type":"EXTERNAL"}},
-						{"step":"edit", "form":{
-							"type":"layout-vertical", 
-							"label":"Use a Block Service",
-							"children":[
-								{"type":"hidden", "path":"type"},
-								{"type":"text", "path":"trigger", "label":"Service Address", "description":"Enter your unique address provided by the block service."}
-							]
-						}}
-					]}
-				]}
-			]
-		},
-		"block-edit": {
-			"roles":["self"],
-			"steps":[
-				{"step":"with-block", "steps":[
-					{"step":"as-modal", "steps":[
-						{"step":"view-html", "file":"block"}
-					]}
-				]}
-			]
-		},
 		"feed": {"step":"view-feed"},
+
 		"websub": {"step":"websub"},
 
 		"inbox": {
 			"roles": ["self"],
-		"step": "view-html"
+			"step": "view-html"
 		},
 		"inbox-sidebar": {
 			"roles": ["self"],

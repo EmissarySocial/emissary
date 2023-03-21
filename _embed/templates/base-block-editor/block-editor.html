@@ -1,0 +1,32 @@
+{{- $blockedActors := (.BlocksByType "ACTOR").Slice -}}
+{{- $blockedDomains := (.BlocksByType "DOMAIN").Slice -}}
+{{- $blockedContent := (.BlocksByType "CONTENT").Slice -}}
+{{- $blockServices := (.BlocksByType "EXTERNAL").Slice -}}
+
+<div>
+	<h2>People</h2>
+	<button hx-get="/@me/block-actor" class="text-sm">Block a Person</button><br>
+
+	{{- template "block-list" $blockedActors -}}
+</div>
+
+<div>
+	<h2>Domains</h2>
+	<button hx-get="/@me/block-domain" class="text-sm">Block a Domain</button><br>
+
+	{{- template "block-list" $blockedDomains -}}
+</div>
+
+<div>
+	<h2>Tags & Keywords</h2>
+	<button hx-get="/@me/block-keywords" class="text-sm">Block Tags &amp; Keywords</button><br>
+
+	{{- template "block-list" $blockedContent -}}
+</div>
+
+<div>
+	<h2>External Services</h2>
+	<button hx-get="/@me/block-service" class="text-sm">Use a Block Service</button><br>
+
+	{{- template "block-list" $blockServices -}}
+</div>

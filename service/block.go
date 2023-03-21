@@ -1,7 +1,10 @@
 package service
 
 import (
+	"context"
+
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -158,12 +161,17 @@ func (service *Block) Schema() schema.Schema {
 func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
 	blockID, err := primitive.ObjectIDFromHex(token)
 
-	if err == nil {
+	if err != nil {
 		return derp.Wrap(err, "service.Block.LoadByToken", "Error converting token to ObjectID", token)
 	}
 
-	criteria := exp.Equal("_id", blockID).AndEqual("userID", userID)
+	criteria := exp.Equal("_id", blockID).AndEqual("userId", userID)
+
 	return service.Load(criteria, block)
+}
+
+func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
+	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
 }
 
 /******************************************

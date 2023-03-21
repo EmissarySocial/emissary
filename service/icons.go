@@ -110,6 +110,10 @@ func (service Icons) Get(name string) string {
 		return service.get("info-circle")
 	case "info-fill":
 		return service.get("info-circle-fill")
+	case "invisible":
+		return service.get("eye-slash")
+	case "invisible-fill":
+		return service.get("eye-slash-fill")
 	case "journal":
 		return service.get("journal")
 	case "link":
@@ -126,6 +130,10 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "mute":
+		return service.get("mic-mute")
+	case "mute-fill":
+		return service.get("mic-mute-fill")
 	case "newspaper":
 		return service.get("newspaper")
 	case "person":
@@ -136,6 +144,10 @@ func (service Icons) Get(name string) string {
 		return service.get("people")
 	case "people-fill":
 		return service.get("people-fill")
+	case "reply":
+		return service.get("reply")
+	case "reply-fill":
+		return service.get("reply-fill")
 	case "save":
 		return service.get("check-lg")
 	case "search":
@@ -160,10 +172,14 @@ func (service Icons) Get(name string) string {
 		return service.get("star")
 	case "star-fill":
 		return service.get("star-fill")
-	case "reply":
-		return service.get("reply")
-	case "reply-fill":
-		return service.get("reply-fill")
+	case "thumbs-down":
+		return service.get("hand-thumbs-down")
+	case "thumbs-down-fill":
+		return service.get("hand-thumbs-down-fill")
+	case "thumbs-up":
+		return service.get("hand-thumbs-up")
+	case "thumbs-up-fill":
+		return service.get("hand-thumbs-up-fill")
 	case "unlink":
 		return service.get("link-45deg")
 	case "upload":
@@ -176,6 +192,10 @@ func (service Icons) Get(name string) string {
 		return service.get("people")
 	case "users-fill":
 		return service.get("people-fill")
+	case "visible":
+		return service.get("eye")
+	case "visible-fill":
+		return service.get("eye-fill")
 
 		// Layouts
 	case "layout-social":

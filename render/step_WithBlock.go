@@ -42,8 +42,7 @@ func (step StepWithBlock) doStep(renderer Renderer, buffer io.Writer, actionMeth
 	block := model.NewBlock()
 	block.UserID = renderer.AuthenticatedID()
 
-	// If we have a real ID, then try to load the block from the database
-	if blockToken != "new" {
+	if (blockToken != "") && (blockToken != "new") {
 		if err := blockService.LoadByToken(renderer.AuthenticatedID(), blockToken, &block); err != nil {
 			if actionMethod == ActionMethodGet {
 				return derp.Wrap(err, location, "Unable to load Block", blockToken)

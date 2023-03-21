@@ -7,14 +7,14 @@ import (
 
 // Block represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Block struct {
-	BlockID  primitive.ObjectID `json:"blockId" bson:"_id"`       // Unique identifier of this Block
-	UserID   primitive.ObjectID `json:"userId"  bson:"userId"`    // Unique identifier of the User who owns this Block
-	Type     string             `json:"type"    bson:"type"`      // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
-	Trigger  string             `json:"trigger" bson:"trigger"`   // Parameter for this block type)
+	BlockID  primitive.ObjectID `json:"blockId"  bson:"_id"`      // Unique identifier of this Block
+	UserID   primitive.ObjectID `json:"userId"   bson:"userId"`   // Unique identifier of the User who owns this Block
+	Type     string             `json:"type"     bson:"type"`     // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
+	Trigger  string             `json:"trigger"  bson:"trigger"`  // Parameter for this block type)
 	Behavior string             `json:"behavior" bson:"behavior"` // Behavior for this block type (e.g. "BLOCK", "MUTE", "ALLOW")
-	Comment  string             `json:"comment" bson:"comment"`   // Optional comment describing why this block exists
+	Comment  string             `json:"comment"  bson:"comment"`  // Optional comment describing why this block exists
 	IsPublic bool               `json:"isPublic" bson:"isPublic"` // If TRUE, this record is visible publicly
-	Origin   OriginLink         `json:"origin" bson:"origin"`     // Internal or External service where this block originated (used for subscriptions)
+	Origin   OriginLink         `json:"origin"   bson:"origin"`   // Internal or External service where this block originated (used for subscriptions)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -36,12 +36,10 @@ func (block Block) ID() string {
 func (block Block) Fields() []string {
 	return []string{
 		"_id",
-		"userId",
-		"type",
 		"trigger",
+		"behavior",
 		"comment",
 		"isPublic",
-		"isActive",
 	}
 }
 

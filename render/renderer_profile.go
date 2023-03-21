@@ -243,11 +243,11 @@ func (w Profile) ActivityPubPublicKeyURL() string {
 
 func (w Profile) Outbox() QueryBuilder[model.StreamSummary] {
 
-	queryBuilder := builder.NewBuilder().
+	expressionBuilder := builder.NewBuilder().
 		Int("publishDate")
 
 	criteria := exp.And(
-		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
@@ -258,11 +258,11 @@ func (w Profile) Outbox() QueryBuilder[model.StreamSummary] {
 
 func (w Profile) Followers() QueryBuilder[model.FollowerSummary] {
 
-	queryBuilder := builder.NewBuilder().
+	expressionBuilder := builder.NewBuilder().
 		String("displayName")
 
 	criteria := exp.And(
-		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
@@ -308,17 +308,35 @@ func (w Profile) FollowingByFolder(token string) ([]model.FollowingSummary, erro
 
 func (w Profile) Blocks() QueryBuilder[model.Block] {
 
-	queryBuilder := builder.NewBuilder()
-	// .String("displayName")
+	expressionBuilder := builder.NewBuilder()
 
 	criteria := exp.And(
-		queryBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
 	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
 
 	return result
+}
+
+func (w Profile) BlocksByType(blockType string) QueryBuilder[model.Block] {
+
+	expressionBuilder := builder.NewBuilder()
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("type", blockType),
+	)
+
+	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+
+	return result
+}
+
+func (w Profile) CountBlocks(blockType string) (int, error) {
+	return w._factory.Block().CountByType(w.objectID(), blockType)
 }
 
 /******************************************

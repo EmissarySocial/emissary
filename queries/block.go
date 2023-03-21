@@ -16,6 +16,15 @@ func CountBlocks(ctx context.Context, blockCollection data.Collection, userID pr
 	return CountRecords(ctx, blockCollection, criteria)
 }
 
+// CountBlocksByType returns the total number of blocks for a given user and type
+func CountBlocksByType(ctx context.Context, blockCollection data.Collection, userID primitive.ObjectID, blockType string) (int, error) {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("journal.deleteDate", 0).
+		AndEqual("type", blockType)
+
+	return CountRecords(ctx, blockCollection, criteria)
+}
+
 func SetBlockCount(userCollection data.Collection, blockCollection data.Collection, userID primitive.ObjectID) error {
 
 	ctx := context.Background()

@@ -44,7 +44,7 @@ func (step StepWithMessage) doStep(renderer Renderer, buffer io.Writer, actionMe
 	message.UserID = renderer.AuthenticatedID()
 
 	// If we have a real ID, then try to load the message from the database
-	if messageToken != "new" {
+	if (messageToken != "") && (messageToken != "new") {
 
 		messageID, err := primitive.ObjectIDFromHex(messageToken)
 
