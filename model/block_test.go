@@ -15,6 +15,7 @@ func TestBlockSchema(t *testing.T) {
 		{"blockId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
 		{"type", "ACTOR", nil},
+		{"label", "LABEL", nil},
 		{"trigger", "TRIGGER", nil},
 		{"behavior", "BLOCK", nil},
 		{"comment", "COMMENT", nil},

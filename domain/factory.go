@@ -347,7 +347,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Block returns a fully populated Block service
 func (factory *Factory) Block() *service.Block {
-	result := service.NewBlock(factory.collection(CollectionBlock), factory.User())
+	result := service.NewBlock(factory.collection(CollectionBlock), factory.Follower(), factory.User())
 	return &result
 }
 

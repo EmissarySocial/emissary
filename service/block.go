@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
@@ -9,20 +11,25 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Block defines a service that manages all content blocks created and imported by Users.
 type Block struct {
-	collection  data.Collection
-	userService *User
+	collection      data.Collection
+	userService     *User
+	followerService *Follower
 }
 
 // NewBlock returns a fully initialized Block service
-func NewBlock(collection data.Collection, userService *User) Block {
+func NewBlock(collection data.Collection, followerService *Follower, userService *User) Block {
 	service := Block{
-		userService: userService,
+		userService:     userService,
+		followerService: followerService,
 	}
 
 	service.Refresh(collection)
@@ -47,7 +54,15 @@ func (service *Block) Close() {
  * Common Data Methods
  ******************************************/
 
-// List returns an iterator containing all of the Blocks who match the provided criteria
+// Query returns an slice of allthe Blocks that match the provided criteria
+func (service *Block) Query(criteria exp.Expression, options ...option.Option) ([]model.Block, error) {
+	result := make([]model.Block, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+
+	return result, err
+}
+
+// List returns an iterator containing all of the Blocks that match the provided criteria
 func (service *Block) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.List(notDeleted(criteria), options...)
 }
@@ -64,6 +79,11 @@ func (service *Block) Load(criteria exp.Expression, block *model.Block) error {
 
 // Save adds/updates an Block in the database
 func (service *Block) Save(block *model.Block, note string) error {
+
+	user := model.NewUser()
+	if err := service.userService.LoadByID(block.UserID, &user); err != nil {
+		return derp.Wrap(err, "service.Block.Save", "Error loading User", block)
+	}
 
 	if block.IsNew() {
 		var err error
@@ -92,9 +112,18 @@ func (service *Block) Save(block *model.Block, note string) error {
 		return derp.Wrap(err, "service.Block.Save", "Error cleaning Block", block)
 	}
 
+	// Generate JSONLD for this block
+	if err := service.CalcJSONLD(&user, block); err != nil {
+		return derp.Wrap(err, "service.Block.Save", "Error setting JSON-LD", block)
+	}
+
 	// Save the block to the database
 	if err := service.collection.Save(block, note); err != nil {
 		return derp.Wrap(err, "service.Block.Save", "Error saving Block", block, note)
+	}
+
+	if err := service.publishChanges(block); err != nil {
+		return derp.Wrap(err, "service.Block.Save", "Error publishing changes", block)
 	}
 
 	// Recalculate the block count for this user
@@ -177,26 +206,58 @@ func (service *Block) Schema() schema.Schema {
 }
 
 /******************************************
+ * Custom Queries
+ ******************************************/
+
+func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate int64, options ...option.Option) ([]model.Block, error) {
+
+	publishDateString := []string{"GT:" + strconv.FormatInt(publishDate, 10)}
+
+	expressionBuilder := builder.NewBuilder().Int64("publishDate")
+
+	criteria := exp.And(
+		exp.Equal("userId", userID),
+		exp.Equal("isPublic", true),
+		exp.NotEqual("type", model.BlockTypeExternal),
+		exp.NotEqual("behavior", model.BlockBehaviorAllow),
+		expressionBuilder.EvaluateField("publishDate", builder.DataTypeInt64, publishDateString),
+	)
+
+	options = append(options, option.SortAsc("publishDate"))
+	result, err := service.Query(criteria, options...)
+
+	return result, err
+}
+
+/******************************************
  * Initial Validations
  ******************************************/
 
 func (service *Block) ValidateNewActor(block *model.Block) error {
 
+	block.Label = block.Trigger
+
 	if block.Behavior == "" {
 		block.Behavior = model.BlockBehaviorBlock
 	}
+
 	return nil
 }
 
 func (service *Block) ValidateNewDomain(block *model.Block) error {
 
+	block.Label = block.Trigger
+
 	if block.Behavior == "" {
 		block.Behavior = model.BlockBehaviorBlock
 	}
+
 	return nil
 }
 
 func (service *Block) ValidateNewContent(block *model.Block) error {
+
+	block.Label = block.Trigger
 
 	if block.Behavior == "" {
 		block.Behavior = model.BlockBehaviorBlock
@@ -205,6 +266,9 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 }
 
 func (service *Block) ValidateNewExternal(block *model.Block) error {
+	block.Label = block.Trigger
+	block.IsPublic = false
+	block.Behavior = ""
 	return nil
 }
 
@@ -212,12 +276,80 @@ func (service *Block) ValidateNewExternal(block *model.Block) error {
  * Block Publishing Rules
  ******************************************/
 
-func (service *Block) Publish(block *model.Block) {
+func (service *Block) CalcJSONLD(user *model.User, block *model.Block) error {
 
+	// Reset JSON-LD for the block.  We're going to recalculate EVERYTHING.
+	block.JSONLD = mapof.NewAny()
+
+	// RULE: No JSON-LD for "Allow" blocks
+	if block.Behavior == model.BlockBehaviorAllow {
+		return nil
+	}
+
+	// RULE: No JSON-LD for "External blocks
+	if block.Type == model.BlockTypeExternal {
+		return nil
+	}
+
+	// Translate the Block Behavior into an ActivityPub Type
+	if block.Behavior == model.BlockBehaviorBlock {
+		block.JSONLD["type"] = vocab.ActivityTypeBlock
+	} else {
+		block.JSONLD["type"] = vocab.ActivityTypeIgnore
+	}
+
+	// Create the summary based on the type of Block
+	switch block.Type {
+
+	case model.BlockTypeActor:
+		block.JSONLD["summary"] = user.DisplayName + " blocked the person " + block.Trigger
+
+	case model.BlockTypeDomain:
+		block.JSONLD["summary"] = user.DisplayName + " blocked the domain " + block.Trigger
+
+	case model.BlockTypeContent:
+		block.JSONLD["summary"] = user.DisplayName + " blocked the keywords " + block.Trigger
+
+	default:
+		// This should never happen
+		return derp.NewInternalError("service.Block.CalcJSONLD", "Unrecognized Block Type", block)
+	}
+
+	// Additional fields that are always present
+	block.JSONLD["actor"] = user.ActivityPubURL()
+	block.JSONLD["target"] = block.Trigger
+	block.JSONLD["published"] = block.PublishDateRCF3339()
+
+	// TODO: need additional grammar for extra fields
+	// - selectbox field to describe WHY the block was created
+	// - comment field to describe WHY the block was created
+	// - refs to other people who have ALSO blocked this person/domain/keyword?
+
+	return nil
 }
 
-func (service *Block) Unpublish(block *model.Block) {
+func (service *Block) publishChanges(block *model.Block) error {
 
+	// Send updates when something is newly published
+	if block.IsPublic && (block.PublishDate == 0) {
+		block.PublishDate = time.Now().UnixMilli()
+
+		// TODO: User Follower Service to actually send announcements
+
+		return service.collection.Save(block, block.Comment)
+	}
+
+	// Send updates when something is unpublished
+	if !block.IsPublic && (block.PublishDate > 0) {
+		block.PublishDate = 0
+
+		// TODO: User Follower Service to actually send announcements
+
+		return service.collection.Save(block, block.Comment)
+	}
+
+	// Nothing to do here.
+	return nil
 }
 
 /******************************************
@@ -238,18 +370,4 @@ func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block
 
 func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
 	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
-}
-
-/******************************************
- * Custom Filters
- ******************************************/
-
-// AllowSender returns TRUE if the designated User accepts documents from this sender (based on their blocklist settings)
-func (service *Block) AllowSender(userID primitive.ObjectID, person *model.PersonLink) (bool, error) {
-	return true, nil
-}
-
-// AllowSender returns TRUE if the designated User accepts the Document (based on their blocklist settings)
-func (service *Block) AllowDocument(userID primitive.ObjectID, document *model.DocumentLink) (bool, error) {
-	return true, nil
 }

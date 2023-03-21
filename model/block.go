@@ -1,21 +1,27 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Block represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Block struct {
-	BlockID         primitive.ObjectID `json:"blockId"  bson:"_id"`            // Unique identifier of this Block
-	UserID          primitive.ObjectID `json:"userId"   bson:"userId"`         // Unique identifier of the User who owns this Block
-	Type            string             `json:"type"     bson:"type"`           // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
-	Trigger         string             `json:"trigger"  bson:"trigger"`        // Parameter for this block type)
-	Behavior        string             `json:"behavior" bson:"behavior"`       // Behavior for this block type (e.g. "BLOCK", "MUTE", "ALLOW")
-	Comment         string             `json:"comment"  bson:"comment"`        // Optional comment describing why this block exists
-	IsPublic        bool               `json:"isPublic" bson:"isPublic"`       // If TRUE, this record is visible publicly
-	Origin          OriginLink         `json:"origin"   bson:"origin"`         // Internal or External service where this block originated (used for subscriptions)
-	PublishDate     int64              `json:"publishDate" bson:"publishDate"` // Date when this block was published to followers
+	BlockID     primitive.ObjectID `json:"blockId"     bson:"_id"`         // Unique identifier of this Block
+	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // Unique identifier of the User who owns this Block
+	Type        string             `json:"type"        bson:"type"`        // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
+	Label       string             `json:"label"       bson:"label"`       // Human-friendly label for this block
+	Trigger     string             `json:"trigger"     bson:"trigger"`     // Parameter for this block type)
+	Behavior    string             `json:"behavior"    bson:"behavior"`    // Behavior for this block type (e.g. "BLOCK", "MUTE", "ALLOW")
+	Comment     string             `json:"comment"     bson:"comment"`     // Optional comment describing why this block exists
+	IsPublic    bool               `json:"isPublic"    bson:"isPublic"`    // If TRUE, this record is visible publicly
+	Origin      OriginLink         `json:"origin"      bson:"origin"`      // Internal or External service where this block originated (used for subscriptions)
+	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Date when this block was published to followers
+	JSONLD      mapof.Any          `json:"jsonld"      bson:"jsonld"`      // JSON-LD data for this object
+
 	journal.Journal `json:"-" bson:"journal"`
 }
 
@@ -67,4 +73,22 @@ func (block Block) Roles(authorization *Authorization) []string {
 
 	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
 	return []string{}
+}
+
+/******************************************
+ * ActivityStreams Methods
+ ******************************************/
+
+// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
+// This map will still need to be marshalled into JSON
+func (block Block) GetJSONLD() mapof.Any {
+	return block.JSONLD
+}
+
+/******************************************
+ * Other Data Accessors
+ ******************************************/
+
+func (block Block) PublishDateRCF3339() string {
+	return time.UnixMilli(block.PublishDate).Format(time.RFC3339)
 }

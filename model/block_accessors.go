@@ -11,6 +11,7 @@ func BlockSchema() schema.Element {
 			"blockId":     schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
 			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent, BlockTypeExternal}},
+			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
 			"behavior":    schema.String{Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
 			"comment":     schema.String{},
@@ -59,6 +60,9 @@ func (block *Block) GetStringOK(name string) (string, bool) {
 
 	case "type":
 		return block.Type, true
+
+	case "label":
+		return block.Label, true
 
 	case "trigger":
 		return block.Trigger, true
@@ -119,6 +123,10 @@ func (block *Block) SetString(name string, value string) bool {
 
 	case "type":
 		block.Type = value
+		return true
+
+	case "label":
+		block.Label = value
 		return true
 
 	case "trigger":
