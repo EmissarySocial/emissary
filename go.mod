@@ -12,7 +12,7 @@ require (
 	github.com/benpate/derp v0.27.0
 	github.com/benpate/digit v0.9.1
 	github.com/benpate/exp v0.6.1
-	github.com/benpate/exp-builder v0.6.0
+	github.com/benpate/exp-builder v0.6.1
 	github.com/benpate/form v0.15.3
 	github.com/benpate/hannibal v0.2.3
 	github.com/benpate/html v0.16.0

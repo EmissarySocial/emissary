@@ -81,8 +81,8 @@ github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.6.1 h1:7mmgbB3TRVeVp/ZBToYVuxdVcDR/3lexV3JHbD9dLgs=
 github.com/benpate/exp v0.6.1/go.mod h1:+eTsvQVuAobL6efQ1KMwzQLK5Trm679Oiq+n8IflrFU=
-github.com/benpate/exp-builder v0.6.0 h1:SzPqSfBjPieR0eyz/SxZsdm5gOThHr1wuNs+bg5jX9A=
-github.com/benpate/exp-builder v0.6.0/go.mod h1:Z5F0Pf++Zb91+Gx50QU/2723lIBncKecXiEuCJYBg20=
+github.com/benpate/exp-builder v0.6.1 h1:2/AsBk2na/WgEAEkeilJ9CwPmBj1ToTNT46QfUHs+1c=
+github.com/benpate/exp-builder v0.6.1/go.mod h1:vbLXdQgRYReCzQQNdTiTaQn85wgpRdPsBkWck2Yi3V4=
 github.com/benpate/form v0.15.3 h1:cDel1aE8FmsvqBHT8/haY1+evViyzb7IEh6RGv4KBEI=
 github.com/benpate/form v0.15.3/go.mod h1:n2GNV9p04bBcnZOKbVZM4KnNo7l0FfTJeWxhfg5AtpY=
 github.com/benpate/hannibal v0.2.3 h1:jEoyHCqfO1jfjy4/OFZZmYSc2ne2GsFk5uC1igXwKnk=
