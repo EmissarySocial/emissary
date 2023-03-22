@@ -36,10 +36,7 @@ func (step StepUnPublish) Post(renderer Renderer) error {
 	publisherService := renderer.factory().Publisher()
 	publisherService.Unpublish(stream, renderer.AuthenticatedID(), step.Role)
 
-	// TODO: CRITICAL: This is going to need a lot more than this.
-	// - Send "Delete" notifications
-	// - 'Tombstone' records??
-	// - WTF, OMG.
+	// TODO: MEDIUM: Do we NEED to 'Tombstone' records when the stream has been deleted?
 
 	return nil
 }

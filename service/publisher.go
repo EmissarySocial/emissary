@@ -104,6 +104,8 @@ func (service Publisher) setPublished(stream *model.Stream, user *model.User) er
 		return derp.Wrap(err, "render.StepPublish", "Error saving stream", stream)
 	}
 
+	// TODO: CRITICAL: Send Delete activities when unpublishing a stream
+
 	// Done.
 	return nil
 }
