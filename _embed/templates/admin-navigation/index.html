@@ -1,55 +1,50 @@
-<div hx-get="/admin/navigation" hx-trigger="refreshPage from:window">
+<div class="page" hx-get="/admin/navigation" hx-trigger="refreshPage from:window">
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
 
-    <div class="page">
+    <h1>Settings</h1>
 
-        <h1>Settings</h1>
-
-        <div id="menu-bar" hx-push-url="true">
-            {{- $token := .Token -}}
-            {{- range .AdminSections -}}
-                <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-            {{- end -}}
-        </div>
-
-        {{ $navigation := .Navigation}}
-        {{- if not $navigation.IsEmpty -}}
-
-            <form class="sortable space-below" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
-                {{- range $navigation -}}
-                    <div class="draggable">
-                        <input type="hidden" name="keys" value="{{.StreamID}}">
-                        <div class="float-right">
-                            <a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
-                        </div>
-                        {{icon "grip-vertical"}}
-                        &nbsp;
-                        <span>{{.Label}}</span>
-                    </div>
-                {{- end -}}
-            </form>
-
-            <div class="text text-sm space-below">
-                <i>Drag and Drop Items to Sort.</i>
-            </div>
-
-            <div class="space-below">
-                <button hx-get="/admin/navigation/add">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
-            </div>
-
-
-        {{- else -}}
-
-            <h2>Let's Set Up Your Site</h2>
-            <p>This page helps you to add top-level items to this website.  You can re-arrange them afterwards, if you need to.</p>
-            <button hx-get="/admin/navigation/add" class="primary">Add a Top-Level Stream</button>
-
+    <div id="menu-bar" hx-push-url="true">
+        {{- $token := .Token -}}
+        {{- range .AdminSections -}}
+            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
         {{- end -}}
-
     </div>
 
+    {{ $navigation := .Navigation}}
+    {{- if not $navigation.IsEmpty -}}
+
+        <form class="sortable space-below" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+            {{- range $navigation -}}
+                <div class="draggable">
+                    <input type="hidden" name="keys" value="{{.StreamID}}">
+                    <div class="float-right">
+                        <a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
+                    </div>
+                    {{icon "grip-vertical"}}
+                    &nbsp;
+                    <span>{{.Label}}</span>
+                </div>
+            {{- end -}}
+        </form>
+
+        <div class="text text-sm space-below">
+            <i>Drag and Drop Items to Sort.</i>
+        </div>
+
+        <div class="space-below">
+            <button hx-get="/admin/navigation/add">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
+        </div>
+
+
+    {{- else -}}
+
+        <h2>Let's Set Up Your Site</h2>
+        <p>This page helps you to add top-level items to this website.  You can re-arrange them afterwards, if you need to.</p>
+        <button hx-get="/admin/navigation/add" class="primary">Add a Top-Level Stream</button>
+
+    {{- end -}}
 
     <script>
         var sortables = document.querySelectorAll(".sortable");
