@@ -14,3 +14,10 @@ func CountMessages(followingCollection data.Collection, userID primitive.ObjectI
 	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID).AndEqual("publishDate", publishDate)
 	return CountRecords(context.Background(), followingCollection, criteria)
 }
+
+// CountOutboxMessages returns the total number of messages for a particular user/publishDate.
+// This is used to assign a "rank" to each message, which is used to sort the messages in the inbox.
+func CountOutboxMessages(followingCollection data.Collection, userID primitive.ObjectID, publishDate int64) (int, error) {
+	criteria := exp.Equal("userId", userID).AndEqual("publishDate", publishDate)
+	return CountRecords(context.Background(), followingCollection, criteria)
+}
