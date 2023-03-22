@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/html"
+	"github.com/benpate/rosetta/slice"
 	"github.com/kr/jsonfeed"
 )
 
@@ -23,7 +23,7 @@ func IteratorToJSonFeed(url string, title string, description string, iterator d
 			Type: "WebSub",
 			URL:  url + "/websub",
 		}},
-		Items: iterators.Map(iterator, model.NewStream, StreamToJsonFeed),
+		Items: slice.Map(data.Slice(iterator, model.NewStream), StreamToJsonFeed),
 	}
 }
 

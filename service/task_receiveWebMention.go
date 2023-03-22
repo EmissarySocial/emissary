@@ -1,24 +1,23 @@
-package tasks
+package service
 
 import (
 	"bytes"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type ReceiveWebMention struct {
-	streamService  *service.Stream
-	mentionService *service.Mention
-	userService    *service.User
+type TaskReceiveWebMention struct {
+	streamService  *Stream
+	mentionService *Mention
+	userService    *User
 	source         string
 	target         string
 }
 
-func NewReceiveWebMention(streamService *service.Stream, mentionService *service.Mention, userService *service.User, source string, target string) ReceiveWebMention {
-	return ReceiveWebMention{
+func NewTaskReceiveWebMention(streamService *Stream, mentionService *Mention, userService *User, source string, target string) TaskReceiveWebMention {
+	return TaskReceiveWebMention{
 		streamService:  streamService,
 		mentionService: mentionService,
 		userService:    userService,
@@ -27,9 +26,9 @@ func NewReceiveWebMention(streamService *service.Stream, mentionService *service
 	}
 }
 
-func (task ReceiveWebMention) Run() error {
+func (task TaskReceiveWebMention) Run() error {
 
-	const location = "tasks.ReceiveWebMention.Run"
+	const location = "service.TaskReceiveWebMention.Run"
 
 	var content bytes.Buffer
 

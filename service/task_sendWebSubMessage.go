@@ -1,4 +1,4 @@
-package tasks
+package service
 
 import (
 	"crypto/hmac"
@@ -10,20 +10,20 @@ import (
 	"github.com/benpate/remote"
 )
 
-// SendWebSubMessage sends a WebSub notification to a single WebSub follower.
-type SendWebSubMessage struct {
+// TaskSendWebSubMessage sends a WebSub notification to a single WebSub follower.
+type TaskSendWebSubMessage struct {
 	stream   model.Stream
 	follower model.Follower
 }
 
-func NewSendWebSubMessage(stream model.Stream, follower model.Follower) SendWebSubMessage {
-	return SendWebSubMessage{
+func NewTaskSendWebSubMessage(stream model.Stream, follower model.Follower) TaskSendWebSubMessage {
+	return TaskSendWebSubMessage{
 		stream:   stream,
 		follower: follower,
 	}
 }
 
-func (task SendWebSubMessage) Run() error {
+func (task TaskSendWebSubMessage) Run() error {
 
 	var body []byte
 
@@ -52,7 +52,7 @@ func (task SendWebSubMessage) Run() error {
 
 	// Try to send the transaction to the remote WebSub client
 	if err := transaction.Send(); err != nil {
-		return derp.Report(derp.Wrap(err, "tasks.SendWebSubMessage", "Error sending WebSub message", task.follower))
+		return derp.Report(derp.Wrap(err, "service.TaskSendWebSubMessage", "Error sending WebSub message", task.follower))
 	}
 
 	// Woot woot!

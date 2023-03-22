@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
 )
@@ -33,10 +33,15 @@ func PostWebMention(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Run the rest of the process asynchronously
-		task := tasks.NewReceiveWebMention(factory.Stream(), factory.Mention(), factory.User(), body.Source, body.Target)
-
-		queue := factory.Queue()
-		queue.Run(task)
+		factory.Queue().Run(
+			service.NewTaskReceiveWebMention(
+				factory.Stream(),
+				factory.Mention(),
+				factory.User(),
+				body.Source,
+				body.Target,
+			),
+		)
 
 		// Success!  Return 201/Accepted to indicate that this request has been queued (which is true)
 		return ctx.String(http.StatusAccepted, "Accepted")

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/timewasted/go-accept-headers"
@@ -50,9 +50,7 @@ func (step StepWebSub) Post(renderer Renderer) error {
 	}
 
 	// Run the task in the background queue.
-	queue := factory.Queue()
-
-	queue.Run(tasks.NewCreateWebSubFollower(
+	factory.Queue().Run(service.NewTaskCreateWebSubFollower(
 		factory.Follower(),
 		factory.Locator(),
 		renderer.objectType(),

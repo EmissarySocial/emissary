@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
@@ -15,13 +16,15 @@ type Publisher struct {
 	streamService   *Stream
 	followerService *Follower
 	userService     *User
+	queue           *queue.Queue
 }
 
-func NewPublisher(streamService *Stream, followerService *Follower, userService *User) Publisher {
+func NewPublisher(streamService *Stream, followerService *Follower, userService *User, queue *queue.Queue) Publisher {
 	return Publisher{
 		streamService:   streamService,
 		followerService: followerService,
 		userService:     userService,
+		queue:           queue,
 	}
 }
 
@@ -107,18 +110,23 @@ func (service Publisher) setPublished(stream *model.Stream, user *model.User) er
 
 func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activityType string, objectType string) error {
 
+	// Get the iterator of followers to notify
+	followers, err := service.followerService.ChannelByParent(stream.ParentID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Publisher.Publish", "Error loading followers", stream)
+	}
+
+	// If the channel is nil, then there are no followers to notify
+	if followers == nil {
+		return nil
+	}
+
 	// Load the ActivityPub Actor for this Stream
 	actor, err := service.userService.ActivityPubActor(stream.Document.Author.InternalID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Publisher.Publish", "Error loading actor", stream)
-	}
-
-	// Get the iterator of followers to notify
-	followers, err := service.followerService.ListActivityPub(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Publisher.Publish", "Error loading followers", stream)
 	}
 
 	// Create the document to be sent
@@ -127,12 +135,8 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activ
 
 	// spew.Dump("SENDING ACTIVITY", activityStream)
 
-	follower := model.NewFollower()
-	for followers.Next(&follower) {
-		if err := pub.SendActivity(actor, activityType, activityStream, follower.Actor.ProfileURL); err != nil {
-			return derp.Wrap(err, "service.Publisher.Publish", "Error sending ActivityPub message", stream)
-		}
-		follower = model.NewFollower()
+	for follower := range followers {
+		service.queue.Run(pub.SendActivityQueueTask(actor, activityType, activityStream, follower.Actor.ProfileURL))
 	}
 
 	return nil
@@ -141,13 +145,22 @@ func (service Publisher) notifyFollowers_ActivityPub(stream *model.Stream, activ
 // notifyFOllowers_WebSub sends a WebSub notification to all followers
 func (service Publisher) notifyFollowers_WebSub(stream *model.Stream) error {
 
-	/*
-		followers, err := service.followerService.ListWebSub(stream.ParentID)
+	followers, err := service.followerService.ChannelWebSub(stream.ParentID)
 
-		if err != nil {
-			return derp.Wrap(err, "service.Publisher.Publish", "Error loading followers", stream)
-		}
-	*/
+	if err != nil {
+		return derp.Wrap(err, "domain.RealtimeBroker.notifyWebSub", "Error loading WebSub followers", stream)
+	}
+
+	// If the channel is nil, then there are no followers to notify
+	if followers == nil {
+		return nil
+	}
+
+	// Loop through all followers, and send WebSub messages through the queue
+
+	for follower := range followers {
+		service.queue.Run(NewTaskSendWebSubMessage(*stream, follower))
+	}
 
 	return nil
 }

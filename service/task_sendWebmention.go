@@ -1,4 +1,4 @@
-package tasks
+package service
 
 import (
 	"github.com/EmissarySocial/emissary/tools/domain"
@@ -6,20 +6,20 @@ import (
 	"willnorris.com/go/webmention"
 )
 
-type SendWebMention struct {
+type TaskSendWebMention struct {
 	source string // URL of the internal document that is linking
 	target string // URL of the external document being linked to
 }
 
-func NewSendWebMention(source string, target string) SendWebMention {
+func NewTaskSendWebMention(source string, target string) TaskSendWebMention {
 
-	return SendWebMention{
+	return TaskSendWebMention{
 		source: source,
 		target: target,
 	}
 }
 
-func (task SendWebMention) Run() error {
+func (task TaskSendWebMention) Run() error {
 
 	// Create a new HTTP client to send the webmentions
 	client := webmention.New(nil)
@@ -38,7 +38,7 @@ func (task SendWebMention) Run() error {
 		}
 
 		if response, err := client.SendWebmention(endpoint, task.source, task.target); err != nil {
-			return derp.Wrap(err, "mention.SendWebMention.Run", "Error sending webmention", task, response)
+			return derp.Wrap(err, "mention.TaskSendWebMention.Run", "Error sending webmention", task, response)
 		}
 	}
 

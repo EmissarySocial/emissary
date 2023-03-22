@@ -169,6 +169,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.followerService = service.NewFollower(
 		factory.collection(CollectionFollower),
 		factory.User(),
+		factory.Queue(),
 		factory.Host(),
 	)
 
@@ -347,7 +348,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Block returns a fully populated Block service
 func (factory *Factory) Block() *service.Block {
-	result := service.NewBlock(factory.collection(CollectionBlock), factory.Follower(), factory.User())
+	result := service.NewBlock(factory.collection(CollectionBlock), factory.Follower(), factory.User(), factory.Queue())
 	return &result
 }
 
@@ -510,7 +511,7 @@ func (factory *Factory) Locator() service.Locator {
 // Publisher returns the Publisher service, which contains
 // all of the business rules for publishing a stream to the federated Interwebs.
 func (factory *Factory) Publisher() service.Publisher {
-	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User())
+	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User(), factory.Queue())
 }
 
 // Queue returns the Queue service, which manages background jobs

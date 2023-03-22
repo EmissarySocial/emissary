@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/EmissarySocial/emissary/tasks"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"willnorris.com/go/webmention"
@@ -96,7 +96,7 @@ func (step StepPublish) sendWebMentions(renderer *Stream) error {
 	queue := factory.Queue()
 
 	for _, link := range links {
-		queue.Run(tasks.NewSendWebMention(renderer.Permalink(), link))
+		queue.Run(service.NewTaskSendWebMention(renderer.Permalink(), link))
 	}
 
 	// Accept your success with grace.

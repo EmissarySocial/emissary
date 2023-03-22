@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -19,13 +20,15 @@ import (
 type Follower struct {
 	collection  data.Collection
 	userService *User
+	queue       *queue.Queue
 	host        string
 }
 
 // NewFollower returns a fully initialized Follower service
-func NewFollower(collection data.Collection, userService *User, host string) Follower {
+func NewFollower(collection data.Collection, userService *User, queue *queue.Queue, host string) Follower {
 	service := Follower{
 		userService: userService,
+		queue:       queue,
 		host:        host,
 	}
 
@@ -62,6 +65,18 @@ func (service *Follower) List(criteria exp.Expression, options ...option.Option)
 	return service.collection.List(notDeleted(criteria), options...)
 }
 
+// Channel returns a channel containing all of the Followers who match the provided criteria
+func (service *Follower) Channel(criteria exp.Expression, options ...option.Option) (<-chan model.Follower, error) {
+
+	it, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Follower.ChannelByParent", "Error creating iterator", criteria)
+	}
+
+	return data.Channel(it, model.NewFollower), nil
+}
+
 // Load retrieves an Follower from the database
 func (service *Follower) Load(criteria exp.Expression, follower *model.Follower) error {
 
@@ -79,6 +94,8 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 	if err := service.Schema().Clean(follower); err != nil {
 		return derp.Wrap(err, "service.Follower.Save", "Error cleaning Follower", follower)
 	}
+
+	// TODO: HIGH: Check if this potential follower is blocked or not
 
 	// Save the follower to the database
 	if err := service.collection.Save(follower, note); err != nil {
@@ -215,6 +232,27 @@ func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error)
 	}
 
 	return result, nil
+}
+
+// ListByParent returns an iterator containing all of the Followers of specific parentID
+func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
+	criteria := exp.Equal("parentId", parentID)
+	return service.List(criteria, options...)
+}
+
+func (service *Follower) ChannelByParent(parentID primitive.ObjectID) (<-chan model.Follower, error) {
+	criteria := exp.Equal("parentId", parentID)
+	return service.Channel(criteria)
+}
+
+func (service *Follower) ChannelActivityPub(parentID primitive.ObjectID) (<-chan model.Follower, error) {
+	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodActivityPub)
+	return service.Channel(criteria)
+}
+
+func (service *Follower) ChannelWebSub(parentID primitive.ObjectID) (<-chan model.Follower, error) {
+	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodWebSub)
+	return service.Channel(criteria)
 }
 
 /******************************************

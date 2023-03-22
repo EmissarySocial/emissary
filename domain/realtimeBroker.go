@@ -4,8 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tasks"
-	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -121,7 +119,6 @@ func (b *RealtimeBroker) listen(factory *Factory) {
 			// Try to send updates to every client that has subscribed to this stream's parent
 			if stream.HasParent() {
 				go b.notifySSE(stream.ParentID)
-				go b.notifyWebSub(stream)
 			}
 
 		case <-b.close:
@@ -136,34 +133,5 @@ func (b *RealtimeBroker) notifySSE(streamID primitive.ObjectID) {
 	// Send realtime messages to SSE clients
 	for _, client := range b.streams[streamID] {
 		client.WriteChannel <- streamID
-	}
-}
-
-// notifyWebSub sends update to every WebSub follower
-func (b *RealtimeBroker) notifyWebSub(stream model.Stream) {
-
-	followers, err := b.followerService.ListWebSub(stream.ParentID)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "domain.RealtimeBroker.notifyWebSub", "Error loading WebSub followers", stream))
-		return
-	}
-
-	// Loop through all followers, and send WebSub messages through the queue
-	follower := model.NewFollower()
-
-	if followers.Next(&follower) {
-
-		// TODO: LOW create an RSS Feed for stream here, for the "fat ping."
-
-		for {
-
-			go b.queue.Run(tasks.NewSendWebSubMessage(stream, follower))
-			follower = model.NewFollower()
-
-			if !followers.Next(&follower) {
-				break
-			}
-		}
 	}
 }

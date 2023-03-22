@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/hannibal/pub"
-	"github.com/benpate/hannibal/streams"
 )
 
 // connect_ActivityPub attempts to connect to a remote user using ActivityPub.
@@ -69,9 +68,7 @@ func (service *Following) disconnect_ActivityPub(following *model.Following) err
 	}
 
 	// Try to send the ActivityPub Undo request
-	activity := streams.NewDocument(service.AsJSONLD(following), nil)
-
-	if err := pub.SendUndo(actor, activity, following.URL); err != nil {
+	if err := pub.SendUndo(actor, service.AsJSONLD(following), following.URL); err != nil {
 		return derp.Wrap(err, location, "Error sending follow request", following)
 	}
 

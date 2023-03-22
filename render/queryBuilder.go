@@ -121,53 +121,6 @@ func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
 	return result, derp.Report(err)
 }
 
-/*
-func (builder QueryBuilder[T]) Objects(actionID string) (sliceof.Type[Renderer], error) {
-
-	var index int64
-
-	// Query the database
-	iterator, err := builder.service.ObjectList(builder.Criteria, builder.makeSortOption())
-
-	if err != nil {
-		return nil, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error querying database"))
-	}
-
-	result := make(sliceof.Type[Renderer], iterator.Count())
-
-	// Loop over each item returned
-	object := builder.service.ObjectNew()
-
-	for iterator.Next(object) {
-
-		// Create a new renderer
-		if renderer, err := NewRenderer(builder.factory, builder.context, object, actionID); err != nil {
-			return result, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error creating new renderer"))
-		} else {
-			result = append(result, renderer)
-		}
-
-		// Calculate max rows
-		index = index + 1
-
-		if builder.MaxRows > 0 {
-			if index >= builder.MaxRows {
-				break
-			}
-		}
-
-		// Make a new object for the next renderer
-		object = builder.service.ObjectNew()
-	}
-
-	if err := iterator.Error(); err != nil {
-		return result, derp.Report(derp.Wrap(err, "renderer.RenderBuilder.iteratorToSlice", "Error iterating through database results"))
-	}
-
-	return result, nil
-}
-*/
-
 /********************************
  * MISC HELPERS
  ********************************/

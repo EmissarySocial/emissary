@@ -7,9 +7,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/EmissarySocial/emissary/tools/iterators"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/slice"
 	"github.com/gorilla/feeds"
 	"github.com/kr/jsonfeed"
 	accept "github.com/timewasted/go-accept-headers"
@@ -48,7 +48,7 @@ func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) error {
 		Created:     time.Now(),
 	}
 
-	result.Items = iterators.Map(children, model.NewStream, convert.StreamToGorillaFeed)
+	result.Items = slice.Map(data.Slice(children, model.NewStream), convert.StreamToGorillaFeed)
 
 	// Now write the feed into the requested format
 	{
@@ -130,7 +130,7 @@ func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, childre
 		},
 	}
 
-	feed.Items = iterators.Map(children, model.NewStream, convert.StreamToJsonFeed)
+	feed.Items = slice.Map(data.Slice(children, model.NewStream), convert.StreamToJsonFeed)
 
 	context.Response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
 

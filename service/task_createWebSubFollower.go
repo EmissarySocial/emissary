@@ -1,11 +1,10 @@
-package tasks
+package service
 
 import (
 	"strconv"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
@@ -13,9 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type CreateWebSubFollower struct {
-	followerService *service.Follower
-	locatorService  service.Locator
+type TaskCreateWebSubFollower struct {
+	followerService *Follower
+	locatorService  Locator
 	objectType      string
 	objectID        primitive.ObjectID
 	format          string // JSONFeed, RSS, Atom
@@ -26,8 +25,8 @@ type CreateWebSubFollower struct {
 	leaseSeconds    int
 }
 
-func NewCreateWebSubFollower(followerService *service.Follower, locatorService service.Locator, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) CreateWebSubFollower {
-	return CreateWebSubFollower{
+func NewTaskCreateWebSubFollower(followerService *Follower, locatorService Locator, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) TaskCreateWebSubFollower {
+	return TaskCreateWebSubFollower{
 		followerService: followerService,
 		locatorService:  locatorService,
 		objectType:      objectType,
@@ -41,7 +40,7 @@ func NewCreateWebSubFollower(followerService *service.Follower, locatorService s
 	}
 }
 
-func (task CreateWebSubFollower) Run() error {
+func (task TaskCreateWebSubFollower) Run() error {
 
 	switch task.mode {
 	case "subscribe":
@@ -50,13 +49,13 @@ func (task CreateWebSubFollower) Run() error {
 		return task.unsubscribe()
 	}
 
-	return derp.NewInternalError("tasks.CreateWebSubFollower.Run", "Invalid mode", task.mode)
+	return derp.NewInternalError("service.TaskCreateWebSubFollower.Run", "Invalid mode", task.mode)
 }
 
 // subscribe creates/updates a follower record
-func (task CreateWebSubFollower) subscribe() error {
+func (task TaskCreateWebSubFollower) subscribe() error {
 
-	const location = "tasks.CreateWebSubFollower.subscribe"
+	const location = "service.TaskCreateWebSubFollower.subscribe"
 
 	// Calculate lease time (within bounds)
 	minLeaseSeconds := 60 * 60 * 24 * 1  // Minimum lease is 1 day
@@ -99,9 +98,9 @@ func (task CreateWebSubFollower) subscribe() error {
 }
 
 // unsubscribe removes a follower record
-func (task CreateWebSubFollower) unsubscribe() error {
+func (task TaskCreateWebSubFollower) unsubscribe() error {
 
-	const location = "tasks.CreateWebSubFollower.unsubscribe"
+	const location = "service.TaskCreateWebSubFollower.unsubscribe"
 
 	// Load the existing follower record
 	follower := model.NewFollower()
@@ -123,9 +122,9 @@ func (task CreateWebSubFollower) unsubscribe() error {
 }
 
 // validate verifies that the request is valid, for an object that we own, and that the callback server approves of the request.
-func (task CreateWebSubFollower) validate(follower *model.Follower) error {
+func (task TaskCreateWebSubFollower) validate(follower *model.Follower) error {
 
-	const location = "tasks.CreateWebSubFollower.validate"
+	const location = "service.TaskCreateWebSubFollower.validate"
 
 	var body string
 
