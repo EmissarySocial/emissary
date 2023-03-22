@@ -59,6 +59,7 @@ type Factory struct {
 	followingService      service.Following
 	inboxService          service.Inbox
 	mentionService        service.Mention
+	outboxService         service.Outbox
 	streamService         service.Stream
 	streamDraftService    service.StreamDraft
 	realtimeBroker        RealtimeBroker
@@ -155,6 +156,11 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Activity Service
 	factory.inboxService = service.NewInbox(
 		factory.collection(CollectionInbox),
+	)
+
+	// Start the Activity Service
+	factory.outboxService = service.NewOutbox(
+		factory.collection(CollectionOutbox),
 	)
 
 	// Start the Following Service
@@ -390,6 +396,11 @@ func (factory *Factory) Inbox() *service.Inbox {
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	return &factory.mentionService
+}
+
+// Outbox returns a fully populated Outbox service
+func (factory *Factory) Outbox() *service.Outbox {
+	return &factory.outboxService
 }
 
 // Stream returns a fully populated Stream service
