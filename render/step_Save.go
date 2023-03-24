@@ -4,6 +4,7 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 )
 
@@ -23,12 +24,18 @@ func (step StepSave) UseGlobalWrapper() bool {
 // Post saves the object to the database
 func (step StepSave) Post(renderer Renderer) error {
 
+	modelService := renderer.service()
 	object := renderer.object()
-
 	comment := executeTemplate(step.Comment, renderer)
 
+	if setter, ok := modelService.(service.AuthorSetter); ok {
+		if err := setter.SetAuthor(object, renderer.AuthenticatedID()); err != nil {
+			return derp.Wrap(err, "render.StepSave.Post", "Error setting author")
+		}
+	}
+
 	// Try to update the stream
-	if err := renderer.service().ObjectSave(object, comment); err != nil {
+	if err := modelService.ObjectSave(object, comment); err != nil {
 		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object")
 	}
 

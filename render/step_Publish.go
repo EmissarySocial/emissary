@@ -57,15 +57,15 @@ func (step StepPublish) publish(renderer *Stream) error {
 	stream := renderer.stream
 	stream.Document.Type = step.Role
 
-	publisherService := renderer.factory().Publisher()
-	publisherService.Publish(stream, renderer.AuthenticatedID(), step.Role)
+	outobxService := renderer.factory().Outbox()
+	outobxService.Publish(renderer.AuthenticatedID(), stream, step.Role)
 
 	return nil
 }
 
 // sendWebMentionds sends WebMention updates to external websites that are
-// mentioned in this stream.
-// TODO: LOW: Should this be moved to the Publisher service?
+// mentioned in this stream.  This is here (and not in the outbox service)
+// because we need to render the content in order to discover outbound links.
 func (step StepPublish) sendWebMentions(renderer *Stream) error {
 
 	var bodyReader bytes.Buffer

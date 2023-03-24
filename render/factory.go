@@ -25,6 +25,7 @@ type Factory interface {
 	Group() *service.Group
 	Inbox() *service.Inbox
 	Mention() *service.Mention
+	Outbox() *service.Outbox
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
@@ -44,7 +45,6 @@ type Factory interface {
 	Locator() service.Locator
 	LookupProvider(primitive.ObjectID) form.LookupProvider
 	Providers() set.Slice[config.Provider]
-	Publisher() service.Publisher
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream
 	StripeClient() (client.API, error)

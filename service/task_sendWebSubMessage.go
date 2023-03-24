@@ -12,13 +12,13 @@ import (
 
 // TaskSendWebSubMessage sends a WebSub notification to a single WebSub follower.
 type TaskSendWebSubMessage struct {
-	stream   model.Stream
+	message  model.OutboxMessage
 	follower model.Follower
 }
 
-func NewTaskSendWebSubMessage(stream model.Stream, follower model.Follower) TaskSendWebSubMessage {
+func NewTaskSendWebSubMessage(message model.OutboxMessage, follower model.Follower) TaskSendWebSubMessage {
 	return TaskSendWebSubMessage{
-		stream:   stream,
+		message:  message,
 		follower: follower,
 	}
 }
@@ -27,6 +27,8 @@ func (task TaskSendWebSubMessage) Run() error {
 
 	var body []byte
 
+	// TODO: LOW: SendWebSubMessage will require a refactor if we want to send "fat pings":
+	// https://indieweb.org/How_to_publish_and_consume_WebSub
 	switch task.follower.Format {
 
 	case model.MimeTypeJSONFeed:

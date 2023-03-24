@@ -250,8 +250,8 @@ func (service *Follower) ChannelActivityPub(parentID primitive.ObjectID) (<-chan
 	return service.Channel(criteria)
 }
 
-func (service *Follower) ChannelWebSub(parentID primitive.ObjectID) (<-chan model.Follower, error) {
-	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodWebSub)
+func (service *Follower) ChannelWebSub(objectIDs ...primitive.ObjectID) (<-chan model.Follower, error) {
+	criteria := exp.Equal("method", model.FollowMethodWebSub).AndIn("parentId", objectIDs)
 	return service.Channel(criteria)
 }
 

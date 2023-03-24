@@ -2,20 +2,18 @@ package service
 
 import (
 	"context"
-	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,21 +23,21 @@ type Stream struct {
 	templateService     *Template
 	draftService        *StreamDraft
 	attachmentService   *Attachment
-	hostName            string
+	host                string
 	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, hostName string, streamUpdateChannel chan model.Stream) Stream {
+func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) Stream {
 
 	service := Stream{
 		templateService:     templateService,
 		attachmentService:   attachmentService,
-		hostName:            hostName,
+		host:                host,
 		streamUpdateChannel: streamUpdateChannel,
 	}
 
-	service.Refresh(hostName, collection, nil)
+	service.Refresh(host, collection, nil)
 
 	return service
 }
@@ -49,8 +47,10 @@ func NewStream(collection data.Collection, templateService *Template, attachment
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(hostName string, collection data.Collection, draftService *StreamDraft) {
-	service.hostName = hostName
+func (service *Stream) Refresh(host string, collection data.Collection, draftService *StreamDraft) {
+
+	spew.Dump("Stream.Refresh", host)
+	service.host = host
 	service.collection = collection
 	service.draftService = draftService
 }
@@ -146,7 +146,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	}
 
 	// RULE: Calculate the Permalink URL for this stream
-	stream.Document.URL = domain.Protocol(service.hostName) + service.hostName + "/" + stream.StreamID.Hex()
+	stream.Document.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// Clean the value (using the global stream schema) before saving
 	if err := service.Schema().Clean(stream); err != nil {
@@ -350,30 +350,6 @@ func (service *Stream) LoadByOriginID(originID primitive.ObjectID, result *model
 // LoadByProductID returns a single `Stream` with custom data matching the provided `Data.productId`
 func (service *Stream) LoadByProductID(productID string, result *model.Stream) error {
 	return service.Load(exp.Equal("data.productId", productID), result)
-}
-
-// LoadByURL returns a single stream that matches the domain and path of the provided URL
-func (service *Stream) LoadByURL(targetURL string, result *model.Stream) error {
-
-	const location = "service.Stream.LoadByURL"
-
-	// Try to parse the URL into its components
-	parsedURL, err := url.Parse(targetURL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid URL", targetURL)
-	}
-
-	// RULE: Validate that the hostname matches
-	if parsedURL.Host != service.hostName {
-		return derp.NewBadRequestError(location, "Invalid hostname", targetURL)
-	}
-
-	// RULE: Discard leading slash, then only use the first path segment (no actions)
-	token := list.Slash(parsedURL.Path).At(1)
-
-	// Return the stream that matches the token
-	return service.LoadByToken(token, result)
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream
@@ -592,4 +568,12 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 
 func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")
+}
+
+/******************************************
+ * ActivityPub Methods
+ ******************************************/
+
+func (service *Stream) ActivityPubID(stream *model.Stream) string {
+	return service.host + "/" + stream.StreamID.Hex()
 }

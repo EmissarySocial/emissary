@@ -120,7 +120,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.collection(CollectionStream),
 		factory.Template(),
 		factory.Attachment(),
-		domain.Hostname,
+		factory.Host(),
 		factory.StreamUpdateChannel(),
 	)
 
@@ -161,6 +161,10 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Activity Service
 	factory.outboxService = service.NewOutbox(
 		factory.collection(CollectionOutbox),
+		factory.Stream(),
+		factory.Follower(),
+		factory.User(),
+		factory.Queue(),
 	)
 
 	// Start the Following Service
@@ -248,7 +252,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.inboxService.Refresh(factory.collection(CollectionInbox))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.streamService.Refresh(domain.Hostname, factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
+		factory.streamService.Refresh(factory.Host(), factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
 		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
 		factory.followerService.Refresh(factory.collection(CollectionFollower))
 		factory.followingService.Refresh(factory.collection(CollectionFollowing))
@@ -517,12 +521,6 @@ func (factory *Factory) Locator() service.Locator {
 		factory.Stream(),
 		factory.Hostname(),
 	)
-}
-
-// Publisher returns the Publisher service, which contains
-// all of the business rules for publishing a stream to the federated Interwebs.
-func (factory *Factory) Publisher() service.Publisher {
-	return service.NewPublisher(factory.Stream(), factory.Follower(), factory.User(), factory.Queue())
 }
 
 // Queue returns the Queue service, which manages background jobs

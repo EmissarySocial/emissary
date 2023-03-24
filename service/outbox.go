@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -13,13 +14,21 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	collection data.Collection
+	collection      data.Collection
+	streamService   *Stream
+	followerService *Follower
+	userService     *User
+	queue           *queue.Queue
 }
 
 // NewOutbox returns a fully populated Outbox service
-func NewOutbox(collection data.Collection) Outbox {
+func NewOutbox(collection data.Collection, streamService *Stream, followerService *Follower, userService *User, queue *queue.Queue) Outbox {
 	service := Outbox{
-		collection: collection,
+		collection:      collection,
+		streamService:   streamService,
+		followerService: followerService,
+		userService:     userService,
+		queue:           queue,
 	}
 
 	service.Refresh(collection)
@@ -192,6 +201,11 @@ func (service *Outbox) Schema() schema.Schema {
 func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
 	criteria = exp.Equal("userId", userID).And(criteria)
 	return service.Query(criteria, options...)
+}
+
+func (service *Outbox) QueryByObject(objectType string, objectID primitive.ObjectID) ([]model.OutboxMessage, error) {
+	criteria := exp.Equal("objectType", objectType).AndEqual("objectId", objectID)
+	return service.Query(criteria)
 }
 
 func (service *Outbox) LoadByID(userID primitive.ObjectID, outboxOutboxMessageID primitive.ObjectID, result *model.OutboxMessage) error {

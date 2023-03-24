@@ -11,6 +11,9 @@ func OutboxMessageSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"outboxMessageId": schema.String{Format: "objectId"},
 			"userId":          schema.String{Format: "objectId"},
+			"objectType":      schema.String{},
+			"objectId":        schema.String{Format: "objectId"},
+			"parentId":        schema.String{Format: "objectId"},
 			"document":        schema.Any{},
 			"rank":            schema.Integer{BitSize: 64},
 		},
@@ -40,6 +43,15 @@ func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
 
 	case "userId":
 		return message.UserID.Hex(), true
+
+	case "objectType":
+		return message.ObjectType, true
+
+	case "objectId":
+		return message.ObjectID.Hex(), true
+
+	case "parentId":
+		return message.ParentID.Hex(), true
 
 	default:
 		return "", false
@@ -78,6 +90,23 @@ func (message *OutboxMessage) SetString(name string, value string) bool {
 			return true
 		}
 
+	case "objectType":
+		message.ObjectType = value
+		return true
+
+	case "objectId":
+
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			message.ObjectID = objectID
+			return true
+		}
+
+	case "parentId":
+
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			message.ParentID = objectID
+			return true
+		}
 	}
 
 	return false
@@ -90,8 +119,8 @@ func (message *OutboxMessage) SetString(name string, value string) bool {
 func (message *OutboxMessage) GetObject(name string) (any, bool) {
 	switch name {
 
-	case "document":
-		return &message.Document, true
+	case "activity":
+		return &message.Activity, true
 
 	default:
 		return nil, false

@@ -33,8 +33,8 @@ func (step StepUnPublish) Post(renderer Renderer) error {
 	streamRenderer := renderer.(*Stream)
 	stream := streamRenderer.stream
 
-	publisherService := renderer.factory().Publisher()
-	publisherService.Unpublish(stream, renderer.AuthenticatedID(), step.Role)
+	outboxService := renderer.factory().Outbox()
+	outboxService.Unpublish(renderer.AuthenticatedID(), stream)
 
 	// TODO: MEDIUM: Do we NEED to 'Tombstone' records when the stream has been deleted?
 

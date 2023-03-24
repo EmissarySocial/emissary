@@ -9,10 +9,13 @@ import (
 // OutboxMessage represents a single item in a User's inbox or outbox.  It is loosely modelled on the OutboxMessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type OutboxMessage struct {
-	OutboxMessageID primitive.ObjectID `json:"messageId"   bson:"_id"`      // Unique ID of the OutboxMessage
-	UserID          primitive.ObjectID `json:"userId"      bson:"userId"`   // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
-	Document        mapof.Any          `json:"document"    bson:"document"` // ActivityPub Document that is the subject of this OutboxMessage
-	Rank            int64              `json:"rank"        bson:"rank"`     // Sort rank for this message (publishDate * 1000 + sequence number)
+	OutboxMessageID primitive.ObjectID `json:"messageId"   bson:"_id"`        // Unique ID of the OutboxMessage
+	UserID          primitive.ObjectID `json:"userId"      bson:"userId"`     // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
+	ObjectType      string             `json:"objectType"  bson:"objectType"` // Type internal record that generated this OutboxMessage (Stream, Block, Follow, Reaction, etc)
+	ObjectID        primitive.ObjectID `json:"objectId"    bson:"objectId"`   // Unique ID of the internal record that generated this OutboxMessage
+	ParentID        primitive.ObjectID `json:"parentId"    bson:"parentId"`   // Unique ID of the parent object (if applicable)
+	Activity        mapof.Any          `json:"activity"    bson:"activity"`   // ActivityPub Document that is the subject of this OutboxMessage
+	Rank            int64              `json:"rank"        bson:"rank"`       // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -21,13 +24,12 @@ type OutboxMessage struct {
 func NewOutboxMessage() OutboxMessage {
 	return OutboxMessage{
 		OutboxMessageID: primitive.NewObjectID(),
-		UserID:          primitive.NilObjectID,
-		Document:        mapof.NewAny(),
+		Activity:        mapof.NewAny(),
 	}
 }
 
 func OutboxMessageFields() []string {
-	return []string{"document", "rank"}
+	return []string{"activity", "rank"}
 }
 
 func (summary OutboxMessage) Fields() []string {
@@ -63,4 +65,8 @@ func (message OutboxMessage) Roles(authorization *Authorization) []string {
 
 func (message OutboxMessage) RankSeconds() int64 {
 	return message.Rank / 1000
+}
+
+func (message OutboxMessage) GetJSONLD() mapof.Any {
+	return message.Activity
 }
