@@ -68,11 +68,7 @@ github.com/aws/aws-sdk-go v1.44.216 h1:nDL5hEGBlUNHXMWbpP4dIyP8IB5tvRgksWE7biVu8
 github.com/aws/aws-sdk-go v1.44.216/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
-github.com/benpate/data v0.23.1 h1:LtkYV76DTNMrimcSDqL/SfBBum0dViqqL7AEDyBY8TU=
-github.com/benpate/data v0.23.1/go.mod h1:L9XrSbxB5X9p6JALYGNyvbamU+olbCnvGNJtd8twU4E=
 github.com/benpate/data-mock v0.23.2 h1:zl8dtXDWTDr/RsIW+bv4E9TqHeWWRHkmXeQqWzOssLg=
-github.com/benpate/data-mongo v0.23.1 h1:O1jvk5K7OHUpUVP9SrZGMaslLvFqFHrVX8NqIfQg2tA=
-github.com/benpate/data-mongo v0.23.1/go.mod h1:2q9r3skyjJHNDtx9BEOSyVD6bJnL22dCgoGk5vfphyE=
 github.com/benpate/derp v0.27.0 h1:qjKlTC2gv5MtqFgz2vSGWoz2WyMNT6i2ALyIyBJ7s6Q=
 github.com/benpate/derp v0.27.0/go.mod h1:Qrtco2SAercNzKqb6WsaXvxn1E+/4DHBaWB+BwehJAo=
 github.com/benpate/digit v0.9.1 h1:TCnbSAccOOU7Oou376U8gBqN8IFo+zLdIu2LRUWs5JY=
@@ -81,12 +77,8 @@ github.com/benpate/exiffix v0.1.0 h1:FuOHckriacy6vv8yhay8S/2lEJ0D9o2N48Bn5MrI9Yk
 github.com/benpate/exiffix v0.1.0/go.mod h1:fVnmOVstYND82C0v7Ullz884kxmU1/BenB7l+zzQuZA=
 github.com/benpate/exp v0.6.1 h1:7mmgbB3TRVeVp/ZBToYVuxdVcDR/3lexV3JHbD9dLgs=
 github.com/benpate/exp v0.6.1/go.mod h1:+eTsvQVuAobL6efQ1KMwzQLK5Trm679Oiq+n8IflrFU=
-github.com/benpate/exp-builder v0.6.0 h1:SzPqSfBjPieR0eyz/SxZsdm5gOThHr1wuNs+bg5jX9A=
-github.com/benpate/exp-builder v0.6.0/go.mod h1:Z5F0Pf++Zb91+Gx50QU/2723lIBncKecXiEuCJYBg20=
 github.com/benpate/form v0.15.3 h1:cDel1aE8FmsvqBHT8/haY1+evViyzb7IEh6RGv4KBEI=
 github.com/benpate/form v0.15.3/go.mod h1:n2GNV9p04bBcnZOKbVZM4KnNo7l0FfTJeWxhfg5AtpY=
-github.com/benpate/hannibal v0.2.3 h1:jEoyHCqfO1jfjy4/OFZZmYSc2ne2GsFk5uC1igXwKnk=
-github.com/benpate/hannibal v0.2.3/go.mod h1:PVzoIRePcxouf95x41BOFqqhikQxe21E7DnbuMd226k=
 github.com/benpate/html v0.16.0 h1:n+O0JbnlG/aM6iW889soFS8a3F9EPZqWaEN2chG4+TM=
 github.com/benpate/html v0.16.0/go.mod h1:ud21gMylifTKhQI443PtHO9D66HUrnShOhQpcV4Bu5I=
 github.com/benpate/icon v0.4.0 h1:HWOMaYwxPsLb3OPX02+j05FwCq376rcAfeGG1kfDXyc=

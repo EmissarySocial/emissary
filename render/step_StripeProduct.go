@@ -124,7 +124,7 @@ func (step StepStripeProduct) Post(renderer Renderer) error {
 	images := []string{}
 
 	if attachment, err := streamService.LoadFirstAttachment(stream.StreamID); err == nil {
-		images = []string{factory.Host() + "/" + stream.StreamID.Hex() + "/attachments/" + attachment.AttachmentID.Hex() + ".jpg?width=600"}
+		images = []string{stream.Permalink() + "/attachments/" + attachment.AttachmentID.Hex() + ".jpg?width=600"}
 	}
 
 	// Connect to the stripe API

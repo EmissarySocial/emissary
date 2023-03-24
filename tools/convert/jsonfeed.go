@@ -29,7 +29,7 @@ func IteratorToJSonFeed(url string, title string, description string, iterator d
 
 func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 
-	return jsonfeed.Item{
+	result := jsonfeed.Item{
 		ID:            stream.Token,
 		URL:           stream.Document.URL,
 		Title:         stream.Document.Label,
@@ -38,13 +38,21 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		Image:         stream.Document.ImageURL,
 		DatePublished: time.UnixMilli(stream.PublishDate),
 		DateModified:  time.UnixMilli(stream.UpdateDate),
-		Author: &jsonfeed.Author{
-			Name:   stream.Document.Author.Name,
-			URL:    stream.Document.Author.ProfileURL,
-			Avatar: stream.Document.Author.ImageURL,
-		},
-		// TODO: Attachments for podcasts, etc.
 	}
+
+	// Attach author if available
+	if !stream.Document.AttributedTo.IsEmpty() {
+		author := stream.Document.AttributedTo.First()
+		result.Author = &jsonfeed.Author{
+			Name:   author.Name,
+			URL:    author.ProfileURL,
+			Avatar: author.ImageURL,
+		}
+	}
+
+	// TODO: LOW: Attachments for podcasts, etc.
+
+	return result
 }
 
 func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
@@ -62,9 +70,9 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 		Label:    item.Title,
 		Summary:  item.Summary,
 		ImageURL: item.Image,
-		Author:   JsonFeedToAuthor(feed, item),
 	}
 
+	message.SetAttributedTo(JsonFeedToAuthor(feed, item))
 	message.PublishDate = item.DatePublished.UnixMilli()
 	message.ContentHTML = JsonFeedToContentHTML(item)
 

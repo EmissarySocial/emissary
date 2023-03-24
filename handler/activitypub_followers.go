@@ -10,8 +10,6 @@ import (
 
 func ActivityPub_GetFollowers(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetFollowers"
-
 	return func(ctx echo.Context) error {
 		result := streams.NewOrderedCollection()
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")

@@ -25,9 +25,9 @@ func MicroformatToMessage(feed *microformats.Microformat, entry *microformats.Mi
 
 	// Get author from entry, then feed
 	if author := AnyToMicroformat(entry.Properties["author"]); author != nil {
-		message.Document.Author = MicroformatToAuthor(author)
+		message.SetAttributedTo(MicroformatToAuthor(author))
 	} else if author := AnyToMicroformat(feed.Properties["author"]); author != nil {
-		message.Document.Author = MicroformatToAuthor(author)
+		message.SetAttributedTo(MicroformatToAuthor(author))
 	}
 
 	// Get the publish date from the entry

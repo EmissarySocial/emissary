@@ -1,6 +1,7 @@
 {
 	"templateId":"outbox-message",
-	"role":"outbox-item",
+	"templateRole":"outbox-item",
+	"socialRole":"Note",
 	"model":"stream",
 	"icon":"message",
 	"label":"Post",
@@ -42,7 +43,7 @@
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"document.imageUrl"},
-				{"step":"publish", "role":"Note", "mentions":["document.summary"]},
+				{"step":"publish", "mentions":["document.summary"]},
 				{"step":"refresh-page"}
 			]
 		},
@@ -54,7 +55,7 @@
 					{"step":"view-html", "file":"edit"},
 					{"step":"set-data", "from-form":["document.summary"]},
 					{"step":"save"},
-					{"step":"publish", "role":"Note", "mentions":["document.summary"]},
+					{"step":"publish", "mentions":["document.summary"]},
 					{"step":"refresh-page"}
 				]}
 			]
@@ -63,7 +64,7 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
-				{"step":"unpublish", "role":"Note"},
+				{"step":"unpublish"},
 				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]
 		}

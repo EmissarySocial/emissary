@@ -1,21 +1,21 @@
-{{$message := .Message}}
+{{- $author := .Message.Author -}}
 
-<div script="install message(folderId:'{{$message.FolderID.Hex}}', readDate:'{{$message.Rank}}')">
+<div script="install message(folderId:'{{.Message.FolderID.Hex}}', readDate:'{{.Message.Rank}}')">
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
 
 	<div class="ellipsis text-lg">
-		<a href="{{$message.Document.Author.ProfileURL}}" class="flex-row">
-			{{- if ne "" $message.Document.Author.ImageURL -}}
-				<img src="{{$message.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+		<a href="{{$author.ProfileURL}}" class="flex-row">
+			{{- if ne "" $author.ImageURL -}}
+				<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em;">
 			{{- end -}}
 
-			<span class="bold black">{{$message.Document.Author.Name}}</span>
+			<span class="bold black">{{$author.Name}}</span>
 			<span class="text-gray">
 				&nbsp;
-				{{ icon $message.Origin.Icon }}
-				{{ $message.PublishDate | tinyDate }}
+				{{ icon .Message.Origin.Icon }}
+				{{ .Message.PublishDate | tinyDate }}
 			</span>
 		</a>
 	</div>
@@ -23,14 +23,14 @@
 	<div class="text-sm">
 
 		<span class="button-group">
-			<button id="previous" hx-get="/@me/message-social?rank=LT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
-			<button id="next" hx-get="/@me/message-social?rank=GT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
+			<button id="previous" hx-get="/@me/message-social?rank=LT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
+			<button id="next" hx-get="/@me/message-social?rank=GT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
 		</span>
 
 		<span class="button-group">
-			<button hx-get="/@me/following-edit?followingId={{$message.Origin.InternalID.Hex}}">Edit Source</button>
-			<button hx-get="/@me/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
-			<button hx-get="/@me/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
+			<button hx-get="/@me/following-edit?followingId={{.Message.Origin.InternalID.Hex}}">Edit Source</button>
+			<button hx-get="/@me/message-delete?messageId={{.Message.MessageID.Hex}}">Delete</button>
+			<button hx-get="/@me/block-new?messageId={{.Message.MessageID.Hex}}">Block</button>
 		</span>
 
 	</div>
@@ -39,18 +39,18 @@
 
 	<div class="content">
 
-		{{- if ne "" $message.Document.Label -}}
-			<h3>{{$message.Document.Label}}</h3>
+		{{- if ne "" .Message.Document.Label -}}
+			<h3>{{.Message.Document.Label}}</h3>
 		{{- end -}}
 
-		{{- if ne "" $message.Document.ImageURL -}}
+		{{- if ne "" .Message.Document.ImageURL -}}
 			<div class="space-below">
-				<img src="{{$message.Document.ImageURL}}" style="max-width:100%">
+				<img src="{{.Message.Document.ImageURL}}" style="max-width:100%">
 			</div>
 		{{- end -}}
 
-		<div>{{$message.Document.Summary}}</div>
-		<div>{{$message.ContentHTML | html}}</div>
+		<div>{{.Message.Document.Summary}}</div>
+		<div>{{.Message.ContentHTML | html}}</div>
 	</div>
 	<hr>
 	-- REPLIES HERE --

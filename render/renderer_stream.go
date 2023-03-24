@@ -16,6 +16,7 @@ import (
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -121,7 +122,7 @@ func (w Stream) service() service.ModelService {
 // templateRole returns the role that this Stream's Template plays in the system.
 // This is used to determine what kinds of Streams can be added underneath this one as children.
 func (w Stream) templateRole() string {
-	return w.template().Role
+	return w.template().TemplateRole
 }
 
 /******************************************
@@ -218,31 +219,21 @@ func (w Stream) ImageURL() string {
 
 // Permalink returns a complete URL for this stream
 func (w Stream) Permalink() string {
-	return w.Host() + "/" + w.stream.StreamID.Hex()
+	return w.stream.Permalink()
 }
 
-// Author returns the Author record for this stream
+// AttributedTo returns ALL AttributedTo records for this stream
+func (w Stream) AttributedTo() sliceof.Object[model.PersonLink] {
+	return w.stream.Document.AttributedTo
+}
+
+// Author returns the "first" AttributedTo record for this stream
 func (w Stream) Author() model.PersonLink {
-	return w.stream.Document.Author
+	return w.stream.Document.AttributedTo.First()
 }
 
-// AuthorURL returns the public URL of the person who created this Stream
-func (w Stream) AuthorURL() string {
-	return w.stream.Document.Author.ProfileURL
-}
-
-// Name of the person who created this Stream
-func (w Stream) AuthorName() string {
-	return w.stream.Document.Author.Name
-}
-
-// PhotoURL of the person who created this Stream
-func (w Stream) AuthorImage() string {
-	return w.stream.Document.Author.ImageURL
-}
-
-func (w Stream) AuthorEmail() string {
-	return w.stream.Document.Author.EmailAddress
+func (w Stream) InReplyTo() sliceof.Object[model.DocumentLink] {
+	return w.stream.InReplyTo
 }
 
 // Returns the body content as an HTML template
@@ -300,10 +291,6 @@ func (w Stream) Data(value string) any {
 // HasParent returns TRUE if the stream being rendered has a parend objec
 func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
-}
-
-func (w Stream) InReplyTo() model.DocumentLink {
-	return w.stream.InReplyTo
 }
 
 // IsReply returns TRUE if this stream is marked as a reply to another stream or resource
@@ -516,6 +503,7 @@ func (w Stream) Children() QueryBuilder[model.StreamSummary] {
 
 // Replies returns all Streams that are "in reply to" the current Stream
 func (w Stream) Replies() QueryBuilder[model.StreamSummary] {
+	// TODO: HIGH: Replies to be merged into Mentions...
 	return w.makeStreamQueryBuilder(exp.Equal("inReplyTo", w.stream.StreamID.Hex()))
 }
 

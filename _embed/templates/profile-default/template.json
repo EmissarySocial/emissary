@@ -1,6 +1,6 @@
 {
 	"templateId":"user-profile",
-	"role":"user-profile",
+	"templateRole":"user-profile",
 	"model":"profile",
 	"label":"User Profile",
 	"description":"Profile displays everything about a user, including their inbox and outbox information",

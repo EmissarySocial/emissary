@@ -12,8 +12,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -48,8 +48,6 @@ func NewStream(collection data.Collection, templateService *Template, attachment
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Stream) Refresh(host string, collection data.Collection, draftService *StreamDraft) {
-
-	spew.Dump("Stream.Refresh", host)
 	service.host = host
 	service.collection = collection
 	service.draftService = draftService
@@ -125,6 +123,10 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
 	}
 
+	// Copy default values from the Template
+	stream.SocialRole = template.SocialRole
+	stream.Document.URL = service.host + "/" + stream.StreamID.Hex()
+
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	defaultTemplate := template.Default()
 	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
@@ -144,9 +146,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	if stream.Token == "" {
 		stream.Token = stream.StreamID.Hex()
 	}
-
-	// RULE: Calculate the Permalink URL for this stream
-	stream.Document.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// Clean the value (using the global stream schema) before saving
 	if err := service.Schema().Clean(stream); err != nil {
@@ -376,11 +375,11 @@ func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *m
 	return service.Load(criteria, result)
 }
 
-func (service *Stream) LoadWithOptions(criteria exp.Expression, options option.Option, result *model.Stream) error {
+func (service *Stream) LoadWithOptions(criteria exp.Expression, result *model.Stream, options ...option.Option) error {
 
 	const location = "service.stream.LoadWithOptions"
 
-	it, err := service.List(notDeleted(criteria), options)
+	it, err := service.List(notDeleted(criteria), options...)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting iterator")
@@ -394,7 +393,7 @@ func (service *Stream) LoadWithOptions(criteria exp.Expression, options option.O
 }
 
 func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortAsc("rank"), result)
+	return service.LoadWithOptions(exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
 }
 
 func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
@@ -404,9 +403,8 @@ func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, re
 	}
 
 	criteria := exp.Equal("parentId", parentID).AndLessThan("rank", rank)
-	options := option.SortDesc("rank")
 
-	err := service.LoadWithOptions(criteria, options, result)
+	err := service.LoadWithOptions(criteria, result, option.SortDesc("rank"))
 
 	if err == nil {
 		return nil
@@ -422,9 +420,8 @@ func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, re
 func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	criteria := exp.Equal("parentId", parentID).AndGreaterThan("rank", rank)
-	options := option.SortAsc("rank")
 
-	err := service.LoadWithOptions(criteria, options, result)
+	err := service.LoadWithOptions(criteria, result, option.SortAsc("rank"))
 
 	if err == nil {
 		return nil
@@ -434,11 +431,11 @@ func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, re
 		return service.LoadFirstSibling(parentID, result)
 	}
 
-	return derp.Wrap(err, "service.stream.LoadPreviousSibling", "Error loading Previous Sibling")
+	return derp.Wrap(err, "service.stream.LoadNextSibling", "Error loading Next Sibling")
 }
 
 func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(exp.Equal("parentId", parentID), option.SortDesc("rank"), result)
+	return service.LoadWithOptions(exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
 }
 
 func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.Attachment, error) {
@@ -531,6 +528,12 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 // of all of this Stream's parents
 func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 
+	// Rule: Notes are always stored under a user's profile, so they have no parents
+	if stream.SocialRole == vocab.ObjectTypeNote {
+		stream.ParentIDs = id.NewSlice()
+		return nil
+	}
+
 	// If this stream has no parent, then it has no parent IDs
 	if stream.ParentID == primitive.NilObjectID {
 		stream.ParentIDs = id.NewSlice()
@@ -568,12 +571,4 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 
 func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")
-}
-
-/******************************************
- * ActivityPub Methods
- ******************************************/
-
-func (service *Stream) ActivityPubID(stream *model.Stream) string {
-	return service.host + "/" + stream.StreamID.Hex()
 }

@@ -1,6 +1,6 @@
 {
 	"templateId":"admin-users",
-	"role":"admin",
+	"templateRole":"admin",
 	"model":"user",
 	"containedBy":["admin"],
 	"label": "User",

@@ -13,15 +13,13 @@ func TestDocumentLink(t *testing.T) {
 	s := schema.New(DocumentLinkSchema())
 
 	table := []tableTestItem{
-		{"internalId", "123412341234123412341234", nil},
-		{"author.name", "TEST-AUTHOR", nil},
-		{"author.profileUrl", "https://test.author.url", nil},
-		{"author.imageUrl", "https://test.author.image.url", nil},
 		{"url", "https://test.url", nil},
-		{"type", "TEST-TYPE", nil},
 		{"label", "TEST-LABEL", nil},
 		{"summary", "TEST-SUMMARY", nil},
 		{"imageUrl", "https://test.image.url", nil},
+		{"attributedTo.0.name", "TEST-AUTHOR-NAME", nil},
+		{"attributedTo.0.profileUrl", "https://test.author.url", nil},
+		{"attributedTo.1.name", "TEST-AUTHOR-NAME-2", nil},
 	}
 
 	tableTest_Schema(t, &s, &origin, table)

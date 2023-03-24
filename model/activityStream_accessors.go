@@ -22,6 +22,7 @@ func ActivityStreamSchema() schema.Element {
 
 func (activityStream *ActivityStream) GetInt(name string) (int, bool) {
 	switch name {
+
 	case "container":
 		return int(activityStream.Container), true
 	}
@@ -31,6 +32,7 @@ func (activityStream *ActivityStream) GetInt(name string) (int, bool) {
 
 func (activityStream *ActivityStream) GetInt64(name string) (int64, bool) {
 	switch name {
+
 	case "publishDate":
 		return activityStream.PublishDate, true
 	}
@@ -40,8 +42,10 @@ func (activityStream *ActivityStream) GetInt64(name string) (int64, bool) {
 
 func (activityStream *ActivityStream) GetString(name string) (string, bool) {
 	switch name {
+
 	case "activityStreamId":
 		return activityStream.ActivityStreamID.Hex(), true
+
 	case "userId":
 		return activityStream.UserID.Hex(), true
 	}

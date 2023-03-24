@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/EmissarySocial/emissary/tools/random"
@@ -65,6 +66,11 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 
 	if err := service.LoadOrCreateDomain(); err != nil {
 		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record"))
+		return
+	}
+
+	if err := queries.UpgradeMongoDB(configuration.ConnectString, configuration.DatabaseName, &service.domain); err != nil {
+		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error upgrading domain record"))
 		return
 	}
 

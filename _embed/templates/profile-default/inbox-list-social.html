@@ -1,9 +1,11 @@
+{{- $author := .Author -}}
+
 <div class="ellipsis flex-row">
-	{{- if ne "" .Document.Author.ImageURL -}}
-		<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:1.5em;">
+	{{- if ne "" $author.ImageURL -}}
+		<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em;">
 	{{- end -}}
 
-	<span class="bold black">{{.Document.Author.Name}}</span>
+	<span class="bold black">{{$author.Name}}</span>
 	<span class="text-gray nowrap" style="flex-grow:1">
 		{{ icon .Origin.Icon }}
 		{{ .PublishDate | tinyDate }}

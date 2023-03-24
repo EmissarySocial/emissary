@@ -14,6 +14,7 @@ func TestMessageSchema(t *testing.T) {
 	table := []tableTestItem{
 		{"messageId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
+		{"socialRole", "Article", nil},
 		{"document.label", "DOCUMENT LABEL", nil},
 		{"document.summary", "DOCUMENT SUMMARY", nil},
 		{"origin.url", "https://origin.url", nil},

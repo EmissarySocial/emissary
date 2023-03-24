@@ -12,7 +12,6 @@ import (
 
 // StepPublish represents an action-step that can update a stream's PublishDate with the current time.
 type StepPublish struct {
-	Role     string
 	Mentions []string
 }
 
@@ -55,10 +54,9 @@ func (step StepPublish) publish(renderer *Stream) error {
 
 	// Use the publisher service to execute publishing rules
 	stream := renderer.stream
-	stream.Document.Type = step.Role
 
 	outobxService := renderer.factory().Outbox()
-	outobxService.Publish(renderer.AuthenticatedID(), stream, step.Role)
+	outobxService.Publish(renderer.AuthenticatedID(), stream)
 
 	return nil
 }

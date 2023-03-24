@@ -250,6 +250,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.folderService.Refresh(factory.collection(CollectionFolder))
 		factory.groupService.Refresh(factory.collection(CollectionGroup))
 		factory.inboxService.Refresh(factory.collection(CollectionInbox))
+		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
 		factory.realtimeBroker.Refresh()
 		factory.mentionService.Refresh(factory.collection(CollectionMention))
 		factory.streamService.Refresh(factory.Host(), factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService

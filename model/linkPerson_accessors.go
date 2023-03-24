@@ -11,10 +11,10 @@ func PersonLinkSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"internalId":   schema.String{Format: "objectId"},
 			"name":         schema.String{MaxLength: 128},
-			"profileUrl":   schema.String{Format: "url"},
-			"inboxUrl":     schema.String{Format: "url"},
-			"imageUrl":     schema.String{Format: "url"},
-			"emailAddress": schema.String{Format: "email"},
+			"profileUrl":   schema.String{Format: "url", MaxLength: 1024},
+			"inboxUrl":     schema.String{Format: "url", MaxLength: 1024},
+			"imageUrl":     schema.String{Format: "url", MaxLength: 1024},
+			"emailAddress": schema.String{Format: "email", MaxLength: 128},
 		},
 	}
 }

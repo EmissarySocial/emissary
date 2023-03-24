@@ -1,6 +1,6 @@
 {
 	"templateId":"admin-connections",
-	"role":"admin",
+	"templateRole":"admin",
 	"model":"domain",
 	"containedBy":["admin"],
 	"label": "Connections",

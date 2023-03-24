@@ -349,8 +349,8 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 	}
 
 	// RULE: Validate Template ContainedBy
-	if template.Role != "admin" {
-		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.Role)
+	if template.TemplateRole != "admin" {
+		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {

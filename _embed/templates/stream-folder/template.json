@@ -1,6 +1,6 @@
 {
 	"templateId":"folder",
-	"role":"folder",
+	"templateRole":"folder",
 	"model":"stream",
 	"containedBy": ["top", "folder"],
 	"label":"Folder",

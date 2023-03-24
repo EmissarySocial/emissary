@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -10,20 +11,24 @@ func StreamSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"streamId":      schema.String{Format: "objectId"},
 			"parentId":      schema.String{Format: "objectId"},
-			"token":         schema.String{Format: "token"},
+			"parentIds":     schema.Array{Items: schema.String{Format: "objectId"}},
+			"depth":         schema.Integer{Minimum: null.NewInt64(0)},
+			"rank":          schema.Integer{Minimum: null.NewInt64(0)},
+			"token":         schema.String{Format: "token", MaxLength: 128},
 			"navigationId":  schema.String{Format: "objectId"},
-			"templateId":    schema.String{},
-			"stateId":       schema.String{},
+			"templateId":    schema.String{MaxLength: 128},
+			"socialRole":    schema.String{MaxLength: 128},
+			"stateId":       schema.String{MaxLength: 128},
 			"permissions":   PermissionSchema(),
+			"defaultAllow":  schema.Array{Items: schema.String{Format: "objectId"}},
 			"document":      DocumentLinkSchema(),
-			"author":        PersonLinkSchema(),
-			"replyTo":       DocumentLinkSchema(),
+			"attributedTo":  schema.Array{Items: PersonLinkSchema()},
+			"inReplyTo":     schema.Array{Items: DocumentLinkSchema()},
 			"content":       ContentSchema(),
 			"widgets":       WidgetSchema(),
-			"rank":          schema.Integer{},
+			"data":          schema.Object{Wildcard: schema.Any{}},
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
-			"data":          schema.Object{Wildcard: schema.Any{}},
 		},
 	}
 }
@@ -89,17 +94,20 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	case "parentId":
 		return stream.ParentID.Hex(), true
 
-	case "token":
-		return stream.Token, true
+	case "socialRole":
+		return stream.SocialRole, true
 
 	case "navigationId":
 		return stream.NavigationID, true
 
+	case "stateId":
+		return stream.StateID, true
+
 	case "templateId":
 		return stream.TemplateID, true
 
-	case "stateId":
-		return stream.StateID, true
+	case "token":
+		return stream.Token, true
 
 	default:
 		return "", false
@@ -172,6 +180,10 @@ func (stream *Stream) SetString(name string, value string) bool {
 		stream.TemplateID = value
 		return true
 
+	case "socialRole":
+		stream.SocialRole = value
+		return true
+
 	case "stateId":
 		stream.StateID = value
 		return true
@@ -194,10 +206,13 @@ func (stream *Stream) GetObject(name string) (any, bool) {
 	case "permissions":
 		return &stream.Permissions, true
 
+	case "defaultAllow":
+		return &stream.DefaultAllow, true
+
 	case "document":
 		return &stream.Document, true
 
-	case "replyTo":
+	case "inReplyTo":
 		return &stream.InReplyTo, true
 
 	case "content":

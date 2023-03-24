@@ -1,6 +1,5 @@
 {
 	"templateId":"base-block-editor",
-	"role":"",
 	"model":"Profile",
 	"label":"Profile Block Editor (BASE TEMPLATE)",
 	"actions": {

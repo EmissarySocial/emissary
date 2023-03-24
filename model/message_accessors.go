@@ -11,6 +11,7 @@ func MessageSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"messageId":   schema.String{Format: "objectId"},
 			"userId":      schema.String{Format: "objectId"},
+			"socialRole":  schema.String{MaxLength: 64},
 			"origin":      OriginLinkSchema(),
 			"document":    DocumentLinkSchema(),
 			"contentHtml": schema.String{Format: "html"},
@@ -48,6 +49,9 @@ func (message *Message) GetStringOK(name string) (string, bool) {
 
 	case "userId":
 		return message.UserID.Hex(), true
+
+	case "socialRole":
+		return message.SocialRole, true
 
 	case "folderId":
 		return message.FolderID.Hex(), true
@@ -98,6 +102,10 @@ func (message *Message) SetString(name string, value string) bool {
 			message.UserID = objectID
 			return true
 		}
+
+	case "socialRole":
+		message.SocialRole = value
+		return true
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {

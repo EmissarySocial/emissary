@@ -8,6 +8,8 @@ import (
 	"github.com/stripe/stripe-go/v72"
 )
 
+// TODO: LOW: Purge Stripe features from Emissary
+
 // StepStripeCheckout represents an action-step that forwards the user to a new page.
 type StepStripeCheckout struct{}
 
@@ -35,16 +37,14 @@ func (step StepStripeCheckout) Post(renderer Renderer) error {
 		return derp.Wrap(err, location, "Error getting Stripe client")
 	}
 
-	address := renderer.Host()
-
 	params := &stripe.CheckoutSessionParams{
 		LineItems: []*stripe.CheckoutSessionLineItemParams{{
 			Price:    stripe.String(priceID),
 			Quantity: stripe.Int64(1),
 		}},
 		Mode:             stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:       stripe.String(address + "/" + stream.StreamID.Hex() + "/success?session={CHECKOUT_SESSION_ID}"),
-		CancelURL:        stripe.String(address + "/" + stream.ParentID.Hex()),
+		SuccessURL:       stripe.String(stream.Permalink() + "/success?session={CHECKOUT_SESSION_ID}"),
+		CancelURL:        stripe.String(renderer.Host() + "/" + stream.ParentID.Hex()),
 		CustomerCreation: stripe.String("if_required"),
 		PhoneNumberCollection: &stripe.CheckoutSessionPhoneNumberCollectionParams{
 			Enabled: stripe.Bool(true),

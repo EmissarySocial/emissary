@@ -1,6 +1,5 @@
 {
 	"templateId":"article-editorjs",
-	"role":"article",
 	"extends": ["base-article"],
 	"containedBy": ["top", "folder", "article"],
 	"label":"Article (WYSIWYG)",

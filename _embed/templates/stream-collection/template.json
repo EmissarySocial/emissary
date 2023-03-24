@@ -1,6 +1,6 @@
 {
 	"templateId":"collection",
-	"role":"collection",
+	"templateRole":"collection",
 	"model":"stream",
 	"containedBy": ["top", "folder", "article"],
 	"label":"Collection",

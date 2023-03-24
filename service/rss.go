@@ -56,22 +56,25 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 	publishDate := time.Unix(stream.PublishDate, 0)
 	modifiedDate := time.Unix(stream.Journal.UpdateDate, 0)
 
-	url := rss.host + "/" + stream.StreamID.Hex()
-
-	return &feeds.JSONItem{
-		Id:            url,
-		Url:           url,
-		ExternalUrl:   url,
+	result := &feeds.JSONItem{
+		Id:            stream.Permalink(),
+		Url:           stream.Permalink(),
+		ExternalUrl:   stream.Permalink(),
 		Title:         stream.Document.Label,
 		Summary:       stream.Document.Summary,
 		Image:         stream.Document.ImageURL,
 		PublishedDate: &publishDate,
 		ModifiedDate:  &modifiedDate,
-
-		Author: &feeds.JSONAuthor{
-			Name:   stream.Document.Author.Name,
-			Url:    stream.Document.Author.ProfileURL,
-			Avatar: stream.Document.Author.ImageURL,
-		},
 	}
+
+	if !stream.Document.AttributedTo.IsEmpty() {
+		author := stream.Document.AttributedTo.First()
+		result.Author = &feeds.JSONAuthor{
+			Name:   author.Name,
+			Url:    author.ProfileURL,
+			Avatar: author.ImageURL,
+		}
+	}
+
+	return result
 }

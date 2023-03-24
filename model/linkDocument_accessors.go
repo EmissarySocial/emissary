@@ -2,32 +2,26 @@ package model
 
 import (
 	"github.com/benpate/rosetta/schema"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func DocumentLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"internalId": schema.String{Format: "objectId"},
-			"author":     PersonLinkSchema(),
-			"url":        schema.String{Format: "url"},
-			"type":       schema.String{},
-			"label":      schema.String{MaxLength: 100},
-			"summary":    schema.String{MaxLength: 1000},
-			"imageUrl":   schema.String{Format: "url"},
+			"url":          schema.String{Format: "url"},
+			"label":        schema.String{MaxLength: 128},
+			"summary":      schema.String{MaxLength: 1024},
+			"imageUrl":     schema.String{Format: "url"},
+			"attributedTo": schema.Array{Items: PersonLinkSchema()},
 		},
 	}
 }
 
-/*********************************
+/******************************************
  * Getter Interfaces
- *********************************/
+ ******************************************/
 
 func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	switch name {
-
-	case "internalId":
-		return doc.InternalID.Hex(), true
 
 	case "url":
 		return doc.URL, true
@@ -38,9 +32,6 @@ func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	case "summary":
 		return doc.Summary, true
 
-	case "type":
-		return doc.Type, true
-
 	case "imageUrl":
 		return doc.ImageURL, true
 
@@ -49,18 +40,12 @@ func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	}
 }
 
-/*********************************
+/******************************************
  * Setter Interfaces
- *********************************/
+ ******************************************/
 
 func (doc *DocumentLink) SetString(name string, value string) bool {
 	switch name {
-
-	case "internalId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			doc.InternalID = objectID
-			return true
-		}
 
 	case "url":
 		doc.URL = value
@@ -74,10 +59,6 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
 		doc.Summary = value
 		return true
 
-	case "type":
-		doc.Type = value
-		return true
-
 	case "imageUrl":
 		doc.ImageURL = value
 		return true
@@ -86,17 +67,16 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
 	return false
 }
 
-/*********************************
- * Tree Traversal Methods
- *********************************/
+/******************************************
+ * Tree Traversal Interfaces
+ ******************************************/
 
 func (doc *DocumentLink) GetObject(name string) (any, bool) {
 	switch name {
 
-	case "author":
-		return &doc.Author, true
-
-	default:
-		return nil, false
+	case "attributedTo":
+		return &doc.AttributedTo, true
 	}
+
+	return nil, false
 }

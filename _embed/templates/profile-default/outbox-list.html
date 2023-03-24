@@ -7,6 +7,7 @@
 	{{- $userCanEdit := .UserCan "profile-edit" -}}
 
 	{{- range $outbox -}}
+		{{- $author := .Author -}}
 		<hr>
 		<div class="hover-trigger">
 			{{- if $userCanEdit -}}
@@ -17,16 +18,18 @@
 			<div hx-get="/{{.StreamID}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
 				<div style="height:60px; width:60px;">
 					<div class="circle aspect-square placeholder-gray" style="height:60px; width:60px;">
-						{{- if ne .Document.Author.ImageURL "" -}}
-							<img src="{{.Document.Author.ImageURL}}" class="circle" style="height:60px; width:60px;" onerror="this.style.display='none'">
+						{{- if ne $author.ImageURL "" -}}
+							<img src="{{$author.ImageURL}}" class="circle" style="height:60px; width:60px;" onerror="this.style.display='none'">
 						{{- end -}}
 					</div>
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">
 						<div class="p-author h-card text-sm gray50" style="margin:0px;">
-							<span class="p-name">{{.Document.Author.Name}}</span>
-							&middot;
+							{{- if ne "" $author.Name -}}
+								<span class="p-name">{{$author.Name}}</span>
+								&middot;
+							{{- end -}}
 							<span class="p-published">{{.PublishDate | humanizeTime}}</span>
 						</div>
 						<div class="h-name bold black">{{.Document.Label}}</div>

@@ -1,6 +1,7 @@
 {
 	"templateId":"photo-album",
-	"role":"photo-album",
+	"templateRole":"photo-album",
+	"socialRole":"Page",
 	"model":"stream",
 	"containedBy": ["top", "folder"],
 	"label":"Photo Album",

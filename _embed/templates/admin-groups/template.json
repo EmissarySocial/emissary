@@ -1,6 +1,6 @@
 {
 	"templateId":"admin-groups",
-	"role":"admin",
+	"templateRole":"admin",
 	"model":"group",
 	"containedBy":["admin"],
 	"label": "Group",

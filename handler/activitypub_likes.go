@@ -10,7 +10,7 @@ import (
 
 func ActivityPub_GetLikes(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetLikes"
+	// TODO: MEDIUM: This function should be implemented (once we have "likes")
 
 	return func(ctx echo.Context) error {
 		result := streams.NewOrderedCollection()

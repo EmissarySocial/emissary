@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -43,6 +44,14 @@ func (summary StreamSummary) Fields() []string {
 /*************************************
  * Other Data Accessors
  *************************************/
+
+func (summary StreamSummary) Author() PersonLink {
+	return summary.Document.AttributedTo.First()
+}
+
+func (summary StreamSummary) AttributedTo() sliceof.Object[PersonLink] {
+	return summary.Document.AttributedTo
+}
 
 func (summary StreamSummary) StreamID() string {
 	return summary.ObjectID.Hex()

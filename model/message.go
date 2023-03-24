@@ -10,15 +10,16 @@ import (
 // Message represents a single item in a User's inbox or outbox.  It is loosely modelled on the MessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
-	MessageID   primitive.ObjectID `json:"messageId"   bson:"_id"`                   // Unique ID of the Message
-	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
-	Origin      OriginLink         `json:"origin"      bson:"origin,omitempty"`      // Link to the origin of this Message
-	Document    DocumentLink       `json:"document"    bson:"document,omitempty"`    // Document that is the subject of this Message
-	ContentHTML string             `json:"contentHtml" bson:"contentHtml,omitempty"` // HTML Content of the Message
-	ContentJSON string             `json:"contentJson" bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
-	FolderID    primitive.ObjectID `json:"folderId"    bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
-	PublishDate int64              `json:"publishDate" bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
-	Rank        int64              `json:"rank"        bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
+	MessageID   primitive.ObjectID `json:"messageId"    bson:"_id"`                   // Unique ID of the Message
+	UserID      primitive.ObjectID `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
+	SocialRole  string             `json:"socialRole"   bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
+	Origin      OriginLink         `json:"origin"       bson:"origin,omitempty"`      // Link to the origin of this Message
+	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Message
+	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Message
+	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
+	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
+	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
+	Rank        int64              `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -33,7 +34,7 @@ func NewMessage() Message {
 }
 
 func MessageFields() []string {
-	return []string{"_id", "userId", "origin", "document", "contentHtml", "folderId", "publishDate", "rank"}
+	return []string{"_id", "userId", "socialRole", "origin", "document", "contentHtml", "folderId", "publishDate", "rank"}
 }
 
 func (summary Message) Fields() []string {
@@ -66,6 +67,18 @@ func (message Message) Roles(authorization *Authorization) []string {
 /******************************************
  * Other Methods
  ******************************************/
+
+func (message *Message) Author() PersonLink {
+	return message.Document.AttributedTo.First()
+}
+
+func (message *Message) SetAttributedTo(persons ...PersonLink) {
+	message.Document.AttributedTo = persons
+}
+
+func (message *Message) AddAttributedTo(persons ...PersonLink) {
+	message.Document.AttributedTo = append(message.Document.AttributedTo, persons...)
+}
 
 func (message Message) RankSeconds() int64 {
 	return message.Rank / 1000

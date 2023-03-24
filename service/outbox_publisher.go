@@ -16,16 +16,13 @@ import (
  * Publish/Unpublish Methods
  ******************************************/
 
-func (service Outbox) Publish(userID primitive.ObjectID, stream *model.Stream, objectType string) error {
+func (service Outbox) Publish(userID primitive.ObjectID, stream *model.Stream) error {
 
 	// Get the current User record
 	user := model.NewUser()
 	if err := service.userService.LoadByID(userID, &user); err != nil {
 		return derp.Wrap(err, "service.Outbox.Publish", "Error loading user", userID)
 	}
-
-	// TODO: LOW: Hack-y way to set the "Published" date.  DO BETTER.
-	stream.Document.Type = objectType
 
 	// Build the outbox message
 	outboxMessage := model.NewOutboxMessage()
@@ -182,7 +179,7 @@ func (service Outbox) setPublished(stream *model.Stream, user *model.User) error
 	stream.UnPublishDate = math.MaxInt64
 
 	// RULE: Set Author to the currently logged in user.
-	stream.Document.Author = user.PersonLink()
+	stream.SetAttributedTo(user.PersonLink())
 
 	// Re-save the Stream with the updated values.
 	if err := service.streamService.Save(stream, "Publish"); err != nil {
@@ -199,7 +196,7 @@ func (service Outbox) makeActivity(user *model.User, stream *model.Stream) mapof
 
 	return mapof.Any{
 		"@context": "https://www.w3.org/ns/activitystreams",
-		"id":       service.streamService.ActivityPubID(stream),
+		"id":       stream.Permalink(),
 		"actor":    user.ActivityPubURL(),
 		"type":     service.guessActivityType(stream),
 		"object":   stream.GetJSONLD(),

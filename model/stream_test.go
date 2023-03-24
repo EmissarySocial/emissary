@@ -16,30 +16,46 @@ func TestStreamSchema(t *testing.T) {
 	tests := []tableTestItem{
 		{"streamId", "000000000000000000000001", nil},
 		{"parentId", "000000000000000000000002", nil},
+		{"parentIds.0", "000000000000000000000003", nil},
+		{"parentIds.2", "000000000000000000000004", nil},
+		{"parentIds.3", "000000000000000000000005", nil},
+		{"depth", 1, nil},
+		{"rank", "1234", 1234},
 		{"token", "TOKEN", nil},
-		{"navigationId", "000000000000000000000003", nil},
+		{"navigationId", "000000000000000000000006", nil},
 		{"templateId", "TEMPLATE", nil},
+		{"socialRole", "SOCIAL-ROLE", nil},
 		{"stateId", "STATE", nil},
 
-		{"document.internalId", "000000000000000000000004", nil},
+		{"permissions.A.0", "000000000000000000000007", nil},
+		{"permissions.A.1", "000000000000000000000008", nil},
+		{"permissions.B.0", "000000000000000000000009", nil},
+		{"permissions.B.1", "00000000000000000000000a", nil},
+
+		{"defaultAllow.0", "00000000000000000000000b", nil},
+		{"defaultAllow.1", "00000000000000000000000c", nil},
+
 		{"document.url", "https://example/document", nil},
 		{"document.label", "DOC-LABEL", nil},
 		{"document.summary", "DOC-SUMMARY", nil},
 		{"document.imageUrl", "DOC-IMAGEURL", nil},
-		{"document.author.name", "DOC-AUTHOR-NAME", nil},
 
-		{"replyTo.url", "https://example/replyTo", nil},
-		{"replyTo.label", "REPLY-LABEL", nil},
-		{"replyTo.summary", "REPLY-SUMMARY", nil},
-		{"replyTo.imageUrl", "REPLY-IMAGEURL", nil},
-		{"replyTo.author.name", "REPLY-AUTHOR-NAME", nil},
+		{"document.attributedTo.0.name", "DOC-AUTHOR-NAME", nil},
+		{"document.attributedTo.0.profileUrl", "https://example/author", nil},
+
+		{"inReplyTo.0.url", "REPLY-URL", nil},
+		{"inReplyTo.0.label", "REPLY-LABEL", nil},
+		{"inReplyTo.0.summary", "REPLY-SUMMARY", nil},
+		{"inReplyTo.0.imageUrl", "REPLY-IMAGEURL", nil},
+		{"inReplyTo.0.attributedTo.0.profileUrl", "https://example/inReplyTo", nil},
+		{"inReplyTo.0.attributedTo.0.name", "REPLY-AUTHOR-NAME", nil},
 
 		{"content.format", "HTML", nil},
 		{"content.raw", "TEST_RAWCONTENT", nil},
 		{"content.html", "TEST_HTML", nil},
 
-		{"permissions.ABC.0", "000000000000000000000005", nil},
-		{"permissions.ABC.1", "000000000000000000000006", nil},
+		{"permissions.ABC.0", "00000000000000000000000B", nil},
+		{"permissions.ABC.1", "00000000000000000000000C", nil},
 
 		// TODO: LOW: Restore Widget test cases
 		// {"widgets.ABC.0", "FIRST VALUE", nil},
@@ -50,7 +66,6 @@ func TestStreamSchema(t *testing.T) {
 		{"data.ABC", "FIRST VALUE", nil},
 		{"data.XYZ", "SECOND VALUE", nil},
 
-		{"rank", "1234", 1234},
 		{"publishDate", 12345678, int64(12345678)},
 		{"unpublishDate", 123456789, int64(123456789)},
 	}

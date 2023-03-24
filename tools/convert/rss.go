@@ -34,10 +34,10 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Message {
 		Label:      htmlTools.ToText(rssItem.Title),
 		Summary:    rssSummary(rssItem),
 		ImageURL:   rssImageURL(rssItem),
-		Author:     rssAuthor(feed, rssItem),
 		UpdateDate: time.Now().Unix(),
 	}
 
+	message.SetAttributedTo(rssAuthor(feed, rssItem))
 	message.PublishDate = rssDate(rssItem.PublishedParsed)
 	message.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
 

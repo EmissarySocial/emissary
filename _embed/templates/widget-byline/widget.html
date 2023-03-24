@@ -1,14 +1,16 @@
+{{- $author := .Author -}}
+
 <div class="widget flex-row space-below">
 	
 	<div class="h-card flex-row">
-		{{- if ne "" .Document.Author.ImageURL -}}
-			<img src="{{.Document.Author.ImageURL}}" class="circle u-photo turboclick" style="height:2em; width:2em;">
+		{{- if ne "" $author.ImageURL -}}
+			<img src="{{$author.ImageURL}}" class="circle u-photo turboclick" style="height:2em; width:2em;">
 		{{- end -}}
 
-		{{- if ne "" .Document.Author.ProfileURL -}}
-			<a href="{{.Document.Author.ProfileURL}}" class="p-name u-url turboclick">{{.Document.Author.Name}}</a>
+		{{- if ne "" $author.ProfileURL -}}
+			<a href="{{$author.ProfileURL}}" class="p-name u-url turboclick">{{$author.Name}}</a>
 		{{- else -}}
-			<span class="p-name">{{.Document.Author.Name}}</span>
+			<span class="p-name">{{$author.Name}}</span>
 		{{- end -}}
 	</div>
 	

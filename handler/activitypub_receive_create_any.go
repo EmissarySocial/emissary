@@ -46,8 +46,8 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 
 	message.UserID = following.UserID
 	message.Origin = following.Origin()
+	message.SocialRole = object.Type()
 	message.Document = model.DocumentLink{
-		Type:       object.Type(),
 		URL:        object.ID(),
 		Label:      object.Name(),
 		Summary:    object.Summary(),
@@ -55,11 +55,13 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 		UpdateDate: time.Now().Unix(),
 	}
 
-	if author, err := object.AttributedTo().AsObject(); err == nil {
-		message.Document.Author = model.PersonLink{
-			Name:       author.Name(),
-			ProfileURL: author.ID(),
-			ImageURL:   author.ImageURL(),
+	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Next() {
+		if author, err := object.AttributedTo().AsObject(); err == nil {
+			message.AddAttributedTo(model.PersonLink{
+				Name:       author.Name(),
+				ProfileURL: author.ID(),
+				ImageURL:   author.ImageURL(),
+			})
 		}
 	}
 

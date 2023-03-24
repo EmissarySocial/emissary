@@ -194,8 +194,9 @@ func finalizeAddStream(factory Factory, context *steranko.Context, stream *model
 	}
 
 	// Assign the current user as the author (with silent failure)
-	user, _ := renderer.getUser()
-	renderer.stream.SetAuthor(&user)
+	if user, err := renderer.getUser(); err == nil {
+		renderer.stream.SetAttributedTo(user.PersonLink())
+	}
 
 	// TODO: MEDIUM: Set Stream order??
 

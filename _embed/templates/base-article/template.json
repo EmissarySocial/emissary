@@ -1,6 +1,7 @@
 {
 	"templateId":"base-article",
-	"role":"article",
+	"templateRole":"article",
+	"socialRole":"Article",
 	"model":"Stream",
 	"extends":["base-widget-editor"],
 	"label":"Article (BASE TEMPLATE)",
@@ -143,7 +144,7 @@
 				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step":"set-state", "state":"published"},
 				{"step":"save", "message":"Published by {{.Author}}"},
-				{"step":"publish", "role":"Article", "mentions":["document.summary","content.html"]},
+				{"step":"publish", "mentions":["document.summary","content.html"]},
 				{"step":"refresh-page"}
 			]
 		},
@@ -163,7 +164,7 @@
 			"steps": [
 				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step":"promote-draft"},
-				{"step":"publish", "role":"Article", "mentions":["document.summary","content.html"]},
+				{"step":"publish", "mentions":["document.summary","content.html"]},
 				{"step":"refresh-page"},
 				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
@@ -220,7 +221,7 @@
 			"roles": ["owner"],
 			"steps": [
 				{"step":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
-				{"step":"unpublish", "role":"Article"},
+				{"step":"unpublish"},
 				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		}

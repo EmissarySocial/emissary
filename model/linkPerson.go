@@ -3,6 +3,7 @@ package model
 import (
 	"net/url"
 
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,6 +24,30 @@ func NewPersonLink() PersonLink {
 // or external person (if the InternalID, ProfileURL, and Name are all empty)
 func (person PersonLink) IsEmpty() bool {
 	return person.InternalID.IsZero() && (person.ProfileURL == "") && (person.Name == "")
+}
+
+func (person PersonLink) GetJSONLD() mapof.Any {
+
+	result := mapof.Any{
+		"@id":   person.ProfileURL,
+		"@type": "Person",
+		"id":    person.ProfileURL,
+		"type":  "Person",
+	}
+
+	if person.Name != "" {
+		result["name"] = person.Name
+	}
+
+	if person.EmailAddress != "" {
+		result["email"] = person.EmailAddress
+	}
+
+	if person.ImageURL != "" {
+		result["image"] = person.ImageURL
+	}
+
+	return result
 }
 
 // Link returns a Link to this person
