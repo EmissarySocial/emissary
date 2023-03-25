@@ -23,10 +23,10 @@
 
 		{{- if .UserCan "profile-edit" -}}
 			<div role="tablist" class="underlined space-below" hx-push-url="true">
-				<span role="tab" aria-selected="true">{{icon "outbox-fill"}} Posts</span>
-				<span role="tab" hx-get="/@{{.UserID}}/following">{{icon "star"}} Following</span>
-				<span role="tab" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
-				<span role="tab" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
+				<span role="tab" class="turboclick" aria-selected="true">{{icon "outbox-fill"}} Posts</span>
+				<span role="tab" class="turboclick" hx-get="/@{{.UserID}}/following">{{icon "star"}} Following</span>
+				<span role="tab" class="turboclick" hx-get="/@{{.UserID}}/followers">{{icon "person"}} Followers</span>
+				<span role="tab" class="turboclick" hx-get="/@{{.UserID}}/blocks">{{icon "block"}} Blocks</span>
 			</div>
 		{{- end -}}
 

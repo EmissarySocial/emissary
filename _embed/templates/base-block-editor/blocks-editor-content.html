@@ -1,10 +1,10 @@
 {{- $blocks := (.BlocksByType "CONTENT").Slice -}}
 
 <div role="tablist" class="pills">
-	<div hx-get="/@me/blocks?tab=ACTOR" role="tab">People</div>
-	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab">Domains</div>
-	<div hx-get="/@me/blocks?tab=CONTENT" role="tab" aria-selected="true">Tags & Keywords</div>
-	<div hx-get="/@me/blocks?tab=EXTERNAL" role="tab">External Services</div>
+	<div hx-get="/@me/blocks?tab=ACTOR" role="tab" class="turboclick">People</div>
+	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab" class="turboclick">Domains</div>
+	<div hx-get="/@me/blocks?tab=CONTENT" role="tab" class="turboclick" aria-selected="true">Tags & Keywords</div>
+	<div hx-get="/@me/blocks?tab=EXTERNAL" role="tab" class="turboclick">External Services</div>
 </div>
 
 <table class="table">
