@@ -15,13 +15,15 @@ import (
 
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
-	collection data.Collection
+	collection   data.Collection
+	blockService *Block
 }
 
 // NewInbox returns a fully populated Inbox service
-func NewInbox(collection data.Collection) Inbox {
+func NewInbox(collection data.Collection, blockService *Block) Inbox {
 	service := Inbox{
-		collection: collection,
+		collection:   collection,
+		blockService: blockService,
 	}
 
 	service.Refresh(collection)
@@ -80,6 +82,20 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 	// Clean the value before saving
 	if err := service.Schema().Clean(message); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
+	}
+
+	// Apply block filters to this message
+	if err := service.blockService.FilterMessage(message); err != nil {
+		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
+	}
+
+	// Blocked message cannot be saved to the database
+	if message.StateID == model.InboxMessageStateBlocked {
+		if message.IsNew() {
+			return nil
+		} else {
+			return service.Delete(message, "Blocked by filters")
+		}
 	}
 
 	// Calculate the rank for this message, using the number of messages with an identical PublishDate

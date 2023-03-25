@@ -156,6 +156,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	// Start the Activity Service
 	factory.inboxService = service.NewInbox(
 		factory.collection(CollectionInbox),
+		factory.Block(),
 	)
 
 	// Start the Activity Service

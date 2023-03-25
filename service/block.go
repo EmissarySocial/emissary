@@ -72,6 +72,17 @@ func (service *Block) List(criteria exp.Expression, options ...option.Option) (d
 	return service.collection.List(notDeleted(criteria), options...)
 }
 
+// Channel returns a channel that will stream all of the Blocks that match the provided criteria
+func (service *Block) Channel(criteria exp.Expression, options ...option.Option) (<-chan model.Block, error) {
+	it, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Block.Channel", "Error creating iterator", criteria, options)
+	}
+
+	return data.Channel(it, model.NewBlock), nil
+}
+
 // Load retrieves an Block from the database
 func (service *Block) Load(criteria exp.Expression, block *model.Block) error {
 
@@ -219,6 +230,26 @@ func (service *Block) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
+	blockID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Block.LoadByToken", "Error converting token to ObjectID", token)
+	}
+
+	criteria := exp.Equal("_id", blockID).AndEqual("userId", userID)
+
+	return service.Load(criteria, block)
+}
+
+func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
+	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
+}
+
+func (service *Block) QueryByUser(userID primitive.ObjectID) ([]model.Block, error) {
+	return service.Query(exp.Equal("userId", userID))
+}
 
 func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate int64, options ...option.Option) ([]model.Block, error) {
 
@@ -419,24 +450,4 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 	// - refs to other people who have ALSO blocked this person/domain/keyword?
 
 	return nil
-}
-
-/******************************************
- * CustomQueries
- ******************************************/
-
-func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
-	blockID, err := primitive.ObjectIDFromHex(token)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Block.LoadByToken", "Error converting token to ObjectID", token)
-	}
-
-	criteria := exp.Equal("_id", blockID).AndEqual("userId", userID)
-
-	return service.Load(criteria, block)
-}
-
-func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
-	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
 }

@@ -3,6 +3,8 @@ package service
 import (
 	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestAtomLinks(t *testing.T) {
@@ -58,7 +60,16 @@ func TestAtomLinks(t *testing.T) {
 	
 	  </feed>`)
 
-	t.Log(discoverLinks_RSS(nil, &body))
+	result := discoverLinks_RSS(nil, &body)
+
+	require.Equal(t, 2, len(result))
+
+	require.Equal(t, "self", result[0].RelationType)
+	require.Equal(t, "https://websub.rocks/blog/102/lw2ssiXKSWWlqvc92Wdo", result[0].Href)
+	require.Equal(t, "application/atom+xml", result[0].MediaType)
+
+	require.Equal(t, "hub", result[1].RelationType)
+	require.Equal(t, "https://websub.rocks/blog/102/lw2ssiXKSWWlqvc92Wdo/hub", result[1].Href)
 }
 
 func TestRSSLinks(t *testing.T) {
@@ -114,6 +125,13 @@ func TestRSSLinks(t *testing.T) {
 	  </channel>
 	</rss>`)
 
-	t.Log(discoverLinks_RSS(nil, &body))
+	result := discoverLinks_RSS(nil, &body)
 
+	require.Equal(t, 2, len(result))
+	require.Equal(t, "self", result[0].RelationType)
+	require.Equal(t, "https://websub.rocks/blog/103/JXKfevIPFu6PFRdErTIu", result[0].Href)
+	require.Equal(t, "application/rss+xml", result[0].MediaType)
+
+	require.Equal(t, "hub", result[1].RelationType)
+	require.Equal(t, "https://websub.rocks/blog/103/JXKfevIPFu6PFRdErTIu/hub", result[1].Href)
 }
