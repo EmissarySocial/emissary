@@ -36,6 +36,13 @@ func (service *Block) FilterMessage(message *model.Message) error {
 	return nil
 }
 
+func (service *Block) FilterMention(mention *model.Mention) error {
+
+	// behavior, err := service.filter(mention.UserID, mention.Origin, mention.Document, mention.ContentHTML)
+
+	return nil
+}
+
 func (service *Block) filter(userID primitive.ObjectID, origin model.OriginLink, document model.DocumentLink, contentHTML string) (string, error) {
 
 	blocks, err := service.QueryByUser(userID)
