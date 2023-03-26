@@ -48,22 +48,22 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	activityStreamService service.ActivityStream
-	attachmentService     service.Attachment
-	groupService          service.Group
-	domainService         service.Domain
-	emailService          service.DomainEmail
-	encryptionKeyService  service.EncryptionKey
-	folderService         service.Folder
-	followerService       service.Follower
-	followingService      service.Following
-	inboxService          service.Inbox
-	mentionService        service.Mention
-	outboxService         service.Outbox
-	streamService         service.Stream
-	streamDraftService    service.StreamDraft
-	realtimeBroker        RealtimeBroker
-	userService           service.User
+	attachmentService    service.Attachment
+	blockService         service.Block
+	groupService         service.Group
+	domainService        service.Domain
+	emailService         service.DomainEmail
+	encryptionKeyService service.EncryptionKey
+	folderService        service.Folder
+	followerService      service.Follower
+	followingService     service.Following
+	inboxService         service.Inbox
+	mentionService       service.Mention
+	outboxService        service.Outbox
+	streamService        service.Stream
+	streamDraftService   service.StreamDraft
+	realtimeBroker       RealtimeBroker
+	userService          service.User
 
 	// real-time watchers
 	streamUpdateChannel chan model.Stream
@@ -94,8 +94,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.config.Hostname = domain.Hostname
 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
-
-	factory.mentionService = service.NewMention(factory.collection(CollectionMention), factory.Host())
 
 	factory.emailService = service.NewDomainEmail(serverEmail, domain)
 
@@ -154,18 +152,38 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	)
 
 	// Start the Activity Service
-	factory.inboxService = service.NewInbox(
-		factory.collection(CollectionInbox),
-		factory.Block(),
-	)
-
-	// Start the Activity Service
 	factory.outboxService = service.NewOutbox(
 		factory.collection(CollectionOutbox),
 		factory.Stream(),
 		factory.Follower(),
 		factory.User(),
 		factory.Queue(),
+	)
+
+	factory.followerService = service.NewFollower(
+		factory.collection(CollectionFollower),
+		factory.User(),
+		factory.Queue(),
+		factory.Host(),
+	)
+
+	factory.blockService = service.NewBlock(
+		factory.collection(CollectionBlock),
+		factory.Follower(),
+		factory.User(),
+		factory.Queue(),
+	)
+
+	factory.mentionService = service.NewMention(
+		factory.collection(CollectionMention),
+		factory.Block(),
+		factory.Host(),
+	)
+
+	// Start the Activity Service
+	factory.inboxService = service.NewInbox(
+		factory.collection(CollectionInbox),
+		factory.Block(),
 	)
 
 	// Start the Following Service
@@ -177,21 +195,9 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 		factory.EncryptionKey(),
 		factory.Host())
 
-	factory.followerService = service.NewFollower(
-		factory.collection(CollectionFollower),
-		factory.User(),
-		factory.Queue(),
-		factory.Host(),
-	)
-
 	factory.folderService = service.NewFolder(
 		factory.collection(CollectionFolder),
 		factory.Inbox(),
-	)
-
-	// Start the ActivityPub Service
-	factory.activityStreamService = service.NewActivityStream(
-		factory.collection(CollectionActivityStream),
 	)
 
 	go factory.followingService.Start()
@@ -243,7 +249,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// Refresh cached services
-		factory.activityStreamService.Refresh(factory.collection(CollectionActivityStream))
+		// TODO: CRITICAL: There are potential circular references here.  Perhaps move all init parameters to the Refresh methods??
 		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
 		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
 		factory.emailService.Refresh(domain)
@@ -348,11 +354,6 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
 }
 
-// ActivityStream returns a fully populated ActivityStream service
-func (factory *Factory) ActivityStream() *service.ActivityStream {
-	return &factory.activityStreamService
-}
-
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService
@@ -360,8 +361,7 @@ func (factory *Factory) Attachment() *service.Attachment {
 
 // Block returns a fully populated Block service
 func (factory *Factory) Block() *service.Block {
-	result := service.NewBlock(factory.collection(CollectionBlock), factory.Follower(), factory.User(), factory.Queue())
-	return &result
+	return &factory.blockService
 }
 
 // Domain returns a fully populated Domain service
