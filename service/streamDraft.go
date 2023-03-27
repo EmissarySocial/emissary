@@ -18,13 +18,8 @@ type StreamDraft struct {
 }
 
 // NewStreamDraft returns a fully populated StreamDraft service.
-func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDraft {
-	service := StreamDraft{
-		streamService: streamService,
-	}
-
-	service.Refresh(collection)
-	return service
+func NewStreamDraft() StreamDraft {
+	return StreamDraft{}
 }
 
 /******************************************
@@ -32,8 +27,9 @@ func NewStreamDraft(collection data.Collection, streamService *Stream) StreamDra
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamDraft) Refresh(collection data.Collection) {
+func (service *StreamDraft) Refresh(collection data.Collection, streamService *Stream) {
 	service.collection = collection
+	service.streamService = streamService
 }
 
 // Close stops any background processes controlled by this service

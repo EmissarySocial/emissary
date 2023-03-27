@@ -32,21 +32,8 @@ type Following struct {
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, host string) Following {
-
-	service := Following{
-		collection:    collection,
-		streamService: streamService,
-		userService:   userService,
-		inboxService:  inboxService,
-		keyService:    keyService,
-		host:          host,
-		closed:        make(chan bool),
-	}
-
-	service.Refresh(collection)
-
-	return service
+func NewFollowing() Following {
+	return Following{}
 }
 
 /******************************************
@@ -54,8 +41,13 @@ func NewFollowing(collection data.Collection, streamService *Stream, userService
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, host string) {
 	service.collection = collection
+	service.streamService = streamService
+	service.userService = userService
+	service.inboxService = inboxService
+	service.keyService = keyService
+	service.host = host
 }
 
 // Close stops the following service watcher

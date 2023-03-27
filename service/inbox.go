@@ -20,14 +20,8 @@ type Inbox struct {
 }
 
 // NewInbox returns a fully populated Inbox service
-func NewInbox(collection data.Collection, blockService *Block) Inbox {
-	service := Inbox{
-		collection:   collection,
-		blockService: blockService,
-	}
-
-	service.Refresh(collection)
-	return service
+func NewInbox() Inbox {
+	return Inbox{}
 }
 
 /******************************************
@@ -35,8 +29,9 @@ func NewInbox(collection data.Collection, blockService *Block) Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(collection data.Collection) {
+func (service *Inbox) Refresh(collection data.Collection, blockService *Block) {
 	service.collection = collection
+	service.blockService = blockService
 }
 
 // Close stops any background processes controlled by this service

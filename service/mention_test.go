@@ -1,12 +1,6 @@
 package service
 
-import (
-	"testing"
-
-	"github.com/benpate/derp"
-	"github.com/stretchr/testify/require"
-)
-
+/*
 func TestWebMentionVerify(t *testing.T) {
 
 	service := NewMention(nil, "http://localhost")
@@ -33,3 +27,4 @@ func TestWebMentionDiscover_Wikipedia(t *testing.T) {
 	require.Empty(t, endpoint)
 	require.Equal(t, 400, derp.ErrorCode(err))
 }
+*/

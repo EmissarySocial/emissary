@@ -16,19 +16,10 @@ type DomainEmail struct {
 	hostname    string
 }
 
-func NewDomainEmail(serverEmail *ServerEmail, configuration config.Domain) DomainEmail {
-
-	service := DomainEmail{
+func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
+	return DomainEmail{
 		serverEmail: serverEmail,
-		smtp:        configuration.SMTPConnection,
-		owner:       configuration.Owner,
-		label:       configuration.Label,
-		hostname:    configuration.Hostname,
 	}
-
-	service.Refresh(configuration)
-
-	return service
 }
 
 /******************************************
@@ -36,12 +27,10 @@ func NewDomainEmail(serverEmail *ServerEmail, configuration config.Domain) Domai
  ******************************************/
 
 func (service *DomainEmail) Refresh(configuration config.Domain) {
-
-	// Add configuration to the service
-	service.label = configuration.Label
-	service.hostname = configuration.Hostname
 	service.smtp = configuration.SMTPConnection
 	service.owner = configuration.Owner
+	service.label = configuration.Label
+	service.hostname = configuration.Hostname
 }
 
 /*******************************

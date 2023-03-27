@@ -25,15 +25,8 @@ type Follower struct {
 }
 
 // NewFollower returns a fully initialized Follower service
-func NewFollower(collection data.Collection, userService *User, queue *queue.Queue, host string) Follower {
-	service := Follower{
-		userService: userService,
-		queue:       queue,
-		host:        host,
-	}
-
-	service.Refresh(collection)
-	return service
+func NewFollower() Follower {
+	return Follower{}
 }
 
 /******************************************
@@ -41,8 +34,11 @@ func NewFollower(collection data.Collection, userService *User, queue *queue.Que
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, queue *queue.Queue, host string) {
 	service.collection = collection
+	service.userService = userService
+	service.queue = queue
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service

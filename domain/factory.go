@@ -93,113 +93,33 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 
 	factory.config.Hostname = domain.Hostname
 
+	// Services are created empty, then populated in a second "Refresh" step later.  This
+	// servse two purposes:
+	//
+	// 1. It resolves the problem of circular dependencies
+	// 2. It allows us to load (and reload) service configuration separately, as config files are loaded and changed.
+
+	// Start the Realtime Broker
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
-	factory.emailService = service.NewDomainEmail(serverEmail, domain)
+	// Create empty service pointers.  These will be populated in the Refresh() step.
+	factory.attachmentService = service.NewAttachment()
+	factory.blockService = service.NewBlock()
+	factory.domainService = service.NewDomain()
+	factory.emailService = service.NewDomainEmail(serverEmail)
+	factory.encryptionKeyService = service.NewEncryptionKey()
+	factory.folderService = service.NewFolder()
+	factory.followerService = service.NewFollower()
+	factory.followingService = service.NewFollowing()
+	factory.groupService = service.NewGroup()
+	factory.mentionService = service.NewMention()
+	factory.inboxService = service.NewInbox()
+	factory.outboxService = service.NewOutbox()
+	factory.streamService = service.NewStream()
+	factory.streamDraftService = service.NewStreamDraft()
+	factory.userService = service.NewUser()
 
-	factory.encryptionKeyService = service.NewEncryptionKey(
-		factory.collection(CollectionEncryptionKey),
-		factory.Host(),
-	)
-
-	// Start the Group Service
-	factory.groupService = service.NewGroup(
-		factory.collection(CollectionGroup),
-	)
-
-	// Start the Attachment Service
-	factory.attachmentService = service.NewAttachment(
-		factory.collection(CollectionAttachment),
-		factory.MediaServer(),
-	)
-
-	// Start the Stream Service
-	factory.streamService = service.NewStream(
-		factory.collection(CollectionStream),
-		factory.Template(),
-		factory.Attachment(),
-		factory.Host(),
-		factory.StreamUpdateChannel(),
-	)
-
-	// Start the StreamDraft Service
-	factory.streamDraftService = service.NewStreamDraft(
-		factory.collection(CollectionStreamDraft),
-		factory.Stream(),
-	)
-
-	// Start the User Service
-	factory.userService = service.NewUser(
-		factory.collection(CollectionUser),
-		factory.collection(CollectionFollower),
-		factory.collection(CollectionFollowing),
-		factory.collection(CollectionBlock),
-		factory.Stream(),
-		factory.EncryptionKey(),
-		factory.Email(),
-		factory.Folder(),
-		factory.Host(),
-	)
-
-	// Start the Domain Service
-	factory.domainService = service.NewDomain(
-		factory.collection(CollectionDomain),
-		domain,
-		factory.Theme(),
-		factory.User(),
-		factory.Provider(),
-		render.FuncMap(factory.Icons()),
-	)
-
-	// Start the Activity Service
-	factory.outboxService = service.NewOutbox(
-		factory.collection(CollectionOutbox),
-		factory.Stream(),
-		factory.Follower(),
-		factory.User(),
-		factory.Queue(),
-	)
-
-	factory.followerService = service.NewFollower(
-		factory.collection(CollectionFollower),
-		factory.User(),
-		factory.Queue(),
-		factory.Host(),
-	)
-
-	factory.blockService = service.NewBlock(
-		factory.collection(CollectionBlock),
-		factory.Follower(),
-		factory.User(),
-		factory.Queue(),
-	)
-
-	factory.mentionService = service.NewMention(
-		factory.collection(CollectionMention),
-		factory.Block(),
-		factory.Host(),
-	)
-
-	// Start the Activity Service
-	factory.inboxService = service.NewInbox(
-		factory.collection(CollectionInbox),
-		factory.Block(),
-	)
-
-	// Start the Following Service
-	factory.followingService = service.NewFollowing(
-		factory.collection(CollectionFollowing),
-		factory.Stream(),
-		factory.User(),
-		factory.Inbox(),
-		factory.EncryptionKey(),
-		factory.Host())
-
-	factory.folderService = service.NewFolder(
-		factory.collection(CollectionFolder),
-		factory.Inbox(),
-	)
-
+	// Start() is okay here because it will check for nil configuration before polling.
 	go factory.followingService.Start()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
@@ -250,26 +170,126 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Refresh cached services
 		// TODO: CRITICAL: There are potential circular references here.  Perhaps move all init parameters to the Refresh methods??
-		factory.attachmentService.Refresh(factory.collection(CollectionAttachment))
-		factory.domainService.Refresh(factory.collection(CollectionDomain), domain)
-		factory.emailService.Refresh(domain)
-		factory.encryptionKeyService.Refresh(factory.collection(CollectionEncryptionKey))
-		factory.folderService.Refresh(factory.collection(CollectionFolder))
-		factory.groupService.Refresh(factory.collection(CollectionGroup))
-		factory.inboxService.Refresh(factory.collection(CollectionInbox))
-		factory.outboxService.Refresh(factory.collection(CollectionOutbox))
-		factory.realtimeBroker.Refresh()
-		factory.mentionService.Refresh(factory.collection(CollectionMention))
-		factory.streamService.Refresh(factory.Host(), factory.collection(CollectionStream), factory.StreamDraft()) // handles circular depencency with streamDraftService
-		factory.streamDraftService.Refresh(factory.collection(CollectionStreamDraft))
-		factory.followerService.Refresh(factory.collection(CollectionFollower))
-		factory.followingService.Refresh(factory.collection(CollectionFollowing))
 
+		// Populate Attachment Service
+		factory.attachmentService.Refresh(
+			factory.collection(CollectionAttachment),
+			factory.MediaServer(),
+		)
+
+		// Populate the Block Service
+		factory.blockService.Refresh(
+			factory.collection(CollectionBlock),
+			factory.Follower(),
+			factory.User(),
+			factory.Queue(),
+		)
+
+		// Populate Domain Service
+		factory.domainService.Refresh(
+			factory.collection(CollectionDomain),
+			domain,
+			factory.Theme(),
+			factory.User(),
+			factory.Provider(),
+			render.FuncMap(factory.Icons()),
+		)
+
+		// Populate Email Service
+		factory.emailService.Refresh(
+			factory.config,
+		)
+
+		// Populate EncryptionKey Service
+		factory.encryptionKeyService.Refresh(
+			factory.collection(CollectionEncryptionKey),
+			factory.Host(),
+		)
+
+		// Populate Folder Service
+		factory.folderService.Refresh(
+			factory.collection(CollectionFolder),
+			factory.Inbox(),
+		)
+
+		// Populate Follower Service
+		factory.followerService.Refresh(
+			factory.collection(CollectionFollower),
+			factory.User(),
+			factory.Queue(),
+			factory.Host(),
+		)
+
+		// Populate Following Service
+		factory.followingService.Refresh(
+			factory.collection(CollectionFollowing),
+			factory.Stream(),
+			factory.User(),
+			factory.Inbox(),
+			factory.EncryptionKey(),
+			factory.Host(),
+		)
+
+		// Populate Group Service
+		factory.groupService.Refresh(
+			factory.collection(CollectionGroup),
+		)
+
+		// Populate Inbox Service
+		factory.inboxService.Refresh(
+			factory.collection(CollectionInbox),
+			factory.Block(),
+		)
+
+		// Populate Mention Service
+		factory.mentionService.Refresh(
+			factory.collection(CollectionMention),
+			factory.Block(),
+			factory.Host(),
+		)
+
+		// Populate Outbox Service
+		factory.outboxService.Refresh(
+			factory.collection(CollectionOutbox),
+			factory.Stream(),
+			factory.Follower(),
+			factory.User(),
+			factory.Queue(),
+		)
+
+		// Populate RealtimeBroker Service
+		factory.realtimeBroker.Refresh(
+			factory.Follower(),
+			factory.Queue(),
+		)
+
+		// Populate Stream Service
+		factory.streamService.Refresh(
+			factory.collection(CollectionStream),
+			factory.Template(),
+			factory.StreamDraft(),
+			factory.Attachment(),
+			factory.Host(),
+			factory.StreamUpdateChannel(),
+		)
+
+		// Populate StreamDraft Service
+		factory.streamDraftService.Refresh(
+			factory.collection(CollectionStreamDraft),
+			factory.Stream(),
+		)
+
+		// Populate User Service
 		factory.userService.Refresh(
 			factory.collection(CollectionUser),
 			factory.collection(CollectionFollower),
 			factory.collection(CollectionFollowing),
 			factory.collection(CollectionBlock),
+			factory.Stream(),
+			factory.EncryptionKey(),
+			factory.Email(),
+			factory.Folder(),
+			factory.Host(),
 		)
 
 		// Watch for updates to streams

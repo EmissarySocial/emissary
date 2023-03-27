@@ -23,22 +23,15 @@ import (
 // Block defines a service that manages all content blocks created and imported by Users.
 type Block struct {
 	collection      data.Collection
-	userService     *User
 	followerService *Follower
+	userService     *User
 
 	queue *queue.Queue
 }
 
 // NewBlock returns a fully initialized Block service
-func NewBlock(collection data.Collection, followerService *Follower, userService *User, queue *queue.Queue) Block {
-	service := Block{
-		userService:     userService,
-		followerService: followerService,
-		queue:           queue,
-	}
-
-	service.Refresh(collection)
-	return service
+func NewBlock() Block {
+	return Block{}
 }
 
 /******************************************
@@ -46,8 +39,11 @@ func NewBlock(collection data.Collection, followerService *Follower, userService
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Block) Refresh(collection data.Collection) {
+func (service *Block) Refresh(collection data.Collection, followerService *Follower, userService *User, queue *queue.Queue) {
 	service.collection = collection
+	service.followerService = followerService
+	service.userService = userService
+	service.queue = queue
 }
 
 // Close stops any background processes controlled by this service

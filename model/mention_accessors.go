@@ -11,7 +11,7 @@ func MentionSchema() schema.Element {
 			"mentionId": schema.String{Format: "objectId"},
 			"objectId":  schema.String{Format: "objectId"},
 			"type":      schema.String{Enum: []string{MentionTypeStream, MentionTypeUser}},
-			"status":    schema.String{Enum: []string{MentionStatusValidated, MentionStatusPending, MentionStatusInvalid}},
+			"stateId":   schema.String{Enum: []string{MentionStatusValidated, MentionStatusPending, MentionStatusInvalid}},
 			"origin":    OriginLinkSchema(),
 			"author":    PersonLinkSchema(),
 		},
@@ -34,8 +34,8 @@ func (mention *Mention) GetStringOK(name string) (string, bool) {
 	case "type":
 		return mention.Type, true
 
-	case "status":
-		return mention.Status, true
+	case "stateId":
+		return mention.StateID, true
 	}
 
 	return "", false
@@ -64,8 +64,8 @@ func (mention *Mention) SetString(name string, value string) bool {
 		mention.Type = value
 		return true
 
-	case "status":
-		mention.Status = value
+	case "stateId":
+		mention.StateID = value
 		return true
 	}
 

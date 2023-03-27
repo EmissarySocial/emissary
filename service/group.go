@@ -20,10 +20,8 @@ type Group struct {
 }
 
 // NewGroup returns a fully populated Group service
-func NewGroup(collection data.Collection) Group {
-	service := Group{}
-	service.Refresh(collection)
-	return service
+func NewGroup() Group {
+	return Group{}
 }
 
 /******************************************

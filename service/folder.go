@@ -18,13 +18,8 @@ type Folder struct {
 }
 
 // NewFolder returns a fully populated Folder service
-func NewFolder(collection data.Collection, inboxService *Inbox) Folder {
-	service := Folder{
-		collection:   collection,
-		inboxService: inboxService,
-	}
-
-	service.Refresh(collection)
+func NewFolder() Folder {
+	service := Folder{}
 	return service
 }
 
@@ -33,8 +28,9 @@ func NewFolder(collection data.Collection, inboxService *Inbox) Folder {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Folder) Refresh(collection data.Collection) {
+func (service *Folder) Refresh(collection data.Collection, inboxService *Inbox) {
 	service.collection = collection
+	service.inboxService = inboxService
 }
 
 // Close stops any background processes controlled by this service

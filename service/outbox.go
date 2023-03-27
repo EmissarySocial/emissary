@@ -22,17 +22,8 @@ type Outbox struct {
 }
 
 // NewOutbox returns a fully populated Outbox service
-func NewOutbox(collection data.Collection, streamService *Stream, followerService *Follower, userService *User, queue *queue.Queue) Outbox {
-	service := Outbox{
-		collection:      collection,
-		streamService:   streamService,
-		followerService: followerService,
-		userService:     userService,
-		queue:           queue,
-	}
-
-	service.Refresh(collection)
-	return service
+func NewOutbox() Outbox {
+	return Outbox{}
 }
 
 /******************************************
@@ -40,8 +31,12 @@ func NewOutbox(collection data.Collection, streamService *Stream, followerServic
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, followerService *Follower, userService *User, queue *queue.Queue) {
 	service.collection = collection
+	service.streamService = streamService
+	service.followerService = followerService
+	service.userService = userService
+	service.queue = queue
 }
 
 // Close stops any background processes controlled by this service

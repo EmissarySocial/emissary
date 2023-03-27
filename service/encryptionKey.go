@@ -21,12 +21,8 @@ type EncryptionKey struct {
 }
 
 // NewEncryptionKey returns a fully initialized EncryptionKey service
-func NewEncryptionKey(collection data.Collection, host string) EncryptionKey {
-	service := EncryptionKey{
-		host: host,
-	}
-	service.Refresh(collection)
-	return service
+func NewEncryptionKey() EncryptionKey {
+	return EncryptionKey{}
 }
 
 /******************************************
@@ -34,8 +30,9 @@ func NewEncryptionKey(collection data.Collection, host string) EncryptionKey {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *EncryptionKey) Refresh(collection data.Collection) {
+func (service *EncryptionKey) Refresh(collection data.Collection, host string) {
 	service.collection = collection
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service

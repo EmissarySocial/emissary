@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,9 +29,11 @@ func (service *Block) FilterMessage(message *model.Message) error {
 
 	case model.BlockBehaviorMute:
 		message.StateID = model.InboxMessageStateMuted
+		spew.Dump("MUTING MESSAGE --------", message)
 
 	case model.BlockBehaviorBlock:
 		message.StateID = model.InboxMessageStateBlocked
+		spew.Dump("BLOCKING MESSAGE --------", message)
 	}
 
 	return nil

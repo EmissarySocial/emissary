@@ -11,7 +11,7 @@ type Mention struct {
 	MentionID primitive.ObjectID `json:"mentionId" bson:"_id"`      // Unique ID for this record
 	ObjectID  primitive.ObjectID `json:"objectId"  bson:"objectId"` // Unique ID of the internal object that was mentioned
 	Type      string             `json:"type"      bson:"type"`     // Type of object that was mentioned (Stream, User)
-	Status    string             `json:"status"    bson:"status"`   // State of this mention (Validated, Pending, Invalid)
+	StateID   string             `json:"stateId"   bson:"stateId"`  // State of this mention (Validated, Pending, Invalid)
 	Origin    OriginLink         `json:"origin"    bson:"origin"`   // Origin information of the site that mentions this object
 	Author    PersonLink         `json:"author"    bson:"author"`   // Author information of the person who mentioned this object
 

@@ -35,17 +35,14 @@ import (
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	collection data.Collection
-	host       string
+	collection   data.Collection
+	blockService *Block
+	host         string
 }
 
 // NewMention returns a fully initialized Mention service
-func NewMention(collection data.Collection, host string) Mention {
-	service := Mention{
-		host: host,
-	}
-	service.Refresh(collection)
-	return service
+func NewMention() Mention {
+	return Mention{}
 }
 
 /******************************************
@@ -53,8 +50,10 @@ func NewMention(collection data.Collection, host string) Mention {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Mention) Refresh(collection data.Collection) {
+func (service *Mention) Refresh(collection data.Collection, blockService *Block, host string) {
 	service.collection = collection
+	service.blockService = blockService
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -94,6 +93,20 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 	// Clean the value before saving
 	if err := service.Schema().Clean(mention); err != nil {
 		return derp.Wrap(err, "service.Mention.Save", "Error cleaning Mention", mention)
+	}
+
+	if err := service.blockService.FilterMention(mention); err != nil {
+		return derp.Wrap(err, "service.Mention.Save", "Error filtering Mention", mention)
+	}
+
+	// Do bot save blocked Mentions
+	if mention.StateID == model.BlockBehaviorBlock {
+		return nil
+	}
+
+	// Do not save muted Mentions
+	if mention.StateID == model.BlockBehaviorMute {
+		return nil
 	}
 
 	// Save the value to the database

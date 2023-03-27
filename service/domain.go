@@ -33,20 +33,8 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap) Domain {
-
-	service := Domain{
-		themeService:    themeService,
-		providerService: providerService,
-		userService:     userService,
-		funcMap:         funcMap,
-		domain:          model.NewDomain(),
-		ready:           false,
-	}
-
-	service.Refresh(collection, configuration)
-
-	return service
+func NewDomain() Domain {
+	return Domain{}
 }
 
 /******************************************
@@ -54,14 +42,15 @@ func NewDomain(collection data.Collection, configuration config.Domain, themeSer
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(collection data.Collection, configuration config.Domain) {
-
-	if collection == nil {
-		return
-	}
+func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap) {
 
 	service.collection = collection
 	service.configuration = configuration
+	service.themeService = themeService
+	service.userService = userService
+	service.providerService = providerService
+	service.funcMap = funcMap
+
 	service.domain = model.NewDomain()
 
 	if err := service.LoadOrCreateDomain(); err != nil {

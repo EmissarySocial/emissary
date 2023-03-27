@@ -35,18 +35,8 @@ type User struct {
 }
 
 // NewUser returns a fully populated User service
-func NewUser(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) User {
-	service := User{
-		streamService: streamService,
-		emailService:  emailService,
-		folderService: folderService,
-		keyService:    keyService,
-		host:          host,
-	}
-
-	service.Refresh(userCollection, followerCollection, followingCollection, blockCollection)
-
-	return service
+func NewUser() User {
+	return User{}
 }
 
 /******************************************
@@ -54,11 +44,18 @@ func NewUser(userCollection data.Collection, followerCollection data.Collection,
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.blocks = blockCollection
+
+	service.streamService = streamService
+	service.emailService = emailService
+	service.folderService = folderService
+	service.keyService = keyService
+
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service

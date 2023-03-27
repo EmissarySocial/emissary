@@ -43,14 +43,13 @@ type RealtimeBroker struct {
 func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBroker {
 
 	result := RealtimeBroker{
-		followerService: factory.Follower(),
-		queue:           factory.Queue(),
-		clients:         make(map[primitive.ObjectID]*RealtimeClient),
-		streams:         make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
-		streamUpdates:   updates,
-		AddClient:       make(chan *RealtimeClient),
-		RemoveClient:    make(chan *RealtimeClient),
-		close:           make(chan bool),
+		clients:       make(map[primitive.ObjectID]*RealtimeClient),
+		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
+		streamUpdates: updates,
+
+		AddClient:    make(chan *RealtimeClient),
+		RemoveClient: make(chan *RealtimeClient),
+		close:        make(chan bool),
 	}
 
 	go result.listen(factory)
@@ -63,8 +62,9 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBrok
  ******************************************/
 
 // Refresh
-func (b *RealtimeBroker) Refresh() {
-	// No operation is required right now.  Included for API consistency.
+func (b *RealtimeBroker) Refresh(followerService *service.Follower, queue *queue.Queue) {
+	b.followerService = followerService
+	b.queue = queue
 }
 
 // Stop closes the broker

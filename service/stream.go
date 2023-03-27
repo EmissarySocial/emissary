@@ -28,18 +28,8 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(collection data.Collection, templateService *Template, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) Stream {
-
-	service := Stream{
-		templateService:     templateService,
-		attachmentService:   attachmentService,
-		host:                host,
-		streamUpdateChannel: streamUpdateChannel,
-	}
-
-	service.Refresh(host, collection, nil)
-
-	return service
+func NewStream() Stream {
+	return Stream{}
 }
 
 /******************************************
@@ -47,10 +37,14 @@ func NewStream(collection data.Collection, templateService *Template, attachment
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(host string, collection data.Collection, draftService *StreamDraft) {
-	service.host = host
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
+	service.templateService = templateService
 	service.draftService = draftService
+	service.attachmentService = attachmentService
+
+	service.host = host
+	service.streamUpdateChannel = streamUpdateChannel
 }
 
 // Close stops any background processes controlled by this service
