@@ -2,7 +2,7 @@
 
 {{- if gt (len $mentions) 0 -}}
 	<div class="widget mentions space-above">
-		<h3>Mentions</h3>
+		<div class="text-lg bold space-below">Mentions</div>
 		{{- range .Mentions -}}
 			<div class="flex-row" script="on click go to url '{{.Origin.URL}}' in new window" role="link">
 				<div style="width:24px;">

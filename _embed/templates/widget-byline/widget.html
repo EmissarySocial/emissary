@@ -7,13 +7,15 @@
 			<img src="{{$author.ImageURL}}" class="circle u-photo turboclick" style="height:2em; width:2em;">
 		{{- end -}}
 
-		{{- if ne "" $author.ProfileURL -}}
-			<a href="{{$author.ProfileURL}}" class="p-name u-url turboclick">{{$author.Name}}</a>
-		{{- else -}}
-			<span class="p-name">{{$author.Name}}</span>
+		{{- if ne "" $author.Name -}}
+			{{- if ne "" $author.ProfileURL -}}
+				<a href="{{$author.ProfileURL}}" class="p-name u-url turboclick">{{$author.Name}}</a> &middot; 
+			{{- else -}}
+				<span class="p-name">{{$author.Name}}</span> &middot; 
+			{{- end -}}
 		{{- end -}}
 	</div>
 	
-	&middot; Published
+	Published
 	<time class="dt-published" datetime="{{.PublishDateRFC3339}}">{{.PublishDateUnix.Format "Jan 2, 2006"}}</time>
 </div>
