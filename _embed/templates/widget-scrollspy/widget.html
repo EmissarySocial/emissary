@@ -1,20 +1,23 @@
 <script type="text/hyperscript" src="/.widgets/scrollspy/hyperscript"></script>
 
 <style>
+	#scrollspy {
+		position:fixed;
+		background-color:var(--white);
+	}
+
 	#scrollspy .scrollspy-item {
 		display:block;
 		white-space: nowrap;
 		overflow:hidden;
 		text-overflow:ellipsis;
 		line-height:180%;
-	}
-
-	#scrollspy .scrollspy-item a {
 		color:var(--gray80);
+		border-left:solid 2px transparent;
 	}
 
 	#scrollspy .level-1 {
-		font-size: 18px;
+		font-size: 15px;
 		padding-left:0px;
 		font-weight:bold;
 	}
@@ -25,15 +28,23 @@
 	}
 
 	#scrollspy .level-3 {
-		font-size: 12px;
+		font-size: 15px;
 		padding-left:16px;
 	}
 
 	#scrollspy .level-4 {
-		font-size: 10px;
+		font-size: 15px;
 		padding-left:24px;
+	}
+
+	#scrollspy .scrollspy-item.selected {
+		font-weight:600;
+		color:var(--black);
+		border-left: solid 2px var(--gray80);
 	}
 
 </style>
 
-<div id="scrollspy"></div>
+<div id="scrollspy">
+	<div class="text-lg bold space-below">Contents</div>
+</div>

@@ -1,14 +1,42 @@
 init
 	set contentNode to first from < .e-content />
-	set nodes to <h1, h2, h3, h4 /> in contentNode
+	set scrollspy_targets to <h1, h2, h3, h4 /> in contentNode
 
-	for node in nodes
-		set anchor to `<div class="scrollspy-item ${scrollspy_indent(node)}"><a href="#${node.id}">${node.textContent}</a></div>`
+	for node in scrollspy_targets
+		if node.id is "" then 
+			set node.id to "scrollspy-" + Math.random()
+		end
+		set anchor to `<a class="scrollspy-item ${scrollspy_indent(node)}" href="#${node.id}">${node.textContent}</a>`
 		put anchor at the end of #scrollspy
 	end
 
+	call scrollspy()
 end
-	
+
+on scroll from window debounced at 20ms
+	call scrollspy()
+end
+
+on click from < .scrollspy a />
+	call scrollspy()
+end
+
+def scrollspy() 
+
+	set contentNode to first from < .e-content />
+	set scrollspy_targets to <h1, h2, h3, h4 /> in contentNode
+
+	for node in scrollspy_targets
+		measure the node
+		if (result.top < window.innerHeight) and (result.bottom >= 0)
+			set hash to "#" + node.id
+			set node to first from <a.scrollspy-item[href="${hash}"] />
+			take .selected from <.scrollspy-item /> for node
+			exit
+		end
+	end
+end
+
 def scrollspy_indent(node)
 
 	if node.tagName is "H1"
@@ -25,3 +53,4 @@ def scrollspy_indent(node)
 
 	return "level-4"
 end
+
