@@ -7,7 +7,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 
 	mail "github.com/xhit/go-simple-mail/v2"
 )
@@ -15,14 +16,14 @@ import (
 type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
-	locations         []config.Folder
+	locations         []mapof.String
 	templates         *template.Template
 
 	changed chan bool
 	closed  chan bool
 }
 
-func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []config.Folder) ServerEmail {
+func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
 	service := ServerEmail{
 		filesystemService: filesystemService,
@@ -40,7 +41,7 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
  * Lifecycle Methods
  ******************************************/
 
-func (service *ServerEmail) Refresh(locations []config.Folder) {
+func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
 
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
@@ -48,7 +49,7 @@ func (service *ServerEmail) Refresh(locations []config.Folder) {
 	}
 
 	// RULE: If nothing has changed since the last time we refreshed, then we're done.
-	if slice.Equal(locations, service.locations) {
+	if slicesAreEqual(locations, service.locations) {
 		return
 	}
 
@@ -117,7 +118,7 @@ func (service *ServerEmail) loadTemplates() error {
 			return derp.Report(err)
 		}
 
-		fmt.Println("... email: " + location.Location)
+		fmt.Println("... email: " + location["location"])
 	}
 
 	// If we got this far, then we're good to go!

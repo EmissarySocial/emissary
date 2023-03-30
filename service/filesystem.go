@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/tools/s3uri"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
@@ -38,21 +38,21 @@ func NewFilesystem(embedded fs.FS) Filesystem {
  ******************************************/
 
 // GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
-func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
+func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
-	switch folder.Adapter {
+	switch folder["adapter"] {
 
 	// Detect embedded file system
 	case config.FolderAdapterEmbed:
-		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder.Location)
+		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder["location"])
 		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", folder)
 
 	// Detect filesystem type
 	case config.FolderAdapterFile:
-		return os.DirFS(folder.Location), nil
+		return os.DirFS(folder["location"]), nil
 
 	case config.FolderAdapterGit:
-		locationURL, err := url.Parse(folder.Location)
+		locationURL, err := url.Parse(folder["location"])
 
 		if err != nil {
 			return nil, derp.Wrap(err, "service.Filesystem.GetFS", "Error parsing Git URL", folder)
@@ -71,7 +71,7 @@ func (filesystem *Filesystem) GetFS(folder config.Folder) (fs.FS, error) {
 }
 
 // GetFSs returns multiple fs.FS filesystems
-func (filesystem *Filesystem) GetFSs(folders ...config.Folder) []fs.FS {
+func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
 
 	result := make([]fs.FS, len(folders))
 
@@ -91,45 +91,49 @@ func (filesystem *Filesystem) GetFSs(folders ...config.Folder) []fs.FS {
  ******************************************/
 
 // GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
-func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
+func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 
-	switch folder.Adapter {
+	switch folder["adapter"] {
 
 	// Detect filesystem type
 	case config.FolderAdapterFile:
-		return afero.NewBasePathFs(afero.NewOsFs(), folder.Location), nil
+		return afero.NewBasePathFs(afero.NewOsFs(), folder["location"]), nil
 
 	// Detect S3 filesystem type
 	case config.FolderAdapterS3:
-		// uri, err := url.Parse(folder.Location)
-		uri, err := s3uri.ParseString(folder.Location)
 
-		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error parsing S3 URI", uri)
-		}
-
-		spew.Dump("GetAfero.S3", uri)
+		// Requires:
+		// accessKey
+		// secretKey
+		// token
+		// region
+		// endpoint
+		// bucket
+		// path
 
 		// Read session configuration
-		config := aws.Config{Region: uri.Region}
-
-		if uri.HasCredentials() {
-			config.Credentials = credentials.NewStaticCredentials(uri.GetCredentials())
+		config := aws.Config{
+			Credentials: credentials.NewStaticCredentials(folder["accessKey"], folder["secretKey"], folder["token"]),
+			Region:      pointerTo(folder["region"]),
+			Endpoint:    pointerTo(folder["endpoint"]),
 		}
 
-		spew.Dump(config)
+		spew.Dump(folder, config, folder["bucket"], folder["path"])
 
 		// Try to make an S3 session
 		session, err := session.NewSession(&config)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", uri)
+			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", folder)
 		}
 
 		spew.Dump("success??")
 
 		// Create an S3 filesystem
-		return s3.NewFs(*uri.Bucket, session), nil
+		result := s3.NewFs(folder["bucket"], session)
+
+		// Force sub-directory
+		return afero.NewBasePathFs(result, folder["path"]), nil
 	}
 
 	// TODO: Implement other Afero adapters to link to other cloud storage providers?
@@ -145,7 +149,7 @@ func (filesystem *Filesystem) GetAfero(folder config.Folder) (afero.Fs, error) {
 }
 
 // GetAferos returns multiple afero filesystems
-func (filesystem *Filesystem) GetAferos(folders ...config.Folder) []afero.Fs {
+func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 
 	result := make([]afero.Fs, len(folders))
 
@@ -165,10 +169,10 @@ func (filesystem *Filesystem) GetAferos(folders ...config.Folder) []afero.Fs {
  ******************************************/
 
 // Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
-func (filesystem *Filesystem) Watch(folder config.Folder, changed chan<- bool, closed <-chan bool) error {
+func (filesystem *Filesystem) Watch(folder mapof.String, changed chan<- bool, closed <-chan bool) error {
 
-	if folder.Adapter == config.FolderAdapterFile {
-		return filesystem.watchOS(folder.Location, changed, closed)
+	if folder["adapter"] == config.FolderAdapterFile {
+		return filesystem.watchOS(folder["location"], changed, closed)
 	}
 
 	// Otherwise, this adapter doesn't support watching so just exit silently

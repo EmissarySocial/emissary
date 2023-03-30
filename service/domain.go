@@ -280,9 +280,9 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	*/
 
-	codeChallenge := oauth2.SetAuthURLParam("code_challenge", value(client.GetStringOK("code_challenge")))
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", client.GetString("code_challenge"))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
-	authCodeURL := config.AuthCodeURL(value(client.GetStringOK("state")), codeChallenge, codeChallengeMethod)
+	authCodeURL := config.AuthCodeURL(client.GetString("state"), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL, nil
 }
@@ -315,7 +315,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	config := provider.OAuthConfig()
 
 	token, err := config.Exchange(context.Background(), code,
-		oauth2.SetAuthURLParam("code_verifier", value(client.GetStringOK("code_challenge"))),
+		oauth2.SetAuthURLParam("code_verifier", client.GetString("code_challenge")),
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthCallbackURL(providerID)))
 
 	if err != nil {

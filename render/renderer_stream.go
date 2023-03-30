@@ -356,7 +356,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 
 	widgetService := w._factory.Widget()
 	var buffer bytes.Buffer
-	buffer.WriteString(`<div class="widgets ` + location + `">`)
+	buffer.WriteString(`<div id="widget-` + location + `" class="widgets ` + location + `">`)
 	for _, streamWidget := range list {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetRenderer := NewWidget(&w, streamWidget)

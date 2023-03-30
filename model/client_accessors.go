@@ -20,6 +20,11 @@ func (client Client) GetObject(name string) (any, bool) {
 	return nil, false
 }
 
+func (client Client) GetString(name string) string {
+	result, _ := client.GetStringOK(name)
+	return result
+}
+
 func (client Client) GetStringOK(name string) (string, bool) {
 	switch name {
 

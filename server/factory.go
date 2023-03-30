@@ -15,6 +15,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/cache"
 	"github.com/benpate/icon"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
@@ -75,7 +77,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		factory.Theme(),
 		factory.Widget(),
 		factory.FuncMap(),
-		[]config.Folder{},
+		sliceof.NewObject[mapof.String](),
 	)
 
 	factory.contentService = service.NewContent(factory.EditorJS())
@@ -84,7 +86,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
 		factory.FuncMap(),
-		[]config.Folder{},
+		sliceof.NewObject[mapof.String](),
 	)
 
 	go factory.start()

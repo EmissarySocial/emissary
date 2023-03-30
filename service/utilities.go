@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -196,6 +197,24 @@ func findDefinition(filesystem fs.FS) (string, []byte, error) {
 	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
 }
 
-func value[T any](value T, _ bool) T {
-	return value
+// pointerTo returns a pointer to a given value.  This is just
+// some syntactic sugar for optional fields in API calls.
+func pointerTo[T any](value T) *T {
+	return &value
+}
+
+func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
+	// Lengths must be identical
+	if len(value1) != len(value2) {
+		return false
+	}
+
+	// Items at each index must be identical
+	for index := range value1 {
+		if !value1[index].Equal(value2[index]) {
+			return false
+		}
+	}
+
+	return true
 }

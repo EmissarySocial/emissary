@@ -8,37 +8,36 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates         set.Map[model.Template] // map of all templates available within this domain
-	templatePrep      set.Map[model.Template] // temporary map of templates that are being prepared
-	locations         []config.Folder         // Configuration for template directory
-	filesystemService Filesystem              // Filesystem service
-	themeService      *Theme                  // Theme Service
-	widgetService     *Widget                 // Widget Service
-	funcMap           template.FuncMap        // Map of functions to use in golang templates
-	mutex             sync.RWMutex            // Mutext that locks access to the templates structure
-	changed           chan bool               // Channel that is used to signal that a template has changed
-	closed            chan bool               // Channel to notify the watcher to close/reset
+	templates         set.Map[model.Template]      // map of all templates available within this domain
+	templatePrep      set.Map[model.Template]      // temporary map of templates that are being prepared
+	locations         sliceof.Object[mapof.String] // Configuration for template directory
+	filesystemService Filesystem                   // Filesystem service
+	themeService      *Theme                       // Theme Service
+	widgetService     *Widget                      // Widget Service
+	funcMap           template.FuncMap             // Map of functions to use in golang templates
+	mutex             sync.RWMutex                 // Mutext that locks access to the templates structure
+	changed           chan bool                    // Channel that is used to signal that a template has changed
+	closed            chan bool                    // Channel to notify the watcher to close/reset
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []config.Folder) *Template {
+func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []mapof.String) *Template {
 
 	service := Template{
 		templates:         make(set.Map[model.Template]),
 		templatePrep:      make(set.Map[model.Template]),
-		locations:         make([]config.Folder, 0),
+		locations:         make(sliceof.Object[mapof.String], 0),
 		filesystemService: filesystemService,
 		themeService:      themeService,
 		widgetService:     widgetService,
@@ -56,7 +55,7 @@ func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetServic
  * Lifecycle Methods
  ******************************************/
 
-func (service *Template) Refresh(locations []config.Folder) {
+func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
@@ -64,7 +63,7 @@ func (service *Template) Refresh(locations []config.Folder) {
 	}
 
 	// RULE: If nothing has changed since the last time we refreshed, then we're done.
-	if slice.Equal(locations, service.locations) {
+	if slicesAreEqual(locations, service.locations) {
 		return
 	}
 

@@ -502,7 +502,7 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 	// Try to make a new subfolder at the chosen path (returns nil if already exists)
 	if err := base.MkdirAll(path, 0777); err != nil {
 		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Error creating subfolder", path))
-		panic(err)
+		// panic(err)
 	}
 
 	// Return a filesystem pointing to the new subfolder.

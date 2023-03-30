@@ -8,9 +8,11 @@ replace github.com/benpate/data => ../../benpate/data
 
 replace github.com/benpate/data-mongo => ../../benpate/data-mongo
 
+replace github.com/benpate/exp-builder => ../../benpate/exp-builder
+
 replace github.com/benpate/hannibal => ../../benpate/hannibal
 
-replace github.com/benpate/exp-builder => ../../benpate/exp-builder
+replace github.com/benpate/mediaserver => ../../benpate/mediaserver
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1

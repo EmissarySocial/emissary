@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -16,17 +17,17 @@ import (
 
 // Config defines all of the domains available on this server
 type Config struct {
-	Domains             set.Slice[Domain]      `json:"domains"`             // Slice of one or more domain configurations
-	Providers           set.Slice[Provider]    `json:"providers"`           // Slice of one or more OAuth client configurations
-	Templates           sliceof.Object[Folder] `json:"templates"`           // Folders containing all stream templates
-	Emails              sliceof.Object[Folder] `json:"emails"`              // Folders containing email templates
-	AttachmentOriginals Folder                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
-	AttachmentCache     Folder                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
-	Certificates        Folder                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
-	AdminEmail          string                 `json:"adminEmail"`          // Email address of the administrator
-	Source              string                 `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
-	Location            string                 `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
-	MongoID             primitive.ObjectID     `json:"_" bson:"_id"`        // Used as unique key for MongoDB
+	Domains             set.Slice[Domain]            `json:"domains"`             // Slice of one or more domain configurations
+	Providers           set.Slice[Provider]          `json:"providers"`           // Slice of one or more OAuth client configurations
+	Templates           sliceof.Object[mapof.String] `json:"templates"`           // Folders containing all stream templates
+	Emails              sliceof.Object[mapof.String] `json:"emails"`              // Folders containing email templates
+	AttachmentOriginals mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
+	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
+	Certificates        mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
+	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
+	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
+	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
+	MongoID             primitive.ObjectID           `json:"_" bson:"_id"`        // Used as unique key for MongoDB
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -43,11 +44,11 @@ func DefaultConfig() Config {
 		Domains: set.Slice[Domain]{},
 
 		// File Locations
-		Templates:           []Folder{{Adapter: "EMBED", Location: "templates"}},
-		Emails:              []Folder{{Adapter: "EMBED", Location: "emails"}},
-		AttachmentOriginals: Folder{Adapter: "FILE", Location: ".emissary/attachments"},
-		AttachmentCache:     Folder{Adapter: "FILE", Location: ".emissary/cache"},
-		Certificates:        Folder{Adapter: "FILE", Location: ".emissary/certificates"},
+		Templates:           []mapof.String{{"adapter": "EMBED", "location": "templates"}},
+		Emails:              []mapof.String{{"adapter": "EMBED", "location": "emails"}},
+		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": ".emissary/attachments"},
+		AttachmentCache:     mapof.String{"adapter": "FILE", "location": ".emissary/cache"},
+		Certificates:        mapof.String{"adapter": "FILE", "location": ".emissary/certificates"},
 	}
 }
 
