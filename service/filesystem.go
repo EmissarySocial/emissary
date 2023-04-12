@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 
@@ -107,7 +106,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		// secretKey
 		// token
 		// region
-		// endpoint
+		// location
 		// bucket
 		// path
 
@@ -115,10 +114,8 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		config := aws.Config{
 			Credentials: credentials.NewStaticCredentials(folder["accessKey"], folder["secretKey"], folder["token"]),
 			Region:      pointerTo(folder["region"]),
-			Endpoint:    pointerTo(folder["endpoint"]),
+			Endpoint:    pointerTo(folder["location"]),
 		}
-
-		spew.Dump(folder, config, folder["bucket"], folder["path"])
 
 		// Try to make an S3 session
 		session, err := session.NewSession(&config)
@@ -126,8 +123,6 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		if err != nil {
 			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", folder)
 		}
-
-		spew.Dump("success??")
 
 		// Create an S3 filesystem
 		result := s3.NewFs(folder["bucket"], session)

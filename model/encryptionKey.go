@@ -28,14 +28,13 @@ func NewEncryptionKey() EncryptionKey {
 func EncryptionKeySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"encryptionKeyId": schema.String{Format: "objectId"},
-			"userId":          schema.String{Format: "objectId"},
-			"type":            schema.String{},
-			"encoding":        schema.String{},
-			"publicPEM":       schema.String{},
-			"privatePEM":      schema.String{},
+			"encryptionKeyId": schema.String{Format: "objectId", Required: true},
+			"userId":          schema.String{Format: "objectId", Required: true},
+			"type":            schema.String{Required: true},
+			"encoding":        schema.String{Required: true},
+			"publicPEM":       schema.String{Required: true},
+			"privatePEM":      schema.String{Required: true},
 		},
-		RequiredProps: []string{"encryptionKeyId", "userId", "type", "encoding", "publicPEM", "privatePEM"},
 	}
 }
 

@@ -1,0 +1,112 @@
+behavior showIf(condition)
+
+	init
+		set :form to the closest <form/>
+		set :expression to parse(condition)
+	end
+
+	on load
+		trigger doTheThing
+	end
+
+	on change from closest <form/>
+		trigger doTheThing
+	end
+
+	on doTheThing
+		set values to :form as Values
+		if evaluateExpression(:expression, values) then
+			show me
+		else
+			hide me
+		end
+	end
+end
+
+js
+function parse(value) {
+	if (value == null) {
+		return {field: "", operator: "", value: ""}
+	}
+
+	var result = {}
+	var field = split(value)
+	var operator = split(field.tail)
+	result["field"] = field.head
+	result["operator"] = parseOperator(operator.head)
+	result["value"] = operator.tail
+
+	return result
+}
+
+function split(value) {
+	let i = value.indexOf(" ")
+	return {
+		head: value.substring(0, i),
+		tail: value.substring(i + 1)
+	}
+}
+
+function parseOperator(value) {
+
+	switch (value) {
+
+	case "eq":
+	case "is":
+	case "&equals;":
+	case "=":
+	case "==":
+		return "="
+
+	case "ne":
+	case "&ne;": 
+	case "!=":
+		return "!="
+
+	case "gt": 
+	case "&gt;": 
+	case ">":
+		return ">"
+
+	case "lt": 
+	case "&lt;":
+	case "<":
+		return "<"
+
+	case "ge":
+	case "&ge;": 
+	case ">=":
+		return ">="
+
+	case "le":
+	case "&le;":
+	case "<=":
+		return "<="
+	}
+
+	return ""
+}
+
+function evaluateExpression(exp, object) {
+	var value = object[exp.field]
+
+	switch (exp.operator) {
+
+	case "=":
+		return value == exp.value
+	case "!=":
+		return value != exp.value
+	case ">":
+		return value > exp.value
+	case "<":
+		return value < exp.value
+	case ">=":
+		return value >= exp.value
+	case "<=":
+		return value <= exp.value
+	}
+
+	return false
+}
+
+end

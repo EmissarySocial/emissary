@@ -126,7 +126,7 @@ func (step StepSetSimpleSharing) form() form.Element {
 		Type: "layout-vertical",
 		Children: []form.Element{
 			{Type: "radio", Path: "rule", Options: mapof.Any{"provider": "sharing"}},
-			{Type: "multiselect", Path: "groupIds", Options: mapof.Any{"provider": "groups"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
+			{Type: "multiselect", Path: "groupIds", Options: mapof.Any{"provider": "groups", "show-if": "rule is private"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
 		},
 	}
 }

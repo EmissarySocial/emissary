@@ -174,11 +174,19 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Children: []form.Element{
 				{Type: "layout-vertical", Label: "Originals", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "attachmentOriginals.adapter"},
-					{Type: "text", Label: "Location", Path: "attachmentOriginals.location"},
+					{Type: "text", Label: "Location / Endpoint", Path: "attachmentOriginals.location"},
+					{Type: "text", Label: "AccessKey", Path: "attachmentOriginals.accessKey", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "attachmentOriginals.secretKey", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "attachmentOriginals.bucket", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "attachmentOriginals.path", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
 				}},
 				{Type: "layout-vertical", Label: "Thumbnails", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "attachmentCache.adapter"},
 					{Type: "text", Label: "Location", Path: "attachmentCache.location"},
+					{Type: "text", Label: "AccessKey", Path: "attachmentCache.accessKey", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "attachmentCache.secretKey", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "attachmentCache.bucket", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "attachmentCache.path", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
 				}},
 			},
 		}, false, nil
@@ -190,6 +198,10 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "certificates.adapter"},
 				{Type: "text", Label: "Location", Path: "certificates.location"},
+				{Type: "text", Label: "AccessKey", Path: "certificates.accessKey", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "SecretKey", Path: "certificates.secretKey", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "Bucket", Path: "certificates.bucket", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "Path", Path: "certificates.path", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
 			},
 		}, false, nil
 
