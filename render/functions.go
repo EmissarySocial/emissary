@@ -24,6 +24,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.Int(a) - convert.Int(b)
 		},
 
+		"divide": func(a any, b any) int64 {
+			return convert.Int64(a) / convert.Int64(b)
+		},
+
 		"icon": func(name string) template.HTML {
 			return template.HTML(icons.Get(name))
 		},

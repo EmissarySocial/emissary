@@ -1,25 +1,25 @@
-<h2 class="black ellipsis">{{.Document.Label}}</h2>
+<div class="space-below">
+	<h2 class="black ellipsis">{{.Document.Label}}</h2>
 
-{{- if ne .Document.ImageURL "" -}}
-	<div class="space-below" style="width:100%; max-width:800px;">
-		<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
+	{{- if ne .Document.ImageURL "" -}}
+		<div class="space-below" style="width:100%; max-width:800px;">
+			<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
+		</div>
+	{{- end -}}
+
+	<div class="text-gray ellipsis-block" style="max-height:6em;">
+		{{- .Document.Summary -}}
 	</div>
-{{- end -}}
 
-<div class="text-gray ellipsis-block" style="max-height:6em;">
-	{{- .Document.Summary -}}
+	<div class="text-sm space-below flex-row">
+		<span class="ellipsis">
+			{{- icon .Origin.Icon }}
+			{{ .Origin.Label }} &middot;
+			{{ .Author.Name -}}
+			&nbsp;&middot;
+		</span>
+		<span class="nowrap">
+			{{- .PublishDate | tinyDate -}}
+		</span>
+	</div>
 </div>
-
-<div class="text-sm space-below flex-row">
-	<span class="ellipsis">
-		{{- icon .Origin.Icon }}
-		{{ .Origin.Label }} &middot;
-		{{ .Author.Name -}}
-		&nbsp;&middot;
-	</span>
-	<span class="nowrap">
-		{{- .PublishDate | tinyDate -}}
-	</span>
-</div>
-
-<hr>

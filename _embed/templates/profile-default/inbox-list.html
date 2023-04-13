@@ -10,21 +10,21 @@
 
 	{{- if gt $folder.ReadDate 0 -}}
 
-		<div 
-			hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
-			hx-target="this"
-			hx-swap="outerHTML"
-			hx-push-url="false"
-			role="button"
-			class="space-below">
-			<div class="text-sm text-gray" style="margin:0px;">
-				&uarr; Read Posts &bull; click to view
-			</div>
-			<div style="border-top:solid 2px red;"></div>
-			<div class="text-sm text-red" style="margin:0px;">
-				&darr; New Posts &bull; {{ $folder.ReadDateSeconds | longDate }}
-			</div>
+	<div 
+		hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
+		hx-target="this"
+		hx-swap="beforebegin"
+		hx-push-url="false"
+		role="button"
+		class="space-below">
+		<div class="text-sm text-gray" style="margin:0px;">
+			&uarr; Older Posts &bull; click to view
 		</div>
+		<div style="border-top:solid 2px red;"></div>
+		<div class="text-sm text-red" style="margin:0px;">
+			&darr; New Posts &bull; {{ $folder.ReadDateSeconds | longDate }}
+		</div>
+	</div>
 
 	{{- end -}}
 	
@@ -37,7 +37,7 @@
 		<div 
 			id="item_{{.MessageID.Hex}}" 
 			role="button"
-			class="message" 
+			class="message"
 			style="max-width:640px;"
 			hx-get="/@me/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
 			hx-push-url="false">

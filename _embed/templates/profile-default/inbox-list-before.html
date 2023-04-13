@@ -17,14 +17,8 @@
 		hx-push-url="false"
 		role="button"
 		class="space-below">
-			<div class="text-sm text-gray" style="margin:0px;">
-				&uarr; Read Posts &bull; click to view
-			</div>
-			<div style="border-top:solid 2px red;"></div>
-			<div class="text-sm text-red" style="margin:0px;">
-				&darr; New Posts &bull; {{ $firstMessage.RankSeconds | longDate }}
-			</div>
-		</div>
+		<button class="text-xs">&uarr; Older than {{ divide $firstMessage.Rank 1000 | longDate }}</button>
+		<div style="border-top:solid 2px var(--gray30);"></div>
 	</div>
 
 	{{- range $index, $message := $inbox -}}
