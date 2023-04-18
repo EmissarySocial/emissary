@@ -74,7 +74,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 		header := ctx.Response().Header()
 
-		header.Set("Mime-Type", attachment.DownloadMimeType())
+		header.Set("Mime-Type", filespec.MimeType)
 		header.Set("ETag", attachment.ETag())
 
 		if stream.DefaultAllowAnonymous() {
