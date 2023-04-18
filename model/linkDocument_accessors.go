@@ -9,7 +9,7 @@ func DocumentLinkSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"url":          schema.String{Format: "url"},
 			"label":        schema.String{MaxLength: 128},
-			"summary":      schema.String{MaxLength: 1024},
+			"summary":      schema.String{Format: "html"},
 			"imageUrl":     schema.String{Format: "url"},
 			"attributedTo": schema.Array{Items: PersonLinkSchema()},
 		},

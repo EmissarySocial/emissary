@@ -40,7 +40,7 @@
 			</div>
 		{{- end -}}
 
-		<div>{{$message.Document.Summary}}</div>
+		<div>{{$message.Document.Summary | html}}</div>
 		<div>{{$message.ContentHTML | html}}</div>
 	</div>
 

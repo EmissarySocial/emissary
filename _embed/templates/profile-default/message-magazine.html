@@ -5,7 +5,7 @@
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1 class="ellipsis">{{$message.Document.Label}}</h1>
+	<h1>{{$message.Document.Label}}</h1>
 
 	<div class="text-gray space-below ellipsis">
 		<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
@@ -40,7 +40,7 @@
 			</div>
 		{{- end -}}
 
-		<div>{{$message.Document.Summary}}</div>
+		<div>{{$message.Document.Summary | html}}</div>
 		<div>{{$message.ContentHTML | html}}</div>
 	</div>
 

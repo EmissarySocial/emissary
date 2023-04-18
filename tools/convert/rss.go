@@ -89,12 +89,7 @@ func rssToActivity_populate(message *model.Message) {
 }
 
 func rssSummary(rssItem *gofeed.Item) string {
-
-	if rssItem.Description != "" {
-		return htmlTools.ToText(rssItem.Description)
-	}
-
-	return ""
+	return rssItem.Description
 }
 
 // rssAuthor returns all information about the actor of an RSS item

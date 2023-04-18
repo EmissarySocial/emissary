@@ -49,7 +49,7 @@
 			</div>
 		{{- end -}}
 
-		<div>{{.Message.Document.Summary}}</div>
+		<div>{{.Message.Document.Summary | html}}</div>
 		<div>{{.Message.ContentHTML | html}}</div>
 	</div>
 	<hr>
