@@ -15,7 +15,7 @@
 					<button hx-get="/{{.StreamID}}/edit">Edit</button>
 				</div>
 			{{- end -}}
-			<div hx-get="/{{.StreamID}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
+			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
 				<div style="height:60px; width:60px;">
 					<div class="circle aspect-square placeholder-gray" style="height:60px; width:60px;">
 						{{- if ne $author.ImageURL "" -}}

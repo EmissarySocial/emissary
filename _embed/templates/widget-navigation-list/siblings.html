@@ -9,14 +9,14 @@
 
 	{{- range $index, $sibling := $siblings -}}
 		{{- if eq $streamID $sibling.StreamID -}}
-			<div class="bold ellipsis">{{.Label}}</div>
+			<div class="bold ellipsis">{{$sibling.Label}}</div>
 
 			{{- if ne "Hidden" $configChildren -}}
 				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
 			{{- end -}}
 
 		{{- else -}}
-			<div class="ellipsis"><a hx-get="/{{$sibling.StreamID}}" class="turboclick">{{.Label}}</a></div>
+			<div class="ellipsis"><a href="/{{$sibling.Token}}" hx-get="/{{$sibling.Token}}" class="turboclick">{{$sibling.Label}}</a></div>
 		{{- end -}}
 	{{- end -}}
 
