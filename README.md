@@ -46,6 +46,10 @@ This means that Emissary must be an exemplary citizen in any DevOps workflow.  I
 
 Emissary is built to be fast on any hardware.  Lightweight, cacheable templates work with the latest web performance techniques from [htmx.org](https://htmx.org) for a web application that always loads quickly and runs smoothly.
 
+## Get Started
+
+To get started, visit the [Emissary Developer Website](https://emissary.dev).  This resource is growing every day, and includes [a quickstart guide](https://emissary.dev/installation) along with detailed documentation on [how to configure Emissary](https://emissary.dev/configuring) for your own environment.
+
 ## Feature Checklist
 
 There's a lot of work to do.  Check out the [project status page](https://emissary.dev/status) and the [Emissary kanban](https://trello.com/b/Ir9dDTdu/emissary-dev) for a peek at where we are right now.
