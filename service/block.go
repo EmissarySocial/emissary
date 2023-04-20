@@ -321,6 +321,8 @@ func (service *Block) ValidateNewExternal(block *model.Block) error {
 // publish marks the Block as published, and sends "Create" activities to all ActivityPub followers
 func (service *Block) publish(block *model.Block) error {
 
+	spew.Dump("block.publish", block)
+
 	// Get all ActivityPub followers
 	followers, err := service.followerService.ChannelActivityPub(block.UserID)
 
@@ -329,6 +331,7 @@ func (service *Block) publish(block *model.Block) error {
 	}
 
 	if followers == nil {
+		spew.Dump("no followers")
 		return nil
 	}
 
@@ -341,6 +344,7 @@ func (service *Block) publish(block *model.Block) error {
 
 	// Send a "Create" activity to all followers
 	for follower := range followers {
+		spew.Dump("to follower", follower)
 		service.queue.Run(pub.SendCreateQueueTask(actor, block.JSONLD, follower.Actor.InboxURL))
 	}
 
