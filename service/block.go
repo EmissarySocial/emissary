@@ -17,6 +17,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -380,7 +381,7 @@ func (service *Block) unpublish(block *model.Block, saveAfter bool) error {
 		return derp.Wrap(err, "service.Block.publishChanges", "Error loading Actor for Block", block)
 	}
 
-	// Send a "Create" activity to all followers
+	// Send a "Undo" activity to all followers
 	for follower := range followers {
 		service.queue.Run(pub.SendUndoQueueTask(actor, block.JSONLD, follower.Actor.InboxURL))
 	}
