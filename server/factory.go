@@ -158,9 +158,11 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		fmt.Println("")
 		fmt.Println("INCOMPLETE CONFIGURATION...")
 		fmt.Println("It looks like you're using the starter configuration file, which contains blank")
-		fmt.Println("values that should be filled in before running.")
+		fmt.Println("values that should be filled in before running. Please exit the program and edit")
+		fmt.Println("the configuration")
 		fmt.Println("")
-		fmt.Println("Try exiting, then running Emissary with the --setup flag to edit the config file.")
+		fmt.Println("Run with --init to create a new configuration file")
+		fmt.Println("Run with --setup to edit the config in the setup console")
 
 		return derp.NewInternalError("server.Factory.refreshDomain", "Incomplete Configuration File")
 	}
