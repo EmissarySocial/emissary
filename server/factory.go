@@ -138,12 +138,32 @@ func (factory *Factory) start() {
 			}
 			factory.mutex.Unlock()
 		}
+
+		// Remove any domains that are still marked for deletion
+		for domainID := range factory.domains {
+			factory.mutex.Lock()
+			if factory.domains[domainID].MarkForDeletion {
+				delete(factory.domains, domainID)
+			}
+			factory.mutex.Unlock()
+		}
 	}
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
 // CALLS TO THIS MUST BE LOCKED
 func (factory *Factory) refreshDomain(config config.Config, domainConfig config.Domain) error {
+
+	if domainConfig.IsStarterContent() {
+		fmt.Println("")
+		fmt.Println("INCOMPLETE CONFIGURATION...")
+		fmt.Println("It looks like you're using the starter configuration file, which contains blank")
+		fmt.Println("values that should be filled in before running.")
+		fmt.Println("")
+		fmt.Println("Try exiting, then running Emissary with the --setup flag to edit the config file.")
+
+		return derp.NewInternalError("server.Factory.refreshDomain", "Incomplete Configuration File")
+	}
 
 	// Try to find the domain
 	if existing := factory.domains[domainConfig.Hostname]; existing != nil {

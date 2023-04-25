@@ -1,0 +1,53 @@
+{
+	"domains": [
+		{
+			"domainId":"000000000000000000000000",
+			"label":"Test Database",
+			"hostname":"localhost",
+			"connectString":"---",
+			"databaseName":"---",
+			"smtp": {
+				"hostname":"---",
+				"username":"---",
+				"password":"---",
+				"port": 465,
+				"tls": false
+			},
+			"owner": {
+				"displayName":"---",
+				"username":"---",
+				"emailAddress":"---",
+				"phoneNumber":"---",
+				"mailingAddress":"---"
+			}
+		}
+	],
+	"providers": [],
+	"templates": [
+		{
+			"adapter":"FILE",
+			"location":"./_embed/templates"
+		}
+	],
+	"emails": [
+		{
+			"adapter":"FILE",
+			"location":"./_embed/emails"
+		}
+	],
+	"attachmentOriginals": {
+		"adapter":"FILE",
+		"location":".emissary/attachmentOriginals"
+	},
+	"attachmentCache": {
+		"adapter":"FILE",
+		"location":".emissary/attachmentCaches"
+	},
+	"certificates": {
+		"adapter":"FILE",
+		"location":".emissary/certificates"
+	},
+	"adminEmail":"",
+	"httpPort":8080,
+	"httpsPort":0
+}

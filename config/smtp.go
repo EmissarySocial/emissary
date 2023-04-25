@@ -24,7 +24,7 @@ func (smtp SMTPConnection) Validate() error {
 
 // Server generates a fully initialized SMTP server object.
 // This object may still be invalid, if the SMTPConnection is not populated with correct information.
-func (smtp *SMTPConnection) Server() (*mail.SMTPServer, bool) {
+func (smtp SMTPConnection) Server() (*mail.SMTPServer, bool) {
 
 	if smtp.Validate() != nil {
 		return nil, false
@@ -38,4 +38,21 @@ func (smtp *SMTPConnection) Server() (*mail.SMTPServer, bool) {
 	result.Password = smtp.Password
 
 	return result, true
+}
+
+func (smtp SMTPConnection) IsStarterContent() bool {
+
+	if smtp.Hostname == "---" {
+		return true
+	}
+
+	if smtp.Username == "---" {
+		return true
+	}
+
+	if smtp.Password == "---" {
+		return true
+	}
+
+	return false
 }

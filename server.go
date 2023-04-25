@@ -41,11 +41,11 @@ func main() {
 	spew.Config.DisableMethods = true
 	spew.Config.Indent = " "
 
-	// Locate the configuration file and populate the factory
+	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
 	configStorage := config.Load(commandLineArgs)
 
-	factory := server.NewFactory(configStorage, embeddedFiles)
+	serverFactory := server.NewFactory(configStorage, embeddedFiles)
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -68,9 +68,9 @@ func main() {
 
 	// Based on configuration, add all other routes and start web server
 	if commandLineArgs.Setup {
-		makeSetupRoutes(factory, e)
+		makeSetupRoutes(serverFactory, e)
 	} else {
-		makeStandardRoutes(factory, e)
+		makeStandardRoutes(serverFactory, e)
 	}
 }
 
