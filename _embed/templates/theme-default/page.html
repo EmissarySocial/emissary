@@ -19,16 +19,16 @@
 			</div>
 			<div class="right">
 				{{- if .IsAuthenticated -}}
-					{{- if eq $topID "inbox" -}}
-						<a href="/@me/inbox" class="selected turboclick">{{icon "email-fill"}} Inbox</a>
-					{{- else -}}
-						<a href="/@me/inbox" class="turboclick">{{icon "email"}} Inbox</a>
-					{{- end -}}
-
 					{{- if eq $topID "profile" -}}
 						<a href="/@me" class="selected turboclick">{{icon "person-fill"}} Profile</a>
 					{{- else -}}
 						<a href="/@me" class="turboclick">{{icon "person"}} Profile</a>
+					{{- end -}}
+
+					{{- if eq $topID "inbox" -}}
+						<a href="/@me/inbox" class="selected turboclick">{{icon "email-fill"}} Inbox</a>
+					{{- else -}}
+						<a href="/@me/inbox" class="turboclick">{{icon "email"}} Inbox</a>
 					{{- end -}}
 
 					{{- if .IsOwner -}}

@@ -1,42 +1,55 @@
 {{- $following := .Following -}}
 
 <div class="table">
-{{- range $following -}}
-	<div class="flex-row" style="align-items:center" role="button" hx-push-url="true">
+	<div class="link flex-row" hx-get="/@me/following-add" style="align-items:center" role="button" hx-push-url="false">
 
 		<div class="flex-row" style="flex-grow:1">
 
-			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
-				{{- if ne "" .ImageURL -}}
-					<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
-				{{- end -}}
+			<div style="width:3em; flex-grow:0; flex-shrink:0; text-align:center;">
+				{{icon "add"}}
 			</div>
 
-			<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
-			<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.internalId={{.FollowingID.Hex}}" style="flex-grow:1;">
-				<div class="ellipsis-block" style="max-height:1.75em;">
-					{{- if ne "" .Label -}}
-						<span class="black bold">{{- .Label -}}</span>
-					{{- else -}}
-						{{- .URL -}}
-					{{- end -}}
-				</div>
-				<div class="text-xs text-gray" style="margin:0px;">
-					{{ if eq "SUCCESS" .Status -}}
-						{{ icon .Icon }} 
-						{{ .LastPolled | tinyDate }}
-					{{- else if eq "LOADING" .Status -}}
-						<span class="green">{{.Status}}</span>
-					{{- else -}}
-						<span class="red">{{.Status}}</span>
-					{{- end -}}
-				</div>
+			<div style="flex-grow:1; text-align:left;">
+				Follow a Person or Website
 			</div>
-		</div>
-
-		<div class="align-right">
-			<button class="text-sm" hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
 		</div>
 	</div>
-{{- end -}}
+	{{- range $following -}}
+		<div class="flex-row" style="align-items:center" role="button" hx-push-url="true">
+
+			<div class="flex-row" style="flex-grow:1">
+
+				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
+					{{- if ne "" .ImageURL -}}
+						<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
+					{{- end -}}
+				</div>
+
+				<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
+				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.internalId={{.FollowingID.Hex}}" style="flex-grow:1;">
+					<div class="ellipsis-block" style="max-height:1.75em;">
+						{{- if ne "" .Label -}}
+							<span class="black bold">{{- .Label -}}</span>
+						{{- else -}}
+							{{- .URL -}}
+						{{- end -}}
+					</div>
+					<div class="text-xs text-gray" style="margin:0px;">
+						{{ if eq "SUCCESS" .Status -}}
+							{{ icon .Icon }} 
+							{{ .LastPolled | tinyDate }}
+						{{- else if eq "LOADING" .Status -}}
+							<span class="green">{{.Status}}</span>
+						{{- else -}}
+							<span class="red">{{.Status}}</span>
+						{{- end -}}
+					</div>
+				</div>
+			</div>
+
+			<div class="align-right" hx-push-url="false">
+				<button class="text-sm" hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
+			</div>
+		</div>
+	{{- end -}}
 </div>

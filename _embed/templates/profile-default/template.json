@@ -127,8 +127,8 @@
 			]
 		},
 
-		"followers": {"step":"view-html", "file":"profile-followers"},
-		"followers-list": {"step":"view-html", "file":"profile-followers-list"},
+		"followers": {"step":"view-html", "file":"inbox-followers"},
+		"followers-list": {"step":"view-html", "file":"inbox-followers-list"},
 		"follower-add": {
 			"roles":["self"],
 			"steps":[
@@ -169,8 +169,8 @@
 			]
 		},
 
-		"following": {"step":"view-html", "file":"profile-following"},
-		"following-list": {"step":"view-html", "file":"profile-following-list"},
+		"following": {"step":"view-html", "file":"inbox-following"},
+		"following-list": {"step":"view-html", "file":"inbox-following-list"},
 		"following-add":{
 			"roles":["self"],
 			"steps":[
@@ -269,7 +269,7 @@
 		"blocks": {
 			"roles":["self"],
 			"step":"view-html", 
-			"file":"profile-blocks"
+			"file":"inbox-blocks"
 		},
 
 		"feed": {"step":"view-feed"},
@@ -299,14 +299,6 @@
 					{"step":"view-html"}
 				]}
 			]
-		},
-		"inbox-following": {
-			"roles":["self"],
-			"step":"view-html"
-		},
-		"inbox-following-list": {
-			"roles":["self"],
-			"step":"view-html"
 		},
 		"inbox-folder-add": {
 			"roles":["self"],

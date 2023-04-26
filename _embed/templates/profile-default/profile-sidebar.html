@@ -27,11 +27,15 @@
 				<button type="button" class="primary width-100" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
-		<div class="space-above" hx-push-url="true">
-			<span hx-get="/@{{.Username}}/followers" role="link"><b>{{.FollowerCount}}</b> Followers</span>
-			&nbsp;
-			<span hx-get="/@{{.Username}}/following" role="link"><b>{{.FollowingCount}}</b> Following</span>
-		</div>
+
+		{{- if .UserCan "profile-edit" -}}
+			<div class="space-above">
+				<a href="/@me/followers" class="text-plain"><b>{{.FollowerCount}}</b> Followers</a>
+				&nbsp;
+				<a href="/@me/following" class="text-plain"><b>{{.FollowingCount}}</b> Following</a>
+			</div>
+		{{- end -}}
+
 		<div class="space-above">
 			<span class="p-note">{{.StatusMessage}}</span>
 		</div>

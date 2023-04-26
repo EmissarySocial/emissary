@@ -86,7 +86,7 @@ func (w Profile) NavigationID() string {
 	if w.UserID() == w.Common.AuthenticatedID().Hex() {
 
 		switch w.ActionID() {
-		case "inbox", "inbox-folder":
+		case "inbox", "inbox-folder", "following", "followers", "blocks":
 			return "inbox"
 		default:
 			return "profile"
