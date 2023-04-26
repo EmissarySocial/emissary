@@ -11,7 +11,7 @@ type OriginLink struct {
 	Type       string             `json:"type"       bson:"type"`                 // The type of service that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
 	URL        string             `json:"url"        bson:"url"`                  // Public URL of the origin
 	Label      string             `json:"label"      bson:"label,omitempty"`      // Human-readable label text of the origin
-	Summary    string             `json:"summary" bson:"summary,omitempty"`       // Human-readable summary text of the origin
+	Summary    string             `json:"summary"    bson:"summary,omitempty"`    // Human-readable summary text of the origin
 	ImageURL   string             `json:"imageUrl"   bson:"imageUrl,omitempty"`   // URL of the cover image for this document's image
 }
 

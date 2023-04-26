@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBlockSchema(t *testing.T) {
@@ -30,4 +31,45 @@ func TestBlockSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &block, table)
+}
+
+func TestBlock_FilterByActorEmail(t *testing.T) {
+
+	block := Block{
+		Type:     BlockTypeActor,
+		Trigger:  "john@connor.com",
+		Behavior: BlockBehaviorBlock,
+	}
+
+	require.True(t, block.FilterByActor("john@connor.com"))
+	require.True(t, block.FilterByActor("John Connor <john@connor.com>"))
+	require.False(t, block.FilterByActor("sara@sky.net"))
+}
+
+func TestBlock_FilterByActorURI(t *testing.T) {
+
+	block := Block{
+		Type:     BlockTypeActor,
+		Trigger:  "https://connor.com/@john",
+		Behavior: BlockBehaviorBlock,
+	}
+
+	require.True(t, block.FilterByActor("https://connor.com/@john"))
+	require.False(t, block.FilterByActor("https://sky.net/@sarah"))
+}
+
+func TestBlock_FilterByDomain(t *testing.T) {
+
+	block := Block{
+		Type:     BlockTypeDomain,
+		Trigger:  "connor.com",
+		Behavior: BlockBehaviorBlock,
+	}
+
+	require.True(t, block.FilterByActor("john@connor.com"))
+	require.True(t, block.FilterByActor("John Connor <john@connor.com>"))
+	require.True(t, block.FilterByActor("https://connor.com/@john"))
+	require.True(t, block.FilterByActor("https://john.connor.com"))
+	require.False(t, block.FilterByActor("sara@sky.net"))
+	require.False(t, block.FilterByActor("https://sky.net/@sarah"))
 }

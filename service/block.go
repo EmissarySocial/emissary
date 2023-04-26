@@ -105,9 +105,6 @@ func (service *Block) Save(block *model.Block, note string) error {
 
 		case model.BlockTypeContent:
 			err = service.ValidateNewContent(block)
-
-		case model.BlockTypeExternal:
-			err = service.ValidateNewExternal(block)
 		}
 
 		if err != nil {
@@ -257,7 +254,6 @@ func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate i
 	criteria := exp.And(
 		exp.Equal("userId", userID),
 		exp.Equal("isPublic", true),
-		exp.NotEqual("type", model.BlockTypeExternal),
 		exp.NotEqual("behavior", model.BlockBehaviorAllow),
 		expressionBuilder.EvaluateField("publishDate", builder.DataTypeInt64, publishDateString),
 	)
@@ -304,14 +300,6 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 	if block.Behavior == "" {
 		block.Behavior = model.BlockBehaviorBlock
 	}
-	return nil
-}
-
-// ValidateNewExternal validates a new block of specific External
-func (service *Block) ValidateNewExternal(block *model.Block) error {
-	block.Label = block.Trigger
-	block.IsPublic = false
-	block.Behavior = ""
 	return nil
 }
 
@@ -408,11 +396,6 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 
 	// RULE: No JSON-LD for "Allow" blocks
 	if block.Behavior == model.BlockBehaviorAllow {
-		return nil
-	}
-
-	// RULE: No JSON-LD for "External blocks
-	if block.Type == model.BlockTypeExternal {
 		return nil
 	}
 

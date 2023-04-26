@@ -18,10 +18,11 @@ import (
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	collection  data.Collection
-	userService *User
-	queue       *queue.Queue
-	host        string
+	collection   data.Collection
+	userService  *User
+	blockService *Block
+	queue        *queue.Queue
+	host         string
 }
 
 // NewFollower returns a fully initialized Follower service
@@ -34,9 +35,10 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, queue *queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, queue *queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
+	service.blockService = blockService
 	service.queue = queue
 	service.host = host
 }
@@ -91,7 +93,10 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 		return derp.Wrap(err, "service.Follower.Save", "Error cleaning Follower", follower)
 	}
 
-	// TODO: HIGH: Check if this potential follower is blocked or not
+	// Check if this potential follower is blocked or not
+	if err := service.blockService.FilterFollower(follower); err != nil {
+		return derp.Wrap(err, "service.Follower.Save", "Blocked", follower)
+	}
 
 	// Save the follower to the database
 	if err := service.collection.Save(follower, note); err != nil {

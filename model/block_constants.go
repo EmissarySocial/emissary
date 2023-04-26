@@ -9,9 +9,6 @@ const BlockTypeActor = "ACTOR"
 // BlockTypeUser blocks all messages that contain a particular phrase (hashtag)
 const BlockTypeContent = "CONTENT"
 
-// BlockTypeExternal passes messages to an external block service (TBD) for analysis.
-const BlockTypeExternal = "EXTERNAL"
-
 // BlockBehaviorBlock prevents the message from being added to the User's inbox
 const BlockBehaviorBlock = "BLOCK"
 

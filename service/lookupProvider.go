@@ -39,7 +39,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Block a Person", Value: model.BlockTypeActor},
 			form.LookupCode{Label: "Block a Domain", Value: model.BlockTypeDomain},
 			form.LookupCode{Label: "Block Tags & Keywords", Value: model.BlockTypeContent},
-			form.LookupCode{Label: "Use Block Service", Value: model.BlockTypeExternal},
 		)
 
 	case "folders":

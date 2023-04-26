@@ -216,6 +216,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.followerService.Refresh(
 			factory.collection(CollectionFollower),
 			factory.User(),
+			factory.Block(),
 			factory.Queue(),
 			factory.Host(),
 		)
