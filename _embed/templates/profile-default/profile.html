@@ -22,7 +22,18 @@
 	<div class="app-content">
 
 		{{if .UserCan "outbox-add" -}}
-			{{- .View "outbox-add" -}}
+			<div class="flex-row space-below">
+				<div style="height:60px; width:60px;">
+					<div class="circle aspect-square placeholder-gray" style="height:60px; width:60px;">
+						<img src="/@{{.UserID}}/avatar" class="circle" style="height:60px; width:60px;" onerror="this.style.display='none'">
+					</div>
+				</div>
+				<div style="flex-grow:1">
+					<div style="max-width:600px;">
+						{{- .View "outbox-add" -}}
+					</div>
+				</div>
+			</div>
 		{{- end -}}
 
 		<div class="h-feed">
