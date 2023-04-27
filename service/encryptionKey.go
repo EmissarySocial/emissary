@@ -119,7 +119,7 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 	encryptionKey.Encoding = model.EncryptionKeyEncodingPlaintext // TODO: MEDIUM: add key encryption encoding
 
 	// Create an actual encryption key
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 512)
 
 	if err != nil {
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", userID)
