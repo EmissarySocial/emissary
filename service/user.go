@@ -496,15 +496,26 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID) (pub.Actor, err
 
 func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
-	// Trim prefixes "acct:" and "@"
-	username = strings.TrimPrefix(username, "acct:")
-	username = strings.TrimPrefix(username, "@")
+	switch {
 
-	// Trim @domain.name suffix if present
-	username = strings.TrimSuffix(username, "@"+domain.NameOnly(service.host))
+	case domain.HasProtocol(username):
+		username = list.Last(username, '@')
+		username = list.First(username, '/')
 
-	// Trim path suffix if present
-	username = list.First(username, '/')
+	case strings.HasPrefix(username, "acct:"):
+		// Trim prefixes "acct:" and "@"
+		username = strings.TrimPrefix(username, "acct:")
+		username = strings.TrimPrefix(username, "@")
+
+		// Trim @domain.name suffix if present
+		username = strings.TrimSuffix(username, "@"+domain.NameOnly(service.host))
+
+		// Trim path suffix if present
+		username = list.First(username, '/')
+
+	default:
+		return digit.Resource{}, derp.New(derp.CodeBadRequestError, "service.User", "Invalid username", username)
+	}
 
 	// Try to load the user from the database
 	user := model.NewUser()
