@@ -78,6 +78,10 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 			fmt.Print(".")
 			record = mapof.NewAny()
 		}
+
+		if domain.DatabaseVersion < 2 {
+
+		}
 	}
 
 	domainCollection := session.Collection("Domain")
