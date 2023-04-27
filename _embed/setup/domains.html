@@ -9,14 +9,14 @@
 		<table class="table">
 
 			<!--  First row is "Add" link -->
-			<tr role="link" hx-get="/domains/new"><td colspan="3">
+			<tr role="link" hx-get="/domains/new"><td colspan="3" class="link">
 				{{icon "add"}} Add a Domain
 			</td></tr>
 
 			{{$empty := true}}
 			{{- range .Domains -}}
 				<tr>
-					<td nowrap><a hx-get="/domains/{{.DomainID}}">{{icon "server"}} {{ .Label }}</a></td>
+					<td hx-get="/domains/{{.DomainID}}" role="button" nowrap>{{icon "server"}} {{ .Label }}</td>
 					<td><div class="hide-md">{{.Hostname}}</div></td>
 					<td class="align-right" nowrap>
 						<button hx-get="/domains/{{.DomainID}}">Edit <span class="hide-sm">Domain</span></button>
