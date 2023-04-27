@@ -1,4 +1,4 @@
-{{- $author := .Message.Author -}}
+{{- $author := .Message.Document.AttributedTo.First -}}
 
 <div script="install message(folderId:'{{.Message.FolderID.Hex}}', readDate:'{{.Message.Rank}}')">
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
