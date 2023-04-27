@@ -14,7 +14,7 @@ func FollowingSchema() schema.Element {
 			"userId":         schema.String{Format: "objectId"},
 			"folderId":       schema.String{Format: "objectId", Required: true},
 			"label":          schema.String{MaxLength: 128},
-			"url":            schema.String{Format: "url", Required: true, MaxLength: 1024},
+			"url":            schema.String{Required: true, MaxLength: 1024},
 			"profileUrl":     schema.String{Format: "url", MaxLength: 1024},
 			"method":         schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusPending, FollowingStatusSuccess, FollowingStatusFailure}},

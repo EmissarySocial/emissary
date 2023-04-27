@@ -3,12 +3,16 @@ package service
 import (
 	"bytes"
 	"mime"
+	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	"github.com/benpate/domain"
 	"github.com/benpate/remote"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -46,7 +50,27 @@ func (service *Following) connect(following *model.Following) error {
 
 	const location = "service.Following.connect"
 
-	// Try to load the targetURL.
+	// Try to use the following.URL as an email address (or @username@server.name)
+	emailAddress := strings.TrimPrefix(following.URL, "@")
+
+	if email, err := mail.ParseAddress(emailAddress); err == nil {
+		spew.Dump(email, err)
+		resource, err := digit.Lookup(email.Address)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error looking up email address", email.Address)
+		}
+
+		following.Links = resource.Links
+		return nil
+	}
+
+	// Try to use the following.URL as an actual URL.
+
+	// Add protocol to the URL if it's missing
+	following.URL = domain.AddProtocol(following.URL)
+
+	// Try to connect to the remote server
 	var body bytes.Buffer
 	transaction := remote.
 		Get(following.URL).
@@ -54,7 +78,7 @@ func (service *Following) connect(following *model.Following) error {
 		Response(&body, nil)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error connecting to remote website", following.URL)
+		return derp.Wrap(err, location, "Error connecting to remote website: "+following.URL)
 	}
 
 	// Look for Links to ActivityPub/Feeds/Hubs
