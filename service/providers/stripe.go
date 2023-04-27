@@ -2,8 +2,8 @@ package providers
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stripe/stripe-go/v72"

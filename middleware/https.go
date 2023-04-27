@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/tools/domain"
+	"github.com/benpate/domain"
 	"github.com/labstack/echo/v4"
 )
 

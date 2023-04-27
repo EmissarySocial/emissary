@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"willnorris.com/go/webmention"
 )
 

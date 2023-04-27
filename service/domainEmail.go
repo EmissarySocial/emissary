@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 )
 

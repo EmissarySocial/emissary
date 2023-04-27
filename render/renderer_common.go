@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/domain"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"

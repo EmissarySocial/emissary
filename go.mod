@@ -8,7 +8,8 @@ require (
 	github.com/benpate/data v0.24.0
 	github.com/benpate/data-mongo v0.24.0
 	github.com/benpate/derp v0.27.1
-	github.com/benpate/digit v0.9.2
+	github.com/benpate/digit v0.10.0
+	github.com/benpate/domain v0.0.2
 	github.com/benpate/exp v0.7.0
 	github.com/benpate/exp-builder v0.7.0
 	github.com/benpate/form v0.15.4
@@ -104,7 +105,6 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.5 // indirect
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
