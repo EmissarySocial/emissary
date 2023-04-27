@@ -42,8 +42,14 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Load the User from the database
 		userService := factory.User()
-		username := ctx.Param("userId")
 		user := model.NewUser()
+
+		// Get the UserID from the URL (could be "me")
+		username, err := profileUsername(sterankoContext)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading user ID")
+		}
 
 		if err := userService.LoadByToken(username, &user); err != nil {
 			return derp.Wrap(err, location, "Error loading user", username)
