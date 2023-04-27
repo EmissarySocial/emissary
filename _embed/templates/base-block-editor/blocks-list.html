@@ -1,31 +1,25 @@
 {{- range . -}}
 	<tr hx-get="/@me/block-edit?blockId={{.BlockID.Hex}}" role="button">
-		<td class="text-xl">
-			{{- if eq "BLOCK" .Behavior -}}
-				<span title="Block">{{icon "block"}}</span>
-			{{- else if eq "MUTE" .Behavior -}}
-				<span title="Mute">{{icon "mute"}}</span>
-			{{- else if eq "ALLOW" .Behavior -}}
-				<span title="Allow">{{icon "thumbs-up"}}</span>
-			{{- end }}
-		</td>
 		<td style="width:100%; vertical-align: middle;">
 			<div class="ellipsis">
 				{{.Trigger}} &nbsp;
 				<span class="text-sm text-gray">{{.Comment}}</span>
 			</div>
 		</td>
-		<td class="text-xl align-right" nowrap>
-			&nbsp;
-			{{- if ne "ALLOW" .Behavior -}}
-				{{ if .IsPublic -}}
-					<span title="Published">{{icon "visible-fill"}}</span>
-				{{- else -}}
-					<span title="Not Published">{{icon "invisible"}}</span>
-				{{- end -}}
+		<td class="align-right" nowrap>
+			{{- if .IsActive -}}
+				<span class="text-green">
+					{{- if .IsPublic -}}
+						<span title="Published">{{icon "visible-fill"}}</span>
+					{{- else -}}
+						<span title="Not Published">{{icon "invisible"}}</span>
+					{{- end -}}
+					&nbsp;
+					Active
+				</span>
+			{{- else -}}
+				Inactive
 			{{- end -}}
-
-			&nbsp;
 		</td>
 	</tr>
 {{- end -}}

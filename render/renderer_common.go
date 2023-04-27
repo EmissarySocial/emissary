@@ -32,7 +32,14 @@ type Common struct {
 	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
-func NewCommon(factory Factory, context *steranko.Context, template model.Template, action model.Action, actionID string) Common {
+func NewCommon(factory Factory, context *steranko.Context, template model.Template, actionID string) (Common, error) {
+
+	action, ok := template.Actions[actionID]
+
+	if !ok {
+		return Common{}, derp.New(derp.CodeBadRequestError, "render.NewCommon", "Invalid action", actionID)
+	}
+
 	return Common{
 		_factory:    factory,
 		_context:    context,
@@ -41,7 +48,7 @@ func NewCommon(factory Factory, context *steranko.Context, template model.Templa
 		actionID:    actionID,
 		requestData: mapof.NewAny(),
 		domain:      model.NewDomain(),
-	}
+	}, nil
 }
 
 /******************************************
@@ -370,23 +377,27 @@ func (w Common) AdminSections() []form.LookupCode {
 	return []form.LookupCode{
 		{
 			Value: "domain",
-			Label: "Domain",
+			Label: "Appearance",
 		},
 		{
 			Value: "navigation",
 			Label: "Navigation",
 		},
 		{
-			Value: "users",
-			Label: "People",
+			Value: "connections",
+			Label: "Services",
 		},
 		{
 			Value: "groups",
 			Label: "Groups",
 		},
 		{
-			Value: "connections",
-			Label: "Connections",
+			Value: "users",
+			Label: "Users",
+		},
+		{
+			Value: "blocks",
+			Label: "Blocks",
 		},
 	}
 }

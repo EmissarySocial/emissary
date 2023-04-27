@@ -17,6 +17,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/tomnomnom/linkheader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -95,18 +96,10 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 		return derp.Wrap(err, "service.Mention.Save", "Error cleaning Mention", mention)
 	}
 
+	// Filter Mentions that are blocked
 	if err := service.blockService.FilterMention(mention); err != nil {
+		spew.Dump("FILTERED")
 		return derp.Wrap(err, "service.Mention.Save", "Error filtering Mention", mention)
-	}
-
-	// Do bot save blocked Mentions
-	if mention.StateID == model.BlockBehaviorBlock {
-		return nil
-	}
-
-	// Do not save muted Mentions
-	if mention.StateID == model.BlockBehaviorMute {
-		return nil
 	}
 
 	// Save the value to the database

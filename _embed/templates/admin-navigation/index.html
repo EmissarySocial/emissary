@@ -3,17 +3,20 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
 
-    <h1>Settings</h1>
-
     <div id="menu-bar" hx-push-url="true">
         {{- $token := .Token -}}
         {{- range .AdminSections -}}
-            <a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+            <a hx-get="/admin/{{.Value}}" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
         {{- end -}}
     </div>
 
     {{ $navigation := .Navigation}}
     {{- if not $navigation.IsEmpty -}}
+
+        <div class="space-below text-sm">
+            <button hx-get="/admin/navigation/add" class="primary">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
+        </div>
+
 
         <form class="sortable space-below" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
             {{- range $navigation -}}
@@ -32,11 +35,6 @@
         <div class="text text-sm space-below">
             <i>Drag and Drop Items to Sort.</i>
         </div>
-
-        <div class="space-below">
-            <button hx-get="/admin/navigation/add">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
-        </div>
-
 
     {{- else -}}
 

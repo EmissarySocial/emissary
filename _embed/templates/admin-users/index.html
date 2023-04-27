@@ -3,12 +3,10 @@
 	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 	<script src="/static/nebula/autosize._hs" type="text/hyperscript"></script>
 	
-	<h1>Settings</h1>
-
 	<div id="menu-bar" hx-push-url="true">
 		{{- $token := .Token -}}
 		{{- range .AdminSections -}}
-			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+			<a hx-get="/admin/{{.Value}}" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
 		{{- end -}}
 	</div>
 

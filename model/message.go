@@ -12,7 +12,6 @@ import (
 type Message struct {
 	MessageID   primitive.ObjectID `json:"messageId"    bson:"_id"`                   // Unique ID of the Message
 	UserID      primitive.ObjectID `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
-	StateID     string             `json:"stateId"      bson:"stateId,omitempty"`     // Status of this message, differs for inbox vs. outbox messages
 	SocialRole  string             `json:"socialRole"   bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
 	Origin      OriginLink         `json:"origin"       bson:"origin,omitempty"`      // Link to the origin of this Message
 	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Message

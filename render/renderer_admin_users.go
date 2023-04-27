@@ -32,16 +32,17 @@ func NewUser(factory Factory, ctx *steranko.Context, template model.Template, us
 		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	// Verify the requested action
-	action, ok := template.Action(actionID)
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
 
-	if !ok {
-		return User{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	if err != nil {
+		return User{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Return the User renderer
 	return User{
 		user:   user,
-		Common: NewCommon(factory, ctx, template, action, actionID),
+		Common: common,
 	}, nil
 }
 

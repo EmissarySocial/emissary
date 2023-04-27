@@ -89,6 +89,20 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 	// Create the correct renderer for this controller
 	switch template.Model {
 
+	case "block":
+
+		blockService := factory.Block()
+		block := model.NewBlock()
+
+		if !objectID.IsZero() {
+			authorization := getAuthorization(ctx)
+			if err := blockService.LoadByID(authorization, objectID, &block); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Block", objectID)
+			}
+		}
+
+		return render.NewBlock(factory, ctx, &block, template, actionID)
+
 	case "domain":
 		domain := factory.Domain().Get()
 		return render.NewDomain(factory, ctx, factory.Provider(), template, &domain, actionID)
@@ -130,6 +144,6 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 		return render.NewUser(factory, ctx, template, &user, actionID)
 
 	default:
-		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'domain', 'group', 'stream', or 'user'", template.Model)
+		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'block', 'domain', 'group', 'stream', or 'user'", template.Model)
 	}
 }

@@ -56,11 +56,18 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 		}
 	}
 
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Error creating common renderer")
+	}
+
 	// Success.  Populate Stream
 	return Stream{
 		modelService: factory.Stream(),
 		stream:       stream,
-		Common:       NewCommon(factory, ctx, template, action, actionID),
+		Common:       common,
 	}, nil
 }
 
@@ -618,10 +625,17 @@ func (w Stream) draftRenderer() (Stream, error) {
 		return Stream{}, derp.Wrap(err, "service.Stream.draftRenderer", "Error loading draft")
 	}
 
+	// Create the underlying Common renderer
+	common, err := NewCommon(w._factory, w._context, w._template, w.actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, "service.Stream.draftRenderer", "Error creating common renderer")
+	}
+
 	// Make a duplicate of this renderer.  Same object, template, action settings
 	return Stream{
 		stream:       &draft,
 		modelService: draftService,
-		Common:       NewCommon(w._factory, w._context, w._template, w.action, w.actionID),
+		Common:       common,
 	}, nil
 }

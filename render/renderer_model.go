@@ -45,10 +45,17 @@ func NewModel(factory Factory, ctx *steranko.Context, modelService service.Model
 		}
 	}
 
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
+
+	if err != nil {
+		return Model{}, derp.Wrap(err, location, "Error creating common renderer")
+	}
+
 	return Model{
 		_service: modelService,
 		_object:  object,
-		Common:   NewCommon(factory, ctx, template, action, actionID),
+		Common:   common,
 	}, nil
 }
 

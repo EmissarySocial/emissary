@@ -13,9 +13,9 @@ func BlockSchema() schema.Element {
 			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
-			"behavior":    schema.String{Enum: []string{BlockBehaviorBlock, BlockBehaviorMute, BlockBehaviorAllow}},
 			"comment":     schema.String{},
 			"origin":      OriginLinkSchema(),
+			"isActive":    schema.Boolean{},
 			"isPublic":    schema.Boolean{},
 			"publishDate": schema.Integer{BitSize: 64},
 		},
@@ -32,6 +32,9 @@ func (block *Block) GetBoolOK(name string) (bool, bool) {
 
 	case "isPublic":
 		return block.IsPublic, true
+
+	case "isActive":
+		return block.IsActive, true
 	}
 
 	return false, false
@@ -67,9 +70,6 @@ func (block *Block) GetStringOK(name string) (string, bool) {
 	case "trigger":
 		return block.Trigger, true
 
-	case "behavior":
-		return block.Behavior, true
-
 	case "comment":
 		return block.Comment, true
 	}
@@ -87,6 +87,10 @@ func (block *Block) SetBool(name string, value bool) bool {
 
 	case "isPublic":
 		block.IsPublic = value
+		return true
+
+	case "isActive":
+		block.IsActive = value
 		return true
 	}
 
@@ -131,10 +135,6 @@ func (block *Block) SetString(name string, value string) bool {
 
 	case "trigger":
 		block.Trigger = value
-		return true
-
-	case "behavior":
-		block.Behavior = value
 		return true
 
 	case "comment":

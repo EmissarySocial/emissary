@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -97,6 +96,7 @@ func (service *Block) Save(block *model.Block, note string) error {
 		var err error
 
 		switch block.Type {
+
 		case model.BlockTypeActor:
 			err = service.ValidateNewActor(block)
 
@@ -123,14 +123,14 @@ func (service *Block) Save(block *model.Block, note string) error {
 	}
 
 	// RULE: Publish changes when the block is first shared publicly
-	if block.IsPublic && (block.PublishDate == 0) {
+	if block.IsActive && block.IsPublic && (block.PublishDate == 0) {
 		if err := service.publish(block); err != nil {
 			return derp.Wrap(err, "service.Block.Save", "Error publishing Block", block)
 		}
 	}
 
 	// RULE: Unpublish changes when the block is no longer shared publicly
-	if !block.IsPublic && (block.PublishDate > 0) {
+	if (!block.IsPublic || !block.IsActive) && (block.PublishDate > 0) {
 		if err := service.unpublish(block, true); err != nil {
 			return derp.Wrap(err, "service.Block.Save", "Error unpublishing Block", block)
 		}
@@ -225,6 +225,23 @@ func (service *Block) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Block) LoadByID(authorization model.Authorization, blockID primitive.ObjectID, block *model.Block) error {
+
+	if !authorization.IsAuthenticated() {
+		return derp.NewUnauthorizedError("service.Block.LoadByID", "Not Authenticated")
+	}
+
+	var criteria exp.Expression = exp.Equal("userId", authorization.UserID)
+
+	if authorization.DomainOwner {
+		criteria = criteria.Or(exp.Equal("userId", primitive.NilObjectID))
+	}
+
+	criteria = criteria.AndEqual("_id", blockID)
+
+	return service.Load(criteria, block)
+}
+
 func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block *model.Block) error {
 	blockID, err := primitive.ObjectIDFromHex(token)
 
@@ -241,8 +258,16 @@ func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (
 	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
 }
 
-func (service *Block) QueryByUser(userID primitive.ObjectID) ([]model.Block, error) {
-	return service.Query(exp.Equal("userId", userID))
+func (service *Block) QueryActiveByUser(userID primitive.ObjectID) ([]model.Block, error) {
+	return service.Query(
+		exp.And(
+			exp.Or(
+				exp.Equal("userId", userID),
+				exp.Equal("userId", primitive.NilObjectID),
+			),
+			exp.Equal("isActive", true),
+		),
+	)
 }
 
 func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate int64, options ...option.Option) ([]model.Block, error) {
@@ -254,7 +279,7 @@ func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate i
 	criteria := exp.And(
 		exp.Equal("userId", userID),
 		exp.Equal("isPublic", true),
-		exp.NotEqual("behavior", model.BlockBehaviorAllow),
+		exp.NotEqual("isActive", true),
 		expressionBuilder.EvaluateField("publishDate", builder.DataTypeInt64, publishDateString),
 	)
 
@@ -270,36 +295,19 @@ func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate i
 
 // ValidateNewActor validates a new block of a specific Actor
 func (service *Block) ValidateNewActor(block *model.Block) error {
-
 	block.Label = block.Trigger
-
-	if block.Behavior == "" {
-		block.Behavior = model.BlockBehaviorBlock
-	}
-
 	return nil
 }
 
 // ValidateNewDomain validates a new block of a specific Domain
 func (service *Block) ValidateNewDomain(block *model.Block) error {
-
 	block.Label = block.Trigger
-
-	if block.Behavior == "" {
-		block.Behavior = model.BlockBehaviorBlock
-	}
-
 	return nil
 }
 
 // ValidateNewContent validates a external block service
 func (service *Block) ValidateNewContent(block *model.Block) error {
-
 	block.Label = block.Trigger
-
-	if block.Behavior == "" {
-		block.Behavior = model.BlockBehaviorBlock
-	}
 	return nil
 }
 
@@ -310,8 +318,6 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 // publish marks the Block as published, and sends "Create" activities to all ActivityPub followers
 func (service *Block) publish(block *model.Block) error {
 
-	spew.Dump("block.publish", block)
-
 	// Get all ActivityPub followers
 	followers, err := service.followerService.ChannelActivityPub(block.UserID)
 
@@ -320,7 +326,6 @@ func (service *Block) publish(block *model.Block) error {
 	}
 
 	if followers == nil {
-		spew.Dump("no followers")
 		return nil
 	}
 
@@ -333,7 +338,6 @@ func (service *Block) publish(block *model.Block) error {
 
 	// Send a "Create" activity to all followers
 	for follower := range followers {
-		spew.Dump("to follower", follower)
 		service.queue.Run(pub.SendCreateQueueTask(actor, block.JSONLD, follower.Actor.InboxURL))
 	}
 
@@ -392,18 +396,11 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 	}
 
 	// Reset JSON-LD for the block.  We're going to recalculate EVERYTHING.
-	block.JSONLD = mapof.NewAny()
-
-	// RULE: No JSON-LD for "Allow" blocks
-	if block.Behavior == model.BlockBehaviorAllow {
-		return nil
-	}
-
-	// Translate the Block Behavior into an ActivityPub Type
-	if block.Behavior == model.BlockBehaviorBlock {
-		block.JSONLD["type"] = vocab.ActivityTypeBlock
-	} else {
-		block.JSONLD["type"] = vocab.ActivityTypeIgnore
+	block.JSONLD = mapof.Any{
+		"type":      vocab.ActivityTypeBlock,
+		"actor":     user.ActivityPubURL(),
+		"target":    block.Trigger,
+		"published": block.PublishDateRCF3339(),
 	}
 
 	// Create the summary based on the type of Block
@@ -422,11 +419,6 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 		// This should never happen
 		return derp.NewInternalError("service.Block.calcJSONLD", "Unrecognized Block Type", block)
 	}
-
-	// Additional fields that are always present
-	block.JSONLD["actor"] = user.ActivityPubURL()
-	block.JSONLD["target"] = block.Trigger
-	block.JSONLD["published"] = block.PublishDateRCF3339()
 
 	// TODO: need additional grammar for extra fields
 	// - selectbox field to describe WHY the block was created

@@ -32,16 +32,16 @@ func NewProfile(factory Factory, ctx *steranko.Context, user *model.User, action
 		return Profile{}, derp.Wrap(err, "render.NewProfile", "Error loading template")
 	}
 
-	// Verify the requested action is valid for this template
-	action, ok := template.Action(actionID)
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
 
-	if !ok {
-		return Profile{}, derp.NewBadRequestError("render.NewProfile", "Invalid action", actionID)
+	if err != nil {
+		return Profile{}, derp.Wrap(err, "render.NewProfile", "Error creating common renderer")
 	}
 
 	return Profile{
 		user:   user,
-		Common: NewCommon(factory, ctx, template, action, actionID),
+		Common: common,
 	}, nil
 }
 

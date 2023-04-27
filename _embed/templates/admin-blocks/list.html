@@ -1,0 +1,7 @@
+{{- $blocks := .ServerWideBlocks.Slice -}}
+
+{{- range $blocks -}}
+	<div hx-get="/admin/blocks/{{.BlockID.Hex}}/edit" role="button">
+		{{.Type}}: {{.Trigger}}
+	</div>
+{{- end -}}

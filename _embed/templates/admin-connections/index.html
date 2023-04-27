@@ -4,12 +4,10 @@
 
 <div class="page" hx-get="/admin/connections/index" hx-trigger="refreshPage from:window">
 
-	<h1>Settings</h1>
-
 	<div id="menu-bar" hx-push-url="true">
 		{{- $token := .Token -}}
 		{{- range .AdminSections -}}
-			<a hx-get="/admin/{{.Value}}" class="{{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+			<a hx-get="/admin/{{.Value}}" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
 		{{- end -}}
 	</div>
 

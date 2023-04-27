@@ -84,15 +84,6 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
 	}
 
-	// Blocked message cannot be saved to the database
-	if message.StateID == model.InboxMessageStateBlocked {
-		if message.IsNew() {
-			return nil
-		} else {
-			return service.Delete(message, "Blocked by filters")
-		}
-	}
-
 	// Calculate the rank for this message, using the number of messages with an identical PublishDate
 	if err := service.CalculateRank(message); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error calculating rank", message)

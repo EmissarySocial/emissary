@@ -19,8 +19,8 @@
 								{"type":"hidden", "path":"type", "options":{"value":"ACTOR"}},
 								{"type":"text", "path":"trigger", "label":"Enter the Person's Fediverse Address", "description":"Something like @blocked-user@domain.com or https://domain.com/@blocked-user"},
 								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this person"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+								{"type":"toggle", "path":"isActive", "label":"Active?", "options":{"true-text":"YES: Block this Person", "false-text":"NO: Do not enforce this block."}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me.", "show-if":"isActive is true"}}
 							]
 						}}
 					]}
@@ -41,8 +41,8 @@
 								{"type":"hidden", "path":"type", "options":{"value":"DOMAIN"}},
 								{"type":"text", "path":"trigger", "label":"Enter the Domain to Block", "description":"Something like blocked-domain.com"},
 								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this domain"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+								{"type":"toggle", "path":"isActive", "label":"Active?", "options":{"true-text":"YES: Block this Domain", "false-text":"NO: Do not enforce this block."}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me.", "show-if":"isActive is true"}}
 							]
 						}}
 					]}
@@ -63,8 +63,8 @@
 								{"type":"hidden", "path":"type", "options":{"value":"CONTENT"}},
 								{"type":"text", "path":"trigger", "label":"Enter the Tags and Keywords to Block", "description":"Enter one or more words, separated by spaces."},
 								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking these tag or keyword"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+								{"type":"toggle", "path":"isActive", "label":"Active?", "options":{"true-text":"YES: Block this Keyword", "false-text":"NO: Do not enforce this block."}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me.", "show-if":"isActive is true"}}
 							]
 						}}
 					]}
@@ -101,8 +101,8 @@
 							"children":[
 								{"type":"text", "path":"trigger", "label":"Blocking", "readOnly":true, "options":{"class":"bold"}},
 								{"type":"textarea", "path":"comment", "label":"Notes", "description":"OPTIONAL. Explains WHY your are blocking this person"},
-								{"type":"select", "path":"behavior", "label":"Action", "options":{"provider":"block-behaviors"}},
-								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me."}}
+								{"type":"toggle", "path":"isActive", "label":"Active?", "options":{"true-text":"YES: Enforce this Block", "false-text":"NO: Do not enforce this block."}},
+								{"type":"toggle", "path":"isPublic", "label":"Publish?", "options":{"true-text":"YES: Followers' accounts may use this block automatically", "false-text":"NO: This block is only visible to me.", "show-if":"isActive is true"}}
 							]
 						}, "options":["delete:/@me/block-delete?blockId={{.ObjectID}}"]}
 					]}

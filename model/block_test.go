@@ -36,9 +36,8 @@ func TestBlockSchema(t *testing.T) {
 func TestBlock_FilterByActorEmail(t *testing.T) {
 
 	block := Block{
-		Type:     BlockTypeActor,
-		Trigger:  "john@connor.com",
-		Behavior: BlockBehaviorBlock,
+		Type:    BlockTypeActor,
+		Trigger: "john@connor.com",
 	}
 
 	require.True(t, block.FilterByActor("john@connor.com"))
@@ -49,9 +48,8 @@ func TestBlock_FilterByActorEmail(t *testing.T) {
 func TestBlock_FilterByActorURI(t *testing.T) {
 
 	block := Block{
-		Type:     BlockTypeActor,
-		Trigger:  "https://connor.com/@john",
-		Behavior: BlockBehaviorBlock,
+		Type:    BlockTypeActor,
+		Trigger: "https://connor.com/@john",
 	}
 
 	require.True(t, block.FilterByActor("https://connor.com/@john"))
@@ -61,9 +59,8 @@ func TestBlock_FilterByActorURI(t *testing.T) {
 func TestBlock_FilterByDomain(t *testing.T) {
 
 	block := Block{
-		Type:     BlockTypeDomain,
-		Trigger:  "connor.com",
-		Behavior: BlockBehaviorBlock,
+		Type:    BlockTypeDomain,
+		Trigger: "connor.com",
 	}
 
 	require.True(t, block.FilterByActor("john@connor.com"))

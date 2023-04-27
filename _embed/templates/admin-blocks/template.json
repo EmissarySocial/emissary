@@ -1,0 +1,37 @@
+{
+	"templateId":"admin-blocks",
+	"templateRole":"admin",
+	"model":"block",
+	"containedBy":["admin"],
+	"label": "Blocks",
+	"description": "Domain Owners only.  Site Admin",
+	"actions": {
+		"index": {"step": "view-html"},
+		"list": {"step": "view-html"},
+		"add": {"steps":[
+			{"step":"as-modal", "background":"/admin/blocks", "steps":[
+				{"step": "edit", "form":{
+					"type":"layout-vertical",
+					"label":"Server-Wide Block",
+					"children":[
+						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"block-types"}},
+						{"type":"text", "path":"trigger", "label":"Trigger Text"}
+					]
+				}}
+			]}
+		]},
+		"edit": {"steps":[
+			{"step":"as-modal", "background":"/admin/blocks", "steps":[
+				{"step": "edit", "form":{
+					"type":"layout-vertical",
+					"label":"Server-Wide Block",
+					"children":[
+						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"block-types"}},
+						{"type":"text", "path":"trigger", "label":"Trigger Text"}
+					]
+				}, "options":["delete:/admin/blocks/{{.BlockID}}/delete"]}
+			]}
+		]},
+		"delete": {"step": "delete"}
+	}
+}

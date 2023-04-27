@@ -15,8 +15,8 @@ type Block struct {
 	Type        string             `json:"type"        bson:"type"`        // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
 	Label       string             `json:"label"       bson:"label"`       // Human-friendly label for this block
 	Trigger     string             `json:"trigger"     bson:"trigger"`     // Parameter for this block type)
-	Behavior    string             `json:"behavior"    bson:"behavior"`    // Behavior for this block type (e.g. "BLOCK", "MUTE", "ALLOW")
 	Comment     string             `json:"comment"     bson:"comment"`     // Optional comment describing why this block exists
+	IsActive    bool               `json:"isActive"    bson:"isActive"`    // If TRUE, this block is active and should be applied to incoming messages
 	IsPublic    bool               `json:"isPublic"    bson:"isPublic"`    // If TRUE, this record is visible publicly
 	Origin      OriginLink         `json:"origin"      bson:"origin"`      // Internal or External service where this block originated (used for subscriptions)
 	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Date when this block was published to followers
@@ -27,7 +27,9 @@ type Block struct {
 
 func NewBlock() Block {
 	return Block{
-		BlockID: primitive.NewObjectID(),
+		BlockID:  primitive.NewObjectID(),
+		IsActive: true,
+		IsPublic: true,
 	}
 }
 
@@ -42,10 +44,10 @@ func (block Block) ID() string {
 func (block Block) Fields() []string {
 	return []string{
 		"_id",
+		"type",
 		"trigger",
-		"behavior",
-		"comment",
 		"isPublic",
+		"isActive",
 	}
 }
 

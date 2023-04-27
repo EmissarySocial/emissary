@@ -30,16 +30,17 @@ func NewNavigation(factory Factory, ctx *steranko.Context, template model.Templa
 		return Navigation{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	// Verify the requested action
-	action, ok := template.Action(actionID)
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
 
-	if !ok {
-		return Navigation{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	if err != nil {
+		return Navigation{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Return the Navigation renderer
 	return Navigation{
 		stream: stream,
-		Common: NewCommon(factory, ctx, template, action, actionID),
+		Common: common,
 	}, nil
 }
 

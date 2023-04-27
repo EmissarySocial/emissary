@@ -35,16 +35,17 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 		return Domain{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	// Verify the requested action
-	action, ok := template.Action(actionID)
+	// Create the underlying common renderer
+	common, err := NewCommon(factory, ctx, template, actionID)
 
-	if !ok {
-		return Domain{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+	if err != nil {
+		return Domain{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Create and return the Domain renderer
 	result := Domain{
 		externalService: externalService,
-		Common:          NewCommon(factory, ctx, template, action, actionID),
+		Common:          common,
 	}
 
 	result.domain = domain
