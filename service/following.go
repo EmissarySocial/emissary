@@ -153,6 +153,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// RULE: Hacky way to make the URL valid.  This should
 	// probably be handled in the schema URL validation.
 	switch {
+	case strings.HasPrefix(following.URL, "@"):
 	case strings.HasPrefix(following.URL, "https://"):
 	case strings.HasPrefix(following.URL, "http://"):
 	default:
