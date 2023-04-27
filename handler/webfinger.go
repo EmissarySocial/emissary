@@ -31,10 +31,9 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 		resourceID := ctx.QueryParam("resource")
 
 		// Handle User Requests
-		if strings.HasPrefix(resourceID, "acct:") {
+		if strings.Contains(resourceID, "@") {
 			userService := factory.User()
-			username := strings.TrimPrefix(resourceID, "acct:")
-			resource, err = userService.LoadWebFinger(username)
+			resource, err = userService.LoadWebFinger(resourceID)
 		} else {
 			streamService := factory.User()
 			resource, err = streamService.LoadWebFinger(resourceID)
