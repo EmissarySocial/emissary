@@ -8,6 +8,9 @@ func TestConfig(t *testing.T) {
 	s := Schema()
 
 	table := []tableTestItem{
+		{"providers.0.providerId", "PROVIDER_ID", nil},
+		{"providers.0.clientId", "CLIENT_ID", nil},
+		{"providers.0.clientSecret", "CLIENT_SECRET", nil},
 		{"domains.0.label", "LABEL", nil},
 		{"domains.0.hostname", "HOSTNAME", nil},
 		{"domains.0.connectString", "CONNECT_STRING", nil},

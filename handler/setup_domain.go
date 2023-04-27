@@ -39,7 +39,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 
 		s := schema.New(config.DomainSchema())
 
-		formHTML, err := form.Editor(s, domainEditForm, domain, nil)
+		formHTML, err := form.Editor(s, domainEditForm, &domain, nil)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Error generating form")

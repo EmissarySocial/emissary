@@ -16,7 +16,7 @@ func ProviderSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"provider":     schema.String{Required: true, Enum: validProviders, MaxLength: 20},
+			"providerId":   schema.String{Required: true, Enum: validProviders, MaxLength: 20},
 			"clientId":     schema.String{Required: false, MaxLength: 255},
 			"clientSecret": schema.String{Required: false, MaxLength: 255},
 		},

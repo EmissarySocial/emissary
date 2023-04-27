@@ -2,9 +2,9 @@ package config
 
 // Provider represents a single external service provider (typically OAuth2)
 type Provider struct {
-	ProviderID   string
-	ClientID     string
-	ClientSecret string
+	ProviderID   string `json:"providerId"   bson:"providerId"`   // Unique identifier for this provider
+	ClientID     string `json:"clientId"     bson:"clientId"`     // Client ID for this provider
+	ClientSecret string `json:"clientSecret" bson:"clientSecret"` // Client Secret for this provider
 }
 
 // NewProvider returns a fully initialized Provider object

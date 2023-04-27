@@ -1,6 +1,8 @@
 package config
 
-import "github.com/benpate/rosetta/schema"
+import (
+	"github.com/benpate/rosetta/schema"
+)
 
 func OwnerSchema() schema.Element {
 	return schema.Object{
