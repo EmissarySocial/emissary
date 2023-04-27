@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/remote"
 )
 
+// Load retrieves a resource from the target URL and parses it for metadata
 func Load(target string) (Page, error) {
 
 	const location = "sherlock.Load"
@@ -38,6 +39,8 @@ func Load(target string) (Page, error) {
 	return Parse(target, &body)
 }
 
+// Parse searches for all of the metadata available in a document,
+// including OpenGraph, MicroFormats, and JSON-LD.
 func Parse(target string, body *bytes.Buffer) (Page, error) {
 
 	const location = "sherlock.Parse"
