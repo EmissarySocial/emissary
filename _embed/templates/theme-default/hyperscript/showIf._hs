@@ -6,14 +6,14 @@ behavior showIf(condition)
 	end
 
 	on load
-		trigger doTheThing
+		trigger recalcShowIf
 	end
 
 	on change from closest <form/>
-		trigger doTheThing
+		trigger recalcShowIf
 	end
 
-	on doTheThing
+	on recalcShowIf
 		set values to :form as Values
 		if evaluateExpression(:expression, values) then
 			show me
@@ -31,14 +31,14 @@ behavior requiredIf(condition)
 	end
 
 	on load
-		trigger doTheThing
+		trigger recalcRequiredIf
 	end
 
 	on change from closest <form/>
-		trigger doTheThing
+		trigger recalcRequiredIf
 	end
 
-	on doTheThing
+	on recalcRequiredIf
 		set values to :form as Values
 		if evaluateExpression(:expression, values) then
 			put [@required] into me
