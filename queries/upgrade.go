@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/EmissarySocial/emissary/model"
+	upgrades "github.com/EmissarySocial/emissary/queries/upgrades"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,7 +15,7 @@ import (
 
 func UpgradeMongoDB(connectionString string, databaseName string, domain *model.Domain) error {
 
-	const currentDatabaseVersion = 1
+	const currentDatabaseVersion = 2
 	const location = "queries.UpgradeMongoDB"
 
 	// If we're already at the target database version, then skip any other work
@@ -36,54 +36,23 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 
 	session := client.Database(databaseName)
 
-	fmt.Println("============ UPGRADING DATABASE ============")
+	fmt.Println("UPGRADING DATABASE...")
 
 	// Upgrade from version 0 to version 1
 	if domain.DatabaseVersion < 1 {
-		streamCollection := session.Collection("Stream")
-
-		cursor, err := streamCollection.Find(ctx, map[string]any{})
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error retrieving streams iterator")
-		}
-
-		record := mapof.NewAny()
-
-		for cursor.Next(ctx) {
-
-			if err := cursor.Decode(&record); err != nil {
-				return derp.Wrap(err, location, "Error decoding stream record")
-			}
-
-			delete(record, "inReplyTo")
-
-			switch record.GetString("templateId") {
-			case "outbox-item":
-				record["socialRole"] = "Note"
-			case "folder":
-				record["socialRole"] = "Page"
-			case "photograph":
-				record["socialRole"] = "Image"
-			default:
-				record["socialRole"] = "Article"
-			}
-
-			filter := bson.M{"_id": record["_id"]}
-
-			if _, err := streamCollection.ReplaceOne(ctx, filter, record); err != nil {
-				return derp.Wrap(err, location, "Error updating stream record")
-			}
-
-			fmt.Print(".")
-			record = mapof.NewAny()
-		}
-
-		if domain.DatabaseVersion < 2 {
-
+		if err := upgrades.Version1(ctx, session); err != nil {
+			return derp.Wrap(err, location, "Error upgrading database to version 1")
 		}
 	}
 
+	// Upgrade from version 1 to version 2
+	if domain.DatabaseVersion < 2 {
+		if err := upgrades.Version2(ctx, session); err != nil {
+			return derp.Wrap(err, location, "Error upgrading database to version 2")
+		}
+	}
+
+	// Mark the Domain as "upgraded"
 	domainCollection := session.Collection("Domain")
 
 	filter := bson.M{"_id": primitive.NilObjectID}

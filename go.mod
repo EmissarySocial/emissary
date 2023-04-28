@@ -13,7 +13,7 @@ require (
 	github.com/benpate/exp v0.7.0
 	github.com/benpate/exp-builder v0.7.0
 	github.com/benpate/form v0.15.4
-	github.com/benpate/hannibal v0.3.0
+	github.com/benpate/hannibal v0.3.1
 	github.com/benpate/html v0.16.1
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.3
