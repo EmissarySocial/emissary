@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/publicKey"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -125,8 +126,8 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", userID)
 	}
 
-	encryptionKey.PrivatePEM = service.encodePrivatePEM(privateKey)
-	encryptionKey.PublicPEM = service.encodePublicPEM(privateKey)
+	encryptionKey.PrivatePEM = publicKey.EncodePrivatePEM(privateKey)
+	encryptionKey.PublicPEM = publicKey.EncodePublicPEM(privateKey)
 
 	if err := service.Save(&encryptionKey, "Created"); err != nil {
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", userID)
@@ -199,44 +200,4 @@ func (service *EncryptionKey) OwnerID(encryptionKey *model.EncryptionKey) string
 // KeyID returns the publicly accessible URL of this EncryptionKey
 func (service *EncryptionKey) KeyID(encryptionKey *model.EncryptionKey) string {
 	return service.OwnerID(encryptionKey) + "/pub/key"
-}
-
-/******************************************
- * Helper Methods
- ******************************************/
-
-func (service *EncryptionKey) encodePrivatePEM(privateKey *rsa.PrivateKey) string {
-
-	// Get ASN.1 DER format
-	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
-
-	// pem.Block
-	privBlock := pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   privDER,
-	}
-
-	// Private key in PEM format
-	privatePEM := pem.EncodeToMemory(&privBlock)
-
-	return string(privatePEM)
-}
-
-func (service *EncryptionKey) encodePublicPEM(privateKey *rsa.PrivateKey) string {
-
-	// Get ASN.1 DER format
-	publicDER := x509.MarshalPKCS1PublicKey(&privateKey.PublicKey)
-
-	// pem.Block
-	publicBlock := pem.Block{
-		Type:    "RSA PUBLIC KEY",
-		Headers: nil,
-		Bytes:   publicDER,
-	}
-
-	// Private key in PEM format
-	publicPEM := pem.EncodeToMemory(&publicBlock)
-
-	return string(publicPEM)
 }

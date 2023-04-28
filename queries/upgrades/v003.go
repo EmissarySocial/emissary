@@ -2,20 +2,24 @@ package upgrades
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 
+	"github.com/EmissarySocial/emissary/tools/publicKey"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func Version2(ctx context.Context, session *mongo.Database) error {
+// Version3 updates all public keys to 512-bit RSA keys (to hopefully match Mastodon)
+func Version3(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version1"
-	streamCollection := session.Collection("Stream")
+	streamCollection := session.Collection("EncryptionKey")
 
-	fmt.Println("... Version 2")
+	fmt.Println("... Version 3")
 
 	cursor, err := streamCollection.Find(ctx, map[string]any{})
 
@@ -31,16 +35,17 @@ func Version2(ctx context.Context, session *mongo.Database) error {
 			return derp.Wrap(err, location, "Error decoding stream record")
 		}
 
-		document := record.GetMap("document")
-		if _, ok := document["attributedTo"]; !ok {
-			if author, ok := document["author"]; ok {
-				document["attributedTo"] = []any{author}
-				delete(document, "author")
-				delete(record, "author")
-				record["document"] = document
-			}
+		// Create an actual encryption key
+		privateKey, err := rsa.GenerateKey(rand.Reader, 512)
+
+		if err != nil {
+			return derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key")
 		}
 
+		record["privatePEM"] = publicKey.EncodePrivatePEM(privateKey)
+		record["publicPEM"] = publicKey.EncodePublicPEM(privateKey)
+
+		// Save record with new public key
 		filter := bson.M{"_id": record["_id"]}
 
 		if _, err := streamCollection.ReplaceOne(ctx, filter, record); err != nil {

@@ -15,7 +15,7 @@ import (
 
 func UpgradeMongoDB(connectionString string, databaseName string, domain *model.Domain) error {
 
-	const currentDatabaseVersion = 2
+	const currentDatabaseVersion = 3
 	const location = "queries.UpgradeMongoDB"
 
 	// If we're already at the target database version, then skip any other work
@@ -38,17 +38,21 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 
 	fmt.Println("UPGRADING DATABASE...")
 
-	// Upgrade from version 0 to version 1
 	if domain.DatabaseVersion < 1 {
 		if err := upgrades.Version1(ctx, session); err != nil {
 			return derp.Wrap(err, location, "Error upgrading database to version 1")
 		}
 	}
 
-	// Upgrade from version 1 to version 2
 	if domain.DatabaseVersion < 2 {
 		if err := upgrades.Version2(ctx, session); err != nil {
 			return derp.Wrap(err, location, "Error upgrading database to version 2")
+		}
+	}
+
+	if domain.DatabaseVersion < 3 {
+		if err := upgrades.Version3(ctx, session); err != nil {
+			return derp.Wrap(err, location, "Error upgrading database to version 3")
 		}
 	}
 
