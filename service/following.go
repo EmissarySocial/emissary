@@ -2,7 +2,6 @@ package service
 
 import (
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -149,16 +148,6 @@ func (service *Following) Save(following *model.Following, note string) error {
 	following.Status = model.FollowingStatusNew
 	following.StatusMessage = ""
 	following.ErrorCount = 0
-
-	// RULE: Hacky way to make the URL valid.  This should
-	// probably be handled in the schema URL validation.
-	switch {
-	case strings.HasPrefix(following.URL, "@"):
-	case strings.HasPrefix(following.URL, "https://"):
-	case strings.HasPrefix(following.URL, "http://"):
-	default:
-		following.URL = "https://" + following.URL
-	}
 
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {

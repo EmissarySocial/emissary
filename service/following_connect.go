@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/remote"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -54,7 +53,7 @@ func (service *Following) connect(following *model.Following) error {
 	emailAddress := strings.TrimPrefix(following.URL, "@")
 
 	if email, err := mail.ParseAddress(emailAddress); err == nil {
-		spew.Dump(email, err)
+
 		resource, err := digit.Lookup(email.Address)
 
 		if err != nil {
