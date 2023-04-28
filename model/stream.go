@@ -27,7 +27,7 @@ type Stream struct {
 	Permissions     mapof.Object[sliceof.String] `json:"permissions"            bson:"permissions"`         // Permissions for which users can access this stream.
 	DefaultAllow    id.Slice                     `json:"defaultAllow"           bson:"defaultAllow"`        // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	Document        DocumentLink                 `json:"document"               bson:"document"`            // Summary information (url, title, summary) for this Stream
-	InReplyTo       sliceof.Object[DocumentLink] `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
+	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
 	Content         Content                      `json:"content"                bson:"content,omitempty"`   // Body content object for this Stream.
 	Widgets         set.Slice[StreamWidget]      `json:"widgets"                bson:"widgets"`             // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data"                   bson:"data,omitempty"`      // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
@@ -48,7 +48,7 @@ func NewStream() Stream {
 		ParentIDs:     id.NewSlice(),
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
-		InReplyTo:     sliceof.NewObject[DocumentLink](),
+		InReplyTo:     NewDocumentLink(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
 		PublishDate:   math.MaxInt64,

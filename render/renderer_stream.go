@@ -239,7 +239,7 @@ func (w Stream) Author() model.PersonLink {
 	return w.stream.Document.AttributedTo.First()
 }
 
-func (w Stream) InReplyTo() sliceof.Object[model.DocumentLink] {
+func (w Stream) InReplyTo() model.DocumentLink {
 	return w.stream.InReplyTo
 }
 
