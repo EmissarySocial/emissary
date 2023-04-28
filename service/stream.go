@@ -158,9 +158,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		}
 	}
 
-	// RULE: Calculate the depth of this stream
-	stream.Depth = len(stream.ParentIDs)
-
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)

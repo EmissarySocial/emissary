@@ -12,7 +12,6 @@ func StreamSchema() schema.Element {
 			"streamId":      schema.String{Format: "objectId"},
 			"parentId":      schema.String{Format: "objectId"},
 			"parentIds":     schema.Array{Items: schema.String{Format: "objectId"}},
-			"depth":         schema.Integer{Minimum: null.NewInt64(0)},
 			"rank":          schema.Integer{Minimum: null.NewInt64(0)},
 			"token":         schema.String{Format: "token", MaxLength: 128},
 			"navigationId":  schema.String{Format: "objectId"},
@@ -57,9 +56,6 @@ func PermissionSchema() schema.Element {
 func (stream *Stream) GetIntOK(name string) (int, bool) {
 
 	switch name {
-
-	case "depth":
-		return stream.Depth, true
 
 	case "rank":
 		return stream.Rank, true
@@ -121,10 +117,6 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 func (stream *Stream) SetInt(name string, value int) bool {
 
 	switch name {
-
-	case "depth":
-		stream.Depth = value
-		return true
 
 	case "rank":
 		stream.Rank = value
