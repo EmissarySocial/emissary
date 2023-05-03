@@ -49,7 +49,7 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.1
 	github.com/yuin/goldmark v1.5.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20220924101305-151362477c87
-	go.mongodb.org/mongo-driver v1.11.4
+	go.mongodb.org/mongo-driver v1.11.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/net v0.9.0
 	golang.org/x/oauth2 v0.7.0
