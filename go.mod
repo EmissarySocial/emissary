@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.251
+	github.com/aws/aws-sdk-go v1.44.256
 	github.com/benpate/data v0.24.0
 	github.com/benpate/data-mongo v0.24.0
 	github.com/benpate/derp v0.27.1
