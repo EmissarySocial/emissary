@@ -4,22 +4,25 @@ import (
 	"net/url"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Message represents a single item in a User's inbox or outbox.  It is loosely modelled on the MessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
-	MessageID   primitive.ObjectID `json:"messageId"    bson:"_id"`                   // Unique ID of the Message
-	UserID      primitive.ObjectID `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message (in their inbox or outbox)
-	SocialRole  string             `json:"socialRole"   bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
-	Origin      OriginLink         `json:"origin"       bson:"origin,omitempty"`      // Link to the origin of this Message
-	Document    DocumentLink       `json:"document"     bson:"document,omitempty"`    // Document that is the subject of this Message
-	ContentHTML string             `json:"contentHtml"  bson:"contentHtml,omitempty"` // HTML Content of the Message
-	ContentJSON string             `json:"contentJson"  bson:"contentJson,omitempty"` // Original JSON message, used for reprocessing later.
-	FolderID    primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
-	PublishDate int64              `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
-	Rank        int64              `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
+	MessageID      primitive.ObjectID `json:"messageId"      bson:"_id"`                      // Unique ID of the Message
+	UserID         primitive.ObjectID `json:"userId"         bson:"userId"`                   // Unique ID of the User who owns this Message (in their inbox or outbox)
+	FolderID       primitive.ObjectID `json:"folderId"       bson:"folderId,omitempty"`       // Unique ID of the Folder where this Message is stored
+	SocialRole     string             `json:"socialRole"     bson:"socialRole,omitempty"`     // Role this message plays in social integrations ("Article", "Note", etc)
+	Origin         OriginLink         `json:"origin"         bson:"origin,omitempty"`         // Link to the origin of this Message
+	Document       DocumentLink       `json:"document"       bson:"document,omitempty"`       // Document that is the subject of this Message
+	ContentHTML    string             `json:"contentHtml"    bson:"contentHtml,omitempty"`    // HTML Content of the Message
+	ContentJSON    string             `json:"contentJson"    bson:"contentJson,omitempty"`    // Original JSON message, used for reprocessing later.
+	ResponseTotals mapof.Int          `json:"responseTotals" bson:"responseTotals,omitempty"` // Summary counter of Responses to this Message
+	MyResponses    mapof.Bool         `json:"myResponses"    bson:"myResponses,omitempty"`    // Booleans flag how the current user has responded to this Message
+	PublishDate    int64              `json:"publishDate"    bson:"publishDate,omitempty"`    // Unix timestamp of the date/time when this Message was published
+	Rank           int64              `json:"rank"           bson:"rank"`                     // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -27,9 +30,11 @@ type Message struct {
 // NewMessage returns a fully initialized Message record
 func NewMessage() Message {
 	return Message{
-		MessageID: primitive.NewObjectID(),
-		UserID:    primitive.NilObjectID,
-		FolderID:  primitive.NilObjectID,
+		MessageID:      primitive.NewObjectID(),
+		UserID:         primitive.NilObjectID,
+		FolderID:       primitive.NilObjectID,
+		ResponseTotals: mapof.NewInt(),
+		MyResponses:    mapof.NewBool(),
 	}
 }
 

@@ -9,16 +9,18 @@ import (
 func MessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"messageId":   schema.String{Format: "objectId"},
-			"userId":      schema.String{Format: "objectId"},
-			"socialRole":  schema.String{MaxLength: 64},
-			"origin":      OriginLinkSchema(),
-			"document":    DocumentLinkSchema(),
-			"contentHtml": schema.String{Format: "html"},
-			"contentJson": schema.String{Format: "json"},
-			"folderId":    schema.String{Format: "objectId"},
-			"publishDate": schema.Integer{BitSize: 64},
-			"rank":        schema.Integer{BitSize: 64},
+			"messageId":      schema.String{Format: "objectId"},
+			"userId":         schema.String{Format: "objectId"},
+			"folderId":       schema.String{Format: "objectId"},
+			"socialRole":     schema.String{MaxLength: 64},
+			"origin":         OriginLinkSchema(),
+			"document":       DocumentLinkSchema(),
+			"contentHtml":    schema.String{Format: "html"},
+			"contentJson":    schema.String{Format: "json"},
+			"responseTotals": schema.Object{Wildcard: schema.Integer{}},
+			"myResponses":    schema.Object{Wildcard: schema.Boolean{}},
+			"publishDate":    schema.Integer{BitSize: 64},
+			"rank":           schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -138,6 +140,12 @@ func (message *Message) GetObject(name string) (any, bool) {
 
 	case "document":
 		return &message.Document, true
+
+	case "responseTotals":
+		return &message.ResponseTotals, true
+
+	case "myResponses":
+		return &message.MyResponses, true
 
 	default:
 		return nil, false
