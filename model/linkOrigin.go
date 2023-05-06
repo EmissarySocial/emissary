@@ -48,8 +48,6 @@ func (origin OriginLink) Icon() string {
 		return "star"
 	case OriginTypePoll:
 		return "rss"
-	case OriginTypeTwitter:
-		return "twitter"
 	case OriginTypeWebSub:
 		return "websub"
 	}
