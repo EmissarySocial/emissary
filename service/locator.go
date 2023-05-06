@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,6 +23,43 @@ func NewLocator(userService *User, streamService *Stream, host string) Locator {
 		streamService: streamService,
 		host:          host,
 	}
+}
+
+func (service Locator) GetDocumentFromURL(document streams.Document) (model.DocumentLink, error) {
+
+	const location = "service.Locator.GetDocumentFromURL"
+
+	uri := document.ID()
+
+	// Parse and validate the URL
+	parsedURI, err := url.Parse(uri)
+
+	if err != nil {
+		return model.DocumentLink{}, derp.Wrap(err, location, "Invalid URL", uri)
+	}
+
+	// If this is a remote document, then just map it into a DocumentLink
+	if parsedURI.Host != service.host {
+
+		return model.DocumentLink{
+			URL:      uri,
+			Label:    document.Name(),
+			Summary:  document.Summary(),
+			ImageURL: document.ImageURL(),
+		}, nil
+	}
+
+	// Fallthrough means this is a local document, so try to load it from the database
+
+	stream := model.NewStream()
+	token := strings.TrimPrefix(parsedURI.Path, "/")
+	token = list.First(token, '/')
+
+	if err := service.streamService.LoadByToken(token, &stream); err != nil {
+		return model.DocumentLink{}, derp.Wrap(err, location, "Invalid Stream", token)
+	}
+
+	return stream.Document, nil
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.

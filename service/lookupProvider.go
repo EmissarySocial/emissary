@@ -43,13 +43,19 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
 
-	case "purgeDurations":
+	case "reaction-icons":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "1 Day", Value: "1"},
-			form.LookupCode{Label: "1 Week", Value: "7"},
-			form.LookupCode{Label: "1 Month", Value: "31"},
-			form.LookupCode{Label: "1 Year", Value: "365"},
-			form.LookupCode{Label: "Forever", Value: "0"},
+			form.LookupCode{Label: "Love", Group: "Like", Value: "❤️"},
+			form.LookupCode{Label: "Like", Group: "Like", Value: "👍"},
+			form.LookupCode{Label: "Dislike", Group: "Dislike", Value: "👎"},
+			form.LookupCode{Label: "Smile", Group: "Like", Value: "😀"},
+			form.LookupCode{Label: "Laugh", Group: "Like", Value: "🤣"},
+			form.LookupCode{Label: "Frown", Group: "Dislike", Value: "🙁"},
+			form.LookupCode{Label: "Emphasize", Group: "Like", Value: "‼️", Icon: ""},
+			form.LookupCode{Label: "Celebrate", Group: "Like", Value: "🎉"},
+			form.LookupCode{Label: "Question", Group: "Like", Value: "❓"},
+			form.LookupCode{Label: "Crown", Group: "Like", Value: "👑"},
+			form.LookupCode{Label: "Fire", Group: "Like", Value: "🔥"},
 		)
 
 	case "sharing":

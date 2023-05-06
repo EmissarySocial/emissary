@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -292,6 +293,25 @@ func (stream Stream) GetJSONLD() mapof.Any {
 }
 
 /******************************************
+ * Publishing MetaData
+ ******************************************/
+
+// IsPublished rturns TRUE if this Stream is currently published
+func (stream *Stream) IsPublished() bool {
+	now := time.Now().Unix()
+	return (stream.PublishDate < now) && (stream.UnPublishDate > now)
+}
+
+// PublishActivity returns the ActivityType that should be used when publishing this Stream (either Create or Update)
+func (stream *Stream) PublishActivity() string {
+	if stream.IsPublished() {
+		return vocab.ActivityTypeUpdate
+	}
+
+	return vocab.ActivityTypeCreate
+}
+
+/******************************************
  * Other Methods
  ******************************************/
 
@@ -300,18 +320,12 @@ func (stream *Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
-// NewAttachment creates a new file Attachment linked to this Stream.
-func (stream *Stream) NewAttachment(filename string) Attachment {
-	result := NewAttachment(AttachmentTypeStream, stream.StreamID)
-	result.Original = filename
-
-	return result
-}
-
+// SetAttributedTo sets the list of people that this Stream is attributed to
 func (stream *Stream) SetAttributedTo(people ...PersonLink) {
 	stream.Document.AttributedTo = people
 }
 
+// AddAttributedTo adds a person to the list of people that this Stream is attributed to
 func (stream *Stream) AddAttributedTo(people ...PersonLink) {
 	stream.Document.AttributedTo = append(stream.Document.AttributedTo, people...)
 }

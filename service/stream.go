@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,6 +14,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,6 +24,7 @@ type Stream struct {
 	collection          data.Collection
 	templateService     *Template
 	draftService        *StreamDraft
+	outboxService       *Outbox
 	attachmentService   *Attachment
 	host                string
 	streamUpdateChannel chan<- model.Stream
@@ -37,10 +40,11 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
+	service.outboxService = outboxService
 	service.attachmentService = attachmentService
 
 	service.host = host
@@ -455,6 +459,72 @@ func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expressio
 /******************************************
  * Custom Actions
  ******************************************/
+
+// Publish marks this stream as "published"
+func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
+
+	activityType := vocab.ActivityTypeCreate
+
+	if stream.IsPublished() {
+		activityType = vocab.ActivityTypeUpdate
+	}
+
+	// RULE: IF this stream is not yet published, then set the publish date
+	stream.PublishDate = time.Now().Unix()
+
+	// RULE: Move unpublish date all the way to the end of time.
+	// TODO: LOW: May want to set automatic unpublish dates later...
+	stream.UnPublishDate = math.MaxInt64
+
+	// RULE: Set Author to the currently logged in user.
+	stream.SetAttributedTo(user.PersonLink())
+
+	// Re-save the Stream with the updated values.
+	if err := service.Save(stream, "Publish"); err != nil {
+		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
+	}
+
+	// Create the Activity to send to the User's Outbox
+	activity := mapof.Any{
+		"@context": vocab.ContextTypeActivityStreams,
+		"type":     activityType,
+		"actor":    user.GetJSONLD(),
+		"object":   stream.GetJSONLD(),
+	}
+
+	service.outboxService.Publish(user.UserID, stream.StreamID, activity)
+
+	// Done.
+	return nil
+}
+
+// UnPublish marks this stream as "published"
+func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
+
+	// RULE: Move unpublish date all the way to the end of time.
+	stream.UnPublishDate = time.Now().Unix()
+
+	// Re-save the Stream with the updated values.
+	if err := service.Save(stream, "Publish"); err != nil {
+		return derp.Wrap(err, "service.Stream.UnPublish", "Error saving stream", stream)
+	}
+
+	// Create the Activity to send to the User's Outbox
+	activity := mapof.Any{
+		"@context": vocab.ContextTypeActivityStreams,
+		"type":     vocab.ActivityTypeDelete,
+		"actor":    user.GetJSONLD(),
+		"object":   stream.GetJSONLD(),
+	}
+
+	// Remove the record from the inbox
+	if err := service.outboxService.UnPublish(user.UserID, stream.StreamID, activity); err != nil {
+		return derp.Wrap(err, "service.Stream.UnPublish", "Error removing from outbox", stream)
+	}
+
+	// Done.
+	return nil
+}
 
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)

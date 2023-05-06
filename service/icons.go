@@ -36,6 +36,10 @@ func (service Icons) Get(name string) string {
 		return service.get("calendar3-week-fill")
 	case "cancel":
 		return service.get("x-lg")
+	case "chat":
+		return service.get("chat")
+	case "chat-fill":
+		return service.get("chat-fill")
 	case "check-circle":
 		return service.get("check-circle")
 	case "check-circle-fill":
@@ -118,6 +122,8 @@ func (service Icons) Get(name string) string {
 		return service.get("journal")
 	case "link":
 		return service.get("link-45deg")
+	case "link-outbound":
+		return service.get("box-arrow-up-right")
 	case "location":
 		return service.get("geo-alt")
 	case "location-fill":
@@ -130,6 +136,8 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "mention":
+		return service.get("at")
 	case "mute":
 		return service.get("mic-mute")
 	case "mute-fill":

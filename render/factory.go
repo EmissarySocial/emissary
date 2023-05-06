@@ -26,6 +26,7 @@ type Factory interface {
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	Outbox() *service.Outbox
+	Response() *service.Response
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template

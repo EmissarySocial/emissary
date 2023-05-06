@@ -60,6 +60,7 @@ type Factory struct {
 	inboxService         service.Inbox
 	mentionService       service.Mention
 	outboxService        service.Outbox
+	responseService      service.Response
 	streamService        service.Stream
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
@@ -115,6 +116,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *
 	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
 	factory.outboxService = service.NewOutbox()
+	factory.responseService = service.NewResponse()
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
@@ -264,11 +266,19 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Queue(),
 		)
 
+		factory.responseService.Refresh(
+			factory.collection(CollectionResponse),
+			factory.Block(),
+			factory.Outbox(),
+			factory.Host(),
+		)
+
 		// Populate Stream Service
 		factory.streamService.Refresh(
 			factory.collection(CollectionStream),
 			factory.Template(),
 			factory.StreamDraft(),
+			factory.Outbox(),
 			factory.Attachment(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
@@ -435,9 +445,14 @@ func (factory *Factory) Stream() *service.Stream {
 	return &factory.streamService
 }
 
-// StreamDraft returns a fully populated StreamDraft service.
+// StreamDraft returns a fully populated StreamDraft service
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
+}
+
+// Response returns a fully populated Response service
+func (factory *Factory) Response() *service.Response {
+	return &factory.responseService
 }
 
 // User returns a fully populated User service
