@@ -48,11 +48,10 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.Origin = following.Origin()
 	message.SocialRole = object.Type()
 	message.Document = model.DocumentLink{
-		URL:        object.ID(),
-		Label:      object.Name(),
-		Summary:    object.Summary(),
-		ImageURL:   object.ImageURL(),
-		UpdateDate: time.Now().Unix(),
+		URL:      object.ID(),
+		Label:    object.Name(),
+		Summary:  object.Summary(),
+		ImageURL: object.ImageURL(),
 	}
 
 	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Next() {
