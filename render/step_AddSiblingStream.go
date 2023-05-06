@@ -43,7 +43,7 @@ func (step StepAddSiblingStream) UseGlobalWrapper() bool {
 	return false
 }
 
-func (step StepAddSiblingStream) Post(renderer Renderer) error {
+func (step StepAddSiblingStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Collect prerequisites
 	factory := renderer.factory()
@@ -97,5 +97,5 @@ func (step StepAddSiblingStream) Post(renderer Renderer) error {
 
 	// TODO: MEDIUM: sort order?
 
-	return finalizeAddStream(renderer.factory(), context, &stream, template, step.WithSibling)
+	return finalizeAddStream(renderer.factory(), context, buffer, &stream, template, step.WithSibling)
 }

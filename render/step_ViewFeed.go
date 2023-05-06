@@ -83,7 +83,7 @@ func (step StepViewFeed) UseGlobalWrapper() bool {
 	return false
 }
 
-func (step StepViewFeed) Post(renderer Renderer) error {
+func (step StepViewFeed) Post(renderer Renderer, _ io.Writer) error {
 	return nil
 }
 

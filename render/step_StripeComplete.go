@@ -66,6 +66,6 @@ func (step StepStripeComplete) Get(renderer Renderer, _ io.Writer) error {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStripeComplete) Post(renderer Renderer) error {
+func (step StepStripeComplete) Post(renderer Renderer, _ io.Writer) error {
 	return nil
 }

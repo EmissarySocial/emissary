@@ -26,7 +26,7 @@ func (step StepWebSub) UseGlobalWrapper() bool {
 }
 
 // Post accepts a WebSub request, verifies it, and potentially creates a new Follower record.
-func (step StepWebSub) Post(renderer Renderer) error {
+func (step StepWebSub) Post(renderer Renderer, _ io.Writer) error {
 
 	var request struct {
 		Mode         string `form:"hub.mode"`

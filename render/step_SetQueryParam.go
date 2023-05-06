@@ -20,7 +20,7 @@ func (step StepSetQueryParam) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetQueryParam) Post(renderer Renderer) error {
+func (step StepSetQueryParam) Post(renderer Renderer, _ io.Writer) error {
 	return step.Do(renderer)
 }
 

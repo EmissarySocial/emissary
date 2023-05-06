@@ -39,7 +39,7 @@ func (step StepEditWidget) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepEditWidget) Post(renderer Renderer) error {
+func (step StepEditWidget) Post(renderer Renderer, _ io.Writer) error {
 
 	// Locate the widget and its configuration
 	widget, streamWidget, streamRenderer, err := step.common(renderer)

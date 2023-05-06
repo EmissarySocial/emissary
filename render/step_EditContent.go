@@ -28,7 +28,7 @@ func (step StepEditContent) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepEditContent) Post(renderer Renderer) error {
+func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
 
 	context := renderer.context()
 

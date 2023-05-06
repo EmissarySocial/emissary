@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
@@ -20,7 +21,7 @@ func (step StepUnPublish) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepUnPublish) Post(renderer Renderer) error {
+func (step StepUnPublish) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepUnPublish.Post"
 
@@ -29,14 +30,23 @@ func (step StepUnPublish) Post(renderer Renderer) error {
 		return derp.NewUnauthorizedError(location, "User is not authenticated", nil)
 	}
 
-	// Use the publisher service to execute publishing rules
 	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
+	factory := streamRenderer.factory()
 
-	outboxService := renderer.factory().Outbox()
-	outboxService.Unpublish(renderer.AuthenticatedID(), stream)
+	// Try to load the User from the Database
+	userService := factory.User()
+	user := model.NewUser()
 
-	// TODO: MEDIUM: Do we NEED to 'Tombstone' records when the stream has been deleted?
+	if err := userService.LoadByID(streamRenderer.AuthenticatedID(), &user); err != nil {
+		return derp.Wrap(err, location, "Error loading user", streamRenderer.AuthenticatedID())
+	}
+
+	// Try to Publish the Stream to ActivityPub
+	streamService := factory.Stream()
+
+	if err := streamService.UnPublish(&user, streamRenderer.stream); err != nil {
+		return derp.Wrap(err, location, "Error publishing stream", streamRenderer.stream)
+	}
 
 	return nil
 }

@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // StepViewHTML represents an action-step that can render a Stream into HTML
 type StepViewHTML struct {
-	File string
+	File   string
+	Method sliceof.String
 }
 
 // Get renders the Stream HTML to the context
 func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
-
-	context := renderer.context()
 
 	/* TODO: Re-implement this later.
 	Caching leads to problems on INDEX-ONLY pages because you may have added/changed/deleted a child
@@ -42,6 +42,27 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 	}
 	*/
 
+	if step.Method.ContainsAny("get", "both") {
+		return step.render(renderer, buffer)
+	}
+
+	return nil
+}
+
+func (step StepViewHTML) UseGlobalWrapper() bool {
+	return true
+}
+
+func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) error {
+
+	if step.Method.ContainsAny("post", "both") {
+		return step.render(renderer, buffer)
+	}
+	return nil
+}
+
+func (step StepViewHTML) render(renderer Renderer, buffer io.Writer) error {
+	context := renderer.context()
 	header := context.Response().Header()
 
 	header.Set("Vary", "Cookie, HX-Request")
@@ -66,13 +87,5 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 		return derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template")
 	}
 
-	return nil
-}
-
-func (step StepViewHTML) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepViewHTML) Post(renderer Renderer) error {
 	return nil
 }

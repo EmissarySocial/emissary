@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
@@ -24,39 +25,37 @@ func (step StepPublish) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepPublish) Post(renderer Renderer) error {
+func (step StepPublish) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepPublish.Post"
-
-	streamRenderer := renderer.(*Stream)
-
-	if err := step.publish(streamRenderer); err != nil {
-		return derp.Wrap(err, location, "Error publishing stream")
-	}
-
-	// Push the "send webmention" task onto the queue
-	if err := step.sendWebMentions(streamRenderer); err != nil {
-		return derp.Wrap(err, location, "Error sending web mentions")
-	}
-
-	return nil
-}
-
-// Post updates the stream with the current date as the "PublishDate"
-func (step StepPublish) publish(renderer *Stream) error {
-
-	const location = "render.StepPublish.publish"
 
 	// Require that the user is signed in to perform this action
 	if !renderer.IsAuthenticated() {
 		return derp.NewUnauthorizedError(location, "User is not authenticated", nil)
 	}
 
-	// Use the publisher service to execute publishing rules
-	stream := renderer.stream
+	streamRenderer := renderer.(*Stream)
+	factory := streamRenderer.factory()
 
-	outobxService := renderer.factory().Outbox()
-	outobxService.Publish(renderer.AuthenticatedID(), stream)
+	// Try to load the User from the Database
+	userService := factory.User()
+	user := model.NewUser()
+
+	if err := userService.LoadByID(streamRenderer.AuthenticatedID(), &user); err != nil {
+		return derp.Wrap(err, location, "Error loading user", streamRenderer.AuthenticatedID())
+	}
+
+	// Try to Publish the Stream to ActivityPub
+	streamService := factory.Stream()
+
+	if err := streamService.Publish(&user, streamRenderer.stream); err != nil {
+		return derp.Wrap(err, location, "Error publishing stream", streamRenderer.stream)
+	}
+
+	// Push the "send webmention" task onto the queue
+	if err := step.sendWebMentions(streamRenderer); err != nil {
+		return derp.Wrap(err, location, "Error sending web mentions")
+	}
 
 	return nil
 }

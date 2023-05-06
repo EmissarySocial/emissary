@@ -50,7 +50,7 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) error {
 	return nil
 }
 
-func (step StepEditConnection) Post(renderer Renderer) error {
+func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepEditConnection.Post"
 

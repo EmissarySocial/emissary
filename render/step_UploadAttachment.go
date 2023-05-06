@@ -21,7 +21,7 @@ func (step StepUploadAttachment) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepUploadAttachment) Post(renderer Renderer) error {
+func (step StepUploadAttachment) Post(renderer Renderer, _ io.Writer) error {
 
 	factory := renderer.factory()
 	context := renderer.context()

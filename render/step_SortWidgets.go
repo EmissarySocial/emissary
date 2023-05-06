@@ -21,7 +21,7 @@ func (step StepSortWidgets) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepSortWidgets) Post(renderer Renderer) error {
+func (step StepSortWidgets) Post(renderer Renderer, _ io.Writer) error {
 
 	streamRenderer, ok := renderer.(*Stream)
 

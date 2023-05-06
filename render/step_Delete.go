@@ -44,7 +44,7 @@ func (step StepDelete) UseGlobalWrapper() bool {
 }
 
 // Post removes the object from the database (likely using a soft-delete, though)
-func (step StepDelete) Post(renderer Renderer) error {
+func (step StepDelete) Post(renderer Renderer, _ io.Writer) error {
 
 	// Delete the object via the model service.
 	if err := renderer.service().ObjectDelete(renderer.object(), "Deleted"); err != nil {

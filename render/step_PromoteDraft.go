@@ -20,7 +20,7 @@ func (step StepStreamPromoteDraft) UseGlobalWrapper() bool {
 }
 
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
-func (step StepStreamPromoteDraft) Post(renderer Renderer) error {
+func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) error {
 
 	streamRenderer := renderer.(*Stream)
 

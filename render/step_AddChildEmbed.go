@@ -81,7 +81,7 @@ func (step StepAddChildEmbed) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepAddChildEmbed) Post(renderer Renderer) error {
+func (step StepAddChildEmbed) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepAddChildEmbed.Post"
 

@@ -22,7 +22,7 @@ func (step StepForwardTo) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepForwardTo) Post(renderer Renderer) error {
+func (step StepForwardTo) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepForwardTo.Post"
 	var nextPage bytes.Buffer

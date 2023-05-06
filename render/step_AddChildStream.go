@@ -48,7 +48,7 @@ func (step StepAddChildStream) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepAddChildStream) Post(renderer Renderer) error {
+func (step StepAddChildStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddChildStream.Post"
 
@@ -88,7 +88,7 @@ func (step StepAddChildStream) Post(renderer Renderer) error {
 	// TODO: MEDIUM: sort order?
 	// TODO: MEDIUM: presets defined by templates?
 
-	return finalizeAddStream(factory, context, &child, template, step.WithChild)
+	return finalizeAddStream(factory, context, buffer, &child, template, step.WithChild)
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create

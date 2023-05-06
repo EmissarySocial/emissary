@@ -38,7 +38,7 @@ func (step StepWithDraft) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithDraft) Post(renderer Renderer) error {
+func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepWithDraft.Post"
 
@@ -51,7 +51,7 @@ func (step StepWithDraft) Post(renderer Renderer) error {
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := Pipeline(step.SubSteps).Post(factory, &draftRenderer); err != nil {
+	if err := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing steps for parent")
 	}
 

@@ -63,7 +63,7 @@ func (step StepSetSimpleSharing) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepSetSimpleSharing) Post(renderer Renderer) error {
+func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepSetSimpleSharing.Post"
 

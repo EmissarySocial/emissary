@@ -1,7 +1,6 @@
 package render
 
 import (
-	"bytes"
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -23,9 +22,8 @@ func (step StepWithNextSibling) UseGlobalWrapper() bool {
 }
 
 // Post executes the subSteps on the parent Stream
-func (step StepWithNextSibling) Post(renderer Renderer) error {
-	var buffer bytes.Buffer
-	return step.Execute(renderer, &buffer, ActionMethodPost)
+func (step StepWithNextSibling) Post(renderer Renderer, buffer io.Writer) error {
+	return step.Execute(renderer, buffer, ActionMethodPost)
 }
 
 // Post executes the subSteps on the parent Stream

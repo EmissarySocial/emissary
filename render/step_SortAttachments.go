@@ -25,7 +25,7 @@ func (step StepSortAttachments) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSortAttachments) Post(renderer Renderer) error {
+func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) error {
 
 	var formPost struct {
 		Keys []string `form:"keys"`

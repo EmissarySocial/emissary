@@ -44,21 +44,21 @@ func (step StepIfCondition) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepIfCondition) Post(renderer Renderer) error {
+func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "renderer.StepIfCondition.Post"
 
 	factory := renderer.factory()
 
 	if step.evaluateCondition(renderer) {
-		if err := Pipeline(step.Then).Post(factory, renderer); err != nil {
+		if err := Pipeline(step.Then).Post(factory, renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error executing 'then' sub-steps")
 		}
 
 		return nil
 	}
 
-	if err := Pipeline(step.Otherwise).Post(factory, renderer); err != nil {
+	if err := Pipeline(step.Otherwise).Post(factory, renderer, buffer); err != nil {
 		return derp.Wrap(err, location, "Error executing 'otherwise' sub-steps")
 	}
 

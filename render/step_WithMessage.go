@@ -23,8 +23,8 @@ func (step StepWithMessage) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithMessage) Post(renderer Renderer) error {
-	return step.doStep(renderer, nil, ActionMethodPost)
+func (step StepWithMessage) Post(renderer Renderer, buffer io.Writer) error {
+	return step.doStep(renderer, buffer, ActionMethodPost)
 }
 
 func (step StepWithMessage) doStep(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {

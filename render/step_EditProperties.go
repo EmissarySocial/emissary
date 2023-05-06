@@ -81,7 +81,7 @@ func (step StepEditProperties) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepEditProperties) Post(renderer Renderer) error {
+func (step StepEditProperties) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepEditProperties.Post"
 	context := renderer.context()

@@ -47,7 +47,7 @@ func (step StepEditModelObject) UseGlobalWrapper() bool {
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepEditModelObject) Post(renderer Renderer) error {
+func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepEditModelObject.Post"
 

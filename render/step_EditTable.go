@@ -45,7 +45,7 @@ func (step StepTableEditor) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepTableEditor) Post(renderer Renderer) error {
+func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepTableEditor.Post"
 

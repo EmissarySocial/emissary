@@ -16,7 +16,7 @@ func (step StepReloadPage) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepReloadPage) Post(renderer Renderer) error {
+func (step StepReloadPage) Post(renderer Renderer, _ io.Writer) error {
 	renderer.context().Response().Header().Set("HX-Refresh", `true`)
 	return nil
 }

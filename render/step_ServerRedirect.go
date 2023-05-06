@@ -27,7 +27,7 @@ func (step StepServerRedirect) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepServerRedirect) Post(renderer Renderer) error {
+func (step StepServerRedirect) Post(renderer Renderer, _ io.Writer) error {
 	if step.On == "get" {
 		return nil
 	}

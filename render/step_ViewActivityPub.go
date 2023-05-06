@@ -34,6 +34,6 @@ func (step StepViewActivityPub) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepViewActivityPub) Post(renderer Renderer) error {
+func (step StepViewActivityPub) Post(renderer Renderer, _ io.Writer) error {
 	return nil
 }

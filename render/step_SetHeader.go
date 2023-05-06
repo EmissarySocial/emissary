@@ -27,7 +27,7 @@ func (step StepSetHeader) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetHeader) Post(renderer Renderer) error {
+func (step StepSetHeader) Post(renderer Renderer, _ io.Writer) error {
 	if step.On == "post" || step.On == "both" {
 		return step.setHeader(renderer)
 	}

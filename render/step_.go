@@ -8,7 +8,7 @@ import (
 
 type Step interface {
 	Get(Renderer, io.Writer) error
-	Post(Renderer) error
+	Post(Renderer, io.Writer) error
 	UseGlobalWrapper() bool // TODO: should have a better solution for using/skipping the global wrapper than this function
 }
 

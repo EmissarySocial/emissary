@@ -20,7 +20,7 @@ func (step StepDeleteAttachments) UseGlobalWrapper() bool {
 	return true
 }
 
-func (step StepDeleteAttachments) Post(renderer Renderer) error {
+func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "renderer.StepDeleteAttachments.Post"
 

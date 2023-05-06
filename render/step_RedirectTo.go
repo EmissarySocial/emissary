@@ -23,7 +23,7 @@ func (step StepRedirectTo) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepRedirectTo) Post(renderer Renderer) error {
+func (step StepRedirectTo) Post(renderer Renderer, _ io.Writer) error {
 	return step.redirect(renderer)
 }
 

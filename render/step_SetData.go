@@ -32,7 +32,7 @@ func (step StepSetData) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetData) Post(renderer Renderer) error {
+func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepSetData.Post"
 

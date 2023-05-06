@@ -22,7 +22,7 @@ func (step StepSave) UseGlobalWrapper() bool {
 }
 
 // Post saves the object to the database
-func (step StepSave) Post(renderer Renderer) error {
+func (step StepSave) Post(renderer Renderer, _ io.Writer) error {
 
 	modelService := renderer.service()
 	object := renderer.object()

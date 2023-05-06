@@ -20,7 +20,7 @@ func (step StepStripeSetup) Get(renderer Renderer, _ io.Writer) error {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepStripeSetup) Post(renderer Renderer) error {
+func (step StepStripeSetup) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepStripeSetup.Post"
 

@@ -20,7 +20,7 @@ func (step StepSetThumbnail) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetThumbnail) Post(renderer Renderer) error {
+func (step StepSetThumbnail) Post(renderer Renderer, _ io.Writer) error {
 
 	// Find best icon from attachments
 	factory := renderer.factory()

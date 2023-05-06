@@ -27,7 +27,7 @@ func (step StepAddTopStream) UseGlobalWrapper() bool {
 	return false
 }
 
-func (step StepAddTopStream) Post(renderer Renderer) error {
+func (step StepAddTopStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.StepAddTopStream.Post"
 
@@ -65,5 +65,5 @@ func (step StepAddTopStream) Post(renderer Renderer) error {
 
 	// TODO: MEDIUM: sort order?
 
-	return finalizeAddStream(renderer.factory(), renderer.context(), &stream, template, step.WithNewStream)
+	return finalizeAddStream(renderer.factory(), renderer.context(), buffer, &stream, template, step.WithNewStream)
 }
