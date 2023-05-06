@@ -1,0 +1,25 @@
+{{$messageID := .MessageID.Hex}}
+<div id="idMessage-{{$messageID}}-response" class="text-sm" hx-target="this" hx-push-url="false">
+	<span class="button {{if .MyResponses.GetBool `REPLY`}}selected{{end}}" 
+		hx-get="/@me/message-replies?messageId={{$messageID}}">{{icon "chat"}} {{ .ResponseTotals.GetInt "REPLIES"}}</span>
+
+	{{- if .MyResponses.GetBool `LIKE` -}}
+		<span class="button selected"
+			hx-post="/@me/message-response?messageId={{$messageID}}"
+			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "heart"}} {{.ResponseTotals.GetInt "LIKE"}}</span>
+	{{- else -}}
+		<span class="button"
+			hx-post="/@me/message-response?meobject={{$messageID}}"
+			hx-vars="{'objectId':'{{$messageID}}', 'type':'LIKE'}">{{icon "heart"}} {{.ResponseTotals.GetInt "LIKE"}}</span>
+	{{- end -}}
+
+	{{- if .MyResponses.GetBool `DISLIKE` -}}
+		<span class="button selected"
+			hx-post="/@me/message-response?messageId={{$messageID}}"
+			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "thumbs-down"}} {{.ResponseTotals.GetInt "DISLIKE"}}</span>
+	{{- else -}}
+		<span class="button"
+			hx-post="/@me/message-response?messageId={{$messageID}}"
+			hx-vars="{'objectId':'{{$messageID}}', 'type':'DISLIKE'}">{{icon "thumbs-down"}} {{.ResponseTotals.GetInt "DISLIKE"}}</span>
+	{{- end -}}
+</div>
