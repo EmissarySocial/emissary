@@ -54,6 +54,27 @@ func (service *Block) FilterMention(mention *model.Mention) error {
 	return nil
 }
 
+func (service *Block) FilterResponse(response *model.Response) error {
+
+	// Get a list of all blocks for this User
+	userID := response.Object.AttributedTo.First().InternalID
+	activeBlocks, err := service.QueryActiveByUser(userID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Block.FilterFollower", "Error loading blocks for user", userID)
+	}
+
+	// Try each block.  If "BLOCK" or "MUTE", then do not allow the mention
+	for _, block := range activeBlocks {
+		if block.FilterByActors(response.Origin.URL, response.Actor.ProfileURL) {
+			return derp.NewValidationError("Actor blocked")
+		}
+	}
+
+	// No block means that this follower is allowed
+	return nil
+}
+
 func (service *Block) FilterMessage(message *model.Message) error {
 
 	// Get a list of all blocks for this User

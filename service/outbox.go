@@ -101,7 +101,9 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) error {
 
 	// Delete Outbox record last.
-	if err := service.collection.Delete(outboxMessage, note); err != nil {
+	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
+
+	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
 	}
 
@@ -193,6 +195,25 @@ func (service *Outbox) Schema() schema.Schema {
  * Custom Query Methods
  ******************************************/
 
+func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, objectID primitive.ObjectID) (model.OutboxMessage, error) {
+
+	result := model.NewOutboxMessage()
+
+	err := service.LoadByObjectID(userID, objectID, &result)
+
+	if err == nil {
+		return result, nil
+	}
+
+	if derp.NotFound(err) {
+		result.UserID = userID
+		result.ObjectID = objectID
+		return result, nil
+	}
+
+	return result, derp.Wrap(err, "service.Outbox", "Error loading Outbox", userID, objectID)
+}
+
 func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
 	criteria = exp.Equal("userId", userID).And(criteria)
 	return service.Query(criteria, options...)
@@ -206,6 +227,13 @@ func (service *Outbox) QueryByObject(objectType string, objectID primitive.Objec
 func (service *Outbox) LoadByID(userID primitive.ObjectID, outboxOutboxMessageID primitive.ObjectID, result *model.OutboxMessage) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("_id", outboxOutboxMessageID)
+
+	return service.Load(criteria, result)
+}
+
+func (service *Outbox) LoadByObjectID(userID primitive.ObjectID, objectID primitive.ObjectID, result *model.OutboxMessage) error {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("_id", objectID)
 
 	return service.Load(criteria, result)
 }
