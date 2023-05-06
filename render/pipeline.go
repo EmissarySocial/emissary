@@ -16,7 +16,7 @@ func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.W
 		return pipeline.Get(factory, renderer, buffer)
 	}
 
-	return pipeline.Post(factory, renderer)
+	return pipeline.Post(factory, renderer, buffer)
 }
 
 // Get runs all of the pipeline steps using the GET method
@@ -43,14 +43,14 @@ func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Write
 }
 
 // Post runs runs all of the pipeline steps using the POST method
-func (pipeline Pipeline) Post(factory Factory, renderer Renderer) error {
+func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
 
 	const location = "render.pipeline.Post"
 
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		if err := ExecutableStep(step).Post(renderer); err != nil {
+		if err := ExecutableStep(step).Post(renderer, buffer); err != nil {
 			return derp.Wrap(err, location, "Error POST-ing to step")
 		}
 	}

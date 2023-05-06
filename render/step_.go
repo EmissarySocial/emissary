@@ -48,6 +48,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteAttachments:
 		return StepDeleteAttachments(s)
 
+	case step.DeleteResponse:
+		return StepDeleteResponse(s)
+
 	case step.EditConnection:
 		return StepEditConnection(s)
 
@@ -95,6 +98,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
+
+	case step.SetResponse:
+		return StepSetResponse(s)
 
 	case step.SetSimpleSharing:
 		return StepSetSimpleSharing(s)
