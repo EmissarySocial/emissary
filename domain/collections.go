@@ -1,8 +1,5 @@
 package domain
 
-// CollectionActivityStream is the database collection where ActivityStream records are stored
-const CollectionActivityStream = "ActivityStream"
-
 // CollectionAttachment is the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
@@ -42,8 +39,8 @@ const CollectionStream = "Stream"
 // CollectionStreamDraft is the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
 
-// CollectionStreamSource is the database collection where Sources are stored
-const CollectionStreamSource = "StreamSource"
+// CollectionResponse is the database collection where Responses are stored
+const CollectionResponse = "Response"
 
 // CollectionTemplate is the database collection where Templates are stored
 const CollectionTemplate = "Template"

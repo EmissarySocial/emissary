@@ -1,6 +1,6 @@
 package model
 
-// Bundle represents a collection of files that are served as a single unit.
+// Bundle represents a collection of files that are packaged into a Theme, Template, or Widget and are served as a single unit.
 // Recognized content types are automatically minified via github.com/tdewolff/minify/v2.
 type Bundle struct {
 	ContentType  string `json:"contentType"`
