@@ -8,7 +8,6 @@ type DocumentLink struct {
 	Summary      string                     `json:"summary,omitempty"       bson:"summary,omitempty"`      // Brief summary of the document
 	ImageURL     string                     `json:"imageUrl,omitempty"      bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
 	AttributedTo sliceof.Object[PersonLink] `json:"attributedTo,omitempty"  bson:"attributedTo,omitempty"` // List of people who are attributed to this document
-	UpdateDate   int64                      `json:"updateDate,omitempty"    bson:"updateDate,omitempty"`   // Unix timestamp of the date/time when this document was last updated
 }
 
 func NewDocumentLink() DocumentLink {

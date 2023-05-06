@@ -30,11 +30,10 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Message {
 	}
 
 	message.Document = model.DocumentLink{
-		URL:        rssItem.Link,
-		Label:      htmlTools.ToText(rssItem.Title),
-		Summary:    rssSummary(rssItem),
-		ImageURL:   rssImageURL(rssItem),
-		UpdateDate: time.Now().Unix(),
+		URL:      rssItem.Link,
+		Label:    htmlTools.ToText(rssItem.Title),
+		Summary:  rssSummary(rssItem),
+		ImageURL: rssImageURL(rssItem),
 	}
 
 	message.SetAttributedTo(rssAuthor(feed, rssItem))
