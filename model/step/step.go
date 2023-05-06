@@ -35,6 +35,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "delete":
 		return NewDelete(stepInfo)
 
+	case "delete-response":
+		return NewDeleteResponse(stepInfo)
+
 	case "save":
 		return NewSave(stepInfo)
 
@@ -43,6 +46,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "set-header":
 		return NewSetHeader(stepInfo)
+
+	case "set-response":
+		return NewSetResponse(stepInfo)
 
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
