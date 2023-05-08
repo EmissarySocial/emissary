@@ -212,6 +212,14 @@ func (service *Inbox) ListByFollowingID(userID primitive.ObjectID, followingID p
 	return service.List(criteria)
 }
 
+// loadByID is a private function because it does not limit results by User.  It should ONLY
+// be available to trusted services in this package.
+func (service *Inbox) loadByID(messageID primitive.ObjectID, result *model.Message) error {
+	criteria := exp.Equal("_id", messageID)
+
+	return service.Load(criteria, result)
+}
+
 func (service *Inbox) LoadByID(userID primitive.ObjectID, messageID primitive.ObjectID, result *model.Message) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("_id", messageID)

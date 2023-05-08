@@ -387,10 +387,8 @@
 		"message-response":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-response"},
-					{"step":"view-html", "file":"message-response", "method":"both"}
-				]}
+				{"step":"set-response"},
+				{"step":"view-html", "file":"message-response", "method":"both"}
 			]
 		},
 		"message-response-delete":{
