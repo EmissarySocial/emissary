@@ -190,18 +190,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 
-	case "stripe-checkout":
-		return NewStripeCheckout(stepInfo)
-
-	case "stripe-complete":
-		return NewStripeComplete(stepInfo)
-
-	case "stripe-product":
-		return NewStripeProduct(stepInfo)
-
-	case "stripe-setup":
-		return NewStripeSetup(stepInfo)
-
 	case "websub":
 		return NewWebSub(stepInfo)
 	}
