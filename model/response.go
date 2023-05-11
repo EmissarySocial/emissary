@@ -8,9 +8,9 @@ import (
 )
 
 type Response struct {
-	ResponseID primitive.ObjectID `json:"reactionId" bson:"_id"`      // Unique identifier for this Response
+	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`      // Unique identifier for this Response
 	Type       string             `json:"type"       bson:"type"`     // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
-	Value      string             `json:"value"      bson:"value"`    // Custom value assigned to the reaction (emoji, vote, etc)
+	Value      string             `json:"value"      bson:"value"`    // Custom value assigned to the response (emoji, vote, etc)
 	Actor      PersonLink         `json:"actor"      bson:"actor"`    // Actor who responded to the Document
 	Origin     OriginLink         `json:"origin"     bson:"origin"`   // Original document where the Actor posted their response
 	ObjectID   primitive.ObjectID `json:"objectId"   bson:"objectId"` // Internal ID of the Document that the Actor resonded to (Zero for external documents)
