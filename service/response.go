@@ -1,10 +1,7 @@
 package service
 
 import (
-	"context"
-
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -19,7 +16,6 @@ import (
 type Response struct {
 	collection    data.Collection
 	blockService  *Block
-	inboxService  *Inbox
 	outboxService *Outbox
 	host          string
 }
@@ -34,10 +30,9 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, blockService *Block, inboxService *Inbox, outboxService *Outbox, host string) {
+func (service *Response) Refresh(collection data.Collection, blockService *Block, outboxService *Outbox, host string) {
 	service.collection = collection
 	service.blockService = blockService
-	service.inboxService = inboxService
 	service.outboxService = outboxService
 	service.host = host
 }
@@ -83,7 +78,7 @@ func (service *Response) Save(response *model.Response, note string) error {
 
 	// Responses from Local Actor should be published to the Outbox
 	if response.FromLocalActor() {
-		if err := service.outboxService.Publish(response.Actor.InternalID, response.ResponseID, response.GetJSONLD()); err != nil {
+		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.InternalID, response.GetJSONLD()); err != nil {
 			return derp.Wrap(err, "service.Response.Save", "Error publishing Response", response)
 		}
 	}
@@ -250,25 +245,6 @@ func (service *Response) QueryByObjectID(objectID primitive.ObjectID) ([]model.R
 func (service *Response) CalculateMessageStatistics(response *model.Response) error {
 
 	spew.Dump(response)
-	objectID := response.ObjectID
-
-	if objectID.IsZero() {
-		return nil
-	}
-
-	message := model.NewMessage()
-
-	if err := service.inboxService.loadByID(objectID, &message); err != nil {
-		return derp.Wrap(err, "service.Response.CalculateMessageStatistics", "Error loading Message", objectID)
-	}
-
-	if err := queries.CalculateMessageStatistics(context.TODO(), service.collection, &message); err != nil {
-		return derp.Wrap(err, "service.Response.CalculateMessageStatistics", "Error calculating message statistics", message)
-	}
-
-	if err := service.inboxService.Save(&message, "Updated Response Totals"); err != nil {
-		return derp.Wrap(err, "service.Response.CalculateMessageStatistics", "Error saving Message", message)
-	}
 
 	return nil
 }

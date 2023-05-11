@@ -480,7 +480,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	stream.SetAttributedTo(user.PersonLink())
 
 	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "Publish"); err != nil {
+	if err := service.Save(stream, "Publishing"); err != nil {
 		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
 	}
 
@@ -492,7 +492,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		"object":   stream.GetJSONLD(),
 	}
 
-	service.outboxService.Publish(user.UserID, stream.StreamID, activity)
+	service.outboxService.Publish("STREAM", stream.StreamID, user.UserID, activity)
 
 	// Done.
 	return nil

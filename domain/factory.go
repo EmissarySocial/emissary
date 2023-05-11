@@ -269,7 +269,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
 			factory.Block(),
-			factory.Inbox(),
 			factory.Outbox(),
 			factory.Host(),
 		)
