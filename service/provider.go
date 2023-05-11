@@ -39,14 +39,6 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 
 	case providers.ProviderTypeGiphy:
 		return service.GetGiphyProvider(), true
-
-	case providers.ProviderTypeStripe:
-		return service.GetStripeProvider(), true
-
-		/* REMOVED FOR NOW
-		case providers.ProviderTypeTwitter:
-			return service.GetTwitterProvider(), true
-		*/
 	}
 
 	return providers.Null{}, false
@@ -54,11 +46,6 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 
 func (service *Provider) GetGiphyProvider() providers.Giphy {
 	return providers.NewGiphy()
-}
-
-// GetStripeProvider returns a populated Stripe adapter
-func (service *Provider) GetStripeProvider() providers.Stripe {
-	return providers.NewStripe()
 }
 
 /* REMOVED FOR NOW

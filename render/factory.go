@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/hannibal/cache"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/stripe/stripe-go/v72/client"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -48,5 +47,4 @@ type Factory interface {
 	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream
-	StripeClient() (client.API, error)
 }

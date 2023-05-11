@@ -10,7 +10,6 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -24,8 +23,6 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/stripe/stripe-go/v72/client"
 )
 
 // Factory knows how to create an populate all services
@@ -595,33 +592,6 @@ func (factory *Factory) Provider() *service.Provider {
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *service.RSS {
 	return service.NewRSS(factory.Stream(), factory.Host())
-}
-
-// TODO: LOW: Move this to providers.Stripe
-func (factory *Factory) StripeClient() (client.API, error) {
-
-	const location = "domain.factory.StripeClient"
-
-	domain := factory.Domain().Get()
-	stripeClient, _ := domain.Clients.Get(providers.ProviderTypeStripe)
-
-	// Confirm that stripe is active
-	if !stripeClient.Active {
-		return client.API{}, derp.NewBadRequestError(location, "Stripe is not active")
-	}
-
-	// Validate the stripe API key exists
-	stripeKey := stripeClient.Data.GetString(providers.Stripe_APIKey)
-
-	if stripeKey == "" {
-		return client.API{}, derp.NewInternalError(location, "Stripe key must not be empty")
-	}
-
-	// Create a new client API and return
-	result := client.API{}
-	result.Init(stripeKey, nil)
-
-	return result, nil
 }
 
 // Other libraries to make it here eventually...

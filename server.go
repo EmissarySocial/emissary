@@ -224,9 +224,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/startup", handler.Startup(factory), mw.Owner)
 	e.POST("/startup", handler.Startup(factory), mw.Owner)
 
-	// EXTERNAL SERVICES (WEBHOOKS)
-	e.POST("/webhooks/stripe", handler.StripeWebhook(factory))
-
 	// Prepare HTTP and HTTPS servers using the new configuration
 	go startHttps(e)
 	go startHttp(e)
