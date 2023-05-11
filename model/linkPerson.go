@@ -50,17 +50,6 @@ func (person PersonLink) GetJSONLD() mapof.Any {
 	return result
 }
 
-// Link returns a Link to this person
-func (person PersonLink) Link(relation string) Link {
-
-	return Link{
-		Relation:   relation,
-		InternalID: person.InternalID,
-		URL:        person.ProfileURL,
-		Label:      person.Name,
-	}
-}
-
 // GetURL gets a named property value of this person,
 // then retuns it as a parsed URL.  Only "profileUrl"
 // "inboxUrl" and "imageUrl" should be passed to this

@@ -25,18 +25,6 @@ func (origin OriginLink) IsEmpty() bool {
 	return origin.InternalID.IsZero() && (origin.URL == "")
 }
 
-// Link returns a Link to this origin
-func (origin OriginLink) Link() Link {
-
-	return Link{
-		InternalID: origin.InternalID,
-		Relation:   LinkRelationOriginal,
-		Source:     origin.Type,
-		URL:        origin.URL,
-		Label:      origin.Label,
-	}
-}
-
 // Icon returns the standard icon label for this origin
 func (origin OriginLink) Icon() string {
 
