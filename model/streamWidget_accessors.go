@@ -49,7 +49,7 @@ func (x *StreamWidget) SetString(key string, value string) bool {
 	return false
 }
 
-func (x *StreamWidget) GetObject(key string) (any, bool) {
+func (x *StreamWidget) GetPointer(key string) (any, bool) {
 
 	switch key {
 

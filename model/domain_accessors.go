@@ -13,20 +13,29 @@ func DomainSchema() schema.Element {
 			"label":      schema.String{Required: true, MinLength: 1, MaxLength: 100},
 			"forward":    schema.String{Format: "url"},
 			"signupForm": SignupFormSchema(),
-			// "clients":    ClientSchema(),
 		},
 	}
 }
 
-/*********************************
- * Getter Interfaces
- *********************************/
+/********************************
+ * Getter/Setter Interfaces
+ ********************************/
 
-func (domain *Domain) GetObject(name string) (any, bool) {
+func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {
+
 	case "signupForm":
 		return &domain.SignupForm, true
+
+	case "themeId":
+		return &domain.ThemeID, true
+
+	case "label":
+		return &domain.Label, true
+
+	case "forward":
+		return &domain.Forward, true
 	}
 
 	return nil, false
@@ -38,15 +47,6 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	case "domainId":
 		return domain.DomainID.Hex(), true
-
-	case "themeId":
-		return domain.ThemeID, true
-
-	case "label":
-		return domain.Label, true
-
-	case "forward":
-		return domain.Forward, true
 	}
 
 	return "", false
@@ -65,18 +65,6 @@ func (domain *Domain) SetString(name string, value string) bool {
 			domain.DomainID = objectID
 			return true
 		}
-
-	case "themeId":
-		domain.ThemeID = value
-		return true
-
-	case "label":
-		domain.Label = value
-		return true
-
-	case "forward":
-		domain.Forward = value
-		return true
 	}
 
 	return false

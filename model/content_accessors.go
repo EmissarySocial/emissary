@@ -13,9 +13,9 @@ func ContentSchema() schema.Element {
 	}
 }
 
-/*********************************
- * Getter Interfaces
- *********************************/
+/********************************
+ * Getter/Setter Interfaces
+ ********************************/
 
 func (content *Content) GetStringOK(name string) (string, bool) {
 	switch name {
@@ -33,10 +33,6 @@ func (content *Content) GetStringOK(name string) (string, bool) {
 		return "", false
 	}
 }
-
-/*********************************
- * Setter Interfaces
- *********************************/
 
 func (content *Content) SetString(name string, value string) bool {
 	switch name {

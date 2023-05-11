@@ -39,7 +39,7 @@ func (response Response) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (response *Response) GetObject(name string) (any, bool) {
+func (response *Response) GetPointer(name string) (any, bool) {
 
 	switch name {
 

@@ -23,7 +23,11 @@ func Schema() schema.Schema {
 	}
 }
 
-func (config *Config) GetObject(name string) (any, bool) {
+/******************************************
+ * Getter/Setter Interfaces
+ ******************************************/
+
+func (config *Config) GetPointer(name string) (any, bool) {
 
 	switch name {
 

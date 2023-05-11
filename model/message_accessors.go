@@ -132,7 +132,7 @@ func (message *Message) SetString(name string, value string) bool {
  * Tree Traversal Methods
  ******************************************/
 
-func (message *Message) GetObject(name string) (any, bool) {
+func (message *Message) GetPointer(name string) (any, bool) {
 	switch name {
 
 	case "origin":

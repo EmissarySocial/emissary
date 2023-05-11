@@ -71,7 +71,7 @@ func (doc *DocumentLink) SetString(name string, value string) bool {
  * Tree Traversal Interfaces
  ******************************************/
 
-func (doc *DocumentLink) GetObject(name string) (any, bool) {
+func (doc *DocumentLink) GetPointer(name string) (any, bool) {
 	switch name {
 
 	case "attributedTo":

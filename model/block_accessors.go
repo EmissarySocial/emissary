@@ -23,32 +23,39 @@ func BlockSchema() schema.Element {
 }
 
 /******************************************
- * Getter Interfaces
+ * Getter/Setter Interfaces
  ******************************************/
 
-func (block *Block) GetBoolOK(name string) (bool, bool) {
+func (block *Block) GetPointer(name string) (any, bool) {
 
 	switch name {
+
+	case "origin":
+		return &block.Origin, true
 
 	case "isPublic":
-		return block.IsPublic, true
+		return &block.IsPublic, true
 
 	case "isActive":
-		return block.IsActive, true
-	}
-
-	return false, false
-}
-
-func (block *Block) GetInt64OK(name string) (int64, bool) {
-
-	switch name {
+		return &block.IsActive, true
 
 	case "publishDate":
-		return block.PublishDate, true
+		return &block.PublishDate, true
+
+	case "type":
+		return &block.Type, true
+
+	case "label":
+		return &block.Label, true
+
+	case "trigger":
+		return &block.Trigger, true
+
+	case "comment":
+		return &block.Comment, true
 	}
 
-	return 0, false
+	return nil, false
 }
 
 func (block *Block) GetStringOK(name string) (string, bool) {
@@ -61,52 +68,9 @@ func (block *Block) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return block.UserID.Hex(), true
 
-	case "type":
-		return block.Type, true
-
-	case "label":
-		return block.Label, true
-
-	case "trigger":
-		return block.Trigger, true
-
-	case "comment":
-		return block.Comment, true
 	}
 
 	return "", false
-}
-
-/******************************************
- * Setter Interfaces
- ******************************************/
-
-func (block *Block) SetBool(name string, value bool) bool {
-
-	switch name {
-
-	case "isPublic":
-		block.IsPublic = value
-		return true
-
-	case "isActive":
-		block.IsActive = value
-		return true
-	}
-
-	return false
-}
-
-func (block *Block) SetInt64(name string, value int64) bool {
-
-	switch name {
-
-	case "publishDate":
-		block.PublishDate = value
-		return true
-	}
-
-	return false
 }
 
 func (block *Block) SetString(name string, value string) bool {
@@ -124,35 +88,7 @@ func (block *Block) SetString(name string, value string) bool {
 			block.UserID = objectID
 			return true
 		}
-
-	case "type":
-		block.Type = value
-		return true
-
-	case "label":
-		block.Label = value
-		return true
-
-	case "trigger":
-		block.Trigger = value
-		return true
-
-	case "comment":
-		block.Comment = value
-		return true
-
 	}
 
 	return false
-}
-
-func (block *Block) GetObject(name string) (any, bool) {
-
-	switch name {
-
-	case "origin":
-		return &block.Origin, true
-	}
-
-	return nil, false
 }

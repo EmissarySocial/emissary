@@ -102,7 +102,7 @@ func (set *Slice[V]) Sort() {
  * schema Interfaces
  ******************************************/
 
-func (set *Slice[V]) GetObject(name string) (any, bool) {
+func (set *Slice[V]) GetPointer(name string) (any, bool) {
 
 	if index, ok := schema.Index(name); ok {
 

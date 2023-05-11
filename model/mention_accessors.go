@@ -19,8 +19,28 @@ func MentionSchema() schema.Element {
 }
 
 /******************************************
- * Getter Interfaces
+ * Getter/Setter Interfaces
  ******************************************/
+
+func (mention *Mention) GetPointer(name string) (any, bool) {
+
+	switch name {
+
+	case "origin":
+		return &mention.Origin, true
+
+	case "author":
+		return &mention.Author, true
+
+	case "type":
+		return &mention.Type, true
+
+	case "stateId":
+		return &mention.StateID, true
+	}
+
+	return nil, false
+}
 
 func (mention *Mention) GetStringOK(name string) (string, bool) {
 	switch name {
@@ -31,19 +51,10 @@ func (mention *Mention) GetStringOK(name string) (string, bool) {
 	case "objectId":
 		return mention.ObjectID.Hex(), true
 
-	case "type":
-		return mention.Type, true
-
-	case "stateId":
-		return mention.StateID, true
 	}
 
 	return "", false
 }
-
-/******************************************
- * Setter Interfaces
- ******************************************/
 
 func (mention *Mention) SetString(name string, value string) bool {
 	switch name {
@@ -59,33 +70,7 @@ func (mention *Mention) SetString(name string, value string) bool {
 			mention.ObjectID = objectID
 			return true
 		}
-
-	case "type":
-		mention.Type = value
-		return true
-
-	case "stateId":
-		mention.StateID = value
-		return true
 	}
 
 	return false
-}
-
-/******************************************
- * Tree Traversal  Interfaces
- ******************************************/
-
-func (mention *Mention) GetObject(name string) (any, bool) {
-
-	switch name {
-
-	case "origin":
-		return &mention.Origin, true
-
-	case "author":
-		return &mention.Author, true
-	}
-
-	return nil, false
 }

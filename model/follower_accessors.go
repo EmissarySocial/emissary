@@ -25,14 +25,30 @@ func FollowerSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
-func (follower *Follower) GetInt64OK(name string) (int64, bool) {
+func (follower *Follower) GetPointer(name string) (any, bool) {
+
 	switch name {
 
+	case "actor":
+		return &follower.Actor, true
+
+	case "data":
+		return &follower.Data, true
+
 	case "expireDate":
-		return follower.ExpireDate, true
+		return &follower.ExpireDate, true
+
+	case "type":
+		return &follower.Type, true
+
+	case "method":
+		return &follower.Method, true
+
+	case "format":
+		return &follower.Format, true
 	}
 
-	return 0, false
+	return nil, false
 }
 
 func (follower *Follower) GetStringOK(name string) (string, bool) {
@@ -43,34 +59,9 @@ func (follower *Follower) GetStringOK(name string) (string, bool) {
 
 	case "parentId":
 		return follower.ParentID.Hex(), true
-
-	case "type":
-		return follower.Type, true
-
-	case "method":
-		return follower.Method, true
-
-	case "format":
-		return follower.Format, true
 	}
 
 	return "", false
-}
-
-/******************************************
- * Setter Interfaces
- ******************************************/
-
-func (follower *Follower) SetInt64(name string, value int64) bool {
-
-	switch name {
-
-	case "expireDate":
-		follower.ExpireDate = value
-		return true
-	}
-
-	return false
 }
 
 func (follower *Follower) SetString(name string, value string) bool {
@@ -88,18 +79,6 @@ func (follower *Follower) SetString(name string, value string) bool {
 			follower.ParentID = objectID
 			return true
 		}
-
-	case "type":
-		follower.Type = value
-		return true
-
-	case "method":
-		follower.Method = value
-		return true
-
-	case "format":
-		follower.Format = value
-		return true
 	}
 
 	return false
@@ -108,17 +87,3 @@ func (follower *Follower) SetString(name string, value string) bool {
 /******************************************
  * Tree Traversal
  ******************************************/
-
-func (follower *Follower) GetObject(name string) (any, bool) {
-
-	switch name {
-
-	case "actor":
-		return &follower.Actor, true
-
-	case "data":
-		return &follower.Data, true
-	}
-
-	return nil, false
-}

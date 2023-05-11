@@ -16,7 +16,11 @@ func DomainSchema() schema.Element {
 	}
 }
 
-func (domain *Domain) GetObject(name string) (any, bool) {
+/******************************************
+ * Getter/Setter Interfaces
+ ******************************************/
+
+func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {
 

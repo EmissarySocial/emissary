@@ -21,17 +21,23 @@ func OutboxMessageSchema() schema.Element {
 }
 
 /******************************************
- * Getter Interfaces
+ * Getter/Setter Interfaces
  ******************************************/
 
-func (message *OutboxMessage) GetInt64OK(name string) (int64, bool) {
+func (message *OutboxMessage) GetPointer(name string) (any, bool) {
 	switch name {
 
+	case "activity":
+		return &message.Activity, true
+
 	case "rank":
-		return message.Rank, true
+		return &message.Rank, true
+
+	case "objectType":
+		return &message.ObjectType, true
 
 	default:
-		return 0, false
+		return nil, false
 	}
 }
 
@@ -44,9 +50,6 @@ func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return message.UserID.Hex(), true
 
-	case "objectType":
-		return message.ObjectType, true
-
 	case "objectId":
 		return message.ObjectID.Hex(), true
 
@@ -55,22 +58,6 @@ func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
 
 	default:
 		return "", false
-	}
-}
-
-/******************************************
- * Setter Interfaces
- ******************************************/
-
-func (message *OutboxMessage) SetInt64(name string, value int64) bool {
-	switch name {
-
-	case "rank":
-		message.Rank = value
-		return true
-
-	default:
-		return false
 	}
 }
 
@@ -90,10 +77,6 @@ func (message *OutboxMessage) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "objectType":
-		message.ObjectType = value
-		return true
-
 	case "objectId":
 
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
@@ -110,19 +93,4 @@ func (message *OutboxMessage) SetString(name string, value string) bool {
 	}
 
 	return false
-}
-
-/******************************************
- * Tree Traversal Methods
- ******************************************/
-
-func (message *OutboxMessage) GetObject(name string) (any, bool) {
-	switch name {
-
-	case "activity":
-		return &message.Activity, true
-
-	default:
-		return nil, false
-	}
 }
