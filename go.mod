@@ -67,7 +67,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
-	github.com/cloudflare/circl v1.3.2 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.9.0 // indirect
 	github.com/dyatlov/go-oembed v0.0.0-20191103150536-a57c85b3b37c // indirect
