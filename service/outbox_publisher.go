@@ -13,16 +13,12 @@ import (
  ******************************************/
 
 // Publish adds/updates an OutboxMessage in the Outbox, and sends notifications to all followers
-func (service Outbox) Publish(userID primitive.ObjectID, objectID primitive.ObjectID, activity mapof.Any) error {
+func (service Outbox) Publish(objectType string, objectID primitive.ObjectID, userID primitive.ObjectID, activity mapof.Any) error {
 
-	// Load or Create an OutboxMessage
-	outboxMessage, err := service.LoadOrCreate(userID, objectID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Outbox.NewPublish", "Error loading outbox message", userID, objectID)
-	}
-
-	// Assign the activity to the outbox message
+	outboxMessage := model.NewOutboxMessage()
+	outboxMessage.ObjectType = objectType
+	outboxMessage.ObjectID = objectID
+	outboxMessage.UserID = userID
 	outboxMessage.Activity = activity
 
 	if err := service.Save(&outboxMessage, "Updated"); err != nil {
