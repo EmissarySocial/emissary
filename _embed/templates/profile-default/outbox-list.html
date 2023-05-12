@@ -32,11 +32,11 @@
 							{{- end -}}
 							<span class="p-published">{{.PublishDate | humanizeTime}}</span>
 						</div>
-						<div class="h-name bold black">{{.Document.Label}}</div>
-						<div class="h-summary black">{{.Document.Summary | html }}</div>
-						{{- if ne .Document.ImageURL ""}}
+						<div class="h-name bold black">{{.Label}}</div>
+						<div class="h-summary black">{{.Summary | html }}</div>
+						{{- if ne .ImageURL ""}}
 							<div style="margin-top:var(--rhythm);">
-								<img src="{{.Document.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+								<img src="{{.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
 							</div>
 						{{- end -}}
 					</div>
