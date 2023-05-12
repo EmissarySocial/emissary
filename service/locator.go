@@ -59,7 +59,7 @@ func (service Locator) GetDocumentFromURL(document streams.Document) (model.Docu
 		return model.DocumentLink{}, derp.Wrap(err, location, "Invalid Stream", token)
 	}
 
-	return stream.Document, nil
+	return stream.DocumentLink(), nil
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.

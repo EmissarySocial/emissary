@@ -31,18 +31,18 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 
 	result := jsonfeed.Item{
 		ID:            stream.Token,
-		URL:           stream.Document.URL,
-		Title:         stream.Document.Label,
+		URL:           stream.URL,
+		Title:         stream.Label,
 		ContentHTML:   first.String(stream.Content.HTML, " "),
-		Summary:       stream.Document.Summary,
-		Image:         stream.Document.ImageURL,
+		Summary:       stream.Summary,
+		Image:         stream.ImageURL,
 		DatePublished: time.UnixMilli(stream.PublishDate),
 		DateModified:  time.UnixMilli(stream.UpdateDate),
 	}
 
 	// Attach author if available
-	if !stream.Document.AttributedTo.IsEmpty() {
-		author := stream.Document.AttributedTo.First()
+	if !stream.AttributedTo.IsEmpty() {
+		author := stream.AttributedTo.First()
 		result.Author = &jsonfeed.Author{
 			Name:   author.Name,
 			URL:    author.ProfileURL,

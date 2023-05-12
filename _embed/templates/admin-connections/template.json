@@ -14,13 +14,6 @@
 	}},
 	"actions": {
 		"index": {"step": "view-html"},
-		"edit": {"step": "edit-connection"},
-		"stripe": {"steps": [{"step": "as-modal", "steps": [
-			{"step": "view-html"},
-			{"step": "set-data", "from-form":["connections.stripe_isActive", "connections.stripe_apiKey"]},
-			{"step": "save"},
-			{"step": "stripe-setup"},
-			{"step": "save"}
-		]}]}
+		"edit": {"step": "edit-connection"}
 	}
 }

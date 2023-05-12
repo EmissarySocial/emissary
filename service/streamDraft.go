@@ -206,12 +206,17 @@ func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string)
 	}
 
 	// Copy data from draft to production
-	stream.Document = draft.Document
+	stream.URL = draft.URL
+	stream.Token = draft.Token
+	stream.Label = draft.Label
+	stream.Summary = draft.Summary
+	stream.ImageURL = draft.ImageURL
 	stream.Widgets = draft.Widgets
 	stream.Content = draft.Content
 	stream.Data = draft.Data
+	stream.AttributedTo = draft.AttributedTo
+	stream.InReplyTo = draft.InReplyTo
 	stream.StateID = stateID
-	stream.Token = draft.Token
 	stream.Journal.DeleteDate = 0 // just in case...
 
 	// Try to save the updated stream back to the database

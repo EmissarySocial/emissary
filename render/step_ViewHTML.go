@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 // StepViewHTML represents an action-step that can render a Stream into HTML
 type StepViewHTML struct {
 	File   string
-	Method sliceof.String
+	Method string
 }
 
 // Get renders the Stream HTML to the context
@@ -42,7 +41,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 	}
 	*/
 
-	if step.Method.ContainsAny("get", "both") {
+	if (step.Method == "get") || (step.Method == "both") {
 		return step.render(renderer, buffer)
 	}
 
@@ -55,9 +54,10 @@ func (step StepViewHTML) UseGlobalWrapper() bool {
 
 func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) error {
 
-	if step.Method.ContainsAny("post", "both") {
+	if (step.Method == "post") || (step.Method == "both") {
 		return step.render(renderer, buffer)
 	}
+
 	return nil
 }
 

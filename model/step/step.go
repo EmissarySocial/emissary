@@ -35,9 +35,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "delete":
 		return NewDelete(stepInfo)
 
-	case "delete-response":
-		return NewDeleteResponse(stepInfo)
-
 	case "save":
 		return NewSave(stepInfo)
 

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func DocumentLinkSchema() schema.Element {
@@ -17,27 +18,42 @@ func DocumentLinkSchema() schema.Element {
 }
 
 /******************************************
- * Getter Interfaces
+ * Getter/Setter Interfaces
  ******************************************/
 
-func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
+func (doc *DocumentLink) GetPointer(name string) (any, bool) {
+
 	switch name {
 
 	case "url":
-		return doc.URL, true
+		return &doc.URL, true
 
 	case "label":
-		return doc.Label, true
+		return &doc.Label, true
 
 	case "summary":
-		return doc.Summary, true
+		return &doc.Summary, true
 
 	case "imageUrl":
-		return doc.ImageURL, true
+		return &doc.ImageURL, true
+
+	case "attributedTo":
+		return &doc.AttributedTo, true
 
 	default:
 		return "", false
 	}
+}
+
+func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
+	switch name {
+
+	case "streamId":
+		return doc.StreamID.Hex(), true
+
+	}
+
+	return "", false
 }
 
 /******************************************
@@ -47,36 +63,12 @@ func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 func (doc *DocumentLink) SetString(name string, value string) bool {
 	switch name {
 
-	case "url":
-		doc.URL = value
-		return true
-
-	case "label":
-		doc.Label = value
-		return true
-
-	case "summary":
-		doc.Summary = value
-		return true
-
-	case "imageUrl":
-		doc.ImageURL = value
-		return true
+	case "streamId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			doc.StreamID = objectID
+			return true
+		}
 	}
 
 	return false
-}
-
-/******************************************
- * Tree Traversal Interfaces
- ******************************************/
-
-func (doc *DocumentLink) GetPointer(name string) (any, bool) {
-	switch name {
-
-	case "attributedTo":
-		return &doc.AttributedTo, true
-	}
-
-	return nil, false
 }

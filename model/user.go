@@ -59,7 +59,7 @@ func (user *User) ID() string {
 
 func (user *User) PersonLink() PersonLink {
 	return PersonLink{
-		InternalID:   user.UserID,
+		UserID:       user.UserID,
 		Name:         user.DisplayName,
 		EmailAddress: user.EmailAddress,
 		ProfileURL:   user.ProfileURL,

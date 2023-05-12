@@ -60,15 +60,15 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		Id:            stream.Permalink(),
 		Url:           stream.Permalink(),
 		ExternalUrl:   stream.Permalink(),
-		Title:         stream.Document.Label,
-		Summary:       stream.Document.Summary,
-		Image:         stream.Document.ImageURL,
+		Title:         stream.Label,
+		Summary:       stream.Summary,
+		Image:         stream.ImageURL,
 		PublishedDate: &publishDate,
 		ModifiedDate:  &modifiedDate,
 	}
 
-	if !stream.Document.AttributedTo.IsEmpty() {
-		author := stream.Document.AttributedTo.First()
+	if !stream.AttributedTo.IsEmpty() {
+		author := stream.AttributedTo.First()
 		result.Author = &feeds.JSONAuthor{
 			Name:   author.Name,
 			Url:    author.ProfileURL,

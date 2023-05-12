@@ -93,7 +93,7 @@ func (w Model) Label() string {
 		return object.Label
 
 	case *model.Stream:
-		return object.Document.Label
+		return object.Label
 
 	default:
 		return ""

@@ -9,17 +9,17 @@ import (
 
 func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 	result := &feeds.Item{
-		Title:       stream.Document.Label,
-		Description: stream.Document.Summary,
+		Title:       stream.Label,
+		Description: stream.Summary,
 		Content:     stream.Content.HTML,
 		Link: &feeds.Link{
-			Href: stream.Document.URL,
+			Href: stream.URL,
 		},
 		Created: time.UnixMilli(stream.PublishDate),
 	}
 
-	if !stream.Document.AttributedTo.IsEmpty() {
-		author := stream.Document.AttributedTo.First()
+	if !stream.AttributedTo.IsEmpty() {
+		author := stream.AttributedTo.First()
 		result.Author = &feeds.Author{
 			Name:  author.Name,
 			Email: author.EmailAddress,

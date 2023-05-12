@@ -78,7 +78,7 @@ func (service *Response) Save(response *model.Response, note string) error {
 
 	// Responses from Local Actor should be published to the Outbox
 	if response.FromLocalActor() {
-		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.InternalID, response.GetJSONLD()); err != nil {
+		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
 			return derp.Wrap(err, "service.Response.Save", "Error publishing Response", response)
 		}
 	}
@@ -122,7 +122,7 @@ func (service *Response) Delete(response *model.Response, note string) error {
 		activity["object"] = response.GetJSONLD()
 
 		// Send the "Undo" activity
-		if err := service.outboxService.UnPublish(response.Actor.InternalID, response.ResponseID, activity); err != nil {
+		if err := service.outboxService.UnPublish(response.Actor.UserID, response.ResponseID, activity); err != nil {
 			return derp.Wrap(err, "service.Response.Save", "Error publishing Response", response)
 		}
 	}
@@ -194,25 +194,6 @@ func (service *Response) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Response) LoadOrCreate(userID primitive.ObjectID, objectID primitive.ObjectID) (model.Response, error) {
-
-	response := model.NewResponse()
-
-	err := service.LoadByObjectID(userID, objectID, &response)
-
-	if err == nil {
-		return response, nil
-	}
-
-	if derp.NotFound(err) {
-		response.ObjectID = objectID
-		response.Actor.InternalID = userID
-		return response, nil
-	}
-
-	return response, derp.Wrap(err, "service.Response.LoadOrCreate", "Error loading Response", userID, objectID)
-}
-
 func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitive.ObjectID, response *model.Response) error {
 
 	criteria := exp.Equal("_id", responseID).
@@ -245,6 +226,54 @@ func (service *Response) QueryByObjectID(objectID primitive.ObjectID) ([]model.R
 func (service *Response) CalculateMessageStatistics(response *model.Response) error {
 
 	spew.Dump(response)
+
+	return nil
+}
+
+/******************************************
+ * Custom Behaviors
+ ******************************************/
+
+// SetResponse is the preferred way of creating/updating a Response.  It includes the business
+// logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
+func (service *Response) SetResponse(actor model.PersonLink, object model.DocumentLink, responseType string, value string) error {
+
+	const location = "service.Response.SetResponse"
+
+	// If a response already exists, then delete it first.
+	oldResponse := model.NewResponse()
+	err := service.LoadByObjectID(actor.UserID, object.StreamID, &oldResponse)
+
+	// RULE: if the response exists....
+	if err == nil {
+
+		// If there was no change, then there's nothing to do.
+		if oldResponse.Type == responseType && oldResponse.Value == value {
+			return nil
+		}
+
+		// Otherwise, delete the old response (which triggers other logic)
+		if err := service.Delete(&oldResponse, "Updated by User"); err != nil {
+			return derp.Wrap(err, location, "Error deleting old response", oldResponse)
+		}
+	}
+
+	// RULE: If there was a ligitimate error loading the old response, then report it
+	if !derp.NotFound(err) {
+		return derp.Wrap(err, location, "Error loading old response", actor.UserID, object.StreamID)
+	}
+
+	// Create a new response
+	newResponse := model.NewResponse()
+	newResponse.Actor = actor
+	newResponse.Object = object
+	newResponse.Type = responseType
+	newResponse.Value = value
+
+	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
+	if err := service.Save(&newResponse, "Updated by User"); err != nil {
+		return derp.Wrap(err, location, "Error saving response", newResponse)
+	}
 
 	return nil
 }

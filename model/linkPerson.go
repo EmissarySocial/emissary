@@ -8,12 +8,12 @@ import (
 )
 
 type PersonLink struct {
-	InternalID   primitive.ObjectID `json:"internalId"   bson:"internalId,omitempty"`   // Unique ID of a document in this database
-	Name         string             `json:"name"         bson:"name,omitempty"`         // Name of the person
-	ProfileURL   string             `json:"profileUrl"   bson:"profileUrl,omitempty"`   // URL of the person's profile
-	InboxURL     string             `json:"inboxUrl"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
-	EmailAddress string             `json:"emailAddress" bson:"emailAddress,omitempty"` // Email address of the person
-	ImageURL     string             `json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the person's avatar image
+	UserID       primitive.ObjectID `json:"userId,omitempty"       bson:"userId,omitempty"`       // Internal ID of the person (if they exist in this database)
+	Name         string             `json:"name,omitempty"         bson:"name,omitempty"`         // Name of the person
+	ProfileURL   string             `json:"profileUrl,omitempty"   bson:"profileUrl,omitempty"`   // URL of the person's profile
+	InboxURL     string             `json:"inboxUrl,omitempty"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
+	EmailAddress string             `json:"emailAddress,omitempty" bson:"emailAddress,omitempty"` // Email address of the person
+	ImageURL     string             `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the person's avatar image
 }
 
 func NewPersonLink() PersonLink {
@@ -21,9 +21,9 @@ func NewPersonLink() PersonLink {
 }
 
 // IsEmpty returns TRUE if this record does not link to an internal
-// or external person (if the InternalID, ProfileURL, and Name are all empty)
+// or external person (if the UserID, ProfileURL, and Name are all empty)
 func (person PersonLink) IsEmpty() bool {
-	return person.InternalID.IsZero() && (person.ProfileURL == "") && (person.Name == "")
+	return person.UserID.IsZero() && (person.ProfileURL == "") && (person.Name == "")
 }
 
 func (person PersonLink) GetJSONLD() mapof.Any {

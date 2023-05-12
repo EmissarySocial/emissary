@@ -176,7 +176,7 @@ func (w Stream) NavigationID() string {
 
 // PageTitle returns the Label for the stream being rendered
 func (w Stream) PageTitle() string {
-	return w.stream.Document.Label
+	return w.stream.Label
 }
 
 // StateID returns the current state of the stream being rendered
@@ -196,32 +196,32 @@ func (w Stream) Token() string {
 
 // Document returns the DocumentLink record for this stream
 func (w Stream) Document() model.DocumentLink {
-	return w.stream.Document
+	return w.stream.DocumentLink()
 }
 
 // Label returns the Label for the stream being rendered
 func (w Stream) Label() string {
-	return w.stream.Document.Label
+	return w.stream.Label
 }
 
 // Summary returns the description of the stream being rendered
 func (w Stream) Summary() string {
-	return w.stream.Document.Summary
+	return w.stream.Summary
 }
 
 // SummaryHTML returns the description of the stream being rendered
 func (w Stream) SummaryHTML() template.HTML {
-	return template.HTML(w.stream.Document.Summary)
+	return template.HTML(w.stream.Summary)
 }
 
 // SummarySummary returns a plaintext summary (<200 characters) of the stream's description
 func (w Stream) ShortSummary() string {
-	return htmlconv.Summary(w.stream.Document.Summary)
+	return htmlconv.Summary(w.stream.Summary)
 }
 
 // ImageURL returns the thumbnail image URL of the stream being rendered
 func (w Stream) ImageURL() string {
-	return w.stream.Document.ImageURL
+	return w.stream.ImageURL
 }
 
 // Permalink returns a complete URL for this stream
@@ -231,12 +231,12 @@ func (w Stream) Permalink() string {
 
 // AttributedTo returns ALL AttributedTo records for this stream
 func (w Stream) AttributedTo() sliceof.Object[model.PersonLink] {
-	return w.stream.Document.AttributedTo
+	return w.stream.AttributedTo
 }
 
 // Author returns the "first" AttributedTo record for this stream
 func (w Stream) Author() model.PersonLink {
-	return w.stream.Document.AttributedTo.First()
+	return w.stream.AttributedTo.First()
 }
 
 func (w Stream) InReplyTo() model.DocumentLink {

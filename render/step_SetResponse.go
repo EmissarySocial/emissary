@@ -21,8 +21,8 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 	const location = "render.StepSetResponse.Post"
 
 	txn := struct {
-		Type  string `json:"type"     form:"type"`  // The Response.Type (Like, Dislike, etc)
-		Value string `json:"value"    form:"value"` // Addional Value (for Emoji, etc)
+		Type  string `json:"type"  form:"type"`  // The Response.Type (Like, Dislike, etc)
+		Value string `json:"value" form:"value"` // Addional Value (for Emoji, etc)
 	}{}
 
 	// Receive the transaction data
@@ -30,25 +30,18 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error binding transaction")
 	}
 
-	// Try to Create/Load the Response
-	responseService := renderer.factory().Response()
-
-	objectID := renderer.objectID()
-	response, err := responseService.LoadOrCreate(renderer.AuthenticatedID(), objectID)
+	// Retrieve the currently authenticated user
+	user, err := renderer.getUser()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading response", objectID)
+		return derp.Wrap(err, location, "Error getting user")
 	}
 
-	// Set new values in the Response
-	response.Type = txn.Type
-	response.Value = txn.Value
-	response.ObjectID = objectID
-	// response.Object = renderer.documentLink()
-
-	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
-	if err := responseService.Save(&response, "Updated by User"); err != nil {
-		return derp.Wrap(err, location, "Error saving response", response)
+	// Retrieve the object that we're responding to
+	// Try to Create/Load the Response
+	responseService := renderer.factory().Response()
+	if err := responseService.SetResponse(user.PersonLink(), getDocumentLink(renderer.object()), txn.Type, txn.Value); err != nil {
+		return derp.Wrap(err, location, "Error setting response")
 	}
 
 	return nil

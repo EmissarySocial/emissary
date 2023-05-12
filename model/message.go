@@ -39,7 +39,7 @@ func NewMessage() Message {
 }
 
 func MessageFields() []string {
-	return []string{"_id", "userId", "socialRole", "origin", "document", "contentHtml", "folderId", "publishDate", "rank"}
+	return []string{"_id", "userId", "socialRole", "origin", "document", "contentHtml", "folderId", "publishDate", "rank", "responseTotals", "myResponses"}
 }
 
 func (summary Message) Fields() []string {

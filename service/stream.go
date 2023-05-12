@@ -123,7 +123,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
-	stream.Document.URL = service.host + "/" + stream.StreamID.Hex()
+	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	defaultTemplate := template.Default()

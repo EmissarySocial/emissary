@@ -2,7 +2,7 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-
+replace github.com/benpate/data-mongo => ../../benpate/data-mongo
 replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (

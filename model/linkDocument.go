@@ -1,8 +1,12 @@
 package model
 
-import "github.com/benpate/rosetta/sliceof"
+import (
+	"github.com/benpate/rosetta/sliceof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type DocumentLink struct {
+	StreamID     primitive.ObjectID         `json:"streamId,omitempty"      bson:"streamId,omitempty"`     // Internal ID of the stream that is being linked to
 	URL          string                     `json:"url,omitempty"           bson:"url,omitempty"`          // URL of the original document
 	Label        string                     `json:"label,omitempty"         bson:"label,omitempty"`        // Label/Title of the document
 	Summary      string                     `json:"summary,omitempty"       bson:"summary,omitempty"`      // Brief summary of the document

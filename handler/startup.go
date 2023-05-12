@@ -221,9 +221,7 @@ func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx 
 
 		if isHome, ok := body.GetBoolOK("home"); isHome && ok {
 			stream := model.NewStream()
-			stream.Document = model.DocumentLink{
-				Label: "Welcome",
-			}
+			stream.Label = "Welcome"
 			stream.TemplateID = "article-editorjs"
 			stream.StateID = "published"
 			stream.Token = "home"
@@ -232,9 +230,7 @@ func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx 
 
 		if isBlog, ok := body.GetBoolOK("blog"); isBlog && ok {
 			stream := model.NewStream()
-			stream.Document = model.DocumentLink{
-				Label: "Blog",
-			}
+			stream.Label = "Blog"
 			stream.TemplateID = "folder"
 			stream.Token = "blog"
 			stream.Data["format"] = "CARDS"
@@ -244,9 +240,7 @@ func StartupStreams(serverFactory *server.Factory, factory *domain.Factory, ctx 
 
 		if isAlbum, ok := body.GetBoolOK("album"); isAlbum && ok {
 			stream := model.NewStream()
-			stream.Document = model.DocumentLink{
-				Label: "Photo Album",
-			}
+			stream.Label = "Photo Album"
 			stream.TemplateID = "photo-album"
 			stream.Token = "photos"
 			streams = append(streams, stream)

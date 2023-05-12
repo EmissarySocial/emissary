@@ -64,12 +64,12 @@ func (response Response) ActivityPubType() string {
 
 // FromLocalActor returns TRUE if this Response was created by a local Actor
 func (response Response) FromLocalActor() bool {
-	return response.Actor.InternalID.IsZero()
+	return response.Actor.UserID.IsZero()
 }
 
 // FromRemoteActor returns TRUE if this Response was created by a remote Actor
 func (response Response) FromRemoteActor() bool {
-	return !response.Actor.InternalID.IsZero()
+	return !response.Actor.UserID.IsZero()
 }
 
 // ToLocalDocument returns TRUE if this Response was created for a local Document

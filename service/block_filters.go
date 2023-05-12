@@ -57,7 +57,7 @@ func (service *Block) FilterMention(mention *model.Mention) error {
 func (service *Block) FilterResponse(response *model.Response) error {
 
 	// Get a list of all blocks for this User
-	userID := response.Object.AttributedTo.First().InternalID
+	userID := response.Object.AttributedTo.First().UserID
 	activeBlocks, err := service.QueryActiveByUser(userID)
 
 	if err != nil {

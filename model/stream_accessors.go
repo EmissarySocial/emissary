@@ -20,7 +20,11 @@ func StreamSchema() schema.Element {
 			"stateId":       schema.String{MaxLength: 128},
 			"permissions":   PermissionSchema(),
 			"defaultAllow":  schema.Array{Items: schema.String{Format: "objectId"}},
-			"document":      DocumentLinkSchema(),
+			"url":           schema.String{Format: "url"},
+			"label":         schema.String{MaxLength: 128},
+			"summary":       schema.String{MaxLength: 2048},
+			"imageUrl":      schema.String{Format: "url"},
+			"attributedTo":  schema.Array{Items: PersonLinkSchema()},
 			"inReplyTo":     DocumentLinkSchema(),
 			"content":       ContentSchema(),
 			"widgets":       WidgetSchema(),
@@ -65,11 +69,17 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "defaultAllow":
 		return &stream.DefaultAllow, true
 
-	case "document":
-		return &stream.Document, true
+	case "url":
+		return &stream.URL, true
 
-	case "inReplyTo":
-		return &stream.InReplyTo, true
+	case "label":
+		return &stream.Label, true
+
+	case "summary":
+		return &stream.Summary, true
+
+	case "imageUrl":
+		return &stream.ImageURL, true
 
 	case "content":
 		return &stream.Content, true
@@ -79,6 +89,12 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &stream.Data, true
+
+	case "attributedTo":
+		return &stream.AttributedTo, true
+
+	case "inReplyTo":
+		return &stream.InReplyTo, true
 
 	case "rank":
 		return &stream.Rank, true

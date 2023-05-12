@@ -7,14 +7,18 @@ import (
 
 // StreamSummary represents a partial stream record (used for lists)
 type StreamSummary struct {
-	ObjectID       primitive.ObjectID `json:"streamId"            bson:"_id"`                 // Unique identifier of this Stream.  (NOT USED PUBLICLY)
-	ParentObjectID primitive.ObjectID `json:"parentId"            bson:"parentId"`            // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
-	Token          string             `json:"token"               bson:"token"`               // Unique value that identifies this element in the URL
-	TemplateID     string             `json:"templateId"          bson:"templateId"`          // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
-	Document       DocumentLink       `json:"document"            bson:"document"`            // Link to the object that this stream is about
-	InReplyTo      DocumentLink       `json:"inReplyTo,omitempty" bson:"inReplyTo,omitempty"` // If this stream is a reply to another stream or web page, then this links to the original document.
-	PublishDate    int64              `json:"publishDate"         bson:"publishDate"`         // Date when this stream was published
-	Rank           int                `json:"rank"                bson:"rank"`                // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	ObjectID       primitive.ObjectID         `json:"streamId"               bson:"_id"`                    // Unique identifier of this Stream.  (NOT USED PUBLICLY)
+	ParentObjectID primitive.ObjectID         `json:"parentId"               bson:"parentId"`               // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
+	Token          string                     `json:"token"                  bson:"token"`                  // Unique value that identifies this element in the URL
+	TemplateID     string                     `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	URL            string                     `json:"url,omitempty"          bson:"url,omitempty"`          // URL of the original document
+	Label          string                     `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
+	Summary        string                     `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
+	ImageURL       string                     `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
+	AttributedTo   sliceof.Object[PersonLink] `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
+	InReplyTo      DocumentLink               `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
+	PublishDate    int64                      `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
+	Rank           int                        `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 }
 
 // TODO: MEDIUM: Lots of cleanup needed here.  InReplyTo should be migrated -> ReplyTo.
@@ -34,7 +38,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "document", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
 }
 
 func (summary StreamSummary) Fields() []string {
@@ -46,11 +50,7 @@ func (summary StreamSummary) Fields() []string {
  *************************************/
 
 func (summary StreamSummary) Author() PersonLink {
-	return summary.Document.AttributedTo.First()
-}
-
-func (summary StreamSummary) AttributedTo() sliceof.Object[PersonLink] {
-	return summary.Document.AttributedTo
+	return summary.AttributedTo.First()
 }
 
 func (summary StreamSummary) StreamID() string {
@@ -59,12 +59,4 @@ func (summary StreamSummary) StreamID() string {
 
 func (summary StreamSummary) ParentID() string {
 	return summary.ParentObjectID.Hex()
-}
-
-func (summary StreamSummary) Label() string {
-	return summary.Document.Label
-}
-
-func (summary StreamSummary) Summary() string {
-	return summary.Document.Summary
 }
