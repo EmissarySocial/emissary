@@ -1,14 +1,14 @@
 <div class="space-below">
-	<h2 class="black ellipsis">{{.Document.Label}}</h2>
+	<h2 class="black ellipsis">{{.Label}}</h2>
 
-	{{- if ne .Document.ImageURL "" -}}
+	{{- if ne .ImageURL "" -}}
 		<div class="space-below" style="width:100%; max-width:800px;">
-			<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
+			<img src="{{.ImageURL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
 		</div>
 	{{- end -}}
 
 	<div class="text-gray ellipsis-block" style="max-height:6em;">
-		{{- .Document.Summary -}}
+		{{- .SummaryText -}}
 	</div>
 
 	<div class="text-sm space-below flex-row">
@@ -22,4 +22,5 @@
 			{{- .PublishDate | tinyDate -}}
 		</span>
 	</div>
+
 </div>

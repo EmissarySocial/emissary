@@ -36,6 +36,7 @@ type Stream struct {
 	Data            mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	AttributedTo    sliceof.Object[PersonLink]   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo       DocumentLink                 `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
+	Responses       ResponseSummary              `json:"responses,omitempty"    bson:"responses,omitempty"`    // Summary of all responses to this document
 	PublishDate     int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:"journal"`
@@ -321,9 +322,9 @@ func (stream *Stream) PublishActivity() string {
 
 func (stream *Stream) DocumentLink() DocumentLink {
 	return DocumentLink{
-		StreamID: stream.StreamID,
-		URL:      stream.URL,
-		Label:    stream.Label,
+		ID:    stream.StreamID,
+		URL:   stream.URL,
+		Label: stream.Label,
 	}
 }
 

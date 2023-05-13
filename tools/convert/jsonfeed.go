@@ -65,16 +65,13 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 		ImageURL: feed.Icon,
 	}
 
-	message.Document = model.DocumentLink{
-		URL:      item.URL,
-		Label:    item.Title,
-		Summary:  item.Summary,
-		ImageURL: item.Image,
-	}
-
-	message.SetAttributedTo(JsonFeedToAuthor(feed, item))
-	message.PublishDate = item.DatePublished.UnixMilli()
+	message.URL = item.URL
+	message.Label = item.Title
+	message.Summary = item.Summary
+	message.ImageURL = item.Image
 	message.ContentHTML = JsonFeedToContentHTML(item)
+	message.PublishDate = item.DatePublished.UnixMilli()
+	message.SetAttributedTo(JsonFeedToAuthor(feed, item))
 
 	return message
 }

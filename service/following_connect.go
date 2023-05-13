@@ -222,7 +222,7 @@ func (service *Following) saveToInbox(following *model.Following, message *model
 	message.UpdateWithFollowing(following)
 
 	// Search for an existing Message that matches the parameter
-	err := service.inboxService.LoadByURL(following.UserID, message.Document.URL, &original)
+	err := service.inboxService.LoadByURL(following.UserID, message.URL, &original)
 
 	switch {
 

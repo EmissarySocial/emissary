@@ -8,6 +8,7 @@ import (
 func DocumentLinkSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
+			"id":           schema.String{Format: "objectId"},
 			"url":          schema.String{Format: "url"},
 			"label":        schema.String{MaxLength: 128},
 			"summary":      schema.String{Format: "html"},
@@ -48,8 +49,8 @@ func (doc *DocumentLink) GetPointer(name string) (any, bool) {
 func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 	switch name {
 
-	case "streamId":
-		return doc.StreamID.Hex(), true
+	case "id":
+		return doc.ID.Hex(), true
 
 	}
 
@@ -63,9 +64,9 @@ func (doc *DocumentLink) GetStringOK(name string) (string, bool) {
 func (doc *DocumentLink) SetString(name string, value string) bool {
 	switch name {
 
-	case "streamId":
+	case "id":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			doc.StreamID = objectID
+			doc.ID = objectID
 			return true
 		}
 	}

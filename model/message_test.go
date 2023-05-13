@@ -23,8 +23,10 @@ func TestMessageSchema(t *testing.T) {
 		{"folderId", "123456123456123456123456", nil},
 		{"publishDate", "123", int64(123)},
 		{"rank", "123", int64(123)},
-		{"myResponses.TEST", "true", true},
-		{"responseTotals.TEST", 7, nil},
+		{"myResponse", ResponseTypeLike, nil},
+		{"responses.likeCount", 7, nil},
+		{"responses.dislikeCount", 7, nil},
+		{"responses.mentionCount", 7, nil},
 	}
 
 	tableTest_Schema(t, &s, &activity, table)

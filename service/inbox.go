@@ -263,7 +263,7 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 	if derp.NotFound(err) {
 		*result = model.NewMessage()
 		result.UserID = userID
-		result.Document.URL = url
+		result.URL = url
 		return nil
 	}
 
@@ -273,6 +273,23 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+func (service *Inbox) SetResponse(userID primitive.ObjectID, messageID primitive.ObjectID, responseType string) error {
+
+	message := model.NewMessage()
+
+	if err := service.LoadByID(userID, messageID, &message); err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error loading Inbox", userID, messageID)
+	}
+
+	message.SetMyResponse(responseType)
+
+	if err := service.Save(&message, "SetResponse"); err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error saving Inbox", userID, messageID, responseType)
+	}
+
+	return nil
+}
 
 func (service *Inbox) CalculateRank(message *model.Message) error {
 

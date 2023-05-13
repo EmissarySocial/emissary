@@ -26,9 +26,9 @@
 			<h2 class="p-summary">{{.Summary | html}}</h2>
 		</div>
 
-		{{- if ne .Document.ImageURL "" -}}
+		{{- if ne .ImageURL "" -}}
 			<div>
-				<img src="{{.Document.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
+				<img src="{{.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
 			</div>
 		{{- end -}}
 

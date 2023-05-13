@@ -1,15 +1,15 @@
 <div class="flex-row space-below" style="justify-content:space-between;" hx-push-url="true">
 
 	<div style="width:160px; flex-grow:0; flex-shrink:0">
-		{{- if ne "" .Document.ImageURL -}}
+		{{- if ne "" .ImageURL -}}
 			<div style="width:140px; margin-right:20px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-				<img src="{{.Document.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
+				<img src="{{.ImageURL}}" loading="lazy" style="width:140px; max-height:140px; object-fit:cover;"/>
 			</div>
 		{{- end -}}
 	</div>
 
 	<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-		<div class="bold black ellipsis">{{.Document.Label}}</div>
+		<div class="bold black ellipsis">{{.Label}}</div>
 		<div class="text-gray text-sm space-below flex-row">
 			<span class="ellipsis">
 				{{ icon .Origin.Icon }}
@@ -21,7 +21,7 @@
 				{{ .PublishDate | tinyDate }}
 			</span>
 		</div>
-		<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{.Document.Summary}}</div>
+		<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{.SummaryText}}</div>
 	</div>
-
+ 
 </div>

@@ -1,4 +1,4 @@
-{{- $author := .Message.Document.AttributedTo.First -}}
+{{- $author := .Message.AttributedTo.First -}}
 
 <div script="install message(folderId:'{{.Message.FolderID.Hex}}', readDate:'{{.Message.Rank}}')">
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
@@ -39,17 +39,17 @@
 
 	<div class="content">
 
-		{{- if ne "" .Message.Document.Label -}}
-			<h3>{{.Message.Document.Label}}</h3>
+		{{- if ne "" .Message.Label -}}
+			<h3>{{.Message.Label}}</h3>
 		{{- end -}}
 
-		{{- if ne "" .Message.Document.ImageURL -}}
+		{{- if ne "" .Message.ImageURL -}}
 			<div class="space-below">
-				<img src="{{.Message.Document.ImageURL}}" style="max-width:100%">
+				<img src="{{.Message.ImageURL}}" style="max-width:100%">
 			</div>
 		{{- end -}}
 
-		<div>{{.Message.Document.Summary | html}}</div>
+		<div>{{.Message.Summary | html}}</div>
 		<div>{{.Message.ContentHTML | html}}</div>
 	</div>
 	<hr>

@@ -255,23 +255,3 @@ func executeTemplate(template TemplateLike, data any) string {
 
 	return buffer.String()
 }
-
-func getDocumentLink(object any) model.DocumentLink {
-
-	switch typed := object.(type) {
-
-	case model.Stream:
-		return typed.DocumentLink()
-
-	case *model.Stream:
-		return typed.DocumentLink()
-
-	case model.Message:
-		return typed.Document
-
-	case *model.Message:
-		return typed.Document
-	}
-
-	return model.NewDocumentLink()
-}

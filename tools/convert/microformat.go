@@ -12,15 +12,15 @@ func MicroformatToMessage(feed *microformats.Microformat, entry *microformats.Mi
 	message := model.NewMessage()
 
 	// Get properties from entry
-	message.Document.URL = MicroformatPropertyToString(entry, "url")
-	message.Document.Label = MicroformatPropertyToString(entry, "name")
-	message.Document.Summary = MicroformatPropertyToString(entry, "summary")
+	message.URL = MicroformatPropertyToString(entry, "url")
+	message.Label = MicroformatPropertyToString(entry, "name")
+	message.Summary = MicroformatPropertyToString(entry, "summary")
 
 	// Get photo from entry, then feed
 	if photoURL := MicroformatPropertyToString(entry, "photo"); photoURL != "" {
-		message.Document.ImageURL = photoURL
+		message.ImageURL = photoURL
 	} else if photoURL := MicroformatPropertyToString(feed, "photo"); photoURL != "" {
-		message.Document.ImageURL = photoURL
+		message.ImageURL = photoURL
 	}
 
 	// Get author from entry, then feed

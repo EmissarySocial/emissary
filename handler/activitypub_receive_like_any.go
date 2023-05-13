@@ -29,7 +29,7 @@ func activityPub_LikeOrDislike(factory *domain.Factory, user *model.User, activi
 	// Create the response object
 	response := model.NewResponse()
 	response.Actor = convert.ActivityPubPersonLink(activity.Actor())
-	response.Object = object
+	response.Message = object
 
 	switch activity.Type() {
 

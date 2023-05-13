@@ -37,11 +37,14 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error getting user")
 	}
 
-	// Retrieve the object that we're responding to
-	// Try to Create/Load the Response
-	responseService := renderer.factory().Response()
-	if err := responseService.SetResponse(user.PersonLink(), getDocumentLink(renderer.object()), txn.Type, txn.Value); err != nil {
-		return derp.Wrap(err, location, "Error setting response")
+	if documentLinker, ok := renderer.object().(DocumentLinker); ok {
+
+		responseService := renderer.factory().Response()
+		documentLink := documentLinker.DocumentLink()
+
+		if err := responseService.SetResponse(user.PersonLink(), documentLink, txn.Type, txn.Value); err != nil {
+			return derp.Wrap(err, location, "Error setting response")
+		}
 	}
 
 	return nil

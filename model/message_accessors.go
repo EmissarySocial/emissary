@@ -9,41 +9,83 @@ import (
 func MessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"messageId":      schema.String{Format: "objectId"},
-			"userId":         schema.String{Format: "objectId"},
-			"folderId":       schema.String{Format: "objectId"},
-			"socialRole":     schema.String{MaxLength: 64},
-			"origin":         OriginLinkSchema(),
-			"document":       DocumentLinkSchema(),
-			"contentHtml":    schema.String{Format: "html"},
-			"contentJson":    schema.String{Format: "json"},
-			"responseTotals": schema.Object{Wildcard: schema.Integer{}},
-			"myResponses":    schema.Object{Wildcard: schema.Boolean{}},
-			"publishDate":    schema.Integer{BitSize: 64},
-			"rank":           schema.Integer{BitSize: 64},
+			"messageId":    schema.String{Format: "objectId"},
+			"userId":       schema.String{Format: "objectId"},
+			"folderId":     schema.String{Format: "objectId"},
+			"socialRole":   schema.String{MaxLength: 64},
+			"origin":       OriginLinkSchema(),
+			"url":          schema.String{Format: "uri"},
+			"label":        schema.String{MaxLength: 128},
+			"summary":      schema.String{MaxLength: 1024},
+			"imageUrl":     schema.String{Format: "uri"},
+			"attributedTo": schema.Array{Items: PersonLinkSchema()},
+			"inReplyTo":    schema.Array{Items: DocumentLinkSchema()},
+			"contentHtml":  schema.String{Format: "html"},
+			"contentJson":  schema.String{Format: "json"},
+			"responses":    ResponseSummarySchema(),
+			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
+			"publishDate":  schema.Integer{BitSize: 64},
+			"rank":         schema.Integer{BitSize: 64},
 		},
 	}
 }
 
 /******************************************
- * Getter Interfaces
+ * Getter/Setter Methods
  ******************************************/
 
-func (message *Message) GetInt64OK(name string) (int64, bool) {
+func (message *Message) GetPointer(name string) (any, bool) {
 	switch name {
 
+	case "socialRole":
+		return &message.SocialRole, true
+
+	case "origin":
+		return &message.Origin, true
+
+	case "url":
+		return &message.URL, true
+
+	case "label":
+		return &message.Label, true
+
+	case "summary":
+		return &message.Summary, true
+
+	case "imageUrl":
+		return &message.ImageURL, true
+
+	case "attributedTo":
+		return &message.AttributedTo, true
+
+	case "inReplyTo":
+		return &message.InReplyTo, true
+
+	case "contentHtml":
+		return &message.ContentHTML, true
+
+	case "contentJson":
+		return &message.ContentJSON, true
+
+	case "responses":
+		return &message.Responses, true
+
+	case "myResponse":
+		return &message.MyResponse, true
+
 	case "publishDate":
-		return message.PublishDate, true
+		return &message.PublishDate, true
 
 	case "rank":
-		return message.Rank, true
+		return &message.Rank, true
 
 	default:
-		return 0, false
+		return nil, false
 	}
 }
 
 func (message *Message) GetStringOK(name string) (string, bool) {
+
 	switch name {
 
 	case "messageId":
@@ -52,44 +94,20 @@ func (message *Message) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return message.UserID.Hex(), true
 
-	case "socialRole":
-		return message.SocialRole, true
-
 	case "folderId":
 		return message.FolderID.Hex(), true
 
-	case "contentHtml":
-		return message.ContentHTML, true
-
-	case "contentJson":
-		return message.ContentJSON, true
-
-	default:
-		return "", false
 	}
+
+	return "", false
 }
 
 /******************************************
  * Setter Interfaces
  ******************************************/
 
-func (message *Message) SetInt64(name string, value int64) bool {
-	switch name {
-
-	case "publishDate":
-		message.PublishDate = value
-		return true
-
-	case "rank":
-		message.Rank = value
-		return true
-
-	default:
-		return false
-	}
-}
-
 func (message *Message) SetString(name string, value string) bool {
+
 	switch name {
 
 	case "messageId":
@@ -99,55 +117,17 @@ func (message *Message) SetString(name string, value string) bool {
 		}
 
 	case "userId":
-
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			message.UserID = objectID
 			return true
 		}
-
-	case "socialRole":
-		message.SocialRole = value
-		return true
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			message.FolderID = objectID
 			return true
 		}
-
-	case "contentHtml":
-		message.ContentHTML = value
-		return true
-
-	case "contentJson":
-		message.ContentJSON = value
-		return true
-
 	}
 
 	return false
-}
-
-/******************************************
- * Tree Traversal Methods
- ******************************************/
-
-func (message *Message) GetPointer(name string) (any, bool) {
-	switch name {
-
-	case "origin":
-		return &message.Origin, true
-
-	case "document":
-		return &message.Document, true
-
-	case "responseTotals":
-		return &message.ResponseTotals, true
-
-	case "myResponses":
-		return &message.MyResponses, true
-
-	default:
-		return nil, false
-	}
 }

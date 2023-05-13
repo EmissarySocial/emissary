@@ -1,26 +1,26 @@
 {{- $messageID := .MessageID.Hex -}}
 
 <div id="idMessage-{{$messageID}}-response" class="text-sm" hx-target="this" hx-push-url="false">
-	<span class="button {{if .MyResponses.GetBool `REPLY`}}selected{{end}}" 
-		hx-get="/@me/message-replies?messageId={{$messageID}}">{{icon "chat"}} {{ .ResponseTotals.GetInt "REPLIES"}}</span>
+	<span class="button" 
+		hx-get="/@me/message-replies?messageId={{$messageID}}">{{icon "chat"}} {{.Responses.ReplyCount}}</span>
 
-	{{- if .MyResponses.GetBool `LIKE` -}}
+	{{- if eq .MyResponse `LIKE` -}}
 		<span class="button selected"
 			hx-post="/@me/message-response?messageId={{$messageID}}"
-			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "heart"}} {{.ResponseTotals.GetInt "LIKE"}}</span>
+			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "thumbs-up-fill"}} {{.Responses.LikeCount}}</span>
 	{{- else -}}
 		<span class="button"
 			hx-post="/@me/message-response?messageId={{$messageID}}"
-			hx-vars="{'objectId':'{{$messageID}}', 'type':'LIKE'}">{{icon "heart"}} {{.ResponseTotals.GetInt "LIKE"}}</span>
+			hx-vars="{'objectId':'{{$messageID}}', 'type':'LIKE'}">{{icon "thumbs-up"}} {{.Responses.LikeCount}}</span>
 	{{- end -}}
 
-	{{- if .MyResponses.GetBool `DISLIKE` -}}
+	{{- if eq .MyResponse `DISLIKE` -}}
 		<span class="button selected"
 			hx-post="/@me/message-response?messageId={{$messageID}}"
-			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "thumbs-down"}} {{.ResponseTotals.GetInt "DISLIKE"}}</span>
+			hx-vars="{'objectId':'{{$messageID}}'}">{{icon "thumbs-down-fill"}} {{.Responses.DislikeCount}}</span>
 	{{- else -}}
 		<span class="button"
 			hx-post="/@me/message-response?messageId={{$messageID}}"
-			hx-vars="{'objectId':'{{$messageID}}', 'type':'DISLIKE'}">{{icon "thumbs-down"}} {{.ResponseTotals.GetInt "DISLIKE"}}</span>
+			hx-vars="{'objectId':'{{$messageID}}', 'type':'DISLIKE'}">{{icon "thumbs-down"}} {{.Responses.DislikeCount}}</span>
 	{{- end -}}
 </div>

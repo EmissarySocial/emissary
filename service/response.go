@@ -6,16 +6,14 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Response defines a service that can send and receive response data
 type Response struct {
 	collection    data.Collection
-	blockService  *Block
+	inboxService  *Inbox
 	outboxService *Outbox
 	host          string
 }
@@ -30,9 +28,9 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, blockService *Block, outboxService *Outbox, host string) {
+func (service *Response) Refresh(collection data.Collection, inboxService *Inbox, outboxService *Outbox, host string) {
 	service.collection = collection
-	service.blockService = blockService
+	service.inboxService = inboxService
 	service.outboxService = outboxService
 	service.host = host
 }
@@ -71,35 +69,29 @@ func (service *Response) Load(criteria exp.Expression, response *model.Response)
 // Save adds/updates an Response in the database
 func (service *Response) Save(response *model.Response, note string) error {
 
-	// Clean the value before saving
+	const location = "service.Response.Save"
+
+	// Validate/Clean the value before saving
 	if err := service.Schema().Clean(response); err != nil {
-		return derp.Wrap(err, "service.Response.Save", "Error cleaning Response", response)
+		return derp.Wrap(err, location, "Error cleaning Response", response)
 	}
 
-	// Responses from Local Actor should be published to the Outbox
-	if response.FromLocalActor() {
-		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
-			return derp.Wrap(err, "service.Response.Save", "Error publishing Response", response)
-		}
-	}
-
-	// Response from Remote Actors should be filtered
-	if response.FromRemoteActor() {
-		// RULE: Filter Responses that are blocked
-		if err := service.blockService.FilterResponse(response); err != nil {
-			return derp.Wrap(err, "service.Response.Save", "Error filtering Response", response)
-		}
-	}
-
-	// Recalculate statistics for the Message affected by this Response.
-	if err := service.CalculateMessageStatistics(response); err != nil {
-		return derp.Wrap(err, "service.Response.Save", "Error calculating message statistics", response)
+	// Clear the "MyResponse" value in the original message
+	if err := service.inboxService.SetResponse(response.Actor.UserID, response.Message.ID, response.Type); err != nil {
+		return derp.Wrap(err, location, "Error updating original message", response.Message.ID)
 	}
 
 	// Save the value to the database
 	if err := service.collection.Save(response, note); err != nil {
-		return derp.Wrap(err, "service.Response.Save", "Error saving Response", response, note)
+		return derp.Wrap(err, location, "Error saving Response", response, note)
 	}
+
+	/*
+		// Responses from Local Actor should be published to the Outbox
+		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
+			return derp.Wrap(err, location, "Error publishing Response", response)
+		}
+	*/
 
 	return nil
 }
@@ -107,25 +99,28 @@ func (service *Response) Save(response *model.Response, note string) error {
 // Delete removes an Response from the database (virtual delete)
 func (service *Response) Delete(response *model.Response, note string) error {
 
+	const location = "service.Response.Delete"
+
 	criteria := exp.Equal("_id", response.ResponseID)
+
+	// Clear the "MyResponse" value in the original message
+	if err := service.inboxService.SetResponse(response.Actor.UserID, response.Message.ID, ""); err != nil {
+		return derp.Wrap(err, location, "Error updating original message", response.Message.ID)
+	}
 
 	// Delete this Response
 	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Response.Delete", "Error deleting Response", criteria)
+		return derp.Wrap(err, location, "Error deleting Response", criteria)
 	}
 
-	if response.FromLocalActor() {
-
+	/*
 		// Create an "Undo" activity
-		activity := response.GetJSONLD()
-		activity["type"] = vocab.ActivityTypeUndo
-		activity["object"] = response.GetJSONLD()
+		activity := pub.Undo(response.GetJSONLD())
 
-		// Send the "Undo" activity
+		// Send the "Undo" activity to followers
 		if err := service.outboxService.UnPublish(response.Actor.UserID, response.ResponseID, activity); err != nil {
-			return derp.Wrap(err, "service.Response.Save", "Error publishing Response", response)
-		}
-	}
+			return derp.Wrap(err, location, "Error publishing Response", response)
+		} */
 
 	return nil
 }
@@ -197,7 +192,7 @@ func (service *Response) Schema() schema.Schema {
 func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitive.ObjectID, response *model.Response) error {
 
 	criteria := exp.Equal("_id", responseID).
-		AndEqual("actor.internalId", userID)
+		AndEqual("actor.userId", userID)
 
 	if err := service.Load(criteria, response); err != nil {
 		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", responseID)
@@ -206,10 +201,10 @@ func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitiv
 	return nil
 }
 
-func (service *Response) LoadByObjectID(userID primitive.ObjectID, objectID primitive.ObjectID, response *model.Response) error {
+func (service *Response) LoadByMessageID(userID primitive.ObjectID, objectID primitive.ObjectID, response *model.Response) error {
 
-	criteria := exp.Equal("objectId", objectID).
-		AndEqual("actor.internalId", userID)
+	criteria := exp.Equal("message.id", objectID).
+		AndEqual("actor.userId", userID)
 
 	if err := service.Load(criteria, response); err != nil {
 		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", userID, objectID)
@@ -218,16 +213,9 @@ func (service *Response) LoadByObjectID(userID primitive.ObjectID, objectID prim
 	return nil
 }
 
-func (service *Response) QueryByObjectID(objectID primitive.ObjectID) ([]model.Response, error) {
-	criteria := exp.Equal("objectId", objectID)
+func (service *Response) QueryByMessageID(objectID primitive.ObjectID) ([]model.Response, error) {
+	criteria := exp.Equal("message.id", objectID)
 	return service.Query(criteria)
-}
-
-func (service *Response) CalculateMessageStatistics(response *model.Response) error {
-
-	spew.Dump(response)
-
-	return nil
 }
 
 /******************************************
@@ -236,19 +224,19 @@ func (service *Response) CalculateMessageStatistics(response *model.Response) er
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
-func (service *Response) SetResponse(actor model.PersonLink, object model.DocumentLink, responseType string, value string) error {
+func (service *Response) SetResponse(actor model.PersonLink, message model.DocumentLink, responseType string, value string) error {
 
 	const location = "service.Response.SetResponse"
 
 	// If a response already exists, then delete it first.
 	oldResponse := model.NewResponse()
-	err := service.LoadByObjectID(actor.UserID, object.StreamID, &oldResponse)
+	err := service.LoadByMessageID(actor.UserID, message.ID, &oldResponse)
 
 	// RULE: if the response exists....
 	if err == nil {
 
 		// If there was no change, then there's nothing to do.
-		if oldResponse.Type == responseType && oldResponse.Value == value {
+		if (oldResponse.Type == responseType) && (oldResponse.Value == value) {
 			return nil
 		}
 
@@ -258,17 +246,17 @@ func (service *Response) SetResponse(actor model.PersonLink, object model.Docume
 		}
 	}
 
-	// RULE: If there was a ligitimate error loading the old response, then report it
-	if !derp.NotFound(err) {
-		return derp.Wrap(err, location, "Error loading old response", actor.UserID, object.StreamID)
+	// RULE: If there is no response type, then this is a DELETE-ONLY operation. Do not create a new response.
+	if responseType == "" {
+		return nil
 	}
 
 	// Create a new response
 	newResponse := model.NewResponse()
-	newResponse.Actor = actor
-	newResponse.Object = object
 	newResponse.Type = responseType
 	newResponse.Value = value
+	newResponse.Actor = actor
+	newResponse.Message = message
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(&newResponse, "Updated by User"); err != nil {

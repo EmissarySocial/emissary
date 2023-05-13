@@ -47,12 +47,10 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.UserID = following.UserID
 	message.Origin = following.Origin()
 	message.SocialRole = object.Type()
-	message.Document = model.DocumentLink{
-		URL:      object.ID(),
-		Label:    object.Name(),
-		Summary:  object.Summary(),
-		ImageURL: object.ImageURL(),
-	}
+	message.URL = object.ID()
+	message.Label = object.Name()
+	message.Summary = object.Summary()
+	message.ImageURL = object.ImageURL()
 
 	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Next() {
 		if author, err := object.AttributedTo().AsObject(); err == nil {
@@ -77,7 +75,7 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 
 	// OMG, is that it? Are we done?  Let's see....
 	if err := inboxService.Save(&message, "Created via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, message.Document.URL)
+		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, message.URL)
 	}
 
 	// Hooo-dat?!?!?

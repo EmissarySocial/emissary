@@ -18,12 +18,12 @@
 		</div>
 
 		<div>
-			{{- .Document.Summary | html -}}
+			{{- .Summary | html -}}
 		</div>
 
-		{{- if ne .Document.ImageURL "" -}}
+		{{- if ne .ImageURL "" -}}
 			<div class="space-above" style="max-width:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-				<img src="{{.Document.ImageURL}}" loading="lazy" style="max-width:400x; max-height:300px; object-fit:cover;"/>
+				<img src="{{.ImageURL}}" loading="lazy" style="max-width:400x; max-height:300px; object-fit:cover;"/>
 			</div>
 		{{- end -}}
 

@@ -5,11 +5,11 @@
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1>{{$message.Document.Label}}</h1>
+	<h1>{{$message.Label}}</h1>
 
 	<div class="text-gray space-below ellipsis">
-		<a href="{{$message.Document.URL}}" target="_blank" class="text-gray">
-			{{- icon $message.Origin.Icon }} {{ $message.Document.URL}}
+		<a href="{{$message.URL}}" target="_blank" class="text-gray">
+			{{- icon $message.Origin.Icon }} {{ $message.URL}}
 		</a>
 		&middot; 
 		{{ $message.PublishDate | tinyDate -}}
@@ -33,14 +33,7 @@
 	<hr/>
 
 	<div class="content">
-
-		{{- if ne "" $message.Document.ImageURL -}}
-			<div class="space-below">
-				<img src="{{$message.Document.ImageURL}}" style="max-width:100%">
-			</div>
-		{{- end -}}
-
-		<div>{{$message.Document.Summary | html}}</div>
+		<div>{{$message.Summary | html}}</div>
 		<div>{{$message.ContentHTML | html}}</div>
 	</div>
 

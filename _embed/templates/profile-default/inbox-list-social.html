@@ -11,11 +11,11 @@
 </div>
 
 <div class="space-above">
-	{{- .Document.Summary | html -}}
+	{{- .Summary | html -}}
 </div>
 
-{{- if ne .Document.ImageURL "" -}}
+{{- if ne .ImageURL "" -}}
 	<div class="space-above" style="position:relative;">
-		<img src="{{.Document.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+		<img src="{{.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 	</div>
 {{- end -}}

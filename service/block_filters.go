@@ -54,19 +54,18 @@ func (service *Block) FilterMention(mention *model.Mention) error {
 	return nil
 }
 
-func (service *Block) FilterResponse(response *model.Response) error {
+func (service *Block) FilterStreamResponse(stream *model.Stream, actors ...string) error {
 
 	// Get a list of all blocks for this User
-	userID := response.Object.AttributedTo.First().UserID
-	activeBlocks, err := service.QueryActiveByUser(userID)
+	activeBlocks, err := service.QueryActiveByUser(stream.ParentID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Block.FilterFollower", "Error loading blocks for user", userID)
+		return derp.Wrap(err, "service.Block.FilterFollower", "Error loading blocks for user", stream.ParentID)
 	}
 
 	// Try each block.  If "BLOCK" or "MUTE", then do not allow the mention
 	for _, block := range activeBlocks {
-		if block.FilterByActors(response.Origin.URL, response.Actor.ProfileURL) {
+		if block.FilterByActors(actors...) {
 			return derp.NewValidationError("Actor blocked")
 		}
 	}
@@ -86,7 +85,7 @@ func (service *Block) FilterMessage(message *model.Message) error {
 
 	// Try to execute each block
 	for _, block := range activeBlocks {
-		if block.FilterByActorAndContent(message.Origin.URL, message.Document.Label, message.Document.Summary, message.ContentHTML) {
+		if block.FilterByActorAndContent(message.Origin.URL, message.Label, message.Summary, message.ContentHTML) {
 			return derp.NewValidationError("Actor blocked")
 		}
 	}
