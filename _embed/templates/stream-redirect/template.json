@@ -37,8 +37,8 @@
 						"form": {
 							"type": "layout-vertical",
 							"children": [
-								{"type": "text", "label": "Label", "path": "document.label"},
-								{"type": "textarea", "label": "Summary", "path": "document.description"},
+								{"type": "text", "label": "Label", "path": "label"},
+								{"type": "textarea", "label": "Summary", "path": "description"},
 								{"type": "text", "label": "URL", "path": "data.url"}
 							]
 						}

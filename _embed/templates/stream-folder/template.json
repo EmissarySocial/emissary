@@ -58,8 +58,8 @@
 							"type":"layout-vertical",
 							"label":"Edit Folder",
 							"children": [
-								{"type":"text", "label":"Label", "path":"document.label"},
-								{"type":"textarea", "label":"Summary", "path":"document.summary"},
+								{"type":"text", "label":"Label", "path":"label"},
+								{"type":"textarea", "label":"Summary", "path":"summary"},
 								{"type":"select", "label":"Format", "path":"data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
 								{"type":"select", "label":"Show Images", "path":"data.showImages"}
 							]

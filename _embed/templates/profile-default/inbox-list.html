@@ -13,6 +13,7 @@
 	<div 
 		hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
 		hx-target="this"
+		hx-trigger="click once"
 		hx-swap="beforebegin"
 		hx-push-url="false"
 		role="button"
@@ -40,6 +41,7 @@
 			class="message"
 			style="max-width:640px;"
 			hx-get="/@me/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
+			hx-trigger="click once"
 			hx-push-url="false">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}

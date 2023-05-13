@@ -67,8 +67,8 @@
 						"label":"Edit Photo Album",
 						"description":"",
 						"children": [
-							{"type":"text", "path":"document.label", "label":"Label"},
-							{"type":"textarea", "path":"document.summary", "label":"Summary", "cssClass":"height300"}
+							{"type":"text", "path":"label", "label":"Label"},
+							{"type":"textarea", "path":"summary", "label":"Summary", "cssClass":"height300"}
 						]
 					}},
 					{"step":"save", "comment":"Updated by {{.Author}}"}
@@ -82,7 +82,7 @@
 				"template":"photograph",
 				"with-child": [
 					{"step":"upload-attachments"},
-					{"step":"set-thumbnail", "path":"document.imageUrl"},
+					{"step":"set-thumbnail", "path":"imageUrl"},
 					{"step":"save", "comment":"Created by {{.Author}}"},
 					{"step":"add-child", "template":"comment-group", "with-child":[
 						{"step":"save", "comment":"Created by {{.Author}}"}

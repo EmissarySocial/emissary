@@ -54,7 +54,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step":"set-data", "values": {"document.label":"New Article (WYSIWYG)"}},
+				{"step":"set-data", "values": {"label":"New Article (WYSIWYG)"}},
 				{"step":"set-state", "state":"unpublished"}
 			]
 		},
@@ -144,7 +144,7 @@
 				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
 				{"step":"set-state", "state":"published"},
 				{"step":"save", "message":"Published by {{.Author}}"},
-				{"step":"publish", "mentions":["document.summary","content.html"]},
+				{"step":"publish", "mentions":["summary","content.html"]},
 				{"step":"refresh-page"}
 			]
 		},
@@ -164,7 +164,7 @@
 			"steps": [
 				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
 				{"step":"promote-draft"},
-				{"step":"publish", "mentions":["document.summary","content.html"]},
+				{"step":"publish", "mentions":["summary","content.html"]},
 				{"step":"refresh-page"},
 				{"step":"forward-to", "url":"/{{.Token}}"}
 			]
@@ -189,8 +189,8 @@
 								"label":"Article Properties",
 								"children": [
 									{"type":"text", "path":"token", "label":"Token/Slug"},
-									{"type":"text",     "path":"document.label",   "label":"Label"},
-									{"type":"textarea", "path":"document.summary", "label":"Summary"}
+									{"type":"text",     "path":"label",   "label":"Label"},
+									{"type":"textarea", "path":"summary", "label":"Summary"}
 								]
 							}
 						}]

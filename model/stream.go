@@ -112,7 +112,7 @@ func (stream *Stream) GetSort(fieldName string) any {
 	switch fieldName {
 	case "publishDate":
 		return stream.PublishDate
-	case "document.label":
+	case "label":
 		return stream.Label
 	case "rank":
 		return stream.Rank

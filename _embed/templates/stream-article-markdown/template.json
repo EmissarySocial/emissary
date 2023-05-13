@@ -9,7 +9,7 @@
 		"init": {
 			"steps": [
 				{"step":"set-data", "values": {
-					"document.label":"New Article (Markdown)", 
+					"label":"New Article (Markdown)", 
 					"content.format":"markdown", 
 					"content.raw":"# New Article"
 				}},

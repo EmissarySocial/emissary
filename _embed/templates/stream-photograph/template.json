@@ -54,11 +54,11 @@
 						"children": [{
 							"type": "text",
 							"label": "Title",
-							"path": "document.label"
+							"path": "label"
 						},{
 							"type": "textarea",
 							"label": "Summary",
-							"path": "document.summary"
+							"path": "summary"
 						}]
 					}},
 					{"step": "save", "comment": "Updated by {{.Author}}"}

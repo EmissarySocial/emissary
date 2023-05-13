@@ -1,8 +1,8 @@
 {{- $messageID := .MessageID.Hex -}}
 
-<div id="idMessage-{{$messageID}}-response" class="text-sm" hx-target="this" hx-push-url="false">
+<div id="idMessage-{{$messageID}}-response" class="text-xs" hx-target="this" hx-push-url="false">
 	<span class="button" 
-		hx-get="/@me/message-replies?messageId={{$messageID}}">{{icon "chat"}} {{.Responses.ReplyCount}}</span>
+		hx-get="/@me/message?messageId={{$messageID}}">{{icon "chat"}} {{.Responses.ReplyCount}}</span>
 
 	{{- if eq .MyResponse `LIKE` -}}
 		<span class="button selected"
