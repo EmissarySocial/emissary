@@ -70,7 +70,7 @@ func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (
 func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error loading Outbox", criteria)
+		return derp.Wrap(err, "service.Outbox", "Error loading Outbox Message", criteria)
 	}
 
 	return nil
@@ -233,7 +233,7 @@ func (service *Outbox) LoadByID(userID primitive.ObjectID, outboxOutboxMessageID
 
 func (service *Outbox) LoadByObjectID(userID primitive.ObjectID, objectID primitive.ObjectID, result *model.OutboxMessage) error {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("_id", objectID)
+		AndEqual("objectId", objectID)
 
 	return service.Load(criteria, result)
 }

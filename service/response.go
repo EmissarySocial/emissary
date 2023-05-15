@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -86,12 +87,10 @@ func (service *Response) Save(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
 	}
 
-	/*
-		// Responses from Local Actor should be published to the Outbox
-		if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
-			return derp.Wrap(err, location, "Error publishing Response", response)
-		}
-	*/
+	// Responses from Local Actor should be published to the Outbox
+	if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
+		return derp.Wrap(err, location, "Error publishing Response", response)
+	}
 
 	return nil
 }
@@ -113,14 +112,13 @@ func (service *Response) Delete(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error deleting Response", criteria)
 	}
 
-	/*
-		// Create an "Undo" activity
-		activity := pub.Undo(response.GetJSONLD())
+	// Create an "Undo" activity
+	activity := pub.Undo(response.GetJSONLD())
 
-		// Send the "Undo" activity to followers
-		if err := service.outboxService.UnPublish(response.Actor.UserID, response.ResponseID, activity); err != nil {
-			return derp.Wrap(err, location, "Error publishing Response", response)
-		} */
+	// Send the "Undo" activity to followers
+	if err := service.outboxService.UnPublish(response.Actor.UserID, response.ResponseID, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing Response", response)
+	}
 
 	return nil
 }
