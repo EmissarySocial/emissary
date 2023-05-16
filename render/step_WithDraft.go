@@ -52,7 +52,7 @@ func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 
 	// Execute the POST render pipeline on the parent
 	if err := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing steps for parent")
+		return derp.Wrap(err, location, "Error executing steps on draft")
 	}
 
 	return nil
