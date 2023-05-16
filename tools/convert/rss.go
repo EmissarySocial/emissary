@@ -101,6 +101,21 @@ func rssImageURL(rssItem *gofeed.Item) string {
 		}
 	}
 
+	// Search for media extensions (YouTube uses this)
+	if media, ok := rssItem.Extensions["media"]; ok {
+		if group, ok := media["group"]; ok {
+			for _, extension := range group {
+				if thumbnails, ok := extension.Children["thumbnail"]; ok {
+					for _, item := range thumbnails {
+						if url := item.Attrs["url"]; url != "" {
+							return url
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return ""
 }
 
