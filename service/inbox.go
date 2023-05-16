@@ -247,7 +247,7 @@ func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.O
 
 func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("document.url", url)
+		AndEqual("url", url)
 
 	return service.Load(criteria, result)
 }
