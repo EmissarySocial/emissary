@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContentSchema(t *testing.T) {
@@ -18,4 +19,9 @@ func TestContentSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &content, table)
+
+	require.Error(t, s.Validate(&content))
+
+	s.Set(&content, "format", ContentFormatHTML)
+	require.Nil(t, s.Validate(&content))
 }

@@ -6,7 +6,7 @@ import "github.com/benpate/rosetta/schema"
 func ContentSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"format": schema.String{},
+			"format": schema.String{Enum: []string{ContentFormatHTML, ContentFormatEditorJS, ContentFormatMarkdown, ContentFormatText}},
 			"raw":    schema.String{Format: "unsafe-any"},
 			"html":   schema.String{Format: "html"},
 		},
@@ -17,39 +17,20 @@ func ContentSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
-func (content *Content) GetStringOK(name string) (string, bool) {
+func (content *Content) GetPointer(name string) (any, bool) {
+
 	switch name {
 
 	case "format":
-		return content.Format, true
+		return &content.Format, true
 
 	case "raw":
-		return content.Raw, true
+		return &content.Raw, true
 
 	case "html":
-		return content.HTML, true
+		return &content.HTML, true
 
-	default:
-		return "", false
 	}
-}
 
-func (content *Content) SetString(name string, value string) bool {
-	switch name {
-
-	case "format":
-		content.Format = value
-		return true
-
-	case "raw":
-		content.Raw = value
-		return true
-
-	case "html":
-		content.HTML = value
-		return true
-
-	default:
-		return false
-	}
+	return nil, false
 }
