@@ -62,8 +62,9 @@ func (user *User) PersonLink() PersonLink {
 	return PersonLink{
 		UserID:       user.UserID,
 		Name:         user.DisplayName,
-		EmailAddress: user.EmailAddress,
 		ProfileURL:   user.ProfileURL,
+		InboxURL:     user.ActivityPubInboxURL(),
+		EmailAddress: user.EmailAddress,
 		ImageURL:     user.ActivityPubAvatarURL(),
 	}
 }
@@ -71,11 +72,12 @@ func (user *User) PersonLink() PersonLink {
 // Summary generates a lightweight summary of this user record.
 func (user *User) Summary() UserSummary {
 	return UserSummary{
-		UserID:      user.UserID,
-		DisplayName: user.DisplayName,
-		Username:    user.Username,
-		ImageURL:    user.ActivityPubAvatarURL(),
-		ProfileURL:  user.ProfileURL,
+		UserID:       user.UserID,
+		DisplayName:  user.DisplayName,
+		Username:     user.Username,
+		EmailAddress: user.EmailAddress,
+		ImageURL:     user.ActivityPubAvatarURL(),
+		ProfileURL:   user.ProfileURL,
 	}
 }
 
@@ -219,6 +221,7 @@ func (user *User) Roles(authorization *Authorization) []string {
 func (user User) GetJSONLD() mapof.Any {
 
 	return mapof.Any{
+		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
 		"id":                user.GetProfileURL(),
 		"type":              vocab.ActorTypePerson,
 		"url":               user.ProfileURL,

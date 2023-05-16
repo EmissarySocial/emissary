@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
-	"github.com/davecgh/go-spew/spew"
 )
 
 /******************************************
@@ -79,7 +79,8 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 
 	fmt.Println("------------------------------------------")
 	fmt.Println("CUSTOM ROUTER : Received Message: " + activityType + "/" + objectType)
-	spew.Dump(activity.Value())
+	marshalled, _ := json.MarshalIndent(activity.Value(), "", "  ")
+	fmt.Println(string(marshalled))
 
 	if routeHandler, ok := router.routes[activityType+"/"+objectType]; ok {
 		return routeHandler(factory, user, activity)
