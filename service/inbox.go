@@ -65,7 +65,7 @@ func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (d
 func (service *Inbox) Load(criteria exp.Expression, result *model.Message) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error loading Inbox", criteria)
+		return derp.Wrap(err, "service.Inbox", "Error loading Inbox message", criteria)
 	}
 
 	return nil

@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
+	"github.com/davecgh/go-spew/spew"
 )
 
 /******************************************
@@ -19,6 +22,10 @@ import (
  ******************************************/
 
 var inboxRouter ActivityPubRouter
+
+func init() {
+	pub.SetDebugLevel(pub.DebugLevelVerbose)
+}
 
 // ActivityPubRouter is a simple object that routes incoming ActivityPub activities to the appropriate handler
 type ActivityPubRouter struct {
@@ -69,6 +76,10 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 
 	activityType := activity.Type()
 	objectType := activity.Object().Type()
+
+	fmt.Println("------------------------------------------")
+	fmt.Println("CUSTOM ROUTER : Received Message: " + activityType + "/" + objectType)
+	spew.Dump(activity.Value())
 
 	if routeHandler, ok := router.routes[activityType+"/"+objectType]; ok {
 		return routeHandler(factory, user, activity)

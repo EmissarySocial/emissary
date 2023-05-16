@@ -3,50 +3,39 @@ package handler
 import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, activityPub_LikeOrDislike)
-}
+	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, func(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
-func activityPub_LikeOrDislike(factory *domain.Factory, user *model.User, activity streams.Document) error {
+		inboxService := factory.Inbox()
 
-	// Get required services
-	responseService := factory.Response()
-	locatorService := factory.Locator()
+		object, err := activity.Object().AsObject()
 
-	// Try to find the object that is being responded to
-	object, err := locatorService.GetDocumentFromURL(activity.Object())
+		if err != nil {
+			return derp.Wrap(err, "activitypub.handler.ActivityPubRouter", "Unable to load JSON-LD Object", activity.Object())
+		}
 
-	if err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error loading object", user.UserID, activity.Object().ID())
-	}
+		// If we already have the object of the Like/Dislike, then increment counters
+		objectID := object.ID()
+		inboxMessage := model.NewMessage()
+		if err := inboxService.LoadByURL(user.UserID, objectID, &inboxMessage); err == nil {
+			inboxMessage.Responses.LikeCount++
 
-	// Create the response object
-	response := model.NewResponse()
-	response.Actor = convert.ActivityPubPersonLink(activity.Actor())
-	response.Message = object
+			if err := inboxService.Save(&inboxMessage, "Incremented Like Count"); err != nil {
+				return err
+			}
 
-	switch activity.Type() {
+			return nil
+		}
 
-	case vocab.ActivityTypeLike:
-		response.Type = model.ResponseTypeLike
+		// If not, then try to load the object from JSON-LD and add to the inbox
 
-	case vocab.ActivityTypeDislike:
-		response.Type = model.ResponseTypeDislike
+		// If not, then
 
-	default:
-		return derp.NewInternalError("handler.activitypub_receive_create", "Invalid activity type", activity.Type())
-	}
-
-	// Save the response object
-	if err := responseService.Save(&response, "Created via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving response", user.UserID, activity.Object().ID())
-	}
-
-	return nil
+		return nil
+	})
 }
