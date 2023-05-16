@@ -12,7 +12,7 @@ require (
 	github.com/benpate/data v0.24.0
 	github.com/benpate/data-mongo v0.24.0
 	github.com/benpate/derp v0.27.1
-	github.com/benpate/digit v0.10.0
+	github.com/benpate/digit v0.10.1
 	github.com/benpate/domain v0.0.2
 	github.com/benpate/exp v0.7.0
 	github.com/benpate/exp-builder v0.7.0
