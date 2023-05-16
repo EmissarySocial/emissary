@@ -10,11 +10,10 @@ func OutboxMessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"outboxMessageId": schema.String{Format: "objectId"},
-			"userId":          schema.String{Format: "objectId"},
 			"objectType":      schema.String{},
 			"objectId":        schema.String{Format: "objectId"},
+			"userId":          schema.String{Format: "objectId"},
 			"parentId":        schema.String{Format: "objectId"},
-			"document":        schema.Any{},
 			"rank":            schema.Integer{BitSize: 64},
 		},
 	}
@@ -26,9 +25,6 @@ func OutboxMessageSchema() schema.Element {
 
 func (message *OutboxMessage) GetPointer(name string) (any, bool) {
 	switch name {
-
-	case "activity":
-		return &message.Activity, true
 
 	case "rank":
 		return &message.Rank, true
