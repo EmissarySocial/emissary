@@ -19,7 +19,7 @@
 			"label": {"type":"string"},
 			"summary": {"type":"string"},
 			"content":{"type":"object", "properties": {
-				"type": {"type":"string"},
+				"format": {"type":"string"},
 				"raw": {"type":"string"},
 				"html": {"type":"string", "format":"html"}
 			}}
@@ -187,7 +187,7 @@
 								"label":"Article Properties",
 								"children": [
 									{"type":"text", "path":"token", "label":"Token/Slug"},
-									{"type":"text",     "path":"label",   "label":"Label"},
+									{"type":"text", "path":"label", "label":"Label"},
 									{"type":"textarea", "path":"summary", "label":"Summary"}
 								]
 							}

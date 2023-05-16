@@ -1,0 +1,22 @@
+<article>
+	<form id="codeForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none">
+		<textarea id="markdownContent" name="content" style="width:100%; height:600px;">{{.ContentRaw}}</textarea>
+	</form>
+</article>
+
+<script type="text/hyperscript">
+
+	def saveDraft(promote)
+		send save to #codeForm
+		wait for htmx:afterOnLoad from #codeForm
+		if promote then
+			fetch /{{.StreamID}}/promote-draft with method:"POST"
+			set window.location to "/{{.StreamID}}"
+		end
+	end
+
+	on blur from #codeForm
+		saveDraft(false)
+	end
+</script>
+

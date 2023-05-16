@@ -277,6 +277,10 @@ func (service Icons) Get(name string) string {
 		return service.get("forward")
 	case "forward-fill":
 		return service.get("forward-fill")
+	case "html":
+		return service.get("code-slash")
+	case "html-fill":
+		return service.get("code-slash")
 	case "inbox":
 		return service.get("inbox")
 	case "inbox-fill":

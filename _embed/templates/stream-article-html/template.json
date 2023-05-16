@@ -1,0 +1,28 @@
+{
+	"templateId":"article-html",
+	"extends":["base-article"],
+	"containedBy": ["top", "folder", "article"],
+	"label":"Article (HTML Code)",
+	"description":"HTML Code editor",
+	"icon":"html",
+	"actions": {
+		"init": {
+			"steps": [
+				{"step":"set-data", "values": {
+					"label":"New Article (HTML Code)", 
+					"content.format":"html", 
+					"content.raw":"<h1>New Article</h1>"
+				}},
+				{"step":"set-state", "state":"unpublished"}
+			]
+		},
+		"editor": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"with-draft", "steps": [
+					{"step":"edit-content", "file":"editor", "format":"MARKDOWN"}
+				]}
+			]
+		}
+	}
+}

@@ -39,7 +39,7 @@
 	</form>
 
 	<div>
-		<a href="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add Another</a>
+		<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add Another</a>
 	</div>
 
 {{- else if .UserCan "add-child" -}}
