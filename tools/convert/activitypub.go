@@ -8,7 +8,7 @@ import (
 // ActivityPubPersonLink converts a streams.Document into a model.PersonLink
 func ActivityPubPersonLink(person streams.Document) model.PersonLink {
 
-	person, _ = person.AsObject()
+	person, _ = person.Load()
 
 	return model.PersonLink{
 		Name:       person.Name(),

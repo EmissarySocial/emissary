@@ -38,7 +38,7 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Retrieve the activity from the request body
-		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.HTTPCache())
+		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityPubClient())
 
 		if err != nil {
 			return derp.Report(derp.Wrap(err, location, "Error parsing ActivityPub request"))

@@ -32,7 +32,7 @@ func init() {
 		// What about manual accepts?
 
 		// Try to look up the complete actor record from the activity
-		follower, err := activity.Actor().AsObject()
+		follower, err := activity.Actor().Load()
 
 		if err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error parsing actor", activity)

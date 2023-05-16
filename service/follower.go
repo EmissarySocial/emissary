@@ -342,8 +342,8 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 		ProfileURL:   actor.ID(),
 		Name:         actor.Name(),
 		ImageURL:     first.String(actor.IconURL(), actor.ImageURL()),
-		InboxURL:     actor.Get("inbox").AsString(),
-		EmailAddress: actor.Get("email").AsString(),
+		InboxURL:     actor.Get("inbox").String(),
+		EmailAddress: actor.Get("email").String(),
 	}
 
 	// Try to save the new follower to the database

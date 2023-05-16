@@ -13,7 +13,7 @@ func init() {
 
 		inboxService := factory.Inbox()
 
-		object, err := activity.Object().AsObject()
+		object, err := activity.Object().Load()
 
 		if err != nil {
 			return derp.Wrap(err, "activitypub.handler.ActivityPubRouter", "Unable to load JSON-LD Object", activity.Object())

@@ -15,8 +15,10 @@ type StepViewActivityPub struct {
 func (step StepViewActivityPub) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Try to load the uri from the Internet
-	cache := renderer.factory().HTTPCache()
-	document, err := streams.NewID(renderer.context().QueryParam("uri"), cache).AsObject()
+	client := renderer.factory().ActivityPubClient()
+	uri := renderer.context().QueryParam("uri")
+
+	document, err := streams.NewDocument(uri, streams.WithClient(client)).Load()
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepViewActivityPub.Get", "Error loading document from the internet")

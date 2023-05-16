@@ -526,8 +526,8 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * Other Non-Model Services
  ******************************************/
 
-func (factory *Factory) HTTPCache() *cache.Cache {
-	return factory.httpCache
+func (factory *Factory) ActivityPubClient() *service.ActivityPubClient {
+	return service.NewActivityPubClient()
 }
 
 // Content returns the Content transformation service

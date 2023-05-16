@@ -24,7 +24,7 @@ func undoFollow(factory *domain.Factory, user *model.User, activity streams.Docu
 	follower := model.NewFollower()
 
 	// Load the original follow
-	originalFollow, err := activity.Object().AsObject()
+	originalFollow, err := activity.Object().Load()
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving original follow request", activity.Value())

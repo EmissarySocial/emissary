@@ -100,7 +100,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 
 	// Import stateRoles
 	action.StateRoles = make(map[string][]string)
-	stateRoles := convert.MapOfInterface(data["stateRoles"])
+	stateRoles := convert.MapOfAny(data["stateRoles"])
 	for key, value := range stateRoles {
 		action.StateRoles[key] = convert.SliceOfString(value)
 	}

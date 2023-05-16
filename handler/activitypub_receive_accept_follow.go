@@ -38,7 +38,7 @@ func init() {
 		}
 
 		// Populate our "Following" record with the NAME and AVATAR of the remote Actor
-		remoteActor, err := activity.Actor().AsObject()
+		remoteActor, err := activity.Actor().Load()
 
 		if err != nil {
 			return derp.Wrap(err, "handler.inboxRouter.Accept.Follow", "Error parsing remote actor", activity.Actor())
