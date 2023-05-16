@@ -28,6 +28,11 @@ func init() {
 
 		// Look for the original message that's being deleted
 		if err := inboxService.LoadByURL(user.UserID, object.ID(), &message); err != nil {
+
+			if derp.NotFound(err) {
+				return nil
+			}
+
 			return derp.Wrap(err, "handler.activitypub_receive_delete", "Error loading message", user.UserID, object.ID())
 		}
 

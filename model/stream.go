@@ -281,8 +281,6 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
 // This map will still need to be marshalled into JSON
 func (stream Stream) GetJSONLD() mapof.Any {
 	return mapof.Any{
-		"@id":       stream.URL,
-		"@type":     stream.SocialRole,
 		"id":        stream.URL,
 		"type":      stream.SocialRole,
 		"url":       stream.URL,

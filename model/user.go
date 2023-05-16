@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -218,9 +219,8 @@ func (user *User) Roles(authorization *Authorization) []string {
 func (user User) GetJSONLD() mapof.Any {
 
 	return mapof.Any{
-		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
 		"id":                user.GetProfileURL(),
-		"type":              "Person",
+		"type":              vocab.ActorTypePerson,
 		"url":               user.ProfileURL,
 		"name":              user.DisplayName,
 		"preferredUsername": user.Username,

@@ -488,7 +488,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	activity := mapof.Any{
 		"@context": vocab.ContextTypeActivityStreams,
 		"type":     activityType,
-		"actor":    user.GetJSONLD(),
+		"actor":    user.ActivityPubURL(),
 		"object":   stream.GetJSONLD(),
 	}
 
@@ -513,7 +513,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 	activity := mapof.Any{
 		"@context": vocab.ContextTypeActivityStreams,
 		"type":     vocab.ActivityTypeDelete,
-		"actor":    user.GetJSONLD(),
+		"actor":    user.ActivityPubURL(),
 		"object":   stream.GetJSONLD(),
 	}
 

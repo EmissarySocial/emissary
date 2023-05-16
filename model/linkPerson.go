@@ -29,10 +29,8 @@ func (person PersonLink) IsEmpty() bool {
 func (person PersonLink) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
-		"@id":   person.ProfileURL,
-		"@type": "Person",
-		"id":    person.ProfileURL,
-		"type":  "Person",
+		"id":   person.ProfileURL,
+		"type": "Person",
 	}
 
 	if person.Name != "" {
