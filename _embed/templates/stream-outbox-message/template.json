@@ -12,7 +12,7 @@
 		"type":"object",
 		"properties": {
 			"summary": {"type":"string", "format":"html"},
-			"imageUrl": {"type":"string", "format":"url"},
+			"imageUrl": {"type":"string", "format":"url"}
 		}
 	},
 	"states": {
