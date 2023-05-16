@@ -16,10 +16,8 @@
 		"type":"object",
 		"properties": {
 			"token": {"type":"string", "required":true},
-			"document": {"type":"object", "properties": {
-				"label": {"type":"string"},
-				"summary": {"type":"string"}
-			}},
+			"label": {"type":"string"},
+			"summary": {"type":"string"},
 			"data": {"type":"object", "properties": {
 				"showSidebar": {"type":"boolean", "default":"true"}
 			}}

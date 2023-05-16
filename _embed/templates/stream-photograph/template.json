@@ -8,11 +8,9 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"document": {"type":"object", "properties": {
-				"label": {"type": "string"},
-				"summary": {"type": "string"},
-				"imageUrl": {"type": "string"}
-			}}
+			"label": {"type": "string"},
+			"summary": {"type": "string"},
+			"imageUrl": {"type": "string"}
 		},
 		"required": []
 	},

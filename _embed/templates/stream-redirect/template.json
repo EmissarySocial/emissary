@@ -10,10 +10,8 @@
 	"schema": {
 		"type": "object",
 		"properties": {
-			"document": {"type":"object", "properties": {
-				"label": {"type":"string"},
-				"summary": {"type":"string"}
-			}},
+			"label": {"type":"string"},
+			"summary": {"type":"string"},
 			"data": {"type": "object", "properties": {
 				"url": {"type": "string", "format":"url"}
 			}}

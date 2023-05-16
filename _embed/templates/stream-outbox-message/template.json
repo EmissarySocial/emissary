@@ -11,10 +11,8 @@
 	"schema": {
 		"type":"object",
 		"properties": {
-			"document":{"type":"object", "properties":{
-				"summary": {"type":"string", "format":"html"},
-				"imageUrl": {"type":"string", "format":"url"}
-			}}
+			"summary": {"type":"string", "format":"html"},
+			"imageUrl": {"type":"string", "format":"url"},
 		}
 	},
 	"states": {

@@ -11,10 +11,8 @@
 	"schema": {
 		"type":"object",
 		"properties": {
-			"document": {"type":"object", "properties":{
-				"label": {"type":"string"},
-				"summary": {"type":"string"}
-			}},
+			"label": {"type":"string"},
+			"summary": {"type":"string"},
 			"data": {"type":"object", "properties": {
 				"format": {"type":"string", "enum": ["TABLE", "CARDS", "COLUMNS"], "default":"CARDS", "required":true},
 				"showImages": {"type":"string", "enum": ["SHOW", "HIDE"], "default":"SHOW"}
