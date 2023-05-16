@@ -31,10 +31,9 @@ func (message *OutboxMessage) GetPointer(name string) (any, bool) {
 
 	case "objectType":
 		return &message.ObjectType, true
-
-	default:
-		return nil, false
 	}
+
+	return nil, false
 }
 
 func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
@@ -52,9 +51,9 @@ func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
 	case "parentId":
 		return message.ParentID.Hex(), true
 
-	default:
-		return "", false
 	}
+
+	return "", false
 }
 
 func (message *OutboxMessage) SetString(name string, value string) bool {
