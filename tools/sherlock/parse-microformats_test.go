@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/benpate/remote"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func TestMicroformats(t *testing.T) {
@@ -25,6 +24,5 @@ func TestMicroformats(t *testing.T) {
 	result := NewPage()
 
 	ParseMicroFormats(uri, &body, &result)
-
-	spew.Dump(result)
+	t.Log(result)
 }

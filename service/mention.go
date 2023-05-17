@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/tomnomnom/linkheader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -98,7 +97,6 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 
 	// Filter Mentions that are blocked
 	if err := service.blockService.FilterMention(mention); err != nil {
-		spew.Dump("FILTERED")
 		return derp.Wrap(err, "service.Mention.Save", "Error filtering Mention", mention)
 	}
 

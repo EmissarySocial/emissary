@@ -30,7 +30,7 @@ const CollectionInbox = "Inbox"
 // CollectionMention is the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
-// CollectionOutbox is the database collection where user's Outbox records are stored
+// CollectionOutbox is the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
 
 // CollectionStream is the database collection where Streams are stored
@@ -38,6 +38,9 @@ const CollectionStream = "Stream"
 
 // CollectionStreamDraft is the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
+
+// CollectionStreamResponse is the database collection where users' StreamResponse records are stored
+const CollectionStreamResponse = "StreamResponse"
 
 // CollectionResponse is the database collection where Responses are stored
 const CollectionResponse = "Response"

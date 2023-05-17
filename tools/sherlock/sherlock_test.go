@@ -16,7 +16,7 @@ func TestLoad_Local(t *testing.T) {
 	meta, err := Load(urlString)
 
 	require.Nil(t, err)
-	spew.Dump(t, meta)
+	t.Log(meta)
 }
 
 func TestLoad_IndieWeb(t *testing.T) {
@@ -26,5 +26,5 @@ func TestLoad_IndieWeb(t *testing.T) {
 	meta, err := Load(urlString)
 
 	require.Nil(t, err)
-	spew.Dump(meta)
+	t.Log(meta)
 }

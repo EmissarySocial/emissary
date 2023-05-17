@@ -199,20 +199,20 @@ func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitiv
 	return nil
 }
 
-func (service *Response) LoadByMessageID(userID primitive.ObjectID, objectID primitive.ObjectID, response *model.Response) error {
+func (service *Response) LoadByMessageID(userID primitive.ObjectID, messageID primitive.ObjectID, response *model.Response) error {
 
-	criteria := exp.Equal("message.id", objectID).
+	criteria := exp.Equal("message.id", messageID).
 		AndEqual("actor.userId", userID)
 
 	if err := service.Load(criteria, response); err != nil {
-		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", userID, objectID)
+		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", userID, messageID)
 	}
 
 	return nil
 }
 
-func (service *Response) QueryByMessageID(objectID primitive.ObjectID) ([]model.Response, error) {
-	criteria := exp.Equal("message.id", objectID)
+func (service *Response) QueryByMessageID(messageID primitive.ObjectID) ([]model.Response, error) {
+	criteria := exp.Equal("message.id", messageID)
 	return service.Query(criteria)
 }
 
@@ -222,13 +222,13 @@ func (service *Response) QueryByMessageID(objectID primitive.ObjectID) ([]model.
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
-func (service *Response) SetResponse(actor model.PersonLink, message model.DocumentLink, responseType string, value string) error {
+func (service *Response) SetResponse(message *model.Message, actor model.PersonLink, responseType string, value string) error {
 
 	const location = "service.Response.SetResponse"
 
 	// If a response already exists, then delete it first.
 	oldResponse := model.NewResponse()
-	err := service.LoadByMessageID(actor.UserID, message.ID, &oldResponse)
+	err := service.LoadByMessageID(actor.UserID, message.MessageID, &oldResponse)
 
 	// RULE: if the response exists....
 	if err == nil {
@@ -254,7 +254,7 @@ func (service *Response) SetResponse(actor model.PersonLink, message model.Docum
 	newResponse.Type = responseType
 	newResponse.Value = value
 	newResponse.Actor = actor
-	newResponse.Message = message
+	newResponse.Message = message.DocumentLink()
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(&newResponse, "Updated by User"); err != nil {

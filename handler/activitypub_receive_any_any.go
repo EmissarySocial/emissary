@@ -12,9 +12,6 @@ func init() {
 	// This funciton handles ActivityPub "Accept/Follow" activities, meaning that
 	// it is called with a remote server accepts our follow request.
 	inboxRouter.Add(vocab.Any, vocab.Any, func(factory *domain.Factory, user *model.User, activity streams.Document) error {
-
-		// spew.Dump("RECEIVED UNKNOWN ACTIVITY -----------------------------", activity)
-
 		return nil
 	})
 }

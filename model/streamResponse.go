@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,15 +28,25 @@ func (response StreamResponse) ID() string {
 	return response.StreamResponseID.Hex()
 }
 
-func StreamResponseSchema() schema.Element {
-	return schema.Object{
-		Properties: schema.ElementMap{
-			"streamResponseId": schema.String{Format: "objectId", Required: true},
-			"streamId":         schema.String{Format: "objectId", Required: true},
-			"actor":            PersonLinkSchema(),
-			"origin":           OriginLinkSchema(),
-			"type":             schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeMention, ResponseTypeRepost}, Required: true},
-			"value":            schema.String{MaxLength: 64},
-		},
+// Equal evaluates two StreamResponse object for equality.  To be equal they
+// must have identical StreamIDs, Actor.ProfileURLs, Types, and Values.
+func (response StreamResponse) Equal(other StreamResponse) bool {
+
+	if response.StreamID != other.StreamID {
+		return false
 	}
+
+	if response.Actor.ProfileURL != other.Actor.ProfileURL {
+		return false
+	}
+
+	if response.Type != other.Type {
+		return false
+	}
+
+	if response.Value != other.Value {
+		return false
+	}
+
+	return true
 }

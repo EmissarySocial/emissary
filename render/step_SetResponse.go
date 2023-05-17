@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
@@ -37,14 +38,16 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error getting user")
 	}
 
-	if documentLinker, ok := renderer.object().(DocumentLinker); ok {
+	message, ok := renderer.object().(*model.Message)
 
-		responseService := renderer.factory().Response()
-		documentLink := documentLinker.DocumentLink()
+	if !ok {
+		return derp.New(derp.CodeBadRequestError, location, "SetResponse can only be called on an Inbox Message")
+	}
 
-		if err := responseService.SetResponse(user.PersonLink(), documentLink, txn.Type, txn.Value); err != nil {
-			return derp.Wrap(err, location, "Error setting response")
-		}
+	responseService := renderer.factory().Response()
+
+	if err := responseService.SetResponse(message, user.PersonLink(), txn.Type, txn.Value); err != nil {
+		return derp.Wrap(err, location, "Error setting response")
 	}
 
 	return nil

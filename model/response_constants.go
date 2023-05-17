@@ -9,6 +9,9 @@ const ResponseTypeLike = "LIKE"
 // https://indieweb.org/mention
 const ResponseTypeMention = "MENTION"
 
+// https://indieweb.org/quotation
+const ResponseTypeQuote = "QUOTE"
+
 // https://indieweb.org/reacji
 const ResponseTypeReactji = "REACTJI"
 
@@ -21,7 +24,7 @@ const ResponseTypeReview = "REVIEW"
 // https://indieweb.org/reply
 const ResponseTypeReply = "REPLY"
 
-// https://indieweb.org/quotation
-const ResponseTypeQuote = "QUOTE"
+// https://indieweb.org/share
+const ResponseTypeShare = "SHARE"
 
 // (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")

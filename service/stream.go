@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"math"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,8 +14,10 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -334,6 +338,28 @@ func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 // LoadByID returns a single `Stream` that matches the provided streamID
 func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
 	return service.Load(exp.Equal("_id", streamID), result)
+}
+
+// LoadByURL returns a single `Stream` that matches the provided URL
+func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
+
+	// Verify we have a valid URL
+	parsedURL, err := url.Parse(streamURL)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Stream.LoadByURL", "Invalid URL", streamURL)
+	}
+
+	// Verify the URL matches this service
+	if domain.AddProtocol(parsedURL.Host) != service.host {
+		return derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", streamURL)
+	}
+
+	// Load the Stream using the token
+	token := strings.TrimPrefix(parsedURL.Path, "/")
+	token = list.First(token, '/')
+
+	return service.LoadByToken(token, result)
 }
 
 // LoadByOriginID returns a single `Stream` that matches the provided `Origin.InternalID`

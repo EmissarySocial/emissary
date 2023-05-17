@@ -14,7 +14,6 @@ import (
 type StreamResponse struct {
 	collection   data.Collection
 	blockService *Block
-	host         string
 }
 
 // NewStreamResponse returns a fully initialized StreamResponse service
@@ -27,10 +26,9 @@ func NewStreamResponse() StreamResponse {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamResponse) Refresh(collection data.Collection, blockService *Block, host string) {
+func (service *StreamResponse) Refresh(collection data.Collection, blockService *Block) {
 	service.collection = collection
 	service.blockService = blockService
-	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -74,7 +72,8 @@ func (service *StreamResponse) Save(streamResponse *model.StreamResponse, note s
 		return derp.Wrap(err, location, "Error cleaning StreamResponse", streamResponse)
 	}
 
-	// TODO: Recalculate statistics for the Message affected by this StreamResponse.
+	// TODO: CRITICAL: Recalculate statistics for the Stream affected by this StreamResponse.
+	// TODO: CRITICAL: Send messages to all followers about the new response.
 
 	// Save the value to the database
 	if err := service.collection.Save(streamResponse, note); err != nil {
@@ -89,7 +88,8 @@ func (service *StreamResponse) Delete(streamResponse *model.StreamResponse, note
 
 	criteria := exp.Equal("_id", streamResponse.StreamResponseID)
 
-	// TODO: Recalculate statistics
+	// TODO: CRITICAL: Recalculate statistics for the Stream affected by this StreamResponse.
+	// TODO: CRITICAL: Send messages to all followers about the new response.
 
 	// Delete this StreamResponse
 	if err := service.collection.HardDelete(criteria); err != nil {
@@ -99,64 +99,6 @@ func (service *StreamResponse) Delete(streamResponse *model.StreamResponse, note
 	return nil
 }
 
-/******************************************
- * Model Service Methods
- ******************************************
-
-// ObjectType returns the type of object that this service manages
-func (service *StreamResponse) ObjectType() string {
-	return "StreamResponse"
-}
-
-// New returns a fully initialized model.Group as a data.Object.
-func (service *StreamResponse) ObjectNew() data.Object {
-	result := model.NewStreamResponse()
-	return &result
-}
-
-func (service *StreamResponse) ObjectID(object data.Object) primitive.ObjectID {
-
-	if streamResponse, ok := object.(*model.StreamResponse); ok {
-		return streamResponse.StreamResponseID
-	}
-
-	return primitive.NilObjectID
-}
-
-func (service *StreamResponse) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
-}
-
-func (service *StreamResponse) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
-func (service *StreamResponse) ObjectLoad(criteria exp.Expression) (data.Object, error) {
-	result := model.NewStreamResponse()
-	err := service.Load(criteria, &result)
-	return &result, err
-}
-
-func (service *StreamResponse) ObjectSave(object data.Object, comment string) error {
-	if streamResponse, ok := object.(*model.StreamResponse); ok {
-		return service.Save(streamResponse, comment)
-	}
-	return derp.NewInternalError("service.StreamResponse.ObjectSave", "Invalid Object Type", object)
-}
-
-func (service *StreamResponse) ObjectDelete(object data.Object, comment string) error {
-	if streamResponse, ok := object.(*model.StreamResponse); ok {
-		return service.Delete(streamResponse, comment)
-	}
-	return derp.NewInternalError("service.StreamResponse.ObjectDelete", "Invalid Object Type", object)
-}
-
-func (service *StreamResponse) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.StreamResponse", "Not Authorized")
-}
-
-*/
-
 func (service *StreamResponse) Schema() schema.Schema {
 	return schema.New(model.StreamResponseSchema())
 }
@@ -165,33 +107,16 @@ func (service *StreamResponse) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *StreamResponse) LoadByID(userID primitive.ObjectID, streamResponseID primitive.ObjectID, streamResponse *model.StreamResponse) error {
+func (service *StreamResponse) LoadByStreamAndActor(streamID primitive.ObjectID, actorURL string, streamResponse *model.StreamResponse) error {
 
-	criteria := exp.Equal("_id", streamResponseID).
-		AndEqual("actor.internalId", userID)
+	criteria := exp.Equal("streamId", streamID).
+		AndEqual("actor.profileUrl", actorURL)
 
 	if err := service.Load(criteria, streamResponse); err != nil {
-		return derp.Wrap(err, "service.StreamResponse.LoadByID", "Error loading StreamResponse", streamResponseID)
+		return derp.Wrap(err, "service.StreamResponse.LoadByStreamAndActor", "Error loading StreamResponse", streamID, actorURL)
 	}
 
 	return nil
-}
-
-func (service *StreamResponse) LoadByObjectID(userID primitive.ObjectID, objectID primitive.ObjectID, streamResponse *model.StreamResponse) error {
-
-	criteria := exp.Equal("objectId", objectID).
-		AndEqual("actor.internalId", userID)
-
-	if err := service.Load(criteria, streamResponse); err != nil {
-		return derp.Wrap(err, "service.StreamResponse.LoadByID", "Error loading StreamResponse", userID, objectID)
-	}
-
-	return nil
-}
-
-func (service *StreamResponse) QueryByObjectID(objectID primitive.ObjectID) ([]model.StreamResponse, error) {
-	criteria := exp.Equal("objectId", objectID)
-	return service.Query(criteria)
 }
 
 /******************************************
@@ -211,7 +136,7 @@ func (service *StreamResponse) SetStreamResponse(stream *model.Stream, origin mo
 
 	// If a streamResponse already exists, then delete it first.
 	oldStreamResponse := model.NewStreamResponse()
-	err := service.LoadByObjectID(actor.UserID, stream.StreamID, &oldStreamResponse)
+	err := service.LoadByStreamAndActor(stream.StreamID, actor.ProfileURL, &oldStreamResponse)
 
 	// RULE: if the streamResponse exists....
 	if err == nil {
