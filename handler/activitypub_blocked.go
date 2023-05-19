@@ -1,30 +1,41 @@
 package handler
 
 import (
-	"strconv"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/slice"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ActivityPub_GetBlocked(serverFactory *server.Factory) echo.HandlerFunc {
+func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetBlocked"
 
 	return func(ctx echo.Context) error {
 
+		publishDateString := ctx.QueryParam("publishDate")
+
+		// For requests directly to the collection, return a summary and the URL of the first page
+		if publishDateString == "" {
+
+			ctx.Response().Header().Set("Content-Type", "application/activity+json")
+			result := activityPub_Collection(ctx.Request().URL.String())
+			return ctx.JSON(200, result)
+		}
+
+		// Fallthrough means this is a request for a specific page
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unrecognized domain name")
 		}
 
+		// Load the User from the database
 		userService := factory.User()
 		user := model.NewUser()
 		userToken := ctx.Param("userId")
@@ -33,52 +44,69 @@ func ActivityPub_GetBlocked(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewNotFoundError(location, "User not found", err)
 		}
 
-		collectionURL := user.ActivityPubBlockedURL()
-		publishDateString := ctx.QueryParam("publishDate")
-
-		// For requests directly to the collection, return a summary and the URL of the first page
-		if publishDateString == "" {
-
-			result := streams.NewOrderedCollection()
-			result.Summary = "Block list published by " + user.Username
-			result.First = collectionURL + "?publishDate=0"
-
-			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			return ctx.JSON(200, result)
+		// RULE: Only public users can be queried
+		if !user.IsPublic {
+			return derp.New(derp.CodeForbiddenError, location, "")
 		}
 
-		// Fallthrough means this is a request for a specific page
-
-		// Set up the response
-		result := streams.NewOrderedCollectionPage()
-		result.PartOf = collectionURL
-		result.OrderedItems = make([]any, 0)
-
+		// Load the User's public blocks
 		blockService := factory.Block()
 		publishDate := convert.Int64(publishDateString)
-		pageSize := 2
+		pageSize := 60
 		blocks, err := blockService.QueryPublicBlocks(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load blocks")
-		}
-
-		// If there are results, then add them into the collection
-		if len(blocks) > 0 {
-
-			result.OrderedItems = slice.Map(blocks, func(block model.Block) any {
-				return block.GetJSONLD()
-			})
-
-			lastBlock := blocks[len(blocks)-1]
-
-			if len(blocks) >= pageSize {
-				result.Next = collectionURL + "?publishDate=" + strconv.FormatInt(lastBlock.PublishDate, 10)
-			}
+			return derp.Wrap(err, location, "Error loading blocks")
 		}
 
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		return ctx.JSON(200, result)
+		results := activityPub_CollectionPage(ctx.Request().URL.String(), pageSize, blocks)
+		return ctx.JSON(200, results)
+	}
+}
+
+func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		// Collect BlockID from URL
+		blockID, err := primitive.ObjectIDFromHex(ctx.Param("block"))
+
+		if err != nil {
+			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Invalid Block ID", err)
+		}
+
+		// Validate the domain name
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Unrecognized domain name")
+		}
+
+		// Load the User from the database
+		userService := factory.User()
+		user := model.NewUser()
+
+		if err := userService.LoadByToken(ctx.Param("user"), &user); err != nil {
+			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "User not found", err)
+		}
+
+		// RULE: Only public users can be queried
+		if !user.IsPublic {
+			return derp.New(derp.CodeForbiddenError, "handler.ActivityPub_GetLikedRecord", "")
+		}
+
+		// Try to load the Block from the database
+		blockService := factory.Block()
+		block := model.NewBlock()
+
+		if err := blockService.LoadByID(user.UserID, blockID, &block); err != nil {
+			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Error loading block")
+		}
+
+		// Return the block as JSON-LD
+		ctx.Response().Header().Set("Content-Type", "application/activity+json")
+		return ctx.JSON(http.StatusOK, block.GetJSONLD())
 	}
 }

@@ -21,4 +21,5 @@ type FieldLister interface {
 // which lets a model object return its data formatted in JSON-LD
 type JSONLDGetter interface {
 	GetJSONLD() mapof.Any
+	Created() int64
 }

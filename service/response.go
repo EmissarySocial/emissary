@@ -199,6 +199,19 @@ func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitiv
 	return nil
 }
 
+func (service *Response) LoadByIDAndType(userID primitive.ObjectID, responseID primitive.ObjectID, responseType string, response *model.Response) error {
+
+	criteria := exp.Equal("_id", responseID).
+		AndEqual("actor.userId", userID).
+		AndEqual("type", responseType)
+
+	if err := service.Load(criteria, response); err != nil {
+		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", responseID)
+	}
+
+	return nil
+}
+
 func (service *Response) LoadByMessageID(userID primitive.ObjectID, messageID primitive.ObjectID, response *model.Response) error {
 
 	criteria := exp.Equal("message.id", messageID).
@@ -209,6 +222,15 @@ func (service *Response) LoadByMessageID(userID primitive.ObjectID, messageID pr
 	}
 
 	return nil
+}
+
+func (service *Response) QueryByUserAndDate(userID primitive.ObjectID, responseType string, createDate int64, maxRows int) ([]model.Response, error) {
+
+	criteria := exp.Equal("actor.userId", userID).
+		AndEqual("type", responseType).
+		AndGreaterThan("journal.createDate", createDate)
+
+	return service.Query(criteria, option.MaxRows(int64(maxRows)), option.SortAsc("journal.createDate"))
 }
 
 func (service *Response) QueryByMessageID(messageID primitive.ObjectID) ([]model.Response, error) {

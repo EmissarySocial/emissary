@@ -292,6 +292,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate the StreamResponse Service
 		factory.streamResponseService.Refresh(
 			factory.collection(CollectionStreamResponse),
+			factory.collection(CollectionStream),
 			factory.Block(),
 		)
 

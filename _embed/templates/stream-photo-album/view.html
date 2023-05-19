@@ -1,4 +1,4 @@
-<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
+<div hx-ext="sse" sse-connect="/{{.StreamID}}/.sse">
 <div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:window">
 
 	<!-- Alternate links for service discovery -->

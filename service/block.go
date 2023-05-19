@@ -225,19 +225,10 @@ func (service *Block) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Block) LoadByID(authorization model.Authorization, blockID primitive.ObjectID, block *model.Block) error {
+func (service *Block) LoadByID(userID primitive.ObjectID, blockID primitive.ObjectID, block *model.Block) error {
 
-	if !authorization.IsAuthenticated() {
-		return derp.NewUnauthorizedError("service.Block.LoadByID", "Not Authenticated")
-	}
-
-	var criteria exp.Expression = exp.Equal("userId", authorization.UserID)
-
-	if authorization.DomainOwner {
-		criteria = criteria.Or(exp.Equal("userId", primitive.NilObjectID))
-	}
-
-	criteria = criteria.AndEqual("_id", blockID)
+	criteria := exp.Equal("_id", blockID).
+		And(service.byUserID(userID))
 
 	return service.Load(criteria, block)
 }
@@ -260,13 +251,8 @@ func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (
 
 func (service *Block) QueryActiveByUser(userID primitive.ObjectID) ([]model.Block, error) {
 	return service.Query(
-		exp.And(
-			exp.Or(
-				exp.Equal("userId", userID),
-				exp.Equal("userId", primitive.NilObjectID),
-			),
-			exp.Equal("isActive", true),
-		),
+		exp.Equal("isActive", true).
+			And(service.byUserID(userID)),
 	)
 }
 
@@ -277,7 +263,7 @@ func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate i
 	expressionBuilder := builder.NewBuilder().Int64("publishDate")
 
 	criteria := exp.And(
-		exp.Equal("userId", userID),
+		service.byUserID(userID),
 		exp.Equal("isPublic", true),
 		exp.NotEqual("isActive", true),
 		expressionBuilder.EvaluateField("publishDate", builder.DataTypeInt64, publishDateString),
@@ -426,4 +412,8 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 	// - refs to other people who have ALSO blocked this person/domain/keyword?
 
 	return nil
+}
+
+func (service *Block) byUserID(userID primitive.ObjectID) exp.Expression {
+	return exp.Equal("userId", userID).Or(exp.Equal("userId", primitive.NilObjectID))
 }

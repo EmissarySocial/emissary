@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -12,8 +13,9 @@ import (
 
 // StreamResponse defines a service that can send and receive streamResponse data
 type StreamResponse struct {
-	collection   data.Collection
-	blockService *Block
+	collection       data.Collection
+	streamCollection data.Collection
+	blockService     *Block
 }
 
 // NewStreamResponse returns a fully initialized StreamResponse service
@@ -26,8 +28,9 @@ func NewStreamResponse() StreamResponse {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamResponse) Refresh(collection data.Collection, blockService *Block) {
+func (service *StreamResponse) Refresh(collection data.Collection, streamCollection data.Collection, blockService *Block) {
 	service.collection = collection
+	service.streamCollection = streamCollection
 	service.blockService = blockService
 }
 
@@ -80,6 +83,10 @@ func (service *StreamResponse) Save(streamResponse *model.StreamResponse, note s
 		return derp.Wrap(err, location, "Error saving StreamResponse", streamResponse, note)
 	}
 
+	if err := queries.CountResponses(service.streamCollection, service.collection, "stream.id", streamResponse.Stream.ID); err != nil {
+		return derp.Wrap(err, location, "Error counting responses")
+	}
+
 	return nil
 }
 
@@ -107,9 +114,24 @@ func (service *StreamResponse) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *StreamResponse) ListByStreamAndType(streamID primitive.ObjectID, responseType string, options ...option.Option) (data.Iterator, error) {
+
+	criteria := exp.Equal("stream.id", streamID).
+		AndEqual("type", responseType)
+
+	return service.List(criteria, options...)
+}
+
+func (service *StreamResponse) QueryByStreamAndType(streamID primitive.ObjectID, responseType string) ([]model.StreamResponse, error) {
+	return service.Query(
+		exp.Equal("stream.id", streamID).
+			AndEqual("type", responseType),
+	)
+}
+
 func (service *StreamResponse) LoadByStreamAndActor(streamID primitive.ObjectID, actorURL string, streamResponse *model.StreamResponse) error {
 
-	criteria := exp.Equal("streamId", streamID).
+	criteria := exp.Equal("stream.id", streamID).
 		AndEqual("actor.profileUrl", actorURL)
 
 	if err := service.Load(criteria, streamResponse); err != nil {
@@ -154,7 +176,7 @@ func (service *StreamResponse) SetStreamResponse(stream *model.Stream, origin mo
 
 	// Create a new streamResponse
 	newStreamResponse := model.NewStreamResponse()
-	newStreamResponse.StreamID = stream.StreamID
+	newStreamResponse.Stream = stream.DocumentLink()
 	newStreamResponse.Actor = actor
 	newStreamResponse.Origin = origin
 	newStreamResponse.Type = streamResponseType

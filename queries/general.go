@@ -10,10 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-type CountRecordsResult struct {
-	Count int `bson:"count"`
-}
-
 func CountRecords(ctx context.Context, collection data.Collection, criteria exp.Expression) (int, error) {
 
 	// Set up the mongodb pipeline query and result
@@ -22,7 +18,7 @@ func CountRecords(ctx context.Context, collection data.Collection, criteria exp.
 		bson.M{"$count": "count"},
 	}
 
-	result := make([]CountRecordsResult, 0)
+	result := make([]Counter, 0)
 
 	// Try to execute the query as a mongodb pipeline
 	if err := pipeline(ctx, collection, &result, query); err != nil {

@@ -2,9 +2,9 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-// replace github.com/benpate/data-mongo => ../../benpate/data-mongo
-// replace github.com/benpate/hannibal => ../../benpate/hannibal
-// replace github.com/benpate/rosetta => ../../benpate/rosetta
+replace github.com/benpate/data => ../../benpate/data
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1

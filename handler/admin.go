@@ -96,7 +96,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 
 		if !objectID.IsZero() {
 			authorization := getAuthorization(ctx)
-			if err := blockService.LoadByID(authorization, objectID, &block); err != nil {
+			if err := blockService.LoadByID(authorization.UserID, objectID, &block); err != nil {
 				return nil, derp.Wrap(err, location, "Error loading Block", objectID)
 			}
 		}

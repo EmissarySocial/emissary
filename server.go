@@ -20,6 +20,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
 	mw "github.com/EmissarySocial/emissary/middleware"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
@@ -179,9 +180,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStream(factory))
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
-	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
+	e.GET("/:stream/.attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
+	e.GET("/:stream/.sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
+	e.GET("/:stream/.qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
+	e.GET("/:stream/.likes", handler.GetLikes(factory))
+	e.GET("/:stream/.dislikes", handler.GetDislikes(factory))
+	e.GET("/:stream/.mentions", handler.GetMentions(factory))
+	// e.GET("/:stream/replies", handler.GetReplies(factory))
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
@@ -200,8 +205,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowers(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowing(factory))
-	e.GET("/@:userId/pub/likes", handler.ActivityPub_GetLikes(factory))
-	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlocked(factory))
+	e.GET("/@:userId/pub/liked", handler.ActivityPub_GetResponseCollection(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/liked/:response", handler.ActivityPub_GetResponse(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlockedCollection(factory))
+	e.GET("/@:userId/pub/blocked/:block", handler.ActivityPub_GetBlock(factory))
 
 	// ME-ONLY PAGES
 	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))

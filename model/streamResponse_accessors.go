@@ -9,7 +9,7 @@ func StreamResponseSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"streamResponseId": schema.String{Format: "objectId", Required: true},
-			"streamId":         schema.String{Format: "objectId", Required: true},
+			"stream":           DocumentLinkSchema(),
 			"actor":            PersonLinkSchema(),
 			"origin":           OriginLinkSchema(),
 			"type":             schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeMention, ResponseTypeRepost}, Required: true},
@@ -21,6 +21,9 @@ func StreamResponseSchema() schema.Element {
 func (response *StreamResponse) GetPointer(name string) (any, bool) {
 
 	switch name {
+
+	case "stream":
+		return &response.Stream, true
 
 	case "actor":
 		return &response.Actor, true
@@ -44,9 +47,6 @@ func (response *StreamResponse) GetStringOK(name string) (string, bool) {
 
 	case "streamResponseId":
 		return response.StreamResponseID.Hex(), true
-
-	case "streamId":
-		return response.StreamID.Hex(), true
 	}
 
 	return "", false
@@ -59,12 +59,6 @@ func (response *StreamResponse) SetString(name string, value string) bool {
 	case "streamResponseId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			response.StreamResponseID = objectID
-			return true
-		}
-
-	case "streamId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			response.StreamID = objectID
 			return true
 		}
 	}

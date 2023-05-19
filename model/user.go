@@ -31,6 +31,7 @@ type User struct {
 	FollowingCount int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
 	BlockCount     int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
 	IsOwner        bool                       `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic       bool                       `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly available
 	PasswordReset  PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
 
 	journal.Journal `json:"journal" bson:"journal"`
@@ -186,12 +187,18 @@ func (user *User) State() string {
 func (user *User) Roles(authorization *Authorization) []string {
 
 	// Everyone has "anonymous" access
-	result := []string{MagicRoleAnonymous}
+	result := []string{}
 
+	if user.IsPublic {
+		result = append(result, MagicRoleAnonymous)
+	}
+
+	// If the visitor is not signed in, then we're done.
 	if authorization == nil {
 		return result
 	}
 
+	// If the visitor is signed in as an "empty" user, then we're doine.
 	if authorization.UserID == primitive.NilObjectID {
 		return result
 	}
@@ -265,10 +272,6 @@ func (user *User) ActivityPubInboxURL() string {
 
 func (user *User) ActivityPubOutboxURL() string {
 	return user.ProfileURL + "/pub/outbox"
-}
-
-func (user *User) ActivityPubOutbox_NewItemURL() string {
-	return user.ProfileURL + "/pub/outbox/" + primitive.NewObjectID().Hex()
 }
 
 func (user *User) ActivityPubFollowersURL() string {
