@@ -18,17 +18,6 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 
 	return func(ctx echo.Context) error {
 
-		publishDateString := ctx.QueryParam("publishDate")
-
-		// For requests directly to the collection, return a summary and the URL of the first page
-		if publishDateString == "" {
-
-			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			result := activityPub_Collection(ctx.Request().URL.String())
-			return ctx.JSON(200, result)
-		}
-
-		// Fallthrough means this is a request for a specific page
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
@@ -49,7 +38,17 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 			return derp.New(derp.CodeForbiddenError, location, "")
 		}
 
-		// Load the User's public blocks
+		publishDateString := ctx.QueryParam("publishDate")
+
+		// For requests directly to the collection, return a summary and the URL of the first page
+		if publishDateString == "" {
+
+			ctx.Response().Header().Set("Content-Type", "application/activity+json")
+			result := activityPub_Collection(user.ActivityPubBlockedURL())
+			return ctx.JSON(200, result)
+		}
+
+		// Fallthrough means this is a request for a specific page
 		blockService := factory.Block()
 		publishDate := convert.Int64(publishDateString)
 		pageSize := 60
@@ -61,7 +60,7 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		results := activityPub_CollectionPage(ctx.Request().URL.String(), pageSize, blocks)
+		results := activityPub_CollectionPage(user.ActivityPubBlockedURL(), pageSize, blocks)
 		return ctx.JSON(200, results)
 	}
 }
