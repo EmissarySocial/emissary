@@ -15,6 +15,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -76,7 +77,7 @@ func (service *Block) Channel(criteria exp.Expression, options ...option.Option)
 		return nil, derp.Wrap(err, "service.Block.Channel", "Error creating iterator", criteria, options)
 	}
 
-	return data.Channel(it, model.NewBlock), nil
+	return iterator.Channel(it, model.NewBlock), nil
 }
 
 // Load retrieves an Block from the database

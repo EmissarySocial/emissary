@@ -7,11 +7,12 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/html"
+	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/slice"
 	"github.com/kr/jsonfeed"
 )
 
-func IteratorToJSonFeed(url string, title string, description string, iterator data.Iterator) jsonfeed.Feed {
+func IteratorToJSonFeed(url string, title string, description string, it data.Iterator) jsonfeed.Feed {
 
 	return jsonfeed.Feed{
 		Version:     "https://jsonfeed.org/version/1.1",
@@ -23,7 +24,7 @@ func IteratorToJSonFeed(url string, title string, description string, iterator d
 			Type: "WebSub",
 			URL:  url + "/websub",
 		}},
-		Items: slice.Map(data.Slice(iterator, model.NewStream), StreamToJsonFeed),
+		Items: slice.Map(iterator.Slice(it, model.NewStream), StreamToJsonFeed),
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -72,7 +73,7 @@ func (service *Follower) Channel(criteria exp.Expression, options ...option.Opti
 		return nil, derp.Wrap(err, "service.Follower.ChannelByParent", "Error creating iterator", criteria)
 	}
 
-	return data.Channel(it, model.NewFollower), nil
+	return iterator.Channel(it, model.NewFollower), nil
 }
 
 // Load retrieves an Follower from the database

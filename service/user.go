@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -212,7 +213,7 @@ func (service *User) ListOwners() (data.Iterator, error) {
 
 func (service *User) ListOwnersAsSlice() []model.UserSummary {
 	it, _ := service.ListOwners()
-	return data.Slice(it, model.NewUserSummary)
+	return iterator.Slice(it, model.NewUserSummary)
 }
 
 // ListByIdentities returns all users that appear in the list of identities
