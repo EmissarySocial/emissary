@@ -2,6 +2,7 @@ package model
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
@@ -17,7 +18,7 @@ type Folder struct {
 	Layout   string             `json:"layout"   bson:"layout"`   // Layout type of the folder
 	Group    int                `json:"group"    bson:"group"`    // Group number of the folder (starting with 1)
 	Rank     int                `json:"rank"     bson:"rank"`     // Sort order of the folder
-	ReadDate int64              `json:"readDate" bson:"readDate"` // PublishDate of the most recently read message in this folder
+	ReadDate int64              `json:"readDate" bson:"readDate"` // PublishDate (in milliseconds) of the most recently read message in this folder
 
 	journal.Journal `json:"-" bson:"journal"`
 }
@@ -27,6 +28,7 @@ func NewFolder() Folder {
 	return Folder{
 		FolderID: primitive.NewObjectID(),
 		Icon:     "folder",
+		ReadDate: time.Now().UnixMilli(),
 	}
 }
 
