@@ -2,27 +2,26 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/data => ../../benpate/data
-replace github.com/benpate/hannibal => ../../benpate/hannibal
-replace github.com/benpate/rosetta => ../../benpate/rosetta
+// replace github.com/benpate/hannibal => ../../benpate/hannibal
+// replace github.com/benpate/rosetta => ../../benpate/rosetta
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.263
-	github.com/benpate/data v0.24.0
-	github.com/benpate/data-mongo v0.24.0
+	github.com/aws/aws-sdk-go v1.44.266
+	github.com/benpate/data v0.26.0
+	github.com/benpate/data-mongo v0.24.1
 	github.com/benpate/derp v0.27.1
-	github.com/benpate/digit v0.10.0
-	github.com/benpate/domain v0.0.2
+	github.com/benpate/digit v0.10.1
+	github.com/benpate/domain v0.0.3
 	github.com/benpate/exp v0.7.0
-	github.com/benpate/exp-builder v0.7.0
-	github.com/benpate/form v0.15.5
-	github.com/benpate/hannibal v0.4.0
-	github.com/benpate/html v0.16.1
+	github.com/benpate/exp-builder v0.7.2
+	github.com/benpate/form v0.15.6
+	github.com/benpate/hannibal v0.4.1
+	github.com/benpate/html v0.16.2
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.10.3
+	github.com/benpate/mediaserver v0.10.4
 	github.com/benpate/remote v0.10.3
-	github.com/benpate/rosetta v0.14.0
+	github.com/benpate/rosetta v0.15.0
 	github.com/benpate/steranko v0.13.3
 	github.com/benpate/table v0.5.2
 	github.com/davecgh/go-spew v1.1.1
@@ -37,12 +36,12 @@ require (
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/labstack/gommon v0.4.0
-	github.com/microcosm-cc/bluemonday v1.0.23
+	github.com/microcosm-cc/bluemonday v1.0.24
 	github.com/mmcdole/gofeed v1.2.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/tdewolff/minify/v2 v2.12.5
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
@@ -52,7 +51,7 @@ require (
 	github.com/yuin/goldmark v1.5.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20220924101305-151362477c87
 	go.mongodb.org/mongo-driver v1.11.6
-	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
+	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
 	golang.org/x/net v0.10.0
 	golang.org/x/oauth2 v0.8.0
 	willnorris.com/go/microformats v1.2.0
@@ -61,7 +60,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230426101702-58e86b294756 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230518184743-7afd39499903 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/chroma/v2 v2.7.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
@@ -91,7 +90,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mmcdole/goxpp v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -104,6 +103,7 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.1 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.6 // indirect
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
