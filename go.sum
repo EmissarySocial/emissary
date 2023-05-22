@@ -69,8 +69,8 @@ github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd3
 github.com/benpate/data v0.26.0 h1:hDCx2jkpvGSVtp+z43LsCVk4hPfnHdVmbo8a2owJ+YM=
 github.com/benpate/data v0.26.0/go.mod h1:8voPlAnPkBmS7ornt90CYfU2oBCKPy5QTarpUtAmiZ4=
 github.com/benpate/data-mock v0.24.2 h1:44Y+jc8tds9kZUkerIvG2CxnL9F+4KNEmXv/Vwqpx7E=
-github.com/benpate/data-mongo v0.24.1 h1:4XFx+pA4CeKVRV1RRSUrTxkiwELbZxxiUPCs9demCnU=
-github.com/benpate/data-mongo v0.24.1/go.mod h1:/v0Ulaf7aA4nbesY/8lRQ/VBhkGbUSx5eA7OOAJsEcY=
+github.com/benpate/data-mongo v0.26.0 h1:3hEOAiay5+tq3LBPl75ltXg+tPcp8oL7Es4Ss4aqRs4=
+github.com/benpate/data-mongo v0.26.0/go.mod h1:xrNwg6dSPz8xD7FTDn0lQJYsuIJK/Okhr8dN5mmHdss=
 github.com/benpate/derp v0.27.1 h1:p/1ss3KcEESkhPWzoAHLm9uhbH4y9gS8Oq5zLf3D6Lg=
 github.com/benpate/derp v0.27.1/go.mod h1:Qrtco2SAercNzKqb6WsaXvxn1E+/4DHBaWB+BwehJAo=
 github.com/benpate/digit v0.10.2 h1:MzkykwPYCmDivoQQtGEKliUrAQnHICMj/D8jNtQ1tRU=
