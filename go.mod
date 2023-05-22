@@ -11,7 +11,7 @@ require (
 	github.com/benpate/data v0.26.0
 	github.com/benpate/data-mongo v0.24.1
 	github.com/benpate/derp v0.27.1
-	github.com/benpate/digit v0.10.1
+	github.com/benpate/digit v0.10.2
 	github.com/benpate/domain v0.0.3
 	github.com/benpate/exp v0.7.0
 	github.com/benpate/exp-builder v0.7.2
@@ -19,7 +19,7 @@ require (
 	github.com/benpate/hannibal v0.4.1
 	github.com/benpate/html v0.16.2
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.10.4
+	github.com/benpate/mediaserver v0.10.5
 	github.com/benpate/remote v0.10.3
 	github.com/benpate/rosetta v0.15.0
 	github.com/benpate/steranko v0.13.3
