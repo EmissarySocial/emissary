@@ -56,13 +56,13 @@ func (response Response) ActivityPubID() string {
 	switch response.Type {
 
 	case ResponseTypeLike:
-		return response.Actor.ProfileURL + "/.likes/" + response.ResponseID.Hex()
+		return response.Actor.ProfileURL + "/likes/" + response.ResponseID.Hex()
 
 	case ResponseTypeDislike:
-		return response.Actor.ProfileURL + "/.dislikes/" + response.ResponseID.Hex()
+		return response.Actor.ProfileURL + "/dislikes/" + response.ResponseID.Hex()
 
 	default:
-		return response.Actor.ProfileURL + "/.mentions/" + response.ResponseID.Hex()
+		return response.Actor.ProfileURL + "/mentions/" + response.ResponseID.Hex()
 	}
 }
 

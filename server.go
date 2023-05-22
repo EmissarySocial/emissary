@@ -181,11 +181,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
-	e.GET("/:stream/.sse", handler.ServerSentEvent(factory))                  // TODO: LOW: Can SSE be moved into a custom render step?
-	e.GET("/:stream/.qrcode", handler.GetQRCode(factory))                     // TODO: LOW: Can QR Codes be moved into a custom render step?
-	e.GET("/:stream/.likes", handler.GetLikes(factory))
-	e.GET("/:stream/.dislikes", handler.GetDislikes(factory))
-	e.GET("/:stream/.mentions", handler.GetMentions(factory))
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
+	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
+	e.GET("/:stream/likes", handler.GetLikes(factory))
+	e.GET("/:stream/dislikes", handler.GetDislikes(factory))
+	e.GET("/:stream/mentions", handler.GetMentions(factory))
 	// e.GET("/:stream/replies", handler.GetReplies(factory))
 
 	// Profile Pages

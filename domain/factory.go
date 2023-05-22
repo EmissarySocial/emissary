@@ -294,6 +294,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionStreamResponse),
 			factory.collection(CollectionStream),
 			factory.Block(),
+			factory.Host(),
 		)
 
 		// Populate User Service

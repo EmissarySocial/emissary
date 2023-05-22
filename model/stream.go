@@ -292,9 +292,9 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		"attributedTo": slice.Map(stream.AttributedTo, func(person PersonLink) mapof.Any {
 			return person.GetJSONLD()
 		}),
-		"likes":    stream.URL + "/.likes",
-		"dislikes": stream.URL + "/.dislikes",
-		"mentions": stream.URL + "/.mentions",
+		"likes":    stream.URL + "/likes",
+		"dislikes": stream.URL + "/dislikes",
+		"mentions": stream.URL + "/mentions",
 	}
 }
 

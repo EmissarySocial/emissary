@@ -1,12 +1,17 @@
 package service
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,6 +21,7 @@ type StreamResponse struct {
 	collection       data.Collection
 	streamCollection data.Collection
 	blockService     *Block
+	host             string
 }
 
 // NewStreamResponse returns a fully initialized StreamResponse service
@@ -28,10 +34,11 @@ func NewStreamResponse() StreamResponse {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamResponse) Refresh(collection data.Collection, streamCollection data.Collection, blockService *Block) {
+func (service *StreamResponse) Refresh(collection data.Collection, streamCollection data.Collection, blockService *Block, host string) {
 	service.collection = collection
 	service.streamCollection = streamCollection
 	service.blockService = blockService
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -75,17 +82,17 @@ func (service *StreamResponse) Save(streamResponse *model.StreamResponse, note s
 		return derp.Wrap(err, location, "Error cleaning StreamResponse", streamResponse)
 	}
 
-	// TODO: CRITICAL: Recalculate statistics for the Stream affected by this StreamResponse.
-	// TODO: CRITICAL: Send messages to all followers about the new response.
-
 	// Save the value to the database
 	if err := service.collection.Save(streamResponse, note); err != nil {
 		return derp.Wrap(err, location, "Error saving StreamResponse", streamResponse, note)
 	}
 
+	// Recalculate statistics for the Stream affected by this StreamResponse.
 	if err := queries.CountResponses(service.streamCollection, service.collection, "stream.id", streamResponse.Stream.ID); err != nil {
 		return derp.Wrap(err, location, "Error counting responses")
 	}
+
+	// TODO: CRITICAL: Send messages to all followers about the new response.
 
 	return nil
 }
@@ -93,15 +100,21 @@ func (service *StreamResponse) Save(streamResponse *model.StreamResponse, note s
 // Delete removes an StreamResponse from the database (virtual delete)
 func (service *StreamResponse) Delete(streamResponse *model.StreamResponse, note string) error {
 
-	criteria := exp.Equal("_id", streamResponse.StreamResponseID)
+	const location = "service.StreamResponse.Delete"
 
-	// TODO: CRITICAL: Recalculate statistics for the Stream affected by this StreamResponse.
-	// TODO: CRITICAL: Send messages to all followers about the new response.
+	criteria := exp.Equal("_id", streamResponse.StreamResponseID)
 
 	// Delete this StreamResponse
 	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.StreamResponse.Delete", "Error deleting StreamResponse", criteria)
+		return derp.Wrap(err, location, "Error deleting StreamResponse", criteria)
 	}
+
+	// Recalculate statistics for the Stream affected by this StreamResponse.
+	if err := queries.CountResponses(service.streamCollection, service.collection, "stream.id", streamResponse.Stream.ID); err != nil {
+		return derp.Wrap(err, location, "Error counting responses")
+	}
+
+	// TODO: CRITICAL: Send messages to all followers about the new response.
 
 	return nil
 }
@@ -129,16 +142,18 @@ func (service *StreamResponse) QueryByStreamAndType(streamID primitive.ObjectID,
 	)
 }
 
+func (service *StreamResponse) LoadByStreamAndOrigin(streamID primitive.ObjectID, originURL string, streamResponse *model.StreamResponse) error {
+	criteria := exp.Equal("stream.id", streamID).AndEqual("origin.url", originURL)
+
+	return service.Load(criteria, streamResponse)
+}
+
 func (service *StreamResponse) LoadByStreamAndActor(streamID primitive.ObjectID, actorURL string, streamResponse *model.StreamResponse) error {
 
 	criteria := exp.Equal("stream.id", streamID).
 		AndEqual("actor.profileUrl", actorURL)
 
-	if err := service.Load(criteria, streamResponse); err != nil {
-		return derp.Wrap(err, "service.StreamResponse.LoadByStreamAndActor", "Error loading StreamResponse", streamID, actorURL)
-	}
-
-	return nil
+	return service.Load(criteria, streamResponse)
 }
 
 /******************************************
@@ -188,4 +203,51 @@ func (service *StreamResponse) SetStreamResponse(stream *model.Stream, origin mo
 	}
 
 	return nil
+}
+
+// ParseURL parses a StreamResponseURL of the form "https://server.name/streamID/responses/streamResponseID" into a StreamID and a StreamResponseID.
+func (service *StreamResponse) ParseURL(value string) (primitive.ObjectID, primitive.ObjectID, error) {
+
+	// Parse the URL
+	parsed, err := url.Parse(value)
+
+	if err != nil {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.StreamResponse.ParseURL", "Error parsing URL", value)
+	}
+
+	// Validate the domain is correct
+	if parsed.Host != domain.NameOnly(service.host) {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.StreamResponse.ParseURL", "Invalid domain", value)
+	}
+
+	// Parse the path as a list
+	path := list.BySlash(strings.TrimPrefix(parsed.Path, "/"))
+
+	// Get the StreamID from the path
+	streamIDString, path := path.Split()
+
+	streamID, err := primitive.ObjectIDFromHex(streamIDString)
+
+	if err != nil {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.StreamResponse.ParseURL", "Error parsing streamID", value)
+	}
+
+	// Get the "subType from the path (must be "responses")
+	subType, path := path.Split()
+
+	if subType != "responses" {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.StreamResponse.ParseURL", "Invalid subType", value)
+	}
+
+	// Get the StreamResponseID from the path
+	streamResponseIDString := path.Head()
+
+	streamResponseID, err := primitive.ObjectIDFromHex(streamResponseIDString)
+
+	if err != nil {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.StreamResponse.ParseURL", "Error parsing streamResponseID", value)
+	}
+
+	// Voila!
+	return streamID, streamResponseID, nil
 }
