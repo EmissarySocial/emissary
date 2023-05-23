@@ -26,12 +26,12 @@ func (step StepAddChildEmbed) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	iconService := renderer.factory().Icons()
-	b := html.New()
 
 	path := renderer.context().Request().URL.Path
 	path = replaceActionID(path, renderer.ActionID())
 
 	// Build the HTML for the "embed" widget
+	b := html.New()
 	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").EndBracket()
 
 	if step.ShowLabels {

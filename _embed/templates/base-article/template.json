@@ -200,7 +200,7 @@
 		"add-child":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-child", "title":"+ Add a Stream", "with-child":[
+				{"step":"add-stream", "location":"child", "title":"+ Add a Stream", "with-stream":[
 					{"step":"save"},
 					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 				]}
@@ -209,7 +209,7 @@
 		"add-sibling":{
 			"roles": ["owner"],
 			"steps": [
-				{"step":"add-sibling", "title":"+ Add a Stream", "with-sibling":[
+				{"step":"add-stream", "location":"sibling", "title":"+ Add a Stream", "with-stream":[
 					{"step":"save"},
 					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 				]}

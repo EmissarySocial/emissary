@@ -70,10 +70,11 @@
 		"new": {
 			"roles": ["editor"],
 			"steps":[{
-				"step":"add-child",
+				"step":"add-stream",
+				"location":"child",
 				"title":"Add an Item",
 				"comment":"Created by {{.Author}}",
-				"with-child": [
+				"with-stream": [
 					{"step":"save", "comment":"Created by {{.Author}}"},
 					{"step":"forward-to", "url":"/{{.Token}}/edit"}
 				]

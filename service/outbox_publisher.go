@@ -47,6 +47,9 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, objectID primitive.Ob
 	// Try to load the existing outbox message
 	outboxMessage := model.NewOutboxMessage()
 	if err := service.LoadByObjectID(userID, objectID, &outboxMessage); err != nil {
+		if derp.NotFound(err) {
+			return nil
+		}
 		return derp.Wrap(err, location, "Error loading outbox message", userID, objectID)
 	}
 

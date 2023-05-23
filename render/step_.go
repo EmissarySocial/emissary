@@ -24,17 +24,11 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.AddChildEmbed:
 		return StepAddChildEmbed(s)
 
-	case step.AddChildStream:
-		return StepAddChildStream(s)
-
 	case step.AddModelObject:
 		return StepAddModelObject(s)
 
-	case step.AddSiblingStream:
-		return StepAddSiblingStream(s)
-
-	case step.AddTopStream:
-		return StepAddTopStream(s)
+	case step.AddStream:
+		return StepAddStream(s)
 
 	case step.AsConfirmation:
 		return StepAsConfirmation(s)

@@ -26,6 +26,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "add":
 		return NewAddModelObject(stepInfo)
 
+	case "add-stream":
+		return NewAddStream(stepInfo)
+
 	case "edit":
 		return NewEditModelObject(stepInfo)
 
@@ -70,17 +73,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 		// STREAM-SPECIFIC STEPS
 
-	case "add-child":
-		return NewAddChildStream(stepInfo)
-
 	case "add-child-embed":
 		return NewAddChildEmbed(stepInfo)
-
-	case "add-sibling":
-		return NewAddSiblingStream(stepInfo)
-
-	case "add-top-level":
-		return NewAddTopStream(stepInfo)
 
 	case "edit-content":
 		return NewEditContent(stepInfo)

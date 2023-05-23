@@ -78,13 +78,14 @@
 		"attachments": {
 			"roles": ["owner", "editor"],
 			"steps": [{
-				"step":"add-child",
+				"step":"add-stream",
+				"location":"child",
 				"template":"photograph",
-				"with-child": [
+				"with-stream": [
 					{"step":"upload-attachments"},
 					{"step":"set-thumbnail", "path":"imageUrl"},
 					{"step":"save", "comment":"Created by {{.Author}}"},
-					{"step":"add-child", "template":"comment-group", "with-child":[
+					{"step":"add-stream", "location":"child", "template":"comment-group", "with-stream":[
 						{"step":"save", "comment":"Created by {{.Author}}"}
 					]}
 				]},
