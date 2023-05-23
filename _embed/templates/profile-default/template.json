@@ -123,7 +123,7 @@
 		"outbox-add": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"add-child-embed", "templates":["outbox-message"], "showLabels":false}
+				{"step":"add-stream", "location":"outbox", "as-embed":true}
 			]
 		},
 
@@ -391,6 +391,12 @@
 					{"step":"set-response"}
 				]},
 				{"step":"view-html", "file":"message-response", "method":"both"}
+			]
+		},
+		"message-reply":{
+			"roles":["self"],
+			"steps":[
+				{"step":"add-stream", "location":"profile", "as-reply":true}
 			]
 		},
 		"message-chat": {

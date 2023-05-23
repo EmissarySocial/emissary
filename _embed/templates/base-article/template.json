@@ -206,15 +206,6 @@
 				]}
 			]
 		},
-		"add-sibling":{
-			"roles": ["owner"],
-			"steps": [
-				{"step":"add-stream", "location":"sibling", "title":"+ Add a Stream", "with-stream":[
-					{"step":"save"},
-					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
-				]}
-			]
-		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [

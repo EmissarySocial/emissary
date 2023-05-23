@@ -28,11 +28,6 @@
 		}
 	},
 	"actions": {
-		"view": {
-			"steps":[
-				{"step":"view-html"}
-			]
-		},
 		"create":{
 			"steps": [
 				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
@@ -45,6 +40,7 @@
 				{"step":"refresh-page"}
 			]
 		},
+		"view": {"step":"view-html"},
 		"edit": {
 			"roles":["self"],
 			"steps": [

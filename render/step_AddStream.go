@@ -5,14 +5,11 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/val"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/slice"
-	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -32,89 +29,8 @@ func (step StepAddStream) Get(renderer Renderer, buffer io.Writer) error {
 		return step.getEmbed(renderer, buffer)
 	}
 
-	// This can only be used on a Stream Renderer
-	factory := renderer.factory()
-
-	var parentRole string
-
-	switch step.Location {
-
-	case "outbox":
-		parentRole = "outbox"
-
-	case "top":
-		parentRole = "top"
-
-	default:
-		parentRole = renderer.templateRole()
-	}
-
 	// Fall through to displaying the default modal
-	modalAddStream(renderer.context().Response(), factory.Template(), factory.Icons(), step.Title, buffer, renderer.URL(), parentRole, step.Templates)
-
-	return nil
-}
-
-// getEmbed renders the HTML for an embedded form
-func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
-
-	const location = "render.StepAddStream.Get"
-
-	templates, selectedTemplateID, childRenderer, err := step.common(renderer)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error getting common data")
-	}
-
-	iconService := renderer.factory().Icons()
-
-	path := renderer.context().Request().URL.Path
-	path = replaceActionID(path, renderer.ActionID())
-
-	// Build the HTML for the "embed" widget
-	b := html.New()
-	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").EndBracket()
-
-	b.Div()
-	for _, template := range templates {
-
-		b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "space-right").EndBracket()
-
-		b.Div().Class("text-lg", "vertical-space-none").EndBracket()
-		if selectedTemplateID == template.Value {
-			iconService.Write(template.Icon+"-fill", b)
-		} else {
-			iconService.Write(template.Icon, b)
-		}
-		b.Close() // DIV
-
-		b.Div().Class("vertical-space-none", "text-sm").InnerText(template.Label).Close()
-
-		b.Close() // A
-
-		b.WriteString("&nbsp;")
-	}
-	b.Close() // DIV
-
-	// If there is a child renderer, then render it here
-	if childRenderer != nil {
-
-		widgetHTML, err := childRenderer.Render()
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error rendering new child stream")
-		}
-
-		b.WriteString(string(widgetHTML))
-	}
-
-	// Close the container
-	b.Close()
-
-	// Write the whole widget back to the outpub buffer
-	buffer.Write(b.Bytes())
-	return nil
-
+	return step.getModal(renderer, buffer)
 }
 
 func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
@@ -131,7 +47,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Try to load the template for the new stream
-	template, err := factory.Template().Load(templateID)
+	newTemplate, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Template not found", templateID)
@@ -141,21 +57,151 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	newStream := model.NewStream()
 
 	// Validate and set the location for the new stream
-	if err := step.setLocation(renderer, &template, &newStream); err != nil {
+	if err := step.setLocation(renderer, &newTemplate, &newStream); err != nil {
 		return derp.Wrap(err, location, "Error getting location for new stream")
 	}
 
 	// Populate the new stream with other data
 	newStream.TemplateID = templateID
 
-	// TODO: MEDIUM: sort order?
-	// TODO: MEDIUM: presets defined by templates?
+	// If this is a reply, then try to get a DocumentLink for the object we're replying to.
+	if step.AsReply {
+		if documentLinker, ok := renderer.object().(DocumentLinker); ok {
+			newStream.InReplyTo = documentLinker.DocumentLink()
+		} else {
+			return derp.NewInternalError(location, "Replies can only be made to Stream and Message (DocumentLinker) objects.")
+		}
+	}
 
-	return finalizeAddStream(factory, context, buffer, &newStream, template, step.WithNewStream)
+	// Create a renderer for the new Stream
+	newRenderer, err := NewStream(factory, context, newTemplate, &newStream, "view")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating renderer", newStream)
+	}
+
+	// Assign the current user as the author (with silent failure)
+	if user, err := newRenderer.getUser(); err == nil {
+		newRenderer.stream.SetAttributedTo(user.PersonLink())
+	}
+
+	// If there is an "init" step for the stream's template, then execute it now
+	if action, ok := newTemplate.Action("init"); ok {
+		if err := Pipeline(action.Steps).Post(factory, &newRenderer, buffer); err != nil {
+			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
+		}
+	}
+
+	// If this is an "embed" action, then also call the "create" action on the new stream
+	if step.AsEmbed {
+		if action, ok := newTemplate.Action("create"); ok {
+			if err := Pipeline(action.Steps).Post(factory, &newRenderer, buffer); err != nil {
+				return derp.Wrap(err, location, "Unable to execute 'create' action on stream")
+			}
+		}
+	}
+
+	// Execute additional "with-stream" steps
+	if err := Pipeline(step.WithNewStream).Post(factory, &newRenderer, buffer); err != nil {
+		return derp.Wrap(err, location, "Unable to execute action steps on stream")
+	}
+
+	return nil
 }
 
 func (step StepAddStream) UseGlobalWrapper() bool {
 	return false
+}
+
+// getEmbed renders the HTML for an embedded form
+func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
+
+	const location = "render.StepAddStream.Get"
+
+	// Get prerequisites
+	factory := renderer.factory()
+	context := renderer.context()
+	templateService := factory.Template()
+
+	// Query all eligible templates
+	templates := templateService.ListByContainerLimited(renderer.templateRole(), step.Templates)
+
+	if len(step.Templates) > 0 {
+		templates = slice.Filter(templates, func(template form.LookupCode) bool {
+			return slice.Contains(step.Templates, template.Value)
+		})
+	}
+
+	if len(templates) == 0 {
+		return derp.NewBadRequestError(location, "No child templates available for this stream", renderer.templateRole())
+	}
+
+	// Find the "selected" template
+	selectedTemplateID := step.getBestTemplate(templates, context.QueryParam("templateId"))
+
+	iconService := renderer.factory().Icons()
+
+	path := renderer.context().Request().URL.Path
+	path = replaceActionID(path, renderer.ActionID())
+
+	// Build the HTML for the "embed" widget
+	b := html.New()
+	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").EndBracket()
+
+	if len(templates) > 1 {
+		b.Div()
+		for _, template := range templates {
+
+			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "space-right").EndBracket()
+
+			b.Div().Class("text-lg", "vertical-space-none").EndBracket()
+			if selectedTemplateID == template.Value {
+				iconService.Write(template.Icon+"-fill", b)
+			} else {
+				iconService.Write(template.Icon, b)
+			}
+			b.Close() // DIV
+
+			b.Div().Class("vertical-space-none", "text-sm").InnerText(template.Label).Close()
+
+			b.Close() // A
+
+			b.WriteString("&nbsp;")
+		}
+		b.Close() // DIV
+	}
+
+	// If there is a child renderer, then render it here
+
+	// Create a new child stream
+	streamService := factory.Stream()
+	child, template, err := streamService.New(renderer.NavigationID(), renderer.objectID(), selectedTemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating new child stream")
+	}
+
+	// Create a new child renderer
+	childRenderer, err := NewStream(factory, context, template, &child, "create")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating new child stream renderer")
+	}
+
+	widgetHTML, err := childRenderer.Render()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error rendering new child stream")
+	}
+
+	b.WriteString(string(widgetHTML))
+
+	// Close the container
+	b.Close()
+
+	// Write the whole widget back to the outpub buffer
+	buffer.Write(b.Bytes())
+	return nil
 }
 
 // setLocation returns the ParentIDs to use in for the new stream.
@@ -228,57 +274,11 @@ func (step StepAddStream) setLocation(renderer Renderer, template *model.Templat
 	}
 }
 
-func (step StepAddStream) common(renderer Renderer) ([]form.LookupCode, string, Renderer, error) {
-
-	const location = "render.StepAddStream.common"
-
-	// Get prerequisites
-	factory := renderer.factory()
-	context := renderer.context()
-	templateService := factory.Template()
-
-	// Query all eligible templates
-	templates := templateService.ListByContainerLimited(renderer.templateRole(), step.Templates)
+func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateID string) string {
 
 	if len(templates) == 0 {
-		return nil, "", nil, derp.NewBadRequestError(location, "No child templates available for this stream", renderer.templateRole())
+		return ""
 	}
-
-	if len(step.Templates) > 0 {
-		templates = slice.Filter(templates, func(template form.LookupCode) bool {
-			return slice.Contains(step.Templates, template.Value)
-		})
-	}
-
-	// Find the "selected" template
-	templateID := step.getBestTemplate(templates, context.QueryParam("templateId"))
-
-	// If no valid template is selected, then do not render a child widget.
-	if templateID == "" {
-		return templates, templateID, nil, nil
-	}
-
-	streamService := factory.Stream()
-
-	// Create a new child stream
-	child, template, err := streamService.New(renderer.NavigationID(), renderer.objectID(), templateID)
-
-	if err != nil {
-		return nil, "", nil, derp.Wrap(err, location, "Error creating new child stream")
-	}
-
-	// Create a new child renderer
-	childRenderer, err := NewStream(factory, context, template, &child, "create")
-
-	if err != nil {
-		return nil, "", nil, derp.Wrap(err, location, "Error creating new child stream renderer")
-	}
-
-	return templates, templateID, &childRenderer, nil
-
-}
-
-func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateID string) string {
 
 	for _, template := range templates {
 		if template.Value == templateID {
@@ -286,30 +286,35 @@ func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateI
 		}
 	}
 
-	if len(templates) > 0 {
-		return templates[0].Value
-	}
-
-	return ""
+	return templates[0].Value
 }
 
 // modalAddStream renders an HTML dialog that lists all of the templates that the user can create
 // tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func modalAddStream(response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
+func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
+	// response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
 
-	templates := templateService.ListByContainerLimited(parentRole, allowedTemplateIDs)
+	factory := renderer.factory()
+	response := renderer.context().Response()
+	templateService := factory.Template()
+	iconProvider := factory.Icons()
+
+	parentRole := step.Location
+
+	if parentRole == "child" {
+		parentRole = renderer.templateRole()
+	}
+
+	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
 
 	b := html.New()
 
-	b.H2()
-	b.I("ti", "ti-plus").Close()
-	b.Span().InnerText(title).Close()
-	b.Close()
+	b.H2().InnerText(step.Title).Close()
 
 	b.Table().Class("table space-below")
 
 	for _, template := range templates {
-		b.TR().Role("link").Data("hx-post", url+"?templateId="+template.Value)
+		b.TR().Role("link").Data("hx-post", renderer.URL()+"?templateId="+template.Value)
 		{
 			b.TD().Class("text-3xl").Style("vertical-align:top").EndBracket()
 			iconProvider.Write(template.Icon, b)
@@ -329,4 +334,6 @@ func modalAddStream(response *echo.Response, templateService *service.Template, 
 	result := WrapModalWithCloseButton(response, b.String())
 
 	io.WriteString(buffer, result)
+
+	return nil
 }

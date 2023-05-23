@@ -177,46 +177,6 @@ func useGlobalWrapper(steps []step.Step) bool {
 	return true
 }
 
-// finalizeAddStream takes all of the follow-on actions required to initialize a new stream.
-// - sets the author to the current user
-// - executes the correct "init" action for this template
-// - saves the stream (if not already saved by "init")
-// - executes any additional "with-stream" steps
-func finalizeAddStream(factory Factory, context *steranko.Context, buffer io.Writer, stream *model.Stream, template model.Template, pipeline Pipeline) error {
-
-	const location = "render.finalizeAddStream"
-
-	// Create stream renderer
-	renderer, err := NewStream(factory, context, template, stream, "view")
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating renderer", stream)
-	}
-
-	// Assign the current user as the author (with silent failure)
-	if user, err := renderer.getUser(); err == nil {
-		renderer.stream.SetAttributedTo(user.PersonLink())
-	}
-
-	// TODO: MEDIUM: Set Stream order??
-
-	// If there is an "init" step for the stream's template, then execute it now
-	if action, ok := template.Actions["init"]; ok {
-		if err := Pipeline(action.Steps).Post(factory, &renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
-		}
-	}
-
-	// Execute additional "with-stream" steps
-	if !pipeline.IsEmpty() {
-		if err := pipeline.Post(factory, &renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Unable to execute action steps on stream")
-		}
-	}
-
-	return nil
-}
-
 // parseOptions parses a string of options into a map of key/value pairs
 func parseOptions(options ...string) mapof.Any {
 
