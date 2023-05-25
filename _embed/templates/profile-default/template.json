@@ -123,7 +123,9 @@
 		"outbox-add": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"add-stream", "location":"outbox", "as-embed":true}
+				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
+				{"step":"add-stream", "location":"outbox", "as-embed":true},
+				{"step":"refresh-page"}
 			]
 		},
 
@@ -396,7 +398,11 @@
 		"message-reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"add-stream", "location":"profile", "as-reply":true}
+				{"step":"with-message", "steps":[
+					{"step":"set-query-param", "postTo":"/@me/message-reply?messageId={{.QueryParam `messageId`}}"},
+					{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+					{"step":"refresh-page"}
+				]}
 			]
 		},
 		"message-chat": {

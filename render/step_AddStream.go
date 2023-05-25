@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -126,12 +125,6 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	// Query all eligible templates
 	templates := templateService.ListByContainerLimited(renderer.templateRole(), step.Templates)
 
-	if len(step.Templates) > 0 {
-		templates = slice.Filter(templates, func(template form.LookupCode) bool {
-			return slice.Contains(step.Templates, template.Value)
-		})
-	}
-
 	if len(templates) == 0 {
 		return derp.NewBadRequestError(location, "No child templates available for this stream", renderer.templateRole())
 	}
@@ -201,6 +194,55 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
 	// Write the whole widget back to the outpub buffer
 	buffer.Write(b.Bytes())
+	return nil
+}
+
+// modalAddStream renders an HTML dialog that lists all of the templates that the user can create
+// tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
+func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
+	// response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
+
+	factory := renderer.factory()
+	response := renderer.context().Response()
+	templateService := factory.Template()
+	iconProvider := factory.Icons()
+
+	parentRole := step.Location
+
+	if parentRole == "child" {
+		parentRole = renderer.templateRole()
+	}
+
+	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
+
+	b := html.New()
+
+	b.H2().InnerText(step.Title).Close()
+
+	b.Table().Class("table space-below")
+
+	for _, template := range templates {
+		b.TR().Role("link").Data("hx-post", renderer.URL()+"?templateId="+template.Value)
+		{
+			b.TD().Class("text-3xl").Style("vertical-align:top").EndBracket()
+			iconProvider.Write(template.Icon, b)
+			// b.I(template.Icon, "text-3xl", "gray80").Close()
+			b.Close()
+
+			b.TD().Style("width:100%")
+			b.Div().Class("bold").InnerText(template.Label).Close()
+			b.Div().Class("gray60").InnerText(template.Description).Close()
+			b.Close()
+		}
+		b.Close()
+	}
+
+	b.CloseAll()
+
+	result := WrapModalWithCloseButton(response, b.String())
+
+	io.WriteString(buffer, result)
+
 	return nil
 }
 
@@ -287,53 +329,4 @@ func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateI
 	}
 
 	return templates[0].Value
-}
-
-// modalAddStream renders an HTML dialog that lists all of the templates that the user can create
-// tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
-func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
-	// response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
-
-	factory := renderer.factory()
-	response := renderer.context().Response()
-	templateService := factory.Template()
-	iconProvider := factory.Icons()
-
-	parentRole := step.Location
-
-	if parentRole == "child" {
-		parentRole = renderer.templateRole()
-	}
-
-	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
-
-	b := html.New()
-
-	b.H2().InnerText(step.Title).Close()
-
-	b.Table().Class("table space-below")
-
-	for _, template := range templates {
-		b.TR().Role("link").Data("hx-post", renderer.URL()+"?templateId="+template.Value)
-		{
-			b.TD().Class("text-3xl").Style("vertical-align:top").EndBracket()
-			iconProvider.Write(template.Icon, b)
-			// b.I(template.Icon, "text-3xl", "gray80").Close()
-			b.Close()
-
-			b.TD().Style("width:100%")
-			b.Div().Class("bold").InnerText(template.Label).Close()
-			b.Div().Class("gray60").InnerText(template.Description).Close()
-			b.Close()
-		}
-		b.Close()
-	}
-
-	b.CloseAll()
-
-	result := WrapModalWithCloseButton(response, b.String())
-
-	io.WriteString(buffer, result)
-
-	return nil
 }

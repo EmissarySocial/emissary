@@ -71,10 +71,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-html":
 		return NewViewHTML(stepInfo)
 
-		// STREAM-SPECIFIC STEPS
-
-	case "add-child-embed":
-		return NewAddChildEmbed(stepInfo)
+	// STREAM-SPECIFIC STEPS
 
 	case "edit-content":
 		return NewEditContent(stepInfo)

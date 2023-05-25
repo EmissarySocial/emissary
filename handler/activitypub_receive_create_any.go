@@ -52,7 +52,7 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.Summary = object.Summary()
 	message.ImageURL = object.ImageURL()
 
-	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Next() {
+	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Tail() {
 		if author, err := object.AttributedTo().Load(); err == nil {
 			message.AddAttributedTo(model.PersonLink{
 				Name:       author.Name(),

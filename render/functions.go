@@ -106,5 +106,12 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 			return time.Unix(valueInt, 0).Format("Monday, January 2, 2006")
 		},
+
+		"addQueryParams": func(extraParams string, url string) string {
+			if strings.Contains(url, "?") {
+				return url + "&" + extraParams
+			}
+			return url + "?" + extraParams
+		},
 	}
 }

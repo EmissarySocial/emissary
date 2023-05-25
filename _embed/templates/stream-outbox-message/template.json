@@ -30,14 +30,12 @@
 	"actions": {
 		"create":{
 			"steps": [
-				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
 				{"step":"view-html", "file":"edit"},
 				{"step":"set-data", "from-form":["summary"]},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"imageUrl"},
-				{"step":"publish", "mentions":["summary"]},
-				{"step":"refresh-page"}
+				{"step":"publish", "mentions":["summary"]}
 			]
 		},
 		"view": {"step":"view-html"},

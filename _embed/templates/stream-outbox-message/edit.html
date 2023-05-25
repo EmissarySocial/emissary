@@ -24,7 +24,9 @@
 
 </script>
 
-<form id="outbox-message" hx-post="{{.QueryParam `postTo`}}" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data" hx-push-url="false"
+{{- $targetURL := .QueryParam "postTo" | addQueryParams "templateId=outbox-message" -}}
+
+<form id="outbox-message" hx-post="{{$targetURL}}" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data" hx-push-url="false"
 	data-script="
 		on htmx:configRequest(parameters)
 			set parameters['summary'] to Autolinker.link(#summaryHTML.innerText, $autolinkerOptions)">
