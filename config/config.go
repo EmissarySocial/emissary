@@ -25,6 +25,7 @@ type Config struct {
 	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 	Certificates        mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
 	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
+	ActivityPubCache    mapof.String                 `json:"activityPubCache"`    // Connection string for ActivityPub cache database
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
 	MongoID             primitive.ObjectID           `json:"_" bson:"_id"`        // Used as unique key for MongoDB
@@ -44,11 +45,12 @@ func DefaultConfig() Config {
 		Domains: set.Slice[Domain]{},
 
 		// File Locations
-		Templates:           []mapof.String{{"adapter": "EMBED", "location": "templates"}},
-		Emails:              []mapof.String{{"adapter": "EMBED", "location": "emails"}},
+		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
+		Emails:              sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "emails"}},
 		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": ".emissary/attachments"},
 		AttachmentCache:     mapof.String{"adapter": "FILE", "location": ".emissary/cache"},
 		Certificates:        mapof.String{"adapter": "FILE", "location": ".emissary/certificates"},
+		ActivityPubCache:    mapof.String{},
 	}
 }
 

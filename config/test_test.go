@@ -29,4 +29,6 @@ func tableTest_Schema(t *testing.T, s *schema.Schema, object any, table []tableT
 		require.Nil(t, err)
 		require.Equal(t, test.output, result)
 	}
+
+	require.Nil(t, s.Validate(object))
 }

@@ -18,6 +18,7 @@ func Schema() schema.Schema {
 				"attachmentCache":     WritableFolderSchema(),
 				"certificates":        WritableFolderSchema(),
 				"adminEmail":          schema.String{Format: "email"},
+				"activityPubCache":    DatabaseConnectInfo(),
 			},
 		},
 	}
@@ -52,32 +53,13 @@ func (config *Config) GetPointer(name string) (any, bool) {
 	case "certificates":
 		return &config.Certificates, true
 
+	case "adminEmail":
+		return &config.AdminEmail, true
+
+	case "activityPubCache":
+		return &config.ActivityPubCache, true
+
 	}
 
 	return nil, false
-}
-
-func (config Config) GetStringOK(name string) (string, bool) {
-
-	switch name {
-
-	case "adminEmail":
-		return config.AdminEmail, true
-
-	}
-
-	return "", false
-}
-
-func (config *Config) SetString(name string, value string) bool {
-
-	switch name {
-
-	case "adminEmail":
-		config.AdminEmail = value
-		return true
-
-	}
-
-	return false
 }
