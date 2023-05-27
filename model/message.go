@@ -100,7 +100,7 @@ func (message *Message) AddAttributedTo(persons ...PersonLink) {
 }
 
 func (message Message) SummaryText() string {
-	return html.Summary(message.Summary)
+	return html.Summary(html.RemoveTags(message.Summary))
 }
 
 func (message Message) RankSeconds() int64 {
@@ -128,7 +128,7 @@ func (message *Message) UpdateWithMessage(other *Message) {
 // IsInternal returns true if this message is "owned" by
 // this server, and is not federated via another server.
 func (message *Message) IsInternal() bool {
-	return !message.Origin.InternalID.IsZero()
+	return !message.Origin.FollowingID.IsZero()
 }
 
 func (message *Message) SetMyResponse(responseType string) {

@@ -10,12 +10,12 @@ func OriginLinkSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"internalId": schema.String{Format: "objectId"},
-			"type":       schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeWebMention}},
-			"url":        schema.String{Format: "url"},
-			"label":      schema.String{MaxLength: 128},
-			"summary":    schema.String{MaxLength: 1024},
-			"imageUrl":   schema.String{Format: "url"},
+			"followingId": schema.String{Format: "objectId"},
+			"type":        schema.String{Enum: []string{OriginTypeActivityPub, OriginTypeInternal, OriginTypePoll, OriginTypeRSSCloud, OriginTypeWebMention}},
+			"url":         schema.String{Format: "url"},
+			"label":       schema.String{MaxLength: 128},
+			"summary":     schema.String{MaxLength: 1024},
+			"imageUrl":    schema.String{Format: "url"},
 		},
 	}
 }
@@ -27,8 +27,8 @@ func OriginLinkSchema() schema.Element {
 func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 	switch name {
 
-	case "internalId":
-		return origin.InternalID.Hex(), true
+	case "followingId":
+		return origin.FollowingID.Hex(), true
 
 	case "type":
 		return origin.Type, true
@@ -57,9 +57,9 @@ func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 func (origin *OriginLink) SetString(name string, value string) bool {
 	switch name {
 
-	case "internalId":
+	case "followingId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			origin.InternalID = objectID
+			origin.FollowingID = objectID
 			return true
 		}
 

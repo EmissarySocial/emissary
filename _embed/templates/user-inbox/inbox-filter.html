@@ -17,7 +17,7 @@
 		{{- range $following -}}
 			{{- $selected := eq $followingID .FollowingID.Hex -}}
 
-			<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}&origin.internalId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
+			<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
 				<img src="{{.ImageURL}}" class="circle" style="width:32px; height:32px; margin-right:8px;">
 				{{.Label}}
 			</div>

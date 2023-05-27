@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benpate/rosetta/html"
+
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
@@ -60,6 +62,16 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				length = len(stringValue)
 			}
 			return "$" + stringValue[:length-2] + "." + stringValue[length-2:]
+		},
+
+		"removeLinks": func(value string) template.HTML {
+			result := strings.ReplaceAll(value, "<a ", "<span ")
+			result = strings.ReplaceAll(result, "</a", "</span")
+			return template.HTML(result)
+		},
+
+		"textOnly": func(value string) string {
+			return html.RemoveTags(value)
 		},
 
 		"html": func(value string) template.HTML {

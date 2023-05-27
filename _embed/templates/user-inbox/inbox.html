@@ -3,7 +3,7 @@
 {{- $filter := .FilteredByFollowing -}}
 
 {{- $folderID := $folder.FolderID.Hex -}}
-{{- $followingID := .QueryParam "origin.internalId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
 
 <div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window">
 

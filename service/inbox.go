@@ -216,7 +216,7 @@ func (service *Inbox) ListByFolder(userID primitive.ObjectID, folderID primitive
 
 func (service *Inbox) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("origin.internalId", followingID)
+		AndEqual("origin.followingId", followingID)
 
 	return service.List(criteria)
 }
@@ -358,7 +358,7 @@ func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID 
 }
 
 func (service *Inbox) DeleteByOrigin(internalID primitive.ObjectID, note string) error {
-	return service.DeleteMany(exp.Equal("origin.internalId", internalID), note)
+	return service.DeleteMany(exp.Equal("origin.followingId", internalID), note)
 }
 
 func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {

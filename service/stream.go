@@ -362,9 +362,9 @@ func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 	return service.LoadByToken(token, result)
 }
 
-// LoadByOriginID returns a single `Stream` that matches the provided `Origin.InternalID`
+// LoadByOriginID returns a single `Stream` that matches the provided `Origin.FollowingID`
 func (service *Stream) LoadByOriginID(originID primitive.ObjectID, result *model.Stream) error {
-	return service.Load(exp.Equal("origin.internalId", originID), result)
+	return service.Load(exp.Equal("origin.followingId", originID), result)
 }
 
 // LoadByProductID returns a single `Stream` with custom data matching the provided `Data.productId`

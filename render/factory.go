@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -34,7 +35,7 @@ type Factory interface {
 	Widget() *service.Widget
 
 	// Other data services
-	ActivityPubClient() *service.ActivityPubClient
+	ActivityPubClient() streams.Client
 	Config() config.Domain
 	Content() *service.Content
 	Domain() *service.Domain

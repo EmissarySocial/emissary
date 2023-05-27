@@ -23,12 +23,12 @@
 	<div class="text-sm">
 
 		<span class="button-group">
-			<button id="previous" hx-get="/@me/inbox/message-social?rank=LT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">&laquo; Prev</button>
-			<button id="next" hx-get="/@me/inbox/message-social?rank=GT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.internalId={{.QueryParam `origin.internalId`}}">Next &raquo;</button>
+			<button id="previous" hx-get="/@me/inbox/message-social?rank=LT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
+			<button id="next" hx-get="/@me/inbox/message-social?rank=GT:{{.Message.Rank}}&folderId={{.Message.FolderID.Hex}}&origin.followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
 		</span>
 
 		<span class="button-group">
-			<button hx-get="/@me/inbox/following-edit?followingId={{.Message.Origin.InternalID.Hex}}">Edit Source</button>
+			<button hx-get="/@me/inbox/following-edit?followingId={{.Message.Origin.FollowingID.Hex}}">Edit Source</button>
 			<button hx-get="/@me/inbox/message-delete?messageId={{.Message.MessageID.Hex}}">Delete</button>
 			<button hx-get="/@me/inbox/block-new?messageId={{.Message.MessageID.Hex}}">Block</button>
 		</span>

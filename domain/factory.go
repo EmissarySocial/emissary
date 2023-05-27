@@ -229,6 +229,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.User(),
 			factory.Inbox(),
 			factory.EncryptionKey(),
+			factory.ActivityPubClient(),
 			factory.Host(),
 		)
 
@@ -543,8 +544,8 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
  * Other Non-Model Services
  ******************************************/
 
-func (factory *Factory) ActivityPubClient() *service.ActivityPubClient {
-	return service.NewActivityPubClient()
+func (factory *Factory) ActivityPubClient() streams.Client {
+	return factory.activityPubClient
 }
 
 // Content returns the Content transformation service

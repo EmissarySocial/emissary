@@ -285,7 +285,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 	}
 
 	expBuilder := builder.NewBuilder().
-		ObjectID("origin.internalId").
+		ObjectID("origin.followingId").
 		ObjectID("folderId").
 		Int("rank")
 
@@ -322,7 +322,7 @@ func (w Inbox) FilteredByFollowing() model.Following {
 		return result
 	}
 
-	token := w._context.QueryParam("origin.internalId")
+	token := w._context.QueryParam("origin.followingId")
 
 	if followingID, err := primitive.ObjectIDFromHex(token); err == nil {
 		followingService := w._factory.Following()
@@ -428,7 +428,7 @@ func (w Inbox) Message() (model.Message, error) {
 			}
 
 			expBuilder := builder.NewBuilder().
-				ObjectID("origin.internalId").
+				ObjectID("origin.followingId").
 				Int("rank")
 
 			rank := expBuilder.Evaluate(w._context.Request().URL.Query())

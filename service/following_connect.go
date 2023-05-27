@@ -8,10 +8,13 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -210,6 +213,44 @@ func (service *Following) poll(following *model.Following, link digit.Link, impo
 		return derp.Wrap(err, location, "Error importing feed", link)
 	}
 
+	return nil
+}
+
+// saveToInbox adds/updates an individual Message based on an RSS item
+func (service *Following) saveDocument(following *model.Following, document *streams.Document) error {
+
+	const location = "service.Following.saveDocument"
+
+	message := model.NewMessage()
+
+	// Search for an existing Message that matches the parameter
+	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
+		if !derp.NotFound(err) {
+			return derp.Wrap(err, location, "Error loading message")
+		}
+	}
+
+	// Set/Update the message with information from the ActivityStream
+	if message.IsNew() {
+		message.UserID = following.UserID
+		message.FolderID = following.FolderID
+		message.Origin = following.Origin()
+	}
+
+	spew.Dump("service.Following.saveDocument ==============", document.Value())
+	message.URL = document.ID()
+	message.Label = document.Name()
+	message.Summary = document.Summary()
+	message.ImageURL = document.ImageURL()
+	message.AttributedTo = convert.ActivityPubPersonLinks(document.AttributedTo())
+	message.ContentHTML = document.Content()
+
+	// Save the message to the database
+	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Yee. Haw.
 	return nil
 }
 

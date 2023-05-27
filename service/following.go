@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 
 	"github.com/benpate/rosetta/mapof"
@@ -26,6 +27,7 @@ type Following struct {
 	userService   *User
 	inboxService  *Inbox
 	keyService    *EncryptionKey
+	httpClient    streams.Client
 	host          string
 	closed        chan bool
 }
@@ -40,12 +42,13 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, host string) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, httpClient streams.Client, host string) {
 	service.collection = collection
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.keyService = keyService
+	service.httpClient = httpClient
 	service.host = host
 }
 
