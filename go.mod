@@ -10,7 +10,7 @@ replace github.com/benpate/sherlock => ../../benpate/sherlock
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.266
+	github.com/aws/aws-sdk-go v1.44.270
 	github.com/benpate/data v0.26.0
 	github.com/benpate/data-mongo v0.24.1
 	github.com/benpate/derp v0.27.1
@@ -27,7 +27,7 @@ require (
 	github.com/benpate/rosetta v0.15.0
 	github.com/benpate/sherlock v0.0.0-00010101000000-000000000000
 	github.com/benpate/steranko v0.13.3
-	github.com/benpate/table v0.5.2
+	github.com/benpate/table v0.5.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
@@ -46,7 +46,7 @@ require (
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.3
-	github.com/tdewolff/minify/v2 v2.12.5
+	github.com/tdewolff/minify/v2 v2.12.6
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.13.0
