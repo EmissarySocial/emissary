@@ -13,6 +13,7 @@
 					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Emails</button>
 					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
 					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
+					<button type="button" role="tab" id="tab-cache" class="tab-label" aria-controls="panel-cache">Cache</button>
 				</div>
 
 				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
@@ -35,6 +36,14 @@
 						automatically generate SSL certificates for all websites.
 						Choose a readable/writeable location where SSL certificates will be cached.</p>
 					<div hx-get="/server/certificates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-cache" aria-labelledby="tab-cache" hidden="true">
+					<p>Add a cache for ActivityPub documents that are loaded from remote servers.  This is a cache
+						of publicly available documents, so it is safe to share this cache database among multiple
+						trusted servers.
+					</p>
+					<div hx-get="/server/cache" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 			</div>

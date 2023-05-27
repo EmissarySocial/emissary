@@ -209,6 +209,14 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			},
 		}, false, nil
 
+	case "cache":
+		return form.Element{
+			Type: "layout-vertical",
+			Children: []form.Element{
+				{Type: "text", Label: "Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
+				{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
+			},
+		}, false, nil
 	}
 
 	return form.Element{}, false, derp.NewBadRequestError("handler.getSetupForm", "Invalid form name", name)

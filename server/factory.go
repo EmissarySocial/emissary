@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"html/template"
@@ -12,11 +13,14 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/cache"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/cache"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
@@ -31,15 +35,15 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	themeService    service.Theme
-	templateService service.Template
-	widgetService   service.Widget
-	contentService  service.Content
-	providerService service.Provider
-	emailService    service.ServerEmail
-	taskQueue       *queue.Queue
-	httpCache       *cache.Cache
-	embeddedFiles   embed.FS
+	themeService      service.Theme
+	templateService   service.Template
+	widgetService     service.Widget
+	contentService    service.Content
+	providerService   service.Provider
+	emailService      service.ServerEmail
+	taskQueue         *queue.Queue
+	activityPubClient streams.Client
+	embeddedFiles     embed.FS
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
@@ -58,7 +62,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
-		httpCache:     cache.NewDefaultCache(),
 	}
 
 	// Global Theme service
@@ -88,6 +91,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		factory.FuncMap(),
 		sliceof.NewObject[mapof.String](),
 	)
+
+	factory.activityPubClient = factory.ActivityPubClient(mapof.String{})
 
 	go factory.start()
 
@@ -128,6 +133,7 @@ func (factory *Factory) start() {
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
+		factory.activityPubClient = factory.ActivityPubClient(config.ActivityPubCache)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -192,7 +198,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.contentService,
 		&factory.providerService,
 		factory.taskQueue,
-		factory.httpCache,
+		factory.activityPubClient,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 	)
@@ -495,4 +501,32 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	}
 
 	return result.Steranko(), nil
+}
+
+func (factory *Factory) ActivityPubClient(connection mapof.String) streams.Client {
+
+	result := sherlock.NewClient()
+
+	if len(connection) == 0 {
+		return result
+	}
+
+	// Try to connect to the server
+	server, err := mongodb.New(connection.GetString("connectString"), connection.GetString("database"))
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "server.Factory.ActivityPubClient", "Unable to connect to ActivityPub cache database.  Continuing without cache."))
+		return result
+	}
+
+	// Try to establish a db session
+	session, err := server.Session(context.Background())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "server.Factory.ActivityPubClient", "Unable to create ActivityPub cache session.  Continuing without cache."))
+		return result
+	}
+
+	// Create the new client
+	return cache.NewClient(session.Collection("ActivityPub"), result)
 }

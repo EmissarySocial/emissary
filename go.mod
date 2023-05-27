@@ -2,8 +2,11 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-// replace github.com/benpate/hannibal => ../../benpate/hannibal
-// replace github.com/benpate/rosetta => ../../benpate/rosetta
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+
+replace github.com/benpate/sherlock => ../../benpate/sherlock
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
@@ -22,6 +25,7 @@ require (
 	github.com/benpate/mediaserver v0.10.5
 	github.com/benpate/remote v0.10.3
 	github.com/benpate/rosetta v0.15.0
+	github.com/benpate/sherlock v0.0.0-00010101000000-000000000000
 	github.com/benpate/steranko v0.13.3
 	github.com/benpate/table v0.5.2
 	github.com/davecgh/go-spew v1.1.1
@@ -86,7 +90,6 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/karlseguin/ccache/v3 v3.0.3 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

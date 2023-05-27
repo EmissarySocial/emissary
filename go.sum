@@ -95,8 +95,6 @@ github.com/benpate/mediaserver v0.10.5 h1:dQjSoykEra50UlVXB8hZq90189n3CHomAQp47y
 github.com/benpate/mediaserver v0.10.5/go.mod h1:suCqz1kyZcSBxk9SndFfw3G+F7Tv7jp7v4RqBiBMx40=
 github.com/benpate/remote v0.10.3 h1:ptiqt4Elf91SlAYfUlXTtoHE3NcKkOEnEIQZpwIV7s4=
 github.com/benpate/remote v0.10.3/go.mod h1:Hq8ERLx87Oo1yZBoI9i/P4qfdwe8vZEvLlMRcljGoRU=
-github.com/benpate/rosetta v0.15.0 h1:MjyMTbMxtR+3VtXWSJB2q9cmaD1UKpdbQdQM/srQwGg=
-github.com/benpate/rosetta v0.15.0/go.mod h1:vu8hP3w9Yu1uV2cIzT3jgsSPUKe6rZYwXuTnXyercFE=
 github.com/benpate/steranko v0.13.3 h1:bzX7OP6d6HqQc3z3UB73qwQXeRSG6OecfRAk7/REHCI=
 github.com/benpate/steranko v0.13.3/go.mod h1:pkzLASy8kCoBTZNtLCDXh+zLcaYERd1LmWUvTM7uMVU=
 github.com/benpate/table v0.5.2 h1:UNAZue3y19R47crSJg17roL1w2rsVUF4w7IWeeUkxwM=
@@ -261,8 +259,6 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
-github.com/karlseguin/ccache/v3 v3.0.3 h1:cz+3tSdTrovp00xHPP3Y6ca/YuSl5kchhYG83wUPYN0=
-github.com/karlseguin/ccache/v3 v3.0.3/go.mod h1:qxC372+Qn+IBj8Pe3KvGjHPj0sWwEF7AeZVhsNPZ6uY=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
 github.com/kevinburke/ssh_config v1.2.0/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

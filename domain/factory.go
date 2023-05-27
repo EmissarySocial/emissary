@@ -16,7 +16,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/form"
-	"github.com/benpate/hannibal/cache"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
@@ -32,13 +32,13 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	themeService    *service.Theme
-	templateService *service.Template
-	widgetService   *service.Widget
-	contentService  *service.Content
-	providerService *service.Provider
-	taskQueue       *queue.Queue
-	httpCache       *cache.Cache
+	themeService      *service.Theme
+	templateService   *service.Template
+	widgetService     *service.Widget
+	contentService    *service.Content
+	providerService   *service.Provider
+	taskQueue         *queue.Queue
+	activityPubClient streams.Client
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -71,19 +71,19 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, httpCache *cache.Cache, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, activityPubClient streams.Client, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
 	// Base Factory object
 	factory := Factory{
-		themeService:    themeService,
-		templateService: templateService,
-		widgetService:   widgetService,
-		contentService:  contentService,
-		providerService: providerService,
-		taskQueue:       taskQueue,
-		httpCache:       httpCache,
+		themeService:      themeService,
+		templateService:   templateService,
+		widgetService:     widgetService,
+		contentService:    contentService,
+		providerService:   providerService,
+		taskQueue:         taskQueue,
+		activityPubClient: activityPubClient,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
