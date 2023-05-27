@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -237,7 +236,6 @@ func (service *Following) saveDocument(following *model.Following, document *str
 		message.Origin = following.Origin()
 	}
 
-	spew.Dump("service.Following.saveDocument ==============", document.Value())
 	message.URL = document.ID()
 	message.Label = document.Name()
 	message.Summary = document.Summary()

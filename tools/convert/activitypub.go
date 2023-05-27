@@ -4,12 +4,9 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func ActivityPubPersonLinks(person streams.Document) []model.PersonLink {
-
-	spew.Dump("ActivityPubPersonLinks -------------", person.Value())
 
 	result := make([]model.PersonLink, 0)
 
@@ -25,8 +22,6 @@ func ActivityPubPersonLinks(person streams.Document) []model.PersonLink {
 			derp.Report(err)
 		}
 	}
-
-	spew.Dump(result)
 
 	return result
 }
