@@ -126,7 +126,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	templates := templateService.ListByContainerLimited(renderer.templateRole(), step.Templates)
 
 	if len(templates) == 0 {
-		return derp.NewBadRequestError(location, "No child templates available for this stream", renderer.templateRole())
+		return derp.NewBadRequestError(location, "No child templates available for this Role", renderer.templateRole())
 	}
 
 	// Find the "selected" template

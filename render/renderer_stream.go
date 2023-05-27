@@ -523,12 +523,6 @@ func (w Stream) Children() QueryBuilder[model.StreamSummary] {
 	return w.makeStreamQueryBuilder(exp.Equal("parentId", w.stream.StreamID))
 }
 
-// Replies returns all Streams that are "in reply to" the current Stream
-func (w Stream) Replies() QueryBuilder[model.StreamSummary] {
-	// TODO: HIGH: Replies to be merged into Mentions...
-	return w.makeStreamQueryBuilder(exp.Equal("inReplyTo", w.stream.StreamID.Hex()))
-}
-
 // makeStreamQueryBuilder returns a fully initialized RenderBuilder
 func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
 

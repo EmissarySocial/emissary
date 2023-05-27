@@ -51,19 +51,21 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.Label = object.Name()
 	message.Summary = object.Summary()
 	message.ImageURL = object.ImageURL()
+	message.AttributedTo = collectPersonLinks(document)
+	message.ContentHTML = object.Content()
+	message.FolderID = following.FolderID
 
-	for attributedTo := object.AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Tail() {
-		if author, err := object.AttributedTo().Load(); err == nil {
-			message.AddAttributedTo(model.PersonLink{
-				Name:       author.Name(),
-				ProfileURL: author.ID(),
-				ImageURL:   author.ImageURL(),
+	if inReplyTo := object.InReplyTo(); !inReplyTo.IsNil() {
+		if parent, _ := object.InReplyTo().Load(); !parent.IsNil() {
+			message.InReplyTo.Append(model.DocumentLink{
+				URL:          parent.ID(),
+				Label:        parent.Name(),
+				Summary:      parent.Summary(),
+				ImageURL:     parent.ImageURL(),
+				AttributedTo: collectPersonLinks(parent.AttributedTo()),
 			})
 		}
 	}
-
-	message.ContentHTML = object.Content()
-	message.FolderID = following.FolderID
 
 	if publishDate := object.Published().Unix(); publishDate > 0 {
 		message.PublishDate = publishDate
@@ -80,4 +82,20 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 
 	// Hooo-dat?!?!?
 	return nil
+}
+
+func collectPersonLinks(document streams.Document) []model.PersonLink {
+	result := make([]model.PersonLink, 0)
+
+	for attributedTo := document.Object().AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Tail() {
+		if author, err := attributedTo.Load(); err == nil {
+			result = append(result, model.PersonLink{
+				Name:       author.Name(),
+				ProfileURL: author.ID(),
+				ImageURL:   author.ImageURL(),
+			})
+		}
+	}
+
+	return result
 }

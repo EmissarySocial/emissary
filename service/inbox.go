@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,8 +16,10 @@ import (
 
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
-	collection   data.Collection
-	blockService *Block
+	collection            data.Collection
+	streamResponseService *StreamResponse
+	blockService          *Block
+	host                  string
 }
 
 // NewInbox returns a fully populated Inbox service
@@ -29,9 +32,11 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(collection data.Collection, blockService *Block) {
+func (service *Inbox) Refresh(collection data.Collection, blockService *Block, streamResponseService *StreamResponse, host string) {
 	service.collection = collection
 	service.blockService = blockService
+	service.streamResponseService = streamResponseService
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -87,6 +92,10 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 	// Calculate the rank for this message, using the number of messages with an identical PublishDate
 	if err := service.CalculateRank(message); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error calculating rank", message)
+	}
+
+	if err := service.CalculateRepsponses(message); err != nil {
+		return derp.Wrap(err, "service.Inbox.Save", "Error handling responses", message)
 	}
 
 	// Save the value to the database
@@ -283,6 +292,8 @@ func (service *Inbox) SetResponse(userID primitive.ObjectID, messageID primitive
 	return nil
 }
 
+// CalculateRank generates a unique rank for the message based on the PublishDate and the number of messages
+// that already exist in the database with this PublishDate.
 func (service *Inbox) CalculateRank(message *model.Message) error {
 
 	count, err := queries.CountMessages(service.collection, message.UserID, message.FolderID, message.PublishDate)
@@ -292,6 +303,38 @@ func (service *Inbox) CalculateRank(message *model.Message) error {
 	}
 
 	message.Rank = (message.PublishDate * 1000) + int64(count)
+	return nil
+}
+
+// CalculateResponses handles situations where we receive an inbox message that is a response to
+// a local Stream.  In that case, we need to add a StreamResponse record as well.
+func (service *Inbox) CalculateRepsponses(message *model.Message) error {
+
+	// If this message is not a reply, then we're done.
+	inReplyTo := message.InReplyTo.First()
+
+	// RULE: If there is no reply, then there's nothing to do.
+	if inReplyTo.IsEmpty() {
+		return nil
+	}
+
+	// RULE: If the reply is not to a local stream, then there's nothing to do.
+	if domain.NameOnly(inReplyTo.URL) != domain.NameOnly(service.host) {
+		return nil
+	}
+
+	// Create a new StreamResponse record
+	streamResponse := model.NewStreamResponse()
+	streamResponse.Type = model.ResponseTypeReply
+	streamResponse.Actor = message.Author()
+	streamResponse.Origin = message.Origin
+	streamResponse.Stream = inReplyTo
+
+	// Save the StreamResponse record
+	if err := service.streamResponseService.Save(&streamResponse, "CalculateResponses"); err != nil {
+		return derp.Wrap(err, "service.Inbox", "Error saving StreamResponse", message, streamResponse)
+	}
+
 	return nil
 }
 
