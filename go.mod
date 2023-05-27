@@ -22,7 +22,7 @@ require (
 	github.com/benpate/mediaserver v0.10.5
 	github.com/benpate/remote v0.10.3
 	github.com/benpate/rosetta v0.15.0
-	github.com/benpate/steranko v0.13.3
+	github.com/benpate/steranko v0.13.4
 	github.com/benpate/table v0.5.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
