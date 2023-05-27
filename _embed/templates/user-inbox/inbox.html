@@ -19,12 +19,12 @@
 			<h1 style="margin-top:0px; flex-grow:1;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
 			<div class="text-sm">
 				{{- if $filter.IsZero -}}
-					<button hx-get="/@me/inbox-filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
+					<button hx-get="/@me/inbox/inbox-filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
 				{{- else -}}
-					<button hx-get="/@me/inbox-filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
+					<button hx-get="/@me/inbox/inbox-filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
 				{{- end -}}
-				<button hx-get="/@me/inbox-folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
-				<button hx-get="/@me/following-add?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
+				<button hx-get="/@me/inbox/inbox-folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
+				<button hx-get="/@me/inbox/following-add?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
 			</div>
 		</div>
 

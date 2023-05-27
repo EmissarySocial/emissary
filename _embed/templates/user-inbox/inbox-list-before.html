@@ -11,7 +11,7 @@
 	{{- $layout := $folder.Layout | lowerCase -}}
 
 	<div 
-		hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$firstMessage.Rank}}"
+		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$firstMessage.Rank}}"
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-push-url="false"
@@ -28,7 +28,7 @@
 			role="button"
 			class="message" 
 			style="max-width:640px;"
-			hx-get="/@me/message-{{$layout}}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
+			hx-get="/@me/inbox/message-{{$layout}}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
 			hx-push-url="false">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}

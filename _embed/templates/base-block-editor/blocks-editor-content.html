@@ -1,13 +1,13 @@
 {{- $blocks := (.BlocksByType "CONTENT").Slice -}}
 
 <div role="tablist" class="pills">
-	<div hx-get="/@me/blocks?tab=ACTOR" role="tab" class="turboclick">People</div>
-	<div hx-get="/@me/blocks?tab=DOMAIN" role="tab" class="turboclick">Domains</div>
-	<div hx-get="/@me/blocks?tab=CONTENT" role="tab" class="turboclick" aria-selected="true">Tags & Keywords</div>
+	<div hx-get="/@me/inbox/blocks?tab=ACTOR" role="tab" class="turboclick">People</div>
+	<div hx-get="/@me/inbox/blocks?tab=DOMAIN" role="tab" class="turboclick">Domains</div>
+	<div hx-get="/@me/inbox/blocks?tab=CONTENT" role="tab" class="turboclick" aria-selected="true">Tags & Keywords</div>
 </div>
 
 <table class="table">
-	<tr hx-get="/@me/block-keywords" role="button" class="link">
+	<tr hx-get="/@me/inbox/block-keywords" role="button" class="link">
 		<td colspan="2">
 			{{icon "add"}}
 			Block Tags &amp; Keywords

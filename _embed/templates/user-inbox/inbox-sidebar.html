@@ -1,21 +1,21 @@
 {{- $selectedID := .SelectedID -}}
 <div id="app-sidebar" class="app-sidebar" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 
-	<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	<div class="pos-sticky" style="top:96px;">
 
-		<form class="sortable" hx-post="/@me/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
+		<form class="sortable" hx-post="/@me/inbox/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
 				{{- if eq $selectedID .FolderID -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item selected ellipsis hover-trigger folder turboclick">
+					<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item selected ellipsis hover-trigger folder turboclick">
 						{{iconFilled .Icon }} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
 					</div>
 				{{- else -}}
-					<div role="link" hx-get="/@me/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder turboclick">
+					<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder turboclick">
 						{{icon .Icon}} {{.Label}}
 						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
 						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
@@ -25,19 +25,19 @@
 
 		</form>
 		
-		<div role="button" hx-get="/@me/inbox-folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
+		<div role="button" hx-get="/@me/inbox/inbox-folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
 
 		<hr>
 
 		{{- if .HasSelection -}}
-			<div role="button" hx-get="/@me/following" class="menu-item turboclick">{{icon "settings"}} Settings</div>
+			<div role="button" hx-get="/@me/inbox/following" class="menu-item turboclick">{{icon "settings"}} Settings</div>
 		{{- else -}}
-			<div role="button" hx-get="/@me/following" class="selected menu-item turboclick">{{icon "settings-fill"}} Settings</div>
+			<div role="button" hx-get="/@me/inbox/following" class="selected menu-item turboclick">{{icon "settings-fill"}} Settings</div>
 		{{- end -}}
 	</div>
 
 	<div 
-		hx-get="/@me/inbox-sidebar" 
+		hx-get="/@me/inbox/inbox-sidebar" 
 		hx-swap="outerHTML" 
 		hx-trigger="refreshSidebar from:body" 
 		hx-push-url="false" 

@@ -1,7 +1,7 @@
 {{- $following := .Following -}}
 
 <div class="table">
-	<div class="link flex-row" hx-get="/@me/following-add" style="align-items:center" role="button" hx-push-url="false">
+	<div class="link flex-row" hx-get="/@me/inbox/following-add" style="align-items:center" role="button" hx-push-url="false">
 
 		<div class="flex-row" style="flex-grow:1">
 
@@ -48,7 +48,7 @@
 			</div>
 
 			<div class="align-right" hx-push-url="false">
-				<button class="text-sm" hx-get="/@me/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
+				<button class="text-sm" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
 			</div>
 		</div>
 	{{- end -}}

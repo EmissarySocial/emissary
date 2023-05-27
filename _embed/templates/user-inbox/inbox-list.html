@@ -11,7 +11,7 @@
 	{{- if gt $folder.ReadDate 0 -}}
 
 	<div 
-		hx-get="/@me/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
+		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
 		hx-target="this"
 		hx-trigger="click once"
 		hx-swap="beforebegin"
@@ -40,7 +40,7 @@
 			role="button"
 			class="message"
 			style="max-width:640px;"
-			hx-get="/@me/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
+			hx-get="/@me/inbox/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.internalId={{$internalID}}"
 			hx-trigger="click once"
 			hx-push-url="false">
 
@@ -67,7 +67,7 @@
 	<!-- Target zone to load additional pages once we scroll down this far -->
 	{{- $lastMessage := $inbox.Last -}}
 	<div 
-		hx-get="/@me/inbox-list?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&remote=true"
+		hx-get="/@me/inbox/inbox-list?folderId={{$folderID}}&origin.internalId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&remote=true"
 		hx-push-url="false" 
 		hx-trigger="intersect once delay:100ms" 
 		hx-target="this" 

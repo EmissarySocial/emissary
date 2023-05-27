@@ -8,7 +8,7 @@
 	</div>
 
 	<div id="panel-user" role="tabpanel" aria-labelledby="tab-user" hidden="false">
-		<form hx-post="/@me/add-block">
+		<form hx-post="/@me/inbox/add-block">
 			<input type="hidden" name="type" value="ACTOR">
 			<div class="layout layout-vertical">
 				<div class="layout-title">Block or Mute an Individual</div>
@@ -30,7 +30,7 @@
 
 	<div id="panel-domain" role="tabpanel" aria-labelledby="tab-domain" hidden="true">
 
-		<form hx-post="/@me/add-block">
+		<form hx-post="/@me/inbox/add-block">
 			<input type="hidden" name="type" value="DOMAIN">
 			<div class="layout layout-vertical">
 				<div class="layout-title">Block or Mute an Entire Domain</div>

@@ -99,7 +99,7 @@
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"as-modal", "steps": [
-						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
+						{"step":"edit", "options":["delete:/@me/inbox/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
 							"label":"Folder Settings",
 							"children": [
@@ -295,7 +295,7 @@
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"as-modal", "steps":[
-						{"step":"edit", "options":"delete:/@me/following-delete?followingId={{.ObjectID}}", "form":{
+						{"step":"edit", "options":"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", "form":{
 							"type": "layout-tabs",
 							"label":"Edit Follow Settings",
 							"children":[{

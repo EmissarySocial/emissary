@@ -10,8 +10,8 @@
 
 		<div role="tablist" class="underlined space-above space-below" hx-push-url="true">
 			<span role="tab" class="turboclick" aria-selected="true">{{icon "star-fill"}} Following</span>
-			<span role="tab" class="turboclick" hx-get="/@me/followers">{{icon "person"}} Followers</span>
-			<span role="tab" class="turboclick" hx-get="/@me/blocks">{{icon "block"}} Blocks</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/blocks">{{icon "block"}} Blocks</span>
 		</div>
 
 		{{- template "inbox-following-list" . -}}
