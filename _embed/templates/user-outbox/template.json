@@ -1,18 +1,18 @@
 {
-	"templateId":"user-profile",
-	"templateRole":"user-profile",
-	"model":"profile",
-	"label":"User Profile",
+	"templateId":"user-outbox",
+	"templateRole":"user-outbox",
+	"model":"outbox",
+	"label":"User Outbox",
 	"description":"Profile displays everything about a user, including their inbox and outbox information",
 	"icon":"inbox",
-	"extends":["base-block-editor"],
+	"extends":[],
 	"containedBy": [],
 	"schema": {
 		"title":"User Profile",
 		"type":"object",
 		"properties": {
 			"feeds": {
-				"description":"Array of people to render on the page",
+				"description":"Array of additional links to render on the profile page",
 				"type":"array",
 				"items": {
 					"type":"object",
@@ -28,25 +28,9 @@
 			}
 		}
 	},
-	"states": {
-		"default": {
-			"label":"Inbox only has default state"
-		}
-	},
-	"roles": {
-		"owner": {
-			"label":"Inbox Owner",
-			"decription":"Full control"
-		}
-	},
-	"bundles": {
-		"stylesheet": {
-			"contentType":"text/css"
-		},
-		"hyperscript":{
-			"contentType":"text/hyperscript"
-		}
-	},
+	"states": {},
+	"roles": {},
+	"bundles": {},
 	"actions": {
 		"view": {
 			"steps":[
@@ -275,174 +259,6 @@
 		},
 
 		"feed": {"step":"view-feed"},
-
-		"websub": {"step":"websub"},
-
-		"inbox": {
-			"roles": ["self"],
-			"step": "view-html"
-		},
-		"inbox-sidebar": {
-			"roles": ["self"],
-			"step":"view-html"
-		},
-		"inbox-list": {
-			"roles": ["self"],
-			"step":"view-html"
-		},
-		"inbox-list-before": {
-			"roles": ["self"],
-			"step":"view-html"
-		},
-		"inbox-filter":{
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
-				]}
-			]
-		},
-		"inbox-folder-add": {
-			"roles":["self"],
-			"steps": [
-				{"step":"set-query-param", "folderId":"new"},
-				{"step":"with-folder", "steps": [
-					{"step":"as-modal", "steps": [
-						{"step":"edit", "form": {
-							"type":"layout-vertical",
-							"label":"Add a Folder",
-							"children": [
-								{"type":"text", "path":"label", "label":"Name"},
-								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
-								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
-							]}
-						},
-						{"step":"save"}
-					]},
-					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
-				]}
-			]
-		},
-		"inbox-folder-edit": {
-			"roles":["self"],
-			"steps": [
-				{"step":"with-folder", "steps": [
-					{"step":"as-modal", "steps": [
-						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
-							"type":"layout-vertical",
-							"label":"Folder Settings",
-							"children": [
-								{"type":"text", "path":"label", "label":"Name"},
-								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
-								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
-							]}
-						},
-						{"step":"save"}
-					]},
-					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
-				]}
-			]
-		},
-		"inbox-folder-update":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-folder", "steps":[
-					{"step":"edit", "form": {
-						"type":"layout-vertical",
-						"children": [
-							{"type":"text", "path":"label", "label":"Name"},
-							{"type":"text", "path":"layout", "label":"Layout"},
-							{"type":"text", "path":"filter", "label":"Filter"}
-						]}
-					},
-					{"step":"save"}
-				]},
-				{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"},
-				{"step":"trigger-event", "event":{"refreshPage":true}}
-			]
-		},
-		"inbox-folder-delete": {
-			"roles":["self"],
-			"steps": [
-				{"step":"with-folder", "steps": [
-					{"step":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
-					{"step":"forward-to", "url":"/@me/inbox"}
-				]}
-			]
-		},
-		"inbox-folder-sort":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-folder", "steps":[
-					{"step":"sort"}
-				]}
-			]
-		},
-		"activitypub-profile": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"view-activitypub", "file":"activitypub-profile"}
-				]}
-			]
-		},
-		"message-response":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-response"}
-				]},
-				{"step":"view-html", "file":"message-response", "method":"both"}
-			]
-		},
-		"message-reply":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-query-param", "postTo":"/@me/message-reply?messageId={{.QueryParam `messageId`}}"},
-					{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-					{"step":"refresh-page"}
-				]}
-			]
-		},
-		"message-chat": {
-			"roles": ["self"],
-			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"message-magazine": {
-			"roles": ["self"],
-			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"message-newspaper": {
-			"roles": ["self"],
-			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"message-social": {
-			"roles": ["self"],
-			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"message-delete": {
-			"roles": ["self"],
-			"steps": [{"step":"with-message", "steps": [
-				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
-				{"step":"reload-page"}
-			]}]
-		}
+		"websub": {"step":"websub"}
 	}
 }	

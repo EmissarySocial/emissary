@@ -118,6 +118,10 @@ func (w Block) executeTemplate(writer io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
+func (w Block) clone(action string) (Renderer, error) {
+	return NewBlock(w._factory, w._context, w.block, w._template, action)
+}
+
 /******************************************
  * DATA ACCESSORS
  ******************************************/

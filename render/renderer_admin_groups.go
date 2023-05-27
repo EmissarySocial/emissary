@@ -118,6 +118,10 @@ func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
+func (w Group) clone(action string) (Renderer, error) {
+	return NewGroup(w._factory, w.context(), w._template, w.group, action)
+}
+
 /******************************************
  * DATA ACCESSORS
  ******************************************/

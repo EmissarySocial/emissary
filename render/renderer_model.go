@@ -144,3 +144,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	// Generate HTML template
 	return subStream.Render()
 }
+
+func (w Model) clone(action string) (Renderer, error) {
+	return NewModel(w._factory, w._context, w._service, w._object, w._template, action)
+}

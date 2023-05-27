@@ -38,7 +38,7 @@ func (step StepServerRedirect) Post(renderer Renderer, _ io.Writer) error {
 // redirect creates a new renderer on this object with the requested Action and then continues as a GET request.
 func (step StepServerRedirect) redirect(renderer Renderer, buffer io.Writer) error {
 
-	newRenderer, err := NewRenderer(renderer.factory(), renderer.context(), renderer.object(), step.Action)
+	newRenderer, err := renderer.clone(step.Action)
 
 	if err != nil {
 		return derp.Wrap(err, "render.StepServerRedirect.Redirect", "Error creating new renderer")

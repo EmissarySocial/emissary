@@ -14,19 +14,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetProfile handles GET requests
-func GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderProfile(serverFactory, render.ActionMethodGet)
+// GetOutbox handles GET requests
+func GetOutbox(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderOutbox(serverFactory, render.ActionMethodGet)
 }
 
-// PostProfile handles POST/DELETE requests
-func PostProfile(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderProfile(serverFactory, render.ActionMethodPost)
+// PostOutbox handles POST/DELETE requests
+func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderOutbox(serverFactory, render.ActionMethodPost)
 }
 
-func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
+func GetOutboxAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.GetProfileAvatar"
+	const location = "handler.GetOutboxAvatar"
 
 	return func(ctx echo.Context) error {
 
@@ -84,10 +84,10 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// renderProfile is the common Profile handler for both GET and POST requests
-func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+// renderOutbox is the common Outbox handler for both GET and POST requests
+func renderOutbox(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
-	const location = "handler.renderProfile"
+	const location = "handler.renderOutbox"
 
 	return func(context echo.Context) error {
 
@@ -123,7 +123,7 @@ func renderProfile(serverFactory *server.Factory, actionMethod render.ActionMeth
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
 
-		renderer, err := render.NewProfile(factory, sterankoContext, &user, actionID)
+		renderer, err := render.NewOutbox(factory, sterankoContext, &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer")

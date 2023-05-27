@@ -17,29 +17,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Outbox struct {
+type Inbox struct {
 	user *model.User
 	Common
 }
 
-func NewOutbox(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Outbox, error) {
+func NewInbox(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Inbox, error) {
 
 	// Load the Template
 	templateService := factory.Template()
-	template, err := templateService.Load("user-outbox")
+	template, err := templateService.Load("user-inbox") // TODO: Users should get to select their inbox template
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, "render.NewOutbox", "Error loading template")
+		return Inbox{}, derp.Wrap(err, "render.NewInbox", "Error loading template")
 	}
 
 	// Create the underlying Common renderer
 	common, err := NewCommon(factory, ctx, template, actionID)
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, "render.NewOutbox", "Error creating common renderer")
+		return Inbox{}, derp.Wrap(err, "render.NewInbox", "Error creating common renderer")
 	}
 
-	return Outbox{
+	return Inbox{
 		user:   user,
 		Common: common,
 	}, nil
@@ -49,14 +49,14 @@ func NewOutbox(factory Factory, ctx *steranko.Context, user *model.User, actionI
  * RENDERER INTERFACE
  ******************************************/
 
-// Render generates the string value for this Outbox
-func (w Outbox) Render() (template.HTML, error) {
+// Render generates the string value for this Inbox
+func (w Inbox) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
 	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Outbox.Render", "Error generating HTML", w._context.Request().URL.String()))
+		return "", derp.Report(derp.Wrap(err, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String()))
 
 	}
 
@@ -64,20 +64,20 @@ func (w Outbox) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-// View executes a separate view for this Outbox
-func (w Outbox) View(actionID string) (template.HTML, error) {
+// View executes a separate view for this Inbox
+func (w Inbox) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewOutbox(w._factory, w._context, w.user, actionID)
+	renderer, err := NewInbox(w._factory, w._context, w.user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "render.Outbox.View", "Error creating Outbox renderer")
+		return template.HTML(""), derp.Wrap(err, "render.Inbox.View", "Error creating Inbox renderer")
 	}
 
 	return renderer.Render()
 }
 
 // NavigationID returns the ID to use for highlighing navigation menus
-func (w Outbox) NavigationID() string {
+func (w Inbox) NavigationID() string {
 
 	// TODO: This is returning incorrect values when we CREATE a new outbox item.
 	// Is there a better way to handle this that doesn't just HARDCODE stuff in here?
@@ -96,48 +96,48 @@ func (w Outbox) NavigationID() string {
 	return ""
 }
 
-func (w Outbox) PageTitle() string {
+func (w Inbox) PageTitle() string {
 	return w.user.DisplayName
 }
 
-func (w Outbox) Permalink() string {
+func (w Inbox) Permalink() string {
 	return w.Host() + "/@" + w.user.UserID.Hex()
 }
 
-func (w Outbox) Token() string {
+func (w Inbox) Token() string {
 	return "users"
 }
 
-func (w Outbox) object() data.Object {
+func (w Inbox) object() data.Object {
 	return w.user
 }
 
-func (w Outbox) objectID() primitive.ObjectID {
+func (w Inbox) objectID() primitive.ObjectID {
 	return w.user.UserID
 }
 
-func (w Outbox) objectType() string {
+func (w Inbox) objectType() string {
 	return "User"
 }
 
-func (w Outbox) schema() schema.Schema {
+func (w Inbox) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
-func (w Outbox) service() service.ModelService {
+func (w Inbox) service() service.ModelService {
 	return w._factory.User()
 }
 
-func (w Outbox) templateRole() string {
+func (w Inbox) templateRole() string {
 	return "outbox"
 }
 
-func (w Outbox) clone(action string) (Renderer, error) {
-	return NewOutbox(w._factory, w._context, w.user, action)
+func (w Inbox) clone(action string) (Renderer, error) {
+	return NewInbox(w._factory, w._context, w.user, action)
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Outbox) UserCan(actionID string) bool {
+func (w Inbox) UserCan(actionID string) bool {
 
 	action, ok := w._template.Action(actionID)
 
@@ -154,12 +154,12 @@ func (w Outbox) UserCan(actionID string) bool {
  * Data Accessors
  ******************************************/
 
-func (w Outbox) UserID() string {
+func (w Inbox) UserID() string {
 	return w.user.UserID.Hex()
 }
 
 // Myself returns TRUE if the current user is viewing their own profile
-func (w Outbox) Myself() bool {
+func (w Inbox) Myself() bool {
 	authorization := getAuthorization(w._context)
 
 	if err := authorization.Valid(); err == nil {
@@ -169,83 +169,83 @@ func (w Outbox) Myself() bool {
 	return false
 }
 
-func (w Outbox) Username() string {
+func (w Inbox) Username() string {
 	return w.user.Username
 }
 
-func (w Outbox) FollowerCount() int {
+func (w Inbox) FollowerCount() int {
 	return w.user.FollowerCount
 }
 
-func (w Outbox) FollowingCount() int {
+func (w Inbox) FollowingCount() int {
 	return w.user.FollowingCount
 }
 
-func (w Outbox) BlockCount() int {
+func (w Inbox) BlockCount() int {
 	return w.user.BlockCount
 }
 
-func (w Outbox) DisplayName() string {
+func (w Inbox) DisplayName() string {
 	return w.user.DisplayName
 }
 
-func (w Outbox) StatusMessage() string {
+func (w Inbox) StatusMessage() string {
 	return w.user.StatusMessage
 }
 
-func (w Outbox) ProfileURL() string {
+func (w Inbox) ProfileURL() string {
 	return w.user.ProfileURL
 }
 
-func (w Outbox) ImageURL() string {
+func (w Inbox) ImageURL() string {
 	return w.user.ActivityPubAvatarURL()
 }
 
-func (w Outbox) Location() string {
+func (w Inbox) Location() string {
 	return w.user.Location
 }
 
-func (w Outbox) Links() []model.PersonLink {
+func (w Inbox) Links() []model.PersonLink {
 	return w.user.Links
 }
 
-func (w Outbox) ActivityPubURL() string {
+func (w Inbox) ActivityPubURL() string {
 	return w.user.ActivityPubURL()
 }
 
-func (w Outbox) ActivityPubAvatarURL() string {
+func (w Inbox) ActivityPubAvatarURL() string {
 	return w.user.ActivityPubAvatarURL()
 }
 
-func (w Outbox) ActivityPubInboxURL() string {
+func (w Inbox) ActivityPubInboxURL() string {
 	return w.user.ActivityPubInboxURL()
 }
 
-func (w Outbox) ActivityPubOutboxURL() string {
+func (w Inbox) ActivityPubOutboxURL() string {
 	return w.user.ActivityPubOutboxURL()
 }
 
-func (w Outbox) ActivityPubFollowersURL() string {
+func (w Inbox) ActivityPubFollowersURL() string {
 	return w.user.ActivityPubFollowersURL()
 }
 
-func (w Outbox) ActivityPubFollowingURL() string {
+func (w Inbox) ActivityPubFollowingURL() string {
 	return w.user.ActivityPubFollowingURL()
 }
 
-func (w Outbox) ActivityPubLikedURL() string {
+func (w Inbox) ActivityPubLikedURL() string {
 	return w.user.ActivityPubLikedURL()
 }
 
-func (w Outbox) ActivityPubPublicKeyURL() string {
+func (w Inbox) ActivityPubPublicKeyURL() string {
 	return w.user.ActivityPubPublicKeyURL()
 }
 
 /******************************************
- * Outbox / Outbox Methods
+ * Inbox / Outbox Methods
  ******************************************/
 
-func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
+func (w Inbox) Outbox() QueryBuilder[model.StreamSummary] {
 
 	expressionBuilder := builder.NewBuilder().
 		Int("publishDate")
@@ -260,7 +260,7 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	return result
 }
 
-func (w Outbox) Followers() QueryBuilder[model.FollowerSummary] {
+func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 
 	expressionBuilder := builder.NewBuilder().
 		String("displayName")
@@ -275,12 +275,12 @@ func (w Outbox) Followers() QueryBuilder[model.FollowerSummary] {
 	return result
 }
 
-func (w Outbox) Following() ([]model.FollowingSummary, error) {
+func (w Inbox) Following() ([]model.FollowingSummary, error) {
 
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Outbox.Following", "Must be signed in to view following")
+		return nil, derp.NewUnauthorizedError("render.Inbox.Following", "Must be signed in to view following")
 	}
 
 	followingService := w._factory.Following()
@@ -288,20 +288,20 @@ func (w Outbox) Following() ([]model.FollowingSummary, error) {
 	return followingService.QueryByUser(userID)
 }
 
-func (w Outbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
+func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
 
 	// Get the UserID from the authentication scope
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Outbox.FollowingByFolder", "Must be signed in to view following")
+		return nil, derp.NewUnauthorizedError("render.Inbox.FollowingByFolder", "Must be signed in to view following")
 	}
 
 	// Get the followingID from the token
 	followingID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "render.Outbox.FollowingByFolder", "Invalid following ID", token)
+		return nil, derp.Wrap(err, "render.Inbox.FollowingByFolder", "Invalid following ID", token)
 	}
 
 	// Try to load the matching records
@@ -310,7 +310,7 @@ func (w Outbox) FollowingByFolder(token string) ([]model.FollowingSummary, error
 
 }
 
-func (w Outbox) Blocks() QueryBuilder[model.Block] {
+func (w Inbox) Blocks() QueryBuilder[model.Block] {
 
 	expressionBuilder := builder.NewBuilder()
 
@@ -324,7 +324,7 @@ func (w Outbox) Blocks() QueryBuilder[model.Block] {
 	return result
 }
 
-func (w Outbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
+func (w Inbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
 
 	expressionBuilder := builder.NewBuilder()
 
@@ -339,7 +339,7 @@ func (w Outbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
 	return result
 }
 
-func (w Outbox) CountBlocks(blockType string) (int, error) {
+func (w Inbox) CountBlocks(blockType string) (int, error) {
 	return w._factory.Block().CountByType(w.objectID(), blockType)
 }
 
@@ -348,18 +348,18 @@ func (w Outbox) CountBlocks(blockType string) (int, error) {
  ******************************************/
 
 // Inbox returns a slice of messages in the current User's inbox
-func (w Outbox) Inbox() (QueryBuilder[model.Message], error) {
+func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("render.Outbox.Inbox", "Must be signed in to view inbox")
+		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("render.Inbox.Inbox", "Must be signed in to view inbox")
 	}
 
 	folderID, err := primitive.ObjectIDFromHex(w.context().Request().URL.Query().Get("folderId"))
 
 	if err != nil {
-		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Outbox.Inbox", "Invalid folderId", w.context().QueryParam("folderId"))
+		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Inbox.Inbox", "Invalid folderId", w.context().QueryParam("folderId"))
 	}
 
 	expBuilder := builder.NewBuilder().
@@ -378,7 +378,7 @@ func (w Outbox) Inbox() (QueryBuilder[model.Message], error) {
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
-func (w Outbox) IsInboxEmpty(inbox []model.Message) bool {
+func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 
 	if len(inbox) > 0 {
 		return false
@@ -392,7 +392,7 @@ func (w Outbox) IsInboxEmpty(inbox []model.Message) bool {
 }
 
 // FIlteredByFollowing returns the Following record that is being used to filter the Inbox
-func (w Outbox) FilteredByFollowing() model.Following {
+func (w Inbox) FilteredByFollowing() model.Following {
 
 	result := model.NewFollowing()
 
@@ -414,38 +414,38 @@ func (w Outbox) FilteredByFollowing() model.Following {
 }
 
 // Folders returns a slice of all folders owned by the current User
-func (w Outbox) Folders() (model.FolderList, error) {
+func (w Inbox) Folders() (model.FolderList, error) {
 
 	result := model.NewFolderList()
 
 	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
-		return result, derp.NewForbiddenError("render.Outbox.Folders", "Not authenticated")
+		return result, derp.NewForbiddenError("render.Inbox.Folders", "Not authenticated")
 	}
 
 	folderService := w._factory.Folder()
 	folders, err := folderService.QueryByUserID(w.AuthenticatedID())
 
 	if err != nil {
-		return result, derp.Wrap(err, "render.Outbox.Folders", "Error loading folders")
+		return result, derp.Wrap(err, "render.Inbox.Folders", "Error loading folders")
 	}
 
 	result.Folders = folders
 	return result, nil
 }
 
-func (w Outbox) FoldersWithSelection() (model.FolderList, error) {
+func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 
 	// Get Folder List
 	result, err := w.Folders()
 
 	if err != nil {
-		return result, derp.Wrap(err, "render.Outbox.FoldersWithSelection", "Error loading folders")
+		return result, derp.Wrap(err, "render.Inbox.FoldersWithSelection", "Error loading folders")
 	}
 
 	// Guarantee that we have at least one folder
 	if len(result.Folders) == 0 {
-		return result, derp.NewInternalError("render.Outbox.FoldersWithSelection", "No folders found", nil)
+		return result, derp.NewInternalError("render.Inbox.FoldersWithSelection", "No folders found", nil)
 	}
 
 	// Find/Mark the Selected FolderID
@@ -468,9 +468,9 @@ func (w Outbox) FoldersWithSelection() (model.FolderList, error) {
 }
 
 // Message uses the `messageId` URL parameter to load an individual message from the Inbox
-func (w Outbox) Message() (model.Message, error) {
+func (w Inbox) Message() (model.Message, error) {
 
-	const location = "render.Outbox.Message"
+	const location = "render.Inbox.Message"
 
 	result := model.NewMessage()
 

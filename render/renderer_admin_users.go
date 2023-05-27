@@ -117,6 +117,10 @@ func (w User) executeTemplate(writer io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
+func (w User) clone(action string) (Renderer, error) {
+	return NewUser(w._factory, w._context, w._template, w.user, action)
+}
+
 /******************************************
  * Domain Data
  ******************************************/

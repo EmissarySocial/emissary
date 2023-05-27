@@ -115,3 +115,7 @@ func (w Navigation) service() service.ModelService {
 func (w Navigation) executeTemplate(wr io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
+
+func (w Navigation) clone(action string) (Renderer, error) {
+	return NewNavigation(w._factory, w._context, w._template, w.stream, action)
+}

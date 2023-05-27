@@ -1,0 +1,365 @@
+{
+	"templateId":"user-inbox",
+	"templateRole":"user-inbox",
+	"model":"inbox",
+	"label":"User Inbox",
+	"description":"Inbox displays all incoming messages for the signed-in user",
+	"icon":"inbox",
+	"extends":["base-block-editor"],
+	"containedBy": [],
+	"schema": {
+		"title":"User Profile",
+		"type":"object",
+		"properties": {
+			"feeds": {
+				"description":"Array of people to render on the page",
+				"type":"array",
+				"items": {
+					"type":"object",
+					"properties": {
+						"url": {
+							"type":"string"
+						},
+						"name": {
+							"type":"string"
+						}
+					}
+				}
+			}
+		}
+	},
+	"states": {
+		"default": {
+			"label":"Inbox only has default state"
+		}
+	},
+	"roles": {
+		"owner": {
+			"label":"Inbox Owner",
+			"decription":"Full control"
+		}
+	},
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		},
+		"hyperscript":{
+			"contentType":"text/hyperscript"
+		}
+	},
+	"actions": {
+
+		"inbox": {
+			"roles": ["self"],
+			"step": "view-html"
+		},
+		"inbox-sidebar": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
+		"inbox-list": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
+		"inbox-list-before": {
+			"roles": ["self"],
+			"step":"view-html"
+		},
+		"inbox-filter":{
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"inbox-folder-add": {
+			"roles":["self"],
+			"steps": [
+				{"step":"set-query-param", "folderId":"new"},
+				{"step":"with-folder", "steps": [
+					{"step":"as-modal", "steps": [
+						{"step":"edit", "form": {
+							"type":"layout-vertical",
+							"label":"Add a Folder",
+							"children": [
+								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						},
+						{"step":"save"}
+					]},
+					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+				]}
+			]
+		},
+		"inbox-folder-edit": {
+			"roles":["self"],
+			"steps": [
+				{"step":"with-folder", "steps": [
+					{"step":"as-modal", "steps": [
+						{"step":"edit", "options":["delete:/@me/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
+							"type":"layout-vertical",
+							"label":"Folder Settings",
+							"children": [
+								{"type":"text", "path":"label", "label":"Name"},
+								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						},
+						{"step":"save"}
+					]},
+					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+				]}
+			]
+		},
+		"inbox-folder-update":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-folder", "steps":[
+					{"step":"edit", "form": {
+						"type":"layout-vertical",
+						"children": [
+							{"type":"text", "path":"label", "label":"Name"},
+							{"type":"text", "path":"layout", "label":"Layout"},
+							{"type":"text", "path":"filter", "label":"Filter"}
+						]}
+					},
+					{"step":"save"}
+				]},
+				{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"},
+				{"step":"trigger-event", "event":{"refreshPage":true}}
+			]
+		},
+		"inbox-folder-delete": {
+			"roles":["self"],
+			"steps": [
+				{"step":"with-folder", "steps": [
+					{"step":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
+					{"step":"forward-to", "url":"/@me/inbox"}
+				]}
+			]
+		},
+		"inbox-folder-sort":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-folder", "steps":[
+					{"step":"sort"}
+				]}
+			]
+		},
+		"activitypub-profile": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"view-activitypub", "file":"activitypub-profile"}
+				]}
+			]
+		},
+		"message-response":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"set-response"}
+				]},
+				{"step":"view-html", "file":"message-response", "method":"both"}
+			]
+		},
+		"message-reply":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"set-query-param", "postTo":"/@me/message-reply?messageId={{.QueryParam `messageId`}}"},
+					{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+					{"step":"refresh-page"}
+				]}
+			]
+		},
+		"message-chat": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-magazine": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-newspaper": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-social": {
+			"roles": ["self"],
+			"steps": [
+					{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"view-html"}
+				]
+			}]
+		},
+		"message-delete": {
+			"roles": ["self"],
+			"steps": [{"step":"with-message", "steps": [
+				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+				{"step":"reload-page"}
+			]}]
+		},
+		
+		"followers": {"step":"view-html", "file":"inbox-followers"},
+		"followers-list": {"step":"view-html", "file":"inbox-followers-list"},
+		"follower-add": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"edit", "form": {
+						"type":"layout-vertical",
+						"label":"Add Follower",
+						"children": [
+							{"type":"text", "path":"url", "label":"URL"}
+						]
+					}},
+					{"step":"view-html", "file":"profile-follower"}
+				]}
+			]
+		},
+		"follower-edit": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-follower", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"edit", "form":{
+							"type":"layout-vertical",
+							"label":"Edit Follower",
+							"children": [
+								{"type":"text", "path":"name", "label":"Name", "readOnly":true},
+								{"type":"text", "path":"url", "label":"URL"}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+		"follow": {
+			"steps": [
+				{"step":"as-modal", "background":"profile", "steps":[
+					{"step":"view-html", "file":"profile-follow"}
+				]}
+			]
+		},
+
+		"following": {"step":"view-html", "file":"inbox-following"},
+		"following-list": {"step":"view-html", "file":"inbox-following-list"},
+		"following-add":{
+			"roles":["self"],
+			"steps":[
+				{"step":"set-query-param", "followingId":"new"},
+				{"step":"as-modal", "background":"view", "steps":[
+					{"step":"with-following", "steps":[
+						{"step":"set-data", "from-url":["url", "folderId"]},
+						{"step":"edit", "form":{
+							"type":"layout-vertical",
+							"label":"Follow a Person or Website",
+							"children": [
+								{
+									"type":"text",
+									"label":"Fediverse Address or Website URL",
+									"path":"url",
+									"description":"Enter the URL of the website you want to subscribe to."
+								},
+								{
+									"type":"select",
+									"label":"Folder",
+									"path":"folderId",
+									"options":{"provider": "folders"},
+									"description": "Automatically add items to this folder."
+								}
+							]
+						}}
+					]}
+				]}
+			]
+		},
+		"following-edit":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"as-modal", "steps":[
+						{"step":"edit", "options":"delete:/@me/following-delete?followingId={{.ObjectID}}", "form":{
+							"type": "layout-tabs",
+							"label":"Edit Follow Settings",
+							"children":[{
+								"type":"layout-vertical",
+								"label":"Settings",
+								"children": [
+									{
+										"type":"text",
+										"label":"Fediverse Address or Website URL",
+										"path":"url",
+										"description":"Enter the URL of the website you want to subscribe to."
+									},
+									{
+										"type":"select",
+										"label":"Folder",
+										"path":"folderId",
+										"options":{"provider": "folders"},
+										"description": "Automatically add items to this folder."
+									},
+									{
+										"type":"toggle",
+										"label":"Update Messages?",
+										"path":"doMoveMessages",
+										"options":{"true-text":"Yes.  Move all messages to the folder selected above.", "false-text":"No.  Leave messages untouched."}
+									}
+								]
+							}, {
+								"type":"layout-vertical",
+								"label":"Info",
+								"readOnly":true,
+								"children":[{
+									"type":"text",
+									"label":"Method",
+									"path":"method"
+								}, {
+									"type":"text",
+									"label":"Status",
+									"path":"status"
+								}, {
+									"type":"text",
+									"label":"Notes",
+									"path":"statusMessage"
+								}]
+							}]
+						}}
+					]}
+				]}
+			]
+		},
+		"following-delete":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"delete", "title":"Stop Following {{.Label}}", "message":"Are you sure you want to delete this follow?"},
+					{"step":"reload-page"}
+				]}
+			]
+		},
+
+		"blocks": {
+			"roles":["self"],
+			"step":"view-html", 
+			"file":"inbox-blocks"
+		}
+
+	}
+}	

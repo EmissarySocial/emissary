@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
-	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
@@ -64,10 +63,12 @@ type Renderer interface {
 	setQuery(string, string)             // Sets a queryString parameter
 	getUser() (model.User, error)        // Retrieves the currently-logged-in user
 	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
+	clone(string) (Renderer, error)      // Creates a new Renderer with the same type and object, but a different action
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
 
+/*
 // TODO: LOW: This is expensive and abstract.  Minimize the use of this function as much as possible.
 // This function is only used in one place, so perhaps we can just inline it?
 func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
@@ -83,3 +84,4 @@ func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, act
 
 	return nil, derp.NewInternalError("render.NewRenderer", "Unrecognized object", object)
 }
+*/

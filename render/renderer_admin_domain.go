@@ -128,6 +128,10 @@ func (w Domain) PageTitle() string {
 	return "Settings"
 }
 
+func (w Domain) clone(action string) (Renderer, error) {
+	return NewDomain(w._factory, w._context, w.externalService, w._template, w.domain, action)
+}
+
 /******************************************
  * Other Data Accessors
  ******************************************/

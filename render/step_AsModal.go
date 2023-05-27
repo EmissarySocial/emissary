@@ -43,7 +43,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Full pages render the entire page, including the modal window
-	fullPageRenderer, err := NewRenderer(renderer.factory(), renderer.context(), renderer.object(), step.Background)
+	fullPageRenderer, err := renderer.clone(step.Background)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating fullPageRenderer")

@@ -191,11 +191,15 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
 	e.GET("/@", handler.TBD)
-	e.GET("/@:userId", handler.GetProfile(factory))
-	e.POST("/@:userId", handler.PostProfile(factory))
-	e.GET("/@:userId/:action", handler.GetProfile(factory))
-	e.POST("/@:userId/:action", handler.PostProfile(factory))
-	e.GET("/@:userId/avatar", handler.GetProfileAvatar(factory))
+	e.GET("/@:userId", handler.GetOutbox(factory))
+	e.POST("/@:userId", handler.PostOutbox(factory))
+	e.GET("/@:userId/:action", handler.GetOutbox(factory))
+	e.POST("/@:userId/:action", handler.PostOutbox(factory))
+	e.GET("/@:userId/avatar", handler.GetOutboxAvatar(factory))
+	e.GET("/@:userId/inbox", handler.GetInbox(factory))
+	e.POST("/@:userId/inbox", handler.PostInbox(factory))
+	e.GET("/@:userId/inbox/:action", handler.GetInbox(factory))
+	e.POST("/@:userId/inbox/:action", handler.PostInbox(factory))
 
 	// ActivityPub Routes
 	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))

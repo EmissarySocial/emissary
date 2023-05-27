@@ -132,6 +132,10 @@ func (w Stream) templateRole() string {
 	return w.template().TemplateRole
 }
 
+func (w Stream) clone(action string) (Renderer, error) {
+	return NewStream(w._factory, w._context, w._template, w.stream, action)
+}
+
 /******************************************
  * ACTION SHORTCUTS
  ******************************************/
