@@ -78,22 +78,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 
 // NavigationID returns the ID to use for highlighing navigation menus
 func (w Inbox) NavigationID() string {
-
-	// TODO: This is returning incorrect values when we CREATE a new outbox item.
-	// Is there a better way to handle this that doesn't just HARDCODE stuff in here?
-
-	// If the user is viewing their own profile, then the top-level ID is the user's own ID
-	if w.UserID() == w.Common.AuthenticatedID().Hex() {
-
-		switch w.ActionID() {
-		case "inbox", "inbox-folder", "following", "followers", "blocks":
-			return "inbox"
-		default:
-			return "profile"
-		}
-	}
-
-	return ""
+	return "inbox"
 }
 
 func (w Inbox) PageTitle() string {
@@ -101,7 +86,7 @@ func (w Inbox) PageTitle() string {
 }
 
 func (w Inbox) Permalink() string {
-	return w.Host() + "/@" + w.user.UserID.Hex()
+	return w.Host() + "/@me/inbox"
 }
 
 func (w Inbox) Token() string {
@@ -129,7 +114,7 @@ func (w Inbox) service() service.ModelService {
 }
 
 func (w Inbox) templateRole() string {
-	return "outbox"
+	return "inbox"
 }
 
 func (w Inbox) clone(action string) (Renderer, error) {
@@ -189,10 +174,6 @@ func (w Inbox) DisplayName() string {
 	return w.user.DisplayName
 }
 
-func (w Inbox) StatusMessage() string {
-	return w.user.StatusMessage
-}
-
 func (w Inbox) ProfileURL() string {
 	return w.user.ProfileURL
 }
@@ -201,64 +182,9 @@ func (w Inbox) ImageURL() string {
 	return w.user.ActivityPubAvatarURL()
 }
 
-func (w Inbox) Location() string {
-	return w.user.Location
-}
-
-func (w Inbox) Links() []model.PersonLink {
-	return w.user.Links
-}
-
-func (w Inbox) ActivityPubURL() string {
-	return w.user.ActivityPubURL()
-}
-
-func (w Inbox) ActivityPubAvatarURL() string {
-	return w.user.ActivityPubAvatarURL()
-}
-
-func (w Inbox) ActivityPubInboxURL() string {
-	return w.user.ActivityPubInboxURL()
-}
-
-func (w Inbox) ActivityPubOutboxURL() string {
-	return w.user.ActivityPubOutboxURL()
-}
-
-func (w Inbox) ActivityPubFollowersURL() string {
-	return w.user.ActivityPubFollowersURL()
-}
-
-func (w Inbox) ActivityPubFollowingURL() string {
-	return w.user.ActivityPubFollowingURL()
-}
-
-func (w Inbox) ActivityPubLikedURL() string {
-	return w.user.ActivityPubLikedURL()
-}
-
-func (w Inbox) ActivityPubPublicKeyURL() string {
-	return w.user.ActivityPubPublicKeyURL()
-}
-
 /******************************************
- * Inbox / Outbox Methods
+ * Inbox Methods
  ******************************************/
-
-func (w Inbox) Outbox() QueryBuilder[model.StreamSummary] {
-
-	expressionBuilder := builder.NewBuilder().
-		Int("publishDate")
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("parentId", w.AuthenticatedID()),
-	)
-
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
-
-	return result
-}
 
 func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 
@@ -342,10 +268,6 @@ func (w Inbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
 func (w Inbox) CountBlocks(blockType string) (int, error) {
 	return w._factory.Block().CountByType(w.objectID(), blockType)
 }
-
-/******************************************
- * Inbox Methods
- ******************************************/
 
 // Inbox returns a slice of messages in the current User's inbox
 func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
