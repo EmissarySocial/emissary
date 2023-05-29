@@ -54,18 +54,7 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.AttributedTo = collectPersonLinks(document)
 	message.ContentHTML = object.Content()
 	message.FolderID = following.FolderID
-
-	if inReplyTo := object.InReplyTo(); !inReplyTo.IsNil() {
-		if parent, _ := object.InReplyTo().Load(); !parent.IsNil() {
-			message.InReplyTo.Append(model.DocumentLink{
-				URL:          parent.ID(),
-				Label:        parent.Name(),
-				Summary:      parent.Summary(),
-				ImageURL:     parent.ImageURL(),
-				AttributedTo: collectPersonLinks(parent.AttributedTo()),
-			})
-		}
-	}
+	message.InReplyTo = object.InReplyTo().ID()
 
 	if publishDate := object.Published().Unix(); publishDate > 0 {
 		message.PublishDate = publishDate
