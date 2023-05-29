@@ -66,7 +66,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	// If this is a reply, then try to get a DocumentLink for the object we're replying to.
 	if step.AsReply {
 		if documentLinker, ok := renderer.object().(DocumentLinker); ok {
-			newStream.InReplyTo = documentLinker.DocumentLink()
+			newStream.InReplyTo = documentLinker.DocumentLink().URL
 		} else {
 			return derp.NewInternalError(location, "Replies can only be made to Stream and Message (DocumentLinker) objects.")
 		}
@@ -121,9 +121,10 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	factory := renderer.factory()
 	context := renderer.context()
 	templateService := factory.Template()
+	parentRole := step.parentRole(renderer)
 
 	// Query all eligible templates
-	templates := templateService.ListByContainerLimited(renderer.templateRole(), step.Templates)
+	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
 
 	if len(templates) == 0 {
 		return derp.NewBadRequestError(location, "No child templates available for this Role", renderer.templateRole())
@@ -206,12 +207,7 @@ func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
 	response := renderer.context().Response()
 	templateService := factory.Template()
 	iconProvider := factory.Icons()
-
-	parentRole := step.Location
-
-	if parentRole == "child" {
-		parentRole = renderer.templateRole()
-	}
+	parentRole := step.parentRole(renderer)
 
 	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
 
@@ -329,4 +325,14 @@ func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateI
 	}
 
 	return templates[0].Value
+}
+
+func (step StepAddStream) parentRole(renderer Renderer) string {
+
+	if step.Location == "child" {
+		return renderer.templateRole()
+	}
+
+	return step.Location
+
 }
