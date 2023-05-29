@@ -14,9 +14,10 @@ type StreamSummary struct {
 	URL            string                     `json:"url,omitempty"          bson:"url,omitempty"`          // URL of the original document
 	Label          string                     `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary        string                     `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
+	Content        Content                    `json:"content,omitempty"      bson:"content,omitempty"`      // Content of the document
 	ImageURL       string                     `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
 	AttributedTo   sliceof.Object[PersonLink] `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
-	InReplyTo      DocumentLink               `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
+	InReplyTo      string                     `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate    int64                      `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
 	Rank           int                        `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 }
@@ -38,7 +39,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
 }
 
 func (summary StreamSummary) Fields() []string {
@@ -59,4 +60,12 @@ func (summary StreamSummary) StreamID() string {
 
 func (summary StreamSummary) ParentID() string {
 	return summary.ParentObjectID.Hex()
+}
+
+func (summary StreamSummary) ContentHTML() string {
+	return summary.Content.HTML
+}
+
+func (summary StreamSummary) ContentRaw() string {
+	return summary.Content.Raw
 }
