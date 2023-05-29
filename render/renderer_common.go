@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -287,6 +288,11 @@ func (w Common) authorization() model.Authorization {
 /******************************************
  * MISC HELPER FUNCTIONS
  ******************************************/
+
+func (w Common) ActivityStream(uri string) streams.Document {
+	result, _ := w._factory.ActivityPubClient().Load(uri)
+	return result
+}
 
 func (w Common) lookupProvider() form.LookupProvider {
 

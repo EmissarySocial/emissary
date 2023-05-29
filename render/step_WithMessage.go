@@ -58,7 +58,7 @@ func (step StepWithMessage) doStep(renderer Renderer, buffer io.Writer, actionMe
 	}
 
 	// Create a new renderer tied to the Message record
-	subRenderer, err := NewModel(factory, context, inboxService, &message, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewMessage(factory, context, inboxService, &message, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to create sub-renderer")
