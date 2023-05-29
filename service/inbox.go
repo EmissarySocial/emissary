@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -310,31 +309,33 @@ func (service *Inbox) CalculateRank(message *model.Message) error {
 // a local Stream.  In that case, we need to add a StreamResponse record as well.
 func (service *Inbox) CalculateRepsponses(message *model.Message) error {
 
-	// If this message is not a reply, then we're done.
-	inReplyTo := message.InReplyTo.First()
+	// TODO: Reimplement this using InReplyTo as a string
+	/*
+		// If this message is not a reply, then we're done.
+		inReplyTo := message.InReplyTo.First()
 
-	// RULE: If there is no reply, then there's nothing to do.
-	if inReplyTo.IsEmpty() {
-		return nil
-	}
+		// RULE: If there is no reply, then there's nothing to do.
+		if inReplyTo.IsEmpty() {
+			return nil
+		}
 
-	// RULE: If the reply is not to a local stream, then there's nothing to do.
-	if domain.NameOnly(inReplyTo.URL) != domain.NameOnly(service.host) {
-		return nil
-	}
+		// RULE: If the reply is not to a local stream, then there's nothing to do.
+		if domain.NameOnly(inReplyTo.URL) != domain.NameOnly(service.host) {
+			return nil
+		}
 
-	// Create a new StreamResponse record
-	streamResponse := model.NewStreamResponse()
-	streamResponse.Type = model.ResponseTypeReply
-	streamResponse.Actor = message.Author()
-	streamResponse.Origin = message.Origin
-	streamResponse.Stream = inReplyTo
+		// Create a new StreamResponse record
+		streamResponse := model.NewStreamResponse()
+		streamResponse.Type = model.ResponseTypeReply
+		streamResponse.Actor = message.Author()
+		streamResponse.Origin = message.Origin
+		streamResponse.Stream = inReplyTo
 
-	// Save the StreamResponse record
-	if err := service.streamResponseService.Save(&streamResponse, "CalculateResponses"); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error saving StreamResponse", message, streamResponse)
-	}
-
+		// Save the StreamResponse record
+		if err := service.streamResponseService.Save(&streamResponse, "CalculateResponses"); err != nil {
+			return derp.Wrap(err, "service.Inbox", "Error saving StreamResponse", message, streamResponse)
+		}
+	*/
 	return nil
 }
 

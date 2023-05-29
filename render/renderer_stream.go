@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/streams"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -243,8 +244,14 @@ func (w Stream) Author() model.PersonLink {
 	return w.stream.AttributedTo.First()
 }
 
-func (w Stream) InReplyTo() model.DocumentLink {
-	return w.stream.InReplyTo
+// IsReply returns TRUE if this stream is marked as a reply to another stream or resource
+func (w Stream) IsReply() bool {
+	return (w.stream.InReplyTo != "")
+}
+
+// InReplyTo returns an ActivityStreams reference to the URL that this stream replies to
+func (w Stream) InReplyTo() streams.Document {
+	return w.ActivityStream(w.stream.InReplyTo)
 }
 
 // Returns the body content as an HTML template
@@ -302,11 +309,6 @@ func (w Stream) Data(value string) any {
 // HasParent returns TRUE if the stream being rendered has a parend objec
 func (w Stream) HasParent() bool {
 	return w.stream.HasParent()
-}
-
-// IsReply returns TRUE if this stream is marked as a reply to another stream or resource
-func (w Stream) IsReply() bool {
-	return (w.stream.InReplyTo.IsEmpty())
 }
 
 // IsNew returns TRUE if this stream has not been saved to the database
