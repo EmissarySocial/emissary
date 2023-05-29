@@ -35,15 +35,11 @@ func (service *Following) import_HTML_feed(following *model.Following, response 
 			case model.MimeTypeJSONFeed:
 				if err := service.poll(following, link, service.import_JSONFeed); err == nil {
 					return nil
-				} else {
-					derp.Report(err)
 				}
 
 			case model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText:
 				if err := service.poll(following, link, service.import_RSS); err == nil {
 					return nil
-				} else {
-					derp.Report(err)
 				}
 			}
 		}
