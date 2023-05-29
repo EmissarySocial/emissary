@@ -1,12 +1,14 @@
 package cache
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type Client struct {
@@ -53,7 +55,10 @@ func (client *Client) Load(uri string) (streams.Document, error) {
 	// Search the cache for the document
 	cachedValue := NewCachedValue()
 	if err := client.loadByURI(uri, &cachedValue); err == nil {
-		return streams.NewDocument(cachedValue.JSONLD, streams.WithClient(client)), nil
+		value := mapof.NewAny()
+		if err := json.Unmarshal([]byte(cachedValue.JSONLD), &value); err != nil {
+			return streams.NewDocument(value, streams.WithClient(client)), nil
+		}
 	}
 
 	// Pass the request to the inner client
@@ -80,14 +85,23 @@ func (client *Client) PurgeByURI(uri string) error {
 
 func (client *Client) save(document streams.Document) {
 
+	// Marshal the document value into JSON.  No, we don't want to save it as BSON.
+	marshalledJSON, err := json.Marshal(document.Value())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "cache.Client.save", "Error marshalling document to JSON", document.Value()))
+		return
+	}
+
+	// Create a new cachedValue
 	cachedValue := NewCachedValue()
 	cachedValue.URI = document.ID()
-	cachedValue.JSONLD = document.Value()
+	cachedValue.JSONLD = string(marshalledJSON)
 	cachedValue.ExpirationDate = time.Now().Add(time.Second * time.Duration(client.timeoutSeconds)).Unix()
 
 	// Save it to the cache
 	if err := client.collection.Save(&cachedValue, "Added to cache"); err != nil {
-		derp.Report(derp.Wrap(err, "cache.Client.save", "Error saving document to cache", document.ID()))
+		derp.Report(derp.Wrap(err, "cache.Client.save", "Error saving document to cache", document.ID(), marshalledJSON))
 	}
 }
 
@@ -97,6 +111,6 @@ func (client *Client) save(document streams.Document) {
 
 func (client Client) loadByURI(uri string, document *CachedValue) error {
 	now := time.Now().Unix()
-	criteria := exp.Equal("_id", uri).AndGreaterThan("expirationDate", now)
+	criteria := exp.Equal("uri", uri).AndGreaterThan("exp", now)
 	return client.collection.Load(criteria, document)
 }

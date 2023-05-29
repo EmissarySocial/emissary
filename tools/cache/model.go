@@ -8,7 +8,7 @@ import (
 type CachedValue struct {
 	CachedValueID   primitive.ObjectID `bson:"_id"`
 	URI             string             `bson:"uri"`
-	JSONLD          any                `bson:"jsonld"`
+	JSONLD          string             `bson:"jsonld"`
 	ExpirationDate  int64              `bson:"exp"`
 	journal.Journal `bson:"journal,inline"`
 }
