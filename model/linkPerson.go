@@ -42,7 +42,7 @@ func (person PersonLink) GetJSONLD() mapof.Any {
 	}
 
 	if person.ImageURL != "" {
-		result["image"] = person.ImageURL
+		result["icon"] = person.ImageURL
 	}
 
 	return result
