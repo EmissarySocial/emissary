@@ -5,9 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v4"
@@ -87,50 +85,6 @@ func (user *User) Summary() UserSummary {
 // of this record is returned.
 func (user User) Copy() User {
 	return user
-}
-
-func (user *User) GetPath(path string) (any, error) {
-
-	switch path {
-
-	case "imageId":
-		return user.ImageID, nil
-
-	case "groupIds":
-		return id.SliceOfString(user.GroupIDs), nil
-
-	case "displayName":
-		return user.DisplayName, nil
-
-	case "username":
-		return user.Username, nil
-
-	}
-
-	return nil, derp.NewBadRequestError("model.User.SetPath", "Invalid Path", path)
-}
-
-func (user *User) SetPath(path string, value any) error {
-
-	switch path {
-
-	case "imageId":
-		user.ImageID, _ = id.Convert(value)
-
-	case "groupIds":
-		user.GroupIDs = id.SliceOfID(value)
-
-	case "displayName":
-		user.DisplayName = convert.String(value)
-
-	case "username":
-		user.Username = convert.String(value)
-
-	default:
-		return derp.NewBadRequestError("model.User.SetPath", "Invalid Path", path, value)
-	}
-
-	return nil
 }
 
 /******************************
