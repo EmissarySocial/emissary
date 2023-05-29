@@ -19,7 +19,7 @@
 			</div>
 			<div class="right">
 				{{- if .IsAuthenticated -}}
-					{{- if eq $topID "profile" -}}
+					{{- if eq $topID "outbox" -}}
 						<a href="/@me" class="selected turboclick">{{icon "person-fill"}} Profile</a>
 					{{- else -}}
 						<a href="/@me" class="turboclick">{{icon "person"}} Profile</a>

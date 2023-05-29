@@ -29,14 +29,17 @@
 <form id="outbox-message" hx-post="{{$targetURL}}" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data" hx-push-url="false"
 	data-script="
 		on htmx:configRequest(parameters)
-			set parameters['summary'] to Autolinker.link(#summaryHTML.innerText, $autolinkerOptions)">
+			set contentHtml to the first <.input/> in me
+			log contentHtml
+			set parameters['content'] to Autolinker.link(contentHtml.innerText, $autolinkerOptions)
+			">
 
 	{{if not .IsNew}}
 		<h1>Edit Post</h1>
 	{{end}}
 
 	<div style="margin-bottom:10px;">
-		<div id="summaryHTML"
+		<div
 			class="input"
 			contenteditable="true"
 			data-script="
@@ -54,7 +57,7 @@
 					set oldPosition to :caret.getPos() then
 					set my innerHTML to Autolinker.link(my innerText, $autolinkerOptions) then
 					call :caret.setPos(oldPosition)"
-		>{{.Summary}}</div>
+		>{{.ContentHTML}}</div>
 	</div>
 
 	<div id="file-preview"></div>

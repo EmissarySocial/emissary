@@ -30,24 +30,32 @@
 	"actions": {
 		"create":{
 			"steps": [
-				{"step":"view-html", "file":"edit"},
-				{"step":"set-data", "from-form":["summary"]},
+				{"step":"edit-content", "file":"edit", "format":"HTML"},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"imageUrl"},
-				{"step":"publish", "mentions":["summary"]}
+				{"step":"publish"}
 			]
 		},
 		"view": {"step":"view-html"},
+		"view-replies":{
+			"step":"view-html"
+		},
+		"add-reply":{
+			"roles":["authenticated"],
+			"steps":[
+				{"step":"set-query-param", "postTo":"/{{.StreamID}}/add-reply"},
+				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true}
+			]
+		},
 		"edit": {
 			"roles":["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
 					{"step":"set-query-param", "postTo":"/{{.StreamID}}/edit"},
-					{"step":"view-html", "file":"edit"},
-					{"step":"set-data", "from-form":["summary"]},
+					{"step":"edit-content", "file":"edit", "format":"HTML"},
 					{"step":"save"},
-					{"step":"publish", "mentions":["summary"]},
+					{"step":"publish"},
 					{"step":"refresh-page"}
 				]}
 			]

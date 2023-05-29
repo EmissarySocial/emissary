@@ -6,7 +6,11 @@
 
 	<div style="max-width:600px;"> 
 
-		<div class="p-author space-below">
+		{{- if .IsReply -}}
+			{{template "parent" .InReplyTo}}
+		{{- end -}}
+
+		<div class="p-author space-below" script="on load go to me + 100 px">
 			<a href="{{.Author.ProfileURL}}" class="text-plain">
 				<img src="{{.Author.ImageURL}}" class="circle-24 inline-block" style="margin-right:8px;">
 				<div class="inline-block">
@@ -16,22 +20,8 @@
 			</a>
 		</div>
 
-		{{- if eq false .InReplyTo.IsEmpty -}}
-			<div class="space-below">
-				<div class="text-gray">
-					<a href="{{.InReplyTo.URL}}" class="u-in-reply-to text-gray bold">{{icon "reply"}} Replying to
-						{{- range .InReplyTo.AttributedTo -}}
-							&nbsp;
-							<!--img src="{{.ImageURL}}" class="inline-block circle" style="vertical-align:middle; height:1.2em; width:1.2em;"/-->
-							<b>{{.Name}}</b>
-						{{- end -}}
-					</a>
-				</div>
-			</div>
-		{{- end -}}
-
 		<div class="space-below">
-			<h2 class="p-summary">{{.Summary | html}}</h2>
+			<h2 class="p-summary">{{.ContentHTML}}</h2>
 		</div>
 
 		{{- if ne .ImageURL "" -}}
@@ -40,26 +30,11 @@
 			</div>
 		{{- end -}}
 
-		<div class="tex-gray space-below">
-			{{- if .Responses.HasMentions -}}
-				<span class="space-right">{{icon "mention"}} {{.Responses.MentionCount}} Mentions</span>
-			{{- else -}}
-				<span class="space-right">{{icon "mention"}} 0</span>
-			{{- end -}}
+		{{template "view-responses" .}}
 
-			{{- if .Responses.HasLikes -}}
-				<span class="space-right">{{icon "thumbs-up"}} {{.Responses.LikeCount}}</span>
-			{{- else -}}
-				<span class="space-right">{{icon "thumbs-up"}} 0</span>
-			{{- end -}}
+		{{.View "view-replies"}}
 
-			{{- if .Responses.HasDislikes -}}
-				<span class="space-right">{{icon "thumbs-down"}} {{.Responses.DislikeCount}}</span>
-			{{- else -}}
-				<span class="space-right">{{icon "thumbs-down"}} 0</span>
-			{{- end -}}
-
-		</div>
+		{{.View "add-reply"}}
 
 	</div>
 

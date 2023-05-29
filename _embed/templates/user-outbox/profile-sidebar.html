@@ -1,6 +1,6 @@
 <div class="app-sidebar">
 	
-	<link rel="stylesheet" href="/.templates/user-profile/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-outbox/stylesheet">
 	<link rel="canonical" class="u-url" href="{{.ProfileURL}}"></link>
 
 	<div class="space-below" style="position:relative;">
@@ -25,14 +25,6 @@
 		{{- if not .Myself -}}
 			<div class="space-above">
 				<button type="button" class="primary width-100" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
-			</div>
-		{{- end -}}
-
-		{{- if .UserCan "profile-edit" -}}
-			<div class="space-above">
-				<a href="/@me/followers" class="text-plain"><b>{{.FollowerCount}}</b> Followers</a>
-				&nbsp;
-				<a href="/@me/following" class="text-plain"><b>{{.FollowingCount}}</b> Following</a>
 			</div>
 		{{- end -}}
 

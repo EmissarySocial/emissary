@@ -30,7 +30,11 @@
 	},
 	"states": {},
 	"roles": {},
-	"bundles": {},
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	},
 	"actions": {
 		"view": {
 			"steps":[
@@ -110,6 +114,15 @@
 				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
 				{"step":"add-stream", "location":"outbox", "as-embed":true},
 				{"step":"refresh-page"}
+			]
+		},
+		"outbox-reply":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+					{"step":"refresh-page"}
+				]}
 			]
 		},
 
