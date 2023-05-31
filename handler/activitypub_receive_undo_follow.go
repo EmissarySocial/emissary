@@ -31,8 +31,8 @@ func undoFollow(factory *domain.Factory, user *model.User, activity streams.Docu
 	}
 
 	// Collect data from the original follow
-	actorURL := originalFollow.ActorID() // The "actor" of the original follow is our follower.actor.ProfileURL
-	userURL := originalFollow.ObjectID() // The "object" of the original follow is our local UserURL
+	actorURL := originalFollow.Actor().ID() // The "actor" of the original follow is our follower.actor.ProfileURL
+	userURL := originalFollow.Object().ID() // The "object" of the original follow is our local UserURL
 	userService := factory.User()
 	userID, err := userService.ParseProfileURL(userURL)
 

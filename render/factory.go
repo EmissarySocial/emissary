@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,6 +15,7 @@ import (
 // Factory is used to locate all necessary services
 type Factory interface {
 	// Model Services
+	ActivityStreams() *service.ActivityStreams
 	Attachment() *service.Attachment
 	Block() *service.Block
 	Folder() *service.Folder
@@ -35,7 +35,6 @@ type Factory interface {
 	Widget() *service.Widget
 
 	// Other data services
-	ActivityPubClient() streams.Client
 	Config() config.Domain
 	Content() *service.Content
 	Domain() *service.Domain

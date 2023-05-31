@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/form"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
@@ -32,13 +31,13 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	themeService      *service.Theme
-	templateService   *service.Template
-	widgetService     *service.Widget
-	contentService    *service.Content
-	providerService   *service.Provider
-	taskQueue         *queue.Queue
-	activityPubClient streams.Client
+	themeService           *service.Theme
+	templateService        *service.Template
+	widgetService          *service.Widget
+	contentService         *service.Content
+	providerService        *service.Provider
+	taskQueue              *queue.Queue
+	activityStreamsService *service.ActivityStreams
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -71,19 +70,19 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, activityPubClient streams.Client, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityStreamsService *service.ActivityStreams, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
 	// Base Factory object
 	factory := Factory{
-		themeService:      themeService,
-		templateService:   templateService,
-		widgetService:     widgetService,
-		contentService:    contentService,
-		providerService:   providerService,
-		taskQueue:         taskQueue,
-		activityPubClient: activityPubClient,
+		themeService:           themeService,
+		templateService:        templateService,
+		widgetService:          widgetService,
+		contentService:         contentService,
+		providerService:        providerService,
+		taskQueue:              taskQueue,
+		activityStreamsService: activityStreamsService,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -229,7 +228,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.User(),
 			factory.Inbox(),
 			factory.EncryptionKey(),
-			factory.ActivityPubClient(),
+			factory.ActivityStreams(),
 			factory.Host(),
 		)
 
@@ -395,6 +394,10 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
 }
 
+func (factory *Factory) ActivityStreams() *service.ActivityStreams {
+	return factory.activityStreamsService
+}
+
 // Attachment returns a fully populated Attachment service
 func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService
@@ -543,10 +546,6 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 /******************************************
  * Other Non-Model Services
  ******************************************/
-
-func (factory *Factory) ActivityPubClient() streams.Client {
-	return factory.activityPubClient
-}
 
 // Content returns the Content transformation service
 func (factory *Factory) Content() *service.Content {

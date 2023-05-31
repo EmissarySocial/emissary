@@ -17,10 +17,10 @@ func init() {
 		userService := factory.User()
 
 		// Try to verify the User
-		userID, err := service.ParseProfileURL_UserID(activity.ObjectID())
+		userID, err := service.ParseProfileURL_UserID(activity.Object().ID())
 
 		if err != nil {
-			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Invalid User URL", activity.ObjectID())
+			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Invalid User URL", activity.Object().ID())
 		}
 
 		if userID != user.UserID {

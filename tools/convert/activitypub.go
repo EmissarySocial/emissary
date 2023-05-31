@@ -15,7 +15,7 @@ func ActivityPubPersonLinks(person streams.Document) []model.PersonLink {
 			link := model.PersonLink{
 				Name:       details.Name(),
 				ProfileURL: details.ID(),
-				ImageURL:   details.ImageURL(),
+				ImageURL:   details.IconOrImage().URL(),
 			}
 			result = append(result, link)
 		} else {
@@ -36,6 +36,6 @@ func ActivityPubPersonLink(person streams.Document) model.PersonLink {
 	return model.PersonLink{
 		Name:       person.Name(),
 		ProfileURL: person.ID(),
-		ImageURL:   person.ImageURL(),
+		ImageURL:   person.IconOrImage().URL(),
 	}
 }

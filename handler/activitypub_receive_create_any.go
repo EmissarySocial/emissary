@@ -31,8 +31,8 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	// TODO: How would this work for private or unsolicited messages?
 	followingService := factory.Following()
 	following := model.NewFollowing()
-	if err := followingService.LoadByURL(user.UserID, document.ActorID(), &following); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error loading following record", user.UserID, document.ActorID())
+	if err := followingService.LoadByURL(user.UserID, document.Actor().ID(), &following); err != nil {
+		return derp.Wrap(err, "handler.activitypub_receive_create", "Error loading following record", user.UserID, document.Actor().ID())
 	}
 
 	inboxService := factory.Inbox()
@@ -50,7 +50,7 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.URL = object.ID()
 	message.Label = object.Name()
 	message.Summary = object.Summary()
-	message.ImageURL = object.ImageURL()
+	message.ImageURL = object.Image().URL()
 	message.AttributedTo = collectPersonLinks(document)
 	message.ContentHTML = object.Content()
 	message.FolderID = following.FolderID
@@ -78,10 +78,11 @@ func collectPersonLinks(document streams.Document) []model.PersonLink {
 
 	for attributedTo := document.Object().AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Tail() {
 		if author, err := attributedTo.Load(); err == nil {
+
 			result = append(result, model.PersonLink{
 				Name:       author.Name(),
 				ProfileURL: author.ID(),
-				ImageURL:   author.ImageURL(),
+				ImageURL:   author.IconOrImage().URL(),
 			})
 		}
 	}

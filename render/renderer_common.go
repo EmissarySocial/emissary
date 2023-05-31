@@ -290,7 +290,7 @@ func (w Common) authorization() model.Authorization {
  ******************************************/
 
 func (w Common) ActivityStream(uri string) streams.Document {
-	result, _ := w._factory.ActivityPubClient().Load(uri)
+	result, _ := w._factory.ActivityStreams().Load(uri)
 	return result
 }
 

@@ -279,7 +279,7 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
 func (stream Stream) GetJSONLD() mapof.Any {
-	return mapof.Any{
+	result := mapof.Any{
 		"id":        stream.URL,
 		"type":      stream.SocialRole,
 		"url":       stream.URL,
@@ -288,13 +288,26 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		"image":     stream.ImageURL,
 		"content":   stream.Content.HTML,
 		"published": time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
-		"attributedTo": slice.Map(stream.AttributedTo, func(person PersonLink) mapof.Any {
-			return person.GetJSONLD()
-		}),
-		"likes":    stream.URL + "/likes",
-		"dislikes": stream.URL + "/dislikes",
-		"mentions": stream.URL + "/mentions",
+		"likes":     stream.URL + "/likes",
+		"dislikes":  stream.URL + "/dislikes",
+		"mentions":  stream.URL + "/mentions",
 	}
+
+	if stream.InReplyTo != "" {
+		result["inReplyTo"] = stream.InReplyTo
+	}
+
+	switch len(stream.AttributedTo) {
+	case 0:
+	case 1:
+		result["attributedTo"] = stream.AttributedTo[0].GetJSONLD()
+	default:
+		result["attributedTo"] = slice.Map(stream.AttributedTo, func(person PersonLink) mapof.Any {
+			return person.GetJSONLD()
+		})
+	}
+
+	return result
 }
 
 /******************************************

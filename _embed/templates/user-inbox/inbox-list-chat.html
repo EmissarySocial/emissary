@@ -15,10 +15,16 @@
 				{{ icon .Origin.Icon }}
 				{{ .PublishDate | tinyDate }}
 			</span>
+
+			{{- if ne .InReplyTo "" -}}
+				<span class="bold text-gray">
+					{{icon "reply"}} Replying to ...
+				</span>
+			{{- end -}}
 		</div>
 
 		<div>
-			{{- .Summary | html -}}
+			{{- .ContentHTML -}}
 		</div>
 
 		{{- if ne .ImageURL "" -}}

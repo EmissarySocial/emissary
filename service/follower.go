@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -342,7 +341,7 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),
 		Name:         actor.Name(),
-		ImageURL:     first.String(actor.IconURL(), actor.ImageURL()),
+		ImageURL:     actor.IconOrImage().URL(),
 		InboxURL:     actor.Get("inbox").String(),
 		EmailAddress: actor.Get("email").String(),
 	}

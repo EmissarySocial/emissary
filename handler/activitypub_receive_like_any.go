@@ -98,6 +98,6 @@ func parseActor(actor streams.Document) model.PersonLink {
 	return model.PersonLink{
 		Name:       actor.Name(),
 		ProfileURL: actor.ID(),
-		ImageURL:   actor.ImageURL(),
+		ImageURL:   actor.IconOrImage().URL(),
 	}
 }

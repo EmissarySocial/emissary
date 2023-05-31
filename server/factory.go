@@ -13,10 +13,11 @@ import (
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/cache"
+	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/EmissarySocial/emissary/tools/asrecursor"
+	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -35,15 +36,15 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	themeService      service.Theme
-	templateService   service.Template
-	widgetService     service.Widget
-	contentService    service.Content
-	providerService   service.Provider
-	emailService      service.ServerEmail
-	taskQueue         *queue.Queue
-	activityPubClient streams.Client
-	embeddedFiles     embed.FS
+	themeService           service.Theme
+	templateService        service.Template
+	widgetService          service.Widget
+	contentService         service.Content
+	providerService        service.Provider
+	emailService           service.ServerEmail
+	taskQueue              *queue.Queue
+	activityStreamsService service.ActivityStreams
+	embeddedFiles          embed.FS
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
@@ -92,7 +93,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.activityPubClient = factory.ActivityPubClient(mapof.String{})
+	factory.activityStreamsService = service.NewActivityStreams()
 
 	go factory.start()
 
@@ -133,7 +134,7 @@ func (factory *Factory) start() {
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
-		factory.activityPubClient = factory.ActivityPubClient(config.ActivityPubCache)
+		factory.RefreshActivityStreams(config.ActivityPubCache)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -191,6 +192,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	newDomain, err := domain.NewFactory(
 		domainConfig,
 		config.Providers,
+		&factory.activityStreamsService,
 		&factory.emailService,
 		&factory.themeService,
 		&factory.templateService,
@@ -198,7 +200,6 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.contentService,
 		&factory.providerService,
 		factory.taskQueue,
-		factory.activityPubClient,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 	)
@@ -503,30 +504,35 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	return result.Steranko(), nil
 }
 
-func (factory *Factory) ActivityPubClient(connection mapof.String) streams.Client {
+func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
-	result := sherlock.NewClient()
-
-	if len(connection) == 0 {
-		return result
-	}
+	var collection data.Collection
 
 	// Try to connect to the server
 	server, err := mongodb.New(connection.GetString("connectString"), connection.GetString("database"))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "server.Factory.ActivityPubClient", "Unable to connect to ActivityPub cache database.  Continuing without cache."))
-		return result
+		derp.Report(err)
+		return
 	}
 
-	// Try to establish a db session
+	// Try to establish a session
 	session, err := server.Session(context.Background())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "server.Factory.ActivityPubClient", "Unable to create ActivityPub cache session.  Continuing without cache."))
-		return result
+		derp.Report(err)
+		return
 	}
 
-	// Create the new client
-	return cache.NewClient(session.Collection("ActivityPub"), result)
+	// TODO: LOW: If called repeatedly, will this leak database connections?
+	// https://stackoverflow.com/questions/45479236/golang-mongodb-connections-leak
+	collection = session.Collection("ActivityPub")
+
+	// Build a new client stack
+	httpClient := sherlock.NewClient()
+	cacheClient := ascache.New(collection, httpClient)
+	recursorClient := asrecursor.New(cacheClient, 3)
+
+	// Inject new values into the existing object
+	factory.activityStreamsService.Refresh(recursorClient, collection)
 }

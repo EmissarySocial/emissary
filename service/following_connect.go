@@ -239,7 +239,7 @@ func (service *Following) saveDocument(following *model.Following, document *str
 	message.URL = document.ID()
 	message.Label = document.Name()
 	message.Summary = document.Summary()
-	message.ImageURL = document.ImageURL()
+	message.ImageURL = document.Image().URL()
 	message.AttributedTo = convert.ActivityPubPersonLinks(document.AttributedTo())
 	message.ContentHTML = document.Content()
 

@@ -1,31 +1,29 @@
-{{$message := .Message}}
-
-<div script="install message(folderId:'{{$message.FolderID.Hex}}', readDate:'{{$message.Rank}}')">
+<div script="install message(folderId:'{{.FolderID}}', readDate:'{{.Rank}}')">
 
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1 class="ellipsis">{{$message.Label}}</h1>
+	<h1 class="ellipsis">{{.Label}}</h1>
 
 	<div class="text-gray space-below ellipsis">
-		<a href="{{$message.URL}}" target="_blank" class="text-gray">
-			{{- icon $message.Origin.Icon }} {{ $message.URL}}
+		<a href="{{.URL}}" target="_blank" class="text-gray">
+			{{- icon .Origin.Icon }} {{ .URL}}
 		</a>
 		&middot; 
-		{{ $message.PublishDate | tinyDate -}}
+		{{ .PublishDate | tinyDate -}}
 	</div>
 
 	<div class="text-sm">
 
 		<span class="button-group">
-			<button id="previous" hx-get="/@me/inbox/message-chat?rank=LT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
-			<button id="next" hx-get="/@me/inbox/message-chat?rank=GT:{{$message.Rank}}&folderId={{$message.FolderID.Hex}}&origin.followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
+			<button id="previous" hx-get="/@me/inbox/message-chat?rank=LT:{{.Rank}}&folderId={{.FolderID}}&origin.followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
+			<button id="next" hx-get="/@me/inbox/message-chat?rank=GT:{{.Rank}}&folderId={{.FolderID}}&origin.followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
 		</span>
 
 		<span class="button-group">
-			<button hx-get="/@me/inbox/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Source</button>
-			<button hx-get="/@me/inbox/message-delete?messageId={{$message.MessageID.Hex}}">Delete</button>
-			<button hx-get="/@me/inbox/block-new?messageId={{$message.MessageID.Hex}}">Block</button>
+			<button hx-get="/@me/inbox/following-edit?followingId={{.Origin.FollowingID.Hex}}">Edit Source</button>
+			<button hx-get="/@me/inbox/message-delete?messageId={{.ObjectID}}">Delete</button>
+			<button hx-get="/@me/inbox/block-new?messageId={{.ObjectID}}">Block</button>
 		</span>
 
 	</div>
@@ -34,14 +32,14 @@
 
 	<div class="content">
 
-		{{- if ne "" $message.ImageURL -}}
+		{{- if ne "" .ImageURL -}}
 			<div class="space-below">
-				<img src="{{$message.ImageURL}}" style="max-width:100%">
+				<img src="{{.ImageURL}}" style="max-width:100%">
 			</div>
 		{{- end -}}
 
-		<div>{{$message.Summary | html}}</div>
-		<div>{{$message.ContentHTML | html}}</div>
+		<div>{{.Summary}}</div>
+		<div>{{.ContentHTML}}</div>
 	</div>
 
 </div>

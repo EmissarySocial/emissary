@@ -178,32 +178,40 @@
 		"message-chat": {
 			"roles": ["self"],
 			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
+				{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"with-message", "steps":[
+						{"step":"view-html"}
+					]}
+				]}
+			]
 		},
 		"message-magazine": {
 			"roles": ["self"],
 			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
+				{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"with-message", "steps":[
+						{"step":"view-html"}
+					]}
 				]
 			}]
 		},
 		"message-newspaper": {
 			"roles": ["self"],
 			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
+				{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"with-message", "steps":[
+						{"step":"view-html"}
+					]}
 				]
 			}]
 		},
 		"message-social": {
 			"roles": ["self"],
 			"steps": [
-					{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
+				{"step":"as-modal", "options":["class:large"], "steps": [
+					{"step":"with-message", "steps":[
+						{"step":"view-html"}
+					]}	
 				]
 			}]
 		},

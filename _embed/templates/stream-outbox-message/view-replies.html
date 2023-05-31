@@ -1,7 +1,6 @@
-<hr>
-REPLIES
-<hr>
-GO
-<hr>
-HERE
-<hr>
+{{- $replies := .RepliesBefore "0" 6 -}}
+
+{{- range $replies -}}
+	<hr>
+	<div>{{.Value}}</div>
+{{- end -}}

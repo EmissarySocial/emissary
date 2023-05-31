@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"math"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -14,6 +15,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/convert"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -494,6 +496,29 @@ func (s Stream) ResponsesByType(responseType string) []model.StreamResponse {
 func (w Stream) Mentions() ([]model.Mention, error) {
 	mentionService := w.factory().Mention()
 	return mentionService.QueryByObjectID(w.stream.StreamID)
+}
+
+func (w Stream) RepliesBefore(dateString string, maxRows int64) []streams.Document {
+
+	maxDate := convert.Int64(dateString)
+
+	if maxDate == 0 {
+		maxDate = math.MaxInt64
+	}
+
+	activityStreamsService := w._factory.ActivityStreams()
+	result, _ := activityStreamsService.QueryRepliesBeforeDate(w.stream.URL, maxDate, maxRows)
+
+	return result.SliceOfDocuments()
+}
+
+func (w Stream) RepliesAfter(dateString string, maxRows int64) []streams.Document {
+	minDate := convert.Int64(dateString)
+
+	activityStreamsService := w._factory.ActivityStreams()
+	result, _ := activityStreamsService.QueryRepliesAfterDate(w.stream.URL, minDate, maxRows)
+
+	return result.SliceOfDocuments()
 }
 
 /******************************************

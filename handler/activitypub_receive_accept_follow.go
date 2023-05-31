@@ -19,10 +19,10 @@ func init() {
 		followingService := factory.Following()
 
 		// Parse the Object.ID of the activity, which should be our original "Follow" activity
-		userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.ObjectID())
+		userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.Object().ID())
 
 		if err != nil {
-			return derp.Wrap(err, "handler.inboxRouter.Accept.Follow", "Error parsing followingID", activity.ObjectID())
+			return derp.Wrap(err, "handler.inboxRouter.Accept.Follow", "Error parsing followingID", activity.Object().ID())
 		}
 
 		// Try to load the original "Following" record.
@@ -33,8 +33,8 @@ func init() {
 		}
 
 		// RULE: Validate that the Following record matches the Accept
-		if following.ProfileURL != activity.ActorID() {
-			return derp.NewForbiddenError("handler.inboxRouter.Accept.Follow", "Invalid Accept", following.ProfileURL, activity.ActorID())
+		if following.ProfileURL != activity.Actor().ID() {
+			return derp.NewForbiddenError("handler.inboxRouter.Accept.Follow", "Invalid Accept", following.ProfileURL, activity.Actor().ID())
 		}
 
 		// Populate our "Following" record with the NAME and AVATAR of the remote Actor
@@ -46,7 +46,7 @@ func init() {
 
 		// Upgrade the "Following" record to ActivityPub
 		following.Label = remoteActor.Name()
-		following.ImageURL = first.String(remoteActor.IconURL(), remoteActor.ImageURL(), following.ImageURL)
+		following.ImageURL = first.String(remoteActor.IconOrImage().URL(), following.ImageURL)
 		following.Method = model.FollowMethodActivityPub
 		following.Secret = ""
 		following.PollDuration = 30

@@ -15,7 +15,7 @@ type StepViewActivityPub struct {
 func (step StepViewActivityPub) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Try to load the uri from the Internet
-	client := renderer.factory().ActivityPubClient()
+	client := renderer.factory().ActivityStreams()
 	uri := renderer.context().QueryParam("uri")
 
 	document, err := streams.NewDocument(uri, streams.WithClient(client)).Load()
