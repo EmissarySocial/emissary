@@ -85,8 +85,6 @@ func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, f
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
 func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, activity mapof.Any) error {
 
-	const location = "SendNotifications_WebSub"
-
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
 		service.queue.Run(NewTaskSendWebSubMessage(follower))

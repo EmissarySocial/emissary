@@ -44,6 +44,10 @@ func (as *ActivityStreams) Load(uri string) (streams.Document, error) {
  * Custom Query Methods
  ******************************************/
 
+func (client *ActivityStreams) DeleteByURL(url string) error {
+	return client.collection.HardDelete(exp.Equal("uri", url))
+}
+
 func (client *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).

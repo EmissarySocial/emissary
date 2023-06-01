@@ -110,6 +110,10 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
 	}
 
+	if err := service.activityStreamsService.DeleteByURL(outboxMessage.URL); err != nil {
+		return derp.Wrap(err, "service.Outbox", "Error deleting ActivityStream", outboxMessage, note)
+	}
+
 	return nil
 }
 
