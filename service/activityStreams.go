@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -41,20 +42,20 @@ func (as *ActivityStreams) Load(uri string) (streams.Document, error) {
  * Custom Query Methods
  ******************************************/
 
-func (client *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int64) (streams.Document, error) {
+func (client *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
 		AndLessOrEqual("published", maxDate)
 
-	return client.query(criteria, option.SortDesc("published"), option.MaxRows(maxRows))
+	return client.query(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
 }
 
-func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int64) (streams.Document, error) {
+func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
 		AndGreaterOrEqual("published", minDate)
 
-	return client.query(criteria, option.SortDesc("published"), option.MaxRows(maxRows))
+	return client.query(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
 }
 
 /******************************************
@@ -81,15 +82,14 @@ func (client *ActivityStreams) query(criteria exp.Expression, options ...option.
 
 	result := make([]mapof.Any, 0, iterator.Count())
 
-	value := mapof.NewAny()
+	value := ascache.NewCachedValue()
 	for iterator.Next(&value) {
+		result = append(result, value.Original)
+		value = ascache.NewCachedValue()
 
 		if err := iterator.Error(); err != nil {
 			return streams.NilDocument(), derp.Wrap(err, "emisary.tools.cache.Client.Query", "Error during iteration")
 		}
-
-		result = append(result, value)
-		value = mapof.NewAny()
 	}
 
 	return streams.NewDocument(result, streams.WithClient(client)), nil

@@ -38,6 +38,7 @@
 			]
 		},
 		"view": {"step":"view-html"},
+		"view-previous": {"step":"view-html"},
 		"view-replies":{
 			"step":"view-html"
 		},

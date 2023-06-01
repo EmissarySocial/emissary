@@ -7,7 +7,7 @@
 	<div style="max-width:600px;"> 
 
 		{{- if .IsReply -}}
-			{{template "parent" .InReplyTo}}
+			{{- template "parent" .InReplyTo -}}
 		{{- end -}}
 
 		<div class="p-author space-below" script="on load go to me + 100 px">
@@ -32,9 +32,11 @@
 
 		{{template "view-responses" .}}
 
-		{{.View "view-replies"}}
+		<hr>
 
-		{{.View "add-reply"}}
+		<div hx-get="/{{.StreamID}}/view-replies" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+			Loading Replies...
+		</div>
 
 	</div>
 

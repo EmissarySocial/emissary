@@ -1,0 +1,22 @@
+{{- $actor := .AttributedTo.Load -}}
+
+<div class="clickable text-gray space-below" script="on click go to url '{{.ID}}'">
+
+	<div class="space-below">
+		<a href="{{.ID}}" class="text-plain">
+			<img src="{{$actor.Icon.URL}}" class="circle-24 inline-block" style="margin-right:8px;">
+			<div class="inline-block">
+				<div class="bold link vertical-space-none">{{$actor.Name}}</div>
+				<div>{{ .Published | humanizeTime }}</div>
+			</div>
+		</a>
+	</div>
+
+	{{- if .Image.NotNil -}}
+		<div><img src="{{.Image.URL}}" style="width:100%;"></div>
+	{{- end -}}
+
+	<div class="space-below">{{.Content | html}}</div>
+
+</div>
+<hr>

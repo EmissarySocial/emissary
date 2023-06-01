@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Client struct {
@@ -63,29 +64,37 @@ func (client *Client) start() {
 
 func (client *Client) Load(uri string) (streams.Document, error) {
 
+	spew.Dump("load from cache", uri)
+
 	// Search the cache for the document
 	if client.collection != nil {
 		cachedValue := NewCachedValue()
 		if err := client.loadByURI(uri, &cachedValue); err == nil {
 
 			if cachedValue.ShouldRefresh() {
-				go client.refresh(cachedValue)
+				go client.refresh(uri, cachedValue)
 			}
 
+			spew.Dump("cache hit!!")
 			return streams.NewDocument(cachedValue.Original, streams.WithClient(client)), nil
 		}
 	}
+
+	spew.Dump("not found", uri)
 
 	// Pass the request to the inner client
 	result, err := client.innerClient.Load(uri)
 
 	if err != nil {
+		spew.Dump("Error loading...", uri)
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
 	}
 
+	spew.Dump("loaded from inner client", uri)
 	// Try to save the new value asynchronously
 	if client.collection != nil {
-		go client.save(result)
+		spew.Dump("saving to cache", uri)
+		go client.save(uri, result)
 	}
 
 	result.WithOptions(streams.WithClient(client))
@@ -110,19 +119,19 @@ func (client *Client) PurgeByURI(uri string) error {
 	return nil
 }
 
-func (client *Client) refresh(value CachedValue) {
+func (client *Client) refresh(uri string, value CachedValue) {
 
 	if client.collection == nil {
 		return
 	}
 
 	// Pass the request to the inner client
-	if result, err := client.innerClient.Load(value.URI); err == nil {
-		client.save(result)
+	if result, err := client.innerClient.Load(uri); err == nil {
+		client.save(uri, result)
 	}
 }
 
-func (client *Client) save(document streams.Document) {
+func (client *Client) save(uri string, document streams.Document) {
 
 	if client.collection == nil {
 		return
@@ -130,7 +139,7 @@ func (client *Client) save(document streams.Document) {
 
 	// Create a new cachedValue
 	cachedValue := NewCachedValue()
-	cachedValue.URI = document.ID()
+	cachedValue.URI = uri
 	cachedValue.Original = document.Map()
 	cachedValue.ExpiresDate = time.Now().Add(time.Second * time.Duration(client.expireSeconds)).Unix()
 	cachedValue.RefreshesDate = CalcRefreshDate(time.Now().Unix(), cachedValue.ExpiresDate)
@@ -159,7 +168,8 @@ func (client *Client) loadByURI(uri string, document *CachedValue) error {
 		return derp.NewInternalError("cache.Client.loadByURI", "Cache connection is not defined")
 	}
 
-	now := time.Now().Unix()
-	criteria := exp.Equal("uri", uri).AndGreaterThan("expires", now)
-	return client.collection.Load(criteria, document)
+	criteria := exp.Equal("uri", uri)
+	err := client.collection.Load(criteria, document)
+
+	return err
 }

@@ -482,7 +482,7 @@ func (s Stream) Responses() model.ResponseSummary {
 	return s.stream.Responses
 }
 
-func (s Stream) ResponsesByType(responseType string) []model.StreamResponse {
+func (s Stream) ResponsesByType(responseType string) sliceof.Object[model.StreamResponse] {
 
 	result, err := s.factory().StreamResponse().QueryByStreamAndType(s.stream.StreamID, responseType)
 
@@ -498,7 +498,7 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 	return mentionService.QueryByObjectID(w.stream.StreamID)
 }
 
-func (w Stream) RepliesBefore(dateString string, maxRows int64) []streams.Document {
+func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	maxDate := convert.Int64(dateString)
 
@@ -512,7 +512,7 @@ func (w Stream) RepliesBefore(dateString string, maxRows int64) []streams.Docume
 	return result.SliceOfDocuments()
 }
 
-func (w Stream) RepliesAfter(dateString string, maxRows int64) []streams.Document {
+func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
 	minDate := convert.Int64(dateString)
 
 	activityStreamsService := w._factory.ActivityStreams()
