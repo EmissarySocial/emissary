@@ -518,7 +518,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		"object":   stream.GetJSONLD(),
 	}
 
-	service.outboxService.Publish("STREAM", stream.StreamID, user.UserID, activity)
+	service.outboxService.Publish(user.UserID, stream.URL, activity)
 
 	// Done.
 	return nil
@@ -544,7 +544,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 	}
 
 	// Remove the record from the inbox
-	if err := service.outboxService.UnPublish(user.UserID, stream.StreamID, activity); err != nil {
+	if err := service.outboxService.UnPublish(user.UserID, stream.URL, activity); err != nil {
 		return derp.Wrap(err, "service.Stream.UnPublish", "Error removing from outbox", stream)
 	}
 

@@ -7,35 +7,60 @@
 	<div style="max-width:600px;"> 
 
 		{{- if .IsReply -}}
-			{{- template "parent" .InReplyTo -}}
-		{{- end -}}
-
-		<div class="p-author space-below" script="on load go to me + 100 px">
-			<a href="{{.Author.ProfileURL}}" class="text-plain">
-				<img src="{{.Author.ImageURL}}" class="circle-24 inline-block" style="margin-right:8px;">
-				<div class="inline-block">
-					<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
-					<div class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
+			{{- $inReplyTo := .InReplyTo.Load -}}
+			<!--
+			<div class="space-below" role="button" hx-get="/{{.StreamID}}/view-previous" hx-trigger="load" hx-push-url="false" hx-target="this">
+				<div class="text-gray">Replying to 
+					<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
 				</div>
-			</a>
-		</div>
-
-		<div class="space-below">
-			<h2 class="p-summary">{{.ContentHTML}}</h2>
-		</div>
-
-		{{- if ne .ImageURL "" -}}
-			<div class="space-below">
-				<img src="{{.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
+				<div class="italics">&ldquo;{{$inReplyTo.Content | textOnly | summary}}&rdquo;</div>
+				<span class="button">View Previous Messages</span>
+			</div>
+			-->
+			<div class="text-gray" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
+				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
+				<span class="link text-xs">[show previous]</span>
+				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>
 			</div>
 		{{- end -}}
 
-		{{template "view-responses" .}}
+		<div class="space-above">
+			<div class="p-author text-lg space-below">
+				<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row">
+					<img src="{{.Author.ImageURL}}" class="circle-64 inline-block" style="margin-right:8px;">
+					<div class="inline-block">
+						<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
+						<div class="dt-published vertical-space-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
+					</div>
+				</a>
+			</div>
+		</div>
 
-		<hr>
+		<div style="margin-left:32px;">
+			<div class="space-below">
+				<h2 class="p-summary">{{.ContentHTML}}</h2>
+			</div>
 
-		<div hx-get="/{{.StreamID}}/view-replies" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-			Loading Replies...
+			{{- if ne .ImageURL "" -}}
+				<div class="space-below">
+					<img src="{{.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
+				</div>
+			{{- end -}}
+
+			{{template "view-responses" .}}
+
+			<hr>
+
+			<div hx-get="/{{.StreamID}}/view-replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+				Loading Replies...
+			</div>
+
+			<div hx-get="/{{.StreamID}}/view-replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
+				{{- if .UserCan "add-reply" -}}
+					{{.View "add-reply"}}
+				{{- end -}}
+			</div>
+
 		</div>
 
 	</div>

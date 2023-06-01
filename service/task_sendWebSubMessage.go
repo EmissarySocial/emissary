@@ -12,13 +12,11 @@ import (
 
 // TaskSendWebSubMessage sends a WebSub notification to a single WebSub follower.
 type TaskSendWebSubMessage struct {
-	message  model.OutboxMessage
 	follower model.Follower
 }
 
-func NewTaskSendWebSubMessage(message model.OutboxMessage, follower model.Follower) TaskSendWebSubMessage {
+func NewTaskSendWebSubMessage(follower model.Follower) TaskSendWebSubMessage {
 	return TaskSendWebSubMessage{
-		message:  message,
 		follower: follower,
 	}
 }

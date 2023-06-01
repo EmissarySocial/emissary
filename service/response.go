@@ -88,7 +88,7 @@ func (service *Response) Save(response *model.Response, note string) error {
 	}
 
 	// Responses from Local Actor should be published to the Outbox
-	if err := service.outboxService.Publish("RESPONSE", response.ResponseID, response.Actor.UserID, response.GetJSONLD()); err != nil {
+	if err := service.outboxService.Publish(response.Actor.UserID, response.ActivityPubID(), response.GetJSONLD()); err != nil {
 		return derp.Wrap(err, location, "Error publishing Response", response)
 	}
 
@@ -116,7 +116,7 @@ func (service *Response) Delete(response *model.Response, note string) error {
 	activity := pub.Undo(response.GetJSONLD())
 
 	// Send the "Undo" activity to followers
-	if err := service.outboxService.UnPublish(response.Actor.UserID, response.ResponseID, activity); err != nil {
+	if err := service.outboxService.UnPublish(response.Actor.UserID, response.ActivityPubID(), activity); err != nil {
 		return derp.Wrap(err, location, "Error publishing Response", response)
 	}
 

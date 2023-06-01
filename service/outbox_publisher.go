@@ -13,44 +13,39 @@ import (
  ******************************************/
 
 // Publish adds/updates an OutboxMessage in the Outbox, and sends notifications to all followers
-func (service Outbox) Publish(objectType string, objectID primitive.ObjectID, userID primitive.ObjectID, activity mapof.Any) error {
+func (service Outbox) Publish(userID primitive.ObjectID, url string, activity mapof.Any) error {
 
+	// Write a new OutboxMessage to the database
 	outboxMessage := model.NewOutboxMessage()
-	outboxMessage.ObjectType = objectType
-	outboxMessage.ObjectID = objectID
 	outboxMessage.UserID = userID
-	outboxMessage.Activity = activity
+	outboxMessage.URL = url
 
 	if err := service.Save(&outboxMessage, "Updated"); err != nil {
 		return derp.Wrap(err, "service.Outbox.NewPublish", "Error saving outbox message", outboxMessage)
 	}
 
-	// RULE: Send ActivityPub Nofitications to all followers
-	if err := service.SendNotifications_ActivityPub(userID, activity); err != nil {
-		return derp.Wrap(err, "service.Outbox.Publish", "Error sending ActivityPub notifications", outboxMessage)
-	}
+	// Send notifications to followers on all push channels
+	activityPubFollowers, webSubFollowers := service.followerService.FollowerChannels(userID)
 
-	// RULE: Send WebSub Nofitications to all followers
-	if err := service.SendNotifications_WebSub(outboxMessage); err != nil {
-		return derp.Wrap(err, "service.Outbox.Publish", "Error sending ActivityPub notifications", outboxMessage)
-	}
+	go service.SendNotifications_ActivityPub(userID, activityPubFollowers, activity)
+	go service.SendNotifications_WebSub(webSubFollowers, activity)
 
 	// Success!!
 	return nil
 }
 
 // UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all followers
-func (service Outbox) UnPublish(userID primitive.ObjectID, objectID primitive.ObjectID, activity mapof.Any) error {
+func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity mapof.Any) error {
 
 	const location = "service.Outbox.Unpublish"
 
 	// Try to load the existing outbox message
 	outboxMessage := model.NewOutboxMessage()
-	if err := service.LoadByObjectID(userID, objectID, &outboxMessage); err != nil {
+	if err := service.LoadByURL(userID, url, &outboxMessage); err != nil {
 		if derp.NotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Error loading outbox message", userID, objectID)
+		return derp.Wrap(err, location, "Error loading outbox message", userID, url)
 	}
 
 	// Fall through means we have a valid outboxMessage to unpublish.
@@ -58,29 +53,19 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, objectID primitive.Ob
 		return derp.Wrap(err, location, "Error deleting outbox message", outboxMessage)
 	}
 
-	if err := service.SendNotifications_ActivityPub(userID, activity); err != nil {
-		return derp.Wrap(err, location, "Error sending ActivityPub notifications", outboxMessage)
-	}
+	// Send notifications to followers on all push channels
+	activityPubFollowers, webSubFollowers := service.followerService.FollowerChannels(userID)
+
+	go service.SendNotifications_ActivityPub(userID, activityPubFollowers, activity)
+	go service.drainChannel(webSubFollowers)
 
 	// Hey-oh!
 	return nil
 }
 
-func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, activity mapof.Any) error {
+func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, followers <-chan model.Follower, activity mapof.Any) error {
 
 	const location = "service.Outbox.SendNotifications_ActivityPub"
-
-	// Get the iterator of followers to notify
-	followers, err := service.followerService.ChannelActivityPub(userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading followers", userID)
-	}
-
-	// If the channel is nil, then there are no followers to notify, so we're done.
-	if followers == nil {
-		return nil
-	}
 
 	// Load the ActivityPub Actor for this Stream
 	actor, err := service.userService.ActivityPubActor(userID)
@@ -98,30 +83,19 @@ func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, a
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) SendNotifications_WebSub(message model.OutboxMessage) error {
+func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, activity mapof.Any) error {
 
 	const location = "SendNotifications_WebSub"
 
-	if message.ObjectType != "Stream" {
-		return nil
-	}
-
-	// Get the iterator of followers to notify
-	followers, err := service.followerService.ChannelWebSub(message.ObjectID, message.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading followers", message)
-	}
-
-	// If the channel is nil, then there are no followers to notify, so we're done.
-	if followers == nil {
-		return nil
-	}
-
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
-		service.queue.Run(NewTaskSendWebSubMessage(message, follower))
+		service.queue.Run(NewTaskSendWebSubMessage(follower))
 	}
 
 	return nil
+}
+
+func (service Outbox) drainChannel(channel <-chan model.Follower) {
+	for range channel {
+	}
 }

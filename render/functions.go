@@ -74,6 +74,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return html.RemoveTags(value)
 		},
 
+		"summary": func(value string) string {
+			return html.Summary(value)
+		},
+
 		"html": func(value string) template.HTML {
 			return template.HTML(value)
 		},
@@ -87,6 +91,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return string(result)
 		},
 
+		"now": func() time.Time {
+			return time.Now()
+		},
+
 		"isoDate": func(value any) string {
 
 			valueInt := convert.Int64(value)
@@ -96,6 +104,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 
 			return time.Unix(valueInt, 0).Format(time.RFC3339)
+		},
+
+		"epochDate": func(value any) int64 {
+			return convert.EpochDate(value)
 		},
 
 		"humanizeTime": func(value any) string {

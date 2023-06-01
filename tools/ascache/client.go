@@ -141,6 +141,9 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue := NewCachedValue()
 	cachedValue.URI = uri
 	cachedValue.Original = document.Map()
+	cachedValue.PublishedDate = document.Published().Unix()
+
+	// TODO: LOW: should see if the document has a header that defines the cache duration
 	cachedValue.ExpiresDate = time.Now().Add(time.Second * time.Duration(client.expireSeconds)).Unix()
 	cachedValue.RefreshesDate = CalcRefreshDate(time.Now().Unix(), cachedValue.ExpiresDate)
 

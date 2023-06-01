@@ -1,0 +1,10 @@
+{{- $published := .QueryParam "published" -}}
+{{- $replies := .RepliesAfter $published 0 -}}
+
+{{- range $replies -}}
+	{{- template "activitystream" . -}}
+{{- end -}}
+
+{{- if .UserCan "add-reply" -}}
+	{{.View "add-reply"}}
+{{- end -}}

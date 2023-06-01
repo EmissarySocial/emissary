@@ -70,13 +70,13 @@ func (task TaskCreateWebSubFollower) subscribe() error {
 	}
 
 	// Create a new Follower record
-	follower, err := task.followerService.LoadByWebSubUnique(task.objectType, task.objectID, task.callback)
+	follower, err := task.followerService.LoadOrCreateByWebSub(task.objectType, task.objectID, task.callback)
 
 	if err != nil {
 		return derp.Report(derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback))
 	}
 
-	// Set additional properties that are not handled by LoadByWebSubUnique
+	// Set additional properties that are not handled by LoadOrCreateByWebSub
 	follower.Format = task.format
 	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
 	follower.Data = mapof.Any{

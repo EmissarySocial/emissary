@@ -30,9 +30,8 @@
 	data-script="
 		on htmx:configRequest(parameters)
 			set contentHtml to the first <.input/> in me
-			log contentHtml
 			set parameters['content'] to Autolinker.link(contentHtml.innerText, $autolinkerOptions)
-			">
+		">
 
 	{{if not .IsNew}}
 		<h1>Edit Post</h1>

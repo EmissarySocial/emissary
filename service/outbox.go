@@ -1,29 +1,34 @@
 package service
 
 import (
+	"sync"
+
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	collection      data.Collection
-	streamService   *Stream
-	followerService *Follower
-	userService     *User
-	queue           *queue.Queue
+	collection             data.Collection
+	activityStreamsService *ActivityStreams
+	streamService          *Stream
+	followerService        *Follower
+	userService            *User
+	counter                int
+	lock                   *sync.Mutex
+	queue                  *queue.Queue
 }
 
 // NewOutbox returns a fully populated Outbox service
 func NewOutbox() Outbox {
-	return Outbox{}
+	return Outbox{
+		lock: &sync.Mutex{},
+	}
 }
 
 /******************************************
@@ -31,9 +36,10 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, followerService *Follower, userService *User, queue *queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityStreamsService *ActivityStreams, followerService *Follower, userService *User, queue *queue.Queue) {
 	service.collection = collection
 	service.streamService = streamService
+	service.activityStreamsService = activityStreamsService
 	service.followerService = followerService
 	service.userService = userService
 	service.queue = queue
@@ -41,7 +47,6 @@ func (service *Outbox) Refresh(collection data.Collection, streamService *Stream
 
 // Close stops any background processes controlled by this service
 func (service *Outbox) Close() {
-
 }
 
 /******************************************
@@ -79,11 +84,6 @@ func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage
 // Save adds/updates an Outbox in the database
 func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(outboxMessage); err != nil {
-		return derp.Wrap(err, "service.Outbox.Save", "Error cleaning Outbox", outboxMessage)
-	}
-
 	// Calculate the rank for this outboxMessage, using the number of outboxMessages with an identical PublishDate
 	if err := service.CalculateRank(outboxMessage); err != nil {
 		return derp.Wrap(err, "service.Outbox.Save", "Error calculating rank", outboxMessage)
@@ -93,6 +93,9 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 	if err := service.collection.Save(outboxMessage, note); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error saving Outbox", outboxMessage, note)
 	}
+
+	// If this message has a valid URL, then cache it into the activitystream service.
+	go service.activityStreamsService.Load(outboxMessage.URL)
 
 	return nil
 }
@@ -132,74 +135,14 @@ func (service *Outbox) DeleteMany(criteria exp.Expression, note string) error {
 }
 
 /******************************************
- * Generic Data Methods
- ******************************************/
-
-// ObjectType returns the type of object that this service manages
-func (service *Outbox) ObjectType() string {
-	return "Outbox"
-}
-
-// New returns a fully initialized model.Stream as a data.Object.
-func (service *Outbox) ObjectNew() data.Object {
-	result := model.NewOutboxMessage()
-	return &result
-}
-
-func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
-
-	if outboxMessage, ok := object.(*model.OutboxMessage); ok {
-		return outboxMessage.OutboxMessageID
-	}
-
-	return primitive.NilObjectID
-}
-
-func (service *Outbox) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
-}
-
-func (service *Outbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
-func (service *Outbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
-	result := model.NewOutboxMessage()
-	err := service.Load(criteria, &result)
-	return &result, err
-}
-
-func (service *Outbox) ObjectSave(object data.Object, note string) error {
-	if outboxMessage, ok := object.(*model.OutboxMessage); ok {
-		return service.Save(outboxMessage, note)
-	}
-	return derp.NewInternalError("service.Outbox.ObjectSave", "Invalid Object Type", object)
-}
-
-func (service *Outbox) ObjectDelete(object data.Object, note string) error {
-	if outboxMessage, ok := object.(*model.OutboxMessage); ok {
-		return service.Delete(outboxMessage, note)
-	}
-	return derp.NewInternalError("service.Outbox.ObjectDelete", "Invalid Object Type", object)
-}
-
-func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Outbox", "Not Authorized")
-}
-
-func (service *Outbox) Schema() schema.Schema {
-	return schema.New(model.OutboxMessageSchema())
-}
-
-/******************************************
  * Custom Query Methods
  ******************************************/
 
-func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, objectID primitive.ObjectID) (model.OutboxMessage, error) {
+func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, url string) (model.OutboxMessage, error) {
 
 	result := model.NewOutboxMessage()
 
-	err := service.LoadByObjectID(userID, objectID, &result)
+	err := service.LoadByURL(userID, url, &result)
 
 	if err == nil {
 		return result, nil
@@ -207,11 +150,11 @@ func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, objectID primitiv
 
 	if derp.NotFound(err) {
 		result.UserID = userID
-		result.ObjectID = objectID
+		result.URL = url
 		return result, nil
 	}
 
-	return result, derp.Wrap(err, "service.Outbox", "Error loading Outbox", userID, objectID)
+	return result, derp.Wrap(err, "service.Outbox", "Error loading Outbox", userID, url)
 }
 
 func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
@@ -219,21 +162,9 @@ func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Exp
 	return service.Query(criteria, options...)
 }
 
-func (service *Outbox) QueryByObject(objectType string, objectID primitive.ObjectID) ([]model.OutboxMessage, error) {
-	criteria := exp.Equal("objectType", objectType).AndEqual("objectId", objectID)
-	return service.Query(criteria)
-}
-
-func (service *Outbox) LoadByID(userID primitive.ObjectID, outboxOutboxMessageID primitive.ObjectID, result *model.OutboxMessage) error {
+func (service *Outbox) LoadByURL(userID primitive.ObjectID, url string, result *model.OutboxMessage) error {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("_id", outboxOutboxMessageID)
-
-	return service.Load(criteria, result)
-}
-
-func (service *Outbox) LoadByObjectID(userID primitive.ObjectID, objectID primitive.ObjectID, result *model.OutboxMessage) error {
-	criteria := exp.Equal("userId", userID).
-		AndEqual("objectId", objectID)
+		AndEqual("url", url)
 
 	return service.Load(criteria, result)
 }
@@ -244,12 +175,17 @@ func (service *Outbox) LoadByObjectID(userID primitive.ObjectID, objectID primit
 
 func (service *Outbox) CalculateRank(outboxMessage *model.OutboxMessage) error {
 
-	count, err := queries.CountOutboxMessages(service.collection, outboxMessage.UserID, outboxMessage.CreateDate)
+	counter := service.getNextCounter()
 
-	if err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error calculating rank", outboxMessage)
-	}
-
-	outboxMessage.Rank = (outboxMessage.CreateDate * 1000) + int64(count)
+	outboxMessage.Rank = (outboxMessage.CreateDate * 1000) + counter
 	return nil
+}
+
+// getNextCounter safely increments the service counter (MOD 1000)
+func (service *Outbox) getNextCounter() int64 {
+	service.lock.Lock()
+	defer service.lock.Unlock()
+
+	service.counter = (service.counter + 1) % 1000
+	return int64(service.counter)
 }

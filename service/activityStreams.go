@@ -8,6 +8,8 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type ActivityStreams struct {
@@ -45,17 +47,24 @@ func (as *ActivityStreams) Load(uri string) (streams.Document, error) {
 func (client *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
-		AndLessOrEqual("published", maxDate)
+		AndLessThan("published", maxDate)
 
-	return client.query(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
+	results, err := client.query(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
+
+	return streams.NewDocument(results.Reverse(), streams.WithClient(client)),
+		derp.Wrap(err, "emissary.tools.cache.Client.QueryRepliesAfterDate", "Error querying database")
 }
 
 func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
+
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
-		AndGreaterOrEqual("published", minDate)
+		AndGreaterThan("published", minDate)
 
-	return client.query(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
+	results, err := client.query(criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
+
+	return streams.NewDocument(results, streams.WithClient(client)),
+		derp.Wrap(err, "emissary.tools.cache.Client.QueryRepliesAfterDate", "Error querying database")
 }
 
 /******************************************
@@ -68,29 +77,31 @@ func (client *ActivityStreams) iterator(criteria exp.Expression, options ...opti
 }
 
 // query reads from the database and returns a slice of streams.Document values
-func (client *ActivityStreams) query(criteria exp.Expression, options ...option.Option) (streams.Document, error) {
+func (client *ActivityStreams) query(criteria exp.Expression, options ...option.Option) (sliceof.Object[mapof.Any], error) {
 
 	if client.collection == nil {
-		return streams.NilDocument(), nil
+		return make(sliceof.Object[mapof.Any], 0), nil
 	}
 
+	spew.Dump("query ---------------", criteria, options)
 	iterator, err := client.iterator(criteria, options...)
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, "emissary.tools.cache.Client.Query", "Error querying database")
+		return nil, derp.Wrap(err, "emissary.tools.cache.Client.Query", "Error querying database")
 	}
 
-	result := make([]mapof.Any, 0, iterator.Count())
+	result := make(sliceof.Object[mapof.Any], 0, iterator.Count())
 
 	value := ascache.NewCachedValue()
 	for iterator.Next(&value) {
+		spew.Dump(value.Original)
 		result = append(result, value.Original)
 		value = ascache.NewCachedValue()
 
 		if err := iterator.Error(); err != nil {
-			return streams.NilDocument(), derp.Wrap(err, "emisary.tools.cache.Client.Query", "Error during iteration")
+			return nil, derp.Wrap(err, "emisary.tools.cache.Client.Query", "Error during iteration")
 		}
 	}
 
-	return streams.NewDocument(result, streams.WithClient(client)), nil
+	return result, nil
 }

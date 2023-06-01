@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
-	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
@@ -23,9 +22,10 @@ import (
 
 // Block defines a service that manages all content blocks created and imported by Users.
 type Block struct {
-	collection      data.Collection
-	followerService *Follower
-	userService     *User
+	collection    data.Collection
+	outboxService *Outbox
+	userService   *User
+	host          string
 
 	queue *queue.Queue
 }
@@ -40,11 +40,12 @@ func NewBlock() Block {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Block) Refresh(collection data.Collection, followerService *Follower, userService *User, queue *queue.Queue) {
+func (service *Block) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
 	service.collection = collection
-	service.followerService = followerService
+	service.outboxService = outboxService
 	service.userService = userService
 	service.queue = queue
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -118,11 +119,6 @@ func (service *Block) Save(block *model.Block, note string) error {
 		return derp.Wrap(err, "service.Block.Save", "Error cleaning Block", block)
 	}
 
-	// Save the block to the database
-	if err := service.collection.Save(block, note); err != nil {
-		return derp.Wrap(err, "service.Block.Save", "Error saving Block", block, note)
-	}
-
 	// RULE: Publish changes when the block is first shared publicly
 	if block.IsActive && block.IsPublic && (block.PublishDate == 0) {
 		if err := service.publish(block); err != nil {
@@ -135,6 +131,11 @@ func (service *Block) Save(block *model.Block, note string) error {
 		if err := service.unpublish(block, true); err != nil {
 			return derp.Wrap(err, "service.Block.Save", "Error unpublishing Block", block)
 		}
+	}
+
+	// Save the block to the database
+	if err := service.collection.Save(block, note); err != nil {
+		return derp.Wrap(err, "service.Block.Save", "Error saving Block", block, note)
 	}
 
 	// Recalculate the block count for this user
@@ -305,29 +306,6 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 // publish marks the Block as published, and sends "Create" activities to all ActivityPub followers
 func (service *Block) publish(block *model.Block) error {
 
-	// Get all ActivityPub followers
-	followers, err := service.followerService.ChannelActivityPub(block.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Block.publishChanges", "Error loading Followers for Block", block)
-	}
-
-	if followers == nil {
-		return nil
-	}
-
-	// Get the ActivityPub actor
-	actor, err := service.userService.ActivityPubActor(block.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Block.publishChanges", "Error loading Actor for Block", block)
-	}
-
-	// Send a "Create" activity to all followers
-	for follower := range followers {
-		service.queue.Run(pub.SendCreateQueueTask(actor, block.JSONLD, follower.Actor.InboxURL))
-	}
-
 	// Try to update the block in the database (directly, without invoking any business rules)
 	block.PublishDate = time.Now().UnixMilli()
 
@@ -336,43 +314,25 @@ func (service *Block) publish(block *model.Block) error {
 		return derp.Wrap(err, "service.Block.Save", "Error setting JSON-LD", block)
 	}
 
-	return service.collection.Save(block, block.Comment)
+	if err := service.outboxService.Publish(block.UserID, block.JSONLD.GetString("id"), block.JSONLD); err != nil {
+		return derp.Wrap(err, "service.Block.publish", "Error publishing Block", block)
+	}
+
+	return nil
 }
 
 // unpublish marks the Block as unpublished and sends "Undo" activities to all ActivityPub followers
 func (service *Block) unpublish(block *model.Block, saveAfter bool) error {
 
-	// Get all ActivityPub followers
-	followers, err := service.followerService.ChannelActivityPub(block.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Block.publishChanges", "Error loading Followers for Block", block)
-	}
-
-	if followers == nil {
-		return nil
-	}
-
-	// Get the ActivityPub actor
-	actor, err := service.userService.ActivityPubActor(block.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Block.publishChanges", "Error loading Actor for Block", block)
-	}
-
-	// Send a "Undo" activity to all followers
-	for follower := range followers {
-		service.queue.Run(pub.SendUndoQueueTask(actor, block.JSONLD, follower.Actor.InboxURL))
-	}
-
-	if !saveAfter {
-		return nil
-	}
-
 	// Try to update the block in the database (directly, without invoking any business rules)
 	block.PublishDate = 0
 	block.JSONLD = mapof.NewAny()
-	return service.collection.Save(block, block.Comment)
+
+	if err := service.outboxService.UnPublish(block.UserID, block.JSONLD.GetString("id"), block.JSONLD); err != nil {
+		return derp.Wrap(err, "service.Block.publish", "Error publishing Block", block)
+	}
+
+	return nil
 }
 
 func (service *Block) calcJSONLD(block *model.Block) error {
@@ -384,6 +344,7 @@ func (service *Block) calcJSONLD(block *model.Block) error {
 
 	// Reset JSON-LD for the block.  We're going to recalculate EVERYTHING.
 	block.JSONLD = mapof.Any{
+		"id":        user.ActivityPubBlockedURL() + "/" + block.BlockID.Hex(),
 		"type":      vocab.ActivityTypeBlock,
 		"actor":     user.ActivityPubURL(),
 		"target":    block.Trigger,

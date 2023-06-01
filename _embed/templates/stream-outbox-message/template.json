@@ -39,14 +39,14 @@
 		},
 		"view": {"step":"view-html"},
 		"view-previous": {"step":"view-html"},
-		"view-replies":{
-			"step":"view-html"
-		},
+		"view-replies-before":{"step":"view-html"},
+		"view-replies-after":{"step":"view-html"},
 		"add-reply":{
 			"roles":["authenticated"],
 			"steps":[
 				{"step":"set-query-param", "postTo":"/{{.StreamID}}/add-reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true}
+				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+				{"step":"trigger-event", "event":{"refreshReplies":true}}
 			]
 		},
 		"edit": {

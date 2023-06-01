@@ -180,9 +180,10 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate the Block Service
 		factory.blockService.Refresh(
 			factory.collection(CollectionBlock),
-			factory.Follower(),
+			factory.Outbox(),
 			factory.User(),
 			factory.Queue(),
+			factory.Host(),
 		)
 
 		// Populate Domain Service
@@ -256,6 +257,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.outboxService.Refresh(
 			factory.collection(CollectionOutbox),
 			factory.Stream(),
+			factory.ActivityStreams(),
 			factory.Follower(),
 			factory.User(),
 			factory.Queue(),

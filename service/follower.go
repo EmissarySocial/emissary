@@ -217,22 +217,11 @@ func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, 
 	return service.Load(criteria, follower)
 }
 
+// LoadByActor retrieves an Follower from the database by parentID and actorID
 func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
 
 	criteria := exp.Equal("parentId", parentID).AndEqual("actor.profileUrl", actorID)
 	return service.Load(criteria, follower)
-}
-
-func (service *Follower) QueryAllURLs(criteria exp.Expression) ([]string, error) {
-
-	result := make([]string, 0)
-	fields := option.Fields("actor.profileUrl")
-
-	if err := service.collection.Query(&result, notDeleted(criteria), fields); err != nil {
-		return result, derp.Wrap(err, "service.Follower.QueryFollowerURLs", "Error querying follower URLs", criteria)
-	}
-
-	return result, nil
 }
 
 // ListByParent returns an iterator containing all of the Followers of specific parentID
@@ -241,34 +230,43 @@ func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...op
 	return service.List(criteria, options...)
 }
 
-func (service *Follower) ChannelByParent(parentID primitive.ObjectID) (<-chan model.Follower, error) {
-	criteria := exp.Equal("parentId", parentID)
-	return service.Channel(criteria)
-}
+// FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
+func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan model.Follower, <-chan model.Follower) {
 
-func (service *Follower) ChannelActivityPub(parentID primitive.ObjectID) (<-chan model.Follower, error) {
-	criteria := exp.Equal("parentId", parentID).AndEqual("method", model.FollowMethodActivityPub)
-	return service.Channel(criteria)
-}
+	activityPubChannel := make(chan model.Follower, 2)
+	webSubChannel := make(chan model.Follower, 2)
 
-func (service *Follower) ChannelWebSub(objectIDs ...primitive.ObjectID) (<-chan model.Follower, error) {
-	criteria := exp.Equal("method", model.FollowMethodWebSub).AndIn("parentId", objectIDs)
-	return service.Channel(criteria)
+	go func() {
+
+		defer close(activityPubChannel)
+		defer close(webSubChannel)
+
+		it, err := service.ListByParent(parentID)
+
+		if err != nil {
+			derp.Report(err)
+			return
+		}
+
+		item := model.NewFollower()
+		for it.Next(&item) {
+			switch item.Method {
+			case model.FollowMethodActivityPub:
+				activityPubChannel <- item
+
+			case model.FollowMethodWebSub:
+				webSubChannel <- item
+			}
+			item = model.NewFollower()
+		}
+	}()
+
+	return activityPubChannel, webSubChannel
 }
 
 /******************************************
  * WebSub Queries
  ******************************************/
-
-// ListWebSub returns an iterator containing all of the Followers of specific parentID
-func (service *Follower) ListWebSub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
-
-	criteria := exp.
-		Equal("parentId", parentID).
-		AndEqual("method", model.FollowMethodWebSub)
-
-	return service.List(criteria, options...)
-}
 
 // LoadByWebSub retrieves a follower based on the parentID and callback
 func (service *Follower) LoadByWebSub(objectType string, parentID primitive.ObjectID, callback string, result *model.Follower) error {
@@ -282,8 +280,8 @@ func (service *Follower) LoadByWebSub(objectType string, parentID primitive.Obje
 	return service.Load(criteria, result)
 }
 
-// LoadByWebSubUnique finds a follower based on the parentID and callback.  If no follower is found, a new record is created.
-func (service *Follower) LoadByWebSubUnique(objectType string, parentID primitive.ObjectID, callback string) (model.Follower, error) {
+// LoadOrCreateByWebSub finds a follower based on the parentID and callback.  If no follower is found, a new record is created.
+func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primitive.ObjectID, callback string) (model.Follower, error) {
 
 	// Try to load the Follower from the database
 	result := model.NewFollower()
