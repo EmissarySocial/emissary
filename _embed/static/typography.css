@@ -181,11 +181,22 @@ h3.space-below {
  ****************************/
 
 .circle-24 {
-	height:50px;
-	width:50px;
-	border-radius:25px;
+	height:24px;
+	width:24px;
+	border-radius:12px;
 }
 
+.circle-32 {
+    height:32px;
+    width:32px;
+    border-radius:16px;
+}
+
+.circle-64 {
+    height:64px;
+    width:64px;
+    border-radius:32px;
+}
 
 .circle-50 {
 	height:50px;
