@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type ActivityStreams struct {
@@ -87,7 +86,6 @@ func (client *ActivityStreams) query(criteria exp.Expression, options ...option.
 		return make(sliceof.Object[mapof.Any], 0), nil
 	}
 
-	spew.Dump("query ---------------", criteria, options)
 	iterator, err := client.iterator(criteria, options...)
 
 	if err != nil {
@@ -98,7 +96,6 @@ func (client *ActivityStreams) query(criteria exp.Expression, options ...option.
 
 	value := ascache.NewCachedValue()
 	for iterator.Next(&value) {
-		spew.Dump(value.Original)
 		result = append(result, value.Original)
 		value = ascache.NewCachedValue()
 

@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Client struct {
@@ -64,8 +63,6 @@ func (client *Client) start() {
 
 func (client *Client) Load(uri string) (streams.Document, error) {
 
-	spew.Dump("load from cache", uri)
-
 	// Search the cache for the document
 	if client.collection != nil {
 		cachedValue := NewCachedValue()
@@ -75,25 +72,19 @@ func (client *Client) Load(uri string) (streams.Document, error) {
 				go client.refresh(uri, cachedValue)
 			}
 
-			spew.Dump("cache hit!!")
 			return streams.NewDocument(cachedValue.Original, streams.WithClient(client)), nil
 		}
 	}
-
-	spew.Dump("not found", uri)
 
 	// Pass the request to the inner client
 	result, err := client.innerClient.Load(uri)
 
 	if err != nil {
-		spew.Dump("Error loading...", uri)
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
 	}
 
-	spew.Dump("loaded from inner client", uri)
 	// Try to save the new value asynchronously
 	if client.collection != nil {
-		spew.Dump("saving to cache", uri)
 		go client.save(uri, result)
 	}
 
