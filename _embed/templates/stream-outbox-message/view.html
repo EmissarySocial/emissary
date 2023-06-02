@@ -4,39 +4,28 @@
 		<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-sm">Edit</button>
 	</div>
 
-	<div style="max-width:600px;"> 
+	<div style="max-width:720px;"> 
 
 		{{- if .IsReply -}}
 			{{- $inReplyTo := .InReplyTo.Load -}}
-			<!--
-			<div class="space-below" role="button" hx-get="/{{.StreamID}}/view-previous" hx-trigger="load" hx-push-url="false" hx-target="this">
-				<div class="text-gray">Replying to 
-					<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
-				</div>
-				<div class="italics">&ldquo;{{$inReplyTo.Content | textOnly | summary}}&rdquo;</div>
-				<span class="button">View Previous Messages</span>
-			</div>
-			-->
-			<div class="text-gray" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
+			<div class="text-gray space-below" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
 				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
 				<span class="link text-xs">[show previous]</span>
 				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>
 			</div>
 		{{- end -}}
 
-		<div class="space-above">
-			<div class="p-author text-lg space-below">
-				<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row">
-					<img src="{{.Author.ImageURL}}" class="circle-64 inline-block" style="margin-right:8px;">
-					<div class="inline-block">
-						<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
-						<div class="dt-published vertical-space-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
-					</div>
-				</a>
-			</div>
+		<div class="p-author text-lg space-below">
+			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row">
+				<img src="{{.Author.ImageURL}}" class="circle-64 inline-block">
+				<div class="inline-block">
+					<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
+					<div class="dt-published vertical-space-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
+				</div>
+			</a>
 		</div>
 
-		<div style="margin-left:32px;">
+		<div style="margin-left:72px;">
 			<div class="space-below">
 				<h2 class="p-summary">{{.ContentHTML}}</h2>
 			</div>
