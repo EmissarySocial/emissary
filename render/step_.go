@@ -153,9 +153,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithFollowing:
 		return StepWithFollowing(s)
 
-	case step.WithMessage:
-		return StepWithMessage(s)
-
 	case step.WithParent:
 		return StepWithParent(s)
 

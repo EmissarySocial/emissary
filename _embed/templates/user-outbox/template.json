@@ -116,15 +116,6 @@
 				{"step":"refresh-page"}
 			]
 		},
-		"outbox-reply":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-					{"step":"refresh-page"}
-				]}
-			]
-		},
 
 		"followers": {"step":"view-html", "file":"inbox-followers"},
 		"followers-list": {"step":"view-html", "file":"inbox-followers-list"},

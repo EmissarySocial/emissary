@@ -38,6 +38,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) error {
 		return nil
 	}
 
+	// Otherwise, we can render the modal on a page background... IF we have a background view defined.
 	if step.Background == "" {
 		return derp.NewBadRequestError(location, "render.StepAsModal.Get", "Cannot open this route directly.")
 	}

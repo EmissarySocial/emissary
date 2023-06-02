@@ -40,7 +40,8 @@
 			role="button"
 			class="message"
 			style="max-width:640px;"
-			hx-get="/@me/inbox/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/messages/{{.MessageID.Hex}}?&origin.followingId={{$internalID}}"
+			old-hx-get="/@me/inbox/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.followingId={{$internalID}}"
 			hx-trigger="click once"
 			hx-push-url="false">
 
@@ -58,7 +59,7 @@
 			
 		</div>
 
-		{{- template "message-response-widget" $message -}}
+		<!-- template "message-response-widget" $message --->
 
 		<hr>
 

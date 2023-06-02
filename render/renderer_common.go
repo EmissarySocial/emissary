@@ -301,7 +301,11 @@ func (w Common) lookupProvider() form.LookupProvider {
 }
 
 func (w Common) executeTemplate(writer io.Writer, name string, data any) error {
-	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
+	if err := w._template.HTMLTemplate.ExecuteTemplate(writer, name, data); err != nil {
+		return derp.Wrap(err, "render.Common.executeTemplate", "Error executing template", name)
+	}
+
+	return nil
 }
 
 // withViewPermission augments a query criteria to include the

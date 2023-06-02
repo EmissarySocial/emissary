@@ -28,7 +28,7 @@
 			role="button"
 			class="message" 
 			style="max-width:640px;"
-			hx-get="/@me/inbox/message-{{$layout}}?messageId={{.MessageID.Hex}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/messages/{{.MessageID.Hex}}?origin.followingId={{$internalID}}"
 			hx-push-url="false">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
@@ -45,7 +45,7 @@
 			
 		</div>
 
-		{{- template "message-response-widget" $message -}}
+		<!-- template "message-response-widget" $message -->
 
 		<hr>
 

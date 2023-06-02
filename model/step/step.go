@@ -161,9 +161,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-follower":
 		return NewWithFollower(stepInfo)
 
-	case "with-message":
-		return NewWithMessage(stepInfo)
-
 	case "with-prev-sibling":
 		return NewWithPrevSibling(stepInfo)
 

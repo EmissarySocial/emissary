@@ -1,0 +1,5 @@
+{{- if .InReplyTo.NotNil -}}
+	{{template "parent" .InReplyTo}}
+{{- end -}}
+
+{{- template "activitystream" . -}}

@@ -1,0 +1,19 @@
+<div class="text-gray space-below">
+	{{- if .Responses.HasMentions -}}
+		<span class="space-right">{{icon "mention"}} {{.Responses.MentionCount}} Mentions</span>
+	{{- else -}}
+		<span class="space-right">{{icon "mention"}} 0</span>
+	{{- end -}}
+
+	{{- if .Responses.HasLikes -}}
+		<span class="space-right">{{icon "thumbs-up"}} {{.Responses.LikeCount}}</span>
+	{{- else -}}
+		<span class="space-right">{{icon "thumbs-up"}} 0</span>
+	{{- end -}}
+
+	{{- if .Responses.HasDislikes -}}
+		<span class="space-right">{{icon "thumbs-down"}} {{.Responses.DislikeCount}}</span>
+	{{- else -}}
+		<span class="space-right">{{icon "thumbs-down"}} 0</span>
+	{{- end -}}
+</div>

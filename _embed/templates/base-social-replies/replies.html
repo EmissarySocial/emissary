@@ -8,6 +8,8 @@
 
 	<div style="max-width:720px;"> 
 
+		...
+
 		{{- if .IsReply -}}
 			{{- $inReplyTo := .InReplyTo.Load -}}
 			<div class="text-gray space-below" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
