@@ -101,7 +101,8 @@
 			"steps":[
 				{"step":"set-query-param", "postTo":"/@me/messages/{{.MessageID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true, "with-stream":[
-					{"step":"save"}
+					{"step":"save"},
+					{"step":"publish"}
 				]},
 				{"step":"trigger-event", "event":{"refreshReplies":true}}
 			]
