@@ -8,19 +8,22 @@
 		<form class="sortable" hx-post="/@me/inbox/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
-				{{- if eq $selectedID .FolderID -}}
-					<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item selected ellipsis hover-trigger folder turboclick">
-						{{iconFilled .Icon }} {{.Label}}
-						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
-						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
-					</div>
-				{{- else -}}
-					<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder turboclick">
-						{{icon .Icon}} {{.Label}}
-						<span class="hover-reveal folder-handle">{{icon "drag-handle"}}</span>
-						<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
-					</div>
-				{{- end -}}
+				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder turboclick {{if eq $selectedID .FolderID}}selected{{end}}">
+					{{- if eq $selectedID .FolderID -}}
+						{{- iconFilled .Icon -}}
+					{{- else -}}
+						{{- icon .Icon -}}
+					{{- end }}
+					{{.Label}}
+					
+					<span class="folder-handle">
+						<span id="folder-unread-{{.FolderID.Hex}}" data-value="{{.UnreadCount}}" class="pill pill-red" script="install unreadcount"></span>
+						<span class="hover-reveal">
+							{{icon "drag-handle"}}
+						</span>
+					</span>
+					<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
+				</div>
 			{{- end -}}
 
 		</form>

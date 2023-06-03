@@ -11,14 +11,15 @@ import (
 
 // Folder represents a custom folder that organizes incoming messages
 type Folder struct {
-	FolderID primitive.ObjectID `json:"folderId" bson:"_id"`      // Unique ID for this folder
-	UserID   primitive.ObjectID `json:"userId"   bson:"userId"`   // ID of the User who owns this folder
-	Label    string             `json:"label"    bson:"label"`    // Label of the folder
-	Icon     string             `json:"icon"     bson:"icon"`     // Icon of the folder
-	Layout   string             `json:"layout"   bson:"layout"`   // Layout type of the folder
-	Group    int                `json:"group"    bson:"group"`    // Group number of the folder (starting with 1)
-	Rank     int                `json:"rank"     bson:"rank"`     // Sort order of the folder
-	ReadDate int64              `json:"readDate" bson:"readDate"` // PublishDate (in milliseconds) of the most recently read message in this folder
+	FolderID    primitive.ObjectID `json:"folderId"    bson:"_id"`         // Unique ID for this folder
+	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // ID of the User who owns this folder
+	Label       string             `json:"label"       bson:"label"`       // Label of the folder
+	Icon        string             `json:"icon"        bson:"icon"`        // Icon of the folder
+	Layout      string             `json:"layout"      bson:"layout"`      // Layout type of the folder
+	Group       int                `json:"group"       bson:"group"`       // Group number of the folder (starting with 1)
+	Rank        int                `json:"rank"        bson:"rank"`        // Sort order of the folder
+	ReadDate    int64              `json:"readDate"    bson:"readDate"`    // PublishDate (in milliseconds) of the most recently read message in this folder
+	UnreadCount int                `json:"unreadCount" bson:"unreadCount"` // Number of unread messages in this folder
 
 	journal.Journal `json:"-" bson:"journal"`
 }

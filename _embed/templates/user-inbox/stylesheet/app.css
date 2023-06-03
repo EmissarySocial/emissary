@@ -62,3 +62,19 @@ main {
 .app.page .app-content {
 	padding-top:12px;
 }
+
+.pill {
+	position:relative;
+	top:-2px;
+	padding:2px 8px;
+	border-radius:8px;
+	background-color:var(--gray15);
+	color:var(--gray80);
+	font-size:12px;
+	vertical-align: middle;
+}
+
+.pill.pill-red {
+	background-color:var(--red60);
+	color:var(--white);
+}
