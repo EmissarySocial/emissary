@@ -32,7 +32,7 @@ func ActivityPub_GetResponseCollection(serverFactory *server.Factory, responseTy
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.New(derp.CodeForbiddenError, "handler.ActivityPub_GetResponseCollection", "")
+			return derp.NewNotFoundError("handler.ActivityPub_GetResponseCollection", "User not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page

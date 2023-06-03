@@ -24,9 +24,9 @@ func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
 	return renderOutbox(serverFactory, render.ActionMethodPost)
 }
 
-func GetOutboxAvatar(serverFactory *server.Factory) echo.HandlerFunc {
+func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.GetOutboxAvatar"
+	const location = "handler.GetProfileAvatar"
 
 	return func(ctx echo.Context) error {
 

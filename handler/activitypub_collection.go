@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"math"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
@@ -13,7 +15,7 @@ func activityPub_Collection(collectionURL string) streams.OrderedCollection {
 
 	// Determine the collection URL
 	// Determine the first page URL
-	firstPageURL := collectionURL + "?publishDate=0"
+	firstPageURL := collectionURL + "?publishDate=" + convert.String(math.MaxInt64)
 
 	// Generate a new Collection stub
 	result := streams.NewOrderedCollection()

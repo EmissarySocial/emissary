@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ActivityPub_GetFollowing(serverFactory *server.Factory) echo.HandlerFunc {
+func ActivityPub_GetFollowingCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		result := streams.NewOrderedCollection()

@@ -166,6 +166,26 @@ func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Exp
 	return service.Query(criteria, options...)
 }
 
+func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+
+	criteria := exp.Equal("userId", userID).
+		And(exp.LessThan("createDate", maxDate))
+
+	options := []option.Option{
+		option.Fields(model.OutboxMessageSummaryFields()...),
+		option.SortDesc("rank"),
+		option.MaxRows(int64(maxRows)),
+	}
+
+	result := make([]model.OutboxMessageSummary, 0, maxRows)
+
+	if err := service.collection.Query(&result, criteria, options...); err != nil {
+		return nil, derp.Wrap(err, "service.Outbox", "Error querying outbox", userID, maxDate)
+	}
+
+	return result, nil
+}
+
 func (service *Outbox) LoadByURL(userID primitive.ObjectID, url string, result *model.OutboxMessage) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url)

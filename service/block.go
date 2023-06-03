@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,7 +11,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
@@ -258,20 +256,14 @@ func (service *Block) QueryActiveByUser(userID primitive.ObjectID) ([]model.Bloc
 	)
 }
 
-func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, publishDate int64, options ...option.Option) ([]model.Block, error) {
+func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Block, error) {
 
-	publishDateString := []string{"GT:" + strconv.FormatInt(publishDate, 10)}
+	criteria := service.byUserID(userID).
+		AndEqual("isPublic", true).
+		AndNotEqual("isActive", true).
+		AndLessThan("publishDate", maxDate)
 
-	expressionBuilder := builder.NewBuilder().Int64("publishDate")
-
-	criteria := exp.And(
-		service.byUserID(userID),
-		exp.Equal("isPublic", true),
-		exp.NotEqual("isActive", true),
-		expressionBuilder.EvaluateField("publishDate", builder.DataTypeInt64, publishDateString),
-	)
-
-	options = append(options, option.SortAsc("publishDate"))
+	options = append(options, option.SortDesc("publishDate"))
 	result, err := service.Query(criteria, options...)
 
 	return result, err

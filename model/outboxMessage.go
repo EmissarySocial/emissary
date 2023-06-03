@@ -13,7 +13,7 @@ type OutboxMessage struct {
 	URL             string             `json:"url"       bson:"url,omitempty"` // URI of the object (if applicable)
 	Rank            int64              `json:"rank"      bson:"rank"`          // Rank of the object (if applicable)
 
-	journal.Journal `json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewOutboxMessage returns a fully initialized OutboxMessage record
