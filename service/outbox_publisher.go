@@ -1,11 +1,15 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"willnorris.com/go/webmention"
 )
 
 /******************************************
@@ -29,6 +33,7 @@ func (service Outbox) Publish(userID primitive.ObjectID, url string, activity ma
 
 	go service.SendNotifications_ActivityPub(userID, activityPubFollowers, activity)
 	go service.SendNotifications_WebSub(webSubFollowers, activity)
+	go service.SendNotifications_WebMention(activity)
 
 	// Success!!
 	return nil
@@ -93,6 +98,40 @@ func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, 
 	return nil
 }
 
+// SendNotifications_WebMention sends WebMention updates to external websites that are
+// mentioned in this stream.  This is here (and not in the outbox service)
+// because we need to render the content in order to discover outbound links.
+func (service Outbox) SendNotifications_WebMention(activity mapof.Any) error {
+
+	// Locate the object ID for this acticity
+	object := activity.GetMap(vocab.PropertyObject)
+	id := object.GetString(vocab.PropertyID)
+	content := activity.GetString(vocab.PropertyContent)
+
+	// Discover all webmention links in the content
+	reader := strings.NewReader(content)
+	links, err := webmention.DiscoverLinksFromReader(reader, id, "")
+
+	if err != nil {
+		return derp.Wrap(err, "mention.SendWebMention.Run", "Error discovering webmention links", activity)
+	}
+
+	// If no links, peace out, homie.
+	if len(links) == 0 {
+		return nil
+	}
+
+	// Add background tasks to TRY sending webmentions to every link we found
+	for _, link := range links {
+		service.queue.Run(NewTaskSendWebMention(id, link))
+	}
+
+	// Accept your success with grace.
+	return nil
+}
+
+// drainChannel empties a channel of followers.  It is used to skip over
+// channels that can't be used by the current process.
 func (service Outbox) drainChannel(channel <-chan model.Follower) {
 	for range channel {
 	}
