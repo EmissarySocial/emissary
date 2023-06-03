@@ -42,7 +42,7 @@
 			style="max-width:640px;"
 			hx-get="/@me/messages/{{.MessageID.Hex}}?&origin.followingId={{$internalID}}"
 			old-hx-get="/@me/inbox/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.followingId={{$internalID}}"
-			hx-trigger="click once"
+			hx-trigger="click"
 			hx-push-url="false">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
