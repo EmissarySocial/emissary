@@ -71,6 +71,7 @@ main {
 	background-color:var(--gray15);
 	color:var(--gray80);
 	font-size:12px;
+	font-weight:800;
 	vertical-align: middle;
 }
 

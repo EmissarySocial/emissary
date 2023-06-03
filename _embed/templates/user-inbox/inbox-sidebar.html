@@ -17,7 +17,11 @@
 					{{.Label}}
 					
 					<span class="folder-handle">
-						<span id="folder-unread-{{.FolderID.Hex}}" data-value="{{.UnreadCount}}" class="pill pill-red" script="install unreadcount"></span>
+						{{- if eq .UnreadCount 0 -}}
+							<span id="folder-unread-{{.FolderID.Hex}}" class="pill pill-red" style="visibility:hidden;">0</span>
+						{{- else -}}
+							<span id="folder-unread-{{.FolderID.Hex}}" class="pill pill-red">{{.UnreadCount}}</span>
+						{{- end -}}
 						<span class="hover-reveal">
 							{{icon "drag-handle"}}
 						</span>
