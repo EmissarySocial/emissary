@@ -9,12 +9,14 @@ import (
 
 type Response struct {
 	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`     // Unique identifier for this Response
+	URL        string             `json:"url"        bson:"url"`     // URL of this Response document
+	ActorID    string             `json:"actorId"    bson:"actorId"` // URL of the Actor who made the response
+	ObjectID   string             `json:"objectId"   bson:"orginId"` // URL of the Object that the actor responded to
 	Type       string             `json:"type"       bson:"type"`    // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
-	Actor      PersonLink         `json:"actor"      bson:"actor"`   // Actor who responded
-	Message    DocumentLink       `json:"message"    bson:"message"` // Message that the Actor responded to
-	Value      string             `json:"value"      bson:"value"`   // Custom value assigned to the response (emoji, vote, etc)
+	Summary    string             `json:"summary"    bson:"summary"` // Summary of the response (e.g. "I liked this post because...")
+	Content    string             `json:"value"      bson:"value"`   // Custom value assigned to the response (emoji, vote, etc.)
 
-	journal.Journal `json:"journal" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewResponse() Response {
@@ -38,32 +40,18 @@ func (response Response) ID() string {
 func (response Response) GetJSONLD() mapof.Any {
 	result := mapof.Any{
 		"@context": vocab.ContextTypeActivityStreams,
-		"id":       response.ActivityPubID(),
+		"id":       response.URL,
 		"type":     response.ActivityPubType(),
-		"actor":    response.Actor.ProfileURL,
-		"object":   response.Message.URL,
+		"actor":    response.ActorID,
+		"object":   response.ObjectID,
+		"summary":  response.Summary,
 	}
 
-	if response.Value != "" {
-		result["content"] = response.Value
+	if response.Content != "" {
+		result["content"] = response.Content
 	}
 
 	return result
-}
-
-func (response Response) ActivityPubID() string {
-
-	switch response.Type {
-
-	case ResponseTypeLike:
-		return response.Actor.ProfileURL + "/likes/" + response.ResponseID.Hex()
-
-	case ResponseTypeDislike:
-		return response.Actor.ProfileURL + "/dislikes/" + response.ResponseID.Hex()
-
-	default:
-		return response.Actor.ProfileURL + "/mentions/" + response.ResponseID.Hex()
-	}
 }
 
 func (response Response) ActivityPubType() string {
@@ -79,4 +67,9 @@ func (response Response) ActivityPubType() string {
 	default:
 		return vocab.ActivityTypeAnnounce
 	}
+}
+
+// IsEqual returns TRUE if two responses match urls, actors, objects, types, and values
+func (response Response) IsEqual(other Response) bool {
+	return (response.URL == other.URL) && (response.ActorID == other.ActorID) && (response.ObjectID == other.ObjectID) && (response.Type == other.Type) && (response.Content == other.Content)
 }

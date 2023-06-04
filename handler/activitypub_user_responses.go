@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ActivityPub_GetResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -50,7 +50,7 @@ func ActivityPub_GetResponseCollection(serverFactory *server.Factory, responseTy
 		pageSize := 60
 
 		// Retrieve a page of responses from the database
-		responses, err := responseService.QueryByUserAndDate(user.UserID, responseType, publishedDate, pageSize)
+		responses, err := responseService.QueryByUserAndDate(user.ProfileURL, responseType, publishedDate, pageSize)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.ActivityPub_GetResponseCollection", "Error loading responses")
@@ -63,7 +63,7 @@ func ActivityPub_GetResponseCollection(serverFactory *server.Factory, responseTy
 	}
 }
 
-func ActivityPub_GetResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func ActivityPub_GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -98,8 +98,16 @@ func ActivityPub_GetResponse(serverFactory *server.Factory, responseType string)
 		responseService := factory.Response()
 		response := model.NewResponse()
 
-		if err := responseService.LoadByIDAndType(user.UserID, responseID, responseType, &response); err != nil {
+		if err := responseService.LoadByID(responseID, &response); err != nil {
 			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Error loading response")
+		}
+
+		if response.ActorID != user.ProfileURL {
+			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Response not found", "ActorID does not match")
+		}
+
+		if response.Type != responseType {
+			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Response not found", "Type does not match")
 		}
 
 		// Return the response as JSON-LD

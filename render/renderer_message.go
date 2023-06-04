@@ -101,7 +101,7 @@ func (w Message) PageTitle() string {
 }
 
 func (w Message) Permalink() string {
-	return ""
+	return w._message.URL
 }
 
 func (w Message) UserCan(string) bool {

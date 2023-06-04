@@ -29,35 +29,27 @@ func undoResponse(factory *domain.Factory, user *model.User, activity streams.Do
 		return derp.Wrap(err, "handler.undoResponse", "Error loading originalActivity")
 	}
 
-	// Try to load the the object of the original activity (the local Stream that was liked/dislked/announced)
-	streamService := factory.Stream()
-	stream := model.NewStream()
-	streamURL := originalActivity.Object().ID()
+	responseService := factory.Response()
+	response := model.NewResponse()
 
-	if err := streamService.LoadByURL(streamURL, &stream); err != nil {
-		return derp.Wrap(err, "handler.undoResponse", "Error loading Stream")
-	}
-
-	// Try to load the StreamResponse that matches the Stream and origin
-	streamResponseService := factory.StreamResponse()
-	streamResponse := model.NewStreamResponse()
-	if err := streamResponseService.LoadByStreamAndOrigin(stream.StreamID, originalActivity.ID(), &streamResponse); err != nil {
-		return derp.Wrap(err, "handler.undoResponse", "Error loading StreamResponse")
+	// Try to load the Response that matches the original activity
+	if err := responseService.LoadByActorAndObject(originalActivity.Actor().ID(), originalActivity.Object().ID(), &response); err != nil {
+		return derp.Wrap(err, "handler.undoResponse", "Error loading Response")
 	}
 
 	// RULE: ActivityPub type must match the received activity
-	if streamResponse.ActivityPubType() != originalActivity.Type() {
+	if activity.Actor().ID() != response.ActorID {
+		return derp.NewUnauthorizedError("handler.undoResponse", "Actor does not match")
+	}
+
+	// RULE: ActivityPub type must match the received activity
+	if response.ActivityPubType() != originalActivity.Type() {
 		return derp.New(derp.CodeBadRequestError, "handler.undoResponse", "ActivityPub type does not match")
 	}
 
-	// RULE: The Actor must match the received activity
-	if streamResponse.Actor.ProfileURL != activity.Actor().String() {
-		return derp.New(derp.CodeBadRequestError, "handler.undoResponse", "Actor does not match")
-	}
-
-	// Delete the StreamResponse
-	if err := streamResponseService.Delete(&streamResponse, "Undo via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.receiveResponse", "Error deleting StreamResponse")
+	// Try to remove the Response from the database. (This will NOT send updates to other servers)
+	if err := responseService.Delete(&response, "Undo via ActivityPub"); err != nil {
+		return derp.Wrap(err, "handler.undoResponse", "Error deleting Response")
 	}
 
 	return nil

@@ -44,24 +44,23 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
-	attachmentService     service.Attachment
-	blockService          service.Block
-	groupService          service.Group
-	domainService         service.Domain
-	emailService          service.DomainEmail
-	encryptionKeyService  service.EncryptionKey
-	folderService         service.Folder
-	followerService       service.Follower
-	followingService      service.Following
-	inboxService          service.Inbox
-	mentionService        service.Mention
-	outboxService         service.Outbox
-	responseService       service.Response
-	streamService         service.Stream
-	streamDraftService    service.StreamDraft
-	streamResponseService service.StreamResponse
-	realtimeBroker        RealtimeBroker
-	userService           service.User
+	attachmentService    service.Attachment
+	blockService         service.Block
+	groupService         service.Group
+	domainService        service.Domain
+	emailService         service.DomainEmail
+	encryptionKeyService service.EncryptionKey
+	folderService        service.Folder
+	followerService      service.Follower
+	followingService     service.Following
+	inboxService         service.Inbox
+	mentionService       service.Mention
+	outboxService        service.Outbox
+	responseService      service.Response
+	streamService        service.Stream
+	streamDraftService   service.StreamDraft
+	realtimeBroker       RealtimeBroker
+	userService          service.User
 
 	// real-time watchers
 	streamUpdateChannel chan model.Stream
@@ -116,7 +115,6 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityStrea
 	factory.responseService = service.NewResponse()
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
-	factory.streamResponseService = service.NewStreamResponse()
 	factory.userService = service.NewUser()
 
 	// Start() is okay here because it will check for nil configuration before polling.
@@ -242,7 +240,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.inboxService.Refresh(
 			factory.collection(CollectionInbox),
 			factory.Block(),
-			factory.StreamResponse(),
 			factory.Host(),
 		)
 
@@ -271,7 +268,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
-			factory.Inbox(),
+			factory.User(),
 			factory.Outbox(),
 			factory.Host(),
 		)
@@ -291,14 +288,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.streamDraftService.Refresh(
 			factory.collection(CollectionStreamDraft),
 			factory.Stream(),
-		)
-
-		// Populate the StreamResponse Service
-		factory.streamResponseService.Refresh(
-			factory.collection(CollectionStreamResponse),
-			factory.collection(CollectionStream),
-			factory.Block(),
-			factory.Host(),
 		)
 
 		// Populate User Service
@@ -453,11 +442,6 @@ func (factory *Factory) Mention() *service.Mention {
 // Outbox returns a fully populated Outbox service
 func (factory *Factory) Outbox() *service.Outbox {
 	return &factory.outboxService
-}
-
-// StreamResponse returns a fully populated StreamResponse service
-func (factory *Factory) StreamResponse() *service.StreamResponse {
-	return &factory.streamResponseService
 }
 
 // Stream returns a fully populated Stream service

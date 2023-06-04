@@ -183,9 +183,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
-	e.GET("/:stream/likes", handler.GetLikes(factory))
-	e.GET("/:stream/dislikes", handler.GetDislikes(factory))
-	e.GET("/:stream/mentions", handler.GetMentions(factory))
+	e.GET("/:stream/pub/likes", handler.ActivityPub_GetStreamLikes(factory))
+	e.GET("/:stream/pub/dislikes", handler.ActivityPub_GetStreamDislikes(factory))
+	e.GET("/:stream/pub/mentions", handler.ActivityPub_GetStreamMentions(factory))
 	// e.GET("/:stream/replies", handler.GetReplies(factory))
 
 	// Profile Pages
@@ -212,8 +212,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowersCollection(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowingCollection(factory))
-	e.GET("/@:userId/pub/liked", handler.ActivityPub_GetResponseCollection(factory, model.ResponseTypeLike))
-	e.GET("/@:userId/pub/liked/:response", handler.ActivityPub_GetResponse(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/liked", handler.ActivityPub_GetUserResponseCollection(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/liked/:response", handler.ActivityPub_GetUserResponse(factory, model.ResponseTypeLike))
 	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlockedCollection(factory))
 	e.GET("/@:userId/pub/blocked/:block", handler.ActivityPub_GetBlock(factory))
 

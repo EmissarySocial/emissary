@@ -482,17 +482,6 @@ func (s Stream) Responses() model.ResponseSummary {
 	return s.stream.Responses
 }
 
-func (s Stream) ResponsesByType(responseType string) sliceof.Object[model.StreamResponse] {
-
-	result, err := s.factory().StreamResponse().QueryByStreamAndType(s.stream.StreamID, responseType)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "renderer.Stream.ResponsesByType", "Error loading responses by type"))
-	}
-
-	return result
-}
-
 func (w Stream) Mentions() ([]model.Mention, error) {
 	mentionService := w.factory().Mention()
 	return mentionService.QueryByObjectID(w.stream.StreamID)

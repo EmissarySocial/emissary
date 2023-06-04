@@ -28,7 +28,6 @@ type Factory interface {
 	Response() *service.Response
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
-	StreamResponse() *service.StreamResponse
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User

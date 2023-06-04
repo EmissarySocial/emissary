@@ -22,8 +22,8 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 	const location = "render.StepSetResponse.Post"
 
 	txn := struct {
-		Type  string `json:"type"  form:"type"`  // The Response.Type (Like, Dislike, etc)
-		Value string `json:"value" form:"value"` // Addional Value (for Emoji, etc)
+		Type    string `json:"type"    form:"type"`    // The Response.Type (Like, Dislike, etc)
+		Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
 	}{}
 
 	// Receive the transaction data
@@ -38,15 +38,17 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error getting user")
 	}
 
-	message, ok := renderer.object().(*model.Message)
-
-	if !ok {
-		return derp.New(derp.CodeBadRequestError, location, "SetResponse can only be called on an Inbox Message")
-	}
-
+	// Create a new response object
 	responseService := renderer.factory().Response()
 
-	if err := responseService.SetResponse(message, user.PersonLink(), txn.Type, txn.Value); err != nil {
+	response := model.NewResponse()
+	response.ActorID = user.ProfileURL
+	response.ObjectID = renderer.Permalink()
+	response.Type = txn.Type
+	response.Content = txn.Content
+
+	// Save the response to the database
+	if err := responseService.SetResponse(&response); err != nil {
 		return derp.Wrap(err, location, "Error setting response")
 	}
 

@@ -276,11 +276,48 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
  * ActivityStreams Methods
  ******************************************/
 
+func (stream Stream) ActivityPubURL() string {
+	return stream.URL
+}
+
+func (stream Stream) ActivityPubType() string {
+	return stream.SocialRole
+}
+
+func (stream Stream) ActivityPubLikesURL() string {
+	return stream.URL + "/pub/likes"
+}
+
+func (stream Stream) ActivityPubDislikesURL() string {
+	return stream.URL + "/pub/dislikes"
+}
+
+func (stream Stream) ActivityPubSharesURL() string {
+	return stream.URL + "/pub/shares"
+}
+
+func (stream Stream) ActivityPubRepliesURL() string {
+	return stream.URL + "/pub/replies"
+}
+
+func (stream Stream) ActivityPubResponses(responseType string) string {
+	switch responseType {
+
+	case ResponseTypeLike:
+		return stream.ActivityPubLikesURL()
+
+	case ResponseTypeDislike:
+		return stream.ActivityPubDislikesURL()
+	}
+
+	return stream.ActivityPubSharesURL()
+}
+
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
 func (stream Stream) GetJSONLD() mapof.Any {
 	result := mapof.Any{
-		"id":        stream.URL,
+		"id":        stream.ActivityPubURL(),
 		"type":      stream.SocialRole,
 		"url":       stream.URL,
 		"name":      stream.Label,
@@ -288,9 +325,9 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		"image":     stream.ImageURL,
 		"content":   stream.Content.HTML,
 		"published": time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
-		"likes":     stream.URL + "/likes",
-		"dislikes":  stream.URL + "/dislikes",
-		"mentions":  stream.URL + "/mentions",
+		"likes":     stream.ActivityPubLikesURL(),
+		"dislikes":  stream.ActivityPubDislikesURL(),
+		"shares":    stream.ActivityPubSharesURL(),
 	}
 
 	if stream.InReplyTo != "" {

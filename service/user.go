@@ -232,6 +232,11 @@ func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) err
 	return service.Load(criteria, result)
 }
 
+func (service *User) LoadByProfileURL(profileUrl string, result *model.User) error {
+	criteria := exp.Equal("profileUrl", profileUrl)
+	return service.Load(criteria, result)
+}
+
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service *User) LoadByUsername(username string, result *model.User) error {
 	criteria := exp.Equal("username", username)

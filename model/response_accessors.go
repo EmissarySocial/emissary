@@ -10,10 +10,11 @@ func ResponseSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"responseId": schema.String{Format: "objectId"},
-			"actor":      PersonLinkSchema(),
-			"message":    DocumentLinkSchema(),
+			"actorId":    schema.String{Format: "url"},
+			"objectId":   schema.String{Format: "url"},
 			"type":       schema.String{MaxLength: 128},
-			"value":      schema.String{MaxLength: 256},
+			"summary":    schema.String{MaxLength: 256},
+			"content":    schema.String{MaxLength: 256},
 		},
 	}
 }
@@ -22,17 +23,20 @@ func (response *Response) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "actor":
-		return &response.Actor, true
+	case "actorId":
+		return &response.ActorID, true
 
-	case "message":
-		return &response.Message, true
+	case "objectId":
+		return &response.ObjectID, true
 
 	case "type":
 		return &response.Type, true
 
-	case "value":
-		return &response.Value, true
+	case "summary":
+		return &response.Summary, true
+
+	case "content":
+		return &response.Content, true
 	}
 
 	return nil, false

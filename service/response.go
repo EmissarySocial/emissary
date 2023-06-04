@@ -14,7 +14,7 @@ import (
 // Response defines a service that can send and receive response data
 type Response struct {
 	collection    data.Collection
-	inboxService  *Inbox
+	userService   *User
 	outboxService *Outbox
 	host          string
 }
@@ -29,9 +29,9 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, inboxService *Inbox, outboxService *Outbox, host string) {
+func (service *Response) Refresh(collection data.Collection, userService *User, outboxService *Outbox, host string) {
 	service.collection = collection
-	service.inboxService = inboxService
+	service.userService = userService
 	service.outboxService = outboxService
 	service.host = host
 }
@@ -77,19 +77,9 @@ func (service *Response) Save(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error cleaning Response", response)
 	}
 
-	// Clear the "MyResponse" value in the original message
-	if err := service.inboxService.SetResponse(response.Actor.UserID, response.Message.ID, response.Type); err != nil {
-		return derp.Wrap(err, location, "Error updating original message", response.Message.ID)
-	}
-
 	// Save the value to the database
 	if err := service.collection.Save(response, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
-	}
-
-	// Responses from Local Actor should be published to the Outbox
-	if err := service.outboxService.Publish(response.Actor.UserID, response.ActivityPubID(), response.GetJSONLD()); err != nil {
-		return derp.Wrap(err, location, "Error publishing Response", response)
 	}
 
 	return nil
@@ -100,142 +90,45 @@ func (service *Response) Delete(response *model.Response, note string) error {
 
 	const location = "service.Response.Delete"
 
-	criteria := exp.Equal("_id", response.ResponseID)
-
-	// Clear the "MyResponse" value in the original message
-	if err := service.inboxService.SetResponse(response.Actor.UserID, response.Message.ID, ""); err != nil {
-		return derp.Wrap(err, location, "Error updating original message", response.Message.ID)
-	}
-
 	// Delete this Response
-	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Error deleting Response", criteria)
-	}
-
-	// Create an "Undo" activity
-	activity := pub.Undo(response.GetJSONLD())
-
-	// Send the "Undo" activity to followers
-	if err := service.outboxService.UnPublish(response.Actor.UserID, response.ActivityPubID(), activity); err != nil {
-		return derp.Wrap(err, location, "Error publishing Response", response)
+	if err := service.collection.HardDelete(exp.Equal("_id", response.ResponseID)); err != nil {
+		return derp.Wrap(err, location, "Error deleting Response", response)
 	}
 
 	return nil
 }
 
-/******************************************
- * Model Service Methods
- ******************************************/
-
-// ObjectType returns the type of object that this service manages
-func (service *Response) ObjectType() string {
-	return "Response"
-}
-
-// New returns a fully initialized model.Group as a data.Object.
-func (service *Response) ObjectNew() data.Object {
-	result := model.NewResponse()
-	return &result
-}
-
-func (service *Response) ObjectID(object data.Object) primitive.ObjectID {
-
-	if response, ok := object.(*model.Response); ok {
-		return response.ResponseID
-	}
-
-	return primitive.NilObjectID
-}
-
-func (service *Response) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
-}
-
-func (service *Response) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
-func (service *Response) ObjectLoad(criteria exp.Expression) (data.Object, error) {
-	result := model.NewResponse()
-	err := service.Load(criteria, &result)
-	return &result, err
-}
-
-func (service *Response) ObjectSave(object data.Object, comment string) error {
-	if response, ok := object.(*model.Response); ok {
-		return service.Save(response, comment)
-	}
-	return derp.NewInternalError("service.Response.ObjectSave", "Invalid Object Type", object)
-}
-
-func (service *Response) ObjectDelete(object data.Object, comment string) error {
-	if response, ok := object.(*model.Response); ok {
-		return service.Delete(response, comment)
-	}
-	return derp.NewInternalError("service.Response.ObjectDelete", "Invalid Object Type", object)
-}
-
-func (service *Response) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Response", "Not Authorized")
-}
-
-func (service *Response) Schema() schema.Schema {
-	return schema.New(model.ResponseSchema())
+// Schema returns the validating schema for a Response object
+func (service *Response) Schema() schema.Element {
+	return model.ResponseSchema()
 }
 
 /******************************************
  * Custom Queries
  ******************************************/
 
-func (service *Response) LoadByID(userID primitive.ObjectID, responseID primitive.ObjectID, response *model.Response) error {
+func (service *Response) QueryByUserAndDate(actorID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("_id", responseID).
-		AndEqual("actor.userId", userID)
+	criteria := exp.Equal("actorId", actorID).AndEqual("type", responseType).And(exp.LessThan("created", maxDate))
+	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
-	if err := service.Load(criteria, response); err != nil {
-		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", responseID)
-	}
-
-	return nil
+	return service.Query(criteria, options...)
 }
 
-func (service *Response) LoadByIDAndType(userID primitive.ObjectID, responseID primitive.ObjectID, responseType string, response *model.Response) error {
+func (service *Response) QueryByObjectAndDate(objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("_id", responseID).
-		AndEqual("actor.userId", userID).
-		AndEqual("type", responseType)
+	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("created", maxDate))
+	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
-	if err := service.Load(criteria, response); err != nil {
-		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", responseID)
-	}
-
-	return nil
+	return service.Query(criteria, options...)
 }
 
-func (service *Response) LoadByMessageID(userID primitive.ObjectID, messageID primitive.ObjectID, response *model.Response) error {
-
-	criteria := exp.Equal("message.id", messageID).
-		AndEqual("actor.userId", userID)
-
-	if err := service.Load(criteria, response); err != nil {
-		return derp.Wrap(err, "service.Response.LoadByID", "Error loading Response", userID, messageID)
-	}
-
-	return nil
+func (service *Response) LoadByID(responseID primitive.ObjectID, response *model.Response) error {
+	return service.Load(exp.Equal("_id", responseID), response)
 }
 
-func (service *Response) QueryByUserAndDate(userID primitive.ObjectID, responseType string, createDate int64, maxRows int) ([]model.Response, error) {
-
-	criteria := exp.Equal("actor.userId", userID).
-		AndEqual("type", responseType).
-		AndGreaterThan("journal.createDate", createDate)
-
-	return service.Query(criteria, option.MaxRows(int64(maxRows)), option.SortAsc("journal.createDate"))
-}
-
-func (service *Response) QueryByMessageID(messageID primitive.ObjectID) ([]model.Response, error) {
-	criteria := exp.Equal("message.id", messageID)
-	return service.Query(criteria)
+func (service *Response) LoadByActorAndObject(actorID string, objectID string, response *model.Response) error {
+	return service.Load(exp.Equal("actorId", actorID).AndEqual("objectId", objectID), response)
 }
 
 /******************************************
@@ -244,44 +137,73 @@ func (service *Response) QueryByMessageID(messageID primitive.ObjectID) ([]model
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
-func (service *Response) SetResponse(message *model.Message, actor model.PersonLink, responseType string, value string) error {
+func (service *Response) SetResponse(response *model.Response) error {
 
 	const location = "service.Response.SetResponse"
 
+	user := model.NewUser()
+	err := service.userService.LoadByProfileURL(response.ActorID, &user)
+
+	// If this is a legitimate error, then abort.
+	if (err != nil) && !derp.NotFound(err) {
+		return derp.Wrap(err, location, "Error loading user", response.ActorID)
+	}
+
+	// NOTE if the actorID is not found then the User will be a blank object
+
 	// If a response already exists, then delete it first.
 	oldResponse := model.NewResponse()
-	err := service.LoadByMessageID(actor.UserID, message.MessageID, &oldResponse)
+	err = service.LoadByActorAndObject(response.ActorID, response.ObjectID, &oldResponse)
 
 	// RULE: if the response exists....
 	if err == nil {
 
 		// If there was no change, then there's nothing to do.
-		if (oldResponse.Type == responseType) && (oldResponse.Value == value) {
+		if response.IsEqual(oldResponse) {
 			return nil
 		}
 
 		// Otherwise, delete the old response (which triggers other logic)
-		if err := service.Delete(&oldResponse, "Updated by User"); err != nil {
+		if err := service.Delete(&oldResponse, ""); err != nil {
 			return derp.Wrap(err, location, "Error deleting old response", oldResponse)
+		}
+
+		// Responses from local Actors should be removed from the Outbox
+		if !user.IsNew() {
+
+			// Create an "Undo" activity
+			undoActivity := pub.Undo(response.GetJSONLD())
+
+			// Send the "Undo" activity to followers
+			if err := service.outboxService.UnPublish(user.UserID, response.URL, undoActivity); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
+			}
+		}
+
+		// RULE: If there is no response type, then this is a DELETE-ONLY operation. Do not create a new response.
+		if response.Type == "" {
+			return nil
 		}
 	}
 
-	// RULE: If there is no response type, then this is a DELETE-ONLY operation. Do not create a new response.
-	if responseType == "" {
-		return nil
+	// Report legitimate errors
+	if !derp.NotFound(err) {
+		return derp.Wrap(err, location, "Error loading original response", oldResponse)
 	}
-
-	// Create a new response
-	newResponse := model.NewResponse()
-	newResponse.Type = responseType
-	newResponse.Value = value
-	newResponse.Actor = actor
-	newResponse.Message = message.DocumentLink()
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
-	if err := service.Save(&newResponse, "Updated by User"); err != nil {
-		return derp.Wrap(err, location, "Error saving response", newResponse)
+	if err := service.Save(response, ""); err != nil {
+		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
+	// Responses from local Actors should be published to the Outbox
+	if user.IsNew() {
+
+		if err := service.outboxService.Publish(user.UserID, response.URL, response.GetJSONLD()); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
+		}
+	}
+
+	// Oye cómo va!
 	return nil
 }
