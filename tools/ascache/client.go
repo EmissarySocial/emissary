@@ -72,7 +72,7 @@ func (client *Client) Load(uri string) (streams.Document, error) {
 				go client.refresh(uri, cachedValue)
 			}
 
-			return streams.NewDocument(cachedValue.Original, streams.WithClient(client)), nil
+			return client.asDocument(cachedValue), nil
 		}
 	}
 
@@ -151,6 +151,19 @@ func (client *Client) save(uri string, document streams.Document) {
 	if cachedValue.InReplyTo != "" {
 		go client.Load(cachedValue.InReplyTo)
 	}
+}
+
+func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
+	result := streams.NewDocument(
+		cachedValue.Original,
+		streams.WithClient(client),
+	)
+
+	for key, value := range cachedValue.ResponseCounts {
+		streams.WithMeta(key, value)(&result)
+	}
+
+	return result
 }
 
 /******************************************

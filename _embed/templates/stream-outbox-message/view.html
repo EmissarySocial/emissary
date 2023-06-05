@@ -1,3 +1,4 @@
+{{- $activity := .ActivityStream "URL" -}}
 <link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
 
 <div class="page h-entry">
@@ -38,7 +39,7 @@
 				</div>
 			{{- end -}}
 
-			{{template "view-responses" .}}
+			{{template "responses" $activity}}
 
 			<hr>
 

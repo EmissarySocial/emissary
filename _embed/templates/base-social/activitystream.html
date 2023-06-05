@@ -16,12 +16,8 @@
 			{{- end -}}
 		
 			<div>{{.Content | html}}</div>
+			<div class="text-sm" style="margin-top:8px;">{{- template "responses" . -}}</div>
 		</div>
-	</div>
-	<div>
-		{{- if .UserCan "set-response" -}}
-			{{.View "set-response"}}
-		{{- end -}}
 	</div>
 </div>
 <hr>
