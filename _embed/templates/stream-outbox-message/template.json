@@ -39,7 +39,6 @@
 			]
 		},
 		"view": {"step":"view-html"},
-		"view-previous": {"step":"view-html"},
 		"add-reply":{
 			"roles":["authenticated"],
 			"steps":[

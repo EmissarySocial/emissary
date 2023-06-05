@@ -1,6 +1,7 @@
 {
 	"templateId":"base-social",
 	"actions": {
+		"parent":{"step":"view-html"},
 		"replies-before":{"step":"view-html"},
 		"replies-after":{"step":"view-html"},
 		"set-response": {

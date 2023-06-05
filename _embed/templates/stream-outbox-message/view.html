@@ -10,7 +10,7 @@
 
 		{{- if .IsReply -}}
 			{{- $inReplyTo := .InReplyTo.Load -}}
-			<div class="text-gray space-below" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
+			<div class="text-gray text-sm" role="button" hx-get="/{{.StreamID}}/parent" hx-push-url="false" hx-target="this" hx-swap="outerHTML">{{icon "reply"}} Replying to 
 				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
 				<span class="link text-xs">[show previous]</span>
 				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>

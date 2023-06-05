@@ -1,5 +1,5 @@
 {{- if .InReplyTo.NotNil -}}
-	{{template "parent" .InReplyTo}}
+	{{template "parent-recursive" .InReplyTo}}
 {{- end -}}
 
 {{- template "activitystream" . -}}

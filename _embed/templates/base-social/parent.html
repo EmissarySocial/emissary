@@ -1,5 +1,3 @@
-{{- if .InReplyTo.NotNil -}}
-	{{template "parent" .InReplyTo}}
-{{- end -}}
+{{- template "parent-recursive" .InReplyTo -}}
 
-{{- template "activitystream" . -}}
+<div class="text-gray text-sm space-below">{{icon "reply"}} Replying to <b>{{.InReplyTo.AttributedTo.Name}}</b></div>
