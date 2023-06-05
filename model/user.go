@@ -32,7 +32,7 @@ type User struct {
 	IsPublic       bool                       `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly available
 	PasswordReset  PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
 
-	journal.Journal `json:"journal" bson:"journal"`
+	journal.Journal `json:"journal" bson:",inline"`
 }
 
 // NewUser returns a fully initialized User object.

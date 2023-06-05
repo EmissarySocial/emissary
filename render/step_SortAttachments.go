@@ -53,7 +53,7 @@ func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) error {
 
 		criteria := exp.Equal("streamId", renderer.objectID()).
 			AndEqual(step.Keys, attachmentID).
-			AndEqual("journal.deleteDate", 0)
+			AndEqual("deleteDate", 0)
 
 		// Try to load the attachment from the database
 		if err := attachmentService.Load(criteria, &attachment); err != nil {

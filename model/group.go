@@ -10,7 +10,7 @@ type Group struct {
 	GroupID primitive.ObjectID `json:"groupId" bson:"_id"`
 	Label   string             `json:"label"   bson:"label"`
 
-	journal.Journal `json:"journal" bson:"journal"`
+	journal.Journal `json:"journal" bson:",inline"`
 }
 
 func NewGroup() Group {

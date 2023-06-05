@@ -150,7 +150,7 @@ func (w Block) Blocks() *QueryBuilder[model.Block] {
 	criteria := exp.And(
 		query.Evaluate(w.context().Request().URL.Query()),
 		exp.Equal("userId", authorization.UserID),
-		exp.Equal("journal.deleteDate", 0),
+		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
@@ -168,7 +168,7 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 	criteria := exp.And(
 		query.Evaluate(w.context().Request().URL.Query()),
 		exp.Equal("userId", primitive.NilObjectID),
-		exp.Equal("journal.deleteDate", 0),
+		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)

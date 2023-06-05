@@ -21,7 +21,7 @@ type Folder struct {
 	ReadDate    int64              `json:"readDate"    bson:"readDate"`    // PublishDate (in milliseconds) of the most recently read message in this folder
 	UnreadCount int                `json:"unreadCount" bson:"unreadCount"` // Number of unread messages in this folder
 
-	journal.Journal `json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewFolder returns a fully initialized Folder object

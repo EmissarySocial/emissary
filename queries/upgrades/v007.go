@@ -13,11 +13,11 @@ import (
 // Version7 moves outbox-message summaries => outbox-message content
 func Version7(ctx context.Context, session *mongo.Database) error {
 
-	const location = "queries.upgrades.Version4"
+	const location = "queries.upgrades.Version7"
 
 	streamCollection := session.Collection("Stream")
 
-	fmt.Println("... Version 5")
+	fmt.Println("... Version 7")
 
 	cursor, err := streamCollection.Find(ctx, map[string]any{"templateId": "outbox-message"})
 

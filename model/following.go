@@ -29,7 +29,7 @@ type Following struct {
 
 	DoMoveMessages bool `json:"-" bson:"-"` // Flag that indicates whether or not to move messages from the old folder to the new folder
 
-	journal.Journal `json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewFollowing returns a fully initialized Following object

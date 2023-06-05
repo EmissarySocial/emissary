@@ -547,8 +547,8 @@ func (w Stream) Children() QueryBuilder[model.StreamSummary] {
 func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
-		Int("journal.createDate").
-		Int("journal.updateDate").
+		Int("createDate").
+		Int("updateDate").
 		Int("publishDate").
 		Int("expirationDate").
 		Int("rank").

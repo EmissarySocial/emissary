@@ -574,7 +574,7 @@ func (service *Stream) RestoreDeleted(ancestorID primitive.ObjectID) error {
 	const location = "service.Stream.RestoreDeleted"
 
 	// Try to list all deleted descendents
-	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("journal.deleteDate", 0)
+	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("deleteDate", 0)
 	iterator, err := service.collection.List(criteria)
 
 	if err != nil {
@@ -602,7 +602,7 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 
 	const location = "service.Stream.PurgeDeleted"
 
-	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("journal.deleteDate", 0)
+	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("deleteDate", 0)
 
 	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Error purging soft-deleted streams")

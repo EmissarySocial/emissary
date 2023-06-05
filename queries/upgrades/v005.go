@@ -13,7 +13,7 @@ import (
 // Version5 migrates Stream.Document.* fields => Stream.* fields
 func Version5(ctx context.Context, session *mongo.Database) error {
 
-	const location = "queries.upgrades.Version4"
+	const location = "queries.upgrades.Version5"
 
 	streamCollection := session.Collection("Inbox")
 

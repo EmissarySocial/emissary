@@ -7,7 +7,7 @@
 	"label":"Photo Album",
 	"description":"A collection of photographs",
 	"icon":"pictures",
-	"childSortType":"journal.createDate",
+	"childSortType":"createDate",
 	"childSortDirection":"DESC",
 	"schema": {
 		"type":"object",

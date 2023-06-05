@@ -12,14 +12,14 @@ import (
 
 // CountBlocks returns the total number of blocks for a given user
 func CountBlocks(ctx context.Context, blockCollection data.Collection, userID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("journal.deleteDate", 0)
+	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
 	return CountRecords(ctx, blockCollection, criteria)
 }
 
 // CountBlocksByType returns the total number of blocks for a given user and type
 func CountBlocksByType(ctx context.Context, blockCollection data.Collection, userID primitive.ObjectID, blockType string) (int, error) {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("journal.deleteDate", 0).
+		AndEqual("deleteDate", 0).
 		AndEqual("type", blockType)
 
 	return CountRecords(ctx, blockCollection, criteria)

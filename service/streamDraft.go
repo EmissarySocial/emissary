@@ -172,7 +172,7 @@ func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.
 
 	criteria := exp.
 		Equal("_id", streamID).
-		AndEqual("journal.deleteDate", 0)
+		AndEqual("deleteDate", 0)
 
 	return service.Load(criteria, result)
 }
@@ -181,7 +181,7 @@ func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.
 func (service *StreamDraft) LoadByToken(token string, result *model.Stream) error {
 	criteria := exp.
 		Equal("token", token).
-		AndEqual("journal.deleteDate", 0)
+		AndEqual("deleteDate", 0)
 
 	return service.Load(criteria, result)
 }

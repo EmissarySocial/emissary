@@ -146,7 +146,7 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 
 	criteria := exp.And(
 		query.Evaluate(w.context().Request().URL.Query()),
-		exp.Equal("journal.deleteDate", 0),
+		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.Group](w._factory.Group(), criteria)

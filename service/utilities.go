@@ -106,7 +106,7 @@ func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.Ob
 
 // notDeleted ensures that a criteria expression does not include soft-deleted items.
 func notDeleted(criteria exp.Expression) exp.Expression {
-	return criteria.And(exp.Equal("journal.deleteDate", 0))
+	return criteria.And(exp.Equal("deleteDate", 0))
 }
 
 // loadHTMLTemplateFromFilesystem locates and parses a Template sub-directory within the filesystem path

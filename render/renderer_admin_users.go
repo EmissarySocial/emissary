@@ -161,7 +161,7 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 
 	criteria := exp.And(
 		query.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("journal.deleteDate", 0),
+		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.UserSummary](w._factory.User(), criteria)

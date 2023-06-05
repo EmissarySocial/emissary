@@ -13,7 +13,7 @@ import (
 // Version6 moves outbox-message summaries => outbox-message content
 func Version6(ctx context.Context, session *mongo.Database) error {
 
-	const location = "queries.upgrades.Version4"
+	const location = "queries.upgrades.Version6"
 
 	streamCollection := session.Collection("Stream")
 

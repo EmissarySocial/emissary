@@ -72,7 +72,7 @@ func (builder QueryBuilder[T]) All() QueryBuilder[T] {
 }
 
 func (builder QueryBuilder[T]) ByCreateDate() QueryBuilder[T] {
-	builder.SortField = "journal.createDate"
+	builder.SortField = "createDate"
 	return builder
 }
 
@@ -102,7 +102,7 @@ func (builder QueryBuilder[T]) ByRank() QueryBuilder[T] {
 }
 
 func (builder QueryBuilder[T]) ByUpdateDate() QueryBuilder[T] {
-	builder.SortField = "journal.updateDate"
+	builder.SortField = "updateDate"
 	return builder
 }
 

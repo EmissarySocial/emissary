@@ -39,7 +39,7 @@ type Stream struct {
 	Responses       ResponseSummary              `json:"responses,omitempty"    bson:"responses,omitempty"`    // Summary of all responses to this document
 	PublishDate     int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
-	journal.Journal `json:"journal" bson:"journal"`
+	journal.Journal `json:"journal" bson:",inline"`
 }
 
 // NewStream returns a fully initialized Stream object.

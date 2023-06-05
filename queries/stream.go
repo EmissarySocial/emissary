@@ -19,7 +19,7 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 
 	// Set up the mongodb pipeline query and result
 	query := bson.A{
-		bson.M{"$match": bson.M{"parentId": parentID, "journal.deleteDate": 0}},
+		bson.M{"$match": bson.M{"parentId": parentID, "deleteDate": 0}},
 		bson.M{"$group": bson.M{"_id": nil, "maxRank": bson.M{"$max": "$rank"}}},
 	}
 

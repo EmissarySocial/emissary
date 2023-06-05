@@ -12,7 +12,7 @@ import (
 
 // CountFollowing returns the total number of accounts that this user is following
 func CountFollowing(ctx context.Context, followingCollection data.Collection, userID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("journal.deleteDate", 0)
+	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
 	return CountRecords(ctx, followingCollection, criteria)
 }
 

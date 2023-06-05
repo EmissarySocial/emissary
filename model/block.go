@@ -22,7 +22,7 @@ type Block struct {
 	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Date when this block was published to followers
 	JSONLD      mapof.Any          `json:"jsonld"      bson:"jsonld"`      // JSON-LD data for this object
 
-	journal.Journal `json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewBlock() Block {

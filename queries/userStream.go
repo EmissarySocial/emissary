@@ -21,7 +21,7 @@ func VoteCount(ctx context.Context, collection data.Collection, streamID primiti
 	result := make([]VoteCountResult, 0)
 
 	err := pipeline(ctx, collection, result, bson.A{
-		bson.M{"$match": bson.M{"_id": streamID, "vote": bson.M{"$exists": true}, "journal.deleteDate": 0}},
+		bson.M{"$match": bson.M{"_id": streamID, "vote": bson.M{"$exists": true}, "deleteDate": 0}},
 		bson.M{"$group": bson.M{"_id": "$vote", "count": "$count"}},
 	})
 
@@ -40,7 +40,7 @@ func VoteDetail(ctx context.Context, collection data.Collection, streamID primit
 	result := make([]VoteDetailResult, 0)
 
 	err := pipeline(ctx, collection, result, bson.A{
-		bson.M{"$match": bson.M{"_id": streamID, "vote": bson.M{"$exists": true}, "journal.deleteDate": 0}},
+		bson.M{"$match": bson.M{"_id": streamID, "vote": bson.M{"$exists": true}, "deleteDate": 0}},
 		bson.M{"$lookup": bson.M{
 			"from":         "User",
 			"localField":   "userId",
