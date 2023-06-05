@@ -11,7 +11,7 @@
 
 		{{- if .IsReply -}}
 			{{- $inReplyTo := .InReplyTo.Load -}}
-			<div class="text-gray text-sm" role="button" hx-get="/{{.StreamID}}/parent" hx-push-url="false" hx-target="this" hx-swap="outerHTML">{{icon "reply"}} Replying to 
+			<div class="text-gray text-sm turboclick" role="button" hx-get="/{{.StreamID}}/parent" hx-push-url="false" hx-target="this" hx-swap="outerHTML">{{icon "reply"}} Replying to 
 				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
 				<span class="link text-xs">[show previous]</span>
 				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>
@@ -19,7 +19,7 @@
 		{{- end -}}
 
 		<div class="p-author text-lg space-below">
-			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row">
+			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
 				<img src="{{.Author.ImageURL}}" class="circle-64 inline-block">
 				<div class="inline-block">
 					<div class="p-author bold link vertical-space-none">{{.Author.Name}}</div>
