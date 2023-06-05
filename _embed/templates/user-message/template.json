@@ -5,7 +5,7 @@
 	"label":"Message Viewer",
 	"description":"Message displays a single message and related parents/responses/replies",
 	"icon":"inbox",
-	"extends":["base-social-replies"],
+	"extends":["base-social"],
 	"containedBy": [],
 	"schema": {
 		"title":"Message",

@@ -1,8 +1,7 @@
 {{- $actor := .AttributedTo.Load -}}
 
-<div class="clickable space-below" role="link" script="on click go to url '{{.ID}}'">
-
-	<div class="flex-row">
+<div class="space-below">
+	<div class="clickable flex-row" role="link" script="on click go to url '{{.ID}}'">
 		<div>
 			<img src="{{$actor.Icon.URL}}" class="circle-32">
 		</div>
@@ -19,6 +18,10 @@
 			<div>{{.Content | html}}</div>
 		</div>
 	</div>
-
+	<div>
+		{{- if .UserCan "set-response" -}}
+			{{.View "set-response"}}
+		{{- end -}}
+	</div>
 </div>
 <hr>

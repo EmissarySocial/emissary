@@ -2,6 +2,7 @@
 	"templateId":"outbox-message",
 	"templateRole":"outbox-item",
 	"socialRole":"Note",
+	"extends":["base-social"],
 	"model":"stream",
 	"icon":"message",
 	"label":"Post",
@@ -39,8 +40,6 @@
 		},
 		"view": {"step":"view-html"},
 		"view-previous": {"step":"view-html"},
-		"view-replies-before":{"step":"view-html"},
-		"view-replies-after":{"step":"view-html"},
 		"add-reply":{
 			"roles":["authenticated"],
 			"steps":[

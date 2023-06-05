@@ -91,9 +91,19 @@ func (w Common) Summary() string {
  * Request Info
  ******************************************/
 
+// Returns the request method
+func (w Common) Method() string {
+	return w.context().Request().Method
+}
+
 // Host returns the protocol + the Hostname
 func (w Common) Host() string {
 	return w.Protocol() + w.Hostname()
+}
+
+// URL returns the originally requested URL
+func (w Common) URL() string {
+	return w.context().Request().URL.RequestURI()
 }
 
 // Protocol returns http:// or https:// used for this request
@@ -106,14 +116,9 @@ func (w Common) Hostname() string {
 	return w._context.Request().Host
 }
 
-// URL returns the originally requested URL
-func (w Common) URL() string {
-	return w.context().Request().URL.RequestURI()
-}
-
-// Returns the request method
-func (w Common) Method() string {
-	return w.context().Request().Method
+// Path returns the request path
+func (w Common) Path() string {
+	return w._context.Request().URL.Path
 }
 
 // Returns the designated request parameter

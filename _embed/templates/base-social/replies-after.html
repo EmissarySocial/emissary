@@ -5,6 +5,6 @@
 	{{- template "activitystream" . -}}
 {{- end -}}
 
-{{- if .UserCan "add-reply" -}}
+{{- if .UserCan "reply" -}}
 	{{.View "add-reply"}}
 {{- end -}}

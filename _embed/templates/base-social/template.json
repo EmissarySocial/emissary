@@ -1,0 +1,13 @@
+{
+	"templateId":"base-social",
+	"actions": {
+		"replies-before":{"step":"view-html"},
+		"replies-after":{"step":"view-html"},
+		"set-response": {
+			"steps":[
+				{"step":"view-html", "file":"responses"},
+				{"step":"set-response"}
+			]
+		}
+	}
+}
