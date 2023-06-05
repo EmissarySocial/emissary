@@ -52,19 +52,6 @@ func isOwner(claims jwt.Claims, err error) bool {
 	return false
 }
 
-// requestHostAndPath returns the full URL of the current request, including the scheme, host, and path.
-// Because I'm being cheap, this DOES NOT include the query params.
-func requestHostAndPath(ctx echo.Context) string {
-	var result url.URL
-	request := ctx.Request()
-	requestURL := request.URL
-	result.Scheme = ctx.Scheme()
-	result.Host = request.Host
-	result.Path = requestURL.Path
-
-	return result.String()
-}
-
 // cleanQueryParams returns a "clean" version of a url.Values structure.
 // It truncates all slices into a single string.
 func cleanQueryParams(values url.Values) mapof.String {

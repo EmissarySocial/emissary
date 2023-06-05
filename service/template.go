@@ -230,6 +230,11 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Error loading Bundles", templateID)
 	}
 
+	// Keep a pointer to the filesystem resources (if present)
+	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
+		template.Resources = resources
+	}
+
 	fmt.Println("... adding template: " + template.TemplateID)
 
 	// Add the template into the prep library

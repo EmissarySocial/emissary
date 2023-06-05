@@ -2,6 +2,7 @@ package model
 
 import (
 	"html/template"
+	"io/fs"
 
 	"github.com/benpate/data/option"
 	"github.com/benpate/rosetta/mapof"
@@ -31,9 +32,10 @@ type Template struct {
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
 	AccessRoles        mapof.Object[Role]   `json:"accessRoles"        bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
+	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
+	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
 	DefaultAction      string               `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
-	HTMLTemplate       *template.Template
 }
 
 // NewTemplate creates a new, fully initialized Template object

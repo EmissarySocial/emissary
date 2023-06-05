@@ -103,6 +103,11 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", themeID)
 	}
 
+	// Keep a pointer to the filesystem resources (if present)
+	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
+		theme.Resources = resources
+	}
+
 	fmt.Println("... adding theme: " + theme.ThemeID)
 
 	// Add the theme into the theme library

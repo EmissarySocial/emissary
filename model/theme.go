@@ -2,6 +2,7 @@ package model
 
 import (
 	"html/template"
+	"io/fs"
 
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
@@ -13,8 +14,9 @@ type Theme struct {
 	Label        string               `json:"label"       bson:"label"`       // Human-readable label for this theme
 	Description  string               `json:"description" bson:"description"` // Human-readable description for this theme
 	Rank         int                  `json:"rank"        bson:"rank"`        // Sort order for this theme
+	HTMLTemplate *template.Template   `json:"-"           bson:"-"`           // HTML template for this theme
 	Bundles      mapof.Object[Bundle] `json:"bundles"     bson:"bundles"`     // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
-	HTMLTemplate *template.Template
+	Resources    fs.FS                `json:"-"           bson:"-"`           // File system containing the template resources
 }
 
 // NewTheme creates a new, fully initialized Theme object

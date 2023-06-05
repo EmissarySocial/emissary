@@ -52,6 +52,11 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 		return derp.Wrap(err, location, "Error loading Bundles", widgetID)
 	}
 
+	// Keep a pointer to the filesystem resources (if present)
+	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
+		widget.Resources = resources
+	}
+
 	fmt.Println("... adding widget: " + widget.WidgetID)
 
 	// Add the widget into the service library
