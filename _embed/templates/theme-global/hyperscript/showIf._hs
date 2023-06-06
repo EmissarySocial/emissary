@@ -6,14 +6,14 @@ behavior showIf(condition)
 	end
 
 	on load
-		trigger doTheThing
+		trigger recalcShowIf
 	end
 
 	on change from closest <form/>
-		trigger doTheThing
+		trigger recalcShowIf
 	end
 
-	on doTheThing
+	on recalcShowIf
 		set values to :form as Values
 		if evaluateExpression(:expression, values) then
 			show me
@@ -22,6 +22,32 @@ behavior showIf(condition)
 		end
 	end
 end
+
+behavior requiredIf(condition)
+
+	init
+		set :form to the closest <form/>
+		set :expression to parse(condition)
+	end
+
+	on load
+		trigger recalcRequiredIf
+	end
+
+	on change from closest <form/>
+		trigger recalcRequiredIf
+	end
+
+	on recalcRequiredIf
+		set values to :form as Values
+		if evaluateExpression(:expression, values) then
+			put [@required] into me
+		else
+			remove [@required] from me
+		end
+	end
+end
+
 
 js
 function parse(value) {

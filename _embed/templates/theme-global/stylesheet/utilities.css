@@ -1,0 +1,95 @@
+/****************************
+ * Utility classes
+ ****************************/
+
+ a, .link {
+	color:var(--link-color);
+	text-decoration:none;
+}
+
+a:hover,
+.link:hover {
+	cursor:pointer;
+	color:var(--link-color-hover)!important;
+}
+
+.clickable, [role="link"], [role="button"] {
+	cursor:pointer;
+}
+
+b, strong, .bold {
+	font-weight:calc(var(--weight) + 200);
+}
+
+.text-thin {
+	font-weight:calc(var(--weight) - 200);
+}
+
+i, em, .italics {
+	font-style:italic;
+}
+
+.circle {
+	border-radius:50%;
+	aspect-ratio: 1;
+}
+
+p:last-child {
+    margin:0px;
+}
+
+.ellipsis {
+    text-overflow:ellipsis;
+    overflow:hidden;
+    white-space:nowrap;
+}
+
+.ellipsis-block {
+    text-overflow:ellipsis; 
+    overflow:hidden; 
+}
+
+.nowrap {
+    white-space:nowrap;
+}
+
+/***************
+ * Aspect Ratio
+ ***************/
+
+.aspect-square,
+.aspect-1-1 {
+	aspect-ratio:1;
+}
+
+.aspect-4-3 {
+	aspect-ratio:4/3;
+}
+
+.aspect-16-9 {
+	aspect-ratio:16/9;
+}
+
+ /***************
+ * Positioning
+ ***************/
+
+.pos-absolute {
+	-webkit-position:absolute;
+	position:absolute;
+}
+
+.pos-fixed {
+	-webkit-position:fixed;
+	position:fixed;
+}
+
+.pos-relative {
+	-webkit-position:relative;
+	position:relative;
+}
+
+.pos-sticky {
+	-webkit-positiion:sticky;
+	position:sticky;
+}

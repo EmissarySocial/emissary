@@ -57,16 +57,6 @@ func main() {
 	e.Use(middleware.Recover())
 	// TODO: HIGH: implement echo.Security middleware
 
-	// Static Content MUST come from static files, because we're not re-linking all those files at runtime
-	if staticFiles, err := fs.Sub(embeddedFiles, "_embed"); err == nil {
-
-		e.Group("/static", mw.CacheControl("public, max-age=3600")).
-			GET("/*", echo.WrapHandler(http.FileServer(http.FS(staticFiles))))
-
-	} else {
-		panic(err)
-	}
-
 	// Based on configuration, add all other routes and start web server
 	if commandLineArgs.Setup {
 		makeSetupRoutes(serverFactory, e)

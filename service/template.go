@@ -217,7 +217,6 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	}
 
 	// All template schemas also inherit from the main stream schema
-	// TODO: HIGH: Revisit this for security implications.  Is this TOO MUCh power to give to templates?
 	template.Schema.Inherit(schema.New(model.StreamSchema()))
 
 	// Load all HTML templates from the filesystem

@@ -20,6 +20,7 @@ behavior Modal
 		wait a tick then
 		add .ready to #modal
 		focus() the first <[tabindex]/> in me
+	end
 
 	on closeModal(nextPage) from window	
 
@@ -33,17 +34,20 @@ behavior Modal
 		if nextPage is not empty then 
 			set the window's location to nextPage
 		end
+	end
 	
 	on click (target)
 		if the target's id is "modal-underlay" then
 			trigger closeModal
 		end
+	end
 
 	on keydown[key=="Escape"] from window
 		if #modal is not empty then 
 			trigger closeModal
 			halt the event
 		end
+	end
 
 	on keydown[key=="Tab"]
 		set focusedElement to the first <:focus/>
@@ -55,3 +59,12 @@ behavior Modal
 		end
 
 		halt the event
+	end
+
+	on htmx:beforeSwap from window
+		if event.detail.target is the first <aside/> then
+			make a RegExp from "^<div " called firstDiv
+			set event.detail.serverResponse to event.detail.serverResponse.replace(firstDiv, "<div class='ready' ")
+		end
+	end
+end

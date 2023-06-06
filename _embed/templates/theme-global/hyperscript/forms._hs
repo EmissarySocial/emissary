@@ -19,12 +19,14 @@ behavior multiselect(sort)
 				make a Sortable from yourself, {animation:150, whisperClass:'multiselect-whisper', onEnd: \ evt -> evt.item.focus()}
 			end
 		end
+	end
 
 	on change	
 		set label to the closest <label/> to the target
 		if label is not null then
 			take .selected for label
 		end
+	end
 
 	on click from <button[data-sort=up]/> in me		
 		set currentLabel to getSelectedLabel(me)
@@ -42,6 +44,7 @@ behavior multiselect(sort)
 		
 		container.insertBefore(currentLabel, previousLabel)
 		focus() the target
+	end
 
 	on click from <button[data-sort=down]/> in me
 		set currentLabel to getSelectedLabel(me)
@@ -59,12 +62,15 @@ behavior multiselect(sort)
 		
 		container.insertBefore(nextLabel, currentLabel)
 		focus() the target
+	end
 
 	on focus from <label/> in me
 		take .selected for target
+	end
 
 	on focus from <input/> in me
 		focus() the closest <label/> to the target
+	end
 
 	on keydown[code=="ArrowUp"]
 		halt the event
@@ -76,6 +82,7 @@ behavior multiselect(sort)
 				focus() the previousLabel
 			end
 		end
+	end
 	
 	on keydown[code=="ArrowDown"]
 		halt the event
@@ -87,6 +94,7 @@ behavior multiselect(sort)
 				focus() the nextLabel
 			end
 		end
+	end
 
 	on keypress[code=="Space"]
 
@@ -104,7 +112,6 @@ behavior multiselect(sort)
 			halt the event
 		end
 	end
-
 end
 
 def getSelectedLabel(container)
@@ -148,14 +155,17 @@ behavior toggle
         send recalculate
         wait a tick
         set my *transition to "background-color 0.1s ease-in-out, border-color 0.1s ease-in-out"
+	end
 
     on mousedown or touchstart
         halt the event
         send toggle
+	end
 
     on keypress[code=="Space"]
         halt the event
         send toggle
+	end
 
     on toggle
 
@@ -167,6 +177,7 @@ behavior toggle
 
         send recalculate
         send change
+	end
 
     on recalculate
 

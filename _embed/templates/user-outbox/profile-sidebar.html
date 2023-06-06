@@ -5,8 +5,6 @@
 
 	<div class="space-below" style="position:relative;">
 		{{- if .UserCan "profile-photo" -}}
-			<script src="/static/nebula/uploader._hs" type="text/hyperscript"></script>
-			<link rel="stylesheet" href="/static/nebula/uploader.css"/>
 			<button type="button" hx-get="/@me/profile-photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	

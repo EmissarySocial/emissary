@@ -1,8 +1,0 @@
-on mousedown from .turboclick
-
-	if event.button is not 0 then 
-		exit
-	end
-
-	send click to event.target
-end

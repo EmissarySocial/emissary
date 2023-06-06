@@ -1,0 +1,17 @@
+{
+	"themeId":"global",
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		},
+		"javascript": {
+			"contentType":"text/javascript"
+		},
+		"hyperscript": {
+			"contentType":"text/hyperscript"
+		},
+		"registration": {
+			"contentType":"text/hyperscript"
+		}
+	}
+}

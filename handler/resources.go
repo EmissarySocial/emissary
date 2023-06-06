@@ -80,7 +80,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 	// Prepare response headers
 	extension := "." + list.Last(filename, '.')
 	contentType := mime.TypeByExtension(extension)
-	cacheControl := "public, max-age=2592000, immutable"
+	cacheControl := "public, max-age=2592000"
 
 	header := response.Header()
 	header.Set("Content-Type", contentType)

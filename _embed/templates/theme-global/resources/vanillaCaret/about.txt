@@ -1,0 +1,2 @@
+This code comes from https://github.com/abhas9/vanilla-caret-js
+MIT Licensed

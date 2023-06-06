@@ -43,6 +43,7 @@ behavior TabContainer
 		end
 
 		for tab in <[role=tab] /> in me
+			log tab
 			if tab == target
 				add [@aria-selected="true"] to tab
 				call window.history.replaceState(undefined, tab.innerHTML, "#" + target[@aria-controls])
@@ -52,6 +53,7 @@ behavior TabContainer
 		end
 
 		for panel in <[role=tabpanel] /> in me
+			log panel
 			set {hidden: (panel[@id] != target[@aria-controls])} on panel
 		end
 	end
