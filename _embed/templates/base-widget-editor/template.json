@@ -8,9 +8,6 @@
 		"stylesheet": {
 			"content-type":"text/css"
 		},
-		"javascript":{
-			"content-type":"text/javascript"
-		},
 		"hyperscript": {
 			"content-type":"text/hyperscript"
 		}

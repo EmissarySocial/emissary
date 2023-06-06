@@ -18,7 +18,7 @@ type CachedValue struct {
 	InReplyTo      string             `bson:"inReplyTo,omitempty"`
 	ResponseCounts mapof.Int          `bson:"responses,omitempty"`
 
-	journal.Journal `bson:"journal,inline"`
+	journal.Journal `bson:",inline"`
 }
 
 func NewCachedValue() CachedValue {

@@ -1,7 +1,7 @@
 {{- $streamID := .StreamID -}}
 
 <link rel="stylesheet" href="/.templates/base-widget-editor/stylesheet">
-<script type="text/javascript" src="/.templates/base-widget-editor/javascript"></script>
+<script type="text/javascript" src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
 <script type="text/hyperscript" src="/.templates/base-widget-editor/hyperscript"></script>
 
 <form hx-post="/{{$streamID}}/widgets" hx-trigger="editor:save" hx-target="main" hx-swap="innerHTML">

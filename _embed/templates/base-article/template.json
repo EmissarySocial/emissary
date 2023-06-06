@@ -87,10 +87,9 @@
 			"roles": ["owner", "editor"],
 			"steps": [
 				{"step":"with-draft", "steps": [
-					{"step":"view-html"},
 					{"step":"sort-widgets"},
 					{"step":"save", "message":"Widgets updated by {{.Author}}"},
-					{"step":"server-redirect", "action":"widgets", "on":"post"}
+					{"step":"view-html", "method":"both"}
 				]}
 			]
 		},
