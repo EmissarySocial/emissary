@@ -13,6 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -174,4 +175,8 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
 
 	return &result
+}
+
+func (service Block) debug() {
+	spew.Dump("Block", service.object())
 }

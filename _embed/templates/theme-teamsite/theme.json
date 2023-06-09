@@ -1,0 +1,14 @@
+{
+	"themeId": "teamsite",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Teamsite (TBD)",
+	"description": "Group collaboration and project website.",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	}
+}

@@ -104,8 +104,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 		return render.NewBlock(factory, ctx, &block, template, actionID)
 
 	case "domain":
-		domain := factory.Domain().Get()
-		return render.NewDomain(factory, ctx, factory.Provider(), template, &domain, actionID)
+		return render.NewDomain(factory, ctx, template, actionID)
 
 	case "group":
 		group := model.NewGroup()

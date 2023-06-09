@@ -237,6 +237,44 @@ func (service *Group) ListAsOptions() []form.LookupCode {
 }
 
 // Count returns the number of (non-deleted) records in the User collection
-func (service *Group) Count(ctx context.Context, criteria exp.Expression) (int, error) {
-	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
+func (service *Group) Count(criteria exp.Expression) (int, error) {
+	return queries.CountRecords(context.TODO(), service.collection, notDeleted(criteria))
+}
+
+/******************************************
+ * Custom Methods
+ ******************************************/
+
+func (service *Group) Startup(theme *model.Theme) error {
+
+	// Try to count the number of existing groups in the database
+	count, err := service.Count(exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, "service.Theme.Startup", "Error counting groups")
+	}
+
+	// If there are already groups in the database, then don't make any changes.
+	if count > 0 {
+		return nil
+	}
+
+	// Create groups
+	groupSchema := schema.New(model.GroupSchema())
+
+	for _, data := range theme.StartupGroups {
+		group := model.NewGroup()
+
+		if err := groupSchema.SetAll(&group, data); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set group data", data))
+			continue
+		}
+
+		if err := service.Save(&group, "Created by Startup"); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save group", group))
+			continue
+		}
+	}
+
+	return nil
 }

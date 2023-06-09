@@ -1,0 +1,14 @@
+{
+	"themeId": "tootly",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Tootly (TBD)",
+	"description": "Fediverse Microblog Service",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	}
+}

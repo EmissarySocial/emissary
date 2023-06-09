@@ -1,5 +1,7 @@
 {
 	"themeId": "codex",
+	"isVisible":true,
+	"category": "General",
 	"label": "Codex",
 	"description": "Sidebar navigation for content-heavy sites",
 	"rank": 10,
@@ -7,5 +9,17 @@
 		"stylesheet": {
 			"contentType":"text/css"
 		}
-	}
+	},
+	"startupStreams": [
+		{"templateId":"article-editorjs", "token":"home", "label":"Welcome"},
+		{"templateId":"article-editorjs", "token":"section-1", "label":"Section 1"},
+		{"templateId":"article-editorjs", "token":"section-2", "label":"Section 2"},
+		{"templateId":"article-editorjs", "token":"section-3", "label":"Section 3"},
+		{"templateId":"article-editorjs", "token":"section-5", "label":"Section 5"},
+		{"templateId":"article-editorjs", "token":"section-6", "label":"Section 6"}
+	],
+	"startupGroups":[
+		{"label":"Publishers"},
+		{"label":"Subscribers"}
+	]
 }

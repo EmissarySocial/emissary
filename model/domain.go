@@ -41,6 +41,14 @@ func (domain *Domain) ID() string {
  * Other Data Accessors
  ******************************************/
 
+func (domain Domain) IsEmpty() bool {
+	return (domain.ThemeID == "")
+}
+
+func (domain Domain) NotEmpty() bool {
+	return !domain.IsEmpty()
+}
+
 // HasSignupForm returns TRUE if this domain includes a valid signup form.
 func (domain *Domain) HasSignupForm() bool {
 	return domain.SignupForm.Active

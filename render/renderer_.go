@@ -63,6 +63,7 @@ type Renderer interface {
 	setQuery(string, string)             // Sets a queryString parameter
 	getUser() (model.User, error)        // Retrieves the currently-logged-in user
 	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
+	debug()                              // Outputs debug information to the console
 	clone(string) (Renderer, error)      // Creates a new Renderer with the same type and object, but a different action
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer

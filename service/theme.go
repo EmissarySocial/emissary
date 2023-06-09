@@ -10,13 +10,16 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
+	"golang.org/x/exp/slices"
 )
 
 // Theme service manages the global site theme that is stored in a particular path of the
 // filesystem.
 type Theme struct {
-	funcMap template.FuncMap
-	themes  mapof.Object[model.Theme]
+	templateService *Template
+	funcMap         template.FuncMap
+	themes          mapof.Object[model.Theme]
 
 	mutex   sync.RWMutex
 	changed chan bool
@@ -24,14 +27,15 @@ type Theme struct {
 }
 
 // NewTheme returns a fully initialized Theme service.
-func NewTheme(funcMap template.FuncMap) *Theme {
+func NewTheme(templateService *Template, funcMap template.FuncMap) *Theme {
 
 	service := Theme{
-		funcMap: funcMap,
-		themes:  mapof.NewObject[model.Theme](),
-		mutex:   sync.RWMutex{},
-		changed: make(chan bool),
-		closed:  make(chan bool),
+		templateService: templateService,
+		funcMap:         funcMap,
+		themes:          mapof.NewObject[model.Theme](),
+		mutex:           sync.RWMutex{},
+		changed:         make(chan bool),
+		closed:          make(chan bool),
 	}
 
 	return &service
@@ -43,17 +47,35 @@ func NewTheme(funcMap template.FuncMap) *Theme {
 
 func (service *Theme) List() []model.Theme {
 
-	service.mutex.RLock()
-	defer service.mutex.RUnlock()
-
 	// Generate a slice containing all themes
 	result := make([]model.Theme, 0, len(service.themes))
 
+	// Lock the data structure
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	for _, theme := range service.themes {
-		result = append(result, theme)
+		if theme.IsVisible {
+			result = append(result, theme)
+		}
 	}
 
 	return result
+}
+
+func (service *Theme) ListSorted() []model.Theme {
+	result := service.List()
+	slices.SortFunc(result, func(a, b model.Theme) bool {
+		return a.Label < b.Label
+	})
+
+	return result
+}
+
+func (service *Theme) ListActive() []model.Theme {
+	return slice.Filter(service.ListSorted(), func(theme model.Theme) bool {
+		return !theme.IsPlaceholder()
+	})
 }
 
 func (service *Theme) GetTheme(themeID string) model.Theme {

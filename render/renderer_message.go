@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -223,4 +224,8 @@ func (w Message) RepliesAfter(dateString string, maxRows int) sliceof.Object[str
 	result, _ := activityStreamsService.QueryRepliesAfterDate(w._message.URL, minDate, maxRows)
 
 	return result.SliceOfDocuments()
+}
+
+func (service Message) debug() {
+	spew.Dump("Message", service.object())
 }

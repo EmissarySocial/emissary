@@ -13,6 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -179,4 +180,8 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	result, err := groupService.ListByIDs(w.user.GroupIDs...)
 
 	return result, derp.Wrap(err, "render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
+}
+
+func (service User) debug() {
+	spew.Dump("User", service.object())
 }

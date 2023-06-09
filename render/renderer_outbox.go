@@ -12,6 +12,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -233,4 +234,8 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
 	return result
+}
+
+func (service Outbox) debug() {
+	spew.Dump("Outbox", service.object())
 }

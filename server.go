@@ -228,8 +228,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)
 
 	// Startup Wizard
-	e.GET("/startup", handler.Startup(factory), mw.Owner)
-	e.POST("/startup", handler.Startup(factory), mw.Owner)
+	e.GET("/startup", handler.GetStartup(factory), mw.Owner)
+	e.GET("/startup/:action", handler.GetStartup(factory), mw.Owner)
+	e.POST("/startup", handler.PostStartup(factory), mw.Owner)
 
 	// Prepare HTTP and HTTPS servers using the new configuration
 	go startHttps(e)

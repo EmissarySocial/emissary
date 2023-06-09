@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -51,6 +52,8 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepEditModelObject.Post"
 
+	renderer.debug()
+
 	// Get the request body
 	body := mapof.NewAny()
 
@@ -58,12 +61,14 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error binding request body")
 	}
 
+	spew.Dump(renderer.schema())
+
 	// Appy request body to the object (limited and validated by the form schema)
 	stepForm := form.New(renderer.schema(), step.Form)
 	object := renderer.object()
 
 	if err := stepForm.SetAll(object, body, renderer.lookupProvider()); err != nil {
-		return derp.Wrap(err, location, "Error applying request body to model object")
+		return derp.Wrap(err, location, "Error applying request body to model object", body)
 	}
 
 	// Save the object to the database

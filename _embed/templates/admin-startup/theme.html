@@ -1,0 +1,37 @@
+{{- $themeID := .QueryParam "themeId" -}}
+{{- $theme := .Theme $themeID -}}
+
+<div>
+	<h1 class="align-center">{{$theme.Label}}</h1>
+	<h2 class="align-center">{{$theme.Description}}</h2>
+
+	<div class="space-below">
+		<img src="/.themes/{{$themeID}}/resources/startup/splash.png" style="width:100%">
+	</div>
+
+	{{- if $theme.IsPlaceholder -}}
+		<div class="align-center space-below bold">
+			This is a placeholder theme that is not yet ready to use.  Please try 
+			another theme or check back later.
+		</div>
+		<div class="align-center">
+			<button hx-get="/startup/welcome" class="primary">Choose a Different Theme</button>
+		</div>
+	{{- else -}}
+		<div 
+			class="space-below" 
+			style="width:clamp(400px, 95%, 800px); margin:24px auto;"
+			hx-get="/.themes/{{$themeID}}/resources/startup/splash.html" 
+			hx-trigger="load" 
+			hx-target="this" 
+			hx-push-url="false" 
+			hx-swap="innerHTML">
+		</div>
+		<div class="align-center">
+			<button hx-get="/startup/welcome">&laquo; Back</button>
+			<button hx-post="/startup?themeId={{$themeID}}" class="primary">Continue with this Theme</button>
+		</div>
+
+	{{- end -}}
+
+</div>

@@ -1,0 +1,86 @@
+/******************************************
+ * PAGE LAYOUT CLASSES
+ ******************************************/
+
+* {
+	 box-sizing: border-box;
+}
+
+html {
+	height:100%;
+}
+
+body {
+	background-color: var(--white);
+	color: var(--text-color);
+	overflow-x: hidden;
+	display:flex;
+	flex-direction:row;
+	align-items: stretch;
+	padding:0px;
+	margin:0px;
+	height:100%;
+}
+
+nav {
+	min-height:100%;
+	flex-basis: 200px;
+	flex-grow:1;
+	width:300px;
+    color: var(--gray80);
+	font-weight:400;
+	background-color: var(--gray10);
+	border-right: solid 1px var(--gray20);
+	padding: 24px 8px;
+}
+
+nav a,
+nav button {
+    color: var(--gray80);
+    display:block;
+	padding:4px 8px;
+	overflow-y:hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav b {
+	display:block;
+	color: var(--black);
+	font-weight: 700;
+	padding: 4px 8px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav a:hover,
+nav a:focus,
+nav button:hover,
+nav button:focus {
+    color: var(--gray90);
+    background-color:var(--gray15);
+}
+
+nav a.selected,
+nav a.selected:hover,
+nav a.selected:focus,
+nav button.selected,
+nav button.selected:hover
+nav button.selected:focus {
+	color: var(--black)!important;
+	font-weight: 700;
+}
+
+main {
+	flex-basis: 0;
+	flex-grow:999;
+	justify-content: center;
+	padding: 24px;
+	min-height:100%;
+}
+
+
+main .page {
+	width:100%;
+	max-width: 800px;
+}

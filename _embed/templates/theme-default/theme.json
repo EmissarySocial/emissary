@@ -1,7 +1,9 @@
 {
 	"themeId": "default",
-	"label": "Emissary",
-	"description": "General purpose, default theme for Emissary websistes.",
+	"isVisible":true,
+	"category":"General",
+	"label": "Maximus",
+	"description": "Clean, top navbar for general purpose websites.",
 	"rank": 0,
 	"bundles": {
 		"stylesheet": {

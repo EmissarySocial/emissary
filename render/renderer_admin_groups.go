@@ -13,6 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -152,4 +153,8 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 	result := NewQueryBuilder[model.Group](w._factory.Group(), criteria)
 
 	return &result
+}
+
+func (service Group) debug() {
+	spew.Dump("Group", service.object())
 }

@@ -15,7 +15,9 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/exp/slices"
 )
 
 type Domain struct {
@@ -24,7 +26,7 @@ type Domain struct {
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.Provider, template model.Template, domain *model.Domain, actionID string) (Domain, error) {
+func NewDomain(factory Factory, ctx *steranko.Context, template model.Template, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
@@ -44,11 +46,19 @@ func NewDomain(factory Factory, ctx *steranko.Context, externalService *service.
 
 	// Create and return the Domain renderer
 	result := Domain{
-		externalService: externalService,
+		externalService: factory.Provider(),
 		Common:          common,
 	}
 
-	result.domain = domain
+	// Get a pointer to the domain for this renderer
+	domainService := factory.Domain()
+
+	// Find/Create new database record for the domain.
+	if _, err := domainService.LoadOrCreateDomain(); err != nil {
+		return Domain{}, derp.Wrap(err, location, "Error creating a new Domain")
+	}
+
+	result.domain = domainService.GetPointer()
 	return result, nil
 }
 
@@ -75,7 +85,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Domain.View"
 
-	renderer, err := NewDomain(w._factory, w._context, w.externalService, w._template, w.domain, actionID)
+	renderer, err := NewDomain(w._factory, w._context, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -101,7 +111,8 @@ func (w Domain) objectType() string {
 }
 
 func (w Domain) schema() schema.Schema {
-	return w._template.Schema
+	return schema.New(model.DomainSchema())
+	// return w._template.Schema
 }
 
 func (w Domain) service() service.ModelService {
@@ -129,7 +140,7 @@ func (w Domain) PageTitle() string {
 }
 
 func (w Domain) clone(action string) (Renderer, error) {
-	return NewDomain(w._factory, w._context, w.externalService, w._template, w.domain, action)
+	return NewDomain(w._factory, w._context, w._template, action)
 }
 
 /******************************************
@@ -140,6 +151,11 @@ func (w Domain) ThemeID() string {
 	return w.domain.ThemeID
 }
 
+func (w Domain) Theme(themeID string) model.Theme {
+	themeService := w._factory.Theme()
+	return themeService.GetTheme(themeID)
+}
+
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w.domain.SignupForm
@@ -148,6 +164,22 @@ func (w Domain) SignupForm() model.SignupForm {
 /******************************************
  * OTHER METHODS
  ******************************************/
+
+func (w Domain) Themes() []model.Theme {
+	themeService := w._factory.Theme()
+	result := themeService.List()
+	slices.SortFunc(result, func(a, b model.Theme) bool {
+		return a.Label < b.Label
+	})
+
+	return result
+}
+
+func (w Domain) ActiveThemes() []model.Theme {
+	return slice.Filter(w.Themes(), func(theme model.Theme) bool {
+		return !theme.IsPlaceholder()
+	})
+}
 
 func (w Domain) Providers() []form.LookupCode {
 
@@ -175,4 +207,7 @@ func (w Domain) Client(providerID string) model.Client {
 func (w Domain) Provider(providerID string) providers.Provider {
 	result, _ := w.externalService.GetProvider(providerID)
 	return result
+}
+func (service Domain) debug() {
+	spew.Dump("Domain", service.object())
 }

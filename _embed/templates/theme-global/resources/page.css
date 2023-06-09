@@ -4,10 +4,11 @@
 
 .page {
     background-color: var(--page-background);
-    padding: 10px 20px;
+    padding: 16px 24px;
     position:relative;
 	line-height:150%;
-	margin-bottom: 50px;
+	margin-top:24px;
+	margin-bottom: 64px;
 	border: solid 1px var(--page-border);
 }
 
@@ -17,8 +18,9 @@
 
  #menu-bar {
 	border-bottom: solid 1px var(--gray20);
-	margin-bottom: 30px;
-	padding: 5px 0px;
+	margin-top:-8px;
+	margin-bottom: 32px;
+	padding: 4px 0px 12px 0px;
 	line-height: 100%;
 	display:flex;
 	flex-direction: row;
@@ -46,11 +48,12 @@
 #menu-bar a,
 #menu-bar button {
 	display: inline-block;
-	padding: 10px 20px;
-	border-radius: var(--border-radius);
-	color: var(--gray80);
+	padding: 8px 12px;
+	border-radius: 4px;
+	color: var(--gray90);
 	background-color:inherit;
 	margin:0px;
+	font-size:14px;
 }
 
 #menu-bar a:hover,

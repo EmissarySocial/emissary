@@ -10,18 +10,15 @@ body {
 	background-color: var(--body-background);
 	color: var(--text-color);
 	overflow-x: hidden;
-}
-
-header {
-	background-color: var(--white);
-	color: var(--gray80);
+	margin:0px;
 }
 
 nav {
-	position:sticky;
+	position:fixed;
 	top:0px;
 	left: 0px;
 	right: 0px;
+	height:56px;
 	z-index:100;
 
     color: var(--gray80);
@@ -53,9 +50,9 @@ nav button {
     color: var(--gray80);
 	background-color: var(--white);
     display:inline-block;
-	padding:10px 20px;
+	padding:8px 16px;
 	border-radius: var(--border-radius);
-	margin:10px 0px;
+	margin:8px 0px;
 	overflow-y:hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -65,7 +62,7 @@ nav b {
 	display:inline-block;
 	color: var(--black);
 	font-weight: 700;
-	padding: 10px 0px;
+	padding: 8px 0px;
 	margin:10px 10px 10px 0px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -91,10 +88,7 @@ nav button.selected:focus {
 
 main {
 	display: flex;
+	flex-direction:row;
 	justify-content: center;
-	padding-top: 20px;
-}
-
-footer {
-	
+	padding-top:56px;
 }

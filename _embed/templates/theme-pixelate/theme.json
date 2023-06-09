@@ -1,0 +1,14 @@
+{
+	"themeId": "pixelate",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Pixel-8 (TBD)",
+	"description": "Photo sharing site",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	}
+}

@@ -53,7 +53,7 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 
 	service.domain = model.NewDomain()
 
-	if err := service.LoadOrCreateDomain(); err != nil {
+	if _, err := service.LoadOrCreateDomain(); err != nil {
 		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record"))
 		return
 	}
@@ -75,26 +75,35 @@ func (service *Domain) Ready() bool {
 	return service.ready
 }
 
-func (service *Domain) LoadOrCreateDomain() error {
+// LoadOrCreate domain guarantees that a domain record exists in the database.
+// It returns A COPY of the service domain.
+func (service *Domain) LoadOrCreateDomain() (model.Domain, error) {
 
-	err := service.collection.Load(exp.All(), &service.domain)
-
-	// Loaded the domain successfully
-	if err == nil {
-		return nil
+	// If the domain has already been loaded, then just return it.
+	if service.domain.NotEmpty() {
+		return service.domain, nil
 	}
 
-	// No record present.  Create a new one.
+	// Try to load the domain from the database
+	err := service.collection.Load(exp.All(), &service.domain)
+
+	// If loaded the domain successfully, then return
+	if err == nil {
+		return service.domain, nil
+	}
+
+	// If "Not Found" then initialize and return
 	if derp.NotFound(err) {
 
 		if err := service.collection.Save(&service.domain, "Created Domain Record"); err != nil {
-			return derp.Wrap(err, "service.Domain.Refresh", "Error creating new domain record")
+			return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Error creating new domain record")
 		}
 
-		return nil
+		return service.domain, nil
 	}
 
-	return derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record")
+	// Ouch.  This is really bad.  Return the error.
+	return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record")
 }
 
 /******************************************
@@ -106,8 +115,12 @@ func (service *Domain) Get() model.Domain {
 	return service.domain
 }
 
+func (service *Domain) GetPointer() *model.Domain {
+	return &service.domain
+}
+
 // Save updates the value of this domain in the database (and in-memory cache)
-func (service *Domain) Save(domain *model.Domain, note string) error {
+func (service *Domain) Save(domain model.Domain, note string) error {
 
 	// Clean the value before saving
 	if err := service.Schema().Clean(domain); err != nil {
@@ -115,12 +128,12 @@ func (service *Domain) Save(domain *model.Domain, note string) error {
 	}
 
 	// Try to save the value to the database
-	if err := service.collection.Save(domain, note); err != nil {
+	if err := service.collection.Save(&domain, note); err != nil {
 		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
 	}
 
 	// Update the in-memory cache
-	service.domain = *domain
+	service.domain = domain
 
 	return nil
 }
@@ -163,7 +176,7 @@ func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
 
 func (service *Domain) ObjectSave(object data.Object, note string) error {
 	if domain, ok := object.(*model.Domain); ok {
-		return service.Save(domain, note)
+		return service.Save(*domain, note)
 	}
 
 	return derp.NewInternalError("service.Domain.ObjectSave", "Invalid Object Type", object)
@@ -328,7 +341,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	client.Active = true
 	service.domain.SetClient(client)
 
-	if service.Save(&service.domain, "OAuth Exchange") != nil {
+	if service.Save(service.domain, "OAuth Exchange") != nil {
 		return derp.NewInternalError(location, "Error saving domain")
 	}
 
@@ -368,7 +381,7 @@ func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
 	service.domain.SetClient(client)
 
 	// Save the domain
-	if err := service.Save(&service.domain, "New OAuth State"); err != nil {
+	if err := service.Save(service.domain, "New OAuth State"); err != nil {
 		return model.Client{}, derp.Wrap(err, location, "Error saving domain")
 	}
 
@@ -420,7 +433,7 @@ func (service *Domain) GetOAuthToken(providerID string) (model.Client, *oauth2.T
 	if token.AccessToken != newToken.AccessToken {
 		client.Token = newToken
 		service.domain.SetClient(client)
-		if err := service.Save(&service.domain, "Refresh OAuth Token"); err != nil {
+		if err := service.Save(service.domain, "Refresh OAuth Token"); err != nil {
 			return model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
 		}
 	}

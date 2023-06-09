@@ -100,7 +100,7 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) error {
 	// Try to save the domain object back to the database
 	domainService := domainRenderer.domainService()
 
-	if err := domainService.Save(domainRenderer.domain, "Updated connection"); err != nil {
+	if err := domainService.Save(*domainRenderer.domain, "Updated connection"); err != nil {
 		return derp.Wrap(err, location, "Error saving domain object")
 	}
 

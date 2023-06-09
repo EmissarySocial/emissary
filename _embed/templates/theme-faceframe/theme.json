@@ -1,0 +1,14 @@
+{
+	"themeId": "faceframe",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Faceframe (TBD)",
+	"description": "Group Sharing for notes, photos, and more",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	}
+}

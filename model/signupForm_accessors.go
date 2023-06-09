@@ -8,8 +8,8 @@ import (
 func SignupFormSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"title":   schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"message": schema.String{Required: true, MinLength: 1, MaxLength: 1000},
+			"title":   schema.String{Required: false, MaxLength: 128},
+			"message": schema.String{Required: false, MaxLength: 1024},
 			"groupId": schema.String{Format: "objectId"},
 			"active":  schema.Boolean{},
 		},

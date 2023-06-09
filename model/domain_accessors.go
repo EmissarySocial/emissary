@@ -8,10 +8,10 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":   schema.String{Format: "objectId"},
-			"themeId":    schema.String{MaxLength: 100},
-			"label":      schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"forward":    schema.String{Format: "url"},
+			"domainId":   schema.String{Format: "objectId", Required: true},
+			"themeId":    schema.String{MaxLength: 100, Required: true},
+			"label":      schema.String{MinLength: 1, MaxLength: 100, Required: true},
+			"forward":    schema.String{Format: "url", Required: false},
 			"signupForm": SignupFormSchema(),
 		},
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -667,4 +668,8 @@ func (w Stream) draftRenderer() (Stream, error) {
 		modelService: draftService,
 		Common:       common,
 	}, nil
+}
+
+func (service Stream) debug() {
+	spew.Dump("Stream", service.object())
 }

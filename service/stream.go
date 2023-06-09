@@ -136,7 +136,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
-		maxRank, err := service.MaxRank(context.TODO(), stream.ParentID)
+		maxRank, err := service.MaxRank(stream.ParentID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error calculating max rank")
@@ -464,13 +464,13 @@ func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.A
 }
 
 // Count returns the number of (non-deleted) records in the Stream collection
-func (service *Stream) Count(ctx context.Context, criteria exp.Expression) (int, error) {
-	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
+func (service *Stream) Count(criteria exp.Expression) (int, error) {
+	return queries.CountRecords(context.TODO(), service.collection, notDeleted(criteria))
 }
 
 // MaxRank returns the maximum rank of all children of a stream
-func (service *Stream) MaxRank(ctx context.Context, parentID primitive.ObjectID) (int, error) {
-	return queries.MaxRank(ctx, service.collection, parentID)
+func (service *Stream) MaxRank(parentID primitive.ObjectID) (int, error) {
+	return queries.MaxRank(context.TODO(), service.collection, parentID)
 }
 
 /******************************************
@@ -485,6 +485,62 @@ func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expressio
 /******************************************
  * Custom Actions
  ******************************************/
+
+func (service *Stream) Startup(theme *model.Theme) error {
+
+	// Try to count the number of streams currently in the database
+	count, err := service.Count(exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, "service.Theme.Startup", "Unable to count streams")
+	}
+
+	// If the database is not empty, then do not add more...
+	if count > 0 {
+		return nil
+	}
+
+	streamSchema := service.Schema()
+
+	for _, data := range theme.StartupStreams {
+
+		// Create a new Stream
+		stream := model.NewStream()
+		if err := streamSchema.SetAll(&stream, data); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set stream data", data))
+			continue
+		}
+
+		// Validate with the general-purpose Stream schema
+		if err := streamSchema.Validate(&stream); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
+			continue
+		}
+
+		// Get/Validate the template for the new stream
+		templateID := data.GetString("templateId")
+		template, err := service.templateService.Load(templateID)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to load template", templateID))
+			continue
+		}
+
+		// Validate with the specific Template schema
+		if err := template.Schema.Validate(&stream); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
+			continue
+		}
+
+		// Save the new Stream to the database
+		if err := service.Save(&stream, "Created by Startup"); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save stream", stream))
+			continue
+		}
+	}
+
+	return nil
+}
 
 // Publish marks this stream as "published"
 func (service *Stream) Publish(user *model.User, stream *model.Stream) error {

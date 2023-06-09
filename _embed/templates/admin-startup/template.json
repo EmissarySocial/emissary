@@ -1,0 +1,21 @@
+{
+	"templateId":"admin-startup",
+	"templateRole":"admin",
+	"model":"domain",
+	"containedBy":["admin"],
+	"label": "Startup",
+	"description": "Startup Wizard for new domains. (Site Admins Only)",
+	"schema": {
+		"type": "object",
+		"properties": {
+			"themeId": {"type":"string"}
+		}
+	},
+	"actions": {
+		"page": {"step":"view-html"},
+		"welcome": {"step": "view-html"},
+		"theme": {"step": "view-html"},
+		"user": {"step": "view-html"},
+		"confirm": {"step": "view-html"}
+	}
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -118,4 +119,8 @@ func (w Navigation) executeTemplate(wr io.Writer, name string, data any) error {
 
 func (w Navigation) clone(action string) (Renderer, error) {
 	return NewNavigation(w._factory, w._context, w._template, w.stream, action)
+}
+
+func (service Navigation) debug() {
+	spew.Dump("Navigation", service.object())
 }

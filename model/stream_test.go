@@ -41,13 +41,7 @@ func TestStreamSchema(t *testing.T) {
 		{"attributedTo.0.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.0.profileUrl", "https://example/author", nil},
 
-		{"inReplyTo.url", "REPLY-URL", nil},
-		{"inReplyTo.label", "REPLY-LABEL", nil},
-		{"inReplyTo.summary", "REPLY-SUMMARY", nil},
-		{"inReplyTo.imageUrl", "REPLY-IMAGEURL", nil},
-		{"inReplyTo.attributedTo.0.profileUrl", "https://example/inReplyTo", nil},
-		{"inReplyTo.attributedTo.0.name", "REPLY-AUTHOR-NAME", nil},
-
+		{"inReplyTo", "https://in-reply-to.com", nil},
 		{"content.format", "HTML", nil},
 		{"content.raw", "TEST_RAWCONTENT", nil},
 		{"content.html", "TEST_HTML", nil},

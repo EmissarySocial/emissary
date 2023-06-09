@@ -1,0 +1,14 @@
+{
+	"themeId": "fedigram",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Fedigram (TBD)",
+	"description": "Retro-style photo share",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	}
+}

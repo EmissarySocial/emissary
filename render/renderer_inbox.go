@@ -14,6 +14,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -443,4 +444,8 @@ func (w Inbox) Message() (model.Message, error) {
 
 	// Fall through means no valid parameters were found
 	return result, derp.NewBadRequestError(location, "Invalid message ID", w._context.QueryParam("messageId"))
+}
+
+func (service Inbox) debug() {
+	spew.Dump("Inbox")
 }

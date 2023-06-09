@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -147,4 +148,8 @@ func (w Model) View(actionID string) (template.HTML, error) {
 
 func (w Model) clone(action string) (Renderer, error) {
 	return NewModel(w._factory, w._context, w._service, w._object, w._template, action)
+}
+
+func (service Model) debug() {
+	spew.Dump("Model", service.object())
 }

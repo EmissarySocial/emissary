@@ -1,0 +1,24 @@
+{
+	"themeId": "blogroll",
+	"extends": ["global"],
+	"isVisible":true,
+	"category": "Blogs",
+	"label": "Weblog 2k",
+	"description": "Classic weblog with 2020's flair",
+	"rank": 10,
+	"bundles": {
+		"stylesheet": {
+			"contentType":"text/css"
+		}
+	},
+
+	"startupStreams": [
+		{"templateId":"folder", "token":"home", "label":"My Blog", "data.format":"CARDS", "data.showImages":"SHOW"},
+		{"templateId":"article-editorjs", "token":"about-me", "label":"About Me"},
+		{"templateId":"article-editorjs", "token":"now", "label":"Now", "summary":"A place to share what I'm up to now."}
+	],
+	"startupGroups": [
+		{"label":"Contributors"},
+		{"label":"Subscribers"}
+	]
+}

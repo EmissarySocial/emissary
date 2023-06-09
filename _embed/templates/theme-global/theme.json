@@ -1,5 +1,6 @@
 {
 	"themeId":"global",
+	"isVisible":false,
 	"bundles": {
 		"stylesheet": {
 			"contentType":"text/css"
