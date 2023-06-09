@@ -65,9 +65,7 @@ func (service *Theme) List() []model.Theme {
 
 func (service *Theme) ListSorted() []model.Theme {
 	result := service.List()
-	slices.SortFunc(result, func(a, b model.Theme) bool {
-		return a.Label < b.Label
-	})
+	slices.SortFunc(result, model.SortThemes)
 
 	return result
 }

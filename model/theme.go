@@ -65,3 +65,7 @@ func (theme Theme) IsEmpty() bool {
 func (theme Theme) IsPlaceholder() bool {
 	return strings.HasSuffix(theme.Label, "(TBD)")
 }
+
+func SortThemes(a, b Theme) bool {
+	return a.Label < b.Label
+}

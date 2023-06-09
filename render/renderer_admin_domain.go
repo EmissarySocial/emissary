@@ -168,17 +168,9 @@ func (w Domain) SignupForm() model.SignupForm {
 func (w Domain) Themes() []model.Theme {
 	themeService := w._factory.Theme()
 	result := themeService.List()
-	slices.SortFunc(result, func(a, b model.Theme) bool {
-		return a.Label < b.Label
-	})
+	slices.SortFunc(result, model.SortThemes)
 
 	return result
-}
-
-func (w Domain) ActiveThemes() []model.Theme {
-	return slice.Filter(w.Themes(), func(theme model.Theme) bool {
-		return !theme.IsPlaceholder()
-	})
 }
 
 func (w Domain) Providers() []form.LookupCode {
