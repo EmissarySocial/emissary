@@ -21,5 +21,10 @@
 	"startupGroups":[
 		{"label":"Publishers"},
 		{"label":"Subscribers"}
+	],
+	"defaultFolders": [
+		{"label":"Friends"},
+		{"label":"Family"},
+		{"label":"Colleagues"}
 	]
 }

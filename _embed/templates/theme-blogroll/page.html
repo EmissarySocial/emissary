@@ -8,7 +8,7 @@
 	{{ template "includes-head" .}}
 </head>
 
-<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+<body hx-target="#page" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
 	<nav>
 		{{- range .Navigation -}}
@@ -26,7 +26,7 @@
 	</nav>
 
 	<main>
-		<div class="page">
+		<div id="page" class="page">
 			{{- .Render -}}
 		</div>
 		<aside></aside>
