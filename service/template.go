@@ -192,6 +192,8 @@ func (service *Template) loadTemplates() error {
 		}
 	}
 
+	service.themeService.calculateAllInheritance()
+
 	// Assign the prep area to live
 	service.mutex.Lock()
 	defer service.mutex.Unlock()

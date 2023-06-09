@@ -208,6 +208,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Folder Service
 		factory.folderService.Refresh(
 			factory.collection(CollectionFolder),
+			factory.Theme(),
+			factory.Domain(),
 			factory.Inbox(),
 		)
 

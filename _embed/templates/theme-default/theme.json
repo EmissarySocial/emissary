@@ -1,5 +1,6 @@
 {
 	"themeId": "default",
+	"extends":["global"],
 	"isVisible":true,
 	"category":"General",
 	"label": "Maximus",

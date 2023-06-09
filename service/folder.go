@@ -7,14 +7,17 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Folder manages all interactions with a user's Folder
 type Folder struct {
-	collection   data.Collection
-	inboxService *Inbox
+	collection    data.Collection
+	themeService  *Theme
+	domainService *Domain
+	inboxService  *Inbox
 }
 
 // NewFolder returns a fully populated Folder service
@@ -28,8 +31,10 @@ func NewFolder() Folder {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Folder) Refresh(collection data.Collection, inboxService *Inbox) {
+func (service *Folder) Refresh(collection data.Collection, themeService *Theme, domainService *Domain, inboxService *Inbox) {
 	service.collection = collection
+	service.themeService = themeService
+	service.domainService = domainService
 	service.inboxService = inboxService
 }
 
@@ -237,43 +242,17 @@ func (service *Folder) UpdateReadDate(userID primitive.ObjectID, folderID primit
 
 func (service *Folder) CreateDefaultFolders(userID primitive.ObjectID) error {
 
-	defaultFolders := []model.Folder{
-		{
-			Label:  "Family",
-			Layout: model.FolderLayoutChat,
-			Icon:   "people",
-			Group:  1,
-		},
-		{
-			Label:  "Friends",
-			Layout: model.FolderLayoutSocial,
-			Icon:   "shield",
-			Group:  1,
-		},
-		{
-			Label:  "Social",
-			Layout: model.FolderLayoutSocial,
-			Icon:   "folder",
-			Group:  1,
-		},
-		{
-			Label:  "News",
-			Layout: model.FolderLayoutMagazine,
-			Icon:   "inbox",
-			Group:  1,
-		},
-		{
-			Label:  "Archive",
-			Layout: model.FolderLayoutNewspaper,
-			Icon:   "archive",
-			Group:  2,
-		},
-	}
+	domain := service.domainService.Get()
+	theme := service.themeService.GetTheme(domain.ThemeID)
 
-	for index, folder := range defaultFolders {
-		folder.FolderID = primitive.NewObjectID()
+	for index, data := range theme.DefaultFolders {
+		folder := model.NewFolder()
 		folder.UserID = userID
 		folder.Rank = index
+		folder.Label = data.GetString("label")
+		folder.Layout = first.String(data.GetString("layout"), model.FolderLayoutNewspaper)
+		folder.Icon = first.String(data.GetString("icon"), "folder")
+
 		if err := service.Save(&folder, "Create default folder"); err != nil {
 			return err
 		}

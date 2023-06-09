@@ -99,7 +99,7 @@ func (service *Theme) GetTheme(themeID string) model.Theme {
 }
 
 /******************************************
- * Real-Time Updates
+ * Loading Themes
  ******************************************/
 
 func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) error {
@@ -131,9 +131,38 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 	fmt.Println("... adding theme: " + theme.ThemeID)
 
 	// Add the theme into the theme library
+	service.set(theme)
+	return nil
+}
+
+func (service *Theme) set(theme model.Theme) {
+
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
 	service.themes[theme.ThemeID] = theme
-	return nil
+}
+
+func (service *Theme) calculateAllInheritance() {
+
+	for _, theme := range service.themes {
+		service.calculateInheritance(theme)
+	}
+}
+
+func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
+
+	if len(theme.Extends) == 0 {
+		return theme
+	}
+
+	for _, parentName := range theme.Extends {
+		if parent, ok := service.themes[parentName]; ok {
+			parent = service.calculateInheritance(parent)
+			theme.Inherit(&parent)
+		}
+	}
+
+	service.set(theme)
+	return theme
 }
