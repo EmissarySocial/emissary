@@ -31,17 +31,17 @@ func (service *Content) New(format string, raw string) model.Content {
 	// Convert raw formats into HTML
 	switch format {
 
-	case "EDITORJS":
+	case model.ContentFormatEditorJS:
 		resultHTML, err = service.editorJS.GenerateHTML(raw)
 
 		if err != nil {
 			derp.Report(err)
 		}
 
-	case "HTML":
+	case model.ContentFormatHTML:
 		resultHTML = raw
 
-	case "MARKDOWN":
+	case model.ContentFormatMarkdown:
 
 		// TODO: Enable markdown plugins (tables, etc)
 		// https://github.com/yuin/goldmark#built-in-extensions
