@@ -189,14 +189,17 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/:action", handler.GetOutbox(factory))
 	e.POST("/@:userId/:action", handler.PostOutbox(factory))
 	e.GET("/@:userId/avatar", handler.GetProfileAvatar(factory))
-	e.GET("/@:userId/inbox", handler.GetInbox(factory))
-	e.POST("/@:userId/inbox", handler.PostInbox(factory))
-	e.GET("/@:userId/inbox/:action", handler.GetInbox(factory))
-	e.POST("/@:userId/inbox/:action", handler.PostInbox(factory))
-	e.GET("@:userId/messages/:message", handler.GetMessage(factory))
-	e.POST("@:userId/messages/:message", handler.PostMessage(factory))
-	e.GET("@:userId/messages/:message/:action", handler.GetMessage(factory))
-	e.POST("@:userId/messages/:message/:action", handler.PostMessage(factory))
+
+	// Profile Pages for "me" only routes
+	e.GET("/@me/inbox", handler.GetInbox(factory))
+	e.POST("/@me/inbox", handler.PostInbox(factory))
+	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
+	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
+	e.GET("@me/messages/:message", handler.GetMessage(factory))
+	e.POST("@me/messages/:message", handler.PostMessage(factory))
+	e.GET("@me/messages/:message/:action", handler.GetMessage(factory))
+	e.POST("@me/messages/:message/:action", handler.PostMessage(factory))
+	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))
 
 	// ActivityPub Routes
 	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))
@@ -210,10 +213,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlockedCollection(factory))
 	e.GET("/@:userId/pub/blocked/:block", handler.ActivityPub_GetBlock(factory))
 
-	// ME-ONLY PAGES
-	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))
-
-	// DOMAIN ADMIN PAGES
+	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
 	e.GET("/admin/:param1", handler.GetAdmin(factory), mw.Owner)
 	e.POST("/admin/:param1", handler.PostAdmin(factory), mw.Owner)
@@ -222,7 +222,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), mw.Owner)
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), mw.Owner)
 
-	// OAUTH Connections
+	// OAuth Connections
 	e.GET("/oauth/:provider", handler.GetOAuth(factory), mw.Owner)
 	e.GET("/oauth/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
 	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)

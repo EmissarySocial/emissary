@@ -39,10 +39,10 @@ func renderMessage(serverFactory *server.Factory, actionMethod render.ActionMeth
 		}
 
 		// Get the UserID from the URL (could be "me")
-		username, err := profileUsername(sterankoContext)
+		authorization := getAuthorization(sterankoContext)
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading user ID")
+		if !authorization.IsAuthenticated() {
+			return derp.NewUnauthorizedError(location, "Not Authorized")
 		}
 
 		// Get the MessageID from the URL
@@ -56,8 +56,8 @@ func renderMessage(serverFactory *server.Factory, actionMethod render.ActionMeth
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByToken(username, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user", username)
+		if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", authorization.UserID)
 		}
 
 		// Try to load the Message from the database

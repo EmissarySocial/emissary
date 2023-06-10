@@ -37,19 +37,18 @@ func renderInbox(serverFactory *server.Factory, actionMethod render.ActionMethod
 			return derp.Wrap(err, location, "Error loading domain factory")
 		}
 
-		// Get the UserID from the URL (could be "me")
-		username, err := profileUsername(sterankoContext)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading user ID")
-		}
-
 		// Try to load the user from the database
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByToken(username, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user", username)
+		authorization := getAuthorization(sterankoContext)
+
+		if !authorization.IsAuthenticated() {
+			return derp.NewUnauthorizedError(location, "Not Authorized")
+		}
+
+		if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", authorization.UserID)
 		}
 
 		// Try to load the User's Outbox
