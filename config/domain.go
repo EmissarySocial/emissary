@@ -30,10 +30,6 @@ func (domain Domain) ID() string {
 
 func (domain Domain) IsStarterContent() bool {
 
-	if domain.DomainID == "000000000000000000000000" {
-		return true
-	}
-
 	if domain.Hostname == "---" {
 		return true
 	}
