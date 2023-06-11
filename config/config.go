@@ -28,7 +28,7 @@ type Config struct {
 	ActivityPubCache    mapof.String                 `json:"activityPubCache"`    // Connection string for ActivityPub cache database
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
-	MongoID             primitive.ObjectID           `json:"_" bson:"_id"`        // Used as unique key for MongoDB
+	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.

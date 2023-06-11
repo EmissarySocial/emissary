@@ -142,7 +142,7 @@ func (factory *Factory) start() {
 
 			factory.mutex.Lock()
 			if err := factory.refreshDomain(config, domainConfig); err != nil {
-				derp.Report(err)
+				derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.ID))
 			}
 			factory.mutex.Unlock()
 		}
@@ -509,11 +509,19 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
 	var collection data.Collection
 
+	uri := connection.GetString("connectString")
+	database := connection.GetString("database")
+
+	// ActivityStreams cache is not configured.
+	if uri == "" || database == "" {
+		return
+	}
+
 	// Try to connect to the server
-	server, err := mongodb.New(connection.GetString("connectString"), connection.GetString("database"))
+	server, err := mongodb.New(uri, database)
 
 	if err != nil {
-		derp.Report(err)
+		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to connect to database"))
 		return
 	}
 

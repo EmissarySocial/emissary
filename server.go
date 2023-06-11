@@ -88,7 +88,7 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(mw.Localhost())
 
 	// Setup Routes
-	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "domains.html"))
+	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "index.html"))
 	e.GET("/server", handler.SetupPageGet(factory, setupTemplates, "server.html"))
 	e.POST("/server", handler.SetupServerPost(factory))
 	e.GET("/server/:section", handler.SetupServerGet(factory))

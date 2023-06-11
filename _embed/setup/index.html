@@ -2,168 +2,30 @@
 
 <main>
 	<div class="framed page">
-		<h1>Configuration File</h1>
 
-		<div script="install TabContainer" class="space-below">
+		<div style="width:clamp(400px, 50%, 800px); margin:40px auto;">
 
-			<div role="tablist">
-				<button role="tab" aria-controls="bootstrap">Startup</button>
-				<button role="tab" aria-controls="location">Storage Options</button>
-				<button role="tab" aria-controls="format">Documentation</button>
+			<div class="align-center space-below">
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-1024.png" style="width:128px;">
+				<h1>Welcome To Emissary</h1>
+			</div>
+	
+			<div class="space-below">
+				This is the Emissary setup console, which helps administrators to 
+				configure domains that Emissary will serve, 
+				along with other file locations.
 			</div>
 
-			<div id="bootstrap" role="tabpanel">
-
-				<p>Emissary can use command line arguments or environment variables to locate the configuration file.  If the configuration file cannot be found, the server will not start. The server is currently using: <code class="inline red">{{.Source}}</code> to find configuration file.</p>
-
-				<h3>1. Command Line Argument</h3>
-				<p>If you launch Emissary using the the --config argument, it will look for the config file in the directory you specify.  See the "Storage Options" section for valid config values</p>
-
-				<h4>Example Command</h4>
-				<code># emissary --config=&lt;value&gt;</code>
-
-				<h3 class="space-above">2. Environment Variable</h3>
-
-				<p>If there is no command line argument present, Emissary will use the OS Environment Variable<code class="inline">EMISSARY_CONFIG</code> as the location of the config file.
-
-				<h4>Example Command</h4>
-				<code># emissary</code>
-
-				<h3 class="space-above">3. Default Location</h3>
-				<p>If neither a command argument or an environment variable is present, Emissary will look for the configuration in a local file named "config.json" in the current directory.  This is the same as using <code class="inline"># emissary --config=file://config.json</code> command.</p>
-
-				<h4>Example Command</h4>
-				<code># emissary</code>
+			<div class="space-below">
+				IMPORTANT: This app <b class="text-red">is not password protected</b>, so it should only be run
+				from a private, trusted machine, and NOT from a publicly available server.  Once
+				you have configured your Emissary instance, you can turn off the console.  It does
+				not need to be running for Emissary to work.
 			</div>
 
-			<div id="location" role="tabpanel">
-
-				<p>Configuration files can be stored as either files accessible through the OS filesystem, or in a dedicated MongoDB database.  URL schemes are used to identify the type of storage. The server's current file location is: <code class="inline red">{{.Location}}</code></p>
-
-				<h3>Filesystem Config File</h3>
-				<p>Use the URL scheme <code class="inline">file://</code> to specify a file in the OS Filesystem.  This can be a local file, or a remote file stored on a connected NAS. Filesystem configurations are automatically reloaded whenever they are changed.</p>
-
-				<code># emissary --config=file://path/to/file.json</code>
-
-				<h3 class="space-above">MongoDB Config Record</h3>
-				<p>Use the URL schemes <code class="inline">mongodb://</code> or <code class="inline">mongodb+src://</code> to read server configuration from a MongoDB database.  Database-driven configurations are automatically reloaded whenever the database is updated.</p>
-				<p><b>IMPORTANT NOTES:</b></p>
-				<ul>
-					<li>In this MongoDB installation, Emissary will attempt to connect to the database named <b>emissary</b> and the collection named <b>config</b>.  You must use these hard-coded values, and populate a single document in this database/collection that contains the configuration file.</li>
-					<li>If you are configuring a MongoDB database via a command-line parameter, be aware that your system shell may identify the "?" in the mongodb connect string as a wildcard character.  In this event, you must escape the "?" with a backslash.</li>
-				</ul>
-
-				<code># emissary --config=mongodb+srv://username:password@cluster.dns/dbname?options=values</code>
-			</div>
-
-			<div id="format" role="tabpanel">
-				<p>Whether they are stored in a JSON file or in a MongoDB database, Emissary config files use the same format:</p>
-
-				<table class="JSON">
-					<tr>
-						<td>{</td>
-						<td></td>
-						<td></td>
-					</tr>
-					<tr class="bold">
-						<td class="indent-1">"domains": [{</td>
-						<td></td>
-						<td>Array of one or more domains on this server/cluster.</td>
-					</tr>
-					<tr>
-						<td class="indent-2">"domainId":</td>
-						<td>"000000000000000000000000",</td>
-						<td>Unique ObjectID of the domain.</td>
-					</tr>
-					<tr>
-						<td class="indent-2">"label":</td>
-						<td>"My Website",</td>
-						<td>Human-friendly label to use in this admin tool (not visible to users)</td>
-					</tr>
-					<tr>
-						<td class="indent-2">"hostname":</td>
-						<td>"my.website.com",</td>
-						<td>Fully-qualified domain name of the website.  Sub-domains are not allowed.</td>
-					</tr>
-					<tr>
-						<td class="indent-2">"connectString":</td>
-						<td>"mongodb+srv://...",</td>
-						<td>MongoDB connection string for this domain's private database</td>
-					</tr>
-					<tr>
-						<td class="indent-2">"databaseName":</td>
-						<td>"MyWebsite",</td>
-						<td>Default database name for this domain's private database</td>
-					</tr>
-					<tr>
-						<td class="indent-1">}],</td>
-						<td></td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="indent-1">"templates": </td>
-						<td>["/paths","/to", "/templates"],</td>
-						<td>Array of readable locations where custom stream templates are stored</td>
-					</tr>
-					<tr>
-						<td class="indent-1">"layouts":</td>
-						<td>["/paths", "/to", "/layouts"],</td>
-						<td>Array of readable locations where system layouts are stored</td>
-					</tr>
-					<tr>
-						<td class="indent-1">"attachmentOriginals":</td>
-						<td>"/path/to/attahments",</td>
-						<td>Readable/Writable location where attachment originals are stored</td>
-					</tr>
-					<tr>
-						<td class="indent-1">"attachmentCache":</td>
-						<td>"/path/to/cache",</td>
-						<td>Readable/Writable location where processed attachment files are stored</td>
-					</tr>
-					<tr>
-						<td class="indent-1">"certificates": </td>
-						<td>"/path/to/certificates"</td>
-						<td>Readable/Writable location for SSL certificate cache.</td>
-					</tr>
-					<tr>
-						<td>}</td>
-						<td></td>
-						<td></td>
-					</tr>
-				</table>
+			<div>
+				Visit the <a href="https://emissary.dev" target="_blank">Emissary website</a> for additional documentation.
 			</div>
 		</div>
 	</div>
 </main>
-
-<style>
-	table.JSON {border-collapse: collapse;}
-	table.JSON tr:nth-child(odd) {
-		background-color: var(--gray05);
-	}
-
-	table.JSON tr td {
-		vertical-align: top;
-		white-space: inherit;
-	}
-	table.JSON tr td:first-child {
-		font-weight: bold;
-		font-family:monospace;
-		padding-right: 5px;
-		white-space: nowrap;
-	}
-	table.JSON tr td:nth-child(2) {
-		font-family:monospace;
-		padding-right: 60px;
-		white-space: nowrap;
-	}
-	table.JSON tr td:nth-child(3) {
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		-ms-user-select: none;
-		user-select: none;
-	}
-
-	.indent-1 {padding-left:20px;}
-	.indent-2 {padding-left:40px;}
-</style>
