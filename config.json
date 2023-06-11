@@ -2,7 +2,7 @@
 	"domains": [
 		{
 			"domainId":"000000000000000000000000",
-			"label":"Test Database",
+			"label":"Starter Domain",
 			"hostname":"localhost",
 			"connectString":"---",
 			"databaseName":"---",

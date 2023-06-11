@@ -88,7 +88,7 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(mw.Localhost())
 
 	// Setup Routes
-	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "index.html"))
+	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "domains.html"))
 	e.GET("/server", handler.SetupPageGet(factory, setupTemplates, "server.html"))
 	e.POST("/server", handler.SetupServerPost(factory))
 	e.GET("/server/:section", handler.SetupServerGet(factory))
@@ -105,6 +105,8 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/oauth", handler.SetupOAuthList(factory, setupTemplates))
 	e.GET("/oauth/:provider", handler.SetupOAuthGet(factory, setupTemplates))
 	e.POST("/oauth/:provider", handler.SetupOAuthPost(factory, setupTemplates))
+	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
+	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 
 	// When running the setup tool, wait a second, then open a browser window to the correct URL
 	go func() {
