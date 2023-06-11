@@ -196,7 +196,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Populate Email Service
 		factory.emailService.Refresh(
-			factory.config,
+			domain,
 		)
 
 		// Populate EncryptionKey Service

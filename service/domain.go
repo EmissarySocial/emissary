@@ -95,7 +95,7 @@ func (service *Domain) LoadOrCreateDomain() (model.Domain, error) {
 	// If "Not Found" then initialize and return
 	if derp.NotFound(err) {
 
-		if err := service.collection.Save(&service.domain, "Created Domain Record"); err != nil {
+		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
 			return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Error creating new domain record")
 		}
 

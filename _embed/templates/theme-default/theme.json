@@ -19,5 +19,17 @@
 		"registration": {
 			"contentType":"text/hyperscript"
 		}
-	}
+	},
+	"startupStreams": [
+		{"templateId":"article-editorjs", "token":"home", "label":"Home", "rank":1}
+	],
+	"startupGroups":[
+		{"label":"Publishers"},
+		{"label":"Subscribers"}
+	],
+	"defaultFolders": [
+		{"label":"Friends"},
+		{"label":"Family"},
+		{"label":"Colleagues"}
+	]
 }

@@ -148,7 +148,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 	server, ok := smtpConnection.Server()
 
 	if !ok {
-		return derp.NewInternalError(location, "ServerEmail service is not configured")
+		return derp.NewInternalError(location, "Cannot create SMTP Connection - invalid or empty credentials", smtpConnection.Hostname, smtpConnection.Username)
 	}
 
 	client, err := server.Connect()

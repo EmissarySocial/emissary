@@ -1,53 +1,52 @@
 {
 	"domains": [
 		{
-			"domainId":"000000000000000000000000",
-			"label":"Starter Domain",
-			"hostname":"localhost",
-			"connectString":"---",
-			"databaseName":"---",
+			"domainId": "648609070ce005007af586db",
+			"label": "Friday",
+			"hostname": "friday.local",
+			"connectString": "mongodb://localhost:27017",
+			"databaseName": "emissary_friday",
 			"smtp": {
-				"hostname":"---",
-				"username":"---",
-				"password":"---",
+				"hostname": "sandbox.smtp.mailtrap.io",
+				"username": "d1849f5e09d57a",
+				"password": "9ebc4e4d18c68d",
 				"port": 465,
-				"tls": false
+				"tls": true
 			},
 			"owner": {
-				"displayName":"---",
-				"username":"---",
-				"emailAddress":"---",
-				"phoneNumber":"---",
-				"mailingAddress":"---"
+				"displayName": "Ben Pate",
+				"username": "benpate",
+				"emailAddress": "ben@pate.org",
+				"phoneNumber": "",
+				"mailingAddress": ""
 			}
 		}
 	],
-	"providers": [],
+	"providers": null,
 	"templates": [
 		{
-			"adapter":"FILE",
-			"location":"./_embed/templates"
+			"adapter": "EMBED",
+			"location": "templates"
 		}
 	],
 	"emails": [
 		{
-			"adapter":"FILE",
-			"location":"./_embed/emails"
+			"adapter": "EMBED",
+			"location": "emails"
 		}
 	],
 	"attachmentOriginals": {
-		"adapter":"FILE",
-		"location":".emissary/attachmentOriginals"
+		"adapter": "FILE",
+		"location": ".emissary/attachments"
 	},
 	"attachmentCache": {
-		"adapter":"FILE",
-		"location":".emissary/attachmentCaches"
+		"adapter": "FILE",
+		"location": ".emissary/cache"
 	},
 	"certificates": {
-		"adapter":"FILE",
-		"location":".emissary/certificates"
+		"adapter": "FILE",
+		"location": ".emissary/certificates"
 	},
-	"adminEmail":"",
-	"httpPort":8080,
-	"httpsPort":0
+	"adminEmail": "",
+	"activityPubCache": {}
 }

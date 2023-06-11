@@ -19,6 +19,7 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -76,7 +77,7 @@ func (service *User) List(criteria exp.Expression, options ...option.Option) (da
 // Load retrieves an User from the database
 func (service *User) Load(criteria exp.Expression, result *model.User) error {
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.User", "Error loading User", criteria)
+		return derp.Wrap(err, "service.User.Load", "Error loading User", criteria)
 	}
 
 	return nil
@@ -102,7 +103,7 @@ func (service *User) Save(user *model.User, note string) error {
 
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
-		return derp.Wrap(err, "service.User", "Error saving User", user, note)
+		return derp.Wrap(err, "service.User.Save", "Error saving User", user, note)
 	}
 
 	// RULE: Take these actions when setting up a new user
@@ -110,12 +111,12 @@ func (service *User) Save(user *model.User, note string) error {
 
 		// RULE: Create a new encryption key for this user
 		if _, err := service.keyService.Create(user.UserID); err != nil {
-			return derp.Wrap(err, "service.User", "Error creating encryption key for User", user, note)
+			return derp.Wrap(err, "service.User.Save", "Error creating encryption key for User", user, note)
 		}
 
 		// RULE: Create default folders for this user
 		if err := service.folderService.CreateDefaultFolders(user.UserID); err != nil {
-			return derp.Wrap(err, "service.User", "Error creating default folders for User", user, note)
+			return derp.Wrap(err, "service.User.Save", "Error creating default folders for User", user, note)
 		}
 	}
 
@@ -132,12 +133,12 @@ func (service *User) Save(user *model.User, note string) error {
 func (service *User) Delete(user *model.User, note string) error {
 
 	if err := service.collection.Delete(user, note); err != nil {
-		return derp.Wrap(err, "service.User", "Error deleting User", user, note)
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User", user, note)
 	}
 
 	// TODO: HIGH: Clean up related records (like InboxItem and OutboxItem)
 	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User", "Error deleting User's streams", user, note)
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's streams", user, note)
 	}
 
 	return nil
@@ -196,7 +197,7 @@ func (service *User) ObjectDelete(object data.Object, note string) error {
 }
 
 func (service *User) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.User", "Not Authorized")
+	return derp.NewUnauthorizedError("service.User.ObjectUserCan", "Not Authorized")
 }
 
 func (service *User) Schema() schema.Schema {
@@ -206,6 +207,10 @@ func (service *User) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *User) ListUsernameOrOwner(username string) (data.Iterator, error) {
+	return service.List(exp.Equal("isOwner", true).OrEqual("username", username))
+}
 
 func (service *User) ListOwners() (data.Iterator, error) {
 	return service.List(exp.Equal("isOwner", true))
@@ -254,10 +259,15 @@ func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model
 // LoadByUsername loads a single model.User object that matches the provided token
 func (service *User) LoadByToken(token string, result *model.User) error {
 
+	spew.Dump("User.LoadByToken", token)
+	spew.Dump(primitive.ObjectIDFromHex(token))
+
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
 	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
 		if err := service.LoadByID(userID, result); err == nil {
 			return nil
+		} else {
+			spew.Dump(err)
 		}
 	}
 
@@ -269,12 +279,12 @@ func (service *User) LoadByResetCode(userID string, code string, user *model.Use
 
 	// Try to find the user by ID
 	if err := service.LoadByToken(userID, user); err != nil {
-		return derp.Wrap(err, "service.User", "Error loading User by ID", userID)
+		return derp.Wrap(err, "service.User.LoadByResetCode", "Error loading User by ID", userID)
 	}
 
 	// If the password reset is not valid, then return an "Unauthorized" error
 	if !user.PasswordReset.IsValid(code) {
-		return derp.NewUnauthorizedError("service.User", "Invalid password reset code", userID, code)
+		return derp.NewUnauthorizedError("service.User.LoadByResetCode", "Invalid password reset code", userID, code)
 	}
 
 	// No Error means success
@@ -292,26 +302,26 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
 	err := queries.SetFollowersCount(service.collection, service.followers, userID)
-	return derp.Report(derp.Wrap(err, "service.User", "Error setting follower count", userID))
+	return derp.Report(derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID))
 }
 
 func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
 	err := queries.SetFollowingCount(service.collection, service.following, userID)
-	return derp.Report(derp.Wrap(err, "service.User", "Error setting following count", userID))
+	return derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
 }
 
 func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
 	err := queries.SetBlockCount(service.collection, service.blocks, userID)
-	return derp.Report(derp.Wrap(err, "service.User", "Error setting block count", userID))
+	return derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
 }
 
 func (service *User) SetOwner(owner config.Owner) error {
 
 	// Try to read the owner from the database
-	users, err := service.ListOwners()
+	users, err := service.ListUsernameOrOwner(owner.Username)
 
 	if err != nil {
-		return derp.Wrap(err, "service.User", "Error loading owners")
+		return derp.Wrap(err, "service.User.SetOwner", "Error loading owners")
 	}
 
 	user := model.NewUser()
@@ -319,28 +329,37 @@ func (service *User) SetOwner(owner config.Owner) error {
 
 	for users.Next(&user) {
 
-		// If this user is already an owner, then we may be able to skip some work...
-		if user.Username == owner.EmailAddress {
+		// See if this user is the "owner" being added/updated
+		isOwner := (user.Username == owner.Username)
+
+		// Mark "found" if possible
+		if isOwner {
 			found = true
 		}
 
-		// Update the user record and try to save it
-		user.IsOwner = (user.Username == owner.EmailAddress)
+		// If we're changing this record, then save it.
+		if user.IsOwner != isOwner {
+			user.IsOwner = isOwner
 
-		if err := service.Save(&user, "AssertOwner"); err != nil {
-			return derp.Wrap(err, "service.User", "Error saving user", user)
+			if err := service.Save(&user, "AssertOwner"); err != nil {
+				return derp.Wrap(err, "service.User.SetOwner", "Error saving user", user)
+			}
 		}
+
+		// Reset the user object
+		user = model.NewUser()
 	}
 
 	// If we didn't find an owner above, then we need to create one.
 	if !found {
 		user := model.NewUser()
 		user.DisplayName = owner.DisplayName
-		user.Username = owner.EmailAddress
+		user.EmailAddress = owner.EmailAddress
+		user.Username = owner.Username
 		user.IsOwner = true
 
 		if err := service.Save(&user, "CreateOwner"); err != nil {
-			return derp.Wrap(err, "service.User", "Error saving user", user)
+			return derp.Wrap(err, "service.User.SetOwner", "Error saving user", user)
 		}
 	}
 
@@ -356,7 +375,7 @@ func (service *User) MakeNewPasswordResetCode(user *model.User) error {
 	// Try to save the user with the new password reset code.
 	if err := service.Save(user, "Create Password Reset Code"); err != nil {
 
-		return derp.Wrap(err, "service.User", "Error saving user", user)
+		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Error saving user", user)
 	}
 
 	return nil
@@ -367,7 +386,7 @@ func (service *User) ResetPassword(user *model.User, resetCode string, newPasswo
 
 	// Verify that the password reset code is valid
 	if !user.PasswordReset.IsValid(resetCode) {
-		return derp.NewForbiddenError("service.User", "Invalid password reset code", user, resetCode)
+		return derp.NewForbiddenError("service.User.ResetPassword", "Invalid password reset code", user, resetCode)
 	}
 
 	// Update the password
@@ -378,7 +397,7 @@ func (service *User) ResetPassword(user *model.User, resetCode string, newPasswo
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(user, "Create Password Reset Code"); err != nil {
-		return derp.Wrap(err, "service.User", "Error saving user", user)
+		return derp.Wrap(err, "service.User.ResetPassword", "Error saving user", user)
 	}
 
 	return nil
@@ -389,13 +408,13 @@ func (service *User) ResetPassword(user *model.User, resetCode string, newPasswo
 func (service *User) SendWelcomeEmail(user *model.User) {
 
 	if err := service.MakeNewPasswordResetCode(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error making password reset", user))
+		derp.Report(derp.Wrap(err, "service.User.SendWelcomeEmail", "Error making password reset", user))
 		return
 	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendWelcome(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
+		derp.Report(derp.Wrap(err, "service.User.SendWelcomeEmail", "Error sending welcome email", user))
 		return
 	}
 }
@@ -405,13 +424,13 @@ func (service *User) SendWelcomeEmail(user *model.User) {
 func (service *User) SendPasswordResetEmail(user *model.User) {
 
 	if err := service.MakeNewPasswordResetCode(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error making password reset", user))
+		derp.Report(derp.Wrap(err, "service.User.SendPasswordResetEmail", "Error making password reset", user))
 		return
 	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User", "Error sending welcome email", user))
+		derp.Report(derp.Wrap(err, "service.User.SendPasswordResetEmail", "Error sending password reset", user))
 		return
 	}
 }
@@ -429,12 +448,12 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	urlValue, err := url.Parse(value)
 
 	if err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, "service.User", "Error parsing profile URL", value)
+		return primitive.NilObjectID, derp.Wrap(err, "service.User.ParseProfileURL", "Error parsing profile URL", value)
 	}
 
 	// RULE: server must be the same as the server we're running on
 	if urlValue.Scheme+"://"+urlValue.Host != service.host {
-		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User", "Profile URL must exist on this server", urlValue, value, service.host)
+		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User.ParseProfileURL", "Profile URL must exist on this server", urlValue, value, service.host)
 	}
 
 	// Extract the username from the URL
@@ -442,7 +461,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	username := path.Head()
 
 	if !strings.HasPrefix(username, "@") {
-		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User", "Username must begin with an '@'", value)
+		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User.ParseProfileURL", "Username must begin with an '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")
@@ -456,7 +475,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	user := model.NewUser()
 
 	if err := service.LoadByUsername(username, &user); err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, "service.User", "Error loading user by username", username)
+		return primitive.NilObjectID, derp.Wrap(err, "service.User.ParseProfileURL", "Error loading user by username", username)
 	}
 
 	return user.UserID, nil
@@ -520,13 +539,13 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		username = list.First(username, '/')
 
 	default:
-		return digit.Resource{}, derp.New(derp.CodeBadRequestError, "service.User", "Invalid username", username)
+		return digit.Resource{}, derp.New(derp.CodeBadRequestError, "service.User.LoadWebFinger", "Invalid username", username)
 	}
 
 	// Try to load the user from the database
 	user := model.NewUser()
 	if err := service.LoadByToken(username, &user); err != nil {
-		return digit.Resource{}, derp.Wrap(err, "service.Stream.LoadWebFinger", "Error loading user", username)
+		return digit.Resource{}, derp.Wrap(err, "service.User.LoadWebFinger", "Error loading user", username)
 	}
 
 	// Make a WebFinger resource for this user.
