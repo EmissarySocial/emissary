@@ -1,27 +1,5 @@
 {
-	"domains": [
-		{
-			"domainId": "000000000000000000000000",
-			"label": "Starter Domain",
-			"hostname": "localhost",
-			"connectString": "---",
-			"databaseName": "---",
-			"smtp": {
-				"hostname": "",
-				"username": "",
-				"password": "",
-				"port": 465,
-				"tls": true
-			},
-			"owner": {
-				"displayName": "---",
-				"username": "---",
-				"emailAddress": "---",
-				"phoneNumber": "---",
-				"mailingAddress": "---"
-			}
-		}
-	],
+	"domains": [],
 	"providers": null,
 	"templates": [
 		{
