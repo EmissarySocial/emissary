@@ -1,24 +1,24 @@
 {
 	"domains": [
 		{
-			"domainId": "648609070ce005007af586db",
-			"label": "Friday",
-			"hostname": "friday.local",
-			"connectString": "mongodb://localhost:27017",
-			"databaseName": "emissary_friday",
+			"domainId": "000000000000000000000000",
+			"label": "Starter Domain",
+			"hostname": "localhost",
+			"connectString": "---",
+			"databaseName": "---",
 			"smtp": {
-				"hostname": "sandbox.smtp.mailtrap.io",
-				"username": "d1849f5e09d57a",
-				"password": "9ebc4e4d18c68d",
+				"hostname": "",
+				"username": "",
+				"password": "",
 				"port": 465,
 				"tls": true
 			},
 			"owner": {
-				"displayName": "Ben Pate",
-				"username": "benpate",
-				"emailAddress": "ben@pate.org",
-				"phoneNumber": "",
-				"mailingAddress": ""
+				"displayName": "---",
+				"username": "---",
+				"emailAddress": "---",
+				"phoneNumber": "---",
+				"mailingAddress": "---"
 			}
 		}
 	],
