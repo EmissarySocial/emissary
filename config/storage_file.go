@@ -84,13 +84,23 @@ func (storage FileStorage) load() Config {
 		// derp.Report(derp.Wrap(err, "config.FileStorage.load", "Error reading configuration"))
 
 		fmt.Println("")
-		fmt.Println("Emissary is unable to read the configuration file at: " + storage.location)
-		fmt.Println("Please check this file location or run the following command to create a new configuration file:")
 		fmt.Println("")
+		fmt.Println("=====================================================")
+		fmt.Println("EMISSARY: UNABLE TO READ CONFIGURATION...")
+		fmt.Println("The configuration file is missing or invalid. Please")
+		fmt.Println("check the following location:")
+		fmt.Println("'" + storage.location + "'")
+		fmt.Println("")
+		fmt.Println("You can initialize an empty configuration file by")
+		fmt.Println("running this command:")
 		fmt.Println("> emissary --init --setup")
 		fmt.Println("")
+		fmt.Println("For assistance, please visit https://emissary.dev/")
+		fmt.Println("=====================================================")
+		fmt.Println("")
+		fmt.Println("")
 
-		panic("Error reading configuration: " + storage.location)
+		os.Exit(0)
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
