@@ -38,7 +38,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
 	switch step.Format {
 
 	// EditorJS writes directly to the request body
-	case "EDITORJS":
+	case model.ContentFormatEditorJS:
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, context.Request().Body); err != nil {

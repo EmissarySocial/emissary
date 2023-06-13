@@ -69,7 +69,7 @@
 		content = await editor.save()
 
 		// POST the content to the server
-		await fetch("{{.URL}}", {
+		await fetch("/{{.StreamID}}/editor", {
 			method: "POST",
 			body: JSON.stringify(content),
 		})
