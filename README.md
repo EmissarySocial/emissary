@@ -1,4 +1,4 @@
-# Emissary 🏴‍☠️
+<img src="https://emissary.social/63a8916bccc34c36f1f55e4d/attachments/648a403a01d6b7eb886a3b3c" width="40%">
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/EmissarySocial/emissary.svg)](https://pkg.go.dev/github.com/EmissarySocial/emissary)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/EmissarySocial/emissary/go.yml?branch=main)](https://github.com/EmissarySocial/emissary/actions/workflows/go.yml)
