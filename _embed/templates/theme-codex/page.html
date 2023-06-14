@@ -12,16 +12,16 @@
 
 	<nav>
 		{{- range .Navigation -}}
-			<a href="/{{.Token}}" script="install turboclick" class="{{- if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
+			<a href="/{{.Token}}" class="turboclick {{ if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
 		{{- end -}}
 
 		<br>
 		{{- if .IsAuthenticated -}}
-			<a href="/@me" script="install turboclick" class="{{- if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
-			<a href="/@me/inbox" script="install turboclick" class="{{- if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
-			{{- if .IsOwner -}}<a href="/admin/domain" script="install turboclick" class="{{- if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
+			<a href="/@me" class="turboclick {{ if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
+			<a href="/@me/inbox" class="turboclick {{ if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
+			{{- if .IsOwner -}}<a href="/admin/domain" class="turboclick {{ if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
 		{{- else -}}
-			<a href="/signin" script="install turboclick">Sign In</a>
+			<a href="/signin" class="turboclick">Sign In</a>
 		{{- end -}}
 	</nav>
 

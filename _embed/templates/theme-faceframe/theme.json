@@ -3,7 +3,7 @@
 	"extends": ["global"],
 	"isVisible":true,
 	"category": "Blogs",
-	"label": "Faceframe (TBD)",
+	"label": "Face:Frame (TBD)",
 	"description": "Group Sharing for notes, photos, and more",
 	"rank": 10,
 	"bundles": {

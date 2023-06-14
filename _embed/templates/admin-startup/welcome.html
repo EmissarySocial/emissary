@@ -3,7 +3,7 @@
 		<div class="space-below">
 			<img src="/.themes/global/resources/emissary/Emissary-Icon-1024.png" style="height:128px;">
 		</div>
-		<h1>Let's set up your new Emissary server</h1>
+		<h1>Let's Set Up Your Emissary</h1>
 		<div>Choose the theme for the kind of server you're making.</div>
 		<div>Don't worry, you can always change your mind later.</div>
 	</div>
@@ -12,7 +12,7 @@
 
 		{{ range .Themes }}
 			<div hx-get="/startup/theme?themeId={{.ThemeID}}" class="x-grid-item x-card clickable">
-				<img src="/.themes/{{.ThemeID}}/resources/startup/icon.jpg" class="x-card-photo">
+				<img src="/.themes/{{.ThemeID}}/resources/startup/icon.png" class="x-card-photo">
 				<h2 class="x-card-text bold">{{.Label}}</h2>
 				<div class="x-card-text">{{.Description}}</div>
 			</div>

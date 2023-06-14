@@ -3,7 +3,7 @@
 	"extends": ["global"],
 	"isVisible":true,
 	"category": "Blogs",
-	"label": "Weblog 2k",
+	"label": "Weblog 2k (TBD)",
 	"description": "Classic weblog with 2020's flair",
 	"rank": 10,
 	"bundles": {

@@ -4,9 +4,9 @@
 	display:flex;
 	flex-direction:row;
 	flex-wrap:wrap;
-	justify-content:left;
+	justify-content:center;
 	align-items:stretch;
-	align-content:flex-start;
+	align-content:center;
 	gap:24px;
 	container-type:inline-size;
 }
