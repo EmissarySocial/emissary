@@ -4,7 +4,7 @@ Fedigram is personal photo-sharing theme optimized for a single person, giving y
 
 <img src="/.themes/fedigram/resources/startup/about.jpg" width="100%">
 
-## Maximus Works Great For:
+## Fedigram Works Great For:
 
 * Public Photo Streams
 * Private Photo Sharing
