@@ -3,47 +3,67 @@
  ******************************************/
 
 * {
-	 box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 body {
-	background-color: var(--white);
+	background-color: var(--body-background);
 	color: var(--text-color);
 	overflow-x: hidden;
-	display:flex;
-	flex-direction:row;
-	align-items: stretch;
-	padding:0px;
 	margin:0px;
-	min-height:100%;
 }
 
 nav {
-	flex-basis: 200px;
-	flex-grow:1;
-	width:300px;
+	position:fixed;
+	top:0px;
+	left: 0px;
+	right: 0px;
+	height:56px;
+	z-index:100;
+
     color: var(--gray80);
 	font-weight:400;
-	background-color: var(--gray10);
-	border-right: solid 1px var(--gray20);
-	padding: 24px 8px;
+	background-color: var(--white);
+	border-bottom: solid 1px var(--gray15);
+	display: flex;
+	justify-content: center;
+	flex-wrap:wrap;
+	overflow-x:auto;
+}
+
+nav .framed {
+	display: flex;
+}
+
+nav .framed div {
+	display: flex;
+	flex-grow:1;
+	justify-content: flex-start;
+}
+
+nav .framed div:last-child {
+	justify-content: flex-end;
 }
 
 nav a,
 nav button {
     color: var(--gray80);
-    display:block;
-	padding:4px 8px;
+	background-color: var(--white);
+    display:inline-block;
+	padding:8px 16px;
+	border-radius: var(--border-radius);
+	margin:8px 0px;
 	overflow-y:hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 
 nav b {
-	display:block;
+	display:inline-block;
 	color: var(--black);
 	font-weight: 700;
-	padding: 4px 8px;
+	padding: 8px 0px;
+	margin:10px 10px 10px 0px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
@@ -53,7 +73,7 @@ nav a:focus,
 nav button:hover,
 nav button:focus {
     color: var(--gray90);
-    background-color:var(--gray15);
+    background-color:var(--gray10);
 }
 
 nav a.selected,
@@ -62,19 +82,13 @@ nav a.selected:focus,
 nav button.selected,
 nav button.selected:hover
 nav button.selected:focus {
-	color: var(--black)!important;
-	font-weight: 700;
+	background-color: var(--gray20);
+	color: var(--black);
 }
 
 main {
-	flex-basis: 0;
-	flex-grow:999;
+	display: flex;
+	flex-direction:row;
 	justify-content: center;
-	padding: 24px;
-}
-
-
-main .page {
-	width:100%;
-	max-width: 800px;
+	padding-top:56px;
 }

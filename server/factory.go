@@ -68,6 +68,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	// Global Theme service
 	factory.themeService = *service.NewTheme(
 		factory.Template(),
+		factory.Content(),
 		factory.FuncMap(),
 	)
 
@@ -441,6 +442,11 @@ func (factory *Factory) NormalizeHostname(hostname string) string {
 /****************************
  * Other Global Services
  ****************************/
+
+// Contet returns the global content service
+func (factory *Factory) Content() *service.Content {
+	return &factory.contentService
+}
 
 // Template returns the global template service
 func (factory *Factory) Template() *service.Template {

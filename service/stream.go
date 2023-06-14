@@ -79,6 +79,7 @@ func (service *Stream) New(navigationID string, parentID primitive.ObjectID, tem
 	result.TemplateID = templateID
 	result.NavigationID = navigationID
 	result.ParentID = parentID
+	result.URL = service.host + "/" + result.StreamID.Hex()
 
 	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
 
@@ -509,6 +510,11 @@ func (service *Stream) Startup(theme *model.Theme) error {
 		if err := streamSchema.SetAll(&stream, data); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set stream data", data))
 			continue
+		}
+
+		// If we have default content, then add that too.
+		if content, ok := data["content"].(model.Content); ok {
+			stream.Content = content
 		}
 
 		// Validate with the general-purpose Stream schema

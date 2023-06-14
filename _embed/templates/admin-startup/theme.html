@@ -29,7 +29,7 @@
 		</div>
 		<div class="align-center">
 			<button hx-get="/startup/welcome">&laquo; Back</button>
-			<button hx-post="/startup?themeId={{$themeID}}" class="primary">Continue with this Theme</button>
+			<button hx-post="/startup?themeId={{$themeID}}" class="primary">Continue with {{$theme.Label}}</button>
 		</div>
 
 	{{- end -}}

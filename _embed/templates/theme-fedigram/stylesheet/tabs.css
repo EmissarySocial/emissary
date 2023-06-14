@@ -44,9 +44,9 @@
     color:var(--gray100);
 }
 
-/***************************
- * Alternate Style
- ***************************/
+/******************************************
+ * Underline Style Tabs
+ ******************************************/
 
  [role="tablist"].underlined {
     border-bottom:none;
@@ -92,5 +92,57 @@
     color:var(--gray100);
     padding:8px;
     margin:0px 8px;
+    font-weight:500;
+}
+
+/******************************************
+ * Pill Style Tabs
+ ******************************************/
+
+ [role="tablist"].pills {
+    border-bottom:none;
+    margin-bottom:20px;
+    line-height:1em;
+    font-weight:400;
+    font-family:inherit;
+    font-size:1rem;
+}
+
+[role="tablist"].pills > [role="tab"] {
+    background-color:rgba(0,0,0,0);
+    border:none;
+    margin:0px;
+    padding:8px 16px;
+
+    cursor:pointer;
+    display:inline-block;
+    border-radius:4px; 
+    color:var(--gray80);
+    text-decoration:none;
+}
+
+[role="tablist"].pills > [role="tab"]:hover:not([disabled]),
+[role="tablist"].pills > [role="tab"]:focus:not([disabled]) {
+    border:none;
+    margin:0px;
+    padding:8px 16px;
+
+    background-color:var(--gray10);
+    color:var(--black);
+}
+
+[role="tablist"].pills > [role="tab"][disabled] {
+    color:var(--gray60);
+    cursor:not-allowed;
+}
+
+[role="tablist"].pills > [role="tab"][aria-selected="true"],
+[role="tablist"].pills > [role="tab"][aria-selected="true"]:hover {
+    border:none;
+    margin:0px;
+    padding:8px 16px;
+
+    background-color:var(--gray50);
+    color:var(--white);
     font-weight:500;
 }

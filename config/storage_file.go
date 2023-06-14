@@ -100,7 +100,7 @@ func (storage FileStorage) load() Config {
 		fmt.Println("")
 		fmt.Println("")
 
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {

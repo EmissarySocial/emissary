@@ -6,6 +6,8 @@
 	box-sizing: border-box;
 }
 
+html {height:100%;}
+
 body {
 	background-color: var(--white);
 	color: var(--text-color);

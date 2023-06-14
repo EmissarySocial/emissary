@@ -1,0 +1,61 @@
+behavior TabContainer
+
+	-- init handles the default tab selection.  If a document hash exists 
+	-- (and points to one of our tabs) then select it first.  Otherwise,
+	-- select the first tab in the list
+	init
+		if window.location.hash is not "" then
+			set target to the first <[aria-controls="${window.location.hash.slice(1)}"]/>
+		end
+
+		if target is null then 
+			set target to first <[role=tab]/> in me
+		end
+
+		send selectTab to target
+	end
+
+	-- select highlighted tab on ENTER (additional key to select tabs)
+	-- on keydown[keyCode==13]
+	--	send select to first <[role=tab]:focus/>
+	--	halt the event
+
+	-- handle mouse clicks directly on tabs
+	on mousedown(target)[button==0] from <[role=tablist] [role=tab] />
+		send selectTab to target
+		halt the event
+	end
+
+	on click from <[role=tablist] [role=tab] />
+		send selectTab to target
+		halt the event
+
+	-- handle touch events for phones and tablets
+	on touchstart(target) from <[role=tablist] [role=tab] />
+		send selectTab to target
+		halt the event
+	end
+
+	on selectTab(target)
+
+		if target [@disabled] is not null then 
+			exit
+		end
+
+		for tab in <[role=tab] /> in me
+			log tab
+			if tab == target
+				add [@aria-selected="true"] to tab
+				call window.history.replaceState(undefined, tab.innerHTML, "#" + target[@aria-controls])
+			else
+				remove [@aria-selected] from tab
+			end
+		end
+
+		for panel in <[role=tabpanel] /> in me
+			log panel
+			set {hidden: (panel[@id] != target[@aria-controls])} on panel
+		end
+	end
+end
+

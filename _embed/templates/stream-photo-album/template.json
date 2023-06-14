@@ -37,6 +37,11 @@
 			"description":"Can read this article, but cannot make changes"
 		}
 	},
+	"bundles":{
+		"stylesheet":{
+			"contentType":"text/css"
+		}
+	},
 	"actions": {
 		"init": {
 			"steps": [

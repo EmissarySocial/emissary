@@ -81,3 +81,23 @@ func (service *Content) New(format string, raw string) model.Content {
 		HTML:   resultHTML,
 	}
 }
+
+func (service *Content) NewByExtension(extension string, raw string) model.Content {
+	format := service.FormatByExtension(extension)
+	return service.New(format, raw)
+}
+
+func (service *Content) FormatByExtension(extension string) string {
+
+	switch extension {
+
+	case "md":
+		return model.ContentFormatMarkdown
+
+	case "json":
+		return model.ContentFormatEditorJS
+
+	default:
+		return model.ContentFormatHTML
+	}
+}

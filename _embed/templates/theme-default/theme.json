@@ -21,7 +21,9 @@
 		}
 	},
 	"startupStreams": [
-		{"templateId":"article-editorjs", "token":"home", "label":"Home", "rank":1}
+		{"templateId":"article-editorjs", "token":"home", "label":"Welcome!", "rank":1},
+		{"templateId":"article-markdown", "token":"about", "label":"About Maximus", "rank":2},
+		{"templateId":"article-markdown", "token":"join-the-team", "label":"Join the Team", "rank":3}
 	],
 	"startupGroups":[
 		{"label":"Publishers"},

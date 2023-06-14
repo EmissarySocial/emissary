@@ -1,42 +1,41 @@
-<h1>{{.Label}}</h1>
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
 
-{{- if ne "" .Summary -}}
-	<div class="space-after">{{.Summary}}</div>
-{{- end -}}
+	<div id="menu-bar">
+		<div class="left">
+			<a href="/{{.Token}}">View Album</a>
 
-<div id="menu-bar">
-	<div class="left">
-		<a href="/{{.Token}}">View Album</a>
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties">Edit Info</a>
+			{{- end -}}
 
-		{{- if .UserCan "properties" -}}
-			<a hx-get="/{{.Token}}/properties">Edit Info</a>
-		{{- end -}}
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
+		</div>
 
-		{{- if .UserCan "sharing" -}}
-			<a hx-get="/{{.Token}}/sharing">Sharing</a>
-		{{- end -}}
+		<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+		</div>
 	</div>
 
-	<div class="right">
-		{{- if .UserCan "delete" -}}
-			<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-		{{- end -}}
-	</div>
+	<article>
+
+		<div class="uploader" script="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
+		
+			<div class="space-above space-below">
+				<div class="gray40" style="font-size:100px;">{{icon "upload"}}</div>
+			</div>
+			<h2 class="space-below">Drag Files Here to Upload</h2>
+			<label for="manual-upload" class="button primary">Or Click to Select from Your Device</label>
+			<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">
+				<input type="file" id="manual-upload" name="file"/>
+			</form>
+			<div class="space-below"></div>
+
+		</div>
+
+	</article>
+
 </div>
-
-<article>
-
-	<div class="uploader" _="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
-	
-		<div class="space-below gray40">{{icon "upload"}}</div>
-		<h2 class="space-below">Drag Files Here to Upload</h2>
-		<label for="manual-upload" class="pure-button pure-button-primary">Or Click to Select from Your Device</label>
-		<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">
-			<input type="file" id="manual-upload" name="file"/>
-		</form>
-		<div class="space-below"></div>
-
-	</div>
-
-</article>
-

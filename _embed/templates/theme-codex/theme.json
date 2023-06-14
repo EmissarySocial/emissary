@@ -4,7 +4,7 @@
 	"isVisible":true,
 	"category": "General",
 	"label": "Codex",
-	"description": "Sidebar navigation for content-heavy sites",
+	"description": "Side-Nav designed for your Magnum Opus",
 	"rank": 10,
 	"bundles": {
 		"stylesheet": {
@@ -12,13 +12,13 @@
 		}
 	},
 	"startupStreams": [
-		{"templateId":"article-editorjs", "token":"home", "label":"Welcome", "rank":1},
-		{"templateId":"article-editorjs", "token":"section-1", "label":"Section 1", "rank":2},
-		{"templateId":"article-editorjs", "token":"section-2", "label":"Section 2", "rank":3},
-		{"templateId":"article-editorjs", "token":"section-3", "label":"Section 3", "rank":4},
-		{"templateId":"article-editorjs", "token":"section-4", "label":"Section 3", "rank":5},
-		{"templateId":"article-editorjs", "token":"section-5", "label":"Section 5", "rank":6},
-		{"templateId":"article-editorjs", "token":"section-6", "label":"Section 6", "rank":7}
+		{"templateId":"article-editorjs", "token":"home", "label":"Welcome!", "rank":1},
+		{"templateId":"article-markdown", "token":"about", "label":"About Codex", "rank":2},
+		{"templateId":"article-markdown", "token":"join-the-team", "label":"Join the Team", "rank":3},
+		{"templateId":"article-markdown", "token":"lorem", "label":"Lorem", "rank":4},
+		{"templateId":"article-markdown", "token":"ipsum", "label":"Ipsum", "rank":5},
+		{"templateId":"article-markdown", "token":"dolor", "label":"Dolor", "rank":6},
+		{"templateId":"article-markdown", "token":"set", "label":"Set", "rank":7}
 	],
 	"startupGroups":[
 		{"label":"Publishers"},

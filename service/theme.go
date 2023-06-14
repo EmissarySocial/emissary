@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"golang.org/x/exp/slices"
@@ -18,6 +19,7 @@ import (
 // filesystem.
 type Theme struct {
 	templateService *Template
+	contentService  *Content
 	funcMap         template.FuncMap
 	themes          mapof.Object[model.Theme]
 
@@ -27,10 +29,11 @@ type Theme struct {
 }
 
 // NewTheme returns a fully initialized Theme service.
-func NewTheme(templateService *Template, funcMap template.FuncMap) *Theme {
+func NewTheme(templateService *Template, contentService *Content, funcMap template.FuncMap) *Theme {
 
 	service := Theme{
 		templateService: templateService,
+		contentService:  contentService,
 		funcMap:         funcMap,
 		themes:          mapof.NewObject[model.Theme](),
 		mutex:           sync.RWMutex{},
@@ -128,6 +131,10 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		theme.Resources = resources
 	}
 
+	if content, err := fs.Sub(filesystem, "content"); err == nil {
+		service.setStartupContent(&theme, content)
+	}
+
 	fmt.Println("... adding theme: " + theme.ThemeID)
 
 	// Add the theme into the theme library
@@ -165,4 +172,31 @@ func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
 
 	service.set(theme)
 	return theme
+}
+
+func (service *Theme) setStartupContent(theme *model.Theme, filesystem fs.FS) {
+
+	// Try to read files in the "content" directory
+	entries, err := fs.ReadDir(filesystem, ".")
+
+	if err != nil {
+		return
+	}
+
+	// For each file in the directory
+	for _, entry := range entries {
+
+		// Search for a StartupStream with a matching filename
+		for index := range theme.StartupStreams {
+			filename, extension := list.Split(entry.Name(), '.')
+			if theme.StartupStreams[index].GetString("token") == filename {
+
+				// If there is a match, then load the file into the StartupStream
+				if raw, err := fs.ReadFile(filesystem, entry.Name()); err == nil {
+					theme.StartupStreams[index]["content"] = service.contentService.NewByExtension(extension, string(raw))
+					break
+				}
+			}
+		}
+	}
 }

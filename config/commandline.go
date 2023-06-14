@@ -73,5 +73,6 @@ func getConfigProtocol(location string) string {
 	}
 
 	derp.Report(derp.NewInternalError("config.getConfigProtocol", "Unable to determine storage engine for: ", location))
+	os.Exit(1)
 	panic("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
 }

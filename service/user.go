@@ -19,7 +19,6 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -259,15 +258,10 @@ func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model
 // LoadByUsername loads a single model.User object that matches the provided token
 func (service *User) LoadByToken(token string, result *model.User) error {
 
-	spew.Dump("User.LoadByToken", token)
-	spew.Dump(primitive.ObjectIDFromHex(token))
-
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
 	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
 		if err := service.LoadByID(userID, result); err == nil {
 			return nil
-		} else {
-			spew.Dump(err)
 		}
 	}
 

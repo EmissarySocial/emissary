@@ -1,5 +1,4 @@
-<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:message">
+<div class="page" hx-ext="sse" sse-connect="/{{.StreamID}}/sse" hx-get="/{{.Token}}" hx-trigger="sse:message">
 
 	{{- if ne .Label "" -}}
 		<h1>{{.Label}}</h1>
@@ -43,5 +42,4 @@
 
 	{{- end -}}
 
-</div>
 </div>

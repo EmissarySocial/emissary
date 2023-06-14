@@ -14,8 +14,8 @@
 
 	"startupStreams": [
 		{"templateId":"folder", "token":"home", "label":"My Blog", "data.format":"CARDS", "data.showImages":"SHOW"},
-		{"templateId":"article-editorjs", "token":"about-me", "label":"About Me"},
-		{"templateId":"article-editorjs", "token":"now", "label":"Now", "summary":"A place to share what I'm up to now."}
+		{"templateId":"article-editorjs", "token":"about", "label":"About Weblog 2k"},
+		{"templateId":"article-editorjs", "token":"join-the-team", "label":"Join the Team"}
 	],
 	"startupGroups": [
 		{"label":"Contributors"},

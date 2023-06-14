@@ -1,0 +1,11 @@
+# Maximus: A Minimalist Theme for Emissary
+
+Maximus is a general-purpose theme with a simple top-navigation bar that works great for three to five top-leve elements.  It works with any number of active users, and includes light and dark modes that fade into the background to let your content shine.  It's also the default theme for many Emissary websites, so it tends to get updates more quickly than others.
+
+<img src="/.themes/default/resources/startup/about.jpg" width="100%">
+
+## Maximus Works Great For:
+
+* Personal Websites and Blogs
+* Community Websites
+

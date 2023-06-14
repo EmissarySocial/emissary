@@ -1,5 +1,6 @@
-<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse">
-<div hx-get="/{{.Token}}" hx-trigger="sse:message, refreshPage from:window">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
+
+	<link rel="stylesheet" href="/.templates/photo-album/stylesheet"/>
 
 	<!-- Alternate links for service discovery -->
 	<link rel="alternate" type="application/rss+xml" href="/{{.StreamID}}/rss"/>
@@ -7,42 +8,38 @@
 	<link rel="alternate" type="application/feed+json" href="/{{.StreamID}}/json"/>
 	<link rel="hub" href="/{{.StreamID}}/websub"/>
 
-	<div class="page">
-		{{ if .UserCan "edit" }}
-			<div id="menu-bar">
-				<div class="left">
-				<a href="/{{.Token}}/edit">Upload Photos</a>
+	{{ if .UserCan "edit" }}
+		<div id="menu-bar">
+			<div class="left">
+			<a href="/{{.Token}}/edit">Upload Photos</a>
 
-				{{- if .UserCan "properties" -}}
-					<a hx-get="/{{.Token}}/properties">Edit Info</a>
-				{{- end -}}
+			{{- if .UserCan "properties" -}}
+				<a hx-get="/{{.Token}}/properties">Edit Info</a>
+			{{- end -}}
 
-				{{- if .UserCan "sharing" -}}
-					<a hx-get="/{{.Token}}/sharing">Sharing</a>
-				{{- end -}}
-				</div>
-
-				<div class="right">
-				{{- if .UserCan "delete" -}}
-					<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-				{{- end -}}
-				</div>
+			{{- if .UserCan "sharing" -}}
+				<a hx-get="/{{.Token}}/sharing">Sharing</a>
+			{{- end -}}
 			</div>
-		{{ end }}
 
-		<h1>{{.Label}}</h1>
-
-		{{- if ne .Summary "" -}}
-			<article class="space-after">
-				{{.Summary}}
-			</article>
-		{{- end -}}
-
-		<div id="children" class="pure-g card-group">
-			{{- .View "children" -}}
+			<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+			</div>
 		</div>
+	{{ end }}
 
+	<h1>{{.Label}}</h1>
+
+	{{- if ne .Summary "" -}}
+		<article class="space-after">
+			{{.Summary}}
+		</article>
+	{{- end -}}
+
+	<div id="children" class="columns-3 card-group">
+		{{- .View "children" -}}
 	</div>
-	
-</div>
+
 </div>

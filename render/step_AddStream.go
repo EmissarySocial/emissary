@@ -53,15 +53,17 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Create the new child stream
-	newStream := model.NewStream()
+	streamService := factory.Stream()
+	newStream, _, err := streamService.New("", primitive.NilObjectID, templateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating new stream", templateID)
+	}
 
 	// Validate and set the location for the new stream
 	if err := step.setLocation(renderer, &newTemplate, &newStream); err != nil {
 		return derp.Wrap(err, location, "Error getting location for new stream")
 	}
-
-	// Populate the new stream with other data
-	newStream.TemplateID = templateID
 
 	// If this is a reply, then try to get a DocumentLink for the object we're replying to.
 	if step.AsReply {

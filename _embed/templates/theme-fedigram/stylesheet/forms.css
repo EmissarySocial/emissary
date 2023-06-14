@@ -248,7 +248,7 @@ button:focus,
 .button:hover,
 .button:focus {
 	background-color: var(--gray30);
-	color:var(--black);
+	color:var(--black)!important;
 }
 
 button.primary,
@@ -263,6 +263,18 @@ button.primary:focus,
 .button.primary:focus {
 	background-color: var(--button-primary-background-hover)!important;
 	color: var(--button-primary-color-hover)!important;
+}
+
+button.selected,
+.button.selected {
+	background-color: var(--gray40);
+	color: var(--gray05);
+}
+
+button.selected:hover,
+.button.selected:hover {
+	background-color: var(--gray50);
+	color: var(--white)!important;
 }
 
 button.warning,
