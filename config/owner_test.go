@@ -14,7 +14,7 @@ func TestOwnerSchema(t *testing.T) {
 	table := []tableTestItem{
 		{"displayName", "DISPLAY_NAME", nil},
 		{"username", "USERNAME", nil},
-		{"emailAddress", "EMAIL_ADDRESS", nil},
+		{"emailAddress", "EMAIL@ADDRESS.COM", nil},
 		{"phoneNumber", "PHONE_NUMBER", nil},
 		{"mailingAddress", "MAILING_ADDRESS", nil},
 	}
