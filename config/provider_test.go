@@ -8,11 +8,11 @@ import (
 
 func TestProviderSchema(t *testing.T) {
 
-	d := NewProvider("PROVIDER_ID")
+	d := NewProvider("GIPHY")
 	s := schema.New(ProviderSchema())
 
 	table := []tableTestItem{
-		{"providerId", "PROVIDER_ID", nil},
+		{"providerId", "GIPHY", nil},
 		{"clientId", "CLIENT_ID", nil},
 		{"clientSecret", "CLIENT_SECRET", nil},
 	}
