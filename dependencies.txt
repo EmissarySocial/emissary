@@ -2,8 +2,8 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
+- sherlock
 - data-mongo
-- hannibal
 - table
 - steranko
 - mediaserver
@@ -13,6 +13,7 @@ NO DEPENDENTS
 
 FEW DEPENDENTS
 
+- hannibal
 - form
 
 SOME DEPENDENTS
