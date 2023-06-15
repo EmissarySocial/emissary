@@ -14,7 +14,7 @@ body {
 }
 
 nav {
-	position:fixed;
+	position:sticky;
 	top:0px;
 	left: 0px;
 	right: 0px;
@@ -90,5 +90,4 @@ main {
 	display: flex;
 	flex-direction:row;
 	justify-content: center;
-	padding-top:56px;
 }
