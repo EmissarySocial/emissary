@@ -51,8 +51,6 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) error {
 
 	const location = "render.StepEditModelObject.Post"
 
-	renderer.debug()
-
 	// Get the request body
 	body := mapof.NewAny()
 
