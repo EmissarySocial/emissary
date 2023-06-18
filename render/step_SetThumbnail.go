@@ -62,6 +62,10 @@ func (step StepSetThumbnail) Post(renderer Renderer, _ io.Writer) error {
 	}
 
 	// Fall through means that we can't find any images.  Set the Thumbnail to an empty string.
-	schema.Set(object, step.Path, "")
+	if err := schema.Set(object, step.Path, ""); err != nil {
+		return derp.Wrap(err, "render.StepSetThumbnail.Post", "Error setting thumbnail")
+	}
+
+	// Success!
 	return nil
 }

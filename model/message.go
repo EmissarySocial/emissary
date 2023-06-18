@@ -156,10 +156,10 @@ func (message *Message) SetMyResponse(responseType string) {
 
 func decrement(value *int) {
 	if *value > 0 {
-		*value = *value - 1
+		*value--
 	}
 }
 
 func increment(value *int) {
-	*value = *value + 1
+	*value++
 }

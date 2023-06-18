@@ -36,13 +36,13 @@ func NewModel(factory Factory, ctx *steranko.Context, modelService service.Model
 	// Check permissions on the InboxFolder
 	if roleStateEnumerator, ok := object.(model.RoleStateEnumerator); !ok {
 		return Model{}, derp.NewBadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
-	} else {
-		if !action.UserCan(roleStateEnumerator, &authorization) {
-			if authorization.IsAuthenticated() {
-				return Model{}, derp.NewForbiddenError(location, "Forbidden")
-			} else {
-				return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
-			}
+
+	} else if !action.UserCan(roleStateEnumerator, &authorization) {
+
+		if authorization.IsAuthenticated() {
+			return Model{}, derp.NewForbiddenError(location, "Forbidden")
+		} else {
+			return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
 	}
 

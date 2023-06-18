@@ -22,6 +22,7 @@ func TestContentSchema(t *testing.T) {
 
 	require.Error(t, s.Validate(&content))
 
-	s.Set(&content, "format", ContentFormatHTML)
+	err := s.Set(&content, "format", ContentFormatHTML)
+	require.Nil(t, err)
 	require.Nil(t, s.Validate(&content))
 }

@@ -33,11 +33,13 @@ func WrapInlineError(ctx echo.Context, err error) error {
 	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
 	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
 
+	// nolint:errcheck
 	if derpError, ok := err.(derp.SingleError); ok {
 		derp.Report(derpError)
 		return ctx.HTML(http.StatusOK, `<span class="red">`+derpError.Message+`</span>`)
 	}
 
+	// nolint:errcheck
 	derp.Report(err)
 	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
 }
@@ -208,6 +210,7 @@ func executeTemplate(template TemplateLike, data any) string {
 
 	var buffer bytes.Buffer
 
+	// nolint:errcheck
 	if err := template.Execute(&buffer, data); err != nil {
 		derp.Report(derp.Wrap(err, "render.executeTemplate", "Error executing template", data))
 		return ""

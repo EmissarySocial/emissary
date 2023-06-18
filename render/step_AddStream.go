@@ -195,7 +195,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	// Close the container
 	b.Close()
 
-	// Write the whole widget back to the outpub buffer
+	// nolint:errcheck // Write the whole widget back to the outpub buffer
 	buffer.Write(b.Bytes())
 	return nil
 }
@@ -239,6 +239,7 @@ func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
 
 	result := WrapModalWithCloseButton(response, b.String())
 
+	// nolint:errcheck
 	io.WriteString(buffer, result)
 
 	return nil

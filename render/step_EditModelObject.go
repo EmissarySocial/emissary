@@ -36,7 +36,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) error {
 
 	result = WrapForm(renderer.URL(), result, optionStrings...)
 
-	// Wrap result as a modal dialog
+	// nolint:errcheck
 	io.WriteString(buffer, result)
 
 	return nil

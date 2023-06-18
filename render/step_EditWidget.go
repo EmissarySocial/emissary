@@ -29,6 +29,8 @@ func (step StepEditWidget) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Wrap the form as a modal and return it to the client
 	formHTML = WrapModalForm(renderer.context().Response(), renderer.URL(), formHTML)
+
+	// nolint:errcheck
 	buffer.Write([]byte(formHTML))
 
 	return nil

@@ -376,6 +376,8 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	for _, streamWidget := range list {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetRenderer := NewWidget(&w, streamWidget)
+
+			// nolint:errcheck
 			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetRenderer); err != nil {
 				derp.Report(derp.Wrap(err, "renderer.Stream.Widgets", "Error executing widget template", widget))
 			}
@@ -462,6 +464,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
 
+	// nolint:errcheck
 	if err != nil {
 		derp.Report(derp.Wrap(err, "renderer.Stream.NextSibling", "Database error"))
 		return Stream{}
@@ -479,8 +482,29 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
-func (s Stream) Responses() model.ResponseSummary {
-	return s.stream.Responses
+func (w Stream) Responses() template.HTML {
+
+	var buffer bytes.Buffer
+	renderer := w.ResponsesRenderer()
+
+	// Execute the "responses" template
+	// nolint:errcheck
+	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
+	}
+
+	// Celebrate with Triumph.
+	return template.HTML(buffer.String())
+}
+
+func (w Stream) ResponsesRenderer() Responses {
+
+	// Collect values for Responses renderer
+	userID := w.authorization().UserID
+	internalURL := "/" + w.stream.StreamID.Hex()
+	responseService := w.factory().Response()
+
+	return NewResponses(userID, internalURL, w.stream.URL, responseService)
 }
 
 func (w Stream) Mentions() ([]model.Mention, error) {
@@ -529,7 +553,11 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	var parent model.Stream
 
 	streamService := w.factory().Stream()
-	streamService.LoadParent(w.stream, &parent)
+
+	// nolint:errcheck
+	if err := streamService.LoadParent(w.stream, &parent); err != nil {
+		derp.Report(derp.Wrap(err, "renderer.Stream.Ancestors", "Error loading parent"))
+	}
 
 	return w.makeStreamQueryBuilder(exp.Equal("parentId", parent.ParentID))
 }

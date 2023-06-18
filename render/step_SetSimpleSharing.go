@@ -54,7 +54,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) error 
 	b.Button().Type("button").Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
-	// Write it to the output buffer and quit
+	// nolint:errcheck
 	io.WriteString(buffer, b.String())
 	return nil
 }

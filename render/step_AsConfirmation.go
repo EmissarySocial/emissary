@@ -35,6 +35,7 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
 
 	result := WrapModal(renderer.context().Response(), b.String())
 
+	// nolint:errcheck
 	io.WriteString(buffer, result)
 	return nil
 }

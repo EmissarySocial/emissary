@@ -421,5 +421,5 @@ func getHrefFromNode(index int, node *goquery.Selection) string {
 
 // isExternalHref returns TRUE if this URL points to an external domain
 func isExternalHref(href string) bool {
-	return strings.HasPrefix("http://", href) || strings.HasPrefix("https://", href)
+	return strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://")
 }

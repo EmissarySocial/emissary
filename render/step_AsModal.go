@@ -92,6 +92,8 @@ func (step StepAsModal) getModalContent(renderer Renderer) string {
 
 	// Write inner items
 	var buffer bytes.Buffer
+
+	// nolint:errcheck
 	if err := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &buffer); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error executing subSteps"))
 		return ""
