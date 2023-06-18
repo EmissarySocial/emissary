@@ -149,8 +149,8 @@ func (template *Template) Inherit(parent *Template) {
 	}
 
 	// Inherit HTMLTemplates from the parent (if not already defined)
+	// nolint:errcheck
 	for _, templateName := range parent.HTMLTemplate.Templates() {
-		// nolint:errcheck
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
 			template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree)
 		}
