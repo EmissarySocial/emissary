@@ -141,6 +141,9 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 	const location = "service.Response.SetResponse"
 
+	// Validate the response
+	response.CalcContent()
+
 	user := model.NewUser()
 	err := service.userService.LoadByProfileURL(response.ActorID, &user)
 

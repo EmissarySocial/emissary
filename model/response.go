@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Reponse defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
+// Object may be a local stream or an inbox message.
 type Response struct {
 	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`     // Unique identifier for this Response
 	URL        string             `json:"url"        bson:"url"`     // URL of this Response document
@@ -19,6 +21,7 @@ type Response struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewReponse returns a fully initialized Response object
 func NewResponse() Response {
 	return Response{
 		ResponseID: primitive.NewObjectID(),
@@ -29,6 +32,7 @@ func NewResponse() Response {
  * data.Object Interface
  ******************************************/
 
+// ID returns the unique identifier for this Response (in string format)
 func (response Response) ID() string {
 	return response.ResponseID.Hex()
 }
@@ -37,23 +41,20 @@ func (response Response) ID() string {
  * Other Data Methods
  ******************************************/
 
+// GetJSONLD returns the JSON-LD representation of this Response
 func (response Response) GetJSONLD() mapof.Any {
-	result := mapof.Any{
+	return mapof.Any{
 		"@context": vocab.ContextTypeActivityStreams,
 		"id":       response.URL,
 		"type":     response.ActivityPubType(),
 		"actor":    response.ActorID,
 		"object":   response.ObjectID,
 		"summary":  response.Summary,
+		"content":  response.Content,
 	}
-
-	if response.Content != "" {
-		result["content"] = response.Content
-	}
-
-	return result
 }
 
+// ActivityPubType converts a ResponseType into an ActivityStreams vocabulary type
 func (response Response) ActivityPubType() string {
 
 	switch response.Type {
@@ -72,4 +73,28 @@ func (response Response) ActivityPubType() string {
 // IsEqual returns TRUE if two responses match urls, actors, objects, types, and values
 func (response Response) IsEqual(other Response) bool {
 	return (response.URL == other.URL) && (response.ActorID == other.ActorID) && (response.ObjectID == other.ObjectID) && (response.Type == other.Type) && (response.Content == other.Content)
+}
+
+// CalcContent sets the content of the response to a default value, if it is not already set.
+func (response *Response) CalcContent() {
+
+	if response.Content != "" {
+		return
+	}
+
+	if response.Type == "" {
+		response.Type = ResponseTypeLike
+	}
+
+	switch response.Type {
+
+	case ResponseTypeDislike:
+		response.Content = "👎"
+
+	case ResponseTypeLike:
+		response.Content = "👍"
+
+	default:
+		response.Content = "👍"
+	}
 }
