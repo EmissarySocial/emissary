@@ -226,6 +226,35 @@ func (w Message) RepliesAfter(dateString string, maxRows int) sliceof.Object[str
 	return result.SliceOfDocuments()
 }
 
+// Responses generates a "Responses" renderer and passes it to the (hard-coded named) "responses" template.
+// A default file is provided in the "base-social" template but can be overridden by other installed packages.
+func (w Message) Responses() template.HTML {
+
+	var buffer bytes.Buffer
+	renderer := w.ResponsesRenderer()
+
+	// Execute the "responses" template
+	// nolint:errcheck
+	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
+	}
+
+	// Celebrate with Triumph.
+	return template.HTML(buffer.String())
+}
+
+// ResponsesRenderer returns a renderer for the responses widget.
+func (w Message) ResponsesRenderer() Responses {
+
+	// Collect values for Responses renderer
+	userID := w.authorization().UserID
+	internalURL := "/@me/messages/" + w._message.MessageID.Hex()
+	responseService := w.factory().Response()
+
+	// Create the new Responses renderer
+	return NewResponses(userID, internalURL, w._message.URL, responseService)
+}
+
 func (service Message) debug() {
 	spew.Dump("Message", service.object())
 }

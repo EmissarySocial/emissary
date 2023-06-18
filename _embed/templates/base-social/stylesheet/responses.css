@@ -1,0 +1,21 @@
+.response-button {
+	margin:0px 4px 0px 0px;
+	padding:4px 8px;
+	color:var(--gray50);
+	cursor:pointer;
+	background:var(--gray10);
+	border:solid 1px var(--gray20);
+	border-radius:4px;
+}
+
+.response-button:hover {
+	background:var(--blue20);
+	border:solid 1px var(--blue30);
+	color:var(--blue80);
+}
+
+.response-button.selected {
+	background:var(--blue30);
+	border:solid 1px var(--blue40);
+	color:var(--blue80);
+}

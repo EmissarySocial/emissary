@@ -33,6 +33,7 @@
 
 {{- if gt (len  $inbox) 0 -}}
 
+	{{- $inboxRenderer := . -}}
 	{{- range $index, $message := $inbox -}}
 
 		<div 
@@ -59,6 +60,7 @@
 			
 		</div>
 
+		{{- $inboxRenderer.Responses $message -}}
 		<hr>
 
 	{{- end -}}

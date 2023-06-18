@@ -3,12 +3,10 @@ package render
 import (
 	"bytes"
 	"html/template"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
-	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
@@ -390,62 +388,29 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 	return result, nil
 }
 
-// Message uses the `messageId` URL parameter to load an individual message from the Inbox
-func (w Inbox) Message() (model.Message, error) {
+// Responses generates a "Responses" renderer and passes it to the (hard-coded named) "responses" template.
+// A default file is provided in the "base-social" template but can be overridden by other installed packages.
+func (w Inbox) Responses(message model.Message) template.HTML {
 
-	const location = "render.Inbox.Message"
+	// Collect values for Responses renderer
+	userID := w.authorization().UserID
+	internalURL := "/@me/messages/" + message.MessageID.Hex()
+	responseService := w.factory().Response()
 
-	result := model.NewMessage()
+	renderer := NewResponses(userID, internalURL, message.URL, responseService)
 
-	// Guarantee that the user is signed in
-	if !w.IsAuthenticated() {
-		return result, derp.NewForbiddenError(location, "Not authenticated")
+	// Render the responses widget
+	var buffer bytes.Buffer
+
+	// nolint:errcheck
+	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}
 
-	// Get Inbox Service
-	inboxService := w._factory.Inbox()
-
-	// Try to parse the messageID from the URL
-	if messageID, err := primitive.ObjectIDFromHex(w._context.QueryParam("messageId")); err == nil {
-
-		// Try to load an Activity record from the Inbox
-		if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &result); err != nil {
-			return result, derp.Wrap(err, location, "Error loading inbox item")
-		}
-
-		return result, nil
-	}
-
-	// Otherwise, look for folder/rank search parameters
-	if folderToken := w._context.QueryParam("folderId"); folderToken != "" {
-		if folderID, err := primitive.ObjectIDFromHex(folderToken); err == nil {
-
-			var sort option.Option
-
-			if strings.HasPrefix(w._context.QueryParam("rank"), "GT:") {
-				sort = option.SortAsc("rank")
-			} else {
-				sort = option.SortDesc("rank")
-			}
-
-			expBuilder := builder.NewBuilder().
-				ObjectID("origin.followingId").
-				Int("rank")
-
-			rank := expBuilder.Evaluate(w._context.Request().URL.Query())
-
-			if err := inboxService.LoadByRank(w.AuthenticatedID(), folderID, rank, &result, sort); err != nil {
-				return result, derp.Wrap(err, location, "Error loading inbox item")
-			}
-
-			return result, nil
-		}
-	}
-
-	// Fall through means no valid parameters were found
-	return result, derp.NewBadRequestError(location, "Invalid message ID", w._context.QueryParam("messageId"))
+	// Celebrate with Triumph.
+	return template.HTML(buffer.String())
 }
 
-func (service Inbox) debug() {
+func (w Inbox) debug() {
 	spew.Dump("Inbox")
 }

@@ -2,12 +2,15 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -127,8 +130,16 @@ func (service *Response) LoadByID(responseID primitive.ObjectID, response *model
 	return service.Load(exp.Equal("_id", responseID), response)
 }
 
+func (service *Response) LoadByUserAndObject(userID primitive.ObjectID, objectID string, response *model.Response) error {
+	return service.Load(exp.Equal("userId", userID).AndEqual("objectId", objectID), response)
+}
+
 func (service *Response) LoadByActorAndObject(actorID string, objectID string, response *model.Response) error {
 	return service.Load(exp.Equal("actorId", actorID).AndEqual("objectId", objectID), response)
+}
+
+func (service *Response) CountByContent(objectID string) (mapof.Int, error) {
+	return queries.CountResponsesByContent(service.collection, objectID)
 }
 
 /******************************************
@@ -143,6 +154,7 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 	// Validate the response
 	response.CalcContent()
+	spew.Dump(response)
 
 	user := model.NewUser()
 	err := service.userService.LoadByProfileURL(response.ActorID, &user)
@@ -163,6 +175,7 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 		// If there was no change, then there's nothing to do.
 		if response.IsEqual(oldResponse) {
+			spew.Dump("EQUAL TO OLD RESPONSE??")
 			return nil
 		}
 
@@ -187,25 +200,31 @@ func (service *Response) SetResponse(response *model.Response) error {
 		if response.Type == "" {
 			return nil
 		}
-	}
 
-	// Report legitimate errors
-	if !derp.NotFound(err) {
+	} else if !derp.NotFound(err) {
+		spew.Dump("err.. grr", err, derp.NotFound(err))
 		return derp.Wrap(err, location, "Error loading original response", oldResponse)
 	}
 
+	spew.Dump("here??")
+
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(response, ""); err != nil {
+		spew.Dump("onefish?")
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
+	spew.Dump("twofish??")
+
 	// Responses from local Actors should be published to the Outbox
-	if user.IsNew() {
+	if !user.IsNew() {
 
 		if err := service.outboxService.Publish(user.UserID, response.URL, response.GetJSONLD()); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 		}
 	}
+
+	spew.Dump("redfish, bluefish??")
 
 	// Oye cómo va!
 	return nil

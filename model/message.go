@@ -69,7 +69,14 @@ func (message Message) State() string {
 
 // Roles returns a list of all roles that match the provided authorization
 func (message Message) Roles(authorization *Authorization) []string {
-	return []string{MagicRoleMyself}
+
+	if authorization.IsAuthenticated() {
+		if authorization.UserID == message.UserID {
+			return []string{MagicRoleMyself}
+		}
+	}
+
+	return []string{}
 }
 
 /******************************************

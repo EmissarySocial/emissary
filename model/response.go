@@ -10,13 +10,14 @@ import (
 // Reponse defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type Response struct {
-	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`     // Unique identifier for this Response
-	URL        string             `json:"url"        bson:"url"`     // URL of this Response document
-	ActorID    string             `json:"actorId"    bson:"actorId"` // URL of the Actor who made the response
-	ObjectID   string             `json:"objectId"   bson:"orginId"` // URL of the Object that the actor responded to
-	Type       string             `json:"type"       bson:"type"`    // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
-	Summary    string             `json:"summary"    bson:"summary"` // Summary of the response (e.g. "I liked this post because...")
-	Content    string             `json:"value"      bson:"value"`   // Custom value assigned to the response (emoji, vote, etc.)
+	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`      // Unique identifier for this Response
+	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`   // ID of the INTERNAL user who made this response (Zero for external users)
+	URL        string             `json:"url"        bson:"url"`      // URL of this Response document
+	ActorID    string             `json:"actorId"    bson:"actorId"`  // URL of the Actor who made the response
+	ObjectID   string             `json:"objectId"   bson:"objectId"` // URL of the Object that the actor responded to
+	Type       string             `json:"type"       bson:"type"`     // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
+	Summary    string             `json:"summary"    bson:"summary"`  // Summary of the response (e.g. "I liked this post because...")
+	Content    string             `json:"content"    bson:"content"`  // Custom value assigned to the response (emoji, vote, etc.)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -72,20 +73,28 @@ func (response Response) ActivityPubType() string {
 
 // IsEqual returns TRUE if two responses match urls, actors, objects, types, and values
 func (response Response) IsEqual(other Response) bool {
-	return (response.URL == other.URL) && (response.ActorID == other.ActorID) && (response.ObjectID == other.ObjectID) && (response.Type == other.Type) && (response.Content == other.Content)
+	return (response.URL == other.URL) &&
+		(response.ActorID == other.ActorID) &&
+		(response.ObjectID == other.ObjectID) &&
+		(response.Type == other.Type) &&
+		(response.Content == other.Content)
 }
 
 // CalcContent sets the content of the response to a default value, if it is not already set.
 func (response *Response) CalcContent() {
 
+	// RULE: If the type is empty, then this is a "DELETE", so make the content is empty too.
+	if response.Type == "" {
+		response.Content = ""
+		return
+	}
+
+	// RULE: If the response HAS content, then there's nothing more to calculate.
 	if response.Content != "" {
 		return
 	}
 
-	if response.Type == "" {
-		response.Type = ResponseTypeLike
-	}
-
+	// Otherwise, set default content based on the response type.
 	switch response.Type {
 
 	case ResponseTypeDislike:
@@ -97,4 +106,6 @@ func (response *Response) CalcContent() {
 	default:
 		response.Content = "👍"
 	}
+
+	// Nothin to return.
 }

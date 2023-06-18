@@ -1,0 +1,15 @@
+{{- $responsesRenderer := .ResponsesRenderer -}}
+{{- $url := $responsesRenderer.InternalURL -}}
+{{- $userResponse := $responsesRenderer.UserResponse -}}
+
+<div hx-push-url="false" hx-swap="none">
+	{{- range emojiFavorites -}}
+		{{- if eq $userResponse . -}}
+			<span class="turboclick response-button selected" hx-post="{{$url}}/set-response" hx-vals='{"type":"", "content":""}'>{{.}}</span>
+		{{- else -}}
+			<span class="turboclick response-button" hx-post="{{$url}}/set-response" hx-vals='{"type":"LIKE", "content":"{{.}}"}'>{{.}}</span>
+		{{- end -}}
+	{{- end -}}
+	<hr>
+	<div>Additional Emoji TBD</div>
+</div>
