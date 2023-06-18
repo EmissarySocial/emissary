@@ -35,6 +35,7 @@
 	<div class="content">
 		<div>{{- $record.Summary -}}</div>
 		<div>{{- $record.Content | html -}}</div>
+		{{ template "responses" . }}
 	</div>
 
 	<hr>

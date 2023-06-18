@@ -9,6 +9,7 @@
 
 	{{- $internalID := .QueryParam "origin.followingId" -}}
 	{{- $layout := $folder.Layout | lowerCase -}}
+	{{- $parentRenderer := . -}}
 
 	<div 
 		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$firstMessage.Rank}}"
@@ -23,6 +24,8 @@
 
 	{{- range $index, $message := $inbox -}}
 
+		{{- $messageRenderer := ($parentRenderer.MessageRenderer $message) -}}
+
 		<div 
 			id="item_{{.MessageID.Hex}}" 
 			role="button"
@@ -32,20 +35,18 @@
 			hx-push-url="false">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "inbox-list-social" $messageRenderer -}}
 			{{- else if eq "CHAT" $folder.Layout -}}
-				{{- template "inbox-list-chat" $message -}}
+				{{- template "inbox-list-chat" $messageRenderer -}}
 			{{- else if eq "NEWSPAPER" $folder.Layout -}}
-				{{- template "inbox-list-newspaper" $message -}}
+				{{- template "inbox-list-newspaper" $messageRenderer -}}
 			{{- else if eq "MAGAZINE" $folder.Layout -}}
-				{{- template "inbox-list-magazine" $message -}}
+				{{- template "inbox-list-magazine" $messageRenderer -}}
 			{{- else -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "inbox-list-social" $messageRenderer -}}
 			{{- end -}}
-			
-		</div>
 
-		<!-- template "message-response-widget" $message -->
+		</div>
 
 		<hr>
 

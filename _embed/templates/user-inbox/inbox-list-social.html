@@ -1,9 +1,10 @@
+{{- $author := .AttributedTo.First -}}
 <div class="ellipsis flex-row">
-	{{- if ne "" .Author.ImageURL -}}
-		<img src="{{.Author.ImageURL}}" class="circle" style="height:1.5em;">
+	{{- if ne "" $author.ImageURL -}}
+		<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em;">
 	{{- end -}}
 
-	<span class="bold black">{{.Author.Name}}</span>
+	<span class="bold black">{{$author.Name}}</span>
 	<span class="text-gray nowrap" style="flex-grow:1">
 		{{ icon .Origin.Icon }}
 		{{ .PublishDate | tinyDate }}
@@ -11,7 +12,7 @@
 </div>
 
 <div class="space-above">
-	{{- .ContentHTML | textOnly -}}
+	{{- .ContentHTML -}}
 </div>
 
 {{- if ne .ImageURL "" -}}
@@ -19,3 +20,5 @@
 		<img src="{{.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 	</div>
 {{- end -}}
+
+{{ template "responses" . }}
