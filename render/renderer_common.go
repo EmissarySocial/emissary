@@ -53,7 +53,7 @@ func NewCommon(factory Factory, context *steranko.Context, template model.Templa
 }
 
 /******************************************
- * RENDERER INTERFACE
+ * Renderer Interface
  ******************************************/
 
 // context returns request context embedded in this renderer.
@@ -173,7 +173,7 @@ func (w Common) NavigationID() string {
 }
 
 /***************************
- * REQUEST DATA (Getters and Setters)
+ * Request Data (Getters and Setters)
  **************************/
 
 func (w Common) GetBool(name string) bool {
@@ -217,7 +217,7 @@ func (w Common) setString(name string, value string) {
 }
 
 /******************************************
- * DOMAIN DATA
+ * Domain Data
  ******************************************/
 
 func (w Common) DomainLabel() (string, error) {
@@ -237,7 +237,7 @@ func (w Common) DomainHasSignupForm() (bool, error) {
 }
 
 /***************************
- * ACCESS PERMISSIONS
+ * Access Permissions
  **************************/
 
 // IsAuthenticated returns TRUE if the user is signed in
@@ -291,7 +291,7 @@ func (w Common) authorization() model.Authorization {
 }
 
 /******************************************
- * MISC HELPER FUNCTIONS
+ * Misc Helper Methods
  ******************************************/
 
 func (w Common) ActivityStream(uri string) streams.Document {
@@ -348,7 +348,7 @@ func (w Common) getUser() (model.User, error) {
 	// TODO: LOW: Cache this if possible.  But without making the renderer a POINTER.
 
 	result := model.NewUser()
-	userService := w.factory().User()
+	userService := w._factory.User()
 	authorization := getAuthorization(w.context())
 
 	if err := userService.LoadByID(authorization.UserID, &result); err != nil {
@@ -361,7 +361,7 @@ func (w Common) getUser() (model.User, error) {
 // getDomain retrieves the current domain model object from the domain service cache
 func (w *Common) getDomain() (model.Domain, error) {
 
-	domainService := w.factory().Domain()
+	domainService := w._factory.Domain()
 
 	if !domainService.Ready() {
 		return model.Domain{}, derp.NewInternalError("render.Common.getDomain", "Domain service not ready", nil)
@@ -371,7 +371,7 @@ func (w *Common) getDomain() (model.Domain, error) {
 }
 
 /******************************************
- * GLOBAL QUERIES
+ * Global Queries
  ******************************************/
 
 // Navigation returns an array of Streams that have a Zero ParentID
@@ -384,7 +384,7 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 }
 
 /******************************************
- * ADDITIONAL DATA
+ * Additional Data
  ******************************************/
 
 // AdminSections returns labels and values for all hard-coded sections of the administrator area.
