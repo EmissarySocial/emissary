@@ -4,7 +4,7 @@
 
 	{{- $lastIndex := subtract (len $outbox) 1 -}}
 	{{- $last := index $outbox $lastIndex -}}
-	{{- $userCanEdit := .UserCan "profile-edit" -}}
+	{{- $userCanEdit := .UserCan "edit" -}}
 
 	{{- range $outbox -}}
 		{{- $author := .Author -}}
