@@ -1,0 +1,42 @@
+.tooltip-container {
+	position: relative;
+}
+
+#tooltip {
+	display:block;
+	position: absolute;
+	left: 50%;
+	bottom: 100%;
+	opacity: 1;
+	margin-bottom: 1em;
+	padding: 1em 1em;
+	background-color: var(--gray80);
+	color:var(--white);
+	line-height: 1;
+	text-align: left;
+	white-space: nowrap;
+	transform: translate(-50%, 1em);
+	transition: all 0.15s ease-in-out;
+	border-radius:4px;
+}
+
+#tooltip::before {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	border: 0.5em solid transparent;
+	border-top-color: var(--gray80);
+	transform: translate(-50%, 0);
+}
+
+#tooltip.closing {
+	animation-name:fadeOut;
+	animation-duration:50ms;
+	animation-timing-function: ease;
+
+	/* Hide after animation */
+	opacity:0;
+}

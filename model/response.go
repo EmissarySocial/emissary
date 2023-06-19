@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -89,22 +90,20 @@ func (response *Response) CalcContent() {
 		return
 	}
 
-	// RULE: If the response HAS content, then there's nothing more to calculate.
-	if response.Content != "" {
-		return
-	}
-
 	// Otherwise, set default content based on the response type.
 	switch response.Type {
 
+	case ResponseTypeMention:
+		response.Content = "@"
+
 	case ResponseTypeDislike:
-		response.Content = "👎"
+		response.Content = first.String(response.Content, "👎")
 
 	case ResponseTypeLike:
-		response.Content = "👍"
+		response.Content = first.String(response.Content, "👍")
 
 	default:
-		response.Content = "👍"
+		response.Content = first.String(response.Content, "👍")
 	}
 
 	// Nothin to return.

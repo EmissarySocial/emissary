@@ -56,5 +56,7 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		return derp.Wrap(err, location, "Error setting response")
 	}
 
+	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
+
 	return nil
 }

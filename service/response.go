@@ -101,9 +101,65 @@ func (service *Response) Delete(response *model.Response, note string) error {
 	return nil
 }
 
-// Schema returns the validating schema for a Response object
-func (service *Response) Schema() schema.Element {
-	return model.ResponseSchema()
+/******************************************
+ * Generic Data Methods
+ ******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *Response) ObjectType() string {
+	return "Response"
+}
+
+// New returns a fully initialized model.Response as a data.Object.
+func (service *Response) ObjectNew() data.Object {
+	result := model.NewResponse()
+	return &result
+}
+
+func (service *Response) ObjectID(object data.Object) primitive.ObjectID {
+
+	if response, ok := object.(*model.Response); ok {
+		return response.ResponseID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *Response) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, notDeleted(criteria), options...)
+}
+
+func (service *Response) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Response) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewResponse()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Response) ObjectSave(object data.Object, note string) error {
+
+	if response, ok := object.(*model.Response); ok {
+		return service.Save(response, note)
+	}
+	return derp.NewInternalError("service.Response.ObjectSave", "Invalid object type", object)
+}
+
+func (service *Response) ObjectDelete(object data.Object, note string) error {
+	if response, ok := object.(*model.Response); ok {
+		return service.Delete(response, note)
+	}
+	return derp.NewInternalError("service.Response.ObjectDelete", "Invalid object type", object)
+}
+
+func (service *Response) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Response", "Not Authorized")
+}
+
+func (service *Response) Schema() schema.Schema {
+	return schema.New(model.ResponseSchema())
 }
 
 /******************************************

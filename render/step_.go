@@ -33,6 +33,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.AsModal:
 		return StepAsModal(s)
 
+	case step.AsTooltip:
+		return StepAsTooltip(s)
+
 	case step.Delete:
 		return StepDelete(s)
 
@@ -153,14 +156,17 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithFollowing:
 		return StepWithFollowing(s)
 
+	case step.WithNextSibling:
+		return StepWithNextSibling(s)
+
 	case step.WithParent:
 		return StepWithParent(s)
 
 	case step.WithPrevSibling:
 		return StepWithPrevSibling(s)
 
-	case step.WithNextSibling:
-		return StepWithNextSibling(s)
+	case step.WithResponse:
+		return StepWithResponse(s)
 	}
 
 	return StepError{Original: stepInfo}

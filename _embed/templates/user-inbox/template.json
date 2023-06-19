@@ -163,7 +163,7 @@
 							{"type":"text", "path":"url", "label":"URL"}
 						]
 					}},
-					{"step":"view-html", "file":"profile-follower"}
+					{"step":"view-html", "file":"follower"}
 				]}
 			]
 		},
@@ -187,7 +187,7 @@
 		"follow": {
 			"steps": [
 				{"step":"as-modal", "background":"profile", "steps":[
-					{"step":"view-html", "file":"profile-follow"}
+					{"step":"view-html", "file":"follow"}
 				]}
 			]
 		},

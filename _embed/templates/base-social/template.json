@@ -5,22 +5,21 @@
 			"content-type":"text/css"
 		}
 	},
-	"actions": {
+	"actions":{
 		"parent":{"step":"view-html"},
 		"replies-before":{"step":"view-html"},
 		"replies-after":{"step":"view-html"},
 		"responses":{"step":"view-html", "file":"responses-wrapper"},
 		"response-icons":{
 			"steps":[
-				{"step":"as-modal", "steps":[
+				{"step":"as-tooltip", "steps":[
 					{"step":"view-html"}
 				]}
 			]},
-		"set-response": {
+		"set-response":{
 			"steps":[
 				{"step":"view-html", "file":"responses"},
-				{"step":"set-response"},
-				{"step":"trigger-event", "event":{"closeModal":true, "reloadResponses":{"url":"HOO-BOY"}}}
+				{"step":"set-response"}
 			]
 		}
 	}
