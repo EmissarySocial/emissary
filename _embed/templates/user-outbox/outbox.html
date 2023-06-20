@@ -21,6 +21,11 @@
 
 	<div class="app-content">
 
+		<div class="space-below">
+			<b>Posts</b> &middot;
+			<a hx-get="/@{{.UserID}}/likes" class="turboclick">Likes</a>
+		</div>
+
 		{{if .UserCan "outbox-add" -}}
 			<div class="flex-row space-below">
 				<div style="height:60px; width:60px;">

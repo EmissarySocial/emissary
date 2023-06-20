@@ -39,6 +39,10 @@ func (response Response) ID() string {
 	return response.ResponseID.Hex()
 }
 
+func (response Response) Fields() []string {
+	return []string{"responseId", "url", "objectId", "type", "content", "createDate"}
+}
+
 /******************************************
  * Other Data Methods
  ******************************************/
@@ -69,6 +73,27 @@ func (response Response) ActivityPubType() string {
 
 	default:
 		return vocab.ActivityTypeAnnounce
+	}
+}
+
+func (response Response) EnglishType() string {
+
+	switch response.Type {
+
+	case ResponseTypeShare:
+		return "Shared"
+
+	case ResponseTypeLike:
+		return "Liked"
+
+	case ResponseTypeDislike:
+		return "Disliked"
+
+	case ResponseTypeMention:
+		return "Mentioned"
+
+	default:
+		return "Responded to"
 	}
 }
 
@@ -107,4 +132,8 @@ func (response *Response) CalcContent() {
 	}
 
 	// Nothin to return.
+}
+
+func (response Response) CreateDateSeconds() int64 {
+	return response.CreateDate / 1000
 }

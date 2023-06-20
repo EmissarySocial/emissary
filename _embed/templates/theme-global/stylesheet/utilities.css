@@ -32,6 +32,7 @@ i, em, .italics {
 .circle {
 	border-radius:50%;
 	aspect-ratio: 1;
+	background-color:var(--gray30);
 }
 
 p:last-child {

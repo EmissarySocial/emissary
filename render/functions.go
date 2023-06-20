@@ -91,36 +91,48 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"isoDate": func(value any) string {
 
-			valueInt := convert.Int64(value)
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
 
-			if valueInt == 0 {
+			if valueTime == emptyTime {
 				return ""
 			}
 
-			return time.Unix(valueInt, 0).Format(time.RFC3339)
+			return valueTime.Format(time.RFC3339)
 		},
 
 		"epochDate": convert.EpochDate,
 
 		"humanizeTime": func(value any) string {
-			valueInt := convert.Int64(value)
-			return humanize.Time(time.Unix(valueInt, 0))
+			valueTime := convert.Time(value)
+			return humanize.Time(valueTime)
 		},
 
 		"tinyDate": func(value any) string {
-			valueInt := convert.Int64(value)
-			if valueInt == 0 {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
 				return ""
 			}
-			return tinyDate.FormatDiff(time.Unix(valueInt, 0), time.Now())
+			return tinyDate.FormatDiff(valueTime, time.Now())
+		},
+
+		"shortDate": func(value any) string {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
+				return ""
+			}
+			return valueTime.Format("Jan 2, 2006")
 		},
 
 		"longDate": func(value any) string {
-			valueInt := convert.Int64(value)
-			if valueInt == 0 {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
 				return ""
 			}
-			return time.Unix(valueInt, 0).Format("Monday, January 2, 2006")
+			return valueTime.Format("Monday, January 2, 2006")
 		},
 
 		"addQueryParams": func(extraParams string, url string) string {

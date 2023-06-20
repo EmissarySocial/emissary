@@ -236,6 +236,21 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	return result
 }
 
+func (w Outbox) Responses() QueryBuilder[model.Response] {
+
+	expressionBuilder := builder.NewBuilder().
+		Int("createDate")
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		exp.Equal("userId", w.objectID()),
+	)
+
+	result := NewQueryBuilder[model.Response](w._factory.Response(), criteria)
+
+	return result
+}
+
 func (service Outbox) debug() {
 	spew.Dump("Outbox", service.object())
 }

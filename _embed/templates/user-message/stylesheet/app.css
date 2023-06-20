@@ -26,6 +26,7 @@ main {
 
 .app-sidebar {
 	flex-grow: 0;
+	flex-shrink:0;
 	width:25%;
 	min-width:160px;
 	max-width:240px;

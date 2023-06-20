@@ -39,9 +39,25 @@
 		"view": {
 			"steps":[
 				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
-				{"step":"view-html"}
+				{"step":"view-html", "file":"outbox"}
 			]
 		},
+		"outbox-list": {"step":"view-html"},
+		"outbox-add": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
+				{"step":"add-stream", "location":"outbox", "as-embed":true},
+				{"step":"refresh-page"}
+			]
+		},
+
+		"likes": {
+			"step":"view-html",
+			"file":"responses"
+		},
+		"likes-list": {"step":"view-html", "file":"responses-list"},
+
 		"sidebar": {"step":"view-html"},
 		"edit": {
 			"roles": ["self"],
@@ -105,15 +121,6 @@
 				{"step":"set-thumbnail", "path":"imageId"},
 				{"step":"save", "comment":"Profile photo deleted by me"},
 				{"step":"reload-page"}
-			]
-		},
-		"outbox-list": {"step":"view-html"},
-		"outbox-add": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
-				{"step":"add-stream", "location":"outbox", "as-embed":true},
-				{"step":"refresh-page"}
 			]
 		},
 
