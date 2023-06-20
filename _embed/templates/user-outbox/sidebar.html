@@ -8,9 +8,11 @@
 			<button type="button" hx-get="/@me/profile-photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
-		<div class="circle placeholder-gray" style="width:90%; max-width:200px;">
+		<div style="width:90%; max-width:200px; margin:0px auto;">
 			{{- if ne "" .ActivityPubAvatarURL -}}
-				<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="height:100%; width:100%;" onerror="this.style.display='none'">
+				<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="height:100%; width:100%;">
+			{{- else -}}
+				<div class="circle placeholder-gray" style="width:90%; max-width:200px; margin:0px auto;"></div>
 			{{- end -}}
 		</div>
 	</div>
