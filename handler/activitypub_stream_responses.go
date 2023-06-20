@@ -10,19 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ActivityPub_GetStreamLikes(serverFactory *server.Factory) echo.HandlerFunc {
-	return activityPub_getStreamResponseCollection(serverFactory, model.ResponseTypeLike)
-}
-
-func ActivityPub_GetStreamDislikes(serverFactory *server.Factory) echo.HandlerFunc {
-	return activityPub_getStreamResponseCollection(serverFactory, model.ResponseTypeDislike)
-}
-
-func ActivityPub_GetStreamMentions(serverFactory *server.Factory) echo.HandlerFunc {
-	return activityPub_getStreamResponseCollection(serverFactory, model.ResponseTypeMention)
-}
-
-func activityPub_getStreamResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func ActivityPub_GetStreamResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

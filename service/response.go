@@ -80,6 +80,11 @@ func (service *Response) Save(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error cleaning Response", response)
 	}
 
+	// Populate the URL of this response
+	if !response.UserID.IsZero() {
+		response.URL = service.host + "/@" + response.UserID.Hex() + "/pub/liked/" + response.ResponseID.Hex()
+	}
+
 	// Save the value to the database
 	if err := service.collection.Save(response, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
@@ -166,9 +171,9 @@ func (service *Response) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Response) QueryByUserAndDate(actorID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
+func (service *Response) QueryByUserAndDate(userID primitive.ObjectID, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("actorId", actorID).AndEqual("type", responseType).And(exp.LessThan("created", maxDate))
+	criteria := exp.Equal("userId", userID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
 	return service.Query(criteria, options...)
@@ -176,7 +181,7 @@ func (service *Response) QueryByUserAndDate(actorID string, responseType string,
 
 func (service *Response) QueryByObjectAndDate(objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("created", maxDate))
+	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
 	return service.Query(criteria, options...)

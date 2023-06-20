@@ -178,10 +178,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
-	e.GET("/:stream/pub/likes", handler.ActivityPub_GetStreamLikes(factory))
-	e.GET("/:stream/pub/dislikes", handler.ActivityPub_GetStreamDislikes(factory))
-	e.GET("/:stream/pub/mentions", handler.ActivityPub_GetStreamMentions(factory))
-	// e.GET("/:stream/replies", handler.GetReplies(factory))
+	e.GET("/:stream/pub/likes", handler.ActivityPub_GetStreamResponseCollection(factory, model.ResponseTypeLike))
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware

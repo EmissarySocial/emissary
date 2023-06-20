@@ -50,7 +50,7 @@ func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, respon
 		pageSize := 60
 
 		// Retrieve a page of responses from the database
-		responses, err := responseService.QueryByUserAndDate(user.ProfileURL, responseType, publishedDate, pageSize)
+		responses, err := responseService.QueryByUserAndDate(user.UserID, responseType, publishedDate, pageSize)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.ActivityPub_GetResponseCollection", "Error loading responses")
