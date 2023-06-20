@@ -558,7 +558,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	}
 
 	// RULE: IF this stream is not yet published, then set the publish date
-	stream.PublishDate = time.Now().Unix()
+	if stream.PublishDate > time.Now().Unix() {
+		stream.PublishDate = time.Now().Unix()
+	}
 
 	// RULE: Move unpublish date all the way to the end of time.
 	// TODO: LOW: May want to set automatic unpublish dates later...
@@ -580,7 +582,10 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		"object":   stream.GetJSONLD(),
 	}
 
-	service.outboxService.Publish(user.UserID, stream.URL, activity)
+	// Try to publish via the outbox service
+	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
+		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
+	}
 
 	// Done.
 	return nil
