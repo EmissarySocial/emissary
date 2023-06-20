@@ -52,11 +52,11 @@
 			]
 		},
 
-		"likes": {
+		"liked": {
 			"step":"view-html",
 			"file":"responses"
 		},
-		"likes-list": {"step":"view-html", "file":"responses-list"},
+		"liked-list": {"step":"view-html", "file":"responses-list"},
 
 		"sidebar": {"step":"view-html"},
 		"edit": {
