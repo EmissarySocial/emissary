@@ -9,15 +9,14 @@
 	bottom: 100%;
 	opacity: 1;
 	margin-bottom: 1em;
-	padding: 1em 1em;
+	padding: 16px 8px;
 	background-color: var(--gray80);
 	color:var(--white);
 	line-height: 1;
 	text-align: left;
 	white-space: nowrap;
 	transform: translate(-50%, 1em);
-	transition: all 0.15s ease-in-out;
-	border-radius:4px;
+	border-radius:8px;
 }
 
 #tooltip::before {

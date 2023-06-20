@@ -23,15 +23,13 @@
 
 		<div class="space-below">
 			<b>Posts</b> &middot;
-			<a hx-get="/@{{.UserID}}/likes" class="turboclick">Likes</a>
+			<a hx-get="/@{{.UserID}}/liked" class="turboclick">Liked</a>
 		</div>
 
 		{{if .UserCan "outbox-add" -}}
 			<div class="flex-row space-below">
-				<div style="height:60px; width:60px;">
-					<div class="circle aspect-square placeholder-gray" style="height:60px; width:60px;">
-						<img src="/@{{.UserID}}/avatar" class="circle" style="height:60px; width:60px;" onerror="this.style.display='none'">
-					</div>
+				<div class="flex-shrink-0" style="width:80px;">
+					<img src="/@{{.UserID}}/avatar" class="circle-64">
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">

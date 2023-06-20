@@ -14,12 +14,8 @@
 				</div>
 			{{- end -}}
 			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
-				<div style="height:60px; width:60px;">
-					<div class="circle aspect-square placeholder-gray" style="height:60px; width:60px;">
-						{{- if ne $author.ImageURL "" -}}
-							<img src="{{$author.ImageURL}}" class="circle" style="height:60px; width:60px;" onerror="this.style.display='none'">
-						{{- end -}}
-					</div>
+				<div class="flex-shrink-0" style="width:80px;">
+					<img src="{{$author.ImageURL}}" class="circle-64">
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">

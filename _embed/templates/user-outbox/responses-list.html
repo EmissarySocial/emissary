@@ -60,7 +60,7 @@
 		<hr>
 	{{- end -}}
 
-		<div hx-get="{{.ProfileURL}}/likes-list?createDate=LT:{{$last.CreateDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
+		<div hx-get="{{.ProfileURL}}/liked-list?createDate=LT:{{$last.CreateDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
 			Just a sec...
 		</div>
 		{{- if eq 12 (len $responses) -}}
