@@ -51,8 +51,8 @@
 					<a href="{{.URL}}" class="u-url" class="text-plain">
 						<span class="p-content">{{.Content}}</span>
 						<span class="p-name bold">{{.EnglishType}}</span> by
-						<span class="p-author">{{$page.DisplayName}}</span> on
-						<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | longDate}}</time>
+						<span class="p-author">{{$page.DisplayName}}</span>
+						<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
 					</a>
 				</div>
 			</div>
