@@ -2,8 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.19
 
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.282
@@ -20,7 +18,7 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.6
 	github.com/benpate/remote v0.10.4
-	github.com/benpate/rosetta v0.16.0
+	github.com/benpate/rosetta v0.16.1
 	github.com/benpate/sherlock v0.1.1
 	github.com/benpate/steranko v0.13.5
 	github.com/benpate/table v0.5.4
