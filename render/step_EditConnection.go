@@ -45,6 +45,8 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) error {
 
 	// Wrap the form as a ModalForm and return
 	result = WrapModalForm(context.Response(), renderer.URL(), result)
+
+	// nolint:errcheck
 	buffer.Write([]byte(result))
 
 	return nil

@@ -1,10 +1,8 @@
 {{- $outbox := .Outbox.Top12.ByPublishDate.Reverse.Slice -}}
 
 {{- if ne 0 (len $outbox) -}}
-
-	{{- $lastIndex := subtract (len $outbox) 1 -}}
-	{{- $last := index $outbox $lastIndex -}}
-	{{- $userCanEdit := .UserCan "profile-edit" -}}
+	{{- $last := $outbox.Last -}}
+	{{- $userCanEdit := .UserCan "edit" -}}
 
 	{{- range $outbox -}}
 		{{- $author := .Author -}}
@@ -45,7 +43,8 @@
 		</div>
 	{{- end -}}
 
-	<div hx-get="{{.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="#loading" hx-swap="outerHTML"></div>
-	<div id="loading">Just a sec...</div>
+	<div hx-get="{{.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
+		Just a sec...
+	</div>
 
 {{- end -}}

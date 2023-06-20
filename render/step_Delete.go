@@ -34,6 +34,8 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 	b.CloseAll()
 
 	result := WrapModal(renderer.context().Response(), b.String())
+
+	// nolint:errcheck
 	io.WriteString(buffer, result)
 
 	return nil

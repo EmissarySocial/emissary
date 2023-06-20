@@ -10,6 +10,7 @@ func ResponseSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"responseId": schema.String{Format: "objectId"},
+			"userId":     schema.String{Format: "objectId"},
 			"actorId":    schema.String{Format: "url"},
 			"objectId":   schema.String{Format: "url"},
 			"type":       schema.String{MaxLength: 128},
@@ -47,17 +48,27 @@ func (response Response) GetStringOK(name string) (string, bool) {
 
 	case "responseId":
 		return response.ResponseID.Hex(), true
+
+	case "userId":
+		return response.UserID.Hex(), true
 	}
 
 	return "", false
 }
 
 func (response *Response) SetString(name string, value string) bool {
+
 	switch name {
 
 	case "responseId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			response.ResponseID = objectID
+			return true
+		}
+
+	case "userId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			response.UserID = objectID
 			return true
 		}
 	}

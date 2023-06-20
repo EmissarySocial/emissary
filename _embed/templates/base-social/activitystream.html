@@ -3,7 +3,7 @@
 <div class="space-below">
 	<div class="clickable flex-row" role="link" script="on click go to url '{{.ID}}'">
 		<div>
-			<img src="{{$actor.Icon.URL}}" class="circle-32">
+			<img class="circle-32" src="{{$actor.Icon.URL}}">
 		</div>
 		<div>
 			<div>
@@ -16,7 +16,7 @@
 			{{- end -}}
 		
 			<div>{{.Content | html}}</div>
-			<div class="text-sm" style="margin-top:8px;">{{- template "responses" . -}}</div>
+			<div class="text-sm" style="margin-top:8px;">{{- .Responses -}}</div>
 		</div>
 	</div>
 </div>

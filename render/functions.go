@@ -70,13 +70,9 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(result)
 		},
 
-		"textOnly": func(value string) string {
-			return html.RemoveTags(value)
-		},
+		"textOnly": html.RemoveTags,
 
-		"summary": func(value string) string {
-			return html.Summary(value)
-		},
+		"summary": html.Summary,
 
 		"html": func(value string) template.HTML {
 			return template.HTML(value)
@@ -91,44 +87,52 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return string(result)
 		},
 
-		"now": func() time.Time {
-			return time.Now()
-		},
+		"now": time.Now,
 
 		"isoDate": func(value any) string {
 
-			valueInt := convert.Int64(value)
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
 
-			if valueInt == 0 {
+			if valueTime == emptyTime {
 				return ""
 			}
 
-			return time.Unix(valueInt, 0).Format(time.RFC3339)
+			return valueTime.Format(time.RFC3339)
 		},
 
-		"epochDate": func(value any) int64 {
-			return convert.EpochDate(value)
-		},
+		"epochDate": convert.EpochDate,
 
 		"humanizeTime": func(value any) string {
-			valueInt := convert.Int64(value)
-			return humanize.Time(time.Unix(valueInt, 0))
+			valueTime := convert.Time(value)
+			return humanize.Time(valueTime)
 		},
 
 		"tinyDate": func(value any) string {
-			valueInt := convert.Int64(value)
-			if valueInt == 0 {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
 				return ""
 			}
-			return tinyDate.FormatDiff(time.Unix(valueInt, 0), time.Now())
+			return tinyDate.FormatDiff(valueTime, time.Now())
+		},
+
+		"shortDate": func(value any) string {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
+				return ""
+			}
+			return valueTime.Format("Jan 2, 2006")
 		},
 
 		"longDate": func(value any) string {
-			valueInt := convert.Int64(value)
-			if valueInt == 0 {
+			valueTime := convert.Time(value)
+			emptyTime := time.Time{}
+			if valueTime == emptyTime {
 				return ""
 			}
-			return time.Unix(valueInt, 0).Format("Monday, January 2, 2006")
+			return valueTime.Format("Monday, January 2, 2006")
 		},
 
 		"addQueryParams": func(extraParams string, url string) string {
@@ -136,6 +140,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				return url + "&" + extraParams
 			}
 			return url + "?" + extraParams
+		},
+
+		"emojiFavorites": func() []string {
+			return []string{"👍", "👎", "😄", "🎉", "🙏", "🧐", "😕"}
 		},
 	}
 }

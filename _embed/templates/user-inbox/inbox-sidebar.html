@@ -1,8 +1,6 @@
 {{- $selectedID := .SelectedID -}}
 <div id="app-sidebar" class="app-sidebar" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 
-	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
-
 	<div class="pos-sticky" style="top:96px;">
 
 		<form class="sortable" hx-post="/@me/inbox/inbox-folder-sort" hx-push-url="false" hx-trigger="end">

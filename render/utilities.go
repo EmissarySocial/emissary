@@ -33,18 +33,20 @@ func WrapInlineError(ctx echo.Context, err error) error {
 	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
 	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
 
+	// nolint:errcheck
 	if derpError, ok := err.(derp.SingleError); ok {
 		derp.Report(derpError)
 		return ctx.HTML(http.StatusOK, `<span class="red">`+derpError.Message+`</span>`)
 	}
 
+	// nolint:errcheck
 	derp.Report(err)
 	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
 }
 
 func WrapModal(response *echo.Response, content string, options ...string) string {
 
-	// These two headers make it a modal
+	// These three headers make it a modal
 	header := response.Header()
 	header.Set("HX-Retarget", "aside")
 	header.Set("HX-Reswap", "innerHTML")
@@ -77,6 +79,22 @@ func WrapModalWithCloseButton(response *echo.Response, content string, options .
 	b.Button().Script("on click trigger closeModal").InnerText("Close Window")
 
 	return WrapModal(response, content+b.String())
+}
+
+func WrapTooltip(response *echo.Response, content string) string {
+
+	// These headers make it a modal
+	header := response.Header()
+	header.Set("HX-Reswap", "beforeend")
+	header.Set("HX-Push", "false")
+
+	b := html.New()
+
+	b.Span().ID("tooltip").Script("install tooltip").EndBracket()
+	b.WriteString(content)
+	b.CloseAll()
+
+	return b.String()
 }
 
 func WrapForm(endpoint string, content string, options ...string) string {
@@ -145,10 +163,19 @@ func CloseModal(ctx echo.Context, url string) {
 	}
 }
 
+// CloseTooltip sets Response header to close a tooltip
+func CloseTooltip(ctx echo.Context) {
+	ctx.Response().Header().Set("HX-Trigger", `{"closeTooltip":true}`)
+}
+
 func RefreshPage(ctx echo.Context) {
 	header := ctx.Response().Header()
 	header.Set("HX-Trigger", "refreshPage")
 	header.Set("HX-Reswap", "none")
+}
+
+func TriggerEvent(ctx echo.Context, event string) {
+	ctx.Response().Header().Set("HX-Trigger", event)
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
@@ -208,6 +235,7 @@ func executeTemplate(template TemplateLike, data any) string {
 
 	var buffer bytes.Buffer
 
+	// nolint:errcheck
 	if err := template.Execute(&buffer, data); err != nil {
 		derp.Report(derp.Wrap(err, "render.executeTemplate", "Error executing template", data))
 		return ""

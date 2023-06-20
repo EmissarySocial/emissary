@@ -115,10 +115,13 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "sort-attachments":
 		return NewSortAttachments(stepInfo)
 
-	// CLIENT-SIDE CONTROLS
+		// CLIENT-SIDE CONTROLS
 
 	case "as-modal":
 		return NewAsModal(stepInfo)
+
+	case "as-tooltip":
+		return NewAsTooltip(stepInfo)
 
 	case "as-confirmation":
 		return NewAsConfirmation(stepInfo)
@@ -161,14 +164,17 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-follower":
 		return NewWithFollower(stepInfo)
 
-	case "with-prev-sibling":
-		return NewWithPrevSibling(stepInfo)
-
 	case "with-next-sibling":
 		return NewWithNextSibling(stepInfo)
 
+	case "with-prev-sibling":
+		return NewWithPrevSibling(stepInfo)
+
 	case "with-parent":
 		return NewWithParent(stepInfo)
+
+	case "with-response":
+		return NewWithResponse(stepInfo)
 
 	// EXTERNAL CONNECTIONS
 

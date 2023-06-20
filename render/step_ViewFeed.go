@@ -75,6 +75,8 @@ func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) error {
 		// Write the result to the buffer and then success.
 		header := renderer.context().Response().Header()
 		header.Add("Content-Type", mimeType)
+
+		// nolint:errcheck
 		buffer.Write([]byte(xml))
 		return nil
 	}

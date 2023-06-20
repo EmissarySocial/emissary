@@ -46,7 +46,7 @@ func (action *Action) UserCan(enumerator RoleStateEnumerator, authorization *Aut
 }
 
 // AllowedRoles returns a string of all page request roles that are allowed to
-// perform this action.  This includes system roles like "anonymous", "authenticated", "author", and "owner".
+// perform this action.  This includes system roles like "anonymous", "authenticated", "self", "author", and "owner".
 func (action *Action) AllowedRoles(stateID string) []string {
 
 	// If present, "States" limits the states where this action can take place at all.
@@ -77,7 +77,7 @@ func (action *Action) AllowedRoles(stateID string) []string {
 	}
 
 	// Owners can always perform actions, no matter what.
-	result = append(result, MagicRoleOwner)
+	result = append(result, MagicRoleMyself, MagicRoleOwner)
 
 	return result
 }

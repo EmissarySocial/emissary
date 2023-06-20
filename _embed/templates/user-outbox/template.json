@@ -39,11 +39,27 @@
 		"view": {
 			"steps":[
 				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
-				{"step":"view-html", "file":"profile"}
+				{"step":"view-html", "file":"outbox"}
 			]
 		},
-		"profile-sidebar": {"step":"view-html"},
-		"profile-edit": {
+		"outbox-list": {"step":"view-html"},
+		"outbox-add": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
+				{"step":"add-stream", "location":"outbox", "as-embed":true},
+				{"step":"refresh-page"}
+			]
+		},
+
+		"likes": {
+			"step":"view-html",
+			"file":"responses"
+		},
+		"likes-list": {"step":"view-html", "file":"responses-list"},
+
+		"sidebar": {"step":"view-html"},
+		"edit": {
 			"roles": ["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
@@ -60,11 +76,11 @@
 				]}
 			]
 		},
-		"profile-photo": {
+		"photo": {
 			"roles": ["self"],
 			"steps":[
 				{"step":"as-modal", "steps":[
-					{"step":"view-html", "file":"profile-photo"},
+					{"step":"view-html", "file":"photo"},
 					{"step":"delete-attachments", "all":true},
 					{"step":"upload-attachments", "maximum":1},
 					{"step":"set-thumbnail", "path":"imageId"},
@@ -73,7 +89,7 @@
 				{"step":"reload-page"}
 			]
 		},
-		"profile-links": {
+		"links": {
 			"roles": ["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
@@ -81,7 +97,7 @@
 				]}
 			]
 		},
-		"profile-links-table": {
+		"links-table": {
 			"roles": ["self"],
 			"steps": [
 				{"step":"edit-table", "path":"links", "form": {
@@ -94,26 +110,17 @@
 				{"step":"save", "comment":"Links updated by me"}
 			]
 		},
-		"profile-photo-preview": {
+		"photo-preview": {
 			"roles": ["self"],
 			"step":"view-html"
 		},
-		"profile-photo-delete": {
+		"photo-delete": {
 			"roles":["self"],
 			"steps":[
 				{"step":"delete-attachments", "all":true},
 				{"step":"set-thumbnail", "path":"imageId"},
 				{"step":"save", "comment":"Profile photo deleted by me"},
 				{"step":"reload-page"}
-			]
-		},
-		"outbox-list": {"step":"view-html"},
-		"outbox-add": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
-				{"step":"add-stream", "location":"outbox", "as-embed":true},
-				{"step":"refresh-page"}
 			]
 		},
 
@@ -130,7 +137,7 @@
 							{"type":"text", "path":"url", "label":"URL"}
 						]
 					}},
-					{"step":"view-html", "file":"profile-follower"}
+					{"step":"view-html", "file":"follower"}
 				]}
 			]
 		},
@@ -154,7 +161,7 @@
 		"follow": {
 			"steps": [
 				{"step":"as-modal", "background":"profile", "steps":[
-					{"step":"view-html", "file":"profile-follow"}
+					{"step":"view-html", "file":"follow"}
 				]}
 			]
 		},

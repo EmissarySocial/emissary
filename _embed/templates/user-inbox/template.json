@@ -5,7 +5,7 @@
 	"label":"User Inbox",
 	"description":"Inbox displays all incoming messages for the signed-in user",
 	"icon":"inbox",
-	"extends":["base-block-editor"],
+	"extends":["base-social", "base-block-editor"],
 	"containedBy": [],
 	"schema": {
 		"title":"User Profile",
@@ -163,7 +163,7 @@
 							{"type":"text", "path":"url", "label":"URL"}
 						]
 					}},
-					{"step":"view-html", "file":"profile-follower"}
+					{"step":"view-html", "file":"follower"}
 				]}
 			]
 		},
@@ -181,13 +181,6 @@
 							]
 						}}
 					]}
-				]}
-			]
-		},
-		"follow": {
-			"steps": [
-				{"step":"as-modal", "background":"profile", "steps":[
-					{"step":"view-html", "file":"profile-follow"}
 				]}
 			]
 		},

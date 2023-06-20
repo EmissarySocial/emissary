@@ -1,4 +1,4 @@
-{{- $author := .Author -}}
+{{- $author := .AttributedTo.First -}}
 
 <div class="flex-row">
 
@@ -16,7 +16,7 @@
 				{{ .PublishDate | tinyDate }}
 			</span>
 
-			{{- if ne .InReplyTo "" -}}
+			{{- if .InReplyTo.NotNil -}}
 				<span class="bold text-gray">
 					{{icon "reply"}} Replying to ...
 				</span>
@@ -36,3 +36,5 @@
 	</div>
 
 </div>
+
+{{- .Responses -}}

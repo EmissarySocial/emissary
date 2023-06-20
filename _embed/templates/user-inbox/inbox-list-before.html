@@ -9,6 +9,7 @@
 
 	{{- $internalID := .QueryParam "origin.followingId" -}}
 	{{- $layout := $folder.Layout | lowerCase -}}
+	{{- $inboxRenderer := . -}}
 
 	<div 
 		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$firstMessage.Rank}}"
@@ -42,11 +43,9 @@
 			{{- else -}}
 				{{- template "inbox-list-social" $message -}}
 			{{- end -}}
-			
 		</div>
 
-		<!-- template "message-response-widget" $message -->
-
+		{{- $inboxRenderer.Responses $message -}}
 		<hr>
 
 	{{- end -}}

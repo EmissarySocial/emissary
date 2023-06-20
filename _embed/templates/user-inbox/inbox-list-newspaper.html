@@ -1,3 +1,5 @@
+{{- $author := .AttributedTo.First -}}
+
 <div class="flex-row space-below" style="justify-content:space-between;" hx-push-url="true">
 
 	<div style="width:160px; margin-right:16px;flex-grow:0; flex-shrink:0">
@@ -14,7 +16,7 @@
 			<span class="ellipsis">
 				{{ icon .Origin.Icon }}
 				{{ .Origin.Label }} &middot;
-				{{ .Author.Name }} 
+				{{ $author.Name }} 
 				&nbsp;&middot;
 			</span>
 			<span class="nowrap">

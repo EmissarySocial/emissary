@@ -63,38 +63,6 @@
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true}
 			]
 		},
-		"view-chat": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]}
-			]
-		},
-		"view-magazine": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"view-newspaper": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
-		"view-social": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "options":["class:large"], "steps": [
-					{"step":"view-html"}
-				]
-			}]
-		},
 
 		"reply":{
 			"roles":["self"],

@@ -1,0 +1,45 @@
+behavior tooltipContainer
+
+	init
+		add .tooltip-container
+		add [@hx-target="this"]
+		add [@hx-swap="beforeend"]
+		add [@hx-trigger="loadTooltip"]
+		htmx.process(me)
+	end
+
+	on touchstart
+		send loadTooltip
+	end
+
+	on click
+		send loadTooltip
+	end
+
+	on mouseenter
+		send loadTooltip
+	end
+
+	on mouseleave
+		send closeTooltip to window
+	end
+
+	on touchstart elsewhere
+		send closeTooltip to window
+	end
+
+	on click elsewhere
+		send closeTooltip to window
+	end
+end
+
+behavior tooltip
+
+	on closeTooltip from window
+		if #tooltip is not null then 
+			add .closing to #tooltip
+			settle
+			remove #tooltip
+		end
+	end
+end

@@ -13,6 +13,7 @@ func TestResponse(t *testing.T) {
 
 	tests := []tableTestItem{
 		{"responseId", "000000000000000000000001", nil},
+		{"userId", "000000000000000000000001", nil},
 		{"type", ResponseTypeMention, nil},
 		{"actorId", "http://actor.com", nil},
 		{"objectId", "https://example/object", nil},

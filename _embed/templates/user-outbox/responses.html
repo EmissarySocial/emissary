@@ -1,0 +1,27 @@
+<!-- Page content -->
+<div class="framed page app h-card" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
+
+	<title>{{.DisplayName}} | Responses</title>
+
+	<!-- Metadata -->
+	<link rel="icon" href="{{.ImageURL}}"/>
+
+	<!-- ActivityPub links -->
+	<link rel="http://webfinger.net/rel/profile-page" href="{{.ProfileURL}}"/>
+	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/.ostatus/tunnel?uri={uri}">
+	<link rel="self" type="application/activity+json" href="{{.ActivityPubURL}}"/>
+
+	{{ .View "sidebar" }}
+
+	<div class="app-content">
+
+		<div class="space-below">
+			<a hx-get="/@{{.UserID}}" class="turboclick">Posts</a> &middot;
+			<b>Likes</b>
+		</div>
+
+		<div class="h-feed">
+			{{ .View "likes-list"}}
+		</div>
+	</div>
+</div>

@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type StepSetResponse struct{}
@@ -26,6 +27,8 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
 	}{}
 
+	spew.Dump(txn)
+
 	// Receive the transaction data
 	if err := renderer.context().Bind(&txn); err != nil {
 		return derp.Wrap(err, location, "Error binding transaction")
@@ -42,6 +45,7 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 	responseService := renderer.factory().Response()
 
 	response := model.NewResponse()
+	response.UserID = user.UserID
 	response.ActorID = user.ProfileURL
 	response.ObjectID = renderer.Permalink()
 	response.Type = txn.Type
@@ -51,6 +55,8 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 	if err := responseService.SetResponse(&response); err != nil {
 		return derp.Wrap(err, location, "Error setting response")
 	}
+
+	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
 
 	return nil
 }

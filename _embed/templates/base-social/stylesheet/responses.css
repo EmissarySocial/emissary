@@ -1,0 +1,37 @@
+.response-button {
+	margin:0px 4px 0px 0px;
+	padding:4px 8px;
+	color:var(--gray50);
+	cursor:pointer;
+	background:var(--gray05);
+	border:solid 1px var(--gray10);
+	border-radius:4px;
+}
+
+.response-button:hover {
+	background:var(--gray15);
+	border:solid 1px var(--gray20);
+	color:var(--gray80);
+}
+
+.response-button.selected {
+	background:var(--gray30);
+	border:solid 1px var(--gray40);
+	color:var(--gray100);
+}
+
+#tooltip .response-button {
+	background:var(--gray70);
+	color:var(--gray20);
+	border:none;
+}
+
+#tooltip .response-button:hover {
+	background:var(--gray60);
+	color:var(--gray10);
+}
+
+#tooltip .response-button.selected {
+	background:var(--gray40);
+	color:var(--gray05);
+}

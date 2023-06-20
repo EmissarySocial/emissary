@@ -1,5 +1,34 @@
-<div class="text-gray space-below">
-	<span hx-post="/{{.URL}}" role="button" class="space-right">{{icon "thumbs-up"}} {{.Meta.GetInt "likes"}}</span>
-	<span hx-post="/{{.URL}}" role="button" class="space-right">{{icon "thumbs-down"}} {{.Meta.GetInt "dislikes"}}</span>
-	<span hx-post="/{{.URL}}" role="button" class="space-right">{{icon "mention"}} {{.Meta.GetInt "mentions"}}</span>
+<!--
+	This template expects a "Responses" renderer.  It will not work with any other renderer.
+-->
+
+<div hx-get="{{.InternalURL}}/responses" hx-trigger="refreshResponses[detail.url=='{{.ObjectID}}'] from:window" hx-target="this" hx-push-url="false"
+	old="{{.InternalURL}}']" class="text-gray space-below" style="margin-top:8px;">
+	{{- if .UserID.IsZero -}}
+	[User Not Signed In]
+	{{- else -}}
+	{{- $countByContent := .CountByContent -}}
+	{{- $userResponse := .UserResponse -}}
+	{{- $internalURL := .InternalURL -}}
+
+	{{- range $content, $count := $countByContent -}}
+	{{ if eq $content $userResponse -}}
+	<span hx-post="{{$internalURL}}/set-response" hx-vals='{"type":", "content":"}' hx-swap="none" hx-push-url="false"
+		role="button" class="response-button selected turboclick">{{$content}} {{$count}}</span>
+	{{- else -}}
+	<span hx-post="{{$internalURL}}/set-response" hx-vals='{"type":"LIKE", "content":"{{$content}}"}' hx-swap="none"
+		hx-push-url="false" role="button" class="response-button turboclick">{{$content}} {{$count}}</span>
+	{{- end -}}
+	{{- end -}}
+
+	<span role="button" hx-get="{{.InternalURL}}/response-icons" script="install tooltipContainer" style="padding:8px 16px;">
+		{{- if eq $userResponse "" -}}
+		{{icon "add-emoji"}}
+		{{- else -}}
+		{{icon "settings"}}
+		{{- end -}}
+	</span>
+	{{- end -}}
+
+	<!-- // TODO: Should restore "mentions" to this widget when possible -->
 </div>

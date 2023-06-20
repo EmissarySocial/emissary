@@ -14,6 +14,8 @@ func (service Icons) Get(name string) string {
 		return service.get("plus-lg")
 	case "add-circle":
 		return service.get("plus-circle")
+	case "add-emoji":
+		return service.get("plus-circle")
 	case "archive":
 		return service.get("archive")
 	case "archive-fill":
