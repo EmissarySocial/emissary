@@ -36,8 +36,11 @@
 	},
 	"actions": {
 		"view": {
-			"step": "view-html",
-			"cache": true
+			"cache": true,
+			"steps":[
+				{"step":"view-json"},
+				{"step":"view-html"}
+			]
 		},
 		"edit": {
 			"roles": ["owner", "editor"],

@@ -61,7 +61,10 @@
 			"stateRoles": {
 				"published": ["viewer"]
 			},
-			"step":"view-html"
+			"steps":[
+				{"step":"view-json"},
+				{"step":"view-html"}
+			]
 		},
 		"heading": {
 			"roles": ["viewer", "editor", "owner"],

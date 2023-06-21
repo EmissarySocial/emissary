@@ -38,7 +38,12 @@
 				{"step":"publish"}
 			]
 		},
-		"view": {"step":"view-html"},
+		"view": {
+			"steps":[
+				{"step":"view-json"},
+				{"step":"view-html"}
+			]
+		},
 		"add-reply":{
 			"roles":["authenticated"],
 			"steps":[

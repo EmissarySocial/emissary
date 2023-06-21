@@ -45,7 +45,10 @@
 		},
 		"view": {
 			"roles": ["viewer", "editor", "owner"],
-			"step":"view-html"
+			"steps":[
+				{"step":"view-json"},
+				{"step":"view-html"}
+			]
 		},
 		"heading": {
 			"step":"view-html"
