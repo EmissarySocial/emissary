@@ -38,6 +38,7 @@
 	"actions": {
 		"view": {
 			"steps":[
+				{"step":"view-json"},
 				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
 				{"step":"view-html", "file":"outbox"}
 			]
