@@ -8,11 +8,12 @@
 		{{- $document := $page.ActivityStream .ObjectID -}}
 		{{- $author := $document.AttributedTo.Load -}}
 		<div class="h-entry">
-			<div class="flex-row clickable" role="link" script="on click go to url '{{$document.ID}}'">
+			<a href="{{.ObjectID}}" class="u-url"></a>
+			<div class="flex-row clickable" role="link" script="on click go to url '{{.ObjectID}}' in new window">
 				<div class="flex-shrink-0" style="width:80px;">
 					{{- if $author.NotNil -}}
 						{{- if ne "" $author.Icon.URL -}}
-							<img src="{{$author.Icon.URL}}" class="circle-64">
+							<img src="{{$author.Icon.URL}}" loading="lazy" class="circle-64">
 						{{- end -}}
 					{{- end -}}
 				</div>
@@ -31,14 +32,13 @@
 								{{ $publishedString -}}
 							{{- end -}}
 						</div>
-						<div class="space-below">
+						<div>
 							{{- if ne "" $document.Image.URL -}}
-								<div><img src="{{$document.Image.URL}}" style="max-width:100%"></div>
+								<div><img src="{{$document.Image.URL}}" loading="lazy" style="max-width:100%"></div>
 							{{- end -}}
 							{{- if ne "" $document.Content -}}
 								<div>
 									{{- $document.Content | textOnly}}
-									<a href="{{.ObjectID}}" class="u-url">{{icon "link-outbound"}}</a>
 								</div>
 							{{- end -}}
 						</div>
@@ -47,13 +47,12 @@
 			</div>
 			<div class="flex-row">
 				<div class="flex-shrink-0" style="width:80px;"></div>
-				<div style="margin-right:16px;">
-					<a href="{{.URL}}" class="u-url" class="text-plain">
-						<span class="p-content">{{.Content}}</span>
-						<span class="p-name bold">{{.EnglishType}}</span> by
-						<span class="p-author">{{$page.DisplayName}}</span>
-						<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
-					</a>
+				<div class="text-sm text-gray">
+					<span class="p-content">{{.Content}}</span>
+					<span class="p-name bold">{{.EnglishType}}</span> by
+					<span class="p-author">{{$page.DisplayName}}</span>
+					<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
+					<a href="{{.URL}}" class="u-url"></a>
 				</div>
 			</div>
 		</div>
