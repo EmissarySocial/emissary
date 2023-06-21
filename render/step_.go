@@ -59,6 +59,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ForwardTo:
 		return StepForwardTo(s)
 
+	case step.Halt:
+		return StepHalt(s)
+
 	case step.IfCondition:
 		return StepIfCondition(s)
 
