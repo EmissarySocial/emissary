@@ -24,13 +24,6 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 	// Partial pages only render the modal window.  This happens MOST of the time.
 	if renderer.IsPartialRequest() {
 
-		header := renderer.context().Response().Header()
-		header.Set("HX-Retarget", "aside")
-		header.Set("HX-Reswap", "innerHTML")
-		if step.Background == "" {
-			header.Set("HX-Push", "false")
-		}
-
 		modalContent, status := step.getModalContent(renderer)
 
 		if status.Halt {
@@ -41,7 +34,16 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 			return ExitError(derp.Wrap(err, location, "Error writing from builder to buffer"))
 		}
 
-		return ExitWithStatus(status).AsFullPage()
+		result := ExitWithStatus(status).
+			WithHeader("HX-Retarget", "aside").
+			WithHeader("HX-Reswap", "innerHTML").
+			AsFullPage()
+
+		if step.Background == "" {
+			result = result.WithHeader("HX-Push", "false")
+		}
+
+		return result
 	}
 
 	// Otherwise, we can render the modal on a page background... IF we have a background view defined.

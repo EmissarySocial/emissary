@@ -69,13 +69,36 @@ func (status PipelineStatus) Apply(ctx echo.Context) {
 
 // Merge combines two PipelineStatus objects into one.
 func (status *PipelineStatus) Merge(newStatus PipelineStatus) {
+
+	// Copy bools into the result
 	status.FullPage = newStatus.FullPage || status.FullPage
 	status.Halt = newStatus.Halt || status.Halt
 
+	// Copy Content Type into the result
 	if newStatus.ContentType != "" {
 		status.ContentType = newStatus.ContentType
 	}
 
+	// Copy Status Code into the result
+	if newStatus.StatusCode != 0 {
+		status.StatusCode = newStatus.StatusCode
+	}
+
+	// Copy HTTP headers into the result
+	for name, value := range newStatus.Headers {
+		if _, ok := status.Headers[name]; !ok {
+			status.Headers[name] = value
+		}
+	}
+
+	// Copy HX-Trigger headers into the result
+	for name, value := range newStatus.Events {
+		if _, ok := status.Events[name]; !ok {
+			status.Events[name] = value
+		}
+	}
+
+	// Copy Error value into the result
 	if newStatus.Error != nil {
 		status.Error = newStatus.Error
 	}
