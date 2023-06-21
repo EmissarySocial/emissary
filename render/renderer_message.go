@@ -258,6 +258,6 @@ func (w Message) ResponsesRenderer() Responses {
 	return NewResponses(userID, internalURL, w._message.URL, responseService)
 }
 
-func (service Message) debug() {
-	spew.Dump("Message", service.object())
+func (w Message) debug() {
+	spew.Dump("Message", w.object())
 }

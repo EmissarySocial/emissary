@@ -414,5 +414,5 @@ func (w Inbox) Responses(message model.Message) template.HTML {
 }
 
 func (w Inbox) debug() {
-	spew.Dump("Inbox")
+	spew.Dump("Inbox", w.object())
 }

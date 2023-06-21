@@ -203,6 +203,6 @@ func (w Domain) Provider(providerID string) providers.Provider {
 	result, _ := w.externalService.GetProvider(providerID)
 	return result
 }
-func (service Domain) debug() {
-	spew.Dump("Domain", service.object())
+func (w Domain) debug() {
+	spew.Dump("Domain", w.object())
 }

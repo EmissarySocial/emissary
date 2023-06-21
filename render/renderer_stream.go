@@ -701,6 +701,6 @@ func (w Stream) draftRenderer() (Stream, error) {
 	}, nil
 }
 
-func (service Stream) debug() {
-	spew.Dump("Stream", service.object())
+func (w Stream) debug() {
+	spew.Dump("Stream", w.object())
 }

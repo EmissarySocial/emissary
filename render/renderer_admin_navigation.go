@@ -124,6 +124,6 @@ func (w Navigation) clone(action string) (Renderer, error) {
 	return NewNavigation(w._factory, w._context, w._template, w.stream, action)
 }
 
-func (service Navigation) debug() {
-	spew.Dump("Navigation", service.object())
+func (w Navigation) debug() {
+	spew.Dump("Navigation", w.object())
 }

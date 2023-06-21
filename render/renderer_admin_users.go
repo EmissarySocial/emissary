@@ -184,6 +184,6 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	return result, derp.Wrap(err, "render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
 }
 
-func (service User) debug() {
-	spew.Dump("User", service.object())
+func (w User) debug() {
+	spew.Dump("User", w.object())
 }

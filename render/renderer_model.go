@@ -153,6 +153,6 @@ func (w Model) clone(action string) (Renderer, error) {
 	return NewModel(w._factory, w._context, w._service, w._object, w._template, action)
 }
 
-func (service Model) debug() {
-	spew.Dump("Model", service.object())
+func (w Model) debug() {
+	spew.Dump("Model", w.object())
 }

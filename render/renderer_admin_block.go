@@ -180,6 +180,6 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 	return &result
 }
 
-func (service Block) debug() {
-	spew.Dump("Block", service.object())
+func (w Block) debug() {
+	spew.Dump("Block", w.object())
 }

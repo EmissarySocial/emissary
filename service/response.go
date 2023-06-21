@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -215,7 +214,6 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 	// Validate the response
 	response.CalcContent()
-	spew.Dump(response)
 
 	user := model.NewUser()
 	err := service.userService.LoadByProfileURL(response.ActorID, &user)
@@ -236,7 +234,6 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 		// If there was no change, then there's nothing to do.
 		if response.IsEqual(oldResponse) {
-			spew.Dump("EQUAL TO OLD RESPONSE??")
 			return nil
 		}
 
@@ -263,19 +260,13 @@ func (service *Response) SetResponse(response *model.Response) error {
 		}
 
 	} else if !derp.NotFound(err) {
-		spew.Dump("err.. grr", err, derp.NotFound(err))
 		return derp.Wrap(err, location, "Error loading original response", oldResponse)
 	}
 
-	spew.Dump("here??")
-
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(response, ""); err != nil {
-		spew.Dump("onefish?")
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
-
-	spew.Dump("twofish??")
 
 	// Responses from local Actors should be published to the Outbox
 	if !user.IsNew() {
@@ -284,8 +275,6 @@ func (service *Response) SetResponse(response *model.Response) error {
 			derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 		}
 	}
-
-	spew.Dump("redfish, bluefish??")
 
 	// Oye cómo va!
 	return nil

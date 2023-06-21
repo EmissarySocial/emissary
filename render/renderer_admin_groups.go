@@ -158,6 +158,6 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 	return &result
 }
 
-func (service Group) debug() {
-	spew.Dump("Group", service.object())
+func (w Group) debug() {
+	spew.Dump("Group", w.object())
 }

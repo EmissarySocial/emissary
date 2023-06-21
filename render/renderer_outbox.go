@@ -253,6 +253,6 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 	return result
 }
 
-func (service Outbox) debug() {
-	spew.Dump("Outbox", service.object())
+func (w Outbox) debug() {
+	spew.Dump("Outbox", w.object())
 }
