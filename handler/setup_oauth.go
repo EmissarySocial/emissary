@@ -83,7 +83,9 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 
 		// Apply the POST data into the connection
 		editForm := setupOAuthForm("")
-		editForm.SetAll(&connection, data, nil)
+		if err := editForm.SetAll(&connection, data, nil); err != nil {
+			return derp.Wrap(err, "handler.SetupOAuthPost", "Error applying form data")
+		}
 
 		// Save/Delete the connection
 		if !connection.IsEmpty() {

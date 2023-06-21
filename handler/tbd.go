@@ -9,6 +9,5 @@ import (
 
 // TBD represents a placeholder handler that will be removed before release.
 func TBD(ctx echo.Context) error {
-	ctx.String(http.StatusOK, spew.Sdump(ctx.Request()))
-	return nil
+	return ctx.String(http.StatusOK, spew.Sdump(ctx.Request()))
 }
