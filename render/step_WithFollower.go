@@ -13,21 +13,21 @@ type StepWithFollower struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithFollower) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithFollower) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithFollower) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithFollower) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodPost)
 }
 
-func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) ExitCondition {
+func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "render.StepWithFollower.execute"
 
 	if !renderer.IsAuthenticated() {
-		return ExitError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
+		return Halt().WithError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
 	// Collect required services and values
@@ -42,7 +42,7 @@ func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, action
 	if (followerToken != "") && (followerToken != "new") {
 		if err := followerService.LoadByToken(renderer.AuthenticatedID(), followerToken, &follower); err != nil {
 			if actionMethod == ActionMethodGet {
-				return ExitError(derp.Wrap(err, location, "Unable to load Follower", followerToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower", followerToken))
 			}
 			// Fall through for POSTS..  we're just creating a new follower.
 		}
@@ -52,12 +52,12 @@ func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, action
 	subRenderer, err := NewModel(factory, context, followerService, &follower, renderer.template(), renderer.ActionID())
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Unable to create sub-renderer"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))
 	}
 
 	// Execute the render pipeline on the Follower record
-	status := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
-	status.Error = derp.Wrap(status.Error, location, "Error executing steps for child")
+	result := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
+	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
 
-	return ExitWithStatus(status)
+	return UseResult(result)
 }

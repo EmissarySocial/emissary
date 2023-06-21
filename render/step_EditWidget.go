@@ -12,19 +12,19 @@ import (
 // StepEditWidget represents an action-step that can update the data.DataMap custom data stored in a Stream
 type StepEditWidget struct{}
 
-func (step StepEditWidget) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepEditWidget) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	widget, streamWidget, _, err := step.common(renderer)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditWidget.Get", "Error locating widget"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Get", "Error locating widget"))
 	}
 
 	// Render the Form
 	formHTML, err := form.Editor(widget.Schema, widget.Form, streamWidget.Data, nil)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditWidget.Get", "Error rendering form"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Get", "Error rendering form"))
 	}
 
 	// Wrap the form as a modal and return it to the client
@@ -37,32 +37,31 @@ func (step StepEditWidget) Get(renderer Renderer, buffer io.Writer) ExitConditio
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepEditWidget) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepEditWidget) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	// Locate the widget and its configuration
 	widget, streamWidget, streamRenderer, err := step.common(renderer)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditWidget.Post", "Error locating widget"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Post", "Error locating widget"))
 	}
 
 	// Get the form post information
 	formData := mapof.NewAny()
 	if err := renderer.context().Bind(&formData); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditWidget.Post", "Error binding form data"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Post", "Error binding form data"))
 	}
 
 	// Apply the form data to the widget
 	f := form.New(widget.Schema, widget.Form)
 	if err := f.SetAll(&streamWidget.Data, formData, nil); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditWidget.Post", "Error applying form data to widget"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Post", "Error applying form data to widget"))
 	}
 
 	// Update the stream with the new widget (in the same location)
 	streamRenderer.stream.Widgets.Put(streamWidget)
 
-	CloseModal(renderer.context(), "")
-	return nil
+	return Continue().WithEvent("closeModal", "true")
 }
 
 // common locates the widget and its configuration

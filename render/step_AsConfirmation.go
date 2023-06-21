@@ -14,7 +14,7 @@ type StepAsConfirmation struct {
 }
 
 // Get displays a modal that asks users to continue or not.
-func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	// Modal Content
 	b := html.New()
@@ -28,15 +28,14 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) ExitCond
 	// Done
 	b.CloseAll()
 
-	result := WrapModal(renderer.context().Response(), b.String())
+	modalHTML := WrapModal(renderer.context().Response(), b.String())
 
 	// nolint:errcheck
-	io.WriteString(buffer, result)
-	return ExitFullPage()
+	io.WriteString(buffer, modalHTML)
+	return Halt().AsFullPage()
 }
 
 // Post does nothing. (Other steps in the pipeline will make changes)
-func (step StepAsConfirmation) Post(renderer Renderer, _ io.Writer) ExitCondition {
-	CloseModal(renderer.context(), "")
-	return nil
+func (step StepAsConfirmation) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
+	return Continue().WithEvent("closeModal", "true")
 }

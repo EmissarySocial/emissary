@@ -16,18 +16,18 @@ type StepWebSub struct {
 }
 
 // Get is not required by WebSub.  So let's redirect to the primary action.
-func (step StepWebSub) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWebSub) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
-	// TODO: MEDIUM: This may not jive with the new ExitCondition model.  Check accordingly.
+	// TODO: MEDIUM: This may not jive with the new PipelineBehavior model.  Check accordingly.
 	newLocation := list.RemoveLast(renderer.URL(), list.DelimiterSlash)
 	if err := renderer.context().Redirect(http.StatusSeeOther, newLocation); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepWebSub.Get", "Error writing redirection", newLocation))
+		return Halt().WithError(derp.Wrap(err, "render.StepWebSub.Get", "Error writing redirection", newLocation))
 	}
 	return nil
 }
 
 // Post accepts a WebSub request, verifies it, and potentially creates a new Follower record.
-func (step StepWebSub) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepWebSub) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	var request struct {
 		Mode         string `form:"hub.mode"`
@@ -38,7 +38,7 @@ func (step StepWebSub) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	}
 
 	if err := renderer.context().Bind(&request); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data"))
+		return Halt().WithError(derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data"))
 	}
 
 	// Try to validate and save the follower via the queue.
@@ -64,7 +64,7 @@ func (step StepWebSub) Post(renderer Renderer, _ io.Writer) ExitCondition {
 		request.LeaseSeconds,
 	))
 
-	// TODO: MEDIUM: This may not jive with the new ExitCondition model.  Check accordingly.
+	// TODO: MEDIUM: This may not jive with the new PipelineBehavior model.  Check accordingly.
 	// Set Status Code 202 (Accepted) to conform to WebSub spec
 	// https://www.w3.org/TR/websub/#subscription-response-details
 	renderer.context().Response().WriteHeader(202)

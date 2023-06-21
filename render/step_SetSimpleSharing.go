@@ -21,7 +21,7 @@ type StepSetSimpleSharing struct {
 	Roles   []string
 }
 
-func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	streamRenderer := renderer.(*Stream)
 	model := streamRenderer.stream.SimplePermissionModel()
@@ -30,7 +30,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) ExitCo
 	formHTML, err := form.Editor(step.schema(), step.form(), model, renderer.lookupProvider())
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "render.StepSetSimpleSharing.Get", "Error rendering form"))
+		return Halt().WithError(derp.Wrap(err, "render.StepSetSimpleSharing.Get", "Error rendering form"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -59,7 +59,7 @@ func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) ExitCo
 	return nil
 }
 
-func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepSetSimpleSharing.Post"
 
@@ -67,7 +67,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) ExitCondit
 
 	// Try to parse the form input
 	if err := request.ParseForm(); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepSetSimpleSharing", "Error parsing form input"))
+		return Halt().WithError(derp.Wrap(err, "render.StepSetSimpleSharing", "Error parsing form input"))
 	}
 
 	var groupIDs []primitive.ObjectID
@@ -85,7 +85,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) ExitCondit
 		groupIDs = id.SliceOfID(request.Form["groupIds"])
 
 	default:
-		return ExitError(derp.NewBadRequestError(location, "Invalid rule: ", rule))
+		return Halt().WithError(derp.NewBadRequestError(location, "Invalid rule: ", rule))
 	}
 
 	// Build the stream criteria

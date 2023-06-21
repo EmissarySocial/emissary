@@ -13,21 +13,21 @@ type StepWithBlock struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithBlock) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithBlock) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithBlock) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithBlock) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodPost)
 }
 
-func (step StepWithBlock) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) ExitCondition {
+func (step StepWithBlock) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "render.StepWithBlock.doStep"
 
 	if !renderer.IsAuthenticated() {
-		return ExitError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
+		return Halt().WithError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
 	// Collect required services and values
@@ -41,7 +41,7 @@ func (step StepWithBlock) execute(renderer Renderer, buffer io.Writer, actionMet
 	if (blockToken != "") && (blockToken != "new") {
 		if err := blockService.LoadByToken(renderer.AuthenticatedID(), blockToken, &block); err != nil {
 			if actionMethod == ActionMethodGet {
-				return ExitError(derp.Wrap(err, location, "Unable to load Block", blockToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Block", blockToken))
 			}
 			// Fall through for POSTS..  we're just creating a new block.
 		}
@@ -51,12 +51,12 @@ func (step StepWithBlock) execute(renderer Renderer, buffer io.Writer, actionMet
 	subRenderer, err := NewModel(factory, context, blockService, &block, renderer.template(), renderer.ActionID())
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Unable to create sub-renderer"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))
 	}
 
 	// Execute the POST render pipeline on the child
-	status := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
-	status.Error = derp.Wrap(status.Error, location, "Error executing steps for child")
+	reesult := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
+	reesult.Error = derp.Wrap(reesult.Error, location, "Error executing steps for child")
 
-	return ExitWithStatus(status)
+	return UseResult(reesult)
 }

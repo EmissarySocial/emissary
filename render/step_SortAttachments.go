@@ -16,12 +16,12 @@ type StepSortAttachments struct {
 	Message string
 }
 
-func (step StepSortAttachments) Get(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSortAttachments) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	var formPost struct {
 		Keys []string `form:"keys"`
@@ -29,7 +29,7 @@ func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) ExitConditi
 
 	// Collect form POST information
 	if err := renderer.context().Bind(&formPost); err != nil {
-		return ExitError(derp.NewBadRequestError("render.StepSortAttachments.Post", "Error binding body"))
+		return Halt().WithError(derp.NewBadRequestError("render.StepSortAttachments.Post", "Error binding body"))
 	}
 
 	factory := renderer.factory()
@@ -44,7 +44,7 @@ func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) ExitConditi
 		attachmentID, err := primitive.ObjectIDFromHex(id)
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, "render.StepSortAttachments.Post", "Invalid attachmentId", id))
+			return Halt().WithError(derp.Wrap(err, "render.StepSortAttachments.Post", "Invalid attachmentId", id))
 		}
 
 		criteria := exp.Equal("streamId", renderer.objectID()).
@@ -53,7 +53,7 @@ func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) ExitConditi
 
 		// Try to load the attachment from the database
 		if err := attachmentService.Load(criteria, &attachment); err != nil {
-			return ExitError(derp.Wrap(err, "render.StepSortAttachments.Post", "Error loading attachment with criteria: ", criteria))
+			return Halt().WithError(derp.Wrap(err, "render.StepSortAttachments.Post", "Error loading attachment with criteria: ", criteria))
 		}
 
 		// If the rank for this attachment has not changed, then don't waste time saving it again.
@@ -65,7 +65,7 @@ func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) ExitConditi
 
 		// Try to save back to the database
 		if err := attachmentService.Save(&attachment, step.Message); err != nil {
-			return ExitError(derp.Wrap(err, "render.StepSortAttachments.Post", "Error saving record tot he database", attachment))
+			return Halt().WithError(derp.Wrap(err, "render.StepSortAttachments.Post", "Error saving record tot he database", attachment))
 		}
 	}
 

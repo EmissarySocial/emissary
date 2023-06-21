@@ -20,7 +20,7 @@ import (
 type StepViewFeed struct{}
 
 // Get renders the Stream HTML to the context
-func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepViewFeed.Get"
 
@@ -30,7 +30,7 @@ func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) ExitCondition 
 	children, err := factory.Stream().ListByParent(renderer.objectID())
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error querying child streams"))
+		return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))
 	}
 
 	mimeType := step.detectMimeType(renderer)
@@ -69,16 +69,16 @@ func (step StepViewFeed) Get(renderer Renderer, buffer io.Writer) ExitCondition 
 		}
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, location, "Error generating feed. This should never happen"))
+			return Halt().WithError(derp.Wrap(err, location, "Error generating feed. This should never happen"))
 		}
 
 		// nolint:errcheck
 		buffer.Write([]byte(xml))
-		return ExitHalt().WithContentType(mimeType)
+		return Halt().WithContentType(mimeType)
 	}
 }
 
-func (step StepViewFeed) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepViewFeed) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
@@ -107,7 +107,7 @@ func (step StepViewFeed) detectMimeType(renderer Renderer) string {
 	return model.MimeTypeJSONFeed
 }
 
-func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, children data.Iterator) ExitCondition {
+func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, children data.Iterator) PipelineBehavior {
 
 	context := renderer.context()
 
@@ -132,12 +132,12 @@ func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, childre
 	bytes, err := json.Marshal(feed)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "render.StepViewFeed.asJSONFeed", "Error generating JSONFeed"))
+		return Halt().WithError(derp.Wrap(err, "render.StepViewFeed.asJSONFeed", "Error generating JSONFeed"))
 	}
 
 	// nolint:errcheck
 	buffer.Write(bytes)
 
 	// Set ContentType
-	return ExitHalt().WithContentType(model.MimeTypeJSONFeed)
+	return Halt().WithContentType(model.MimeTypeJSONFeed)
 }

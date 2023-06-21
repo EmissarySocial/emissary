@@ -7,11 +7,11 @@ import (
 // StepHalt represents an action-step that can save changes to any object
 type StepHalt struct{}
 
-func (step StepHalt) Get(renderer Renderer, _ io.Writer) ExitCondition {
-	return ExitHalt()
+func (step StepHalt) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
+	return Halt()
 }
 
 // Post saves the object to the database
-func (step StepHalt) Post(renderer Renderer, _ io.Writer) ExitCondition {
-	return ExitHalt()
+func (step StepHalt) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
+	return Halt()
 }

@@ -15,7 +15,7 @@ type StepSetHeader struct {
 	Value *template.Template
 }
 
-func (step StepSetHeader) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepSetHeader) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	if step.On == "post" {
 		return nil
 	}
@@ -23,21 +23,21 @@ func (step StepSetHeader) Get(renderer Renderer, buffer io.Writer) ExitCondition
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepSetHeader) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSetHeader) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	if step.On == "get" {
 		return nil
 	}
 	return step.setHeader(renderer)
 }
 
-func (step StepSetHeader) setHeader(renderer Renderer) ExitCondition {
+func (step StepSetHeader) setHeader(renderer Renderer) PipelineBehavior {
 
 	response := renderer.context().Response()
 
 	var value bytes.Buffer
 
 	if err := step.Value.Execute(&value, renderer); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepSetHeader.Post", "Error executing template", step.Value))
+		return Halt().WithError(derp.Wrap(err, "render.StepSetHeader.Post", "Error executing template", step.Value))
 	}
 
 	response.Header().Set(step.Name, value.String())

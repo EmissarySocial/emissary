@@ -13,21 +13,19 @@ type StepForwardTo struct {
 	URL *template.Template
 }
 
-func (step StepForwardTo) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepForwardTo) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepForwardTo) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepForwardTo) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepForwardTo.Post"
 	var nextPage bytes.Buffer
 
 	if err := step.URL.Execute(&nextPage, renderer); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error evaluating 'url'"))
+		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
-	CloseModal(renderer.context(), nextPage.String())
-
-	return nil
+	return Continue().WithEvent("closeModal", "true").WithEvent("refreshPage", nextPage.String())
 }

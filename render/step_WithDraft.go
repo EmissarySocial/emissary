@@ -13,7 +13,7 @@ type StepWithDraft struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepWithDraft.Get"
 
@@ -22,18 +22,18 @@ func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) ExitCondition
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error getting draft renderer"))
+		return Halt().WithError(derp.Wrap(err, location, "Error getting draft renderer"))
 	}
 
 	// Execute the POST render pipeline on the parent
 	status := Pipeline(step.SubSteps).Get(factory, &draftRenderer, buffer)
 	status.Error = derp.Wrap(status.Error, location, "Error executing steps on draft")
 
-	return ExitWithStatus(status)
+	return UseResult(status)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepWithDraft.Post"
 
@@ -42,12 +42,12 @@ func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) ExitConditio
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error getting draft renderer"))
+		return Halt().WithError(derp.Wrap(err, location, "Error getting draft renderer"))
 	}
 
 	// Execute the POST render pipeline on the parent
-	status := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer)
-	status.Error = derp.Wrap(status.Error, location, "Error executing steps on draft")
+	result := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer)
+	result.Error = derp.Wrap(result.Error, location, "Error executing steps on draft")
 
-	return ExitWithStatus(status)
+	return UseResult(result)
 }

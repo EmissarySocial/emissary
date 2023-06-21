@@ -14,7 +14,7 @@ type StepViewHTML struct {
 }
 
 // Get renders the Stream HTML to the context
-func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	if step.Method != "post" {
 		return step.execute(renderer, buffer)
@@ -23,7 +23,7 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) ExitCondition 
 	return nil
 }
 
-func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	if step.Method != "get" {
 		return step.execute(renderer, buffer)
@@ -32,7 +32,7 @@ func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) ExitCondition
 	return nil
 }
 
-func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	/* TODO: MEDIUM: Re-implement client-side caching later.
 	Caching leads to problems on INDEX-ONLY pages because you may have added/changed/deleted a child
@@ -74,13 +74,13 @@ func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) ExitCondit
 	}
 
 	if err := renderer.executeTemplate(buffer, filename, renderer); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template"))
 	}
 
 	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
 	object := renderer.object()
 
-	return Exit().
+	return Continue().
 		WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
 		WithHeader("ETag", object.ETag())
 }

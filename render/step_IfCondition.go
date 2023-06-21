@@ -18,31 +18,31 @@ type StepIfCondition struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer, buffer, ActionMethodPost)
 }
 
 // Get displays a form where users can update stream data
-func (step StepIfCondition) execute(renderer Renderer, buffer io.Writer, method ActionMethod) ExitCondition {
+func (step StepIfCondition) execute(renderer Renderer, buffer io.Writer, method ActionMethod) PipelineBehavior {
 
 	const location = "renderer.StepIfCondition.execute"
 
 	factory := renderer.factory()
 
 	if step.evaluateCondition(renderer) {
-		status := Pipeline(step.Then).Execute(factory, renderer, buffer, method)
-		status.Error = derp.Wrap(status.Error, location, "Error executing 'then' sub-steps")
-		return ExitWithStatus(status)
+		result := Pipeline(step.Then).Execute(factory, renderer, buffer, method)
+		result.Error = derp.Wrap(result.Error, location, "Error executing 'then' sub-steps")
+		return UseResult(result)
 	}
 
-	status := Pipeline(step.Otherwise).Get(factory, renderer, buffer)
-	status.Error = derp.Wrap(status.Error, location, "Error executing 'otherwise' sub-steps")
-	return ExitWithStatus(status)
+	result := Pipeline(step.Otherwise).Get(factory, renderer, buffer)
+	result.Error = derp.Wrap(result.Error, location, "Error executing 'otherwise' sub-steps")
+	return UseResult(result)
 }
 
 // evaluateCondition executes the conditional template and

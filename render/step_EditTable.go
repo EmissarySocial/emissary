@@ -17,7 +17,7 @@ type StepTableEditor struct {
 	Form form.Element
 }
 
-func (step StepTableEditor) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepTableEditor) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepTableEditor.Get"
 	var err error
@@ -39,13 +39,13 @@ func (step StepTableEditor) Get(renderer Renderer, buffer io.Writer) ExitConditi
 	}
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error drawing table", step.Path))
+		return Halt().WithError(derp.Wrap(err, location, "Error drawing table", step.Path))
 	}
 
 	return nil
 }
 
-func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepTableEditor.Post"
 
@@ -56,7 +56,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	body := mapof.NewAny()
 
 	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &body); err != nil {
-		return ExitError(derp.Wrap(err, location, "Failed to bind body", step))
+		return Halt().WithError(derp.Wrap(err, location, "Failed to bind body", step))
 	}
 
 	if edit := renderer.QueryParam("edit"); edit != "" {
@@ -65,11 +65,11 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
 		editIndex, ok := convert.IntOk(edit, 0)
 
 		if !ok {
-			return ExitError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
+			return Halt().WithError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
 		}
 
 		if editIndex < 0 {
-			return ExitError(derp.NewInternalError(location, "Edit index out of range", step.Path, editIndex))
+			return Halt().WithError(derp.NewInternalError(location, "Edit index out of range", step.Path, editIndex))
 		}
 
 		// Try to edit the row in the data table
@@ -77,7 +77,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
 			path := step.Path + "." + edit + "." + field.Path
 
 			if err := s.Set(object, path, body[field.Path]); err != nil {
-				return ExitError(derp.Wrap(err, location, "Error setting value in table", object, field.Path, path, body[field.Path]))
+				return Halt().WithError(derp.Wrap(err, location, "Error setting value in table", object, field.Path, path, body[field.Path]))
 			}
 		}
 
@@ -87,23 +87,23 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
 		table, err := s.Get(object, step.Path)
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, location, "Error locating table in data object"))
+			return Halt().WithError(derp.Wrap(err, location, "Error locating table in data object"))
 		}
 
 		// Bounds checking
 		deleteIndex, ok := convert.IntOk(delete, 0)
 
 		if !ok {
-			return ExitError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
+			return Halt().WithError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
 		}
 
 		if (deleteIndex < 0) || (deleteIndex >= convert.SliceLength(table)) {
-			return ExitError(derp.NewInternalError(location, "Edit index out of range", step.Path, deleteIndex))
+			return Halt().WithError(derp.NewInternalError(location, "Edit index out of range", step.Path, deleteIndex))
 		}
 
 		// Try to find the schema element for this table control
 		if ok := renderer.schema().Remove(renderer.object(), step.Path+"."+delete); !ok {
-			return ExitError(derp.NewInternalError(location, "Failed to remove row from table", step.Path))
+			return Halt().WithError(derp.NewInternalError(location, "Failed to remove row from table", step.Path))
 		}
 	}
 
@@ -116,7 +116,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	t.AllowAll()
 
 	if err := t.DrawView(renderer.context().Response().Writer); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error building HTML"))
+		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
 	}
 
 	return nil

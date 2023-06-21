@@ -9,7 +9,7 @@ import (
 type Pipeline []step.Step
 
 // Execute switches between GET and POST methods for this pipeline, based on the provided ActionMethod
-func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.Writer, actionMethod ActionMethod) PipelineStatus {
+func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.Writer, actionMethod ActionMethod) PipelineResult {
 
 	if actionMethod == ActionMethodGet {
 		return pipeline.Get(factory, renderer, buffer)
@@ -19,9 +19,9 @@ func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.W
 }
 
 // Get runs all of the pipeline steps using the GET method
-func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) PipelineStatus {
+func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) PipelineResult {
 
-	status := NewPipelineStatus()
+	status := NewPipelineResult()
 
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
@@ -42,9 +42,9 @@ func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Write
 }
 
 // Post runs runs all of the pipeline steps using the POST method
-func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writer) PipelineStatus {
+func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writer) PipelineResult {
 
-	status := NewPipelineStatus()
+	status := NewPipelineResult()
 
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {

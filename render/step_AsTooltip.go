@@ -14,28 +14,28 @@ type StepAsTooltip struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepAsTooltip) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepAsTooltip) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepAsTooltip.Get"
 
 	// Write inner items
 	var tooltipBuffer bytes.Buffer
 
-	status := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &tooltipBuffer)
-	status.Error = derp.Wrap(status.Error, location, "Error executing subSteps")
+	result := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &tooltipBuffer)
+	result.Error = derp.Wrap(result.Error, location, "Error executing subSteps")
 
-	if status.Halt {
-		return ExitWithStatus(status)
+	if result.Halt {
+		return UseResult(result)
 	}
 
 	// Wrap the content in a tooltip
 	tooltipContent := WrapTooltip(renderer.context().Response(), tooltipBuffer.String())
 
 	if _, err := io.WriteString(buffer, tooltipContent); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error writing from builder to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))
 	}
 
-	return ExitFullPage()
+	return Halt().AsFullPage()
 }
 
 func (step StepAsTooltip) UseGlobalWrapper() bool {
@@ -43,11 +43,11 @@ func (step StepAsTooltip) UseGlobalWrapper() bool {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepAsTooltip) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepAsTooltip) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	// Write inner items
-	status := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer)
-	status.Error = derp.Wrap(status.Error, "render.StepAsTooltip.Post", "Error executing subSteps")
+	result := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer)
+	result.Error = derp.Wrap(result.Error, "render.StepAsTooltip.Post", "Error executing subSteps")
 
-	return ExitWithStatus(status).WithEvent("closeTooltip", "true")
+	return UseResult(result).WithEvent("closeTooltip", "true")
 }

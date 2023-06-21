@@ -9,11 +9,11 @@ import (
 
 type StepSetResponse struct{}
 
-func (step StepSetResponse) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepSetResponse) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
-func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepSetResponse.Post"
 
@@ -24,14 +24,14 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	// Receive the transaction data
 	if err := renderer.context().Bind(&txn); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error binding transaction"))
+		return Halt().WithError(derp.Wrap(err, location, "Error binding transaction"))
 	}
 
 	// Retrieve the currently authenticated user
 	user, err := renderer.getUser()
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error getting user"))
+		return Halt().WithError(derp.Wrap(err, location, "Error getting user"))
 	}
 
 	// Create a new response object
@@ -46,10 +46,10 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	// Save the response to the database
 	if err := responseService.SetResponse(&response); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error setting response"))
+		return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 	}
 
-	return Exit().WithEvent("refreshResponses", response.ObjectID)
+	return Continue().WithEvent("refreshResponses", response.ObjectID)
 	//	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
 	// return nil
 }

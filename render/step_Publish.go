@@ -10,18 +10,18 @@ import (
 // StepPublish represents an action-step that can update a stream's PublishDate with the current time.
 type StepPublish struct{}
 
-func (step StepPublish) Get(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepPublish) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepPublish) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepPublish) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepPublish.Post"
 
 	// Require that the user is signed in to perform this action
 	if !renderer.IsAuthenticated() {
-		return ExitError(derp.NewUnauthorizedError(location, "User is not authenticated", nil))
+		return Halt().WithError(derp.NewUnauthorizedError(location, "User is not authenticated", nil))
 	}
 
 	streamRenderer := renderer.(*Stream)
@@ -32,14 +32,14 @@ func (step StepPublish) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	user := model.NewUser()
 
 	if err := userService.LoadByID(streamRenderer.AuthenticatedID(), &user); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error loading user", streamRenderer.AuthenticatedID()))
+		return Halt().WithError(derp.Wrap(err, location, "Error loading user", streamRenderer.AuthenticatedID()))
 	}
 
 	// Try to Publish the Stream to ActivityPub
 	streamService := factory.Stream()
 
 	if err := streamService.Publish(&user, streamRenderer.stream); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error publishing stream", streamRenderer.stream))
+		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamRenderer.stream))
 	}
 
 	return nil

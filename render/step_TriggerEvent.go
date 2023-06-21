@@ -10,11 +10,11 @@ type StepTriggerEvent struct {
 	Value string
 }
 
-func (step StepTriggerEvent) Get(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepTriggerEvent) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepTriggerEvent) Post(renderer Renderer, _ io.Writer) ExitCondition {
-	return ExitWithEvent(step.Event, step.Value)
+func (step StepTriggerEvent) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
+	return Continue().WithEvent(step.Event, step.Value)
 }

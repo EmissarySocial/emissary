@@ -13,16 +13,16 @@ import (
 // StepSortWidgets represents an action-step that can edit/update Container in a streamDraft.
 type StepSortWidgets struct{}
 
-func (step StepSortWidgets) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepSortWidgets) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
-func (step StepSortWidgets) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepSortWidgets) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	streamRenderer, ok := renderer.(*Stream)
 
 	if !ok {
-		return ExitError(derp.NewInternalError("render.StepSortWidgets.Post", "edit-widgets can only be used on Stream data"))
+		return Halt().WithError(derp.NewInternalError("render.StepSortWidgets.Post", "edit-widgets can only be used on Stream data"))
 	}
 
 	// Collect required services
@@ -34,7 +34,7 @@ func (step StepSortWidgets) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	data := mapof.NewString()
 
 	if err := context.Bind(&data); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepSortWidgets.Post", "Error binding form data"))
+		return Halt().WithError(derp.Wrap(err, "render.StepSortWidgets.Post", "Error binding form data"))
 	}
 
 	// Set up some variables

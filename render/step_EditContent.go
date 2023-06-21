@@ -15,16 +15,16 @@ type StepEditContent struct {
 	Format   string
 }
 
-func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	if err := renderer.executeTemplate(buffer, step.Filename, renderer); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditContent.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Get", "Error executing template"))
 	}
 
 	return nil
 }
 
-func (step StepEditContent) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	context := renderer.context()
 
@@ -38,7 +38,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) ExitCondition {
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, context.Request().Body); err != nil {
-			return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data"))
+			return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data"))
 		}
 
 		rawContent = buffer.String()
@@ -48,7 +48,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 		body := mapof.NewAny()
 		if err := context.Bind(&body); err != nil {
-			return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data"))
+			return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data"))
 		}
 
 		rawContent, _ = body.GetStringOK("content")
@@ -65,7 +65,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(stream, "Content edited"); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error saving stream"))
+		return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Post", "Error saving stream"))
 	}
 
 	// Success!

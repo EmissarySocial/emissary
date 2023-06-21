@@ -12,7 +12,7 @@ import (
 
 type StepEditConnection struct{}
 
-func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepEditConnection.Get"
 
@@ -30,29 +30,29 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) ExitCond
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return ExitError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider
 	form := manualProvider.ManualConfig()
 
 	// Write the form data
-	result, err := form.Editor(client, nil)
+	formHTML, err := form.Editor(client, nil)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error generating form editor"))
+		return Halt().WithError(derp.Wrap(err, location, "Error generating form editor"))
 	}
 
 	// Wrap the form as a ModalForm and return
-	result = WrapModalForm(context.Response(), renderer.URL(), result)
+	formHTML = WrapModalForm(context.Response(), renderer.URL(), formHTML)
 
 	// nolint:errcheck
-	buffer.Write([]byte(result))
+	buffer.Write([]byte(formHTML))
 
-	return ExitFullPage()
+	return Halt().AsFullPage()
 }
 
-func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepEditConnection.Post"
 
@@ -63,7 +63,7 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) ExitConditio
 	postData := mapof.NewAny()
 
 	if err := context.Bind(&postData); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error parsing POST data"))
+		return Halt().WithError(derp.Wrap(err, location, "Error parsing POST data"))
 	}
 
 	// Collect parameters and services
@@ -76,7 +76,7 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) ExitConditio
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return ExitError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider
@@ -84,12 +84,12 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) ExitConditio
 
 	// Apply the form data to the domain object
 	if err := form.SetAll(&client, postData, nil); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error updating domain object form"))
+		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
 	}
 
 	// Run post-configuration scripts, if any
 	if err := adapter.AfterConnect(renderer.factory(), &client); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error installing client"))
+		return Halt().WithError(derp.Wrap(err, location, "Error installing client"))
 	}
 
 	// Prevent nil maps
@@ -103,9 +103,8 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) ExitConditio
 	domainService := domainRenderer.domainService()
 
 	if err := domainService.Save(*domainRenderer.domain, "Updated connection"); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error saving domain object"))
+		return Halt().WithError(derp.Wrap(err, location, "Error saving domain object"))
 	}
 
-	CloseModal(context, "")
-	return ExitFullPage()
+	return Halt().WithEvent("closeModal", "").AsFullPage()
 }

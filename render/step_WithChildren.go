@@ -13,12 +13,12 @@ type StepWithChildren struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepWithChildren.Post"
 
@@ -28,11 +28,11 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) ExitCondi
 	children, err := factory.Stream().ListByParent(streamRenderer.stream.ParentID)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error listing children"))
+		return Halt().WithError(derp.Wrap(err, location, "Error listing children"))
 	}
 
 	child := model.NewStream()
-	status := NewPipelineStatus()
+	result := NewPipelineResult()
 
 	for children.Next(&child) {
 
@@ -41,21 +41,21 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) ExitCondi
 		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, "")
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, location, "Error creating renderer for child"))
+			return Halt().WithError(derp.Wrap(err, location, "Error creating renderer for child"))
 		}
 
 		// Execute the POST render pipeline on the child
-		childStatus := Pipeline(step.SubSteps).Post(factory, &childStream, buffer)
-		childStatus.Error = derp.Wrap(status.Error, location, "Error executing steps for child")
+		childResult := Pipeline(step.SubSteps).Post(factory, &childStream, buffer)
+		childResult.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
 
-		if status.Halt {
-			return ExitWithStatus(status)
+		if result.Halt {
+			return UseResult(result)
 		}
 
 		// Reset the child object so that old records don't bleed into new ones.
 		child = model.NewStream()
-		status.Merge(childStatus)
+		result.Merge(childResult)
 	}
 
-	return ExitWithStatus(status)
+	return UseResult(result)
 }

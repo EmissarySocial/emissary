@@ -14,27 +14,27 @@ type StepRedirectTo struct {
 	URL *template.Template
 }
 
-func (step StepRedirectTo) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepRedirectTo) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	return step.execute(renderer)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepRedirectTo) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepRedirectTo) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return step.execute(renderer)
 }
 
 // Redirect returns an HTTP 307 Temporary Redirect that works for both GET and POST methods
-func (step StepRedirectTo) execute(renderer Renderer) ExitCondition {
+func (step StepRedirectTo) execute(renderer Renderer) PipelineBehavior {
 
 	const location = "render.StepRedirectTo.execute"
 	var nextPage bytes.Buffer
 
 	if err := step.URL.Execute(&nextPage, renderer); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error evaluating 'url'"))
+		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
 	if err := renderer.context().Redirect(http.StatusTemporaryRedirect, nextPage.String()); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error redirecting to new page"))
+		return Halt().WithError(derp.Wrap(err, location, "Error redirecting to new page"))
 	}
 
 	return nil

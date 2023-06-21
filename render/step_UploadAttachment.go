@@ -14,11 +14,11 @@ type StepUploadAttachment struct {
 	Maximum int
 }
 
-func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	factory := renderer.factory()
 	context := renderer.context()
@@ -26,7 +26,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 	form, err := context.MultipartForm()
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading multipart form."))
+		return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading multipart form."))
 	}
 
 	files := form.File["file"]
@@ -58,7 +58,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 		source, err := fileHeader.Open()
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader))
+			return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading file from multi-part header", fileHeader))
 		}
 
 		defer source.Close()
@@ -67,7 +67,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 		width, height, err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source)
 
 		if err != nil {
-			return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment))
+			return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment to mediaserver", attachment))
 		}
 
 		// Update original dimensions
@@ -76,7 +76,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 
 		// Try to save
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment))
+			return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error saving attachment", attachment))
 		}
 
 		// EditorJS can only upload a single file at a time.
@@ -97,16 +97,16 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 			bytes, err := json.Marshal(response)
 
 			if err != nil {
-				return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error marshalling response", response))
+				return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error marshalling response", response))
 			}
 
 			// Write the response to the buffer
 			if _, err := buffer.Write(bytes); err != nil {
-				return ExitError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error writing response to buffer", response))
+				return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error writing response to buffer", response))
 			}
 
 			// Tell the client that we're done.
-			return ExitHalt().WithContentType("application/json")
+			return Halt().WithContentType("application/json")
 		}
 
 		// If we have reached the maximum configured number of attachments,
@@ -117,5 +117,5 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) ExitC
 	}
 
 	// After all files are uploaded, tell the client that we're done.
-	return Exit().WithEvent("attachments-updated", "true")
+	return Continue().WithEvent("attachments-updated", "true")
 }

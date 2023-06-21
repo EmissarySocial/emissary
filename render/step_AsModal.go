@@ -17,7 +17,7 @@ type StepAsModal struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepAsModal.Get"
 
@@ -27,14 +27,14 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 		modalContent, status := step.getModalContent(renderer)
 
 		if status.Halt {
-			return ExitWithStatus(status)
+			return UseResult(status)
 		}
 
 		if _, err := io.WriteString(buffer, modalContent); err != nil {
-			return ExitError(derp.Wrap(err, location, "Error writing from builder to buffer"))
+			return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))
 		}
 
-		result := ExitWithStatus(status).
+		result := UseResult(status).
 			WithHeader("HX-Retarget", "aside").
 			WithHeader("HX-Reswap", "innerHTML").
 			AsFullPage()
@@ -48,47 +48,47 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	// Otherwise, we can render the modal on a page background... IF we have a background view defined.
 	if step.Background == "" {
-		return ExitError(derp.NewBadRequestError(location, "render.StepAsModal.Get", "Cannot open this route directly."))
+		return Halt().WithError(derp.NewBadRequestError(location, "render.StepAsModal.Get", "Cannot open this route directly."))
 	}
 
 	// Full pages render the entire page, including the modal window
 	fullPageRenderer, err := renderer.clone(step.Background)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error creating fullPageRenderer"))
+		return Halt().WithError(derp.Wrap(err, location, "Error creating fullPageRenderer"))
 	}
 
 	htmlTemplate := renderer.factory().Domain().Theme().HTMLTemplate
 	var fullPage bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", fullPageRenderer); err != nil {
-		return ExitError(derp.Wrap(err, "render.StepAsModal.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, "render.StepAsModal.Get", "Error executing template"))
 	}
 
 	// Insert the modal into the page
 	asideBegin := "<aside>"
 	asideEnd := "</aside>"
-	modalString, status := step.getModalContent(renderer)
+	modalString, result := step.getModalContent(renderer)
 	fullPageString := strings.Replace(fullPage.String(), asideBegin+asideEnd, asideBegin+modalString+asideEnd, 1)
 
 	if _, err := io.WriteString(buffer, fullPageString); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error writing from builder to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))
 	}
 
-	return ExitWithStatus(status).AsFullPage()
+	return UseResult(result).AsFullPage()
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepAsModal) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepAsModal) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	// Write inner items
-	status := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer)
-	status.Error = derp.Wrap(status.Error, "render.StepAsModal.Post", "Error executing subSteps")
+	result := Pipeline(step.SubSteps).Post(renderer.factory(), renderer, buffer)
+	result.Error = derp.Wrap(result.Error, "render.StepAsModal.Post", "Error executing subSteps")
 
-	return ExitWithStatus(status).WithEvent("closeModal", "true")
+	return UseResult(result).WithEvent("closeModal", "true")
 }
 
-func (step StepAsModal) getModalContent(renderer Renderer) (string, PipelineStatus) {
+func (step StepAsModal) getModalContent(renderer Renderer) (string, PipelineResult) {
 
 	const location = "render.StepAsModal.getModalContent"
 
@@ -96,12 +96,12 @@ func (step StepAsModal) getModalContent(renderer Renderer) (string, PipelineStat
 	var buffer bytes.Buffer
 
 	// nolint:errcheck
-	status := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &buffer)
-	status.Error = derp.Wrap(status.Error, location, "Error executing subSteps")
+	result := Pipeline(step.SubSteps).Get(renderer.factory(), renderer, &buffer)
+	result.Error = derp.Wrap(result.Error, location, "Error executing subSteps")
 
-	if status.Halt {
-		return "", status
+	if result.Halt {
+		return "", result
 	}
 
-	return WrapModal(renderer.context().Response(), buffer.String(), step.Options...), status
+	return WrapModal(renderer.context().Response(), buffer.String(), step.Options...), result
 }

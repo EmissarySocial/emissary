@@ -7,8 +7,8 @@ import (
 )
 
 type Step interface {
-	Get(Renderer, io.Writer) ExitCondition
-	Post(Renderer, io.Writer) ExitCondition
+	Get(Renderer, io.Writer) PipelineBehavior
+	Post(Renderer, io.Writer) PipelineBehavior
 }
 
 // ExecutableStep uses an Step object to create a new action

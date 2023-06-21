@@ -11,12 +11,12 @@ type StepStreamPromoteDraft struct {
 	StateID string
 }
 
-func (step StepStreamPromoteDraft) Get(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepStreamPromoteDraft) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
-func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	streamRenderer := renderer.(*Stream)
 
@@ -26,7 +26,7 @@ func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) ExitCond
 	stream, err := factory.StreamDraft().Promote(renderer.objectID(), step.StateID)
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft"))
+		return Halt().WithError(derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft"))
 	}
 
 	// Push the newly updated stream back to the renderer so that subsequent

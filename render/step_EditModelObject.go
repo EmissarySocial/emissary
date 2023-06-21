@@ -16,7 +16,7 @@ type StepEditModelObject struct {
 }
 
 // Get displays a modal form that lets users enter data for their new model object.
-func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	const location = "render.StepEditModelObject.Get"
 
@@ -26,7 +26,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) ExitCon
 	result, err := form.Editor(schema, step.Form, renderer.object(), renderer.lookupProvider())
 
 	if err != nil {
-		return ExitError(derp.Wrap(err, location, "Error generating form"))
+		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
 	}
 
 	optionStrings := make([]string, len(step.Options))
@@ -43,7 +43,7 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) ExitCon
 }
 
 // Post initializes a new model object, populates it with data from the form, then saves it to the database.
-func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) ExitCondition {
+func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepEditModelObject.Post"
 
@@ -51,7 +51,7 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) ExitConditi
 	body := mapof.NewAny()
 
 	if err := renderer.context().Bind(&body); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error binding request body"))
+		return Halt().WithError(derp.Wrap(err, location, "Error binding request body"))
 	}
 
 	// Appy request body to the object (limited and validated by the form schema)
@@ -59,12 +59,12 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) ExitConditi
 	object := renderer.object()
 
 	if err := stepForm.SetAll(object, body, renderer.lookupProvider()); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error applying request body to model object", body))
+		return Halt().WithError(derp.Wrap(err, location, "Error applying request body to model object", body))
 	}
 
 	// Save the object to the database
 	if err := renderer.service().ObjectSave(object, "Edited"); err != nil {
-		return ExitError(derp.Wrap(err, location, "Error saving model object to database"))
+		return Halt().WithError(derp.Wrap(err, location, "Error saving model object to database"))
 	}
 
 	// Success!
