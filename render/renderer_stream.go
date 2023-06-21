@@ -100,11 +100,14 @@ func (w Stream) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := Pipeline(w.action.Steps).Get(w.factory(), &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Stream.Render", "Error generating HTML"))
+	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
+
+	if status.Error != nil {
+		return "", derp.Report(derp.Wrap(status.Error, "render.Stream.Render", "Error generating HTML"))
 	}
 
 	// Success!
+	status.Apply(w._context)
 	return template.HTML(buffer.String()), nil
 }
 

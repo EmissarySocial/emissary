@@ -13,7 +13,7 @@ type StepWithDraft struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	const location = "render.StepWithDraft.Get"
 
@@ -22,23 +22,18 @@ func (step StepWithDraft) Get(renderer Renderer, buffer io.Writer) error {
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting draft renderer")
+		return ExitError(derp.Wrap(err, location, "Error getting draft renderer"))
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := Pipeline(step.SubSteps).Get(factory, &draftRenderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing steps on draft")
-	}
+	status := Pipeline(step.SubSteps).Get(factory, &draftRenderer, buffer)
+	status.Error = derp.Wrap(status.Error, location, "Error executing steps on draft")
 
-	return nil
-}
-
-func (step StepWithDraft) UseGlobalWrapper() bool {
-	return useGlobalWrapper(step.SubSteps)
+	return ExitWithStatus(status)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	const location = "render.StepWithDraft.Post"
 
@@ -47,13 +42,12 @@ func (step StepWithDraft) Post(renderer Renderer, buffer io.Writer) error {
 	draftRenderer, err := streamRenderer.draftRenderer()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting draft renderer")
+		return ExitError(derp.Wrap(err, location, "Error getting draft renderer"))
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing steps on draft")
-	}
+	status := Pipeline(step.SubSteps).Post(factory, &draftRenderer, buffer)
+	status.Error = derp.Wrap(status.Error, location, "Error executing steps on draft")
 
-	return nil
+	return ExitWithStatus(status)
 }

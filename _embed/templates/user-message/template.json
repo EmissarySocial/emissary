@@ -72,16 +72,7 @@
 					{"step":"save"},
 					{"step":"publish"}
 				]},
-				{"step":"trigger-event", "event":{"refreshReplies":true}}
-			]
-		},
-
-		"profile": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"view-activitypub", "file":"profile"}
-				]}
+				{"step":"trigger-event", "event":"refreshReplies"}
 			]
 		},
 

@@ -5,20 +5,15 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type StepSetResponse struct{}
 
-func (step StepSetResponse) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepSetResponse) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepSetResponse) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	const location = "render.StepSetResponse.Post"
 
@@ -27,18 +22,16 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 		Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
 	}{}
 
-	spew.Dump(txn)
-
 	// Receive the transaction data
 	if err := renderer.context().Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding transaction")
+		return ExitError(derp.Wrap(err, location, "Error binding transaction"))
 	}
 
 	// Retrieve the currently authenticated user
 	user, err := renderer.getUser()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting user")
+		return ExitError(derp.Wrap(err, location, "Error getting user"))
 	}
 
 	// Create a new response object
@@ -53,10 +46,10 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) error {
 
 	// Save the response to the database
 	if err := responseService.SetResponse(&response); err != nil {
-		return derp.Wrap(err, location, "Error setting response")
+		return ExitError(derp.Wrap(err, location, "Error setting response"))
 	}
 
-	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
-
-	return nil
+	return Exit().WithEvent("refreshResponses", response.ObjectID)
+	//	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
+	// return nil
 }

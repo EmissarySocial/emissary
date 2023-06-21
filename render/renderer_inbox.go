@@ -54,12 +54,14 @@ func (w Inbox) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	if err := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer); err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String()))
+	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
+	if status.Error != nil {
+		return "", derp.Report(derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String()))
 	}
 
 	// Success!
+	status.Apply(w._context)
 	return template.HTML(buffer.String()), nil
 }
 

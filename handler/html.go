@@ -14,36 +14,39 @@ import (
 func renderHTML(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
 
 	const location = "handler.renderHTML"
+	var partialPage bytes.Buffer
 
-	// If this is a POST, then execute the action pipeline
-	if actionMethod == render.ActionMethodPost {
+	// Execute the action pipeline
+	pipeline := render.Pipeline(renderer.Action().Steps)
 
-		pipeline := render.Pipeline(renderer.Action().Steps)
+	status := pipeline.Execute(factory, renderer, &partialPage, actionMethod)
 
-		if err := pipeline.Execute(factory, renderer, ctx.Response().Writer, actionMethod); err != nil {
-			return derp.Wrap(err, location, "Error executing action pipeline", pipeline)
-		}
-		return nil
+	if status.Error != nil {
+		return derp.Wrap(status.Error, location, "Error executing action pipeline", pipeline)
 	}
 
-	// Partial Page requests are served directly from the renderer
-	if renderer.IsPartialRequest() || !renderer.UseGlobalWrapper() {
+	// Set Response Headers
+	response := ctx.Response()
+	header := response.Header()
+	header.Set("Content-Type", status.GetContentType())
 
-		result, err := renderer.Render()
+	for name, value := range status.Headers {
+		header.Set(name, value)
+	}
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error rendering partial page request")
-		}
-		return ctx.HTML(http.StatusOK, string(result))
+	// Partial page requests can be completed here.
+	if renderer.IsPartialRequest() || status.FullPage {
+		return ctx.HTML(status.GetStatusCode(), partialPage.String())
 	}
 
 	// Full Page requests require the theme service to wrap the rendered content
 	htmlTemplate := factory.Domain().Theme().HTMLTemplate
-	var buffer bytes.Buffer
+	renderer.SetContent(partialPage.String())
+	var fullPage bytes.Buffer
 
-	if err := htmlTemplate.ExecuteTemplate(&buffer, "page", renderer); err != nil {
+	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", renderer); err != nil {
 		return derp.Wrap(err, location, "Error rendering full-page content")
 	}
 
-	return ctx.HTML(http.StatusOK, buffer.String())
+	return ctx.HTML(http.StatusOK, fullPage.String())
 }

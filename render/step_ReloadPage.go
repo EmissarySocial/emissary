@@ -7,16 +7,11 @@ import (
 // StepReloadPage represents an action-step that forwards the user to a new page.
 type StepReloadPage struct{}
 
-func (step StepReloadPage) Get(renderer Renderer, _ io.Writer) error {
+func (step StepReloadPage) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
-}
-
-func (step StepReloadPage) UseGlobalWrapper() bool {
-	return true
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepReloadPage) Post(renderer Renderer, _ io.Writer) error {
-	renderer.context().Response().Header().Set("HX-Refresh", `true`)
-	return nil
+func (step StepReloadPage) Post(renderer Renderer, _ io.Writer) ExitCondition {
+	return Exit().WithHeader("HX-Refresh", "true")
 }

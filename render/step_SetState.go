@@ -11,21 +11,16 @@ type StepSetState struct {
 	StateID string
 }
 
-func (step StepSetState) Get(renderer Renderer, _ io.Writer) error {
+func (step StepSetState) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepSetState) UseGlobalWrapper() bool {
-	return true
-}
-
 // Post updates the stream with configured data, and moves the stream to a new state
-func (step StepSetState) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSetState) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	// Try to set the state via the Path interface.
-	object := renderer.object()
-	if err := renderer.schema().Set(object, "stateId", step.StateID); err != nil {
-		return derp.Wrap(err, "render.stepSetState.Post", "Error setting stateId", step.StateID)
+	if err := renderer.schema().Set(renderer.object(), "stateId", step.StateID); err != nil {
+		return ExitError(derp.Wrap(err, "render.stepSetState.Post", "Error setting stateId", step.StateID))
 	}
 
 	return nil

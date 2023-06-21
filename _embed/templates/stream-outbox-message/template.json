@@ -44,7 +44,7 @@
 			"steps":[
 				{"step":"set-query-param", "postTo":"/{{.StreamID}}/add-reply"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-				{"step":"trigger-event", "event":{"refreshReplies":true}}
+				{"step":"trigger-event", "event":"refreshReplies"}
 			]
 		},
 		"edit": {

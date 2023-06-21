@@ -14,7 +14,7 @@ type StepEditProperties struct {
 	Paths []string
 }
 
-func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	schema := renderer.schema()
 	streamRenderer := renderer.(*Stream)
@@ -68,27 +68,25 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) error {
 	html, err := form.Editor(schema, element, stream, renderer.lookupProvider())
 
 	if err != nil {
-		return derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML")
+		return ExitError(derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML"))
 	}
 
 	result := WrapModalForm(renderer.context().Response(), renderer.URL(), html)
-	_, err = buffer.Write([]byte(result))
+	if _, err = buffer.Write([]byte(result)); err != nil {
+		return ExitError(derp.Wrap(err, "render.StepEditProperties.Get", "Error writing response"))
+	}
 
-	return err
+	return nil
 }
 
-func (step StepEditProperties) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepEditProperties) Post(renderer Renderer, _ io.Writer) error {
+func (step StepEditProperties) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	const location = "render.StepEditProperties.Post"
 	context := renderer.context()
 	body := mapof.NewAny()
 
 	if err := context.Bind(&body); err != nil {
-		return derp.Wrap(err, location, "Error binding request body")
+		return ExitError(derp.Wrap(err, location, "Error binding request body"))
 	}
 
 	schema := renderer.schema()
@@ -98,13 +96,13 @@ func (step StepEditProperties) Post(renderer Renderer, _ io.Writer) error {
 	for _, path := range step.Paths {
 		if value, ok := body[path]; ok {
 			if err := schema.Set(stream, path, value); err != nil {
-				return derp.Wrap(err, location, "Error setting value", path, body[path])
+				return ExitError(derp.Wrap(err, location, "Error setting value", path, body[path]))
 			}
 		}
 	}
 
 	if err := schema.Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Error validating data", stream)
+		return ExitError(derp.Wrap(err, location, "Error validating data", stream))
 	}
 
 	CloseModal(context, "")

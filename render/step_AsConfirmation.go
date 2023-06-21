@@ -14,15 +14,10 @@ type StepAsConfirmation struct {
 }
 
 // Get displays a modal that asks users to continue or not.
-func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
-
-	header := renderer.context().Response().Header()
-	header.Set("HX-Retarget", "aside")
-	header.Set("HX-Push", "false")
-
-	b := html.New()
+func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	// Modal Content
+	b := html.New()
 	b.H1().InnerText(step.Title).Close()
 	b.Div().Class("space-below").InnerText(step.Message).Close()
 
@@ -37,15 +32,11 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) error {
 
 	// nolint:errcheck
 	io.WriteString(buffer, result)
-	return nil
-}
-
-func (step StepAsConfirmation) UseGlobalWrapper() bool {
-	return false
+	return ExitFullPage()
 }
 
 // Post does nothing. (Other steps in the pipeline will make changes)
-func (step StepAsConfirmation) Post(renderer Renderer, _ io.Writer) error {
+func (step StepAsConfirmation) Post(renderer Renderer, _ io.Writer) ExitCondition {
 	CloseModal(renderer.context(), "")
 	return nil
 }

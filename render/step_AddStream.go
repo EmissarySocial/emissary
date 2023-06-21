@@ -22,17 +22,25 @@ type StepAddStream struct {
 }
 
 // Get renders the HTML for this step - either a modal template selector, or the embedded edit form
-func (step StepAddStream) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepAddStream) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
+	// If this is an "Embedded" form, then call the appropriate fork.
 	if step.AsEmbed {
-		return step.getEmbed(renderer, buffer)
+		if err := step.getEmbed(renderer, buffer); err != nil {
+			return ExitError(err)
+		}
+		return ExitFullPage()
 	}
 
 	// Fall through to displaying the default modal
-	return step.getModal(renderer, buffer)
+	if err := step.getModal(renderer, buffer); err != nil {
+		return ExitError(err)
+	}
+
+	return ExitFullPage()
 }
 
-func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	const location = "render.StepAddStream.Post"
 
@@ -49,7 +57,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	newTemplate, err := factory.Template().Load(templateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Template not found", templateID)
+		return ExitError(derp.Wrap(err, location, "Template not found", templateID))
 	}
 
 	// Create the new child stream
@@ -57,12 +65,12 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	newStream, _, err := streamService.New("", primitive.NilObjectID, templateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating new stream", templateID)
+		return ExitError(derp.Wrap(err, location, "Error creating new stream", templateID))
 	}
 
 	// Validate and set the location for the new stream
 	if err := step.setLocation(renderer, &newTemplate, &newStream); err != nil {
-		return derp.Wrap(err, location, "Error getting location for new stream")
+		return ExitError(derp.Wrap(err, location, "Error getting location for new stream"))
 	}
 
 	// If this is a reply, then try to get a DocumentLink for the object we're replying to.
@@ -70,7 +78,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 		if documentLinker, ok := renderer.object().(DocumentLinker); ok {
 			newStream.InReplyTo = documentLinker.DocumentLink().URL
 		} else {
-			return derp.NewInternalError(location, "Replies can only be made to Stream and Message (DocumentLinker) objects.")
+			return ExitError(derp.NewInternalError(location, "Replies can only be made to Stream and Message (DocumentLinker) objects."))
 		}
 	}
 
@@ -78,7 +86,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 	newRenderer, err := NewStream(factory, context, newTemplate, &newStream, "view")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating renderer", newStream)
+		return ExitError(derp.Wrap(err, location, "Error creating renderer", newStream))
 	}
 
 	// Assign the current user as the author (with silent failure)
@@ -88,30 +96,31 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) error {
 
 	// If there is an "init" step for the stream's template, then execute it now
 	if action, ok := newTemplate.Action("init"); ok {
-		if err := Pipeline(action.Steps).Post(factory, &newRenderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Unable to execute 'init' action on stream")
+		status := Pipeline(action.Steps).Post(factory, &newRenderer, buffer)
+		status.Error = derp.Wrap(status.Error, location, "Unable to execute 'init' action on stream")
+
+		if status.Halt {
+			return ExitWithStatus(status)
 		}
 	}
 
 	// If this is an "embed" action, then also call the "create" action on the new stream
 	if step.AsEmbed {
 		if action, ok := newTemplate.Action("create"); ok {
-			if err := Pipeline(action.Steps).Post(factory, &newRenderer, buffer); err != nil {
-				return derp.Wrap(err, location, "Unable to execute 'create' action on stream")
+			status := Pipeline(action.Steps).Post(factory, &newRenderer, buffer)
+			status.Error = derp.Wrap(status.Error, location, "Unable to execute 'create' action on stream")
+
+			if status.Halt {
+				return ExitWithStatus(status)
 			}
 		}
 	}
 
 	// Execute additional "with-stream" steps
-	if err := Pipeline(step.WithNewStream).Post(factory, &newRenderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Unable to execute action steps on stream")
-	}
+	status := Pipeline(step.WithNewStream).Post(factory, &newRenderer, buffer)
+	status.Error = derp.Wrap(status.Error, location, "Unable to execute action steps on stream")
 
-	return nil
-}
-
-func (step StepAddStream) UseGlobalWrapper() bool {
-	return false
+	return ExitWithStatus(status).AsFullPage()
 }
 
 // getEmbed renders the HTML for an embedded form

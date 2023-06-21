@@ -12,15 +12,11 @@ type StepDeleteAttachments struct {
 	All bool
 }
 
-func (step StepDeleteAttachments) Get(renderer Renderer, _ io.Writer) error {
+func (step StepDeleteAttachments) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepDeleteAttachments) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) error {
+func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	const location = "renderer.StepDeleteAttachments.Post"
 
@@ -35,7 +31,7 @@ func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) error {
 
 		// Delete all attachments for this stream
 		if err := attachmentService.DeleteAll(objectType, objectID, "Deleted by {{.Author}}"); err != nil {
-			return derp.Wrap(err, location, "Error deleting all attachments")
+			return ExitError(derp.Wrap(err, location, "Error deleting all attachments"))
 		}
 
 	} else {
@@ -44,11 +40,11 @@ func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) error {
 		attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid attachment ID", attachmentIDString)
+			return ExitError(derp.Wrap(err, location, "Invalid attachment ID", attachmentIDString))
 		}
 
 		if err := attachmentService.DeleteByID(objectType, objectID, attachmentID); err != nil {
-			return derp.Wrap(err, location, "Error deleting attachment", attachmentID)
+			return ExitError(derp.Wrap(err, location, "Error deleting attachment", attachmentID))
 		}
 	}
 

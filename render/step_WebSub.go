@@ -16,17 +16,18 @@ type StepWebSub struct {
 }
 
 // Get is not required by WebSub.  So let's redirect to the primary action.
-func (step StepWebSub) Get(renderer Renderer, buffer io.Writer) error {
-	newLocation := list.RemoveLast(renderer.URL(), list.DelimiterSlash)
-	return renderer.context().Redirect(http.StatusSeeOther, newLocation)
-}
+func (step StepWebSub) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
-func (step StepWebSub) UseGlobalWrapper() bool {
-	return false
+	// TODO: MEDIUM: This may not jive with the new ExitCondition model.  Check accordingly.
+	newLocation := list.RemoveLast(renderer.URL(), list.DelimiterSlash)
+	if err := renderer.context().Redirect(http.StatusSeeOther, newLocation); err != nil {
+		return ExitError(derp.Wrap(err, "render.StepWebSub.Get", "Error writing redirection", newLocation))
+	}
+	return nil
 }
 
 // Post accepts a WebSub request, verifies it, and potentially creates a new Follower record.
-func (step StepWebSub) Post(renderer Renderer, _ io.Writer) error {
+func (step StepWebSub) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	var request struct {
 		Mode         string `form:"hub.mode"`
@@ -37,7 +38,7 @@ func (step StepWebSub) Post(renderer Renderer, _ io.Writer) error {
 	}
 
 	if err := renderer.context().Bind(&request); err != nil {
-		return derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data")
+		return ExitError(derp.Wrap(err, "render.StepWebSub.Post", "Error parsing form data"))
 	}
 
 	// Try to validate and save the follower via the queue.
@@ -63,6 +64,7 @@ func (step StepWebSub) Post(renderer Renderer, _ io.Writer) error {
 		request.LeaseSeconds,
 	))
 
+	// TODO: MEDIUM: This may not jive with the new ExitCondition model.  Check accordingly.
 	// Set Status Code 202 (Accepted) to conform to WebSub spec
 	// https://www.w3.org/TR/websub/#subscription-response-details
 	renderer.context().Response().WriteHeader(202)

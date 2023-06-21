@@ -4,13 +4,12 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model/step"
-	"github.com/benpate/derp"
 )
 
 type Pipeline []step.Step
 
 // Execute switches between GET and POST methods for this pipeline, based on the provided ActionMethod
-func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
+func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.Writer, actionMethod ActionMethod) PipelineStatus {
 
 	if actionMethod == ActionMethodGet {
 		return pipeline.Get(factory, renderer, buffer)
@@ -20,48 +19,50 @@ func (pipeline Pipeline) Execute(factory Factory, renderer Renderer, buffer io.W
 }
 
 // Get runs all of the pipeline steps using the GET method
-func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (pipeline Pipeline) Get(factory Factory, renderer Renderer, buffer io.Writer) PipelineStatus {
 
-	const location = "render.pipeline.Get"
+	status := NewPipelineStatus()
 
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		if err := ExecutableStep(step).Get(renderer, buffer); err != nil {
+		// Execute the step and collect the results in the pipeline status
+		resultFn := ExecutableStep(step).Get(renderer, buffer)
 
-			// ErrorCode 200 == StatusOK, which means everything is fine, we just want to halt execution of this pipeline
-			if derp.ErrorCode(err) == 200 {
-				break
-			}
+		if resultFn != nil {
+			resultFn(&status)
+		}
 
-			// Everything else is a legitimate error, so FAIL
-			return derp.Wrap(err, location, "Error GET-ing from step")
+		if status.Halt {
+			return status
 		}
 	}
 
-	return nil
+	return status
 }
 
 // Post runs runs all of the pipeline steps using the POST method
-func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writer) error {
+func (pipeline Pipeline) Post(factory Factory, renderer Renderer, buffer io.Writer) PipelineStatus {
 
-	const location = "render.pipeline.Post"
+	status := NewPipelineStatus()
 
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		if err := ExecutableStep(step).Post(renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Error POST-ing to step")
+		resultFn := ExecutableStep(step).Post(renderer, buffer)
+
+		if resultFn != nil {
+			resultFn(&status)
+		}
+
+		if status.Halt {
+			return status
 		}
 	}
 
-	return nil
+	return status
 }
 
 func (pipeline Pipeline) IsEmpty() bool {
 	return len(pipeline) == 0
-}
-
-func HaltPipeline() error {
-	return derp.New(200, "FAKE ERROR TO HALT EXECUTION", "")
 }

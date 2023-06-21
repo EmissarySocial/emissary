@@ -7,9 +7,8 @@ import (
 )
 
 type Step interface {
-	Get(Renderer, io.Writer) error
-	Post(Renderer, io.Writer) error
-	UseGlobalWrapper() bool // TODO: should have a better solution for using/skipping the global wrapper than this function
+	Get(Renderer, io.Writer) ExitCondition
+	Post(Renderer, io.Writer) ExitCondition
 }
 
 // ExecutableStep uses an Step object to create a new action
@@ -125,9 +124,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.UploadAttachment:
 		return StepUploadAttachment(s)
-
-	case step.ViewActivityPub:
-		return StepViewActivityPub(s)
 
 	case step.ViewHTML:
 		return StepViewHTML(s)

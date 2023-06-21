@@ -15,20 +15,16 @@ type StepEditContent struct {
 	Format   string
 }
 
-func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	if err := renderer.executeTemplate(buffer, step.Filename, renderer); err != nil {
-		return derp.Wrap(err, "render.StepEditContent.Get", "Error executing template")
+		return ExitError(derp.Wrap(err, "render.StepEditContent.Get", "Error executing template"))
 	}
 
 	return nil
 }
 
-func (step StepEditContent) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
+func (step StepEditContent) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	context := renderer.context()
 
@@ -42,7 +38,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, context.Request().Body); err != nil {
-			return derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data")
+			return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data"))
 		}
 
 		rawContent = buffer.String()
@@ -52,7 +48,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
 
 		body := mapof.NewAny()
 		if err := context.Bind(&body); err != nil {
-			return derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data")
+			return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data"))
 		}
 
 		rawContent, _ = body.GetStringOK("content")
@@ -69,7 +65,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) error {
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(stream, "Content edited"); err != nil {
-		return derp.Wrap(err, "render.StepEditContent.Post", "Error saving stream")
+		return ExitError(derp.Wrap(err, "render.StepEditContent.Post", "Error saving stream"))
 	}
 
 	// Success!

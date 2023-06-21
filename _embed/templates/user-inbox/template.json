@@ -90,7 +90,8 @@
 						},
 						{"step":"save"}
 					]},
-					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+					{"step":"trigger-event", "event":"closeModal"},
+					{"step":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
@@ -110,7 +111,8 @@
 						},
 						{"step":"save"}
 					]},
-					{"step":"trigger-event", "event":{"closeModal":true, "refreshPage":true}}
+					{"step":"trigger-event", "event":"closeModal"},
+					{"step":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
@@ -129,7 +131,7 @@
 					{"step":"save"}
 				]},
 				{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"},
-				{"step":"trigger-event", "event":{"refreshPage":true}}
+				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"inbox-folder-delete": {

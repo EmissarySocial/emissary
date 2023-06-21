@@ -18,51 +18,31 @@ type StepIfCondition struct {
 }
 
 // Get displays a form where users can update stream data
-func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) error {
-
-	const location = "renderer.StepIfCondition.Get"
-
-	factory := renderer.factory()
-
-	if step.evaluateCondition(renderer) {
-		if err := Pipeline(step.Then).Get(factory, renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Error executing 'then' sub-steps")
-		}
-
-		return nil
-	}
-
-	if err := Pipeline(step.Otherwise).Get(factory, renderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing 'otherwise' sub-steps")
-	}
-
-	return nil
-}
-
-func (step StepIfCondition) UseGlobalWrapper() bool {
-	return useGlobalWrapper(step.Then) && useGlobalWrapper(step.Otherwise)
+func (step StepIfCondition) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepIfCondition) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodPost)
+}
 
-	const location = "renderer.StepIfCondition.Post"
+// Get displays a form where users can update stream data
+func (step StepIfCondition) execute(renderer Renderer, buffer io.Writer, method ActionMethod) ExitCondition {
+
+	const location = "renderer.StepIfCondition.execute"
 
 	factory := renderer.factory()
 
 	if step.evaluateCondition(renderer) {
-		if err := Pipeline(step.Then).Post(factory, renderer, buffer); err != nil {
-			return derp.Wrap(err, location, "Error executing 'then' sub-steps")
-		}
-
-		return nil
+		status := Pipeline(step.Then).Execute(factory, renderer, buffer, method)
+		status.Error = derp.Wrap(status.Error, location, "Error executing 'then' sub-steps")
+		return ExitWithStatus(status)
 	}
 
-	if err := Pipeline(step.Otherwise).Post(factory, renderer, buffer); err != nil {
-		return derp.Wrap(err, location, "Error executing 'otherwise' sub-steps")
-	}
-
-	return nil
+	status := Pipeline(step.Otherwise).Get(factory, renderer, buffer)
+	status.Error = derp.Wrap(status.Error, location, "Error executing 'otherwise' sub-steps")
+	return ExitWithStatus(status)
 }
 
 // evaluateCondition executes the conditional template and

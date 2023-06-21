@@ -13,16 +13,12 @@ type StepSave struct {
 	Comment *template.Template
 }
 
-func (step StepSave) Get(renderer Renderer, _ io.Writer) error {
+func (step StepSave) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepSave) UseGlobalWrapper() bool {
-	return true
-}
-
 // Post saves the object to the database
-func (step StepSave) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSave) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	modelService := renderer.service()
 	object := renderer.object()
@@ -30,13 +26,13 @@ func (step StepSave) Post(renderer Renderer, _ io.Writer) error {
 
 	if setter, ok := modelService.(service.AuthorSetter); ok {
 		if err := setter.SetAuthor(object, renderer.AuthenticatedID()); err != nil {
-			return derp.Wrap(err, "render.StepSave.Post", "Error setting author")
+			return ExitError(derp.Wrap(err, "render.StepSave.Post", "Error setting author"))
 		}
 	}
 
 	// Try to update the stream
 	if err := modelService.ObjectSave(object, comment); err != nil {
-		return derp.Wrap(err, "render.StepSave.Post", "Error saving model object")
+		return ExitError(derp.Wrap(err, "render.StepSave.Post", "Error saving model object"))
 	}
 
 	return nil

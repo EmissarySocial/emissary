@@ -18,26 +18,22 @@ type StepSetData struct {
 	Defaults mapof.Any // values to set into the object IFF they are currently empty.
 }
 
-func (step StepSetData) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepSetData) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	if err := step.setURLPaths(renderer); err != nil {
-		return derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL")
+		return ExitError(derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL"))
 	}
 
 	return nil
 }
 
-func (step StepSetData) UseGlobalWrapper() bool {
-	return true
-}
-
 // Post updates the stream with approved data from the request body.
-func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSetData) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	const location = "render.StepSetData.Post"
 
 	if err := step.setURLPaths(renderer); err != nil {
-		return derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL")
+		return ExitError(derp.Wrap(err, "render.StepSetData.Get", "Error setting data from URL"))
 	}
 
 	object := renderer.object()
@@ -51,7 +47,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
 		if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {
 			result := derp.Wrap(err, location, "Error binding body")
 			derp.SetErrorCode(result, http.StatusBadRequest)
-			return result
+			return ExitError(result)
 		}
 
 		// Put approved form data into the stream
@@ -59,7 +55,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
 			if err := schema.Set(object, p, inputs[p]); err != nil {
 				result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
 				derp.SetErrorCode(result, http.StatusBadRequest)
-				return result
+				return ExitError(result)
 			}
 		}
 	}
@@ -69,7 +65,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
 		if err := schema.Set(object, key, value); err != nil {
 			result := derp.Wrap(err, location, "Error setting value from template.json", key, value)
 			derp.SetErrorCode(result, http.StatusBadRequest)
-			return result
+			return ExitError(result)
 		}
 	}
 
@@ -80,7 +76,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) error {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value)
 				derp.SetErrorCode(result, http.StatusBadRequest)
-				return result
+				return ExitError(result)
 			}
 		}
 	}

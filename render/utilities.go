@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
@@ -163,11 +162,6 @@ func CloseModal(ctx echo.Context, url string) {
 	}
 }
 
-// CloseTooltip sets Response header to close a tooltip
-func CloseTooltip(ctx echo.Context) {
-	ctx.Response().Header().Set("HX-Trigger", `{"closeTooltip":true}`)
-}
-
 func RefreshPage(ctx echo.Context) {
 	header := ctx.Response().Header()
 	header.Set("HX-Trigger", "refreshPage")
@@ -189,19 +183,6 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 	}
 
 	return model.NewAuthorization()
-}
-
-// useGlobalWrapper returns TRUE if all steps can use the global wrapper
-// if any cannot, then it returns false.
-func useGlobalWrapper(steps []step.Step) bool {
-
-	for _, item := range steps {
-		if !ExecutableStep(item).UseGlobalWrapper() {
-			return false
-		}
-	}
-
-	return true
 }
 
 // parseOptions parses a string of options into a map of key/value pairs

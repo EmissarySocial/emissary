@@ -13,23 +13,19 @@ type StepWithPrevSibling struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithPrevSibling) Get(renderer Renderer, buffer io.Writer) error {
-	return step.Execute(renderer, buffer, ActionMethodGet)
-}
-
-func (step StepWithPrevSibling) UseGlobalWrapper() bool {
-	return useGlobalWrapper(step.SubSteps)
+func (step StepWithPrevSibling) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post executes the subSteps on the parent Stream
-func (step StepWithPrevSibling) Post(renderer Renderer, buffer io.Writer) error {
-	return step.Execute(renderer, buffer, ActionMethodPost)
+func (step StepWithPrevSibling) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodPost)
 }
 
 // Post executes the subSteps on the parent Stream
-func (step StepWithPrevSibling) Execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
+func (step StepWithPrevSibling) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) ExitCondition {
 
-	const location = "render.StepWithPrevSibling.Post"
+	const location = "render.StepWithPrevSibling.execute"
 
 	var sibling model.Stream
 
@@ -38,7 +34,7 @@ func (step StepWithPrevSibling) Execute(renderer Renderer, buffer io.Writer, act
 	stream := streamRenderer.stream
 
 	if err := factory.Stream().LoadPrevSibling(stream.ParentID, stream.Rank, &sibling); err != nil {
-		return derp.Wrap(err, location, "Error listing parent")
+		return ExitError(derp.Wrap(err, location, "Error listing parent"))
 	}
 
 	// Make a renderer with the new parent stream
@@ -46,13 +42,11 @@ func (step StepWithPrevSibling) Execute(renderer Renderer, buffer io.Writer, act
 	siblingRenderer, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &sibling, "view")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating renderer for sibling")
+		return ExitError(derp.Wrap(err, location, "Error creating renderer for sibling"))
 	}
 
 	// Execute the POST render pipeline on the parent
-	if err := Pipeline(step.SubSteps).Execute(factory, &siblingRenderer, buffer, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Error executing steps for parent")
-	}
-
-	return nil
+	status := Pipeline(step.SubSteps).Execute(factory, &siblingRenderer, buffer, actionMethod)
+	status.Error = derp.Wrap(status.Error, location, "Error executing steps for parent")
+	return ExitWithStatus(status)
 }

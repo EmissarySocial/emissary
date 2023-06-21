@@ -142,12 +142,6 @@ func (w Common) IsPartialRequest() bool {
 	return false
 }
 
-// UseGlobalWrapper returns TRUE if every step in this request uses the common site chrome.
-// It returns FALSE if any of its sub-steps must not use the common wrapper.
-func (w Common) UseGlobalWrapper() bool {
-	return useGlobalWrapper(w.action.Steps)
-}
-
 // templateRole returns the the role that the current Template performs in the system.
 // Used for selecting eligible child templates.
 func (w Common) templateRole() string {
@@ -180,8 +174,16 @@ func (w Common) GetBool(name string) bool {
 	return w.requestData.GetBool(name)
 }
 
+func (w Common) GetContent() template.HTML {
+	return w.GetHTML("content")
+}
+
 func (w Common) GetFloat(name string) float64 {
 	return w.requestData.GetFloat(name)
+}
+
+func (w Common) GetHTML(name string) template.HTML {
+	return template.HTML(w.requestData.GetString(name))
 }
 
 func (w Common) GetInt(name string) int {
@@ -196,23 +198,27 @@ func (w Common) GetString(name string) string {
 	return w.requestData.GetString(name)
 }
 
-func (w Common) setBool(name string, value bool) {
+func (w Common) SetBool(name string, value bool) {
 	w.requestData.SetBool(name, value)
 }
 
-func (w Common) setFloat(name string, value float64) {
+func (w Common) SetContent(value string) {
+	w.SetString("content", value)
+}
+
+func (w Common) SetFloat(name string, value float64) {
 	w.requestData.SetFloat(name, value)
 }
 
-func (w Common) setInt(name string, value int) {
+func (w Common) SetInt(name string, value int) {
 	w.requestData.SetInt(name, value)
 }
 
-func (w Common) setInt64(name string, value int64) {
+func (w Common) SetInt64(name string, value int64) {
 	w.requestData.SetInt64(name, value)
 }
 
-func (w Common) setString(name string, value string) {
+func (w Common) SetString(name string, value string) {
 	w.requestData.SetString(name, value)
 }
 

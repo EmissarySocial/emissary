@@ -11,16 +11,12 @@ type StepStreamPromoteDraft struct {
 	StateID string
 }
 
-func (step StepStreamPromoteDraft) Get(renderer Renderer, _ io.Writer) error {
+func (step StepStreamPromoteDraft) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepStreamPromoteDraft) UseGlobalWrapper() bool {
-	return true
-}
-
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
-func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) error {
+func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	streamRenderer := renderer.(*Stream)
 
@@ -30,7 +26,7 @@ func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) error {
 	stream, err := factory.StreamDraft().Promote(renderer.objectID(), step.StateID)
 
 	if err != nil {
-		return derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft")
+		return ExitError(derp.Wrap(err, "renderer.StepStreamPromoteDraft.Post", "Error publishing draft"))
 	}
 
 	// Push the newly updated stream back to the renderer so that subsequent

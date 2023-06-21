@@ -13,25 +13,21 @@ type StepWithFollowing struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithFollowing) Get(renderer Renderer, buffer io.Writer) error {
-	return step.doStep(renderer, buffer, ActionMethodGet)
-}
-
-func (step StepWithFollowing) UseGlobalWrapper() bool {
-	return useGlobalWrapper(step.SubSteps)
+func (step StepWithFollowing) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodGet)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepWithFollowing) Post(renderer Renderer, buffer io.Writer) error {
-	return step.doStep(renderer, buffer, ActionMethodPost)
+func (step StepWithFollowing) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer, buffer, ActionMethodPost)
 }
 
-func (step StepWithFollowing) doStep(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) error {
+func (step StepWithFollowing) execute(renderer Renderer, buffer io.Writer, actionMethod ActionMethod) ExitCondition {
 
-	const location = "render.StepWithFollowing.doStep"
+	const location = "render.StepWithFollowing.execute"
 
 	if !renderer.IsAuthenticated() {
-		return derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action")
+		return ExitError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
 	// Collect required services and values
@@ -46,7 +42,7 @@ func (step StepWithFollowing) doStep(renderer Renderer, buffer io.Writer, action
 	if (followingToken != "") && (followingToken != "new") {
 		if err := followingService.LoadByToken(renderer.AuthenticatedID(), followingToken, &following); err != nil {
 			if actionMethod == ActionMethodGet {
-				return derp.Wrap(err, location, "Unable to load Following", followingToken)
+				return ExitError(derp.Wrap(err, location, "Unable to load Following", followingToken))
 			}
 			// Fall through for POSTS..  we're just creating a new following.
 		}
@@ -56,13 +52,12 @@ func (step StepWithFollowing) doStep(renderer Renderer, buffer io.Writer, action
 	subRenderer, err := NewModel(factory, context, followingService, &following, renderer.template(), renderer.ActionID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create sub-renderer")
+		return ExitError(derp.Wrap(err, location, "Unable to create sub-renderer"))
 	}
 
 	// Execute the POST render pipeline on the child
-	if err := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Error executing steps for child")
-	}
+	status := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
+	status.Error = derp.Wrap(status.Error, location, "Error executing steps for child")
 
-	return nil
+	return ExitWithStatus(status)
 }

@@ -16,16 +16,12 @@ type StepSort struct {
 	Message string
 }
 
-func (step StepSort) Get(renderer Renderer, _ io.Writer) error {
+func (step StepSort) Get(renderer Renderer, _ io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepSort) UseGlobalWrapper() bool {
-	return true
-}
-
 // Post updates the stream with approved data from the request body.
-func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
+func (step StepSort) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	var formPost struct {
 		Keys []string `form:"keys"`
@@ -33,7 +29,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 
 	// Collect form POST information
 	if err := renderer.context().Bind(&formPost); err != nil {
-		return derp.NewBadRequestError("render.StepSort.Post", "Error binding body")
+		return ExitError(derp.NewBadRequestError("render.StepSort.Post", "Error binding body"))
 	}
 
 	for index, id := range formPost.Keys {
@@ -45,7 +41,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 		objectID, err := primitive.ObjectIDFromHex(id)
 
 		if err != nil {
-			return derp.Wrap(err, "render.StepSort.Post", "Invalid objectId", id)
+			return ExitError(derp.Wrap(err, "render.StepSort.Post", "Invalid objectId", id))
 		}
 
 		criteria := exp.Equal(step.Keys, objectID)
@@ -54,7 +50,7 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 		object, err := renderer.service().ObjectLoad(criteria)
 
 		if err != nil {
-			return derp.Wrap(err, "render.StepSort.Post", "Error loading object with criteria: ", criteria)
+			return ExitError(derp.Wrap(err, "render.StepSort.Post", "Error loading object with criteria: ", criteria))
 		}
 
 		// If the rank for this object has not changed, then don't waste time saving it again.
@@ -69,20 +65,17 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) error {
 		// Update the object
 		if setter, ok := object.(schema.IntSetter); ok {
 			if ok := setter.SetInt(step.Values, newRank); !ok {
-				return derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank)
+				return ExitError(derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank))
 			}
 		}
 
 		// Try to save back to the database
 		if err := renderer.service().ObjectSave(object, step.Message); err != nil {
-			return derp.Wrap(err, "render.StepSort.Post", "Error saving record tot he database", object)
+			return ExitError(derp.Wrap(err, "render.StepSort.Post", "Error saving record tot he database", object))
 		}
 
 	}
 
-	// Do not swap on the client side.  We don't want to reload the entire page.
-	renderer.context().Response().Header().Set("HX-Reswap", "none")
-
-	// Done.  Nothing more to do here.
-	return nil
+	// Done. Do not swap on the client side.  We don't want to reload the entire page.
+	return Exit().WithHeader("HX-Reswap", "none")
 }

@@ -35,20 +35,22 @@ type Renderer interface {
 	Action() model.Action                // The pipeline action to be taken by this renderer
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
 	IsPartialRequest() bool              // Returns TRUE if this is an HTMX request for a page fragment
-	UseGlobalWrapper() bool              // Returns TRUE if this renderer uses the common site chrome.
 	UserCan(string) bool                 // Returns TRUE if the signed-in user has access to the named action
 	AuthenticatedID() primitive.ObjectID // Returns the ID of the signed-in user (or zero if not signed in)
 
+	SetContent(string)
+	GetContent() template.HTML
 	GetBool(name string) bool
 	GetFloat(name string) float64
+	GetHTML(name string) template.HTML
 	GetInt(name string) int
 	GetInt64(name string) int64
 	GetString(name string) string
-	setBool(name string, value bool)
-	setFloat(name string, value float64)
-	setInt(name string, value int)
-	setInt64(name string, value int64)
-	setString(name string, value string)
+	SetBool(name string, value bool)
+	SetFloat(name string, value float64)
+	SetInt(name string, value int)
+	SetInt64(name string, value int64)
+	SetString(name string, value string)
 
 	factory() Factory                    // The service factory
 	context() *steranko.Context          // The request context embedded in the Renderer
@@ -68,21 +70,3 @@ type Renderer interface {
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }
-
-/*
-// TODO: LOW: This is expensive and abstract.  Minimize the use of this function as much as possible.
-// This function is only used in one place, so perhaps we can just inline it?
-func NewRenderer(factory Factory, ctx *steranko.Context, object data.Object, actionID string) (Renderer, error) {
-
-	switch object := object.(type) {
-
-	case *model.Stream:
-		return NewStreamWithoutTemplate(factory, ctx, object, actionID)
-
-	case *model.User:
-		return NewProfile(factory, ctx, object, actionID)
-	}
-
-	return nil, derp.NewInternalError("render.NewRenderer", "Unrecognized object", object)
-}
-*/

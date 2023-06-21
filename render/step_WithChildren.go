@@ -13,16 +13,12 @@ type StepWithChildren struct {
 	SubSteps []step.Step
 }
 
-func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepWithChildren) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 	return nil
 }
 
-func (step StepWithChildren) UseGlobalWrapper() bool {
-	return useGlobalWrapper(step.SubSteps)
-}
-
 // Post updates the stream with approved data from the request body.
-func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
+func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	const location = "render.StepWithChildren.Post"
 
@@ -32,10 +28,11 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
 	children, err := factory.Stream().ListByParent(streamRenderer.stream.ParentID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing children")
+		return ExitError(derp.Wrap(err, location, "Error listing children"))
 	}
 
 	child := model.NewStream()
+	status := NewPipelineStatus()
 
 	for children.Next(&child) {
 
@@ -44,17 +41,21 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) error {
 		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, "")
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating renderer for child")
+			return ExitError(derp.Wrap(err, location, "Error creating renderer for child"))
 		}
 
 		// Execute the POST render pipeline on the child
-		if err := Pipeline(step.SubSteps).Post(factory, &childStream, buffer); err != nil {
-			return derp.Wrap(err, location, "Error executing steps for child")
+		childStatus := Pipeline(step.SubSteps).Post(factory, &childStream, buffer)
+		childStatus.Error = derp.Wrap(status.Error, location, "Error executing steps for child")
+
+		if status.Halt {
+			return ExitWithStatus(status)
 		}
 
 		// Reset the child object so that old records don't bleed into new ones.
 		child = model.NewStream()
+		status.Merge(childStatus)
 	}
 
-	return nil
+	return ExitWithStatus(status)
 }

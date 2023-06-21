@@ -14,9 +14,27 @@ type StepViewHTML struct {
 }
 
 // Get renders the Stream HTML to the context
-func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
-	/* TODO: Re-implement this later.
+	if step.Method != "post" {
+		return step.execute(renderer, buffer)
+	}
+
+	return nil
+}
+
+func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) ExitCondition {
+
+	if step.Method != "get" {
+		return step.execute(renderer, buffer)
+	}
+
+	return nil
+}
+
+func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) ExitCondition {
+
+	/* TODO: MEDIUM: Re-implement client-side caching later.
 	Caching leads to problems on INDEX-ONLY pages because you may have added/changed/deleted a child
 	object, but the parent page is still cached.  So, you need to invalidate the cache for the parent.
 
@@ -41,34 +59,11 @@ func (step StepViewHTML) Get(renderer Renderer, buffer io.Writer) error {
 	}
 	*/
 
-	if (step.Method == "get") || (step.Method == "both") {
-		return step.render(renderer, buffer)
-	}
-
-	return nil
-}
-
-func (step StepViewHTML) UseGlobalWrapper() bool {
-	return true
-}
-
-func (step StepViewHTML) Post(renderer Renderer, buffer io.Writer) error {
-
-	if (step.Method == "post") || (step.Method == "both") {
-		return step.render(renderer, buffer)
-	}
-
-	return nil
-}
-
-func (step StepViewHTML) render(renderer Renderer, buffer io.Writer) error {
-	context := renderer.context()
-	header := context.Response().Header()
-
-	header.Set("Vary", "Cookie, HX-Request")
-	// header.Set("Cache-Control", "private")
-
 	// TODO: LOW: We can do a better job with caching.  If a page is public, then caching should be public, too.
+	// context := renderer.context()
+	// header := context.Response().Header()
+	// header.Set("Vary", "Cookie, HX-Request")
+	// header.Set("Cache-Control", "private")
 
 	var filename string
 
@@ -78,14 +73,14 @@ func (step StepViewHTML) render(renderer Renderer, buffer io.Writer) error {
 		filename = renderer.ActionID()
 	}
 
-	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
-	object := renderer.object()
-	header.Set("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339))
-	header.Set("ETag", object.ETag())
-
 	if err := renderer.executeTemplate(buffer, filename, renderer); err != nil {
-		return derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template")
+		return ExitError(derp.Wrap(err, "render.StepViewHTML.Get", "Error executing template"))
 	}
 
-	return nil
+	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
+	object := renderer.object()
+
+	return Exit().
+		WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
+		WithHeader("ETag", object.ETag())
 }

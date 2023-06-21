@@ -14,28 +14,28 @@ type StepRedirectTo struct {
 	URL *template.Template
 }
 
-func (step StepRedirectTo) Get(renderer Renderer, buffer io.Writer) error {
-	return step.redirect(renderer)
-}
-
-func (step StepRedirectTo) UseGlobalWrapper() bool {
-	return true
+func (step StepRedirectTo) Get(renderer Renderer, buffer io.Writer) ExitCondition {
+	return step.execute(renderer)
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepRedirectTo) Post(renderer Renderer, _ io.Writer) error {
-	return step.redirect(renderer)
+func (step StepRedirectTo) Post(renderer Renderer, _ io.Writer) ExitCondition {
+	return step.execute(renderer)
 }
 
 // Redirect returns an HTTP 307 Temporary Redirect that works for both GET and POST methods
-func (step StepRedirectTo) redirect(renderer Renderer) error {
+func (step StepRedirectTo) execute(renderer Renderer) ExitCondition {
 
-	const location = "render.StepRedirectTo.Redirect"
+	const location = "render.StepRedirectTo.execute"
 	var nextPage bytes.Buffer
 
 	if err := step.URL.Execute(&nextPage, renderer); err != nil {
-		return derp.Wrap(err, location, "Error evaluating 'url'")
+		return ExitError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
-	return renderer.context().Redirect(http.StatusTemporaryRedirect, nextPage.String())
+	if err := renderer.context().Redirect(http.StatusTemporaryRedirect, nextPage.String()); err != nil {
+		return ExitError(derp.Wrap(err, location, "Error redirecting to new page"))
+	}
+
+	return nil
 }

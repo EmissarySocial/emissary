@@ -16,7 +16,7 @@ type StepDelete struct {
 }
 
 // Get displays a customizable confirmation form for the delete
-func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
+func (step StepDelete) Get(renderer Renderer, buffer io.Writer) ExitCondition {
 
 	b := html.New()
 
@@ -38,19 +38,15 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) error {
 	// nolint:errcheck
 	io.WriteString(buffer, result)
 
-	return nil
-}
-
-func (step StepDelete) UseGlobalWrapper() bool {
-	return true
+	return ExitFullPage()
 }
 
 // Post removes the object from the database (likely using a soft-delete, though)
-func (step StepDelete) Post(renderer Renderer, _ io.Writer) error {
+func (step StepDelete) Post(renderer Renderer, _ io.Writer) ExitCondition {
 
 	// Delete the object via the model service.
 	if err := renderer.service().ObjectDelete(renderer.object(), "Deleted"); err != nil {
-		return derp.Wrap(err, "render.StepDelete.Post", "Error deleting stream")
+		return ExitError(derp.Wrap(err, "render.StepDelete.Post", "Error deleting stream"))
 	}
 
 	CloseModal(renderer.context(), "")
