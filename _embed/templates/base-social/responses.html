@@ -2,7 +2,7 @@
 	This template expects a "Responses" renderer.  It will not work with any other renderer.
 -->
 
-<div hx-get="{{.InternalURL}}/responses" hx-trigger="refreshResponses[detail=='{{.ObjectID}}'] from:window" hx-target="this" hx-push-url="false"
+<div hx-get="{{.InternalURL}}/responses" hx-trigger="refreshResponses[detail.value=='{{.ObjectID}}'] from:window" hx-target="this" hx-push-url="false"
 	old="{{.InternalURL}}']" class="text-gray space-below" style="margin-top:8px;">
 	{{- if .UserID.IsZero -}}
 	[User Not Signed In]

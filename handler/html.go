@@ -25,14 +25,8 @@ func renderHTML(factory *domain.Factory, ctx *steranko.Context, renderer render.
 		return derp.Wrap(status.Error, location, "Error executing action pipeline", pipeline)
 	}
 
-	// Set Response Headers
-	response := ctx.Response()
-	header := response.Header()
-	header.Set("Content-Type", status.GetContentType())
-
-	for name, value := range status.Headers {
-		header.Set(name, value)
-	}
+	// Copy status values into the Response...
+	status.Apply(ctx)
 
 	// Partial page requests can be completed here.
 	if renderer.IsPartialRequest() || status.FullPage {

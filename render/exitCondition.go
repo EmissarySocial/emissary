@@ -50,16 +50,20 @@ func (status PipelineStatus) GetStatusCode() int {
 
 func (status PipelineStatus) Apply(ctx echo.Context) {
 
-	header := ctx.Response().Header()
+	response := ctx.Response()
+	header := response.Header()
+	header.Set("Content-Type", status.GetContentType())
 
-	if status.ContentType != "" {
-		header.Set("Content-Type", status.ContentType)
-	}
-
+	// Copy HT-Trigger events into response
 	if len(status.Events) > 0 {
 		if hxTrigger, err := json.Marshal(status.Events); err == nil {
 			header.Set("HX-Trigger", string(hxTrigger))
 		}
+	}
+
+	// Copy OTHER headers into response
+	for name, value := range status.Headers {
+		header.Set(name, value)
 	}
 }
 
