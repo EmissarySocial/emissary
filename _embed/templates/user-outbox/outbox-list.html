@@ -15,7 +15,7 @@
 			{{- end -}}
 			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{$author.ImageURL}}" class="circle-64">
+					<img src="{{$author.ImageURL}}" class="circle-64" loading="lazy">
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">
@@ -30,7 +30,7 @@
 						<div class="h-summary black">{{.ContentHTML}}</div>
 						{{- if ne .ImageURL ""}}
 							<div style="margin-top:var(--rhythm);">
-								<img src="{{.ImageURL}}?width=600" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+								<img src="{{.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
 							</div>
 						{{- end -}}
 					</div>

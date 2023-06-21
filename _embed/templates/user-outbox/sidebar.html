@@ -10,7 +10,7 @@
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
 			{{- if ne "" .ActivityPubAvatarURL -}}
-				<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" style="height:100%; width:100%;">
+				<img class="circle aspect-square u-photo" src="{{.ActivityPubAvatarURL}}" loading="lazy" style="height:100%; width:100%;">
 			{{- else -}}
 				<div class="circle placeholder-gray" style="width:90%; max-width:200px; margin:0px auto;"></div>
 			{{- end -}}

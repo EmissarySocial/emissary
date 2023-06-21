@@ -4,7 +4,7 @@
 	
 	<div class="h-card flex-row">
 		{{- if ne "" $author.ImageURL -}}
-			<img src="{{$author.ImageURL}}" class="circle u-photo turboclick" style="height:2em; width:2em;">
+			<img src="{{$author.ImageURL}}" class="circle u-photo" loading="lazy" style="height:2em; width:2em;">
 		{{- end -}}
 
 		{{- if ne "" $author.Name -}}
