@@ -68,6 +68,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-html":
 		return NewViewHTML(stepInfo)
 
+	case "view-json":
+		return NewViewJSONLD(stepInfo)
+
 	// STREAM-SPECIFIC STEPS
 
 	case "edit-content":

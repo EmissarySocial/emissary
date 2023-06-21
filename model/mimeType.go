@@ -10,6 +10,8 @@ const MimeTypeEventStream = "text/event-stream"
 
 const MimeTypeJSON = "application/json"
 
+const MimeTypeJSONLD = "application/ld+json"
+
 const MimeTypeJSONFeed = "application/feed+json"
 
 const MimeTypeHTML = "text/html"

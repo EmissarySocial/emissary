@@ -128,11 +128,14 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.UploadAttachment:
 		return StepUploadAttachment(s)
 
+	case step.ViewFeed:
+		return StepViewFeed(s)
+
 	case step.ViewHTML:
 		return StepViewHTML(s)
 
-	case step.ViewFeed:
-		return StepViewFeed(s)
+	case step.ViewJSONLD:
+		return StepViewJSONLD(s)
 
 	case step.WebSub:
 		return StepWebSub(s)
