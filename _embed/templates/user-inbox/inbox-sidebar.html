@@ -42,9 +42,9 @@
 	</div>
 
 	<div 
-		hx-get="/@me/inbox/inbox-sidebar" 
+		hx-get="/@me/inbox/inbox-sidebar?folderId={{$selectedID.Hex}}" 
 		hx-swap="outerHTML" 
-		hx-trigger="refreshSidebar from:body" 
+		hx-trigger="refreshSidebar from:window" 
 		hx-push-url="false" 
 		hx-target="#app-sidebar">
 	</div>

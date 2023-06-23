@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,11 +19,15 @@ type Inbox struct {
 	collection   data.Collection
 	blockService *Block
 	host         string
+	counter      int
+	mutex        *sync.Mutex
 }
 
 // NewInbox returns a fully populated Inbox service
 func NewInbox() Inbox {
-	return Inbox{}
+	return Inbox{
+		mutex: &sync.Mutex{},
+	}
 }
 
 /******************************************
@@ -86,10 +91,8 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
 	}
 
-	// Calculate the rank for this message, using the number of messages with an identical PublishDate
-	if err := service.CalculateRank(message); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error calculating rank", message)
-	}
+	// Calculate a (hopefully unique) rank for this message
+	service.CalculateRank(message)
 
 	// Save the value to the database
 	if err := service.collection.Save(message, note); err != nil {
@@ -270,16 +273,19 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 
 // CalculateRank generates a unique rank for the message based on the PublishDate and the number of messages
 // that already exist in the database with this PublishDate.
-func (service *Inbox) CalculateRank(message *model.Message) error {
+func (service *Inbox) CalculateRank(message *model.Message) {
 
-	count, err := queries.CountMessages(service.collection, message.UserID, message.FolderID, message.PublishDate)
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
 
-	if err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error calculating rank", message)
-	}
+	// Increment the counter (MOD 1000) so that we have precise ordering of messages
+	service.counter = (service.counter + 1) % 1000
 
-	message.Rank = (message.PublishDate * 1000) + int64(count)
-	return nil
+	message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
+}
+
+func (service *Inbox) CountMessagesAfterRank(userID primitive.ObjectID, folderID primitive.ObjectID, minRank int64) (int, error) {
+	return queries.CountMessagesAfterRank(service.collection, userID, folderID, minRank)
 }
 
 func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {

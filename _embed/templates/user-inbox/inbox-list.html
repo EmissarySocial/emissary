@@ -1,7 +1,7 @@
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected}}
 
-{{- $inbox := .Inbox.Top12.Slice -}}
+{{- $inbox := .Inbox.Top12.ByRank.Slice -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $internalID := .QueryParam "origin.followingId" -}}
 {{- $rank := .QueryParam "rank" -}}
@@ -42,9 +42,9 @@
 			class="message"
 			style="max-width:640px;"
 			hx-get="/@me/messages/{{.MessageID.Hex}}?&origin.followingId={{$internalID}}"
-			old-hx-get="/@me/inbox/message-{{$folder.Layout | lowerCase }}?messageId={{.MessageID.Hex}}&origin.followingId={{$internalID}}"
 			hx-trigger="click"
-			hx-push-url="false">
+			hx-push-url="false"
+			script="install listItem(folderId:'{{$folderID}}', rank:'{{.Rank}}')">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
 				{{- template "inbox-list-social" $message -}}
@@ -77,17 +77,21 @@
 		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
 
-	<!-- Target zone to update the folder read date once we scroll down this far -->
+	<!-- Target zone to update the folder read date once we scroll down this far
 	{{- if eq "" $internalID -}}
 		<div
-			hx-post="/@me/pub/folder/readDate?folderId={{$folderID}}&readDate={{$lastMessage.Rank}}"
+			hx-post="/@me/pub/folder/readDate?folderId={{$folderID}}&rank={{$lastMessage.Rank}}"
 			hx-push-url="false"
 			hx-trigger="intersect once">
 		</div>
 	{{- end -}}
+	-->
 
-{{- else if eq "" (.QueryParam "remote") -}}
+{{- else -}}
 
-	<h2 class="text-gray">There are no new messages in this inbox.</h2>
+	{{if eq "" (.QueryParam "remote") -}}
+		<h2 class="text-gray">This inbox is empty.  Try following a new person or website.</h2>
+	{{- end -}}
 
+	<div style="height:100vw"></div>
 {{- end -}}

@@ -1,7 +1,7 @@
-behavior message(folderId, readDate)
+behavior message(folderId, rank)
 
 	init
-		fetch `/@me/pub/folder/readDate?folderId=${folderId}&readDate=${readDate}` with method:"POST"
+		fetch `/@me/pub/folder/readDate?folderId=${folderId}&rank=${rank}` with method:"POST"
 	end
 
 	on keydown[key=="ArrowLeft"] from window

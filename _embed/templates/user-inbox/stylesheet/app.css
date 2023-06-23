@@ -68,15 +68,15 @@ main {
 	position:relative;
 	top:-2px;
 	padding:2px 8px;
-	border-radius:8px;
+	border-radius:1em;
 	background-color:var(--gray15);
 	color:var(--gray80);
 	font-size:12px;
-	font-weight:800;
+	font-weight:400;
 	vertical-align: middle;
 }
 
 .pill.pill-red {
-	background-color:var(--red60);
+	background-color:var(--red50);
 	color:var(--white);
 }

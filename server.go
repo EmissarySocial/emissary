@@ -198,7 +198,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("@me/messages/:message", handler.PostMessage(factory))
 	e.GET("@me/messages/:message/:action", handler.GetMessage(factory))
 	e.POST("@me/messages/:message/:action", handler.PostMessage(factory))
-	e.POST("/@me/pub/folder/readDate", handler.PostInboxFolderReadDate(factory))
+	e.POST("/@me/pub/folder/readDate", handler.PostFolderReadDate(factory))
 
 	// ActivityPub Routes
 	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))

@@ -17,7 +17,7 @@ import (
 )
 
 type Inbox struct {
-	user *model.User
+	_user *model.User
 	Common
 }
 
@@ -39,7 +39,7 @@ func NewInbox(factory Factory, ctx *steranko.Context, user *model.User, actionID
 	}
 
 	return Inbox{
-		user:   user,
+		_user:  user,
 		Common: common,
 	}, nil
 }
@@ -68,7 +68,7 @@ func (w Inbox) Render() (template.HTML, error) {
 // View executes a separate view for this Inbox
 func (w Inbox) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewInbox(w._factory, w._context, w.user, actionID)
+	renderer, err := NewInbox(w._factory, w._context, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.Inbox.View", "Error creating Inbox renderer")
@@ -83,7 +83,7 @@ func (w Inbox) NavigationID() string {
 }
 
 func (w Inbox) PageTitle() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w Inbox) Permalink() string {
@@ -95,11 +95,11 @@ func (w Inbox) Token() string {
 }
 
 func (w Inbox) object() data.Object {
-	return w.user
+	return w._user
 }
 
 func (w Inbox) objectID() primitive.ObjectID {
-	return w.user.UserID
+	return w._user.UserID
 }
 
 func (w Inbox) objectType() string {
@@ -119,7 +119,7 @@ func (w Inbox) templateRole() string {
 }
 
 func (w Inbox) clone(action string) (Renderer, error) {
-	return NewInbox(w._factory, w._context, w.user, action)
+	return NewInbox(w._factory, w._context, w._user, action)
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
@@ -133,7 +133,7 @@ func (w Inbox) UserCan(actionID string) bool {
 
 	authorization := w.authorization()
 
-	return action.UserCan(w.user, &authorization)
+	return action.UserCan(w._user, &authorization)
 }
 
 /******************************************
@@ -141,7 +141,7 @@ func (w Inbox) UserCan(actionID string) bool {
  ******************************************/
 
 func (w Inbox) UserID() string {
-	return w.user.UserID.Hex()
+	return w._user.UserID.Hex()
 }
 
 // Myself returns TRUE if the current user is viewing their own profile
@@ -149,38 +149,38 @@ func (w Inbox) Myself() bool {
 	authorization := getAuthorization(w._context)
 
 	if err := authorization.Valid(); err == nil {
-		return authorization.UserID == w.user.UserID
+		return authorization.UserID == w._user.UserID
 	}
 
 	return false
 }
 
 func (w Inbox) Username() string {
-	return w.user.Username
+	return w._user.Username
 }
 
 func (w Inbox) FollowerCount() int {
-	return w.user.FollowerCount
+	return w._user.FollowerCount
 }
 
 func (w Inbox) FollowingCount() int {
-	return w.user.FollowingCount
+	return w._user.FollowingCount
 }
 
 func (w Inbox) BlockCount() int {
-	return w.user.BlockCount
+	return w._user.BlockCount
 }
 
 func (w Inbox) DisplayName() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w Inbox) ProfileURL() string {
-	return w.user.ProfileURL
+	return w._user.ProfileURL
 }
 
 func (w Inbox) ImageURL() string {
-	return w.user.ActivityPubAvatarURL()
+	return w._user.ActivityPubAvatarURL()
 }
 
 /******************************************
@@ -287,7 +287,6 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
-		ObjectID("folderId").
 		Int("rank")
 
 	criteria := exp.And(

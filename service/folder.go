@@ -229,11 +229,23 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
  * Other Behaviors
  ******************************************/
 
-// UpdateReadDate uses an optimized query to update the read date of a particular folder **IF** the
-// new readDate is greater than the current readDate.
-func (service *Folder) UpdateReadDate(userID primitive.ObjectID, folderID primitive.ObjectID, readDate int64) error {
+// CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
+// then updates the folder's "unreadCount" and "readDate" fields
+func (service *Folder) CalculateUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, minRank int64) error {
 
-	if err := queries.UpdateFolderReadDate(service.collection, userID, folderID, readDate); err != nil {
+	unreadCount, err := service.inboxService.CountMessagesAfterRank(userID, folderID, minRank)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Folder", "Error counting unread messages", userID, folderID, minRank)
+	}
+
+	return service.SetUnreadCount(userID, folderID, minRank, unreadCount)
+}
+
+// SetUnreadCount uses an optimized query to update the the "readDate" and "unreadCount" of a particular folder
+func (service *Folder) SetUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, readDate int64, unreadCount int) error {
+
+	if err := queries.UpdateFolderUnreadCount(service.collection, userID, folderID, readDate, unreadCount); err != nil {
 		return derp.Wrap(err, "service.Folder", "Error updating folder read date", userID, folderID, readDate)
 	}
 

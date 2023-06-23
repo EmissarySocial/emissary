@@ -55,11 +55,14 @@
 		},
 		"inbox-sidebar": {
 			"roles": ["self"],
-			"step":"view-html"
+			"step":"view-html",
+			"file":"inbox-sidebar-remote"
 		},
 		"inbox-list": {
 			"roles": ["self"],
-			"step":"view-html"
+			"steps":[
+				{"step":"view-html"}
+			]
 		},
 		"inbox-list-before": {
 			"roles": ["self"],

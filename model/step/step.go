@@ -115,7 +115,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "sort-attachments":
 		return NewSortAttachments(stepInfo)
 
-		// CLIENT-SIDE CONTROLS
+	// CLIENT-SIDE CONTROLS
 
 	case "as-modal":
 		return NewAsModal(stepInfo)
