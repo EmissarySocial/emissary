@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/mmcdole/gofeed"
 )
@@ -44,7 +45,8 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	for _, rssItem := range rssFeed.Items {
-		if document, err := service.httpClient.Load(rssItem.Link); err == nil {
+		defaultValue := convert.RSSToActivity(rssFeed, rssItem)
+		if document, err := service.httpClient.Load(rssItem.Link, defaultValue); err == nil {
 			if err := service.saveDocument(following, &document); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error saving document", document))
 			}

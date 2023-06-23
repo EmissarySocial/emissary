@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
@@ -182,7 +183,7 @@ func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
 }
 
 func (w Message) InReplyTo() streams.Document {
-	result, _ := w._factory.ActivityStreams().Load(w._message.InReplyTo)
+	result, _ := w._factory.ActivityStreams().Load(w._message.InReplyTo, mapof.NewAny())
 	return result
 }
 

@@ -242,6 +242,7 @@ func (service *Following) saveDocument(following *model.Following, document *str
 	message.ImageURL = document.Image().URL()
 	message.AttributedTo = convert.ActivityPubPersonLinks(document.AttributedTo())
 	message.ContentHTML = document.Content()
+	message.PublishDate = document.Published().Unix()
 
 	// Save the message to the database
 	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {

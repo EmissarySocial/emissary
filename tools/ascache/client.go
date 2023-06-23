@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type Client struct {
@@ -61,7 +62,7 @@ func (client *Client) start() {
  * Hannibal HTTP Client Methods
  ******************************************/
 
-func (client *Client) Load(uri string) (streams.Document, error) {
+func (client *Client) Load(uri string, defaultValue map[string]any) (streams.Document, error) {
 
 	// Search the cache for the document
 	if client.collection != nil {
@@ -77,7 +78,7 @@ func (client *Client) Load(uri string) (streams.Document, error) {
 	}
 
 	// Pass the request to the inner client
-	result, err := client.innerClient.Load(uri)
+	result, err := client.innerClient.Load(uri, defaultValue)
 
 	if err != nil {
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
@@ -117,7 +118,7 @@ func (client *Client) refresh(uri string, value CachedValue) {
 	}
 
 	// Pass the request to the inner client
-	if result, err := client.innerClient.Load(uri); err == nil {
+	if result, err := client.innerClient.Load(uri, mapof.NewAny()); err == nil {
 		client.save(uri, result)
 	}
 }
@@ -149,7 +150,7 @@ func (client *Client) save(uri string, document streams.Document) {
 
 	// If this is a reply, then cache the parent document as well
 	if cachedValue.InReplyTo != "" {
-		go client.Load(cachedValue.InReplyTo)
+		go client.Load(cachedValue.InReplyTo, mapof.NewAny())
 	}
 }
 

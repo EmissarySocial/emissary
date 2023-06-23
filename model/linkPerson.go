@@ -26,6 +26,10 @@ func (person PersonLink) IsEmpty() bool {
 	return person.UserID.IsZero() && (person.ProfileURL == "") && (person.Name == "")
 }
 
+func (person PersonLink) NotEmpty() bool {
+	return !person.IsEmpty()
+}
+
 func (person PersonLink) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{

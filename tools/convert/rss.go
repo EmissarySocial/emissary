@@ -4,39 +4,48 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/vocab"
 	htmlTools "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
 )
 
 // RSSToActivity populates an Activity object from a gofeed.Feed and gofeed.Item
-func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) model.Message {
+func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) mapof.Any {
 
-	message := model.NewMessage()
-
-	message.Origin = model.OriginLink{
-		URL:   feed.FeedLink,
-		Label: feed.Title,
+	result := mapof.Any{
+		vocab.PropertyID:        rssItem.Link,
+		vocab.PropertyName:      htmlTools.ToText(rssItem.Title),
+		vocab.PropertyPublished: rssDate(rssItem.PublishedParsed),
 	}
 
-	if feed.Image != nil {
-		message.Origin.ImageURL = feed.Image.URL
+	if summary := rssSummary(rssItem); summary != "" {
+		result[vocab.PropertySummary] = summary
 	}
 
-	message.URL = rssItem.Link
-	message.Label = htmlTools.ToText(rssItem.Title)
-	message.Summary = rssSummary(rssItem)
-	message.ImageURL = rssImageURL(rssItem)
-	message.ContentHTML = bluemonday.UGCPolicy().Sanitize(rssItem.Content)
-	message.PublishDate = rssDate(rssItem.PublishedParsed)
-	message.SetAttributedTo(rssAuthor(feed, rssItem))
+	if imageURL := rssImageURL(feed, rssItem); imageURL != "" {
+		result[vocab.PropertyImage] = imageURL
+	}
 
-	return message
+	if contentHTML := rssContent(rssItem.Content); contentHTML != "" {
+		result[vocab.PropertyContent] = contentHTML
+	}
+
+	if attributedTo := rssAuthor(feed, rssItem); attributedTo.NotEmpty() {
+		result[vocab.PropertyAttributedTo] = attributedTo.GetJSONLD()
+	}
+
+	return result
 }
 
 func rssSummary(rssItem *gofeed.Item) string {
-	return rssItem.Description
+	return htmlTools.ToText(rssItem.Description)
+}
+
+func rssContent(value string) string {
+	return bluemonday.UGCPolicy().Sanitize(value)
 }
 
 // rssAuthor returns all information about the actor of an RSS item
@@ -84,7 +93,7 @@ func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 }
 
 // rssImageURL returns the URL of the first image in the item's enclosure list.
-func rssImageURL(rssItem *gofeed.Item) string {
+func rssImageURL(rssFeed *gofeed.Feed, rssItem *gofeed.Item) string {
 
 	if rssItem == nil {
 		return ""

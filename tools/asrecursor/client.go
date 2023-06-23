@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 )
 
 type Recursor struct {
@@ -21,9 +22,9 @@ func New(innerClient streams.Client, maxDepth int) *Recursor {
 	return result
 }
 
-func (client *Recursor) Load(uri string) (streams.Document, error) {
+func (client *Recursor) Load(uri string, defaultValue map[string]any) (streams.Document, error) {
 
-	result, err := client.innerClient.Load(uri)
+	result, err := client.innerClient.Load(uri, defaultValue)
 
 	if err != nil {
 		return result, derp.Wrap(err, "asrecursor.Load", "Error loading document from inner client")
@@ -49,7 +50,7 @@ func (client *Recursor) recurse(document streams.Document, depth int) {
 	// RULE: If "document" is only a string/id, then load it.
 	if document.IsString() {
 		var err error
-		document, err = client.innerClient.Load(document.ID())
+		document, err = client.innerClient.Load(document.ID(), mapof.NewAny())
 
 		if err != nil {
 			return
