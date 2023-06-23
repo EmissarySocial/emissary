@@ -57,10 +57,7 @@ func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
 	service.locations = locations
 
 	// Load all templates from the filesystem
-	if err := service.loadTemplates(); err != nil {
-		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Error loading templates from filesystem"))
-		return
-	}
+	service.loadTemplates()
 
 	// Try to watch the template directory for changes
 	go service.watch()
@@ -102,7 +99,7 @@ func (service *ServerEmail) watch() {
 	}
 }
 
-func (service *ServerEmail) loadTemplates() error {
+func (service *ServerEmail) loadTemplates() {
 
 	templates := template.New("")
 
@@ -111,11 +108,11 @@ func (service *ServerEmail) loadTemplates() error {
 		filesystem, err := service.filesystemService.GetFS(location)
 
 		if err != nil {
-			return derp.Report(err)
+			derp.Report(err)
 		}
 
 		if err := loadHTMLTemplateFromFilesystem(filesystem, templates, service.funcMap); err != nil {
-			return derp.Report(err)
+			derp.Report(err)
 		}
 
 		fmt.Println("... email: " + location["location"])
@@ -123,8 +120,6 @@ func (service *ServerEmail) loadTemplates() error {
 
 	// If we got this far, then we're good to go!
 	service.templates = templates
-
-	return nil
 }
 
 func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateName string, from string, to []string, subject string, data any) error {
