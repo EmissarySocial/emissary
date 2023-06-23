@@ -3,6 +3,8 @@
 <div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
 
 	<title>{{.FollowerCount}} Followers | {{.DisplayName}}</title>
+	<link rel="stylesheet" href="/.templates/base-social/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	{{- template "inbox-sidebar" $folders -}}
 
