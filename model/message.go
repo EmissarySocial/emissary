@@ -15,7 +15,7 @@ type Message struct {
 	FolderID     primitive.ObjectID         `json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Message is stored
 	SocialRole   string                     `json:"socialRole"   bson:"socialRole,omitempty"`   // Role this message plays in social integrations ("Article", "Note", etc)
 	Origin       OriginLink                 `json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Message
-	URL          string                     `json:"url"          bson:"url,omitempty"`          // URL of this Message
+	URL          string                     `json:"url"          bson:"url"`                    // URL of this Message
 	Label        string                     `json:"label"        bson:"label,omitempty"`        // Label of this Message
 	Summary      string                     `json:"summary"      bson:"summary,omitempty"`      // Summary of this Message
 	ImageURL     string                     `json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the image associated with this Message

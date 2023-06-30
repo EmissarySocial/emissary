@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"net/http"
+	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
@@ -42,6 +43,11 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	following.SetLinks(discoverLinks_RSS(response, body)...)
 
 	// If we have a feed, then import all of the items from it.
+
+	// Before inserting, sort the items chronologically so that new feeds appear correctly in the UX
+	sort.SliceStable(rssFeed.Items, func(i, j int) bool {
+		return rssFeed.Items[i].PublishedParsed.Unix() < rssFeed.Items[j].PublishedParsed.Unix()
+	})
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	for _, rssItem := range rssFeed.Items {
