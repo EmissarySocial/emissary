@@ -165,9 +165,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Save the new session into the factory.
 		factory.Session = session
-
-		// Refresh cached services
-		// TODO: CRITICAL: There are potential circular references here.  Perhaps move all init parameters to the Refresh methods??
+		
+		// REFRESH CACHED SERVICES
 
 		// Populate Attachment Service
 		factory.attachmentService.Refresh(
