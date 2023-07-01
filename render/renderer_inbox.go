@@ -292,6 +292,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
 		exp.Equal("folderId", folderID),
+		exp.Equal("deleteDate", 0),
 		expBuilder.Evaluate(w._context.Request().URL.Query()),
 	)
 
