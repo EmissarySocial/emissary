@@ -70,22 +70,12 @@
 	<div 
 		hx-get="/@me/inbox/inbox-list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&remote=true"
 		hx-push-url="false" 
-		hx-trigger="intersect once delay:100ms" 
+		hx-trigger="intersect once" 
 		hx-target="this" 
 		hx-swap="outerHTML">
 		<hr>
 		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
-
-	<!-- Target zone to update the folder read date once we scroll down this far
-	{{- if eq "" $internalID -}}
-		<div
-			hx-post="/@me/pub/folder/readDate?folderId={{$folderID}}&rank={{$lastMessage.Rank}}"
-			hx-push-url="false"
-			hx-trigger="intersect once">
-		</div>
-	{{- end -}}
-	-->
 
 {{- else -}}
 
