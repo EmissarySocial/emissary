@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benpate/rosetta/html"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -144,6 +145,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"emojiFavorites": func() []string {
 			return []string{"👍", "👎", "😄", "🎉", "🙏", "🧐", "😕"}
+		},
+
+		"dump": func(values ...any) string {
+			spew.Dump(values)
+			return ""
 		},
 	}
 }
