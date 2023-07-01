@@ -82,8 +82,8 @@ github.com/benpate/exp-builder v0.7.3 h1:m5ySKAKRvVqsiwrxkSlvU1G9vumm4bQs6l1KBrQ
 github.com/benpate/exp-builder v0.7.3/go.mod h1:MhOPZyI2CY+9FuOXScxNCNeOt2D111eFPjNFBqxaVTg=
 github.com/benpate/form v0.16.0 h1:F9x34g+A/U42ulT2EA4dKAUm/UQJ6zKYNV9l64WXEr0=
 github.com/benpate/form v0.16.0/go.mod h1:tfZN4vpn8zilxDPsJNoMRvqlUrjeMlo1hdVrjxhDRes=
-github.com/benpate/hannibal v0.4.2 h1:JSOSx9FdixprJbMxDQFkdlA5VvdaYIbyBM+qyOueLPA=
-github.com/benpate/hannibal v0.4.2/go.mod h1:PP7Y/HEqjrsikJyIlroHrFgKDQyx2H4/pye2buQMgfE=
+github.com/benpate/hannibal v0.4.3 h1:EzAcmdcc9rXLjTTpDUtoEPcB3uyLbBCAJaKq1zpbv0w=
+github.com/benpate/hannibal v0.4.3/go.mod h1:BO7LF9KmEXDHCbgK4GgzGDgiNgnvTCGOLQUWSUsTQfA=
 github.com/benpate/html v0.16.3 h1:SOmpI6/0NbnRh34P6TSDeVuQ3//+toGiwCfE5tTbNzU=
 github.com/benpate/html v0.16.3/go.mod h1:9QmC5wd7po95c4ZgmhQYKeIOPlwB6M6Gt4WFH3nDSN0=
 github.com/benpate/icon v0.4.0 h1:HWOMaYwxPsLb3OPX02+j05FwCq376rcAfeGG1kfDXyc=
@@ -92,10 +92,10 @@ github.com/benpate/mediaserver v0.10.6 h1:AoEXDXUUTGvrODWS4pkn4BIhbP6yWIyU10caN/
 github.com/benpate/mediaserver v0.10.6/go.mod h1:oEeppF+kAtTzDhJP9lpyMWec+LHks16leSK8OiuFjw0=
 github.com/benpate/remote v0.10.4 h1:PkhGzN7YGZiS5VfKK/xghk3Gio2+yjkAL1B1iU16muc=
 github.com/benpate/remote v0.10.4/go.mod h1:AllAEWRr2+R9hB0MttrutZX5qLBYP2YujMAKqqW3oGU=
-github.com/benpate/rosetta v0.16.1 h1:E+ljh+0QB9cVAvWo3bq6K9mrNsUc/GnzV8rG5Z7V/Fo=
-github.com/benpate/rosetta v0.16.1/go.mod h1:XWXwxhf+JQ/roniEDAaiIHThrn4gW33KhSJHVq2FNO8=
-github.com/benpate/sherlock v0.1.1 h1:ZPVbiMSiYFIC2LgEfz2PPHCNbX/4UPJ2DzwKZ/3FrZ0=
-github.com/benpate/sherlock v0.1.1/go.mod h1:yEWExjjA1llHEkToB8DO8y2m6B/UZuqlbUloM0/CI5c=
+github.com/benpate/rosetta v0.16.2 h1:ZjXLqHmCCLTFvsEfmxwyydqeRcHyI0ZTmHEnnMuN1Mc=
+github.com/benpate/rosetta v0.16.2/go.mod h1:XWXwxhf+JQ/roniEDAaiIHThrn4gW33KhSJHVq2FNO8=
+github.com/benpate/sherlock v0.2.0 h1:/BMVQ/FpvjeQnKr1RGHq2lewHslG5iWkXMK5iGnX1NE=
+github.com/benpate/sherlock v0.2.0/go.mod h1:yG4yH+/SGG1J4kykHiTRjH7T2ArwH1VI6KxgnnI3mlY=
 github.com/benpate/steranko v0.13.5 h1:me336zqWH8Vhto/i+J76Ompsd/ldIbUPH/y5YqL3Y/c=
 github.com/benpate/steranko v0.13.5/go.mod h1:ZQehr+zKFJkmDovVtAQIUe5gaffGaMJZZdOVUtD9cPE=
 github.com/benpate/table v0.5.4 h1:beuLX05USdT2MCwYnUjO81mhippDaN5X0Yteu5zNThk=
