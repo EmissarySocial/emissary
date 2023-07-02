@@ -275,6 +275,13 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 // that already exist in the database with this PublishDate.
 func (service *Inbox) CalculateRank(message *model.Message) {
 
+	// RULE: Do not reset the rank for items that already have one. This prevents
+	// older messages from being re-queued to the top of the list
+	if message.Rank > 0 {
+		return
+	}
+
+	// Super-Quick™️ lock to use the service.counter variable
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
