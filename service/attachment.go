@@ -91,6 +91,7 @@ func (service *Attachment) Save(attachment *model.Attachment, note string) error
 func (service *Attachment) Delete(attachment *model.Attachment, note string) error {
 
 	// Delete uploaded files from MediaServer
+	// nolint:errcheck
 	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
 		derp.Report(derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachment))
 		// Fail loudly, but do not stop.
