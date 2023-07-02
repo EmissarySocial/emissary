@@ -159,7 +159,7 @@ func (service *Following) SetStatus(following *model.Following, status string, s
 
 		// On success, "LastPolled" is only updated when we're successful.  Reset other times.
 		following.LastPolled = time.Now().Unix()
-		following.NextPoll = following.LastPolled + int64(following.PollDuration*60)
+		following.NextPoll = following.LastPolled + int64(following.PollDuration*60*60)
 		following.ErrorCount = 0
 
 	case model.FollowingStatusFailure:
