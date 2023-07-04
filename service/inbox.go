@@ -72,7 +72,7 @@ func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (d
 func (service *Inbox) Load(criteria exp.Expression, result *model.Message) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error loading Inbox message", criteria)
+		return derp.Wrap(err, "service.Inbox.Load", "Error loading Inbox message", criteria)
 	}
 
 	return nil
@@ -96,7 +96,7 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 
 	// Save the value to the database
 	if err := service.collection.Save(message, note); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error saving Inbox", message, note)
+		return derp.Wrap(err, "service.Inbox.Save", "Error saving Inbox", message, note)
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func (service *Inbox) Delete(message *model.Message, note string) error {
 
 	// Delete Inbox record last.
 	if err := service.collection.Delete(message, note); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error deleting Inbox", message, note)
+		return derp.Wrap(err, "service.Inbox.Delete", "Error deleting Inbox", message, note)
 	}
 
 	return nil
@@ -119,14 +119,14 @@ func (service *Inbox) DeleteMany(criteria exp.Expression, note string) error {
 	it, err := service.List(criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Message.Delete", "Error listing streams to delete", criteria)
+		return derp.Wrap(err, "service.Inbox.DeleteMany", "Error listing streams to delete", criteria)
 	}
 
 	message := model.NewMessage()
 
 	for it.Next(&message) {
 		if err := service.Delete(&message, note); err != nil {
-			return derp.Wrap(err, "service.Message.Delete", "Error deleting message", message)
+			return derp.Wrap(err, "service.Inbox.DeleteMany", "Error deleting message", message)
 		}
 		message = model.NewMessage()
 	}
@@ -187,7 +187,7 @@ func (service *Inbox) ObjectDelete(object data.Object, note string) error {
 }
 
 func (service *Inbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Inbox", "Not Authorized")
+	return derp.NewUnauthorizedError("service.Inbox.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Inbox) Schema() schema.Schema {
@@ -232,14 +232,14 @@ func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.O
 	it, err := service.List(criteria, options...)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox", "Error loading Inbox", userID, folderID, rankExpression)
+		return derp.Wrap(err, "service.Inbox.LoadByRank", "Error loading Inbox", userID, folderID, rankExpression)
 	}
 
 	for it.Next(result) {
 		return nil
 	}
 
-	return derp.NewNotFoundError("service.Inbox", "Inbox message not found", userID, folderID, rankExpression)
+	return derp.NewNotFoundError("service.Inbox.LoadByRank", "Inbox message not found", userID, folderID, rankExpression)
 }
 
 func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
