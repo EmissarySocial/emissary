@@ -193,11 +193,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			render.FuncMap(factory.Icons()),
 		)
 
-		// Populate Email Service
-		factory.emailService.Refresh(
-			domain,
-		)
-
 		// Populate EncryptionKey Service
 		factory.encryptionKeyService.Refresh(
 			factory.collection(CollectionEncryptionKey),
@@ -312,6 +307,12 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			}
 		}
 	}
+
+	// Re-Populate Email Service
+	// This is separate because it may change separately from the DNS
+	factory.emailService.Refresh(
+		domain,
+	)
 
 	factory.config = domain
 	factory.providers = providers
