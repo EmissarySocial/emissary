@@ -219,7 +219,8 @@
 							]
 						}}
 					]}
-				]}
+				]},
+				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"following-edit":{
@@ -292,6 +293,5 @@
 			"step":"view-html", 
 			"file":"inbox-blocks"
 		}
-
 	}
 }	
