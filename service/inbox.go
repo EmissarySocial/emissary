@@ -264,7 +264,47 @@ func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result
 		return nil
 	}
 
-	return derp.Wrap(err, "service.Inbox", "Error loading Inbox", userID, url)
+	return derp.Wrap(err, "service.Inbox.LoadOrCreate", "Error loading Inbox", userID, url)
+}
+
+// LoadSibling searches for the previous/next sibling to the provided message criteria.
+func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, following string, direction string) (model.Message, error) {
+
+	// Initialize query parameters
+	var criteria exp.Expression = exp.Equal("folderId", folderID)
+	var sort option.Option
+
+	// Specific criteria for previous/next
+	if direction == "prev" {
+		criteria = criteria.AndLessThan("rank", rank)
+		sort = option.SortDesc("rank")
+	} else {
+		criteria = criteria.AndGreaterThan("rank", rank)
+		sort = option.SortAsc("rank")
+	}
+
+	// Limit further if a "followingId" is present
+	if followingID, err := primitive.ObjectIDFromHex(following); err == nil {
+		criteria = criteria.AndEqual("origin.followingId", followingID)
+	}
+
+	// Query the database.
+	it, err := service.List(criteria, option.FirstRow(), sort)
+
+	if err != nil {
+		return model.Message{}, derp.Wrap(err, "service.Inbox.LoadSibling", "Error retrieving siblings")
+	}
+
+	// Try to read the results
+	result := model.NewMessage()
+
+	// This *should* read the prev/next message into the pointer and be done.
+	if it.Next(&result) {
+		return result, nil
+	}
+
+	// No results.  Shame! Shame!
+	return model.Message{}, derp.NewNotFoundError("service.Inbox.LoadSibling", "No record found")
 }
 
 /******************************************

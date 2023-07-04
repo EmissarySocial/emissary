@@ -16,14 +16,14 @@
 	<div class="text-sm">
 
 		<span class="button-group">
-			<button id="previous" hx-get="/@me/message-newspaper?rank=LT:{{.Rank}}&folderId={{.FolderID}}&origin.followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
-			<button id="next" hx-get="/@me/message-newspaper?rank=GT:{{.Rank}}&folderId={{.FolderID}}&origin.followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
+			<button id="previous" hx-get="/@me/messages/{{.MessageID}}/view?sibling=prev&followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
+			<button id="next" hx-get="/@me/messages/{{.MessageID}}/view?sibling=next&followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
 		</span>
 
 		<span class="button-group">
 			<button hx-get="/@me/following-edit?followingId={{.Origin.FollowingID.Hex}}">Edit Source</button>
-			<button hx-get="/@me/message-delete?messageId={{.MessageID}}">Delete</button>
-			<button hx-get="/@me/block-new?messageId={{.MessageID}}">Block</button>
+			<button hx-get="/@me/messages/{{.MessageID}}/delete">Delete</button>
+			<button hx-get="/@me/inbox/block-new?messageId={{.MessageID}}">Block</button>
 		</span>
 
 	</div>

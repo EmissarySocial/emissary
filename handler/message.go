@@ -68,12 +68,22 @@ func renderMessage(serverFactory *server.Factory, actionMethod render.ActionMeth
 			return derp.Wrap(err, location, "Error loading message", context.Param("message"))
 		}
 
-		// Try to load the User's Outbox
-		actionID := first.String(context.Param("action"), "view")
+		// Move to previous/next sibling if requested
+		if siblingType := context.QueryParam("sibling"); siblingType != "" {
+			followingID := context.QueryParam("followingId")
+			if sibling, err := inboxService.LoadSibling(message.FolderID, message.Rank, followingID, siblingType); err == nil {
+				message = sibling
+			}
+		}
 
+		// Render in JSON-LD (if requested)
+		// TODO: Templates should probably use the new "view-json" action instead.
 		if ok, err := handleJSONLD(context, &user); ok {
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
+
+		// Try to load the User's Outbox
+		actionID := first.String(context.Param("action"), "view")
 
 		// Create the new Renderer
 		renderer, err := render.NewMessage(factory, sterankoContext, inboxService, &message, actionID)
