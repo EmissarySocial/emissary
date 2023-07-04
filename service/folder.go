@@ -229,6 +229,22 @@ func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL stri
  * Other Behaviors
  ******************************************/
 
+func (service *Folder) ReCalculateUnreadCountFromFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {
+
+	// Try to load the folder
+	folder := model.NewFolder()
+	if err := service.LoadByID(userID, folderID, &folder); err != nil {
+		return derp.Report(derp.Wrap(err, "service.Folder.ReCalculateUnreadCountFromFolder", "Error loading folder"))
+	}
+
+	// Recalculate unread counts
+	if err := service.CalculateUnreadCount(userID, folderID, folder.ReadDate); err != nil {
+		return derp.Report(derp.Wrap(err, "service.Folder.ReCalculateUnReadCountFromFolder", "Error updating Unread count"))
+	}
+
+	return nil
+}
+
 // CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
 // then updates the folder's "unreadCount" and "readDate" fields
 func (service *Folder) CalculateUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, minRank int64) error {
@@ -236,7 +252,7 @@ func (service *Folder) CalculateUnreadCount(userID primitive.ObjectID, folderID 
 	unreadCount, err := service.inboxService.CountMessagesAfterRank(userID, folderID, minRank)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder", "Error counting unread messages", userID, folderID, minRank)
+		return derp.Wrap(err, "service.Folder.CalculateUnreadCount", "Error counting unread messages", userID, folderID, minRank)
 	}
 
 	return service.SetUnreadCount(userID, folderID, minRank, unreadCount)

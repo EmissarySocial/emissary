@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
@@ -24,6 +25,11 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 
 	following.Label = feed.Title
 	following.SetLinks(discoverLinks_JSONFeed(response, &feed)...)
+
+	// Before inserting, sort the items chronologically so that new feeds appear correctly in the UX
+	sort.SliceStable(feed.Items, func(i, j int) bool {
+		return feed.Items[i].DatePublished.Unix() < feed.Items[j].DatePublished.Unix()
+	})
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
 	for _, item := range feed.Items {

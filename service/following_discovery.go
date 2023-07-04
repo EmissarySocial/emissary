@@ -24,7 +24,10 @@ func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
 	discoverLinks_Headers(&result, response)
 
 	// Look for links embedded in the HTML
-	discoverLinks_HTML(&result, response, body)
+	// nolint:errcheck // derp.Report is good enough here.
+	if err := discoverLinks_HTML(&result, response, body); err != nil {
+		derp.Report(derp.Wrap(err, "service.discoverLinks", "Error getting links from HTML"))
+	}
 
 	// Fall back to WebFinger, just in case
 	if len(result) == 0 {
@@ -106,7 +109,7 @@ func discoverLinks_HTML(result *digit.LinkSet, response *http.Response, body *by
 		return derp.Wrap(err, location, "Error parsing HTML document")
 	}
 
-	links := htmlDocument.Find("[rel=alternate],[rel=self],[rel=hub],[rel=icon]").Nodes
+	links := htmlDocument.Find("[rel*=feed],[rel*=alternate],[rel*=self],[rel*=hub],[rel*=icon]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {

@@ -50,14 +50,24 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	})
 
 	// Update all items in the feed.  If we have an error, then don't stop, just save it for later.
+	recalculate := false
 	for _, rssItem := range rssFeed.Items {
 		defaultValue := convert.RSSToActivity(rssFeed, rssItem)
 		if document, err := service.httpClient.Load(rssItem.Link, defaultValue); err == nil {
-			if err := service.saveDocument(following, &document); err != nil {
+			if created, err := service.saveDocument(following, &document); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error saving document", document))
+			} else if created {
+				recalculate = true
 			}
 		} else {
 			derp.Report(derp.Wrap(err, location, "Error loading document", rssItem.Link))
+		}
+	}
+
+	// Recalculate read counts if we've added any new items to the feed.
+	if recalculate {
+		if err := service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID); err != nil {
+			return derp.Wrap(err, location, "Error updating read counts")
 		}
 	}
 

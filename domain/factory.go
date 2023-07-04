@@ -165,7 +165,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Save the new session into the factory.
 		factory.Session = session
-		
+
 		// REFRESH CACHED SERVICES
 
 		// Populate Attachment Service
@@ -227,6 +227,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Stream(),
 			factory.User(),
 			factory.Inbox(),
+			factory.Folder(),
 			factory.EncryptionKey(),
 			factory.ActivityStreams(),
 			factory.Host(),

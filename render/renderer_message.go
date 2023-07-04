@@ -170,8 +170,20 @@ func (w Message) Summary() string {
 	return w._message.Summary
 }
 
+func (w Message) SummaryText() string {
+	return w._message.SummaryText()
+}
+
 func (w Message) SummaryHTML() template.HTML {
 	return template.HTML(w._message.Summary)
+}
+
+func (w Message) HasImage() bool {
+	return w._message.HasImage()
+}
+
+func (w Message) HasContentImage() bool {
+	return w._message.HasContentImage()
 }
 
 func (w Message) ImageURL() string {

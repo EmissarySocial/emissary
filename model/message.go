@@ -1,6 +1,8 @@
 package model
 
 import (
+	"strings"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/sliceof"
@@ -107,7 +109,26 @@ func (message *Message) AddAttributedTo(persons ...PersonLink) {
 }
 
 func (message Message) SummaryText() string {
-	return html.Summary(html.RemoveTags(message.Summary))
+
+	// First, try to use the "Summary" field.  If we have content there, then use it.
+	if message.Summary != "" {
+		if summary := html.Summary(html.RemoveTags(message.Summary)); summary != "" {
+			return summary
+		}
+	}
+
+	// Otherwise, summarize the "Content" field instead.
+	return html.Summary(html.RemoveTags(message.ContentHTML))
+}
+
+// HasImage returns TRUE if there is a "preview" image included with this message
+func (message Message) HasImage() bool {
+	return message.ImageURL != ""
+}
+
+// HasContentImage returns TRUE if there is at least one <img> tag in the body of this message
+func (message Message) HasContentImage() bool {
+	return strings.Contains(message.ContentHTML, "<img")
 }
 
 func (message Message) RankSeconds() int64 {

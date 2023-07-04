@@ -1,11 +1,9 @@
-{{- $record := .ActivityStream .URL -}}
-
 <div script="install message(folderId:'{{.FolderID}}', readDate:'{{.Rank}}')">
 
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1>{{.Label}}</h1>
+	<h1 role="link" class="clickable" script="">{{.Label}}</h1>
 
 	<div class="text-gray space-below ellipsis">
 		<a href="{{.URL}}" target="_blank" class="text-gray">
@@ -33,8 +31,14 @@
 	<hr/>
 
 	<div class="content">
-		<div>{{- $record.Summary -}}</div>
-		<div>{{- $record.Content | html -}}</div>
+		{{- if not .HasContentImage -}}
+			{{- if .HasImage -}}
+				<div><a href="{{.URL}}" target="_blank"><img src="{{.ImageURL}}" style="width:100%;"/></a></div>
+			{{- end -}}
+		{{- end -}}
+
+		<div>{{- .SummaryText -}}</div>
+		<div>{{- .ContentHTML -}}</div>
 	</div>
 
 	{{- .Responses -}}
@@ -52,4 +56,3 @@
 	</div>
 
 </div>
-

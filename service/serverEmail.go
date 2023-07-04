@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
@@ -149,7 +150,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 	client, err := server.Connect()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, from, to, subject, data)
+		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, from, to, subject, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
 	}
 
 	// Try to send the email

@@ -215,17 +215,18 @@ func (service *Following) poll(following *model.Following, link digit.Link, impo
 	return nil
 }
 
-// saveToInbox adds/updates an individual Message based on an RSS item
-func (service *Following) saveDocument(following *model.Following, document *streams.Document) error {
+// saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
+func (service *Following) saveDocument(following *model.Following, document *streams.Document) (bool, error) {
 
 	const location = "service.Following.saveDocument"
 
 	message := model.NewMessage()
+	created := false
 
 	// Search for an existing Message that matches the parameter
 	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
 		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error loading message")
+			return false, derp.Wrap(err, location, "Error loading message")
 		}
 	}
 
@@ -234,6 +235,7 @@ func (service *Following) saveDocument(following *model.Following, document *str
 		message.UserID = following.UserID
 		message.FolderID = following.FolderID
 		message.Origin = following.Origin()
+		created = true
 	}
 
 	message.URL = document.ID()
@@ -246,11 +248,11 @@ func (service *Following) saveDocument(following *model.Following, document *str
 
 	// Save the message to the database
 	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return false, derp.Wrap(err, location, "Error saving message")
 	}
 
 	// Yee. Haw.
-	return nil
+	return created, nil
 }
 
 // saveToInbox adds/updates an individual Message based on an RSS item

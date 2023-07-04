@@ -26,6 +26,7 @@ type Following struct {
 	streamService *Stream
 	userService   *User
 	inboxService  *Inbox
+	folderService *Folder
 	keyService    *EncryptionKey
 	httpClient    streams.Client
 	host          string
@@ -42,11 +43,12 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, keyService *EncryptionKey, httpClient streams.Client, host string) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, httpClient streams.Client, host string) {
 	service.collection = collection
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
+	service.folderService = folderService
 	service.keyService = keyService
 	service.httpClient = httpClient
 	service.host = host
@@ -168,9 +170,11 @@ func (service *Following) Save(following *model.Following, note string) error {
 	}
 
 	// Recalculate the follower count for this user
+	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Connect to external services and discover the best update method
+	// nolint:errcheck
 	go service.Connect(*following)
 
 	// Win!
@@ -189,7 +193,12 @@ func (service *Following) Delete(following *model.Following, note string) error 
 	}
 
 	// Recalculate the follower count for this user
+	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
+
+	// Recalculate the unread count for this folder
+	// nolint:errcheck
+	go service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID)
 
 	// Disconnect from external services (if necessary)
 	service.Disconnect(following)
