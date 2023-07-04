@@ -109,7 +109,7 @@ func discoverLinks_HTML(result *digit.LinkSet, response *http.Response, body *by
 		return derp.Wrap(err, location, "Error parsing HTML document")
 	}
 
-	links := htmlDocument.Find("[rel*=feed],[rel*=alternate],[rel*=self],[rel*=hub],[rel*=icon]").Nodes
+	links := htmlDocument.Find("[rel=alternate],[rel=self],[rel=hub],[rel=icon],[rel=feed]").Nodes
 
 	// Look through RSS links for all valid feeds
 	for _, link := range links {
