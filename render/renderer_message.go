@@ -180,7 +180,15 @@ func (w Message) HasSummary() bool {
 }
 
 func (w Message) Summary() string {
-	return w._message.SummaryText()
+	return w._message.Summary
+}
+
+func (w Message) SummaryOrContent() template.HTML {
+	return template.HTML(w._message.SummaryOrContent())
+}
+
+func (w Message) ContentOrSummary() template.HTML {
+	return template.HTML(w._message.ContentOrSummary())
 }
 
 func (w Message) HasImage() bool {

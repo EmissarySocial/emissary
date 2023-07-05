@@ -112,14 +112,22 @@ func (message Message) HasSummary() bool {
 	return message.Summary != ""
 }
 
-func (message Message) SummaryText() string {
+func (message Message) SummaryOrContent() string {
 
 	// First, try to use the "Summary" field.  If we have content there, then use it.
 	if message.Summary != "" {
 		return html.RemoveTags(message.Summary)
 	}
 
-	return ""
+	return message.ContentHTML
+}
+
+func (message Message) ContentOrSummary() string {
+	if message.ContentHTML != "" {
+		return message.ContentHTML
+	}
+
+	return message.Summary
 }
 
 // HasImage returns TRUE if there is a "preview" image included with this message

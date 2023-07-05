@@ -24,9 +24,6 @@
 		<span role="button" hx-get="{{.InternalURL}}/response-icons" script="install tooltipContainer" style="padding:8px 16px;">
 			{{- if eq $userResponse "" -}}
 				{{- icon "add-emoji" -}}
-				{{- if eq 0 (len $countByContent) -}}
-					&nbsp;Add Response
-				{{- end -}}
 			{{- else -}}
 				{{- icon "settings" -}}
 			{{- end -}}

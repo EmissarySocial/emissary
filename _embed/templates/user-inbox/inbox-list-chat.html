@@ -24,7 +24,7 @@
 		</div>
 
 		<div>
-			{{- .ContentHTML -}}
+			{{- .ContentOrSummary | html -}}
 		</div>
 
 		{{- if ne .ImageURL "" -}}

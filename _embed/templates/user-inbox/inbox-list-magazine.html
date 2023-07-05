@@ -9,11 +9,11 @@
 		</div>
 
 		<div class="text-gray ellipsis-block" style="max-height:6em;">
-			{{- .Summary | html -}}
+			{{- .SummaryOrContent | html -}}
 		</div>
 	{{- else -}}
 		<div class="text-gray ellipsis-block">
-			{{- .Summary | html -}}
+			{{- .SummaryOrContent | html -}}
 		</div>
 	{{- end -}}
 
