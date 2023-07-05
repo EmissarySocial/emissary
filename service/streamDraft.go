@@ -70,7 +70,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 
 	// Save a draft copy of the original stream
 	if err := service.Save(result, "create draft record"); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Load", "Error saving draft")
+		return derp.Wrap(err, "service.StreamDraft.Load", "Error saving draft", criteria)
 	}
 
 	// Return the original stream as a new draft to use.
