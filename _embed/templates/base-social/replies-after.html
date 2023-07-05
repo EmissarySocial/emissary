@@ -4,3 +4,7 @@
 {{- range $replies -}}
 	{{- template "activitystream" . -}}
 {{- end -}}
+
+{{- if .UserCan "reply" -}}
+	{{- .View "reply" -}}
+{{- end -}}
