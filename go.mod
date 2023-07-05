@@ -18,7 +18,7 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.6
 	github.com/benpate/remote v0.10.4
-	github.com/benpate/rosetta v0.16.2
+	github.com/benpate/rosetta v0.16.3
 	github.com/benpate/sherlock v0.2.0
 	github.com/benpate/steranko v0.13.5
 	github.com/benpate/table v0.5.4
