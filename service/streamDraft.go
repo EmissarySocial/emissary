@@ -169,20 +169,7 @@ func (service *StreamDraft) Schema() schema.Schema {
 
 // LoadByID returns a single Stream that matches a particular StreamID
 func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
-
-	criteria := exp.
-		Equal("_id", streamID).
-		AndEqual("deleteDate", 0)
-
-	return service.Load(criteria, result)
-}
-
-// LoadByToken returns a single Stream that matches a particular Token
-func (service *StreamDraft) LoadByToken(token string, result *model.Stream) error {
-	criteria := exp.
-		Equal("token", token).
-		AndEqual("deleteDate", 0)
-
+	criteria := exp.Equal("_id", streamID)
 	return service.Load(criteria, result)
 }
 
