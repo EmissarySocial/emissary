@@ -26,7 +26,7 @@
 			<a hx-get="/@{{.UserID}}/liked" class="turboclick">Liked</a>
 		</div>
 
-		{{if .UserCan "outbox-add" -}}
+		{{if .IsMyself -}}
 			<div class="flex-row space-below">
 				<div class="flex-shrink-0" style="width:80px;">
 					<img src="/@{{.UserID}}/avatar" class="circle-64">

@@ -4,7 +4,7 @@
 	<link rel="canonical" class="u-url" href="{{.ProfileURL}}"></link>
 
 	<div class="space-below" style="position:relative;">
-		{{- if .UserCan "photo" -}}
+		{{- if .IsMyself -}}
 			<button type="button" hx-get="/@me/photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
@@ -18,7 +18,9 @@
 	</div>
 
 	<div class="space-below">
-		<button hx-get="/@me/edit" class="text-xs float-right">Edit</button>
+		{{- if .IsMyself -}}
+			<button hx-get="/@me/edit" class="text-xs float-right">Edit</button>
+		{{- end -}}
 		
 		<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 		<h2 class="gray50" style="margin:0px;">{{.Username}}</h2>
@@ -43,19 +45,17 @@
 
 		{{- if eq 0 (len $links) -}}
 
-			{{- if .UserCan "edit" -}}
+			{{- if .IsMyself -}}
 				<hr>
-			<button type="button" hx-get="/@me/links">Add Links</button>
+				<button type="button" hx-get="/@me/links">Add Links</button>
 			{{- end -}}
 
 		{{- else -}}
 
-			{{- if .UserCan "edit"  -}}
+			{{- if .IsMyself  -}}
 				<hr>
 				<div class="float-right">
-					{{- if .UserCan "links" -}}
-						<button type="button" hx-get="/@me/links" class="text-xs vertical-space-none">Edit</button>
-					{{- end -}}
+					<button type="button" hx-get="/@me/links" class="text-xs vertical-space-none">Edit</button>
 				</div>
 			{{- end -}}
 
@@ -66,7 +66,7 @@
 
 	</div>
 
-	{{- if .UserCan "edit" -}}
+	{{- if .IsMyself -}}
 		<hr>
 		<div>
 			<button hx-post="/signout" hx-target="body">Sign Out</button>

@@ -2,13 +2,13 @@
 
 {{- if ne 0 (len $outbox) -}}
 	{{- $last := $outbox.Last -}}
-	{{- $userCanEdit := .UserCan "edit" -}}
+	{{- $isMyself := .IsMyself -}}
 
 	{{- range $outbox -}}
 		{{- $author := .Author -}}
 		<hr>
 		<div class="hover-trigger">
-			{{- if $userCanEdit -}}
+			{{- if $isMyself -}}
 				<div class="float-right hover-reveal text-sm">
 					<button hx-get="/{{.StreamID}}/edit">Edit</button>
 				</div>

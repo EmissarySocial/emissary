@@ -79,7 +79,10 @@ func (w Outbox) View(actionID string) (template.HTML, error) {
 
 // NavigationID returns the ID to use for highlighing navigation menus
 func (w Outbox) NavigationID() string {
-	return "outbox"
+	if w.user.UserID == w.AuthenticatedID() {
+		return "outbox"
+	}
+	return "user"
 }
 
 func (w Outbox) PageTitle() string {
@@ -134,6 +137,12 @@ func (w Outbox) UserCan(actionID string) bool {
 	authorization := w.authorization()
 
 	return action.UserCan(w.user, &authorization)
+}
+
+// IsMyself returns TRUE if the outbox record is owned
+// by the currently signed-in user
+func (w Outbox) IsMyself() bool {
+	return w.user.UserID == w.authorization().UserID
 }
 
 /******************************************
@@ -230,7 +239,7 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("parentId", w.AuthenticatedID()),
+		exp.Equal("parentId", w.user.UserID),
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
