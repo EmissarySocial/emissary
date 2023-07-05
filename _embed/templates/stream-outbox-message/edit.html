@@ -44,7 +44,7 @@
 				on keydown[key=='Enter']
 					if event.target is not me then exit end
 					halt the event
-					send enterKey to #outbox-message
+					send enterKey to closest #outbox-message
 
 				on keypress debounced at 500ms 
 					set oldPosition to :caret.getPos() then

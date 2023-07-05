@@ -27,7 +27,7 @@
 							<span class="p-published">{{.PublishDate | humanizeTime}}</span>
 						</div>
 						<div class="h-name bold black">{{.Label}}</div>
-						<div class="h-summary black">{{.ContentHTML}}</div>
+						<div class="h-summary black">{{.ContentHTML | html }}</div>
 						{{- if ne .ImageURL ""}}
 							<div style="margin-top:var(--rhythm);">
 								<img src="{{.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
