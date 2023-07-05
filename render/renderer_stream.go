@@ -683,14 +683,14 @@ func (w Stream) draftRenderer() (Stream, error) {
 
 	// Load the draft of the object
 	if err := draftService.LoadByID(w.stream.StreamID, &draft); err != nil {
-		return Stream{}, derp.Wrap(err, "service.Stream.draftRenderer", "Error loading draft")
+		return Stream{}, derp.Wrap(err, "render.Stream.draftRenderer", "Error loading draft")
 	}
 
 	// Create the underlying Common renderer
 	common, err := NewCommon(w._factory, w._context, w._template, w.actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, "service.Stream.draftRenderer", "Error creating common renderer")
+		return Stream{}, derp.Wrap(err, "render.Stream.draftRenderer", "Error creating common renderer")
 	}
 
 	// Make a duplicate of this renderer.  Same object, template, action settings
