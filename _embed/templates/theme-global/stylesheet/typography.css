@@ -76,7 +76,7 @@ h3.space-below {
     display:flex;
     flex-direction:row;
     align-items:stretch;
-    gap:10px;
+    gap:8px;
 }
 
 .flex-column {
@@ -99,6 +99,31 @@ h3.space-below {
 .flex-align-stretch {
     align-items:stretch;
 }
+
+.flex-justify-start {
+    justify-content: flex-start safe;
+}
+
+.flex-justify-end {
+    justify-content: flex-end safe;
+}
+
+.flex-justify-center {
+    justify-content: center safe;
+}
+
+.flex-justify-between {
+    justify-content: space-between safe;
+}
+
+.flex-justify-around {
+    justify-content: space-around safe;
+}
+
+.flex-justify-evenly {
+    justify-content: space-evenly safe;
+}
+
 
 .flex-shrink-0 {
     flex-shrink:0;
@@ -187,13 +212,6 @@ h3.space-below {
 
 .align-right {
     text-align:right;
-}
-
-.flex-row {
-    display:flex;
-    flex-direction:row;
-    align-items:stretch;
-    gap:8px;
 }
 
 .float-right {
