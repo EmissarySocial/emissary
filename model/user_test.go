@@ -29,6 +29,7 @@ func TestUserSchema(t *testing.T) {
 		{"followerCount", "1", 1},
 		{"followingCount", "2", 2},
 		{"blockCount", "3", 3},
+		{"isPublic", "true", true},
 		{"isOwner", "true", true},
 	}
 

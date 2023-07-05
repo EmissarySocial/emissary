@@ -13,13 +13,15 @@ import (
 
 func ActivityPub_GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.ActivityPub_GetOutboxCollection"
+
 	return func(ctx echo.Context) error {
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetOutboxCollection", "Unrecognized domain name")
+			return derp.Wrap(err, location, "Unrecognized domain name")
 		}
 
 		// Try to load the User from the database
@@ -27,12 +29,12 @@ func ActivityPub_GetOutboxCollection(serverFactory *server.Factory) echo.Handler
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetOutboxCollection", "User not found", err)
+			return derp.NewNotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError("handler.ActivityPub_GetOutboxCollection", "User not found")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page
@@ -53,7 +55,7 @@ func ActivityPub_GetOutboxCollection(serverFactory *server.Factory) echo.Handler
 		messages, err := outboxService.QueryByUserAndDate(user.UserID, publishedDate, pageSize)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetOutboxCollection", "Error loading outbox messages")
+			return derp.Wrap(err, location, "Error loading outbox messages")
 		}
 
 		// Return results as an OrderedCollectionPage

@@ -35,7 +35,7 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.New(derp.CodeForbiddenError, location, "")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		publishDateString := ctx.QueryParam("publishDate")
@@ -67,33 +67,35 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 
 func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.ActivityPub_GetBlock"
+
 	return func(ctx echo.Context) error {
 
 		// Collect BlockID from URL
 		blockID, err := primitive.ObjectIDFromHex(ctx.Param("block"))
 
 		if err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Invalid Block ID", err)
+			return derp.NewNotFoundError(location, "Invalid Block ID", err)
 		}
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Unrecognized domain name")
+			return derp.Wrap(err, location, "Unrecognized domain name")
 		}
 
 		// Load the User from the database
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByToken(ctx.Param("user"), &user); err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "User not found", err)
+		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
+			return derp.NewNotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.New(derp.CodeForbiddenError, "handler.ActivityPub_GetLikedRecord", "")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// Try to load the Block from the database
@@ -101,7 +103,7 @@ func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 		block := model.NewBlock()
 
 		if err := blockService.LoadByID(user.UserID, blockID, &block); err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Error loading block")
+			return derp.Wrap(err, location, "Error loading block")
 		}
 
 		// Return the block as JSON-LD

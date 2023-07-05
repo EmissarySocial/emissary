@@ -23,6 +23,10 @@ type Outbox struct {
 
 func NewOutbox(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Outbox, error) {
 
+	if !isUserVisible(ctx, user) {
+		return Outbox{}, derp.NewNotFoundError("render.NewOutbox", "User not found")
+	}
+
 	// Load the Template
 	templateService := factory.Template()
 	template, err := templateService.Load("user-outbox") // Users should get to choose their own outbox template

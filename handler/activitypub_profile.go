@@ -12,13 +12,15 @@ import (
 
 func ActivityPub_GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.ActivityPub_GetProfile"
+
 	return func(context echo.Context) error {
 
 		// Try to find the factory for this context
 		factory, err := serverFactory.ByContext(context)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetProfile", "Error creating server factory")
+			return derp.Wrap(err, location, "Error creating server factory")
 		}
 
 		// Try to load the user
@@ -27,7 +29,12 @@ func ActivityPub_GetProfile(serverFactory *server.Factory) echo.HandlerFunc {
 		userID := context.Param("userId")
 
 		if err := userService.LoadByToken(userID, &user); err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetProfile", "Error loading user", userID)
+			return derp.Wrap(err, location, "Error loading user", userID)
+		}
+
+		// RULE: Only public users can be queried
+		if !user.IsPublic {
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// Return the user's profile in JSON-LD format

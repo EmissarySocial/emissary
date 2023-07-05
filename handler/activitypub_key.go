@@ -31,6 +31,19 @@ func ActivityPub_GetPublicKey(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error getting server factory")
 		}
 
+		// Try to load the user (to confirm that it exists)
+		userService := factory.User()
+		user := model.NewUser()
+
+		if err := userService.LoadByID(userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user", userID)
+		}
+
+		// RULE: Only public users can be queried
+		if !user.IsPublic {
+			return derp.NewNotFoundError(location, "")
+		}
+
 		// Try to load the key from the Datbase
 		keyService := factory.EncryptionKey()
 		key := model.NewEncryptionKey()

@@ -13,13 +13,15 @@ import (
 
 func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
+	const location = "handler.ActivityPub_GetResponseCollection"
+
 	return func(ctx echo.Context) error {
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetResponseCollection", "Unrecognized domain name")
+			return derp.Wrap(err, location, "Unrecognized domain name")
 		}
 
 		// Try to load the User from the database
@@ -27,12 +29,12 @@ func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, respon
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetResponseCollection", "User not found", err)
+			return derp.NewNotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError("handler.ActivityPub_GetResponseCollection", "User not found")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page
@@ -53,7 +55,7 @@ func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, respon
 		responses, err := responseService.QueryByUserAndDate(user.UserID, responseType, publishedDate, pageSize)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetResponseCollection", "Error loading responses")
+			return derp.Wrap(err, location, "Error loading responses")
 		}
 
 		// Return results as an OrderedCollectionPage
@@ -65,20 +67,22 @@ func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, respon
 
 func ActivityPub_GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
+	const location = "handler.ActivityPub_GetUserResponse"
+
 	return func(ctx echo.Context) error {
 
 		// Collect ResponseID from URL
 		responseID, err := primitive.ObjectIDFromHex(ctx.Param("response"))
 
 		if err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Invalid Response ID", err)
+			return derp.NewNotFoundError(location, "Invalid Response ID", err)
 		}
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Unrecognized domain name")
+			return derp.Wrap(err, location, "Unrecognized domain name")
 		}
 
 		// Load the User from the database
@@ -86,12 +90,12 @@ func ActivityPub_GetUserResponse(serverFactory *server.Factory, responseType str
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "User not found", err)
+			return derp.NewNotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.New(derp.CodeForbiddenError, "handler.ActivityPub_GetLikedRecord", "")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// Try to load the Response from the database
@@ -99,15 +103,15 @@ func ActivityPub_GetUserResponse(serverFactory *server.Factory, responseType str
 		response := model.NewResponse()
 
 		if err := responseService.LoadByID(responseID, &response); err != nil {
-			return derp.Wrap(err, "handler.ActivityPub_GetLikedRecord", "Error loading response")
+			return derp.Wrap(err, location, "Error loading response")
 		}
 
 		if response.ActorID != user.ProfileURL {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Response not found", "ActorID does not match")
+			return derp.NewNotFoundError(location, "Response not found", "ActorID does not match")
 		}
 
 		if response.Type != responseType {
-			return derp.NewNotFoundError("handler.ActivityPub_GetLikedRecord", "Response not found", "Type does not match")
+			return derp.NewNotFoundError(location, "Response not found", "Type does not match")
 		}
 
 		// Return the response as JSON-LD

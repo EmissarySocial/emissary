@@ -37,6 +37,11 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Report(derp.Wrap(err, location, "Error loading User", userID.Hex()))
 		}
 
+		// RULE: Only public users can be queried
+		if !user.IsPublic {
+			return derp.NewNotFoundError(location, "")
+		}
+
 		// Retrieve the activity from the request body
 		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityStreams())
 

@@ -224,3 +224,24 @@ func executeTemplate(template TemplateLike, data any) string {
 
 	return buffer.String()
 }
+
+// isUserVisible returns TRUE if the currently signed in user is allowed to
+// view the provided model.User record.
+func isUserVisible(context *steranko.Context, user *model.User) bool {
+
+	authorization := getAuthorization(context)
+
+	if err := authorization.Valid(); err != nil {
+		return false
+	}
+
+	if authorization.DomainOwner {
+		return true
+	}
+
+	if authorization.UserID == user.UserID {
+		return true
+	}
+
+	return user.IsPublic
+}

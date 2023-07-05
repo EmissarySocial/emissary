@@ -23,6 +23,7 @@ func UserSchema() schema.Element {
 			"followerCount":  schema.Integer{},
 			"followingCount": schema.Integer{},
 			"blockCount":     schema.Integer{},
+			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
 		},
 	}
@@ -44,6 +45,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "isOwner":
 		return &user.IsOwner, true
+
+	case "isPublic":
+		return &user.IsPublic, true
 
 	case "followerCount":
 		return &user.FollowerCount, true

@@ -55,6 +55,10 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading user", username)
 		}
 
+		if !isUserVisible(sterankoContext, &user) {
+			return derp.NewNotFoundError("handler.GetProfileAvatar", "User not found")
+		}
+
 		// Check ETags for the user's avatar
 		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == user.ImageID.Hex() {
 			return ctx.NoContent(http.StatusNotModified)
@@ -116,6 +120,10 @@ func renderOutbox(serverFactory *server.Factory, actionMethod render.ActionMetho
 			return derp.Wrap(err, location, "Error loading user", username)
 		}
 
+		if !isUserVisible(sterankoContext, &user) {
+			return derp.NewNotFoundError("handler.GetProfileAvatar", "User not found")
+		}
+
 		// Try to load the User's Outbox
 		actionID := first.String(context.Param("action"), "view")
 
@@ -160,4 +168,13 @@ func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
 	}
 
 	return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "User is not authenticated")
+}
+
+func isUserVisible(context *steranko.Context, user *model.User) bool {
+
+	if getAuthorization(context).DomainOwner {
+		return true
+	}
+
+	return user.IsPublic
 }
