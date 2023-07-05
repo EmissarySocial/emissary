@@ -64,7 +64,8 @@
 
 	<div>
 		{{- if .IsNew -}}
-			<button type="submit" class="primary htmx-request-hide text-sm">New Post</button>
+			{{- $label := first (.QueryParam "new-stream-label") "New Post" -}}
+			<button type="submit" class="primary htmx-request-hide text-sm">{{- $label -}}</button>
 			<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
 			<span class="text-lg">
 				&nbsp;

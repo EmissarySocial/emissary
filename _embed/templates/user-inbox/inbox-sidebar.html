@@ -44,7 +44,7 @@
 	<div 
 		hx-get="/@me/inbox/inbox-sidebar?folderId={{$selectedID.Hex}}" 
 		hx-swap="outerHTML" 
-		hx-trigger="refreshSidebar from:window" 
+		hx-trigger="refreshSidebar from:window, every 600s" 
 		hx-push-url="false" 
 		hx-target="#app-sidebar">
 	</div>

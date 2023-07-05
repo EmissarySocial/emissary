@@ -31,6 +31,15 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.Int64(a) / convert.Int64(b)
 		},
 
+		"first": func(values ...any) any {
+			for _, value := range values {
+				if !convert.IsZeroValue(value) {
+					return value
+				}
+			}
+			return nil
+		},
+
 		"icon": func(name string) template.HTML {
 			return template.HTML(icons.Get(name))
 		},

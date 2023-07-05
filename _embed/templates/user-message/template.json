@@ -59,7 +59,7 @@
 		"view-reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "postTo":"/@me/outbox-reply?messageId={{.QueryParam `messageId`}}"},
+				{"step":"set-query-param", "new-stream-label":"Add a Reply", "postTo":"/@me/outbox-reply?messageId={{.QueryParam `messageId`}}"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true}
 			]
 		},
@@ -67,7 +67,7 @@
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "postTo":"/@me/messages/{{.MessageID}}/reply"},
+				{"step":"set-query-param", "new-stream-label":"Add a Reply", "postTo":"/@me/messages/{{.MessageID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true, "with-stream":[
 					{"step":"save"},
 					{"step":"publish"}

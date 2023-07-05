@@ -108,17 +108,18 @@ func (message *Message) AddAttributedTo(persons ...PersonLink) {
 	message.AttributedTo = append(message.AttributedTo, persons...)
 }
 
+func (message Message) HasSummary() bool {
+	return message.Summary != ""
+}
+
 func (message Message) SummaryText() string {
 
 	// First, try to use the "Summary" field.  If we have content there, then use it.
 	if message.Summary != "" {
-		if summary := html.Summary(html.RemoveTags(message.Summary)); summary != "" {
-			return summary
-		}
+		return html.RemoveTags(message.Summary)
 	}
 
-	// Otherwise, summarize the "Content" field instead.
-	return html.Summary(html.RemoveTags(message.ContentHTML))
+	return ""
 }
 
 // HasImage returns TRUE if there is a "preview" image included with this message
@@ -126,9 +127,13 @@ func (message Message) HasImage() bool {
 	return message.ImageURL != ""
 }
 
+func (message Message) HasContent() bool {
+	return message.ContentHTML != ""
+}
+
 // HasContentImage returns TRUE if there is at least one <img> tag in the body of this message
 func (message Message) HasContentImage() bool {
-	return strings.Contains(message.ContentHTML, "<img")
+	return strings.Contains(message.ContentHTML, "<img ")
 }
 
 func (message Message) RankSeconds() int64 {

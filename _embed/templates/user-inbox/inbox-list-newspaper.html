@@ -23,7 +23,7 @@
 				{{ .PublishDate | tinyDate }}
 			</span>
 		</div>
-		<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{.SummaryText}}</div>
+		<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{.Summary | html}}</div>
 	</div>
  
 </div>

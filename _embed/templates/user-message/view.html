@@ -3,7 +3,7 @@
 	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
 		<button script="on click send closeModal">Close</button>
 	</div>
-	<h1 role="link" class="clickable" script="">{{.Label}}</h1>
+	<h1 role="link" class="clickable" script="on click go to '{{.URL}}' in a new window">{{.Label}}</h1>
 
 	<div class="text-gray space-below ellipsis">
 		<a href="{{.URL}}" target="_blank" class="text-gray">
@@ -37,8 +37,17 @@
 			{{- end -}}
 		{{- end -}}
 
-		<div>{{- .SummaryText -}}</div>
-		<div>{{- .ContentHTML -}}</div>
+		{{- if .HasSummary -}}
+			{{- if .HasContent -}}
+				<div class="text-lg space-below">{{- .Summary | html -}}</div>
+				<div>{{- .ContentHTML -}}</div>
+			{{- else -}}
+				<div>{{- .Summary | html -}}</div>
+			{{- end -}}
+		{{- else -}}
+			<div>{{- .ContentHTML -}}</div>
+		{{- end -}}
+			
 	</div>
 
 	{{- .Responses -}}

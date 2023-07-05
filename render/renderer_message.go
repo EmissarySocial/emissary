@@ -162,34 +162,6 @@ func (w Message) URL() string {
 	return w._message.URL
 }
 
-func (w Message) Label() string {
-	return w._message.Label
-}
-
-func (w Message) Summary() string {
-	return w._message.Summary
-}
-
-func (w Message) SummaryText() string {
-	return w._message.SummaryText()
-}
-
-func (w Message) SummaryHTML() template.HTML {
-	return template.HTML(w._message.Summary)
-}
-
-func (w Message) HasImage() bool {
-	return w._message.HasImage()
-}
-
-func (w Message) HasContentImage() bool {
-	return w._message.HasContentImage()
-}
-
-func (w Message) ImageURL() string {
-	return w._message.ImageURL
-}
-
 func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
 	return w._message.AttributedTo
 }
@@ -197,6 +169,34 @@ func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
 func (w Message) InReplyTo() streams.Document {
 	result, _ := w._factory.ActivityStreams().Load(w._message.InReplyTo, mapof.NewAny())
 	return result
+}
+
+func (w Message) Label() string {
+	return w._message.Label
+}
+
+func (w Message) HasSummary() bool {
+	return w._message.HasSummary()
+}
+
+func (w Message) Summary() string {
+	return w._message.SummaryText()
+}
+
+func (w Message) HasImage() bool {
+	return w._message.HasImage()
+}
+
+func (w Message) ImageURL() string {
+	return w._message.ImageURL
+}
+
+func (w Message) HasContent() bool {
+	return w._message.HasContent()
+}
+
+func (w Message) HasContentImage() bool {
+	return w._message.HasContentImage()
 }
 
 func (w Message) ContentHTML() template.HTML {

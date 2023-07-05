@@ -5,6 +5,8 @@
 #tooltip {
 	display:block;
 	position: absolute;
+	z-index:10000;
+	overflow:visible;
 	left: 50%;
 	bottom: 100%;
 	opacity: 1;

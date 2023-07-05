@@ -47,7 +47,7 @@
 		"add-reply":{
 			"roles":["authenticated"],
 			"steps":[
-				{"step":"set-query-param", "postTo":"/{{.StreamID}}/add-reply"},
+				{"step":"set-query-param", "new-stream-label":"Reply to {{.Author.Name}}", "postTo":"/{{.StreamID}}/add-reply"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
 				{"step":"trigger-event", "event":"refreshReplies"}
 			]
