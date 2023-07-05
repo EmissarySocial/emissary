@@ -85,10 +85,12 @@ func (message Message) Roles(authorization *Authorization) []string {
  * Other Methods
  ******************************************/
 
+// Author returns the primary author, i.e., the first PersonLink in the AttributedTo slice.
 func (message *Message) Author() PersonLink {
 	return message.AttributedTo.First()
 }
 
+// DocumentLink returns a fully populated DocumentLink for this message.
 func (message Message) DocumentLink() DocumentLink {
 	return DocumentLink{
 		ID:           message.MessageID,
@@ -108,26 +110,9 @@ func (message *Message) AddAttributedTo(persons ...PersonLink) {
 	message.AttributedTo = append(message.AttributedTo, persons...)
 }
 
+// HasSummary returns TRUE if the "Summary" field is not empty
 func (message Message) HasSummary() bool {
 	return message.Summary != ""
-}
-
-func (message Message) SummaryOrContent() string {
-
-	// First, try to use the "Summary" field.  If we have content there, then use it.
-	if message.Summary != "" {
-		return html.RemoveTags(message.Summary)
-	}
-
-	return message.ContentHTML
-}
-
-func (message Message) ContentOrSummary() string {
-	if message.ContentHTML != "" {
-		return message.ContentHTML
-	}
-
-	return message.Summary
 }
 
 // HasImage returns TRUE if there is a "preview" image included with this message
@@ -135,6 +120,7 @@ func (message Message) HasImage() bool {
 	return message.ImageURL != ""
 }
 
+// HasContent returns TRUE if the "ContentHTML" field is not empty
 func (message Message) HasContent() bool {
 	return message.ContentHTML != ""
 }
@@ -142,6 +128,26 @@ func (message Message) HasContent() bool {
 // HasContentImage returns TRUE if there is at least one <img> tag in the body of this message
 func (message Message) HasContentImage() bool {
 	return strings.Contains(message.ContentHTML, "<img ")
+}
+
+// SummaryOrContent returns the summary (if present), otherwise it returns the content
+func (message Message) SummaryOrContent() string {
+
+	// First, try to use the "Summary" field.  If we have content there, then use it.
+	if message.HasSummary() {
+		return html.RemoveTags(message.Summary)
+	}
+
+	return message.ContentHTML
+}
+
+// ContentOrSummary returns the content (if present), otherwise it returns the summary
+func (message Message) ContentOrSummary() string {
+	if message.HasContent() {
+		return message.ContentHTML
+	}
+
+	return message.Summary
 }
 
 func (message Message) RankSeconds() int64 {
