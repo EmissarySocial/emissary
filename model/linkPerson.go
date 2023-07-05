@@ -30,6 +30,10 @@ func (person PersonLink) NotEmpty() bool {
 	return !person.IsEmpty()
 }
 
+func (person PersonLink) HasImageURL() bool {
+	return person.ImageURL != ""
+}
+
 func (person PersonLink) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
