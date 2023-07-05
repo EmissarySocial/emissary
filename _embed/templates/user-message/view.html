@@ -4,7 +4,7 @@
 		<button script="on click send closeModal">Close</button>
 	</div>
 
-	<h1 role="link" class="clickable ellipsis flex-row flex-justify-center flex-align-center" script="on click go to '{{.URL}}' in a new window">
+	<h1 role="link" class="clickable ellipsis flex-row flex-justify-center flex-align-center" script="on click go to url '{{.URL}}' in new window">
 		{{- if ne "" .Label -}}
 			{{- .Label -}}
 		{{- else if .AttributedTo.NotEmpty -}}
@@ -35,7 +35,7 @@
 
 	<hr/>
 
-	<div class="content">
+	<div class="content space-below">
 		{{- if not .HasContentImage -}}
 			{{- if .HasImage -}}
 				<div class="space-below">
