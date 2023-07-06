@@ -231,17 +231,16 @@ func isUserVisible(context *steranko.Context, user *model.User) bool {
 
 	authorization := getAuthorization(context)
 
-	if err := authorization.Valid(); err != nil {
-		return false
-	}
-
+	// If the user is the domain owner, they can see everything
 	if authorization.DomainOwner {
 		return true
 	}
 
+	// If the user is the same as the one being viewed, they can always see themselves
 	if authorization.UserID == user.UserID {
 		return true
 	}
 
+	// Otherwise, only public users are visible.
 	return user.IsPublic
 }

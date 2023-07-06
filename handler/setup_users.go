@@ -69,6 +69,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		user.Username = data.GetString("username")
 		user.EmailAddress = data.GetString("emailAddress")
 		user.IsOwner = true
+		user.IsPublic = true
 
 		// Try to save the new user record
 		userService := factory.User()

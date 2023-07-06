@@ -70,7 +70,8 @@
 						"children": [
 							{"type":"text", "path":"displayName", "label":"Name"},
 							{"type":"text", "path":"location", "label":"Location"},
-							{"type":"textarea", "path":"statusMessage", "label":"Message"}
+							{"type":"textarea", "path":"statusMessage", "label":"Message"},
+							{"type":"toggle", "path":"isPublic", "label":"Public?", "options":{"true-text":"Visible to the Public", "false-text":"Hidden from Public Servers"}}
 						]
 					}},
 					{"step":"save", "comment":"Profile updated by me"}
