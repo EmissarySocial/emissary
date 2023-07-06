@@ -201,7 +201,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/pub/folder/readDate", handler.PostFolderReadDate(factory))
 
 	// ActivityPub Routes
-	e.GET("/@:userId/pub", handler.ActivityPub_GetProfile(factory))
+	e.GET("/@:userId/pub", handler.GetOutbox(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutboxCollection(factory))
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))

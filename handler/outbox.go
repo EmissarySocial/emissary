@@ -121,7 +121,11 @@ func renderOutbox(serverFactory *server.Factory, actionMethod render.ActionMetho
 		}
 
 		if !isUserVisible(sterankoContext, &user) {
-			return derp.NewNotFoundError("handler.GetProfileAvatar", "User not found")
+			return derp.NewNotFoundError("handler.renderOutbox", "User not found")
+		}
+
+		if isJSONLDRequest(sterankoContext) {
+			return renderProfileJSONLD(context, factory, &user)
 		}
 
 		// Try to load the User's Outbox
@@ -172,9 +176,18 @@ func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
 
 func isUserVisible(context *steranko.Context, user *model.User) bool {
 
-	if getAuthorization(context).DomainOwner {
+	authorization := getAuthorization(context)
+
+	// Domain owners can see everything
+	if authorization.DomainOwner {
 		return true
 	}
 
+	// Signed-in users can see themselves
+	if authorization.UserID == user.UserID {
+		return true
+	}
+
+	// Otherwise, access depends on the user's profile being public
 	return user.IsPublic
 }
