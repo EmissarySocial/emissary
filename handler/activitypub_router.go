@@ -23,10 +23,6 @@ import (
 
 var inboxRouter ActivityPubRouter
 
-func init() {
-	pub.SetDebugLevel(pub.DebugLevelVerbose)
-}
-
 // ActivityPubRouter is a simple object that routes incoming ActivityPub activities to the appropriate handler
 type ActivityPubRouter struct {
 	routes map[string]ActivityPubRouteHandler
@@ -77,10 +73,13 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 	activityType := activity.Type()
 	objectType := activity.Object().Type()
 
-	fmt.Println("------------------------------------------")
-	fmt.Println("CUSTOM ROUTER : Received Message: " + activityType + "/" + objectType)
-	marshalled, _ := json.MarshalIndent(activity.Value(), "", "  ")
-	fmt.Println(string(marshalled))
+	if pub.IsMinDebugLevel(pub.DebugLevelTerse) {
+		marshalled, _ := json.MarshalIndent(activity.Value(), "", "  ")
+		fmt.Println("------------------------------------------")
+		fmt.Println("EMISSARY CUSTOM ROUTER : Received Message: " + activityType + "/" + objectType)
+		fmt.Println(string(marshalled))
+		fmt.Println("")
+	}
 
 	if routeHandler, ok := router.routes[activityType+"/"+objectType]; ok {
 		return routeHandler(factory, user, activity)

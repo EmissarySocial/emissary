@@ -152,6 +152,19 @@ func getSetupForm(name string) (form.Element, bool, error) {
 
 	switch name {
 
+	case "general":
+		return form.Element{
+			Type: "layout-group",
+			Children: []form.Element{
+				{Type: "layout-vertical", Label: "Common Services", Description: "Common queue and cache services used across multiple installations.  This should only be shared across trusted servers.", Children: []form.Element{
+					{Type: "text", Label: "Database Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
+					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
+				}},
+				{Type: "layout-vertical", Label: "Testing and Development"},
+				{Type: "select", Label: "Debug Output", Path: "debugLevel", Options: mapof.Any{"options": []string{"None", "Terse", "Verbose"}}},
+			},
+		}, false, nil
+
 	case "templates":
 		return form.Element{
 			Type: "layout-vertical",
@@ -209,15 +222,6 @@ func getSetupForm(name string) (form.Element, bool, error) {
 				{Type: "text", Label: "SecretKey", Path: "certificates.secretKey", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
 				{Type: "text", Label: "Bucket", Path: "certificates.bucket", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
 				{Type: "text", Label: "Path", Path: "certificates.path", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
-			},
-		}, false, nil
-
-	case "cache":
-		return form.Element{
-			Type: "layout-vertical",
-			Children: []form.Element{
-				{Type: "text", Label: "Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
-				{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 			},
 		}, false, nil
 	}

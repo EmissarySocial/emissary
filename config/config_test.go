@@ -72,6 +72,7 @@ func TestConfig(t *testing.T) {
 		{"attachmentCache.path", "PATH...", nil},
 
 		{"adminEmail", "ADMIN@EMAIL.COM", nil},
+		{"debugLevel", "Verbose", nil},
 		{"activityPubCache.connectString", "ACTIVITY_PUB_CACHE", nil},
 		{"activityPubCache.database", "ACTIVITY_PUB_CACHE", nil},
 	}

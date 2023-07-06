@@ -6,8 +6,8 @@
 	"label": "Domain",
 	"description": "Domain Owners only.  Site Admin",
 	"schema": {"type": "object", "properties": {
-		"themeId": {"type":"string", "maxLength": 100},
 		"label":   {"type":"string", "maxLength":100},
+		"themeId": {"type":"string", "maxLength": 100},
 		"signupForm": {"type":"object", "properties": {
 			"title":   {"type":"string", "format":"no-html", "maxLength":100},
 			"message": {"type":"string", "format":"no-html", "maxLength":100},

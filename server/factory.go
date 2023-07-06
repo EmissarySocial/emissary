@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -137,6 +138,9 @@ func (factory *Factory) start() {
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
 		factory.RefreshActivityStreams(config.ActivityPubCache)
+
+		// Refresh debugging settings
+		pub.SetDebugLevelString(config.DebugLevel)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {

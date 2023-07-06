@@ -17,6 +17,7 @@ func Schema() schema.Schema {
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),
 				"certificates":        WritableFolderSchema(),
+				"debugLevel":          schema.String{Enum: []string{"None", "Terse", "Verbose"}, Default: "None"},
 				"adminEmail":          schema.String{Format: "email"},
 				"activityPubCache":    DatabaseConnectInfo(),
 			},
@@ -52,6 +53,9 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "certificates":
 		return &config.Certificates, true
+
+	case "debugLevel":
+		return &config.DebugLevel, true
 
 	case "adminEmail":
 		return &config.AdminEmail, true

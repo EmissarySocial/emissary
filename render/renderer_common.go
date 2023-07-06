@@ -398,7 +398,7 @@ func (w Common) AdminSections() []form.LookupCode {
 	return []form.LookupCode{
 		{
 			Value: "domain",
-			Label: "Appearance",
+			Label: "General",
 		},
 		{
 			Value: "navigation",

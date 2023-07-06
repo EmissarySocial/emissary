@@ -15,7 +15,11 @@
 					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Emails</button>
 					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
 					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
-					<button type="button" role="tab" id="tab-cache" class="tab-label" aria-controls="panel-cache">Cache</button>
+					<button type="button" role="tab" id="tab-general" class="tab-label" aria-controls="panel-general" aria-selected="true">General</button>
+				</div>
+
+				<div role="tabpanel" id="panel-general" aria-labelledby="tab-general" hidden="true">
+					<div hx-get="/server/general" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
@@ -31,21 +35,6 @@
 				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">
 					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
 					<div hx-get="/server/attachments" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-certificates" aria-labelledby="tab-certificates" hidden="true">
-					<p>Emissary uses <a href="https://letsencrypt.org" target="_blank">Let's Encrypt</a> to 
-						automatically generate SSL certificates for all websites.
-						Choose a readable/writeable location where SSL certificates will be cached.</p>
-					<div hx-get="/server/certificates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-cache" aria-labelledby="tab-cache" hidden="true">
-					<p>Add a cache for ActivityPub documents that are loaded from remote servers.  This is a cache
-						of publicly available documents, so it is safe to share this cache database among multiple
-						trusted servers.
-					</p>
-					<div hx-get="/server/cache" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 			</div>

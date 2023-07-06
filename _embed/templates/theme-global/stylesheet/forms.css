@@ -343,8 +343,8 @@ button[disabled].barberpole
 
 .layout-title {
     font-weight:calc(var(--weight) + 300);
-    font-size: calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
+    font-size: calc(var(--rhythm) * 3);
+    line-height:calc(var(--rhythm) * 2);
     margin-top:var(--rhythm);
     margin-bottom:calc(var(--rhythm) * 2);
     color: var(--heading-color);
@@ -398,6 +398,13 @@ button[disabled].barberpole
 .layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element > label {
 	margin-bottom:8px;
 	display:block;
+}
+
+.layout-group {
+	margin-bottom:24px;
+}
+
+.layout-group > .layout-group-elements {
 }
 
 /******************************************
