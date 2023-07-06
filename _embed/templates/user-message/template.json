@@ -37,37 +37,11 @@
 				]}
 			]
 		},
-		"replies-before":{
-			"roles":["self"],
-			"steps": [
-				{"step":"view-html"}
-			]
-		},
-		"replies-after":{
-			"roles":["self"],
-			"steps": [
-				{"step":"view-html"}
-			]
-		},
-		"view-response":{
-			"roles":["self"],
-			"steps":[
-				{"step":"set-response"},
-				{"step":"view-html", "file":"view-response", "method":"both"}
-			]
-		},
-		"view-reply":{
-			"roles":["self"],
-			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Add a Reply", "postTo":"/@me/outbox-reply?messageId={{.QueryParam `messageId`}}"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true}
-			]
-		},
 
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Add a Reply", "postTo":"/@me/messages/{{.MessageID}}/reply"},
+				{"step":"set-query-param", "new-stream-label":"Reply to This Post", "postTo":"/@me/messages/{{.MessageID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true, "with-stream":[
 					{"step":"save"},
 					{"step":"publish"}
