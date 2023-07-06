@@ -207,6 +207,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowersCollection(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowingCollection(factory))
+	e.GET("/@:userId/pub/following/:followingId", handler.ActivityPub_GetFollowingRecord(factory))
 	e.GET("/@:userId/pub/liked", handler.ActivityPub_GetUserResponseCollection(factory, model.ResponseTypeLike))
 	e.GET("/@:userId/pub/liked/:response", handler.ActivityPub_GetUserResponse(factory, model.ResponseTypeLike))
 	e.GET("/@:userId/pub/blocked", handler.ActivityPub_GetBlockedCollection(factory))
