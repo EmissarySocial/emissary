@@ -16,7 +16,7 @@
 				{{ .PublishDate | tinyDate }}
 			</span>
 
-			{{- if .InReplyTo.NotNil -}}
+			{{- if ne "" .InReplyTo -}}
 				<span class="bold text-gray">
 					{{icon "reply"}} Replying to ...
 				</span>
