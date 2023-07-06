@@ -44,6 +44,7 @@
 			hx-get="/@me/messages/{{.MessageID.Hex}}?&origin.followingId={{$internalID}}"
 			hx-trigger="click"
 			hx-push-url="false"
+			tabIndex="0"
 			script="install listItem(folderId:'{{$folderID}}', rank:'{{.Rank}}')">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}

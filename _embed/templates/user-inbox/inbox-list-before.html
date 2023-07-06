@@ -30,7 +30,8 @@
 			class="message" 
 			style="max-width:640px;"
 			hx-get="/@me/messages/{{.MessageID.Hex}}?origin.followingId={{$internalID}}"
-			hx-push-url="false">
+			hx-push-url="false"
+			tabIndex="0">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
 				{{- template "inbox-list-social" $message -}}
