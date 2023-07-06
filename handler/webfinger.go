@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
@@ -46,6 +47,7 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
 		// If relation is specified, then limit links to that type only
 		resource.FilterLinks(ctx.QueryParam("rel"))
+		ctx.Response().Header().Set("Content-Type", model.MimeTypeJSONResourceDescriptor)
 
 		// Return the Response as a JSON object
 		return ctx.JSON(http.StatusOK, resource)

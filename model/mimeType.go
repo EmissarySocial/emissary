@@ -14,6 +14,8 @@ const MimeTypeJSONLD = "application/ld+json"
 
 const MimeTypeJSONFeed = "application/feed+json"
 
+const MimeTypeJSONResourceDescriptor = "application/jrd+json"
+
 const MimeTypeHTML = "text/html"
 
 const MimeTypeImage = "image/*"
