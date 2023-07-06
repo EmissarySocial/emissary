@@ -44,14 +44,6 @@
 				{"step":"view-html"}
 			]
 		},
-		"add-reply":{
-			"roles":["authenticated"],
-			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Reply to {{.Author.Name}}", "postTo":"/{{.StreamID}}/add-reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-				{"step":"trigger-event", "event":"refreshReplies"}
-			]
-		},
 		"edit": {
 			"roles":["self"],
 			"steps": [
@@ -62,6 +54,14 @@
 					{"step":"publish"},
 					{"step":"refresh-page"}
 				]}
+			]
+		},
+		"reply":{
+			"roles":["authenticated"],
+			"steps":[
+				{"step":"set-query-param", "new-stream-label":"Reply to {{.Author.Name}}", "postTo":"/{{.StreamID}}/reply"},
+				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+				{"step":"trigger-event", "event":"refreshReplies"}
 			]
 		},
 		"delete": {

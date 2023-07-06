@@ -49,8 +49,8 @@
 			</div>
 
 			<div hx-get="/{{.StreamID}}/view-replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
-				{{- if .UserCan "add-reply" -}}
-					{{.View "add-reply"}}
+				{{- if .UserCan "reply" -}}
+					{{.View "reply"}}
 				{{- end -}}
 			</div>
 
