@@ -35,8 +35,12 @@ func (as *ActivityStreams) Refresh(innerClient streams.Client, collection data.C
  * Hannibal HTTP Client Interface
  ******************************************/
 
-func (as *ActivityStreams) Load(uri string, defaultValue map[string]any) (streams.Document, error) {
-	return as.innerClient.Load(uri, defaultValue)
+func (as *ActivityStreams) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
+	return as.innerClient.LoadDocument(uri, defaultValue)
+}
+
+func (as *ActivityStreams) LoadActor(uri string) (streams.Document, error) {
+	return as.innerClient.LoadActor(uri)
 }
 
 /******************************************

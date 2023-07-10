@@ -545,11 +545,10 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
 	// TODO: LOW: If called repeatedly, will this leak database connections?
 	// https://stackoverflow.com/questions/45479236/golang-mongodb-connections-leak
-	collection = session.Collection("ActivityPub")
 
 	// Build a new client stack
 	httpClient := sherlock.NewClient()
-	cacheClient := ascache.New(collection, httpClient)
+	cacheClient := ascache.New(session, httpClient)
 	recursorClient := asrecursor.New(cacheClient, 3)
 
 	// Inject new values into the existing object

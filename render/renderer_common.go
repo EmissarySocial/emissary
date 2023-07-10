@@ -301,7 +301,7 @@ func (w Common) authorization() model.Authorization {
  ******************************************/
 
 func (w Common) ActivityStream(uri string) streams.Document {
-	result, _ := w._factory.ActivityStreams().Load(uri, mapof.NewAny())
+	result, _ := w._factory.ActivityStreams().LoadDocument(uri, mapof.NewAny())
 	return result
 }
 

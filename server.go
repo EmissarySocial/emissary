@@ -250,6 +250,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 }
 
 // startHttp starts the HTTPS server using Let's Encrypt SSL certificates.  If port 443 is not available, it will wait 10ms and retry until it is
+// TODO: HIGH: Move this into the server factory, where it can listen for changes to the HTTPS port
 func startHttps(e *echo.Echo) {
 	fmt.Println("Starting HTTP server...")
 	for {
@@ -260,6 +261,7 @@ func startHttps(e *echo.Echo) {
 }
 
 // startHttp starts the HTTP server.  If port 80 is not available, it will wait 10ms and retry until it is
+// TODO: HIGH: Move this into the server factory, where it can listen for changes to the HTTP port
 func startHttp(e *echo.Echo) {
 	fmt.Println("Starting HTTP server...")
 	for {
@@ -316,7 +318,5 @@ TODO: MEDIUM: Move this into Factory, or somewhere that can listen to configurat
 		Prompt:     autocert.AcceptTOS,
 		Email:      c.AdminEmail,
 	}
-
-
 
 **/

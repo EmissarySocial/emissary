@@ -22,9 +22,25 @@ func New(innerClient streams.Client, maxDepth int) *Recursor {
 	return result
 }
 
-func (client *Recursor) Load(uri string, defaultValue map[string]any) (streams.Document, error) {
+func (client *Recursor) LoadActor(uri string) (streams.Document, error) {
+	result, err := client.innerClient.LoadActor(uri)
 
-	result, err := client.innerClient.Load(uri, defaultValue)
+	if err != nil {
+		return result, derp.Wrap(err, "asrecursor.Load", "Error loading actor from inner client")
+	}
+
+	client.recurseCollection(result, "outbox", 0)
+	client.recurseCollection(result, "following", 0)
+	client.recurseCollection(result, "followers", 0)
+	client.recurseCollection(result, "liked", 0)
+	client.recurseCollection(result, "blocked", 0)
+
+	return result, nil
+}
+
+func (client *Recursor) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
+
+	result, err := client.innerClient.LoadDocument(uri, defaultValue)
 
 	if err != nil {
 		return result, derp.Wrap(err, "asrecursor.Load", "Error loading document from inner client")
@@ -36,6 +52,14 @@ func (client *Recursor) Load(uri string, defaultValue map[string]any) (streams.D
 
 	result.WithOptions(streams.WithClient(client))
 	return result, nil
+}
+
+func (client *Recursor) recurseCollection(document streams.Document, propertyName string, depth int) {
+	if collection := document.Get(propertyName); collection.NotNil() {
+		for item := collection.Items(); item.NotNil(); item.Next() {
+			client.recurse(item, depth+1)
+		}
+	}
 }
 
 func (client *Recursor) recurse(document streams.Document, depth int) {
@@ -50,7 +74,7 @@ func (client *Recursor) recurse(document streams.Document, depth int) {
 	// RULE: If "document" is only a string/id, then load it.
 	if document.IsString() {
 		var err error
-		document, err = client.innerClient.Load(document.ID(), mapof.NewAny())
+		document, err = client.innerClient.LoadDocument(document.ID(), mapof.NewAny())
 
 		if err != nil {
 			return

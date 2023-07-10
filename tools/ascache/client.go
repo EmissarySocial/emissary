@@ -11,18 +11,18 @@ import (
 )
 
 type Client struct {
-	collection     data.Collection
+	session        data.Session
 	innerClient    streams.Client
 	expireSeconds  int64
 	purgeFrequency int64
 }
 
 // New returns a fully initialized Client object
-func New(collection data.Collection, innerClient streams.Client, options ...OptionFunc) *Client {
+func New(session data.Session, innerClient streams.Client, options ...OptionFunc) *Client {
 
 	// Create a default client
 	result := Client{
-		collection:     collection,
+		session:        session,
 		innerClient:    innerClient,
 		expireSeconds:  60 * 60 * 24 * 30, // Default expiration is 30 days
 		purgeFrequency: 60 * 60 * 4,       // Default purge frequency is 4 hours
@@ -45,14 +45,18 @@ func New(collection data.Collection, innerClient streams.Client, options ...Opti
 // start is a background process that purges expired documents from the cache
 func (client *Client) start() {
 
-	if client.collection == nil {
+	if client.session == nil {
 		return
 	}
 
 	for client.purgeFrequency > 0 {
 		time.Sleep(time.Second * time.Duration(client.purgeFrequency))
 
-		if err := client.collection.HardDelete(exp.LessThan("exp", time.Now().Unix())); err != nil {
+		if err := client.session.Collection(CollectionActors).HardDelete(exp.LessThan("exp", time.Now().Unix())); err != nil {
+			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired actors from cache"))
+		}
+
+		if err := client.session.Collection(CollectionDocuments).HardDelete(exp.LessThan("exp", time.Now().Unix())); err != nil {
 			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired documents from cache"))
 		}
 	}
@@ -62,15 +66,15 @@ func (client *Client) start() {
  * Hannibal HTTP Client Methods
  ******************************************/
 
-func (client *Client) Load(uri string, defaultValue map[string]any) (streams.Document, error) {
+func (client *Client) LoadActor(uri string) (streams.Document, error) {
 
 	// Search the cache for the document
-	if client.collection != nil {
+	if client.session != nil {
 		cachedValue := NewCachedValue()
-		if err := client.loadByURI(uri, &cachedValue); err == nil {
+		if err := client.loadByURI(CollectionActors, uri, &cachedValue); err == nil {
 
 			if cachedValue.ShouldRefresh() {
-				go client.refresh(uri, cachedValue)
+				go client.refresh(CollectionActors, uri, cachedValue)
 			}
 
 			return client.asDocument(cachedValue), nil
@@ -78,15 +82,47 @@ func (client *Client) Load(uri string, defaultValue map[string]any) (streams.Doc
 	}
 
 	// Pass the request to the inner client
-	result, err := client.innerClient.Load(uri, defaultValue)
+	result, err := client.innerClient.LoadActor(uri)
 
 	if err != nil {
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
 	}
 
 	// Try to save the new value asynchronously
-	if client.collection != nil {
-		go client.save(uri, result)
+	if client.session != nil {
+		go client.save(CollectionActors, uri, result)
+	}
+
+	result.WithOptions(streams.WithClient(client))
+
+	return result, nil
+}
+
+func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
+
+	// Search the cache for the document
+	if client.session != nil {
+		cachedValue := NewCachedValue()
+		if err := client.loadByURI(CollectionDocuments, uri, &cachedValue); err == nil {
+
+			if cachedValue.ShouldRefresh() {
+				go client.refresh(CollectionDocuments, uri, cachedValue)
+			}
+
+			return client.asDocument(cachedValue), nil
+		}
+	}
+
+	// Pass the request to the inner client
+	result, err := client.innerClient.LoadDocument(uri, defaultValue)
+
+	if err != nil {
+		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
+	}
+
+	// Try to save the new value asynchronously
+	if client.session != nil {
+		go client.save(CollectionDocuments, uri, result)
 	}
 
 	result.WithOptions(streams.WithClient(client))
@@ -98,34 +134,34 @@ func (client *Client) Load(uri string, defaultValue map[string]any) (streams.Doc
  * Other Cache Management Methods
  ******************************************/
 
-func (client *Client) PurgeByURI(uri string) error {
+func (client *Client) PurgeByURI(collection string, uri string) error {
 
-	if client.collection == nil {
+	if client.session == nil {
 		return derp.NewInternalError("cache.Client.delete", "Cache connection is not defined")
 	}
 
-	if err := client.collection.HardDelete(exp.Equal("uri", uri)); err != nil {
+	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
 		return derp.Wrap(err, "cache.Client.delete", "Error deleting document from cache (by URI)", uri)
 	}
 
 	return nil
 }
 
-func (client *Client) refresh(uri string, value CachedValue) {
+func (client *Client) refresh(collection string, uri string, value CachedValue) {
 
-	if client.collection == nil {
+	if client.session == nil {
 		return
 	}
 
 	// Pass the request to the inner client
-	if result, err := client.innerClient.Load(uri, mapof.NewAny()); err == nil {
-		client.save(uri, result)
+	if result, err := client.innerClient.LoadDocument(uri, mapof.NewAny()); err == nil {
+		client.save(collection, uri, result)
 	}
 }
 
-func (client *Client) save(uri string, document streams.Document) {
+func (client *Client) save(collection string, uri string, document streams.Document) {
 
-	if client.collection == nil {
+	if client.session == nil {
 		return
 	}
 
@@ -144,13 +180,13 @@ func (client *Client) save(uri string, document streams.Document) {
 	}
 
 	// Save it to the cache
-	if err := client.collection.Save(&cachedValue, ""); err != nil {
+	if err := client.session.Collection(collection).Save(&cachedValue, ""); err != nil {
 		derp.Report(derp.Wrap(err, "cache.Client.save", "Error saving document to cache", document.ID()))
 	}
 
 	// If this is a reply, then cache the parent document as well
 	if cachedValue.InReplyTo != "" {
-		go client.Load(cachedValue.InReplyTo, mapof.NewAny())
+		go client.LoadDocument(cachedValue.InReplyTo, mapof.NewAny())
 	}
 }
 
@@ -170,14 +206,18 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 /******************************************
  * Other Queries
  ******************************************/
-func (client *Client) loadByURI(uri string, document *CachedValue) error {
 
-	if client.collection == nil {
+func (client *Client) loadByURI(collection string, uri string, document *CachedValue) error {
+
+	if client.session == nil {
 		return derp.NewInternalError("cache.Client.loadByURI", "Cache connection is not defined")
 	}
 
 	criteria := exp.Equal("uri", uri)
-	err := client.collection.Load(criteria, document)
 
-	return err
+	if err := client.session.Collection(collection).Load(criteria, document); err != nil {
+		return derp.Wrap(err, "cache.Client.loadByURI", "Error loading document from cache", uri)
+	}
+
+	return nil
 }

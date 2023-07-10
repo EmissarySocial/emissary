@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -25,6 +26,23 @@ func (service *Following) Connect(following model.Following) error {
 	if err := service.SetStatus(&following, model.FollowingStatusLoading, ""); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
 	}
+
+	actor, err := service.httpClient.LoadActor(following.URL)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading document", following.URL)
+	}
+
+	spew.Dump(actor.Value(), actor.Outbox().Value())
+	outbox, err := actor.Outbox().Load()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading outbox", following.URL)
+	}
+
+	spew.Dump(outbox.Items().Value(), actor.Meta())
+
+	return nil
 
 	// If there is an error connecting to the URL, then mark the status as Failure
 	if err := service.connect(&following); err != nil {

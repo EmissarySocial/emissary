@@ -96,7 +96,7 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 	}
 
 	// If this message has a valid URL, then cache it into the activitystream service.
-	go service.activityStreamsService.Load(outboxMessage.URL, mapof.NewAny())
+	go service.activityStreamsService.LoadDocument(outboxMessage.URL, mapof.NewAny())
 
 	return nil
 }

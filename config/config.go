@@ -24,9 +24,11 @@ type Config struct {
 	AttachmentOriginals mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 	Certificates        mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
-	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
-	DebugLevel          string                       `json:"debugLevel"`          // Amount of debugging information to log for the server (None, Terse, Verbose)
 	ActivityPubCache    mapof.String                 `json:"activityPubCache"`    // Connection string for ActivityPub cache database
+	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
+	HTTPPort            int                          `json:"httpPort"`            // Port to listen on for HTTP requests
+	HTTPSPort           int                          `json:"httpsPort"`           // Port to listen on for HTTPS requests
+	DebugLevel          string                       `json:"debugLevel"`          // Amount of debugging information to log for the server (None, Terse, Verbose)
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
 	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
@@ -53,6 +55,8 @@ func DefaultConfig() Config {
 		Certificates:        mapof.String{"adapter": "FILE", "location": ".emissary/certificates"},
 		ActivityPubCache:    mapof.String{},
 		DebugLevel:          "None",
+		HTTPPort:            80,
+		HTTPSPort:           443,
 	}
 }
 

@@ -73,6 +73,8 @@ func TestConfig(t *testing.T) {
 
 		{"adminEmail", "ADMIN@EMAIL.COM", nil},
 		{"debugLevel", "Verbose", nil},
+		{"httpPort", "8080", 8080},
+		{"httpsPort", "8443", 8443},
 		{"activityPubCache.connectString", "ACTIVITY_PUB_CACHE", nil},
 		{"activityPubCache.database", "ACTIVITY_PUB_CACHE", nil},
 	}
