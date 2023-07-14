@@ -63,7 +63,13 @@ Emissary is intended to be as easy to run and as scalable as possible.  Therefor
 * [HTMX](https://htmx.org) / [Hyperscript](https://hyperscript.org)
 * That's it.  I'll worry about a cute acronym later.
 
-A list of other open-source libraries can be found in the [Go module file](https://github.com/EmissarySocial/emissary/blob/main/go.mod).
+Emissary also relies on a stack of custom libraries that make it go:
+
+* [Hannibal](https://github.com/benpate/hannibal) - A robust, idiomatic ActivityPub interfaces in Go
+* [Sherlock](https://github.com/benpate/sherlock) - Inspect data in ActivityPub/RSS/MicroFormats and more
+* [Rosetta](https://github.com/benpate/rosetta) - Data mapping and manipulations: schemas, conversions, etc 
+
+A complete list can be found in the [Go module file](https://github.com/EmissarySocial/emissary/blob/main/go.mod).
 
 ## The Elephant in the <s>Room</s> Internet
 
