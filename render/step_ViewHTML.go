@@ -60,9 +60,9 @@ func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) PipelineBe
 	*/
 
 	// TODO: LOW: We can do a better job with caching.  If a page is public, then caching should be public, too.
-	// context := renderer.context()
-	// header := context.Response().Header()
-	// header.Set("Vary", "Cookie, HX-Request")
+	context := renderer.context()
+	header := context.Response().Header()
+	header.Set("Vary", "Cookie, HX-Request")
 	// header.Set("Cache-Control", "private")
 
 	var filename string
