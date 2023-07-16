@@ -14,7 +14,7 @@ func TestOriginLink(t *testing.T) {
 
 	table := []tableTestItem{
 		{"followingId", "123412341234123412341234", nil},
-		{"type", "TEST-TYPE", nil},
+		{"type", "ACTIVITYPUB", nil},
 		{"url", "https://test.url", nil},
 		{"label", "TEST-LABEL", nil},
 		{"summary", "TEST-SUMMARY", nil},

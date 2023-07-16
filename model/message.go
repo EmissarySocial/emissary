@@ -27,6 +27,7 @@ type Message struct {
 	ContentJSON  string                     `json:"contentJson"  bson:"contentJson,omitempty"`  // Original JSON message, used for reprocessing later.
 	Responses    ResponseSummary            `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
 	MyResponse   string                     `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
+	Read         bool                       `json:"read"         bson:"read"`                   // If the owner of this message has read this message
 	PublishDate  int64                      `json:"publishDate"  bson:"publishDate,omitempty"`  // Unix timestamp of the date/time when this Message was published
 	Rank         int64                      `json:"rank"         bson:"rank"`                   // Sort rank for this message (publishDate * 1000 + sequence number)
 

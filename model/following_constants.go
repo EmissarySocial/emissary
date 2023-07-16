@@ -12,8 +12,11 @@ const FollowMethodWebSub = "WEBSUB"
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"
 
-// FollowingStatusLoading represents a following that is currently loading
+// FollowingStatusLoading represents a following that is being loaded for the first time
 const FollowingStatusLoading = "LOADING"
+
+// FollowingStatusPolling represents a following that is being polled for updates
+const FollowingStatusPolling = "POLLING"
 
 // FollowingStatusPending represents a following that has been partially connected (e.g. WebSub)
 const FollowingStatusPending = "PENDING"
@@ -23,3 +26,13 @@ const FollowingStatusSuccess = "SUCCESS"
 
 // FollowingStatusFailure represents a following that has failed to load
 const FollowingStatusFailure = "FAILURE"
+
+const FollowingFormatActivityStream = "ACTIVITYSTREAM"
+
+const FollowingFormatRSS = "RSS"
+
+const FollowingFormatAtom = "ATOM"
+
+const FollowingFormatJSONFeed = "JSONFEED"
+
+const FollowingFormatMicroFormats = "MICROFORMATS"
