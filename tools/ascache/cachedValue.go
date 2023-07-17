@@ -12,6 +12,7 @@ type CachedValue struct {
 	CachedValueID  primitive.ObjectID `bson:"_id"`
 	URI            string             `bson:"uri"`
 	Original       mapof.Any          `bson:"original"`
+	Metadata       mapof.Any          `bson:"metadata"`
 	PublishedDate  int64              `bson:"published"`
 	RefreshesDate  int64              `bson:"refreshes"`
 	ExpiresDate    int64              `bson:"expires"`
@@ -24,6 +25,8 @@ type CachedValue struct {
 func NewCachedValue() CachedValue {
 	return CachedValue{
 		CachedValueID:  primitive.NewObjectID(),
+		Original:       make(mapof.Any),
+		Metadata:       make(mapof.Any),
 		ResponseCounts: make(mapof.Int),
 	}
 }

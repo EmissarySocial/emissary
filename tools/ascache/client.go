@@ -77,7 +77,9 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 				go client.refresh(CollectionActors, uri, cachedValue)
 			}
 
-			return client.asDocument(cachedValue), nil
+			result := client.asDocument(cachedValue)
+			result.MetaSet(cachedValue.Metadata)
+			return result, nil
 		}
 	}
 
@@ -197,7 +199,7 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 	)
 
 	for key, value := range cachedValue.ResponseCounts {
-		streams.WithMeta(key, value)(&result)
+		result.MetaSetInt(key, value)
 	}
 
 	return result

@@ -94,10 +94,8 @@ func (client *Recursor) recurse(document streams.Document, depth int) {
 	// Check "Items" property for all collections
 	switch document.Type() {
 	case vocab.CoreTypeCollection, vocab.CoreTypeCollectionPage, vocab.CoreTypeOrderedCollection, vocab.CoreTypeOrderedCollectionPage:
-		if items := document.Items(); items.NotNil() {
-			items.ForEach(func(item streams.Document) {
-				client.recurse(item, depth+1)
-			})
+		for item := document.Items(); item.NotNil(); item = item.Tail() {
+			client.recurse(item.Head(), depth+1)
 		}
 	}
 }
