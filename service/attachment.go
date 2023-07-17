@@ -175,9 +175,10 @@ func (service *Attachment) DeleteAll(objectType string, objectID primitive.Objec
 	}
 
 	for _, attachment := range attachments {
+
 		if err := service.Delete(&attachment, note); err != nil {
+			// nolint:errcheck // Fail loudly, but do not stop.
 			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
-			// Fail loudly, but do not stop.
 		}
 	}
 

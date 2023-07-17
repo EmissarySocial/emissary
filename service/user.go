@@ -304,9 +304,10 @@ func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
 	return derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
 }
 
-func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
+func (service *User) CalcBlockCount(userID primitive.ObjectID) {
 	err := queries.SetBlockCount(service.collection, service.blocks, userID)
-	return derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+	// nolint: errcheck
+	derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
 }
 
 func (service *User) SetOwner(owner config.Owner) error {

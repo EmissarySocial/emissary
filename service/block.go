@@ -154,7 +154,8 @@ func (service *Block) Delete(block *model.Block, note string) error {
 
 	if block.IsPublic {
 		if err := service.unpublish(block, false); err != nil {
-			derp.Report(derp.Wrap(err, "service.Block.Delete", "Error unpublishing Block", block)) // Fail loudly, but don't block.
+			// nolint: errcheck // Fail loudly, but don't block.
+			derp.Report(derp.Wrap(err, "service.Block.Delete", "Error unpublishing Block", block))
 		}
 	}
 
