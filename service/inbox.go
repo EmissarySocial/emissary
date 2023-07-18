@@ -16,11 +16,12 @@ import (
 
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
-	collection   data.Collection
-	blockService *Block
-	host         string
-	counter      int
-	mutex        *sync.Mutex
+	collection    data.Collection
+	blockService  *Block
+	folderService *Folder
+	host          string
+	counter       int
+	mutex         *sync.Mutex
 }
 
 // NewInbox returns a fully populated Inbox service
@@ -35,9 +36,10 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(collection data.Collection, blockService *Block, host string) {
+func (service *Inbox) Refresh(collection data.Collection, blockService *Block, folderService *Folder, host string) {
 	service.collection = collection
 	service.blockService = blockService
+	service.folderService = folderService
 	service.host = host
 }
 
@@ -311,6 +313,40 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
  * Custom Behaviors
  ******************************************/
 
+func (service *Inbox) MarkRead(userID primitive.ObjectID, messageID primitive.ObjectID, read bool) error {
+
+	const location = "service.Inbox.MarkRead"
+
+	// Load the Message from the database
+	message := model.NewMessage()
+
+	if err := service.LoadByID(userID, messageID, &message); err != nil {
+		return derp.Wrap(err, location, "Error loading message")
+	}
+
+	// Set the message as read and save to the database
+	message.Read = read
+
+	if err := service.Save(&message, "MarkRead"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Recalculate the "unread" count on the corresponding folder
+	unreadCount, err := service.CountUnreadMessages(userID, message.FolderID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error counting unread messages")
+	}
+
+	// Update the "unread" count for the Folder
+	if err := service.folderService.SetUnreadCount(userID, message.FolderID, unreadCount); err != nil {
+		return derp.Wrap(err, location, "Error setting unread count")
+	}
+
+	// Lo hicimos! we did it.
+	return nil
+}
+
 // CalculateRank generates a unique rank for the message based on the PublishDate and the number of messages
 // that already exist in the database with this PublishDate.
 func (service *Inbox) CalculateRank(message *model.Message) {
@@ -331,8 +367,9 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 	message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
 }
 
-func (service *Inbox) CountMessagesAfterRank(userID primitive.ObjectID, folderID primitive.ObjectID, minRank int64) (int, error) {
-	return queries.CountMessagesAfterRank(service.collection, userID, folderID, minRank)
+// CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
+func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
+	return queries.CountUnreadMessages(service.collection, userID, folderID)
 }
 
 func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {

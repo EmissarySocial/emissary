@@ -287,7 +287,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
-		Int("rank")
+		Bool("read")
 
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),

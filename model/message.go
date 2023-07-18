@@ -13,7 +13,8 @@ import (
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
 	MessageID    primitive.ObjectID         `json:"messageId"    bson:"_id"`                    // Unique ID of the Message
-	UserID       primitive.ObjectID         `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message (in their inbox or outbox)
+	UserID       primitive.ObjectID         `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message
+	FollowingID  primitive.ObjectID         `json:"followingId"  bson:"followingId,omitempty"`  // Unique ID of the Following record that generated this Message
 	FolderID     primitive.ObjectID         `json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Message is stored
 	SocialRole   string                     `json:"socialRole"   bson:"socialRole,omitempty"`   // Role this message plays in social integrations ("Article", "Note", etc)
 	Origin       OriginLink                 `json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Message
@@ -37,10 +38,10 @@ type Message struct {
 // NewMessage returns a fully initialized Message record
 func NewMessage() Message {
 	return Message{
-		MessageID: primitive.NewObjectID(),
-		UserID:    primitive.NilObjectID,
-		FolderID:  primitive.NilObjectID,
-		Responses: NewResponseSummary(),
+		MessageID:    primitive.NewObjectID(),
+		Responses:    NewResponseSummary(),
+		Origin:       NewOriginLink(),
+		AttributedTo: sliceof.NewObject[PersonLink](),
 	}
 }
 

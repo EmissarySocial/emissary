@@ -237,6 +237,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.inboxService.Refresh(
 			factory.collection(CollectionInbox),
 			factory.Block(),
+			factory.Folder(),
 			factory.Host(),
 		)
 
