@@ -1,17 +1,6 @@
 package service
 
-import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"sort"
-
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/benpate/derp"
-	"github.com/kr/jsonfeed"
-)
-
+/*
 func (service *Following) import_JSONFeed(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
 	const location = "service.Following.importJSONFeed"
@@ -42,3 +31,4 @@ func (service *Following) import_JSONFeed(following *model.Following, response *
 	// Save our success!
 	return nil
 }
+*/

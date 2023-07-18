@@ -18,7 +18,7 @@ func FollowingSchema() schema.Element {
 			"profileUrl":     schema.String{Format: "url", MaxLength: 1024},
 			"method":         schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"format":         schema.String{Enum: []string{FollowingFormatActivityStream, FollowingFormatRSS, FollowingFormatAtom, FollowingFormatJSONFeed, FollowingFormatMicroFormats}},
-			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusPolling, FollowingStatusPending, FollowingStatusSuccess, FollowingStatusFailure}},
+			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage":  schema.String{MaxLength: 1024},
 			"lastPolled":     schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"pollDuration":   schema.Integer{Minimum: null.NewInt64(1)},

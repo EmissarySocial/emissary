@@ -1,19 +1,7 @@
 package service
 
-import (
-	"bytes"
-	"net/http"
-	"sort"
-
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/benpate/derp"
-	"github.com/mmcdole/gofeed"
-)
-
 /******************************************
  * Connection Methods
- ******************************************/
 
 func (service *Following) import_RSS(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
@@ -73,3 +61,5 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 
 	return nil
 }
+
+******************************************/

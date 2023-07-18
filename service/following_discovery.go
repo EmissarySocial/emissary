@@ -1,20 +1,6 @@
 package service
 
-import (
-	"bytes"
-	"mime"
-	"net/http"
-	"strings"
-
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/benpate/derp"
-	"github.com/benpate/digit"
-	"github.com/benpate/rosetta/list"
-	"github.com/kr/jsonfeed"
-	"github.com/tomnomnom/linkheader"
-)
-
+/*
 // discoverLinks attempts to discover ActivityPub/RSS/Atom/JSONFeed links from a given following URL.
 func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
 
@@ -234,3 +220,4 @@ func discoverLinks_JSONFeed(response *http.Response, jsonFeed *jsonfeed.Feed) []
 
 	return result
 }
+*/

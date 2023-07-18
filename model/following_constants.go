@@ -15,12 +15,6 @@ const FollowingStatusNew = "NEW"
 // FollowingStatusLoading represents a following that is being loaded for the first time
 const FollowingStatusLoading = "LOADING"
 
-// FollowingStatusPolling represents a following that is being polled for updates
-const FollowingStatusPolling = "POLLING"
-
-// FollowingStatusPending represents a following that has been partially connected (e.g. WebSub)
-const FollowingStatusPending = "PENDING"
-
 // FollowingStatusSuccess represents a following that has successfully loaded
 const FollowingStatusSuccess = "SUCCESS"
 

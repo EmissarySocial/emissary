@@ -52,7 +52,7 @@ func init() {
 		following.PollDuration = 30
 
 		// Save the "Following" record to the database
-		if err := followingService.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
+		if err := followingService.SetStatusSuccess(&following); err != nil {
 			return derp.Wrap(err, "handler.inboxRouter.Accept.Follow", "Error saving following", following)
 		}
 
