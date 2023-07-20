@@ -324,9 +324,14 @@ func (service *Inbox) MarkRead(userID primitive.ObjectID, messageID primitive.Ob
 		return derp.Wrap(err, location, "Error loading message")
 	}
 
-	// Set the message as read and save to the database
-	message.Read = read
+	// Update the ReadDate timestamp
+	if read {
+		message.ReadDate = time.Now().Unix()
+	} else {
+		message.ReadDate = 0
+	}
 
+	// Save the record to the database
 	if err := service.Save(&message, "MarkRead"); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}

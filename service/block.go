@@ -300,7 +300,7 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 func (service *Block) publish(block *model.Block) error {
 
 	// Try to update the block in the database (directly, without invoking any business rules)
-	block.PublishDate = time.Now().UnixMilli()
+	block.PublishDate = time.Now().Unix()
 
 	// Generate JSONLD for this block
 	if err := service.calcJSONLD(block); err != nil {

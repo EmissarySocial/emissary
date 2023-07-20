@@ -81,6 +81,7 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 
 			result := client.asDocument(cachedValue)
 			result.MetaSet(cachedValue.Metadata)
+
 			return result, nil
 		}
 	}

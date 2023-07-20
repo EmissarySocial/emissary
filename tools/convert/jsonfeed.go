@@ -37,8 +37,8 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		ContentHTML:   first.String(stream.Content.HTML, " "),
 		Summary:       stream.Summary,
 		Image:         stream.ImageURL,
-		DatePublished: time.UnixMilli(stream.PublishDate),
-		DateModified:  time.UnixMilli(stream.UpdateDate),
+		DatePublished: time.Unix(stream.PublishDate, 0),
+		DateModified:  time.Unix(stream.UpdateDate, 0),
 	}
 
 	// Attach author if available
@@ -71,7 +71,7 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 	message.Summary = item.Summary
 	message.ImageURL = item.Image
 	message.ContentHTML = JsonFeedToContentHTML(item)
-	message.PublishDate = item.DatePublished.UnixMilli()
+	message.PublishDate = item.DatePublished.Unix()
 	message.SetAttributedTo(JsonFeedToAuthor(feed, item))
 
 	return message
