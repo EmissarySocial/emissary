@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	"math"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -20,7 +21,7 @@ func CountMessages(inboxCollection data.Collection, userID primitive.ObjectID, f
 // CountUnreadMessages returns the total number of messages for a partucular user/folder
 // that have not been read
 func CountUnreadMessages(inboxCollection data.Collection, userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID).AndEqual("read", false)
+	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID).AndEqual("readDate", math.MaxInt64)
 	return CountRecords(context.Background(), inboxCollection, criteria)
 }
 

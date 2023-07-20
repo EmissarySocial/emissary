@@ -101,6 +101,11 @@ func (builder QueryBuilder[T]) ByRank() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) ByReadDate() QueryBuilder[T] {
+	builder.SortField = "readDate"
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByUpdateDate() QueryBuilder[T] {
 	builder.SortField = "updateDate"
 	return builder

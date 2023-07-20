@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -16,7 +15,6 @@ func (service *Following) Connect(following model.Following) error {
 	const location = "service.Following.Connect"
 
 	isNewFollowing := (following.Status == model.FollowingStatusNew)
-
 	// Update the following status
 	if err := service.SetStatusLoading(&following); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
@@ -55,8 +53,6 @@ func (service *Following) Connect(following model.Following) error {
 
 		document := getActualDocument(documentOrLink)
 
-		spew.Dump(document.Value())
-
 		// RULE: For new following records, the first six records are "unread".  All others are "read"
 		markRead := !isNewFollowing || (counter > 6)
 		counter++
@@ -94,10 +90,6 @@ func (service *Following) saveMessage(following model.Following, document stream
 
 	const location = "service.Following.saveMessage"
 	message := model.NewMessage()
-	created := false
-
-	// Potentially traverse "Create" and "Update" activities to get the actual document
-	document = getActualDocument(document)
 
 	// Search for an existing Message that matches the parameter
 	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
@@ -106,19 +98,22 @@ func (service *Following) saveMessage(following model.Following, document stream
 		}
 	}
 
-	// Set/Update the message with information from the ActivityStream
-	if message.IsNew() {
-		message.UserID = following.UserID
-		message.FolderID = following.FolderID
-		message.Origin = following.Origin()
+	// Load and refine the document from its actual URL
+	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
 
-		if markRead {
-			message.Read = true
-		}
-
-		created = true
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error loading document from source URL")
 	}
 
+	// If this message already exists in the database, then exit here.
+	if !message.IsNew() {
+		return false, nil
+	}
+
+	// Populate the new message
+	message.UserID = following.UserID
+	message.FolderID = following.FolderID
+	message.Origin = following.Origin()
 	message.URL = document.ID()
 	message.Label = document.Name()
 	message.Summary = document.Summary()
@@ -127,20 +122,23 @@ func (service *Following) saveMessage(following model.Following, document stream
 	message.ContentHTML = document.Content()
 	message.PublishDate = document.Published().Unix()
 
+	if markRead {
+		message.ReadDate = message.PublishDate
+	}
+
 	// Save the message to the database
 	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
 		return false, derp.Wrap(err, location, "Error saving message")
 	}
 
 	// Yee. Haw.
-	return created, nil
+	return true, nil
 }
 
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
 
 	meta := actor.Meta()
-	spew.Dump(meta)
 
 	// ActivityPub is handled first because it is the highest fidelity connection
 	if meta.GetString("format") == "ActivityPub" {

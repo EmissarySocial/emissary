@@ -25,6 +25,7 @@ func MessageSchema() schema.Element {
 			"responses":    ResponseSummarySchema(),
 			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
 			"publishDate":  schema.Integer{BitSize: 64},
+			"readDate":     schema.Integer{BitSize: 64},
 			"rank":         schema.Integer{BitSize: 64},
 		},
 	}
@@ -75,6 +76,9 @@ func (message *Message) GetPointer(name string) (any, bool) {
 
 	case "publishDate":
 		return &message.PublishDate, true
+
+	case "readDate":
+		return &message.ReadDate, true
 
 	case "rank":
 		return &message.Rank, true
