@@ -14,7 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/asrecursor"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -549,8 +548,8 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	// Build a new client stack
 	httpClient := sherlock.NewClient()
 	cacheClient := ascache.New(session, httpClient)
-	recursorClient := asrecursor.New(cacheClient, 3)
+	// recursorClient := asrecursor.New(cacheClient, 3)
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(recursorClient, collection)
+	factory.activityStreamsService.Refresh(cacheClient, collection)
 }
