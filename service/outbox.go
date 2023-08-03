@@ -95,7 +95,8 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 		return derp.Wrap(err, "service.Outbox", "Error saving Outbox", outboxMessage, note)
 	}
 
-	// If this message has a valid URL, then cache it into the activitystream service.
+	// If this message has a valid URL, then try cache it into the activitystream service.
+	// nolint:errcheck - this is just an optimistic cache, so we don't care if it fails.
 	go service.activityStreamsService.LoadDocument(outboxMessage.URL, mapof.NewAny())
 
 	return nil
@@ -111,7 +112,7 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
 	}
 
-	if err := service.activityStreamsService.DeleteByURL(outboxMessage.URL); err != nil {
+	if err := service.activityStreamsService.DeleteDocumentByURL(outboxMessage.URL); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting ActivityStream", outboxMessage, note)
 	}
 

@@ -151,7 +151,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	// TODO: LOW: Implement Fat Pings
-	if webSub := meta.GetString("hub_websub"); webSub != "" {
+	if webSub := meta.GetString("websub"); webSub != "" {
 		if err := service.connect_WebSub(following, webSub); err != nil {
 			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to WebSub", following))
 		}

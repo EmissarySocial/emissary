@@ -10,14 +10,15 @@ import (
 
 type CachedValue struct {
 	CachedValueID  primitive.ObjectID `bson:"_id"`
-	URI            string             `bson:"uri"`
-	Original       mapof.Any          `bson:"original"`
-	Metadata       mapof.Any          `bson:"metadata"`
-	PublishedDate  int64              `bson:"published"`
-	RefreshesDate  int64              `bson:"refreshes"`
-	ExpiresDate    int64              `bson:"expires"`
-	InReplyTo      string             `bson:"inReplyTo,omitempty"`
-	ResponseCounts mapof.Int          `bson:"responses,omitempty"`
+	URI            string             `bson:"uri"`                  // ID/URL of this document
+	Original       mapof.Any          `bson:"original"`             // Original document, parsed as a map
+	Metadata       mapof.Any          `bson:"metadata"`             // Additional metadata about this document (cache control, subscription type, etc)
+	PublishedDate  int64              `bson:"published"`            // Unix epoch seconds when this document was published
+	RefreshesDate  int64              `bson:"refreshes"`            // Unix epoch seconds when this document should be reloaded
+	ExpiresDate    int64              `bson:"expires"`              // Unix epoch seconds when this document should be deleted
+	Collection     string             `bson:"collection,omitempty"` // ID/URL of the collection that this document belongs to (user outbox, etc)
+	InReplyTo      string             `bson:"inReplyTo,omitempty"`  // ID/URL of the document that this document is in reply to
+	ResponseCounts mapof.Int          `bson:"responses,omitempty"`  // Map of response types to the number of each type
 
 	journal.Journal `bson:",inline"`
 }

@@ -1,5 +1,5 @@
 package ascache
 
-const CollectionActors = "Actors"
+const CollectionActor = "Actor"
 
-const CollectionDocuments = "Documents"
+const CollectionDocument = "Document"

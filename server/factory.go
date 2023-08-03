@@ -14,7 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
@@ -516,8 +515,6 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
-	var collection data.Collection
-
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
@@ -551,5 +548,5 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	// recursorClient := asrecursor.New(cacheClient, 3)
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(cacheClient, collection)
+	factory.activityStreamsService.Refresh(cacheClient, session.Collection("Actor"), session.Collection("Document"))
 }
