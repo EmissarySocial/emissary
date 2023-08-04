@@ -18,6 +18,7 @@ type Client struct {
 	minCacheSeconds     int
 	maxCacheSeconds     int
 	purgeFrequency      int64
+	cacheMode           string
 }
 
 // New returns a fully initialized Client object
@@ -30,6 +31,7 @@ func New(session data.Session, innerClient streams.Client, options ...OptionFunc
 		minCacheSeconds: 60 * 60 * 24 * 30,  // Default minimum expiration is 30 days
 		maxCacheSeconds: 60 * 60 * 24 * 365, // Default maximum expiration is 365 days
 		purgeFrequency:  60 * 60 * 4,        // Default purge frequency is 4 hours
+		cacheMode:       CacheModeReadWrite,
 	}
 
 	// Apply option functions to the client
@@ -49,19 +51,30 @@ func New(session data.Session, innerClient streams.Client, options ...OptionFunc
 // start is a background process that purges expired documents from the cache
 func (client *Client) start() {
 
-	if client.session == nil {
+	// If the client is not writable then don't purge expired documents
+	if client.notWritable() {
 		return
 	}
 
-	for client.purgeFrequency > 0 {
+	// If the purge frequency is 0 then don't purge expired documents
+	if client.purgeFrequency == 0 {
+		return
+	}
+
+	for {
+		// wait for the purge frequency duration
 		time.Sleep(time.Second * time.Duration(client.purgeFrequency))
 
-		if err := client.session.Collection(CollectionActor).HardDelete(exp.LessThan("exp", time.Now().Unix())); err != nil {
+		criteria := exp.LessThan("expires", time.Now().Unix())
+
+		// Try to remove expired actors
+		if err := client.session.Collection(CollectionActor).HardDelete(criteria); err != nil {
 			// nolint: errcheck
 			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired actors from cache"))
 		}
 
-		if err := client.session.Collection(CollectionDocument).HardDelete(exp.LessThan("exp", time.Now().Unix())); err != nil {
+		// Try to remove expired documents
+		if err := client.session.Collection(CollectionDocument).HardDelete(criteria); err != nil {
 			// nolint: errcheck
 			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired documents from cache"))
 		}
@@ -75,19 +88,15 @@ func (client *Client) start() {
 func (client *Client) LoadActor(uri string) (streams.Document, error) {
 
 	// Search the cache for the document
-	if client.session != nil {
-		cachedValue := NewCachedValue()
-		if err := client.loadByURI(CollectionActor, uri, &cachedValue); err == nil {
+	cachedValue := NewCachedValue()
+	if err := client.loadByURI(CollectionActor, uri, &cachedValue); err == nil {
 
-			if cachedValue.ShouldRefresh() {
-				go client.refresh(CollectionActor, uri, cachedValue)
-			}
-
-			result := client.asDocument(cachedValue)
-			result.MetaSet(cachedValue.Metadata)
-
-			return result, nil
+		if cachedValue.ShouldRefresh() {
+			go client.refreshActor(CollectionActor, uri, cachedValue)
 		}
+
+		result := client.asDocument(cachedValue)
+		return result, nil
 	}
 
 	// Pass the request to the inner client
@@ -97,12 +106,12 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
 	}
 
+	result.WithOptions(streams.WithClient(client))
+
 	// Try to save the new value asynchronously
-	if client.session != nil {
+	if client.isWritable() {
 		go client.save(CollectionActor, uri, result)
 	}
-
-	result.WithOptions(streams.WithClient(client))
 
 	return result, nil
 }
@@ -110,16 +119,14 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
 
 	// Search the cache for the document
-	if client.session != nil {
-		cachedValue := NewCachedValue()
-		if err := client.loadByURI(CollectionDocument, uri, &cachedValue); err == nil {
+	cachedValue := NewCachedValue()
+	if err := client.loadByURI(CollectionDocument, uri, &cachedValue); err == nil {
 
-			if cachedValue.ShouldRefresh() {
-				go client.refresh(CollectionDocument, uri, cachedValue)
-			}
-
-			return client.asDocument(cachedValue), nil
+		if cachedValue.ShouldRefresh() {
+			go client.refreshDocument(CollectionDocument, uri, cachedValue)
 		}
+
+		return client.asDocument(cachedValue), nil
 	}
 
 	// Pass the request to the inner client
@@ -129,12 +136,12 @@ func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (str
 		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
 	}
 
+	result.WithOptions(streams.WithClient(client))
+
 	// Try to save the new value asynchronously
-	if client.session != nil {
+	if client.isWritable() {
 		go client.save(CollectionDocument, uri, result)
 	}
-
-	result.WithOptions(streams.WithClient(client))
 
 	return result, nil
 }
@@ -145,20 +152,37 @@ func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (str
 
 func (client *Client) PurgeByURI(collection string, uri string) error {
 
-	if client.session == nil {
-		return derp.NewInternalError("cache.Client.delete", "Cache connection is not defined")
+	// If the client is not writable then don't try to purge the cache
+	if client.notWritable() {
+		return nil
 	}
 
+	// Try to purge the cache
 	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
 		return derp.Wrap(err, "cache.Client.delete", "Error deleting document from cache (by URI)", uri)
 	}
 
+	// Woot woot
 	return nil
 }
 
-func (client *Client) refresh(collection string, uri string, value CachedValue) {
+func (client *Client) refreshActor(collection string, uri string, value CachedValue) {
 
-	if client.session == nil {
+	// If the client is not writable, then don't try to refresh the cache
+	if client.notWritable() {
+		return
+	}
+
+	// Pass the request to the inner client
+	if result, err := client.innerClient.LoadActor(uri); err == nil {
+		client.save(collection, uri, result)
+	}
+}
+
+func (client *Client) refreshDocument(collection string, uri string, value CachedValue) {
+
+	// If the client is not writable, then don't try to refresh the cache
+	if client.notWritable() {
 		return
 	}
 
@@ -170,12 +194,13 @@ func (client *Client) refresh(collection string, uri string, value CachedValue) 
 
 func (client *Client) save(collection string, uri string, document streams.Document) {
 
-	if client.session == nil {
+	// If the client is not writable, then don't try to save the document
+	if client.notWritable() {
 		return
 	}
 
 	// Use response headers to if we can cache this document
-	expireSeconds := client.parseCacheControl(document.MetaString("cache-control"))
+	expireSeconds := client.calcExpireSeconds(document.MetaString("cache-control"))
 
 	if expireSeconds == 0 {
 		return
@@ -214,6 +239,8 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 		streams.WithClient(client),
 	)
 
+	result.MetaSet(cachedValue.Metadata)
+
 	for key, value := range cachedValue.ResponseCounts {
 		result.MetaSetInt(key, value)
 	}
@@ -221,7 +248,8 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 	return result
 }
 
-func (client *Client) parseCacheControl(cacheString string) int {
+// calcExpireSeconds calculates the number of seconds to cache this document
+func (client *Client) calcExpireSeconds(cacheString string) int {
 
 	parsed := cachecontrol.Parse(cacheString)
 
@@ -290,4 +318,24 @@ func (client *Client) loadByURI(collection string, uri string, document *CachedV
 	}
 
 	return nil
+}
+
+// isReadable returns TRUE if the client is configured to read from the cache
+func (client *Client) isReadable() bool {
+	return client.cacheMode != CacheModeWriteOnly
+}
+
+// notReadable returns TRUE if the client is not configured to read from the cache
+func (client *Client) notReadable() bool {
+	return client.cacheMode == CacheModeWriteOnly
+}
+
+// isWritable returns TRUE if the client is configured to write to the cache
+func (client *Client) isWritable() bool {
+	return client.cacheMode != CacheModeReadOnly
+}
+
+// notWritable returns TRUE if the client is not configured to write to the cache
+func (client *Client) notWritable() bool {
+	return client.cacheMode == CacheModeReadOnly
 }
