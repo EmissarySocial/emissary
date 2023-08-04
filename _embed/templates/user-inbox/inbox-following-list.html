@@ -43,6 +43,12 @@
 						{{- else -}}
 							<span class="red">{{.Status}}</span>
 						{{- end -}}
+
+						{{ if eq .Method "POLL" }}
+							&middot;
+							Next:
+							{{ .NextPoll | humanizeTime -}}
+						{{- end -}}
 					</div>
 				</div>
 			</div>
