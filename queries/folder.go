@@ -21,8 +21,9 @@ func FolderSetUnreadCount(collection data.Collection, userID primitive.ObjectID,
 
 	// Create filter and update statements
 	filter := bson.M{
-		"_id":    folderID,
-		"userId": userID,
+		"_id":        folderID,
+		"userId":     userID,
+		"deleteDate": 0,
 	}
 
 	update := bson.M{

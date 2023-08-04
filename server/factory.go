@@ -545,7 +545,9 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	// Build a new client stack
 	httpClient := sherlock.NewClient()
 	cacheClient := ascache.New(session, httpClient)
+	// readOnlyCache := ascache.New(session, httpClient, ascache.WithReadOnly())
 	// recursorClient := asrecursor.New(cacheClient, 3)
+	// writableCache := ascache.New(session, httpClient, ascache.WithWriteOnly())
 
 	// Inject new values into the existing object
 	factory.activityStreamsService.Refresh(cacheClient, session.Collection("Actor"), session.Collection("Document"))

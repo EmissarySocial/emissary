@@ -148,6 +148,8 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 // Save adds/updates an Following in the database
 func (service *Following) Save(following *model.Following, note string) error {
 
+	oldFolderID := following.FolderID
+
 	// RULE: Reset status and error counts when saving
 	following.Method = model.FollowMethodPoll
 	following.Status = model.FollowingStatusNew
@@ -179,7 +181,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// RULE: Update messages if requested by the UX
 	if following.DoMoveMessages {
-		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
+		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, oldFolderID, following.FolderID)
 	}
 
 	// Recalculate the follower count for this user

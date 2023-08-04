@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
@@ -35,7 +37,7 @@ func (service *Following) Connect(following model.Following) error {
 	following.Label = actor.Name()
 	following.ProfileURL = actor.ID()
 	following.ImageURL = actor.IconOrImage().URL()
-	following.Format = actor.Meta().GetString("format")
+	following.Format = strings.ToUpper(actor.Meta().GetString("format"))
 
 	// ...and mark the status as "Success"
 	if err := service.SetStatusSuccess(&following); err != nil {
@@ -141,7 +143,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 	meta := actor.Meta()
 
 	// ActivityPub is handled first because it is the highest fidelity connection
-	if meta.GetString("format") == "ActivityPub" {
+	if meta.GetString("format") == "ACTIVITYSTREAM" {
 		if ok, err := service.connect_ActivityPub(following, actor); ok {
 			return
 		} else if err != nil {
