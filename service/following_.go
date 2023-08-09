@@ -132,7 +132,7 @@ func (service *Following) Query(criteria exp.Expression, options ...option.Optio
 
 // List returns an iterator containing all of the Following who match the provided criteria
 func (service *Following) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Following from the database
@@ -147,8 +147,6 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 
 // Save adds/updates an Following in the database
 func (service *Following) Save(following *model.Following, note string) error {
-
-	oldFolderID := following.FolderID
 
 	// RULE: Reset status and error counts when saving
 	following.Method = model.FollowMethodPoll
@@ -181,7 +179,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// RULE: Update messages if requested by the UX
 	if following.DoMoveMessages {
-		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, oldFolderID, following.FolderID)
+		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
 	}
 
 	// Recalculate the follower count for this user

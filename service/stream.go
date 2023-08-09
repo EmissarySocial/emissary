@@ -102,7 +102,7 @@ func (service *Stream) QuerySummary(criteria exp.Expression, options ...option.O
 
 // List returns an iterator containing all of the Streams that match the provided criteria
 func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Stream from the database
@@ -642,7 +642,7 @@ func (service *Stream) RestoreDeleted(ancestorID primitive.ObjectID) error {
 
 	// Try to list all deleted descendents
 	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("deleteDate", 0)
-	iterator, err := service.collection.List(criteria)
+	iterator, err := service.collection.Iterator(criteria)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error listing soft-deleted streams")

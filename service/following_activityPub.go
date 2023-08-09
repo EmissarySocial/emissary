@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // connect_ActivityPub attempts to connect to a remote user using ActivityPub.
@@ -16,6 +17,7 @@ func (service *Following) connect_ActivityPub(following *model.Following, actor 
 
 	const location = "service.Following.connect_ActivityPub"
 
+	spew.Dump("connect_ActivityPub")
 	// Update the Following record with the remote URL
 	following.ProfileURL = actor.ID()
 	following.StatusMessage = "Pending ActivityPub connection"

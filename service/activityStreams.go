@@ -104,7 +104,7 @@ func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate i
 
 // iterator reads from the database and returns a data.Iterator with the result values.
 func (client *ActivityStreams) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return client.documentCollection.List(criteria, options...)
+	return client.documentCollection.Iterator(criteria, options...)
 }
 
 // query reads from the database and returns a slice of streams.Document values

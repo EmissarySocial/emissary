@@ -65,7 +65,7 @@ func (service *Block) Query(criteria exp.Expression, options ...option.Option) (
 
 // List returns an iterator containing all of the Blocks that match the provided criteria
 func (service *Block) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Channel returns a channel that will stream all of the Blocks that match the provided criteria

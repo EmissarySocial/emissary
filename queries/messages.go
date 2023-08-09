@@ -14,21 +14,35 @@ import (
 // CountMessages returns the total number of messages for a particular user/folder/publishDate.
 // This is used to assign a "rank" to each message, which is used to sort the messages in the inbox.
 func CountMessages(inboxCollection data.Collection, userID primitive.ObjectID, folderID primitive.ObjectID, publishDate int64) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID).AndEqual("publishDate", publishDate)
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID).
+		AndEqual("publishDate", publishDate).
+		AndEqual("deleteDate", 0)
+
 	return CountRecords(context.Background(), inboxCollection, criteria)
 }
 
 // CountUnreadMessages returns the total number of messages for a partucular user/folder
 // that have not been read
 func CountUnreadMessages(inboxCollection data.Collection, userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID).AndEqual("readDate", math.MaxInt64)
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID).
+		AndEqual("readDate", math.MaxInt64).
+		AndEqual("deleteDate", 0)
+
 	return CountRecords(context.Background(), inboxCollection, criteria)
 }
 
 // CountOutboxMessages returns the total number of messages for a particular user/publishDate.
 // This is used to assign a "rank" to each message, which is used to sort the messages in the inbox.
 func CountOutboxMessages(outboxCollection data.Collection, userID primitive.ObjectID, publishDate int64) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("publishDate", publishDate)
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("publishDate", publishDate).
+		AndEqual("deleteDate", 0)
+
 	return CountRecords(context.Background(), outboxCollection, criteria)
 }
 

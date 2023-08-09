@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -44,7 +46,10 @@ func (service *Following) Connect(following model.Following) error {
 		return derp.Wrap(err, location, "Error setting status", following)
 	}
 
-	// Get the actor's outbox and messages
+	// Try to connect to push services (WebSub, ActivityPub, etc)
+	go service.connect_PushServices(&following, &actor)
+
+	// Import the actor's outbox and messages
 	outbox := actor.Outbox()
 	done := make(chan struct{})
 	documents := collections.Documents(outbox, done)
@@ -68,8 +73,10 @@ func (service *Following) Connect(following model.Following) error {
 			derp.Report(derp.Wrap(err, location, "Error saving document", document))
 		}
 
-		// If this is not a new message, then we can break out of the loop.
-		if !isNew {
+		// We can stop here if:
+		// 1. We've already imported this message before
+		// 2. We've already imported 256 messages
+		if (!isNew) || (counter > 256) {
 			close(done)
 			break
 		}
@@ -79,9 +86,6 @@ func (service *Following) Connect(following model.Following) error {
 	if err := service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID); err != nil {
 		return derp.Wrap(err, location, "Error recalculating unread count")
 	}
-
-	// Finally, look for push services to connect to (WebSub, ActivityPub, etc)
-	service.connect_PushServices(&following, &actor)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil
@@ -140,10 +144,10 @@ func (service *Following) saveMessage(following model.Following, document stream
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
 
-	meta := actor.Meta()
+	spew.Dump("connect_PushServices", following, actor.Value(), actor.Meta())
 
 	// ActivityPub is handled first because it is the highest fidelity connection
-	if meta.GetString("format") == "ACTIVITYSTREAM" {
+	if actor.MetaString("format") == sherlock.FormatActivityStream {
 		if ok, err := service.connect_ActivityPub(following, actor); ok {
 			return
 		} else if err != nil {
@@ -153,7 +157,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 
 	// WebSub is second because it works (and fat pings will be cool when they're implemented)
 	// TODO: LOW: Implement Fat Pings
-	if webSub := meta.GetString("websub"); webSub != "" {
+	if webSub := actor.MetaString("websub"); webSub != "" {
 		if err := service.connect_WebSub(following, webSub); err != nil {
 			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to WebSub", following))
 		}

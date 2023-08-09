@@ -67,7 +67,7 @@ func (service *Inbox) Query(criteria exp.Expression, options ...option.Option) (
 
 // List returns an iterator containing all of the Activities that match the provided criteria
 func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Inbox from the database
@@ -99,6 +99,11 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 	// Save the value to the database
 	if err := service.collection.Save(message, note); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error saving Inbox", message, note)
+	}
+
+	// Recalculate the unread count for the folder that owns this message.
+	if err := service.folderService.CalculateUnreadCount(message.UserID, message.FolderID); err != nil {
+		return derp.Wrap(err, "service.Inbox.Save", "Error recalculating unread count", message)
 	}
 
 	return nil
@@ -377,7 +382,7 @@ func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID pr
 	return queries.CountUnreadMessages(service.collection, userID, folderID)
 }
 
-func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, oldFolderID primitive.ObjectID, newFolderID primitive.ObjectID) {
+func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {
 
 	it, err := service.ListByFollowingID(userID, followingID)
 
@@ -388,21 +393,16 @@ func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID 
 
 	message := model.NewMessage()
 	for it.Next(&message) {
-		message.FolderID = newFolderID
+		message.FolderID = folderID
 		if err := service.Save(&message, "UpdateInboxFolders"); err != nil {
 			derp.Report(derp.Wrap(err, "service.Inbox", "Cannot save Inbox Message", message))
 		}
 		message = model.NewMessage()
 	}
 
-	// Recalculate the "unread" count on the old folder
-	if err := service.folderService.CalculateUnreadCount(userID, oldFolderID); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot calculate unread count for old folder", userID, oldFolderID))
-	}
-
 	// Recalculate the "unread" count on the new folder
-	if err := service.folderService.CalculateUnreadCount(userID, newFolderID); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot calculate unread count for new folder", userID, oldFolderID))
+	if err := service.folderService.CalculateUnreadCount(userID, folderID); err != nil {
+		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot calculate unread count for new folder", userID, folderID))
 	}
 }
 

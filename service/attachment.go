@@ -48,7 +48,7 @@ func (service *Attachment) New() model.Attachment {
 
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service *Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 func (service *Attachment) Query(criteria exp.Expression, options ...option.Option) ([]model.Attachment, error) {

@@ -69,7 +69,7 @@ func (service *Outbox) Query(criteria exp.Expression, options ...option.Option) 
 
 // List returns an iterator containing all of the Activities that match the provided criteria
 func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Outbox from the database

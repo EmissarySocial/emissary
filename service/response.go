@@ -56,7 +56,7 @@ func (service *Response) Query(criteria exp.Expression, options ...option.Option
 
 // List returns an iterator containing all of the Responses that match the provided criteria
 func (service *Response) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Response from the database
