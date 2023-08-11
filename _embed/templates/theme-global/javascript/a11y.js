@@ -5,33 +5,48 @@
  * keyboard event handlers that work as an alternative for "clicks"
  */
 
-htmx.defineExtension("a11y", {
+(function(){
 
-	init: function() {},
+	var api;
 
-	onEvent: function(/** @type {string} */ name, /** @type {Event} */ event) {
+	htmx.defineExtension("a11y", {
 
-		// Only take actions on "htmx:afterProcessNode"
-		if (name !== "htmx:afterProcessNode") {
-			return;
+		init: function(internalAPI) {
+			api = internalAPI
+		},
+
+		onEvent: function(/** @type {string} */ name, /** @type {Event} */ event) {
+
+			// Only take actions on "htmx:afterProcessNode"
+			if (name !== "htmx:afterProcessNode") {
+				return;
+			}
+
+			// Special rules for links and buttons
+			event.target.querySelectorAll("a,button,[role=link],[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
+				
+				// If tabIndex is not already set, then default it to 0
+				if (node.attributes["tabIndex"] == undefined) {
+					node.tabIndex = 0
+				}
+
+				// If node is focusable (and not already a link or button) then add keyboard handlers for ENTER and SPACE keys
+				if (node.tabIndex != -1) {
+					node.addEventListener("keyup", function(event) {
+						if (event.key == "Enter") {
+							htmx.trigger(node, "click")
+						}
+					})
+				}
+			})
+
+			// Scan for hx-target attributes and add `aria-live="polite"` to any targeted elements
+			event.target.querySelectorAll("[hx-target],[data-hx-target]").forEach(function(/** @type {HTMLElement} */ node) {
+				var target = api.getTarget(node)
+				if (target.attributes["aria-live"] == undefined) {
+					target.setAttribute("aria-live", "polite")
+				}
+			})
 		}
-
-		// Special rules for links and buttons
-		event.target.querySelectorAll("a,button,[role=link],[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
-			
-			// If tabIndex is not already set, then default it to 0
-			if (node.attributes["tabIndex"] == undefined) {
-				node.tabIndex = 0
-			}
-
-			// If node is focusable (and not already a link or button) then add keyboard handlers for ENTER and SPACE keys
-			if (node.tabIndex != -1) {
-				node.addEventListener("keyup", function(event) {
-					if (event.key == "Enter") {
-						htmx.trigger(node, "click")
-					}
-				})
-			}
-		})
-	}
-})
+	})
+})();

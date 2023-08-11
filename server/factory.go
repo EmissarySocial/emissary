@@ -14,8 +14,6 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/asrecursor"
-	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
@@ -50,7 +48,8 @@ type Factory struct {
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
-	domains map[string]*domain.Factory
+	domains   map[string]*domain.Factory
+	refreshed chan bool
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
@@ -64,6 +63,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
+		refreshed:     make(chan bool, 1),
 	}
 
 	// Global Theme service
@@ -160,7 +160,14 @@ func (factory *Factory) start() {
 			}
 			factory.mutex.Unlock()
 		}
+
+		factory.refreshed <- true
 	}
+}
+
+// Refreshed returns the channel that is notified whenever the configuration is refreshed
+func (factory *Factory) Refreshed() <-chan bool {
+	return factory.refreshed
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
@@ -517,8 +524,6 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
-	var collection data.Collection
-
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
@@ -545,13 +550,14 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
 	// TODO: LOW: If called repeatedly, will this leak database connections?
 	// https://stackoverflow.com/questions/45479236/golang-mongodb-connections-leak
-	collection = session.Collection("ActivityPub")
 
 	// Build a new client stack
 	httpClient := sherlock.NewClient()
-	cacheClient := ascache.New(collection, httpClient)
-	recursorClient := asrecursor.New(cacheClient, 3)
+	cacheClient := ascache.New(session, httpClient)
+	// readOnlyCache := ascache.New(session, httpClient, ascache.WithReadOnly())
+	// recursorClient := asrecursor.New(cacheClient, 3)
+	// writableCache := ascache.New(session, httpClient, ascache.WithWriteOnly())
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(recursorClient, collection)
+	factory.activityStreamsService.Refresh(cacheClient, session.Collection("Actor"), session.Collection("Document"))
 }

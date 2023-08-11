@@ -3,13 +3,12 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
 	"github.com/labstack/gommon/random"
 )
 
-func (service *Following) connect_WebSub(following *model.Following, hub digit.Link) error {
+func (service *Following) connect_WebSub(following *model.Following, hub string) error {
 
 	const location = "service.Following.ConnectWebSub"
 
@@ -25,13 +24,8 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 	following.Secret = random.String(32)
 	following.PollDuration = 30
 
-	// "Pending" status means that we're still waiting on the WebSub connection
-	if err := service.SetStatus(following, model.FollowingStatusPending, ""); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
-	}
-
 	// Send request to the hub
-	transaction := remote.Post(hub.Href).
+	transaction := remote.Post(hub).
 		Header("Accept", followingMimeStack).
 		Form("hub.mode", "subscribe").
 		Form("hub.topic", following.URL).
@@ -41,7 +35,7 @@ func (service *Following) connect_WebSub(following *model.Following, hub digit.L
 		Response(&success, &failure)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub.Href)
+		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub)
 	}
 
 	// Success!

@@ -167,7 +167,7 @@ func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
 }
 
 func (w Message) InReplyTo() streams.Document {
-	result, _ := w._factory.ActivityStreams().Load(w._message.InReplyTo, mapof.NewAny())
+	result, _ := w._factory.ActivityStreams().LoadDocument(w._message.InReplyTo, mapof.NewAny())
 	return result
 }
 

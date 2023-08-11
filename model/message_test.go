@@ -22,6 +22,7 @@ func TestMessageSchema(t *testing.T) {
 		{"contentJson", `{"json":true}`, nil},
 		{"folderId", "123456123456123456123456", nil},
 		{"publishDate", "123", int64(123)},
+		{"readDate", 456, int64(456)},
 		{"rank", "123", int64(123)},
 		{"myResponse", ResponseTypeLike, nil},
 		{"responses.likeCount", 7, nil},

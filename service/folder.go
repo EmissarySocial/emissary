@@ -61,7 +61,7 @@ func (service *Folder) Query(criteria exp.Expression, options ...option.Option) 
 
 // List returns an iterator containing all of the Folders that match the provided criteria
 func (service *Folder) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Folder from the database
@@ -238,7 +238,7 @@ func (service *Folder) ReCalculateUnreadCountFromFolder(userID primitive.ObjectI
 	}
 
 	// Recalculate unread counts
-	if err := service.CalculateUnreadCount(userID, folderID, folder.ReadDate); err != nil {
+	if err := service.CalculateUnreadCount(userID, folderID); err != nil {
 		return derp.Report(derp.Wrap(err, "service.Folder.ReCalculateUnReadCountFromFolder", "Error updating Unread count"))
 	}
 
@@ -247,22 +247,22 @@ func (service *Folder) ReCalculateUnreadCountFromFolder(userID primitive.ObjectI
 
 // CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
 // then updates the folder's "unreadCount" and "readDate" fields
-func (service *Folder) CalculateUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, minRank int64) error {
+func (service *Folder) CalculateUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
-	unreadCount, err := service.inboxService.CountMessagesAfterRank(userID, folderID, minRank)
+	unreadCount, err := service.inboxService.CountUnreadMessages(userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder.CalculateUnreadCount", "Error counting unread messages", userID, folderID, minRank)
+		return derp.Wrap(err, "service.Folder.CalculateUnreadCount", "Error counting unread messages", userID, folderID)
 	}
 
-	return service.SetUnreadCount(userID, folderID, minRank, unreadCount)
+	return service.SetUnreadCount(userID, folderID, unreadCount)
 }
 
 // SetUnreadCount uses an optimized query to update the the "readDate" and "unreadCount" of a particular folder
-func (service *Folder) SetUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, readDate int64, unreadCount int) error {
+func (service *Folder) SetUnreadCount(userID primitive.ObjectID, folderID primitive.ObjectID, unreadCount int) error {
 
-	if err := queries.UpdateFolderUnreadCount(service.collection, userID, folderID, readDate, unreadCount); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error updating folder read date", userID, folderID, readDate)
+	if err := queries.FolderSetUnreadCount(service.collection, userID, folderID, unreadCount); err != nil {
+		return derp.Wrap(err, "service.Folder", "Error updating folder read date", userID, folderID)
 	}
 
 	return nil

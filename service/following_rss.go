@@ -1,19 +1,7 @@
 package service
 
-import (
-	"bytes"
-	"net/http"
-	"sort"
-
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/benpate/derp"
-	"github.com/mmcdole/gofeed"
-)
-
 /******************************************
  * Connection Methods
- ******************************************/
 
 func (service *Following) import_RSS(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
@@ -53,7 +41,7 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 	recalculate := false
 	for _, rssItem := range rssFeed.Items {
 		defaultValue := convert.RSSToActivity(rssFeed, rssItem)
-		if document, err := service.httpClient.Load(rssItem.Link, defaultValue); err == nil {
+		if document, err := service.httpClient.LoadDocument(rssItem.Link, defaultValue); err == nil {
 			if created, err := service.saveDocument(following, &document); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error saving document", document))
 			} else if created {
@@ -73,3 +61,5 @@ func (service *Following) import_RSS(following *model.Following, response *http.
 
 	return nil
 }
+
+******************************************/

@@ -1,9 +1,6 @@
 package model
 
 import (
-	"strconv"
-	"time"
-
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +15,6 @@ type Folder struct {
 	Layout      string             `json:"layout"      bson:"layout"`      // Layout type of the folder
 	Group       int                `json:"group"       bson:"group"`       // Group number of the folder (starting with 1)
 	Rank        int                `json:"rank"        bson:"rank"`        // Sort order of the folder
-	ReadDate    int64              `json:"readDate"    bson:"readDate"`    // PublishDate (in milliseconds) of the most recently read message in this folder
 	UnreadCount int                `json:"unreadCount" bson:"unreadCount"` // Number of unread messages in this folder
 
 	journal.Journal `json:"-" bson:",inline"`
@@ -29,7 +25,6 @@ func NewFolder() Folder {
 	return Folder{
 		FolderID: primitive.NewObjectID(),
 		Icon:     "folder",
-		ReadDate: time.Now().UnixMilli(),
 	}
 }
 
@@ -44,17 +39,6 @@ func (folder Folder) ID() string {
 /******************************************
  * Other Data Accessors
  ******************************************/
-
-// ReadDateSeonds returns the ReadDate as a number of seconds since the Unix Epoch.
-// Since this value is stored as milliseconds, we divide by 1000 to get the seconds.
-func (folder Folder) ReadDateSeconds() int64 {
-	return folder.ReadDate / 1000
-}
-
-// ReadDateString returns the ReadDate as a string
-func (folder Folder) ReadDateString() string {
-	return strconv.FormatInt(folder.ReadDate, 10)
-}
 
 func (folder Folder) LookupCode() form.LookupCode {
 	return form.LookupCode{

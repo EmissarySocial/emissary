@@ -18,8 +18,9 @@ type Following struct {
 	ImageURL      string             `json:"imageUrl"       bson:"imageUrl"`      // URL of an image that represents this "following"
 	Links         digit.LinkSet      `json:"links"          bson:"links"`         // List of links can be used to update this following.
 	Method        string             `json:"method"         bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
+	Format        string             `json:"format"         bson:"format"`        // Format of the feed (ACTIVITYSTREAM, RSS, ATOM, JSON, MICROFORMATS)
 	Secret        string             `json:"secret"         bson:"secret"`        // Secret used to authenticate this feed (if required)
-	Status        string             `json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, WAITING, SUCCESS, FAILURE)
+	Status        string             `json:"status"         bson:"status"`        // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
 	StatusMessage string             `json:"statusMessage"  bson:"statusMessage"` // Optional message describing the status of the last poll
 	LastPolled    int64              `json:"lastPolled"     bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
 	PollDuration  int                `json:"pollDuration"   bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.

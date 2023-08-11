@@ -132,7 +132,7 @@ func (service *Following) Query(criteria exp.Expression, options ...option.Optio
 
 // List returns an iterator containing all of the Following who match the provided criteria
 func (service *Following) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Following from the database
@@ -159,6 +159,19 @@ func (service *Following) Save(following *model.Following, note string) error {
 		return derp.Wrap(err, "service.Following.Save", "Error cleaning Following", following)
 	}
 
+	// RULE: Update Polling duration based on the transmission method
+	switch following.Method {
+
+	case model.FollowMethodActivityPub:
+		following.PollDuration = 24 * 7 * 30 // retry ActivityPub connections every 30 days
+
+	case model.FollowMethodWebSub:
+		following.PollDuration = 24 * 7 // retry WebSub connections every 7 days
+
+	default:
+		following.PollDuration = 24
+	}
+
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
@@ -173,7 +186,8 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
-	// Connect to external services and discover the best update method
+	// Connect to external services and discover the best update method.
+	// This will also update the status again, soon.
 	// nolint:errcheck
 	go service.Connect(*following)
 
@@ -386,7 +400,106 @@ func (service *Following) CallbackURL() string {
 }
 
 /******************************************
- * ActivityPub Methods
+ * Other Updates Methods
+ ******************************************/
+
+func (service *Following) SetStatusLoading(following *model.Following) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusLoading
+	following.StatusMessage = ""
+	following.LastPolled = time.Now().Unix()
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
+}
+
+func (service *Following) SetStatusSuccess(following *model.Following) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusSuccess
+	following.StatusMessage = ""
+
+	following.NextPoll = following.LastPolled + int64(following.PollDuration*60*60)
+	following.ErrorCount = 0
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
+}
+
+func (service *Following) SetStatusFailure(following *model.Following, statusMessage string) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusFailure
+	following.StatusMessage = statusMessage
+	following.ErrorCount = following.ErrorCount + 1
+
+	// On failure, compute exponential backoff
+	// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m (max ~4 hours)
+	// But do not change "LastPolled" because that is the last time we were successful
+	errorBackoff := following.ErrorCount
+
+	if errorBackoff > 8 {
+		errorBackoff = 8
+	}
+
+	errorBackoff = 2 ^ errorBackoff
+	following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
+}
+
+/*
+// SetStatus updates the status (and statusMessage) of a Following record.
+func (service *Following) SetStatus(following *model.Following, status string, statusMessage string) error {
+
+	// Update properties of the Following
+	following.Status = status
+	following.StatusMessage = statusMessage
+
+	// Recalculate the next poll time
+	switch following.Status {
+	case model.FollowingStatusSuccess:
+
+		// On success, "LastPolled" is only updated when we're successful.  Reset other times.
+		following.LastPolled = time.Now().Unix()
+		following.NextPoll = following.LastPolled + int64(following.PollDuration*60*60)
+		following.ErrorCount = 0
+
+	case model.FollowingStatusFailure:
+
+		// On failure, compute exponential backoff
+		// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m
+		// But do not change "LastPolled" because that is the last time we were successful
+		errorBackoff := following.ErrorCount
+
+		if errorBackoff > 8 {
+			errorBackoff = 8
+		}
+
+		errorBackoff = 2 ^ errorBackoff
+
+		following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+		following.ErrorCount++
+
+	default:
+		// On all other statuse, the error counters are not touched
+		// because "New", "Loading", and "Polling" are going to be overwritten very soon.
+	}
+
+	// Try to save the Following to the database
+	if err := service.collection.Save(following, "Updating status"); err != nil {
+		return derp.Wrap(err, "service.Following.SetStatus", "Error updating following status", following)
+	}
+
+	// Success!!
+	return nil
+}
+*/
+
+/******************************************
+ * ActivityPub Data Accessors
  ******************************************/
 
 func (service *Following) ActivityPubID(following *model.Following) string {

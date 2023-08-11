@@ -70,7 +70,7 @@ func (service *User) Close() {
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an User from the database
@@ -304,9 +304,10 @@ func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
 	return derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
 }
 
-func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
+func (service *User) CalcBlockCount(userID primitive.ObjectID) {
 	err := queries.SetBlockCount(service.collection, service.blocks, userID)
-	return derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+	// nolint: errcheck
+	derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
 }
 
 func (service *User) SetOwner(owner config.Owner) error {

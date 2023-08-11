@@ -35,6 +35,19 @@ func CountRecords(ctx context.Context, collection data.Collection, criteria exp.
 }
 
 func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Expression, update bson.M) error {
-	_, err := mongoCollection(collection).UpdateMany(ctx, mongodb.ExpressionToBSON(criteria), update)
-	return err
+
+	// Guarantee that we're using MongoDB
+	mongo := mongoCollection(collection)
+
+	if mongo == nil {
+		return derp.NewInternalError("queries.RawUpdate", "Collection is not a MongoDB collection")
+	}
+
+	// Update the database
+	if _, err := mongo.UpdateMany(ctx, mongodb.ExpressionToBSON(criteria), update); err != nil {
+		return derp.Wrap(err, "queries.RawUpdate", "Error updating records", criteria, update)
+	}
+
+	// Silence is golden.
+	return nil
 }

@@ -1,17 +1,14 @@
-{{- $folders := .FoldersWithSelection}}
-{{- $folder := $folders.Selected}}
+{{- $folders := .FoldersWithSelection -}}
+{{- $folder := $folders.Selected -}}
 
 {{- $inbox := .Inbox.Top12.ByRank.Slice -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $internalID := .QueryParam "origin.followingId" -}}
-{{- $rank := .QueryParam "rank" -}}
 
-{{ if eq "" (.QueryParam "remote")}}
-
-	{{- if gt $folder.ReadDate 0 -}}
+{{- if eq "" (.QueryParam "remote") -}}
 
 	<div 
-		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$folder.ReadDate}}"
+		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}"
 		hx-target="this"
 		hx-trigger="click once"
 		hx-swap="beforebegin"
@@ -23,11 +20,9 @@
 		</div>
 		<div style="border-top:solid 2px red;"></div>
 		<div class="text-sm text-red" style="margin:0px;">
-			&darr; New Posts &bull; {{ $folder.ReadDateSeconds | longDate }}
+			&darr; New Posts
 		</div>
 	</div>
-
-	{{- end -}}
 	
 {{- end -}}
 
@@ -45,7 +40,7 @@
 			hx-trigger="click"
 			hx-push-url="false"
 			tabIndex="0"
-			script="install listItem(folderId:'{{$folderID}}', rank:'{{.Rank}}')">
+			script="install listItem(messageId:'{{.MessageID.Hex}}')">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
 				{{- template "inbox-list-social" $message -}}
@@ -69,7 +64,7 @@
 	<!-- Target zone to load additional pages once we scroll down this far -->
 	{{- $lastMessage := $inbox.Last -}}
 	<div 
-		hx-get="/@me/inbox/inbox-list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&remote=true"
+		hx-get="/@me/inbox/inbox-list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
 		hx-push-url="false" 
 		hx-trigger="intersect once" 
 		hx-target="this" 

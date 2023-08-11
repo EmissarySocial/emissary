@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math"
 	"strings"
 
 	"github.com/benpate/data/journal"
@@ -13,7 +14,8 @@ import (
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
 	MessageID    primitive.ObjectID         `json:"messageId"    bson:"_id"`                    // Unique ID of the Message
-	UserID       primitive.ObjectID         `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message (in their inbox or outbox)
+	UserID       primitive.ObjectID         `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message
+	FollowingID  primitive.ObjectID         `json:"followingId"  bson:"followingId,omitempty"`  // Unique ID of the Following record that generated this Message
 	FolderID     primitive.ObjectID         `json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Message is stored
 	SocialRole   string                     `json:"socialRole"   bson:"socialRole,omitempty"`   // Role this message plays in social integrations ("Article", "Note", etc)
 	Origin       OriginLink                 `json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Message
@@ -27,6 +29,7 @@ type Message struct {
 	ContentJSON  string                     `json:"contentJson"  bson:"contentJson,omitempty"`  // Original JSON message, used for reprocessing later.
 	Responses    ResponseSummary            `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
 	MyResponse   string                     `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
+	ReadDate     int64                      `json:"readDate"    bson:"readDate"`                // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	PublishDate  int64                      `json:"publishDate"  bson:"publishDate,omitempty"`  // Unix timestamp of the date/time when this Message was published
 	Rank         int64                      `json:"rank"         bson:"rank"`                   // Sort rank for this message (publishDate * 1000 + sequence number)
 
@@ -36,10 +39,11 @@ type Message struct {
 // NewMessage returns a fully initialized Message record
 func NewMessage() Message {
 	return Message{
-		MessageID: primitive.NewObjectID(),
-		UserID:    primitive.NilObjectID,
-		FolderID:  primitive.NilObjectID,
-		Responses: NewResponseSummary(),
+		MessageID:    primitive.NewObjectID(),
+		Responses:    NewResponseSummary(),
+		Origin:       NewOriginLink(),
+		AttributedTo: sliceof.NewObject[PersonLink](),
+		ReadDate:     math.MaxInt64,
 	}
 }
 

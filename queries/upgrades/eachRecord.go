@@ -27,6 +27,7 @@ func ForEachRecord(collection *mongo.Collection, fn func(value mapof.Any) error)
 		err := cursor.Decode(&value)
 
 		if err != nil {
+			// nolint:errcheck
 			derp.Report(derp.Wrap(err, "queries.upgrades.EachRecord", "Error decoding record"))
 			continue
 		}
@@ -35,6 +36,7 @@ func ForEachRecord(collection *mongo.Collection, fn func(value mapof.Any) error)
 		err = fn(value)
 
 		if err != nil {
+			// nolint:errcheck
 			derp.Report(derp.Wrap(err, "queries.upgrades.EachRecord", "Error processing record", value))
 			continue
 		}
@@ -43,6 +45,7 @@ func ForEachRecord(collection *mongo.Collection, fn func(value mapof.Any) error)
 		_, err = collection.ReplaceOne(ctx, bson.M{"_id": value["_id"]}, value)
 
 		if err != nil {
+			// nolint:errcheck
 			derp.Report(derp.Wrap(err, "queries.upgrades.EachRecord", "Error saving record", value))
 			continue
 		}

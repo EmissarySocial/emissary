@@ -5,41 +5,32 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/streams"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // connect_ActivityPub attempts to connect to a remote user using ActivityPub.
 // It returns (TRUE, nil) if successful.
 // If there was an error connecting to the remote server, then it returns (FALSE, error)
 // If the remote server does not support ActivityPub, then it returns (FALSE, nil)
-func (service *Following) connect_ActivityPub(following *model.Following) (bool, error) {
+func (service *Following) connect_ActivityPub(following *model.Following, actor *streams.Document) (bool, error) {
 
 	const location = "service.Following.connect_ActivityPub"
 
-	// Search for an ActivityPub link for this resource
-	remoteProfile := following.Links.Find(
-		digit.NewLink(digit.RelationTypeSelf, model.MimeTypeActivityPub, ""),
-	)
-
-	// if no ActivityPub link, then exit.
-	if remoteProfile.IsEmpty() {
-		return false, nil
-	}
-
+	spew.Dump("connect_ActivityPub")
 	// Update the Following record with the remote URL
-	following.ProfileURL = remoteProfile.Href
-	if err := service.SetStatus(following, model.FollowingStatusLoading, ""); err != nil {
-		return false, derp.Wrap(err, location, "Error saving following", following)
-	}
+	following.ProfileURL = actor.ID()
+	following.StatusMessage = "Pending ActivityPub connection"
 
 	// Try to get the Actor (with encryption keys)
-	actor, err := service.userService.ActivityPubActor(following.UserID)
+	localActor, err := service.userService.ActivityPubActor(following.UserID)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
 	}
 
 	// Try to send the ActivityPub follow request
-	if err := pub.SendFollow(actor, service.ActivityPubID(following), remoteProfile.Href); err != nil {
+	if err := pub.SendFollow(localActor, service.ActivityPubID(following), following.ProfileURL); err != nil {
 		return false, derp.Wrap(err, location, "Error sending follow request", following)
 	}
 

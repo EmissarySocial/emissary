@@ -5,23 +5,24 @@ go 1.19
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.283
-	github.com/benpate/data v0.27.0
-	github.com/benpate/data-mongo v0.27.0
+	github.com/benpate/cachecontrol v0.0.1
+	github.com/benpate/data v0.28.0
+	github.com/benpate/data-mongo v0.28.0
 	github.com/benpate/derp v0.27.2
-	github.com/benpate/digit v0.10.3
-	github.com/benpate/domain v0.0.4
+	github.com/benpate/digit v0.10.4
+	github.com/benpate/domain v0.1.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.3
-	github.com/benpate/form v0.16.0
-	github.com/benpate/hannibal v0.4.5
+	github.com/benpate/form v0.16.1
+	github.com/benpate/hannibal v0.5.0
 	github.com/benpate/html v0.16.3
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.10.6
-	github.com/benpate/remote v0.10.5
-	github.com/benpate/rosetta v0.16.3
-	github.com/benpate/sherlock v0.2.0
-	github.com/benpate/steranko v0.13.5
-	github.com/benpate/table v0.5.4
+	github.com/benpate/mediaserver v0.10.7
+	github.com/benpate/remote v0.10.6
+	github.com/benpate/rosetta v0.17.0
+	github.com/benpate/sherlock v0.3.0
+	github.com/benpate/steranko v0.14.0
+	github.com/benpate/table v0.5.5
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
@@ -49,8 +50,8 @@ require (
 	github.com/yuin/goldmark v1.5.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20220924101305-151362477c87
 	go.mongodb.org/mongo-driver v1.11.7
+	golang.org/x/crypto v0.10.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/net v0.11.0
 	golang.org/x/oauth2 v0.9.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
@@ -111,9 +112,9 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/image v0.8.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect

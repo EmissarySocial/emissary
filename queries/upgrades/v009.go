@@ -14,6 +14,7 @@ func Version9(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 8")
 
+	// nolint:errcheck
 	ForEachRecord(session.Collection("Stream"), func(record mapof.Any) error {
 		if content, ok := record["content"]; ok {
 			if contentMap, ok := content.(mapof.Any); ok {

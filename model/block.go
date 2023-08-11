@@ -19,7 +19,7 @@ type Block struct {
 	IsActive    bool               `json:"isActive"    bson:"isActive"`    // If TRUE, this block is active and should be applied to incoming messages
 	IsPublic    bool               `json:"isPublic"    bson:"isPublic"`    // If TRUE, this record is visible publicly
 	Origin      OriginLink         `json:"origin"      bson:"origin"`      // Internal or External service where this block originated (used for subscriptions)
-	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Date when this block was published to followers
+	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Unix timestamp when this block was published to followers
 	JSONLD      mapof.Any          `json:"jsonld"      bson:"jsonld"`      // JSON-LD data for this object
 
 	journal.Journal `json:"-" bson:",inline"`
@@ -92,5 +92,5 @@ func (block Block) GetJSONLD() mapof.Any {
  ******************************************/
 
 func (block Block) PublishDateRCF3339() string {
-	return time.UnixMilli(block.PublishDate).Format(time.RFC3339)
+	return time.Unix(block.PublishDate, 0).Format(time.RFC3339)
 }

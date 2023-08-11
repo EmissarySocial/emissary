@@ -1,25 +1,11 @@
-<div script="install message(folderId:'{{.FolderID}}', readDate:'{{.Rank}}')">
-
-	<div class="float-right text-sm" style="margin-top:var(--rhythm); line-height:calc(var(--rhythm) * 6);">
-		<button script="on click send closeModal">Close</button>
-	</div>
-
-	<h1 role="link" class="clickable ellipsis flex-row flex-justify-center flex-align-center" script="on click go to url '{{.URL}}' in new window">
-		{{- if ne "" .Label -}}
-			{{- .Label -}}
-		{{- else if .AttributedTo.NotEmpty -}}
-			{{- $author := .AttributedTo.First -}}
-			{{- if $author.HasImageURL -}}
-				<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em">&nbsp;
-			{{- end -}}
-			{{- .AttributedTo.First.Name -}}
-		{{- else -}}
-			{{.URL}}
-		{{- end -}}
-	</h2>
+<div script="install message(messageId:'{{.MessageID}}')">
 
 	<div class="text-sm">
 
+		<div class="button-group float-right">
+			<button script="on click send closeModal">Close</button>
+		</div>
+	
 		<span class="button-group">
 			<button id="previous" hx-get="/@me/messages/{{.MessageID}}/view?sibling=prev&followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
 			<button id="next" hx-get="/@me/messages/{{.MessageID}}/view?sibling=next&followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
@@ -33,7 +19,21 @@
 
 	</div>
 
-	<hr/>
+	<h1 role="link" class="clickable flex-row flex-justify-center flex-align-center" script="on click go to url '{{.URL}}' in new window">
+		{{- if ne "" .Label -}}
+			{{- .Label -}}
+		{{- else if .AttributedTo.NotEmpty -}}
+			{{- $author := .AttributedTo.First -}}
+			{{- if $author.HasImageURL -}}
+				<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em">&nbsp;
+			{{- end -}}
+			{{- .AttributedTo.First.Name -}}
+		{{- else -}}
+			{{.URL}}
+		{{- end -}}
+	</h2>
+
+	<hr>
 
 	<div class="content space-below">
 		{{- if not .HasContentImage -}}

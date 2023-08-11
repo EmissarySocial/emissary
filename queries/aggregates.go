@@ -12,6 +12,7 @@ import (
 // GroupBy returns amap of counts, grouped by the provided pipeline
 func GroupBy(collection data.Collection, pipeline []bson.M) (mapof.Int, error) {
 
+	// Guarantee that we're using MongoDB
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {

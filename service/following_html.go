@@ -1,16 +1,6 @@
 package service
 
-import (
-	"bytes"
-	"net/http"
-
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/slice"
-	"willnorris.com/go/microformats"
-)
-
+/*
 func (service *Following) import_HTML(following *model.Following, response *http.Response, body *bytes.Buffer) error {
 
 	const location = "service.Following.importHTML"
@@ -77,3 +67,4 @@ func (service *Following) import_Microformats(following *model.Following, respon
 
 	return atLeastOneChild
 }
+*/
