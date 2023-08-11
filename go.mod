@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data-mongo v0.28.0
 	github.com/benpate/derp v0.27.2
 	github.com/benpate/digit v0.10.4
-	github.com/benpate/domain v0.0.4
+	github.com/benpate/domain v0.1.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.3
 	github.com/benpate/form v0.16.1
@@ -50,6 +50,7 @@ require (
 	github.com/yuin/goldmark v1.5.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20220924101305-151362477c87
 	go.mongodb.org/mongo-driver v1.11.7
+	golang.org/x/crypto v0.10.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/oauth2 v0.9.0
 	willnorris.com/go/microformats v1.2.0
@@ -111,7 +112,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/image v0.8.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.11.0 // indirect

@@ -65,18 +65,12 @@ func (service *Following) Connect(following model.Following) error {
 		counter++
 
 		// Try to save the document to the database.
-		isNew, err := service.saveMessage(following, document, markRead)
-
-		// Report import errors
-		// nolint: errcheck
-		if err != nil {
+		if err := service.saveMessage(following, document, markRead); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error saving document", document))
 		}
 
-		// We can stop here if:
-		// 1. We've already imported this message before
-		// 2. We've already imported 256 messages
-		if (!isNew) || (counter > 256) {
+		// Check business rules to see if we're done importing
+		if service.cancelImport(following.Format, counter) {
 			close(done)
 			break
 		}
@@ -91,8 +85,21 @@ func (service *Following) Connect(following model.Following) error {
 	return nil
 }
 
+// cancelImport is a small test that runs every message imported by the Connect method.
+// It returns TRUE if the import should be canceled, based on the following rules:
+// 1. For ActivityStreams data, we import that last 256 messages from the outbox
+// 2. For other records (RSS/Atom/JSONFeed/MicroFormats), we import all messages from the feed
+func (service *Following) cancelImport(format string, counter int) bool {
+
+	if format == model.FollowingFormatActivityStream {
+		return (counter > 256)
+	}
+
+	return false
+}
+
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
-func (service *Following) saveMessage(following model.Following, document streams.Document, markRead bool) (bool, error) {
+func (service *Following) saveMessage(following model.Following, document streams.Document, markRead bool) error {
 
 	const location = "service.Following.saveMessage"
 	message := model.NewMessage()
@@ -100,7 +107,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 	// Search for an existing Message that matches the parameter
 	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
 		if !derp.NotFound(err) {
-			return false, derp.Wrap(err, location, "Error loading message")
+			return derp.Wrap(err, location, "Error loading message")
 		}
 	}
 
@@ -108,12 +115,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
 
 	if err != nil {
-		return false, derp.Wrap(err, location, "Error loading document from source URL")
-	}
-
-	// If this message already exists in the database, then exit here.
-	if !message.IsNew() {
-		return false, nil
+		return derp.Wrap(err, location, "Error loading document from source URL")
 	}
 
 	// Populate the new message
@@ -134,17 +136,17 @@ func (service *Following) saveMessage(following model.Following, document stream
 
 	// Save the message to the database
 	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
-		return false, derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Error saving message")
 	}
 
+	spew.Dump("saveMessage", message.URL, message.Label)
+
 	// Yee. Haw.
-	return true, nil
+	return nil
 }
 
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
-
-	spew.Dump("connect_PushServices", following, actor.Value(), actor.Meta())
 
 	// ActivityPub is handled first because it is the highest fidelity connection
 	if actor.MetaString("format") == sherlock.FormatActivityStream {

@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/benpate/rosetta/list"
 	"github.com/labstack/echo/v4"
 )
 
@@ -12,7 +13,9 @@ func Localhost() echo.MiddlewareFunc {
 
 		return func(ctx echo.Context) error {
 
-			if ctx.Request().Host != "localhost:8080" {
+			hostname := list.First(ctx.Request().Host, ':')
+
+			if hostname != "localhost" {
 				return ctx.NoContent(http.StatusNotFound)
 			}
 

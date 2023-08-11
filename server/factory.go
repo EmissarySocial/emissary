@@ -48,7 +48,8 @@ type Factory struct {
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
-	domains map[string]*domain.Factory
+	domains   map[string]*domain.Factory
+	refreshed chan bool
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
@@ -62,6 +63,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
+		refreshed:     make(chan bool, 1),
 	}
 
 	// Global Theme service
@@ -158,7 +160,14 @@ func (factory *Factory) start() {
 			}
 			factory.mutex.Unlock()
 		}
+
+		factory.refreshed <- true
 	}
+}
+
+// Refreshed returns the channel that is notified whenever the configuration is refreshed
+func (factory *Factory) Refreshed() <-chan bool {
+	return factory.refreshed
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist

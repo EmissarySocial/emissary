@@ -5,6 +5,8 @@ adapters for reading/writing from the filesystem or a mongodb database.
 package config
 
 import (
+	"strconv"
+
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
@@ -99,4 +101,26 @@ func (config Config) AllProviders() []form.LookupCode {
 	})
 
 	return allProviders
+}
+
+// HTTPPortString returns the HTTP port as a string (prefixed with a colon).
+// This defaults to ":80" if no port is specified.
+func (config Config) HTTPPortString() (string, bool) {
+
+	if config.HTTPPort == 0 {
+		return ":80", false
+	}
+
+	return ":" + strconv.Itoa(config.HTTPPort), true
+}
+
+// HTTPSPortString returns the HTTPS port as a string (prefixed with a colon).
+// This defaults to ":443" if no port is specified.
+func (config Config) HTTPSPortString() (string, bool) {
+
+	if config.HTTPSPort == 0 {
+		return ":443", false
+	}
+
+	return ":" + strconv.Itoa(config.HTTPSPort), true
 }
