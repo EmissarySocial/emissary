@@ -7,16 +7,18 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/sherlock"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/sherlock"
 	"github.com/tomnomnom/linkheader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -392,24 +394,26 @@ func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mentio
 
 	mention.Origin.URL = originURL
 
-	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	page, err := sherlock.Parse(originURL, body)
+	page := mapof.NewAny()
 
-	if err != nil {
+	// Inspect the source document for metadata (microformats, opengraph, etc.)
+	if err := sherlock.Parse(originURL, body, page); err != nil {
 		return derp.Wrap(err, "service.Mention.ParseMicroformats", "Error parsing page", originURL)
 	}
 
 	// Copy the page data into the mention
-	mention.Origin.Label = page.Title
-	mention.Origin.URL = page.CanonicalURL
+	mention.Origin.Label = page.GetString(vocab.PropertyName)
+	mention.Origin.URL = page.GetString(vocab.PropertyID)
 
-	if len(page.Authors) > 0 {
-		author := page.Authors[0]
-		mention.Author.Name = author.Name
-		mention.Author.ProfileURL = author.URL
-		mention.Author.EmailAddress = author.Email
-		mention.Author.ImageURL = author.Image.URL
-	}
+	/*
+		if len(page.Authors) > 0 {
+			author := page.Authors[0]
+			mention.Author.Name = author.Name
+			mention.Author.ProfileURL = author.URL
+			mention.Author.EmailAddress = author.Email
+			mention.Author.ImageURL = author.Image.URL
+		}
+	*/
 
 	// No errors
 	return nil
