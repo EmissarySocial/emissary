@@ -2,6 +2,7 @@ package service
 
 import (
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
@@ -115,7 +116,12 @@ func (service *Following) saveMessage(following model.Following, document stream
 	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading document from source URL")
+		wrappedError := derp.Wrap(err, location, "Error loading document from source URL")
+		if isDocumentAdequate(document) {
+			return wrappedError
+		} else {
+			derp.Report(wrappedError)
+		}
 	}
 
 	// Populate the new message
@@ -139,7 +145,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
-	spew.Dump("saveMessage", message.URL, message.Label)
+	spew.Dump("saveMessage: "+time.Unix(message.PublishDate, 0).Format(time.RFC3339), markRead, message.URL, message.Label, message.ReadDate)
 
 	// Yee. Haw.
 	return nil
@@ -153,7 +159,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 		if ok, err := service.connect_ActivityPub(following, actor); ok {
 			return
 		} else if err != nil {
-			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to ActivityPub", following))
+			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to ActivityPub"))
 		}
 	}
 
@@ -161,7 +167,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 	// TODO: LOW: Implement Fat Pings
 	if webSub := actor.MetaString("websub"); webSub != "" {
 		if err := service.connect_WebSub(following, webSub); err != nil {
-			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to WebSub", following))
+			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to WebSub"))
 		}
 	}
 
@@ -185,4 +191,21 @@ func getActualDocument(document streams.Document) streams.Document {
 	default:
 		return document
 	}
+}
+
+func isDocumentAdequate(document streams.Document) bool {
+
+	if document.ID() == "" {
+		return false
+	}
+
+	if document.Name() == "" {
+		return false
+	}
+
+	if (document.Summary() == "") || (document.Content() == "") {
+		return false
+	}
+
+	return true
 }
