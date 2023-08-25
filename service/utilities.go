@@ -154,7 +154,9 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 			}
 
 			// Add this minified template into the resulting parse-tree
-			t.AddParseTree(actionID, contentTemplate.Tree)
+			if _, err := t.AddParseTree(actionID, contentTemplate.Tree); err != nil {
+				derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to add template to parse tree", actionID))
+			}
 		}
 	}
 
