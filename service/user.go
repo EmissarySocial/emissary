@@ -483,7 +483,7 @@ func (service *User) ActivityPubURL(userID primitive.ObjectID) string {
 }
 
 func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
-	return service.host + "/@" + userID.Hex() + "/pub/key"
+	return service.host + "/@" + userID.Hex() + "#main-key" // was "/pub/key"
 }
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **

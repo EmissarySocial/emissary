@@ -15,6 +15,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Require 2048-bit encryption keys
+const encryptionKeyBits = 2048
+
 // EncryptionKey defines a service that tracks the (possibly external) accounts an internal User is encryptionKey.
 type EncryptionKey struct {
 	collection data.Collection
@@ -85,10 +88,16 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
  * Custom Queries
  ******************************************/
 
+// LoadByID tries to load the EncryptionKey from the database.  If no key
+// exists for the designated user, then a new one is generated.
 func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
-	err := service.Load(exp.Equal("userID", userID), encryptionKey)
+	// spew.Dump("encryptionKey.LoadByID", userID.Hex())
 
+	// Try to load the encryption key from the database
+	err := service.Load(exp.Equal("userId", userID), encryptionKey)
+
+	// If there is no error, then return in success
 	if err == nil {
 		return err
 	}
@@ -96,6 +105,7 @@ func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey 
 	// "Not Found" means we should create a new encryption key
 	if derp.NotFound(err) {
 
+		// spew.Dump("NOT FOUND.  Creating New Key")
 		if newKey, err := service.Create(userID); err == nil {
 			*encryptionKey = newKey
 		} else {
@@ -105,6 +115,7 @@ func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey 
 		return nil
 	}
 
+	// Otherwise, it's a legitimate error, so return it.
 	return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", userID)
 }
 
@@ -120,7 +131,7 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 	encryptionKey.Encoding = model.EncryptionKeyEncodingPlaintext // TODO: MEDIUM: add key encryption encoding
 
 	// Create an actual encryption key
-	privateKey, err := rsa.GenerateKey(rand.Reader, 512)
+	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", userID)
@@ -199,5 +210,5 @@ func (service *EncryptionKey) OwnerID(encryptionKey *model.EncryptionKey) string
 
 // KeyID returns the publicly accessible URL of this EncryptionKey
 func (service *EncryptionKey) KeyID(encryptionKey *model.EncryptionKey) string {
-	return service.OwnerID(encryptionKey) + "/pub/key"
+	return service.OwnerID(encryptionKey) + "#main-key" // was "/pub/key"
 }
