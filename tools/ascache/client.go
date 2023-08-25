@@ -69,13 +69,11 @@ func (client *Client) start() {
 
 		// Try to remove expired actors
 		if err := client.session.Collection(CollectionActor).HardDelete(criteria); err != nil {
-			// nolint: errcheck
 			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired actors from cache"))
 		}
 
 		// Try to remove expired documents
 		if err := client.session.Collection(CollectionDocument).HardDelete(criteria); err != nil {
-			// nolint: errcheck
 			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired documents from cache"))
 		}
 	}
@@ -228,7 +226,6 @@ func (client *Client) save(collection string, uri string, document streams.Docum
 
 	// Save the document to the cache
 	if err := client.session.Collection(collection).Save(&cachedValue, ""); err != nil {
-		// nolint: errcheck // derp.Report has us covered.
 		derp.Report(derp.Wrap(err, "cache.Client.save", "Error saving document to cache", document.ID()))
 	}
 }

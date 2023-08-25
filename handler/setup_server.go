@@ -27,19 +27,16 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 		header.Set("Content-Type", model.MimeTypeHTML)
 		header.Set("Cache-Control", "no-cache")
 
-		// nolint: errcheck
 		if useWrapper {
 			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", config); err != nil {
 				derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
 			}
 		}
 
-		// nolint: errcheck
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
 			derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
 		}
 
-		// nolint: errcheck
 		if useWrapper {
 			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", config); err != nil {
 				derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))

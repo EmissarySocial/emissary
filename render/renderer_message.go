@@ -260,7 +260,6 @@ func (w Message) Responses() template.HTML {
 	renderer := w.ResponsesRenderer()
 
 	// Execute the "responses" template
-	// nolint:errcheck
 	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
 		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}

@@ -98,7 +98,7 @@ func (service *Template) watch() {
 	for _, folder := range service.locations {
 
 		if err := service.filesystemService.Watch(folder, service.changed, service.closed); err != nil {
-			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", folder))
+			derp.Report(derp.Wrap(err, "service.template.Watch", "Error watching filesystem", folder))
 		}
 	}
 
@@ -108,7 +108,9 @@ func (service *Template) watch() {
 		select {
 
 		case <-service.changed:
-			service.loadTemplates()
+			if err := service.loadTemplates(); err != nil {
+				derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
+			}
 
 		case <-service.closed:
 			return

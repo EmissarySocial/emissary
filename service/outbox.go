@@ -96,7 +96,7 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 	}
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
-	// nolint:errcheck - this is just an optimistic cache, so we don't care if it fails.
+	// nolint:errcheck
 	go service.activityStreamsService.LoadDocument(outboxMessage.URL, mapof.NewAny())
 
 	return nil

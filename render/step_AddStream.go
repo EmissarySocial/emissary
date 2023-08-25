@@ -204,7 +204,8 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	// Close the container
 	b.Close()
 
-	// nolint:errcheck // Write the whole widget back to the outpub buffer
+	// Write the whole widget back to the outpub buffer
+	// nolint:errcheck
 	buffer.Write(b.Bytes())
 	return nil
 }

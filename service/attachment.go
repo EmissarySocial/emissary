@@ -91,7 +91,6 @@ func (service *Attachment) Save(attachment *model.Attachment, note string) error
 func (service *Attachment) Delete(attachment *model.Attachment, note string) error {
 
 	// Delete uploaded files from MediaServer
-	// nolint:errcheck
 	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
 		derp.Report(derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachment))
 		// Fail loudly, but do not stop.
@@ -177,7 +176,6 @@ func (service *Attachment) DeleteAll(objectType string, objectID primitive.Objec
 	for _, attachment := range attachments {
 
 		if err := service.Delete(&attachment, note); err != nil {
-			// nolint:errcheck // Fail loudly, but do not stop.
 			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
 		}
 	}

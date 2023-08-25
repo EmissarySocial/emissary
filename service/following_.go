@@ -183,12 +183,10 @@ func (service *Following) Save(following *model.Following, note string) error {
 	}
 
 	// Recalculate the follower count for this user
-	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Connect to external services and discover the best update method.
 	// This will also update the status again, soon.
-	// nolint:errcheck
 	go service.Connect(*following)
 
 	// Win!
@@ -207,11 +205,9 @@ func (service *Following) Delete(following *model.Following, note string) error 
 	}
 
 	// Recalculate the follower count for this user
-	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Recalculate the unread count for this folder
-	// nolint:errcheck
 	go service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID)
 
 	// Disconnect from external services (if necessary)

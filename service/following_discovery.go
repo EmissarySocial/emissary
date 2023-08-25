@@ -10,7 +10,6 @@ func discoverLinks(response *http.Response, body *bytes.Buffer) digit.LinkSet {
 	discoverLinks_Headers(&result, response)
 
 	// Look for links embedded in the HTML
-	// nolint:errcheck // derp.Report is good enough here.
 	if err := discoverLinks_HTML(&result, response, body); err != nil {
 		derp.Report(derp.Wrap(err, "service.discoverLinks", "Error getting links from HTML"))
 	}

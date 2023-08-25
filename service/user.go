@@ -294,20 +294,22 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
  * Custom Actions
  ******************************************/
 
-func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowersCount(service.collection, service.followers, userID)
-	return derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID)
+func (service *User) CalcFollowerCount(userID primitive.ObjectID) {
+	if err := queries.SetFollowersCount(service.collection, service.followers, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID))
+	}
 }
 
-func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowingCount(service.collection, service.following, userID)
-	return derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID)
+func (service *User) CalcFollowingCount(userID primitive.ObjectID) {
+	if err := queries.SetFollowingCount(service.collection, service.following, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
+	}
 }
 
 func (service *User) CalcBlockCount(userID primitive.ObjectID) {
-	err := queries.SetBlockCount(service.collection, service.blocks, userID)
-	// nolint: errcheck
-	derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+	if err := queries.SetBlockCount(service.collection, service.blocks, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+	}
 }
 
 func (service *User) SetOwner(owner config.Owner) error {

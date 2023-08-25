@@ -382,7 +382,6 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetRenderer := NewWidget(&w, streamWidget)
 
-			// nolint:errcheck
 			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetRenderer); err != nil {
 				derp.Report(derp.Wrap(err, "renderer.Stream.Widgets", "Error executing widget template", widget))
 			}
@@ -469,7 +468,6 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
 
-	// nolint:errcheck
 	if err != nil {
 		derp.Report(derp.Wrap(err, "renderer.Stream.NextSibling", "Database error"))
 		return Stream{}
@@ -493,7 +491,6 @@ func (w Stream) Responses() template.HTML {
 	renderer := w.ResponsesRenderer()
 
 	// Execute the "responses" template
-	// nolint:errcheck
 	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
 		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}
@@ -559,7 +556,6 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 
 	streamService := w.factory().Stream()
 
-	// nolint:errcheck
 	if err := streamService.LoadParent(w.stream, &parent); err != nil {
 		derp.Report(derp.Wrap(err, "renderer.Stream.Ancestors", "Error loading parent"))
 	}

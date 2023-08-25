@@ -412,7 +412,6 @@ func (w Inbox) Responses(message model.Message) template.HTML {
 	// Render the responses widget
 	var buffer bytes.Buffer
 
-	// nolint:errcheck
 	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
 		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}
