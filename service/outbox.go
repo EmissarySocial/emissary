@@ -175,7 +175,7 @@ func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int
 
 	options := []option.Option{
 		option.Fields(model.OutboxMessageSummaryFields()...),
-		option.SortDesc("rank"),
+		option.SortDesc("createDate"),
 		option.MaxRows(int64(maxRows)),
 	}
 
