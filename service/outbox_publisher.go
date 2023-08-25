@@ -68,7 +68,7 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity 
 	return nil
 }
 
-func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, followers <-chan model.Follower, activity mapof.Any) error {
+func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, followers <-chan model.Follower, activity mapof.Any) {
 
 	const location = "service.Outbox.SendNotifications_ActivityPub"
 
@@ -76,32 +76,29 @@ func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, f
 	actor, err := service.userService.ActivityPubActor(userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading actor", userID)
+		derp.Report(derp.Wrap(err, location, "Error loading actor", userID))
+		return
 	}
 
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
 		service.queue.Run(pub.SendQueueTask(actor, activity, follower.Actor.ProfileURL))
 	}
-
-	return nil
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, activity mapof.Any) error {
+func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, activity mapof.Any) {
 
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
 		service.queue.Run(NewTaskSendWebSubMessage(follower))
 	}
-
-	return nil
 }
 
 // SendNotifications_WebMention sends WebMention updates to external websites that are
 // mentioned in this stream.  This is here (and not in the outbox service)
 // because we need to render the content in order to discover outbound links.
-func (service Outbox) SendNotifications_WebMention(activity mapof.Any) error {
+func (service Outbox) SendNotifications_WebMention(activity mapof.Any) {
 
 	// Locate the object ID for this acticity
 	object := activity.GetMap(vocab.PropertyObject)
@@ -113,21 +110,19 @@ func (service Outbox) SendNotifications_WebMention(activity mapof.Any) error {
 	links, err := webmention.DiscoverLinksFromReader(reader, id, "")
 
 	if err != nil {
-		return derp.Wrap(err, "mention.SendWebMention.Run", "Error discovering webmention links", activity)
+		derp.Report(derp.Wrap(err, "mention.SendWebMention.Run", "Error discovering webmention links", activity))
+		return
 	}
 
 	// If no links, peace out, homie.
 	if len(links) == 0 {
-		return nil
+		return
 	}
 
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
 		service.queue.Run(NewTaskSendWebMention(id, link))
 	}
-
-	// Accept your success with grace.
-	return nil
 }
 
 // drainChannel empties a channel of followers.  It is used to skip over

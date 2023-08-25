@@ -102,8 +102,13 @@ func (service *Following) Start() {
 			default:
 
 				// Poll each following for new items.
-				service.Connect(following)
-				service.PurgeInbox(following)
+				if err := service.Connect(following); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error connecting to remote server"))
+				}
+
+				if err := service.PurgeInbox(following); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
+				}
 			}
 
 			following = model.NewFollowing()
@@ -187,7 +192,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// Connect to external services and discover the best update method.
 	// This will also update the status again, soon.
-	go service.Connect(*following)
+	go derp.Report(service.Connect(*following))
 
 	// Win!
 	return nil
@@ -208,7 +213,7 @@ func (service *Following) Delete(following *model.Following, note string) error 
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Recalculate the unread count for this folder
-	go service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID)
+	go derp.Report(service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID))
 
 	// Disconnect from external services (if necessary)
 	service.Disconnect(following)

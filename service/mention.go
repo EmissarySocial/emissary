@@ -375,6 +375,7 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 		}
 
 		// If buffer exists, write the source document to the buffer, then return without error.
+		// nolint: errcheck // okay to ignore write error
 		if buffer != nil {
 			buffer.Write([]byte(content))
 		}
