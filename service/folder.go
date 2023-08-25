@@ -234,12 +234,12 @@ func (service *Folder) ReCalculateUnreadCountFromFolder(userID primitive.ObjectI
 	// Try to load the folder
 	folder := model.NewFolder()
 	if err := service.LoadByID(userID, folderID, &folder); err != nil {
-		return derp.Report(derp.Wrap(err, "service.Folder.ReCalculateUnreadCountFromFolder", "Error loading folder"))
+		return derp.Wrap(err, "service.Folder.ReCalculateUnreadCountFromFolder", "Error loading folder")
 	}
 
 	// Recalculate unread counts
 	if err := service.CalculateUnreadCount(userID, folderID); err != nil {
-		return derp.Report(derp.Wrap(err, "service.Folder.ReCalculateUnReadCountFromFolder", "Error updating Unread count"))
+		return derp.Wrap(err, "service.Folder.ReCalculateUnReadCountFromFolder", "Error updating Unread count")
 	}
 
 	return nil

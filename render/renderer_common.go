@@ -275,7 +275,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Stream.UserName", "Error loading User"))
+		return "", derp.Wrap(err, "render.Stream.UserName", "Error loading User")
 	}
 
 	return user.DisplayName, nil
@@ -292,7 +292,7 @@ func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User"))
+		return "", derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User")
 	}
 
 	return user.ActivityPubAvatarURL(), nil

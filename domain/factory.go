@@ -148,14 +148,14 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain))
+			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
 		}
 
 		// Establish a connection
 		session, err := server.Session(context.Background())
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain))
+			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain)
 		}
 
 		// If we already have a database connection, then close it

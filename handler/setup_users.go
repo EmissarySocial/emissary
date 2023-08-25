@@ -111,7 +111,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
 		if err := domainEmailService.SendWelcome(&user); err != nil {
-			return derp.Report(derp.Wrap(err, "handler.SetupDomainUserInvite", "Error sending email"))
+			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Error sending email")
 		}
 
 		return nil

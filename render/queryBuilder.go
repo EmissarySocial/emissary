@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data/option"
-	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
 )
@@ -123,7 +122,7 @@ func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
 	result := make([]T, 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
-	return result, derp.Report(err)
+	return result, err
 }
 
 /********************************

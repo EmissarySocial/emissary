@@ -21,20 +21,20 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error creating ActivityStreamsHandler"))
+			return derp.Wrap(err, location, "Error creating ActivityStreamsHandler")
 		}
 
 		// Try to load the User who owns this inbox
 		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, location, "UserID must be a valid ObjectID"))
+			return derp.Wrap(err, location, "UserID must be a valid ObjectID")
 		}
 
 		user := model.NewUser()
 		userService := factory.User()
 		if err := userService.LoadByID(userID, &user); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error loading User", userID.Hex()))
+			return derp.Wrap(err, location, "Error loading User", userID.Hex())
 		}
 
 		// RULE: Only public users can be queried
@@ -46,12 +46,12 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityStreams())
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error parsing ActivityPub request"))
+			return derp.Wrap(err, location, "Error parsing ActivityPub request")
 		}
 
 		// Handle the ActivityPub request
 		if err := inboxRouter.Handle(factory, &user, activity); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error handling ActivityPub request"))
+			return derp.Wrap(err, location, "Error handling ActivityPub request")
 		}
 
 		// Send the response to the client

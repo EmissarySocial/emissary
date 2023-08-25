@@ -20,14 +20,14 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 	factory, domain, err := loadFactoryAndDomain(fm, ctx)
 
 	if err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error getting factory"))
+		return derp.Wrap(err, location, "Error getting factory")
 	}
 
 	// Find and execute the template
 	template := factory.Domain().Theme().HTMLTemplate
 
 	if err := template.ExecuteTemplate(&buffer, templateName, &domain); err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error executing template"))
+		return derp.Wrap(err, location, "Error executing template")
 	}
 
 	// Write the result to the response.
@@ -42,7 +42,7 @@ func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory
 	factory, err := fm.ByContext(ctx)
 
 	if err != nil {
-		return nil, model.Domain{}, derp.Report(derp.Wrap(err, location, "Error getting factory"))
+		return nil, model.Domain{}, derp.Wrap(err, location, "Error getting factory")
 	}
 
 	// Get the domain record

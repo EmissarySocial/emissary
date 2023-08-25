@@ -7,7 +7,7 @@ func (service *Following) import_HTML(following *model.Following, response *http
 
 	// Look for Feed Data
 	if err := service.import_HTML_feed(following, response, body); err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error importing HTML", following, body.String()))
+		return derp.Wrap(err, location, "Error importing HTML", following, body.String())
 	}
 
 	// Success!
