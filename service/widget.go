@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"slices"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"golang.org/x/exp/slices"
 )
 
 // Widget service manages the global, in-memory library of widget templates that can
