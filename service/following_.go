@@ -396,14 +396,11 @@ func (service *Following) PurgeInbox(following model.Following) error {
 	return nil
 }
 
-func (service *Following) CallbackURL() string {
-	return service.host + "/.websub"
-}
-
 /******************************************
  * Other Updates Methods
  ******************************************/
 
+// SetStatusLoading updates a Following record with the "Loading" status
 func (service *Following) SetStatusLoading(following *model.Following) error {
 
 	// Update Following state
@@ -415,6 +412,8 @@ func (service *Following) SetStatusLoading(following *model.Following) error {
 	return service.collection.Save(following, "Updating status")
 }
 
+// SetStatusSuccess updates a Following record with the "Success" status and
+// resets the error count to zero.
 func (service *Following) SetStatusSuccess(following *model.Following) error {
 
 	// Update Following state
@@ -428,6 +427,8 @@ func (service *Following) SetStatusSuccess(following *model.Following) error {
 	return service.collection.Save(following, "Updating status")
 }
 
+// SetStatusFailure updates a Following record to the "Failure" status and
+// increments the error count.
 func (service *Following) SetStatusFailure(following *model.Following, statusMessage string) error {
 
 	// Update Following state
@@ -451,66 +452,21 @@ func (service *Following) SetStatusFailure(following *model.Following, statusMes
 	return service.collection.Save(following, "Updating status")
 }
 
-/*
-// SetStatus updates the status (and statusMessage) of a Following record.
-func (service *Following) SetStatus(following *model.Following, status string, statusMessage string) error {
-
-	// Update properties of the Following
-	following.Status = status
-	following.StatusMessage = statusMessage
-
-	// Recalculate the next poll time
-	switch following.Status {
-	case model.FollowingStatusSuccess:
-
-		// On success, "LastPolled" is only updated when we're successful.  Reset other times.
-		following.LastPolled = time.Now().Unix()
-		following.NextPoll = following.LastPolled + int64(following.PollDuration*60*60)
-		following.ErrorCount = 0
-
-	case model.FollowingStatusFailure:
-
-		// On failure, compute exponential backoff
-		// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m
-		// But do not change "LastPolled" because that is the last time we were successful
-		errorBackoff := following.ErrorCount
-
-		if errorBackoff > 8 {
-			errorBackoff = 8
-		}
-
-		errorBackoff = 2 ^ errorBackoff
-
-		following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
-		following.ErrorCount++
-
-	default:
-		// On all other statuse, the error counters are not touched
-		// because "New", "Loading", and "Polling" are going to be overwritten very soon.
-	}
-
-	// Try to save the Following to the database
-	if err := service.collection.Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following.SetStatus", "Error updating following status", following)
-	}
-
-	// Success!!
-	return nil
-}
-*/
-
 /******************************************
  * ActivityPub Data Accessors
  ******************************************/
 
+// ActivityPubID returns the public URL (ID) of a Following record
 func (service *Following) ActivityPubID(following *model.Following) string {
 	return service.host + "/@" + following.UserID.Hex() + "/pub/following/" + following.FollowingID.Hex()
 }
 
+// ActivityPubActorID returns the public URL (ID) of the actor being followed
 func (service *Following) ActivityPubActorID(following *model.Following) string {
 	return service.host + "/@" + following.UserID.Hex()
 }
 
+// AsJSONLD returns a Following record as a JSON-LD object
 func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
 
 	return mapof.Any{

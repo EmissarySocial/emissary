@@ -1,4 +1,4 @@
-{{- $inbox := .Inbox.Top12.ByReadDate.Reverse.Slice.Reverse -}}
+{{- $inbox := .Inbox.Top12.ByCreateDate.Reverse.Slice.Reverse -}}
 
 {{- if gt (len  $inbox) 0 -}}
 
@@ -11,15 +11,14 @@
 	{{- $layout := $folder.Layout | lowerCase -}}
 	{{- $inboxRenderer := . -}}
 
-
 	<div 
-		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{${firstMessage.readDate}}"
+		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-push-url="false"
 		role="button"
 		class="turboclick space-below">
-		<button class="text-xs">&uarr; Older than {{ divide $firstMessage.Rank 1000 | longDate }}</button>
+		<button class="text-xs">&uarr; Older than {{ $firstMessage.ReadDate | longDate}}</button>
 		<div style="border-top:solid 2px var(--gray30);"></div>
 	</div>
 

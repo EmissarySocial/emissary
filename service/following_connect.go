@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/sherlock"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -19,7 +21,6 @@ func (service *Following) Connect(following model.Following) error {
 
 	const location = "service.Following.Connect"
 
-	isNewFollowing := (following.Status == model.FollowingStatusNew)
 	// Update the following status
 	if err := service.SetStatusLoading(&following); err != nil {
 		return derp.Wrap(err, location, "Error updating following status", following)
@@ -53,28 +54,36 @@ func (service *Following) Connect(following model.Following) error {
 	// Import the actor's outbox and messages
 	outbox := actor.Outbox()
 	done := make(chan struct{})
-	documents := collections.Documents(outbox, done)
-	counter := 0
+	documentChan := collections.Documents(outbox, done)   // start reading documents from the outbox
+	documentChan = channel.Limit(256, documentChan, done) // Limit to 128 documents
+	documents := channel.Slice(documentChan)              // Convert the channel into a slice
+
+	sort.Slice(documents, func(a int, b int) bool {
+		return documents[a].Published().Before(documents[b].Published())
+	})
+
+	spew.Dump("IMPORTING DOCUMENTS:", len(documents))
 
 	// Try to add each message into the database unitl done
-	for documentOrLink := range documents {
+	for index, documentOrLink := range documents {
 
+		spew.Dump(index, documentOrLink.ID(), documentOrLink.Published().Format(time.Stamp))
+
+		// Traverse JSON-LD documents if necessary
 		document := getActualDocument(documentOrLink)
 
-		// RULE: For new following records, the first six records are "unread".  All others are "read"
-		markRead := !isNewFollowing || (counter > 6)
-		counter++
+		// RULE: The six most recent records in the data set are not marked "read"
+		markRead := (index < (len(documents) - 6))
+
+		spew.Dump(markRead)
 
 		// Try to save the document to the database.
 		if err := service.saveMessage(following, document, markRead); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error saving document", document))
 		}
 
-		// Check business rules to see if we're done importing
-		if service.cancelImport(following.Format, counter) {
-			close(done)
-			break
-		}
+		// Wait 1 millisecond between each document to guarantee sorting by CreateDate
+		time.Sleep(1 * time.Millisecond)
 	}
 
 	// Recalculate Folder unread counts
@@ -86,31 +95,10 @@ func (service *Following) Connect(following model.Following) error {
 	return nil
 }
 
-// cancelImport is a small test that runs every message imported by the Connect method.
-// It returns TRUE if the import should be canceled, based on the following rules:
-// 1. For ActivityStreams data, we import that last 256 messages from the outbox
-// 2. For other records (RSS/Atom/JSONFeed/MicroFormats), we import all messages from the feed
-func (service *Following) cancelImport(format string, counter int) bool {
-
-	if format == model.FollowingFormatActivityStream {
-		return (counter > 256)
-	}
-
-	return false
-}
-
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
 func (service *Following) saveMessage(following model.Following, document streams.Document, markRead bool) error {
 
 	const location = "service.Following.saveMessage"
-	message := model.NewMessage()
-
-	// Search for an existing Message that matches the parameter
-	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
-		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error loading message")
-		}
-	}
 
 	// Load and refine the document from its actual URL
 	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
@@ -121,6 +109,15 @@ func (service *Following) saveMessage(following model.Following, document stream
 			return wrappedError
 		} else {
 			derp.Report(wrappedError)
+		}
+	}
+
+	// Try to find an existing Message that matches the document ID
+	message := model.NewMessage()
+
+	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
+		if !derp.NotFound(err) {
+			return derp.Wrap(err, location, "Error searching for message")
 		}
 	}
 
@@ -136,7 +133,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 	message.ContentHTML = document.Content()
 	message.PublishDate = document.Published().Unix()
 
-	if markRead {
+	if message.NotRead() && markRead {
 		message.ReadDate = message.PublishDate
 	}
 
@@ -145,7 +142,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
-	spew.Dump("saveMessage: "+time.Unix(message.PublishDate, 0).Format(time.RFC3339), markRead, message.URL, message.Label, message.ReadDate)
+	spew.Dump("saveMessage", time.Unix(message.PublishDate, 0).Format(time.Stamp), markRead, message.URL, message.Label)
 
 	// Yee. Haw.
 	return nil

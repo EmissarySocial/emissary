@@ -48,7 +48,7 @@ func NewMessage() Message {
 }
 
 func MessageFields() []string {
-	return []string{"_id", "userId", "socialRole", "origin", "url", "label", "summary", "imageUrl", "contentHtml", "attributedTo", "folderId", "publishDate", "rank", "responses", "myResponse"}
+	return []string{"_id", "userId", "socialRole", "origin", "url", "label", "summary", "imageUrl", "contentHtml", "attributedTo", "folderId", "publishDate", "rank", "responses", "myResponse", "readDate", "createDate"}
 }
 
 func (summary Message) Fields() []string {
@@ -180,6 +180,16 @@ func (message *Message) UpdateWithMessage(other *Message) {
 // this server, and is not federated via another server.
 func (message *Message) IsInternal() bool {
 	return !message.Origin.FollowingID.IsZero()
+}
+
+// IsRead returns TRUE if this message has a valid ReadDate
+func (message Message) IsRead() bool {
+	return message.ReadDate < math.MaxInt64
+}
+
+// NotRead returns TRUE if this message does not have a valid ReadDate
+func (message Message) NotRead() bool {
+	return message.ReadDate == math.MaxInt64
 }
 
 func (message *Message) SetMyResponse(responseType string) {

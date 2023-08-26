@@ -298,7 +298,8 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
 		Int("rank").
-		Int("readDate")
+		Int("readDate").
+		Int("createDate")
 
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
@@ -306,6 +307,8 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		exp.Equal("deleteDate", 0),
 		expBuilder.Evaluate(queryString),
 	)
+
+	spew.Dump(queryString, criteria)
 
 	return NewQueryBuilder[model.Message](w._factory.Inbox(), criteria), nil
 }
