@@ -5,6 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
@@ -151,7 +152,9 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit HTMLTemplates from the parent (if not already defined)
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
-			template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree)
+			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
+				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Error adding template", templateName.Name()))
+			}
 		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"strings"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -93,7 +94,9 @@ func (theme *Theme) Inherit(parent *Theme) {
 	// Inherit HTMLTemplates from the parent (if not already defined)
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if theme.HTMLTemplate.Lookup(templateName.Name()) == nil {
-			theme.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree)
+			if _, err := theme.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
+				derp.Report(derp.Wrap(err, "model.Theme.Inherit", "Error adding template", templateName.Name()))
+			}
 		}
 	}
 
