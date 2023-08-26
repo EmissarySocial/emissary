@@ -42,7 +42,7 @@ var embeddedFiles embed.FS
 
 func main() {
 
-	fmt.Println("_____           _                          ")
+	fmt.Println(" _____           _                          ")
 	fmt.Println("| ____|_ __ ___ (_)___ ___  __ _ _ __ _   _ ")
 	fmt.Println("|  _| | '_ ` _ \\| / __/ __|/ _` | '__| | | |")
 	fmt.Println("| |___| | | | | | \\__ \\__ \\ (_| | |  | |_| |")
@@ -318,7 +318,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo) {
 			Email:      config.AdminEmail,
 		}
 
-		fmt.Println("Starting HTTPS server")
+		fmt.Println("Starting HTTPS server on port " + portString + ".")
 
 		for {
 			if err := e.StartAutoTLS(portString); err != nil {
@@ -337,7 +337,7 @@ func startHTTP(factory *server.Factory, e *echo.Echo) {
 	config := factory.Config()
 
 	if portString, ok := config.HTTPPortString(); ok {
-		fmt.Println("Starting HTTP server")
+		fmt.Println("Starting HTTP server on port " + portString + ".")
 		for {
 			if err := e.Start(portString); err != nil {
 				fmt.Println(err.Error())

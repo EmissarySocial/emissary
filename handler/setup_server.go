@@ -157,8 +157,13 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Database Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
 					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 				}},
-				{Type: "layout-vertical", Label: "Testing and Development"},
-				{Type: "select", Label: "Debug Output", Path: "debugLevel", Options: mapof.Any{"options": []string{"None", "Terse", "Verbose"}}},
+				{Type: "layout-vertical", Label: "Ports", Children: []form.Element{
+					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "text", Label: "HTTPS", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+				}},
+				{Type: "layout-vertical", Label: "Testing and Development", Children: []form.Element{
+					{Type: "select", Label: "Debug Output", Path: "debugLevel", Options: mapof.Any{"options": []string{"None", "Terse", "Verbose"}}},
+				}},
 			},
 		}, false, nil
 

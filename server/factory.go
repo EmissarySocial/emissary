@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/icon"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
@@ -399,7 +400,13 @@ func (factory *Factory) DeleteProvider(providerID string) error {
 func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
 
 	host := factory.NormalizeHostname(ctx.Request().Host)
-	return factory.ByDomainName(host)
+	result, err := factory.ByDomainName(host)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "server.Factory.ByContext", "Error finding domain", host)
+	}
+
+	return result, nil
 }
 
 // ByDomainID retrieves a domain using a DomainID
@@ -432,13 +439,14 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.NewNotFoundError("factory.ByDomainName.Get", "Unrecognized domain name", name)
+	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present
 func (factory *Factory) NormalizeHostname(hostname string) string {
 
 	hostname = strings.ToLower(hostname)
+	hostname = list.Head(hostname, ':')
 
 	if dotIndex := strings.Index(hostname, "."); dotIndex > 0 {
 
