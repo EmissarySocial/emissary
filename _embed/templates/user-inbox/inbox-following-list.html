@@ -29,7 +29,8 @@
 				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" style="flex-grow:1;">
 					<div class="ellipsis-block" style="max-height:1.75em;">
 						{{- if ne "" .Label -}}
-							<span class="black bold">{{- .Label -}}</span>
+							<div class="black bold">{{- .Label -}}</div>
+							<div class="text-gray">{{- .URL -}}</div>
 						{{- else -}}
 							{{- .URL -}}
 						{{- end -}}
