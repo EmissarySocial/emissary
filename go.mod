@@ -1,32 +1,31 @@
 module github.com/EmissarySocial/emissary
 
-go 1.19
+go 1.21
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.44.283
 	github.com/benpate/cachecontrol v0.0.1
 	github.com/benpate/data v0.28.0
-	github.com/benpate/data-mongo v0.28.0
-	github.com/benpate/derp v0.27.2
-	github.com/benpate/digit v0.10.4
+	github.com/benpate/data-mongo v0.28.1
+	github.com/benpate/derp v0.28.0
+	github.com/benpate/digit v0.10.5
 	github.com/benpate/domain v0.1.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.3
-	github.com/benpate/form v0.16.1
-	github.com/benpate/hannibal v0.5.0
+	github.com/benpate/form v0.16.2
+	github.com/benpate/hannibal v0.6.0
 	github.com/benpate/html v0.16.3
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.7
-	github.com/benpate/remote v0.10.6
-	github.com/benpate/rosetta v0.17.0
+	github.com/benpate/remote v0.10.7
+	github.com/benpate/rosetta v0.18.0
 	github.com/benpate/sherlock v0.3.0
-	github.com/benpate/steranko v0.14.0
-	github.com/benpate/table v0.5.5
+	github.com/benpate/steranko v0.15.1
+	github.com/benpate/table v0.6.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -63,14 +62,17 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/chroma/v2 v2.7.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
+	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
+	github.com/gliderlabs/ssh v0.3.5 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
