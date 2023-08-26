@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -62,20 +61,14 @@ func (service *Following) Connect(following model.Following) error {
 		return documents[a].Published().Before(documents[b].Published())
 	})
 
-	spew.Dump("IMPORTING DOCUMENTS:", len(documents))
-
 	// Try to add each message into the database unitl done
 	for index, documentOrLink := range documents {
-
-		spew.Dump(index, documentOrLink.ID(), documentOrLink.Published().Format(time.Stamp))
 
 		// Traverse JSON-LD documents if necessary
 		document := getActualDocument(documentOrLink)
 
 		// RULE: The six most recent records in the data set are not marked "read"
 		markRead := (index < (len(documents) - 6))
-
-		spew.Dump(markRead)
 
 		// Try to save the document to the database.
 		if err := service.saveMessage(following, document, markRead); err != nil {
@@ -141,8 +134,6 @@ func (service *Following) saveMessage(following model.Following, document stream
 	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
-
-	spew.Dump("saveMessage", time.Unix(message.PublishDate, 0).Format(time.Stamp), markRead, message.URL, message.Label)
 
 	// Yee. Haw.
 	return nil

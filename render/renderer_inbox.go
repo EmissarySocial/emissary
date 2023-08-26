@@ -308,8 +308,6 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		expBuilder.Evaluate(queryString),
 	)
 
-	spew.Dump(queryString, criteria)
-
 	return NewQueryBuilder[model.Message](w._factory.Inbox(), criteria), nil
 }
 

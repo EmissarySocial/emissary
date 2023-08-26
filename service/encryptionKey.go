@@ -92,8 +92,6 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 // exists for the designated user, then a new one is generated.
 func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
-	// spew.Dump("encryptionKey.LoadByID", userID.Hex())
-
 	// Try to load the encryption key from the database
 	err := service.Load(exp.Equal("userId", userID), encryptionKey)
 
@@ -104,8 +102,6 @@ func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey 
 
 	// "Not Found" means we should create a new encryption key
 	if derp.NotFound(err) {
-
-		// spew.Dump("NOT FOUND.  Creating New Key")
 		if newKey, err := service.Create(userID); err == nil {
 			*encryptionKey = newKey
 		} else {
