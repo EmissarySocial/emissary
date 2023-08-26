@@ -69,7 +69,7 @@ func (service *Outbox) Query(criteria exp.Expression, options ...option.Option) 
 
 // List returns an iterator containing all of the Activities that match the provided criteria
 func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Outbox from the database
@@ -95,8 +95,9 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 		return derp.Wrap(err, "service.Outbox", "Error saving Outbox", outboxMessage, note)
 	}
 
-	// If this message has a valid URL, then cache it into the activitystream service.
-	go service.activityStreamsService.Load(outboxMessage.URL, mapof.NewAny())
+	// If this message has a valid URL, then try cache it into the activitystream service.
+	// nolint:errcheck
+	go service.activityStreamsService.LoadDocument(outboxMessage.URL, mapof.NewAny())
 
 	return nil
 }
@@ -111,7 +112,7 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
 	}
 
-	if err := service.activityStreamsService.DeleteByURL(outboxMessage.URL); err != nil {
+	if err := service.activityStreamsService.DeleteDocumentByURL(outboxMessage.URL); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting ActivityStream", outboxMessage, note)
 	}
 
@@ -174,7 +175,7 @@ func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int
 
 	options := []option.Option{
 		option.Fields(model.OutboxMessageSummaryFields()...),
-		option.SortDesc("rank"),
+		option.SortDesc("createDate"),
 		option.MaxRows(int64(maxRows)),
 	}
 

@@ -19,12 +19,13 @@ func MessageSchema() schema.Element {
 			"summary":      schema.String{MaxLength: 1024},
 			"imageUrl":     schema.String{Format: "uri"},
 			"attributedTo": schema.Array{Items: PersonLinkSchema()},
-			"inReplyTo":    schema.Array{Items: DocumentLinkSchema()},
+			"inReplyTo":    schema.String{Format: "uri"},
 			"contentHtml":  schema.String{Format: "html"},
 			"contentJson":  schema.String{Format: "json"},
 			"responses":    ResponseSummarySchema(),
 			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
 			"publishDate":  schema.Integer{BitSize: 64},
+			"readDate":     schema.Integer{BitSize: 64},
 			"rank":         schema.Integer{BitSize: 64},
 		},
 	}
@@ -75,6 +76,9 @@ func (message *Message) GetPointer(name string) (any, bool) {
 
 	case "publishDate":
 		return &message.PublishDate, true
+
+	case "readDate":
+		return &message.ReadDate, true
 
 	case "rank":
 		return &message.Rank, true

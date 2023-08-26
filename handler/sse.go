@@ -32,7 +32,7 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 		f, ok := w.(http.Flusher)
 
 		if !ok {
-			return derp.Report(derp.NewInternalError("handler.ServerSentEvent", "Streaming Not Supported"))
+			return derp.NewInternalError("handler.ServerSentEvent", "Streaming Not Supported")
 		}
 
 		token := ctx.Param("stream")
@@ -40,7 +40,7 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 		streamID, err := primitive.ObjectIDFromHex(token)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, "handler.ServerSentEvent", "Invalid StreamID", token))
+			return derp.Wrap(err, "handler.ServerSentEvent", "Invalid StreamID", token)
 		}
 
 		httpRequest := domain.NewHTTPRequest(ctx)

@@ -24,19 +24,33 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/browser"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 //go:embed all:_embed/**
 var embeddedFiles embed.FS
 
+/******************************************
+ * Main Application Entry Point
+ ******************************************/
+
 func main() {
 
-	fmt.Println("Starting Emissary.")
+	fmt.Println(" _____           _                          ")
+	fmt.Println("| ____|_ __ ___ (_)___ ___  __ _ _ __ _   _ ")
+	fmt.Println("|  _| | '_ ` _ \\| / __/ __|/ _` | '__| | | |")
+	fmt.Println("| |___| | | | | | \\__ \\__ \\ (_| | |  | |_| |")
+	fmt.Println("|_____|_| |_| |_|_|___/___/\\__,_|_|   \\__, |")
+	fmt.Println("                                      |___/ ")
+	fmt.Println("")
+
+	go waitForSigInt()
 
 	// Set global configuration
 	spew.Config.DisableMethods = true
@@ -46,7 +60,10 @@ func main() {
 	commandLineArgs := config.GetCommandLineArgs()
 	configStorage := config.Load(commandLineArgs)
 
-	serverFactory := server.NewFactory(configStorage, embeddedFiles)
+	factory := server.NewFactory(configStorage, embeddedFiles)
+
+	// Wait for the first time the configuration is loaded
+	<-factory.Refreshed()
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -54,21 +71,61 @@ func main() {
 	e.HTTPErrorHandler = errorHandler
 
 	// Global middleware
+	// TODO: HIGH: Implement echo.Secure - https://echo.labstack.com/docs/middleware/secure
+	// TODO: HIGH: Implement CSRF protection - https://echo.labstack.com/docs/middleware/csrf
+	// TODO: MEDIUM: Implement Rate Limiter - https://echo.labstack.com/docs/middleware/rate-limiter
+	// TODO: LOW: Implement Timeout - https://echo.labstack.com/docs/middleware/timeout
+	// TODO: LOW: Implement GZip - https://echo.labstack.com/docs/middleware/gzip
 	e.Use(middleware.Recover())
-	// TODO: HIGH: implement echo.Security middleware
 
-	// Based on configuration, add all other routes and start web server
 	if commandLineArgs.Setup {
-		makeSetupRoutes(serverFactory, e)
+
+		// Add routes for setup tool
+		makeSetupRoutes(factory, e)
+
+		// When running the setup tool, wait a second, then open a browser window to the correct URL
+		openLocalhostBrowser(factory.Config())
+
+		// Prepare HTTP and HTTPS servers using the new configuration
+		go startHTTP(factory, e)
+
 	} else {
-		makeStandardRoutes(serverFactory, e)
+		// Add routes for standard web server
+		makeStandardRoutes(factory, e)
+
+		// Prepare HTTP and HTTPS servers using the new configuration
+		go startHTTP(factory, e)
+		go startHTTPS(factory, e)
+	}
+
+	// Listen to the OS SIGINT channel for an interrupt signal
+	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	// https://golang.org/pkg/os/signal/#Notify
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	for {
+		select {
+
+		// Collect configuration refresh events (probably don't need to do anything, though)
+		case <-factory.Refreshed():
+
+		// If we get a SIGINT, then shutdown gracefully
+		case <-quit:
+			gracefulShutdown(e)
+			break
+		}
 	}
 }
+
+/******************************************
+ * Routes for Different Application Modes
+ ******************************************/
 
 // makeSetupRoutes generates a new Echo instance for the setup behavior
 func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 
-	fmt.Println("Starting Emissary Config Tool.")
+	fmt.Println("Starting Emissary Setup Tool.")
 
 	// Locate the setup templates
 	setupFiles, err := fs.Sub(embeddedFiles, "_embed/setup")
@@ -82,9 +139,6 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 		ParseFS(setupFiles, "*.html"))
 
 	// Middleware for setup pages
-	// TODO: LOW: Security
-	// TODO: LOW: Rate Limiter
-	// TODO: HIGH: CSRF
 	e.Use(mw.Localhost())
 
 	// Setup Routes
@@ -107,32 +161,20 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/:provider", handler.SetupOAuthPost(factory, setupTemplates))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
-
-	// When running the setup tool, wait a second, then open a browser window to the correct URL
-	go func() {
-		time.Sleep(time.Second * 1)
-		browser.OpenURL("http://localhost:8080/")
-	}()
-
-	// Start the HTTP server on alternate port 8080
-	fmt.Println("Starting HTTP server...")
-	if err := e.Start(":8080"); err != nil {
-		derp.Report(derp.Wrap(err, "setup.Setup", "Error starting HTTP server"))
-	}
 }
 
 // makeStandardRoutes generates a new Echo instance the primary server behavior
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
+	fmt.Println("Starting Emissary Server.")
+
 	e.Pre(mw.HttpsRedirect)
 
 	// Middleware for standard pages
-	// TODO: MEDIUM: Rate Limiter
-	// TODO: MEDIUM: Security Middleware
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
 
-	// Well-Known API calls
+	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.GET("/favicon.ico", handler.GetFavicon(factory))
@@ -198,13 +240,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("@me/messages/:message", handler.PostMessage(factory))
 	e.GET("@me/messages/:message/:action", handler.GetMessage(factory))
 	e.POST("@me/messages/:message/:action", handler.PostMessage(factory))
-	e.POST("/@me/pub/folder/readDate", handler.PostFolderReadDate(factory))
+	e.POST("@me/messages/:message/mark-read", handler.PostMessageMarkRead(factory))
 
 	// ActivityPub Routes
 	e.GET("/@:userId/pub", handler.GetOutbox(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutboxCollection(factory))
-	e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
+	// e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowersCollection(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowingCollection(factory))
 	e.GET("/@:userId/pub/following/:followingId", handler.ActivityPub_GetFollowingRecord(factory))
@@ -231,41 +273,110 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/startup", handler.GetStartup(factory), mw.Owner)
 	e.GET("/startup/:action", handler.GetStartup(factory), mw.Owner)
 	e.POST("/startup", handler.PostStartup(factory), mw.Owner)
+}
 
-	// Prepare HTTP and HTTPS servers using the new configuration
-	go startHttps(e)
-	go startHttp(e)
+/******************************************
+ * Additional Helper Functions
+ ******************************************/
 
-	// GRACEFUL SHUTDOWN FOR STANDARD SERVER
-	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
+// openLocalhostBrowser opens a browser window to the localhost URL
+// IF the server is configured to run on HTTP or HTTPS
+func openLocalhostBrowser(config config.Config) {
+
+	if portString, ok := config.HTTPPortString(); ok {
+		time.Sleep(500 * time.Millisecond)
+		browser.OpenURL("http://localhost" + portString + "/")
+
+	} else {
+		fmt.Println("Unable to open setup tool because no HTTP port is configured.")
+	}
+}
+
+// startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
+// If the configured port is not available, it will wait one second and retry until it is
+func startHTTPS(factory *server.Factory, e *echo.Echo) {
+
+	// Get Current configuration
+	config := factory.Config()
+
+	// If HTTPS is configured, then try to start an HTTPS server
+	if portString, ok := config.HTTPSPortString(); ok {
+
+		// Find all NON-LOCAL domain names.  We need AT LEAST ONE to get an SSL Certificate
+		domains := slice.Filter(config.DomainNames(), domain.NotLocalhost)
+
+		if len(domains) == 0 {
+			fmt.Println("Skipping HTTPS server because there are no non-local domains.")
+			return
+		}
+
+		// Initialize Let's Encrypt autocert for TLS certificates
+		e.AutoTLSManager = autocert.Manager{
+			HostPolicy: autocert.HostWhitelist(domains...),
+			Cache:      autocert.DirCache(config.Certificates["location"]),
+			Prompt:     autocert.AcceptTOS,
+			Email:      config.AdminEmail,
+		}
+
+		fmt.Println("Starting HTTPS server on port " + portString + ".")
+
+		for {
+			if err := e.StartAutoTLS(portString); err != nil {
+				fmt.Println(err.Error())
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}
+
+	fmt.Println("Skipping HTTPS server because no HTTPS port is configured.")
+}
+
+// startHTTP starts the HTTP server.
+// If the configured port is not available, it will wait one second and retry until it is
+func startHTTP(factory *server.Factory, e *echo.Echo) {
+	config := factory.Config()
+
+	if portString, ok := config.HTTPPortString(); ok {
+		fmt.Println("Starting HTTP server on port " + portString + ".")
+		for {
+			if err := e.Start(portString); err != nil {
+				fmt.Println(err.Error())
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}
+
+	fmt.Println("Skipping HTTP server because no HTTP port is configured.")
+}
+
+func waitForSigInt() {
+	// Listen to the OS SIGINT channel for an interrupt signal
 	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	// https://golang.org/pkg/os/signal/#Notify
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
+
+	// Wait for an interrupt signal from the OS
 	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	// Shut down the echo server gracefully
+	// gracefulShutdown(e)
+
+	// Exit the program (forcefully)
+	os.Exit(0)
+}
+
+// gracefulShutdown listens for a SIGINT signal, then shuts down the server gracefully
+func gracefulShutdown(e *echo.Echo) {
+
+	// Get a cancellation context with a 5 second timeout
+	// https://echo.labstack.com/docs/cookbook/graceful-shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Try to shut down the server
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
-	}
-}
-
-// startHttp starts the HTTPS server using Let's Encrypt SSL certificates.  If port 443 is not available, it will wait 10ms and retry until it is
-func startHttps(e *echo.Echo) {
-	fmt.Println("Starting HTTP server...")
-	for {
-		if err := e.StartAutoTLS(":443"); err != nil {
-			time.Sleep(10 * time.Millisecond)
-		}
-	}
-}
-
-// startHttp starts the HTTP server.  If port 80 is not available, it will wait 10ms and retry until it is
-func startHttp(e *echo.Echo) {
-	fmt.Println("Starting HTTP server...")
-	for {
-		if err := e.Start(":80"); err != nil {
-			time.Sleep(10 * time.Millisecond)
-		}
 	}
 }
 
@@ -295,28 +406,3 @@ func errorHandler(err error, ctx echo.Context) {
 	ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 	// ctx.String(derp.ErrorCode(err), derp.Message(err))
 }
-
-/** AUTOCERT HOST POLICY
-TODO: MEDIUM: Move this into Factory, or somewhere that can listen to configuration changes.  This isn't necessary for now because DigitalOcean handles HTTPS for us.
-
-	// Find all NON-LOCAL domain names
-	domains := slice.Filter(c.DomainNames(), isRemoteDomain)
-
-	if len(domains) == 0 {
-		fmt.Println("Skipping HTTPS server because there are no non-local domains.")
-		return
-	}
-
-	fmt.Println("Starting HTTPS server...")
-
-	// Initialize Let's Encrypt autocert for TLS certificates
-	e.AutoTLSManager = autocert.Manager{
-		HostPolicy: autocert.HostWhitelist(domains...),
-		Cache:      autocert.DirCache(c.Certificates.Location),
-		Prompt:     autocert.AcceptTOS,
-		Email:      c.AdminEmail,
-	}
-
-
-
-**/

@@ -1,6 +1,9 @@
 package config
 
-import "github.com/benpate/rosetta/schema"
+import (
+	"github.com/benpate/rosetta/null"
+	"github.com/benpate/rosetta/schema"
+)
 
 // Schema returns the data schema for the configuration file.
 func Schema() schema.Schema {
@@ -19,6 +22,8 @@ func Schema() schema.Schema {
 				"certificates":        WritableFolderSchema(),
 				"debugLevel":          schema.String{Enum: []string{"None", "Terse", "Verbose"}, Default: "None"},
 				"adminEmail":          schema.String{Format: "email"},
+				"httpPort":            schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(80)},
+				"httpsPort":           schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(443)},
 				"activityPubCache":    DatabaseConnectInfo(),
 			},
 		},
@@ -59,6 +64,12 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "adminEmail":
 		return &config.AdminEmail, true
+
+	case "httpPort":
+		return &config.HTTPPort, true
+
+	case "httpsPort":
+		return &config.HTTPSPort, true
 
 	case "activityPubCache":
 		return &config.ActivityPubCache, true

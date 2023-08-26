@@ -1,14 +1,6 @@
 package service
 
-import (
-	"bytes"
-	"testing"
-
-	"github.com/benpate/derp"
-	"github.com/benpate/remote"
-	"willnorris.com/go/microformats"
-)
-
+/*
 func TestMicroformats(t *testing.T) {
 
 	var body bytes.Buffer
@@ -22,3 +14,4 @@ func TestMicroformats(t *testing.T) {
 
 	t.Log(data)
 }
+*/

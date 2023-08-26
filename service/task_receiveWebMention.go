@@ -75,7 +75,9 @@ func (task TaskReceiveWebMention) Run() error {
 	}
 
 	// Parse the WebMention source into the Mention object
-	task.mentionService.GetPageInfo(&content, task.source, &mention)
+	if err := task.mentionService.GetPageInfo(&content, task.source, &mention); err != nil {
+		return derp.Wrap(err, location, "Error parsing source", task.source)
+	}
 
 	// Try to save the mention to the database
 	if err := task.mentionService.Save(&mention, "Created"); err != nil {

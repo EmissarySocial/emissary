@@ -31,6 +31,7 @@ type Renderer interface {
 	Permalink() string                   // Permanent link to the stream being rendered
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page
+	SetQueryParam(string, string)        // Sets a queryString parameter
 	ActionID() string                    // Token that identifies the action requested via the URL.
 	Action() model.Action                // The pipeline action to be taken by this renderer
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
@@ -62,7 +63,6 @@ type Renderer interface {
 	schema() schema.Schema               // Schema to use to validate this Object
 	object() data.Object                 // Model Object being rendered
 	objectID() primitive.ObjectID        // MongoDB ObjectID of the Object being rendered
-	setQuery(string, string)             // Sets a queryString parameter
 	getUser() (model.User, error)        // Retrieves the currently-logged-in user
 	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
 	debug()                              // Outputs debug information to the console

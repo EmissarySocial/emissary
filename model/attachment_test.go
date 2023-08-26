@@ -15,7 +15,7 @@ func TestAttachmentSchema(t *testing.T) {
 	table := []tableTestItem{
 		{"attachmentId", "123456781234567812345678", nil},
 		{"objectId", "876543218765432187654321", nil},
-		{"objectType", "TYPE", nil},
+		{"objectType", "Stream", nil},
 		{"original", "ORIGINAL", nil},
 		{"rank", "1", 1},
 		{"height", "100", 100},

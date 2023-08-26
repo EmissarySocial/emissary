@@ -121,6 +121,12 @@ func (w Common) Path() string {
 	return w._context.Request().URL.Path
 }
 
+func (w Common) SetQueryParam(name string, value string) {
+	query := w.context().Request().URL.Query()
+	query.Set(name, value)
+	w.context().Request().URL.RawQuery = query.Encode()
+}
+
 // Returns the designated request parameter
 func (w Common) QueryParam(param string) string {
 	urlValue := w.context().Request().URL.Query()[param]
@@ -156,7 +162,7 @@ func (w Common) UserCan(_ string) bool {
 
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
-	return time.Now().UnixMilli()
+	return time.Now().Unix()
 }
 
 // NavigationID returns the the identifier of the top-most stream in the
@@ -269,7 +275,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Stream.UserName", "Error loading User"))
+		return "", derp.Wrap(err, "render.Stream.UserName", "Error loading User")
 	}
 
 	return user.DisplayName, nil
@@ -286,7 +292,7 @@ func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Report(derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User"))
+		return "", derp.Wrap(err, "render.Stream.UserAvatar", "Error loading User")
 	}
 
 	return user.ActivityPubAvatarURL(), nil
@@ -301,7 +307,7 @@ func (w Common) authorization() model.Authorization {
  ******************************************/
 
 func (w Common) ActivityStream(uri string) streams.Document {
-	result, _ := w._factory.ActivityStreams().Load(uri, mapof.NewAny())
+	result, _ := w._factory.ActivityStreams().LoadDocument(uri, mapof.NewAny())
 	return result
 }
 
@@ -332,7 +338,7 @@ func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
 
 	if !authorization.DomainOwner {
 		result = result.And(exp.In("defaultAllow", authorization.AllGroupIDs())).
-			And(exp.LessThan("publishDate", time.Now().UnixMilli())) // Stream must be published
+			And(exp.LessThan("publishDate", time.Now().Unix())) // Stream must be published
 	}
 
 	return result
@@ -340,12 +346,6 @@ func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
 
 func (w Common) template() model.Template {
 	return w._template
-}
-
-func (w Common) setQuery(name string, value string) {
-	query := w.context().Request().URL.Query()
-	query.Set(name, value)
-	w.context().Request().URL.RawQuery = query.Encode()
 }
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer

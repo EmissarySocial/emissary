@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
@@ -19,6 +21,45 @@ func GetMessage(serverFactory *server.Factory) echo.HandlerFunc {
 // PostMessage handles POST/DELETE requests
 func PostMessage(serverFactory *server.Factory) echo.HandlerFunc {
 	return renderMessage(serverFactory, render.ActionMethodPost)
+}
+
+func PostMessageMarkRead(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(context echo.Context) error {
+
+		const location = "handler.PostFolderReadDate"
+
+		// User must be authenticated to use this function
+		userID, err := authenticatedID(context)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error getting authenticated user ID")
+		}
+
+		// Get the folder ID from the URL
+		messageID, err := primitive.ObjectIDFromHex(context.Param("message"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error parsing folder ID", context.Param("message"))
+		}
+
+		// Get the factory for this domain
+		factory, err := serverFactory.ByContext(context)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error getting server factory")
+		}
+
+		// Try to mark the message as "read"
+		inboxService := factory.Inbox()
+		if err := inboxService.MarkRead(userID, messageID, true); err != nil {
+			return derp.Wrap(err, location, "Error marking message read")
+		}
+
+		// No Content Necessary. But reload the folder list...
+		context.Response().Header().Set("HX-Trigger", "refreshSidebar")
+		return context.NoContent(http.StatusNoContent)
+	}
 }
 
 // renderMessage is the common Inbox handler for both GET and POST requests

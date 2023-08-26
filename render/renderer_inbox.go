@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"math"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -10,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -57,7 +59,9 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Report(derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String()))
+		err := derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String())
+		derp.Report(err)
+		return "", err
 	}
 
 	// Success!
@@ -279,22 +283,32 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("render.Inbox.Inbox", "Must be signed in to view inbox")
 	}
 
-	folderID, err := primitive.ObjectIDFromHex(w.context().Request().URL.Query().Get("folderId"))
+	queryString := w.context().Request().URL.Query()
+
+	folderID, err := primitive.ObjectIDFromHex(queryString.Get("folderId"))
 
 	if err != nil {
 		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Inbox.Inbox", "Invalid folderId", w.context().QueryParam("folderId"))
 	}
 
+	if queryString.Get("readDate") == "" {
+		queryString.Set("readDate", convert.String(math.MaxInt64))
+	}
+
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
-		Int("rank")
+		Int("rank").
+		Int("readDate").
+		Int("createDate")
 
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
 		exp.Equal("folderId", folderID),
 		exp.Equal("deleteDate", 0),
-		expBuilder.Evaluate(w._context.Request().URL.Query()),
+		expBuilder.Evaluate(queryString),
 	)
+
+	spew.Dump(queryString, criteria)
 
 	return NewQueryBuilder[model.Message](w._factory.Inbox(), criteria), nil
 }
@@ -381,10 +395,7 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 	}
 
 	// Update the query string to reflect the selected folder
-	w.setQuery("folderId", result.SelectedID.Hex())
-	if w._context.QueryParam("rank") == "" {
-		w.setQuery("rank", "GT:"+result.Selected().ReadDateString())
-	}
+	w.SetQueryParam("folderId", result.SelectedID.Hex())
 
 	// Return the result
 	return result, nil
@@ -404,7 +415,6 @@ func (w Inbox) Responses(message model.Message) template.HTML {
 	// Render the responses widget
 	var buffer bytes.Buffer
 
-	// nolint:errcheck
 	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
 		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}

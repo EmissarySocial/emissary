@@ -11,11 +11,12 @@ type FollowingSummary struct {
 	Method      string             `bson:"method"`
 	Status      string             `bson:"status"`
 	LastPolled  int64              `bson:"lastPolled"`
+	NextPoll    int64              `bson:"nextPoll"`
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary
 func FollowingSummaryFields() []string {
-	return []string{"_id", "url", "label", "folderId", "imageUrl", "method", "status", "lastPolled"}
+	return []string{"_id", "url", "label", "folderId", "imageUrl", "method", "status", "lastPolled", "nextPoll"}
 }
 
 func (summary FollowingSummary) Fields() []string {

@@ -14,12 +14,11 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/asrecursor"
-	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/icon"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
@@ -50,7 +49,8 @@ type Factory struct {
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
-	domains map[string]*domain.Factory
+	domains   map[string]*domain.Factory
+	refreshed chan bool
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
@@ -64,6 +64,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewQueue(128, 16),
+		refreshed:     make(chan bool, 1),
 	}
 
 	// Global Theme service
@@ -160,7 +161,14 @@ func (factory *Factory) start() {
 			}
 			factory.mutex.Unlock()
 		}
+
+		factory.refreshed <- true
 	}
+}
+
+// Refreshed returns the channel that is notified whenever the configuration is refreshed
+func (factory *Factory) Refreshed() <-chan bool {
+	return factory.refreshed
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
@@ -392,7 +400,13 @@ func (factory *Factory) DeleteProvider(providerID string) error {
 func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
 
 	host := factory.NormalizeHostname(ctx.Request().Host)
-	return factory.ByDomainName(host)
+	result, err := factory.ByDomainName(host)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "server.Factory.ByContext", "Error finding domain", host)
+	}
+
+	return result, nil
 }
 
 // ByDomainID retrieves a domain using a DomainID
@@ -425,13 +439,14 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.NewNotFoundError("factory.ByDomainName.Get", "Unrecognized domain name", name)
+	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present
 func (factory *Factory) NormalizeHostname(hostname string) string {
 
 	hostname = strings.ToLower(hostname)
+	hostname = list.Head(hostname, ':')
 
 	if dotIndex := strings.Index(hostname, "."); dotIndex > 0 {
 
@@ -517,8 +532,6 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
-	var collection data.Collection
-
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
@@ -545,13 +558,14 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
 	// TODO: LOW: If called repeatedly, will this leak database connections?
 	// https://stackoverflow.com/questions/45479236/golang-mongodb-connections-leak
-	collection = session.Collection("ActivityPub")
 
 	// Build a new client stack
 	httpClient := sherlock.NewClient()
-	cacheClient := ascache.New(collection, httpClient)
-	recursorClient := asrecursor.New(cacheClient, 3)
+	cacheClient := ascache.New(session, httpClient)
+	// readOnlyCache := ascache.New(session, httpClient, ascache.WithReadOnly())
+	// recursorClient := asrecursor.New(cacheClient, 3)
+	// writableCache := ascache.New(session, httpClient, ascache.WithWriteOnly())
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(recursorClient, collection)
+	factory.activityStreamsService.Refresh(cacheClient, session.Collection("Actor"), session.Collection("Document"))
 }

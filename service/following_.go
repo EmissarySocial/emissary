@@ -102,8 +102,13 @@ func (service *Following) Start() {
 			default:
 
 				// Poll each following for new items.
-				service.Connect(following)
-				service.PurgeInbox(following)
+				if err := service.Connect(following); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error connecting to remote server"))
+				}
+
+				if err := service.PurgeInbox(following); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
+				}
 			}
 
 			following = model.NewFollowing()
@@ -132,7 +137,7 @@ func (service *Following) Query(criteria exp.Expression, options ...option.Optio
 
 // List returns an iterator containing all of the Following who match the provided criteria
 func (service *Following) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Following from the database
@@ -159,6 +164,19 @@ func (service *Following) Save(following *model.Following, note string) error {
 		return derp.Wrap(err, "service.Following.Save", "Error cleaning Following", following)
 	}
 
+	// RULE: Update Polling duration based on the transmission method
+	switch following.Method {
+
+	case model.FollowMethodActivityPub:
+		following.PollDuration = 24 * 7 * 30 // retry ActivityPub connections every 30 days
+
+	case model.FollowMethodWebSub:
+		following.PollDuration = 24 * 7 // retry WebSub connections every 7 days
+
+	default:
+		following.PollDuration = 24
+	}
+
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
@@ -170,12 +188,11 @@ func (service *Following) Save(following *model.Following, note string) error {
 	}
 
 	// Recalculate the follower count for this user
-	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
-	// Connect to external services and discover the best update method
-	// nolint:errcheck
-	go service.Connect(*following)
+	// Connect to external services and discover the best update method.
+	// This will also update the status again, soon.
+	go derp.Report(service.Connect(*following))
 
 	// Win!
 	return nil
@@ -193,12 +210,10 @@ func (service *Following) Delete(following *model.Following, note string) error 
 	}
 
 	// Recalculate the follower count for this user
-	// nolint:errcheck
 	go service.userService.CalcFollowingCount(following.UserID)
 
 	// Recalculate the unread count for this folder
-	// nolint:errcheck
-	go service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID)
+	go derp.Report(service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID))
 
 	// Disconnect from external services (if necessary)
 	service.Disconnect(following)
@@ -381,22 +396,77 @@ func (service *Following) PurgeInbox(following model.Following) error {
 	return nil
 }
 
-func (service *Following) CallbackURL() string {
-	return service.host + "/.websub"
+/******************************************
+ * Other Updates Methods
+ ******************************************/
+
+// SetStatusLoading updates a Following record with the "Loading" status
+func (service *Following) SetStatusLoading(following *model.Following) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusLoading
+	following.StatusMessage = ""
+	following.LastPolled = time.Now().Unix()
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
+}
+
+// SetStatusSuccess updates a Following record with the "Success" status and
+// resets the error count to zero.
+func (service *Following) SetStatusSuccess(following *model.Following) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusSuccess
+	following.StatusMessage = ""
+
+	following.NextPoll = following.LastPolled + int64(following.PollDuration*60*60)
+	following.ErrorCount = 0
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
+}
+
+// SetStatusFailure updates a Following record to the "Failure" status and
+// increments the error count.
+func (service *Following) SetStatusFailure(following *model.Following, statusMessage string) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusFailure
+	following.StatusMessage = statusMessage
+	following.ErrorCount = following.ErrorCount + 1
+
+	// On failure, compute exponential backoff
+	// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m (max ~4 hours)
+	// But do not change "LastPolled" because that is the last time we were successful
+	errorBackoff := following.ErrorCount
+
+	if errorBackoff > 8 {
+		errorBackoff = 8
+	}
+
+	errorBackoff = 2 ^ errorBackoff
+	following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+
+	// Save the Following to the database
+	return service.collection.Save(following, "Updating status")
 }
 
 /******************************************
- * ActivityPub Methods
+ * ActivityPub Data Accessors
  ******************************************/
 
+// ActivityPubID returns the public URL (ID) of a Following record
 func (service *Following) ActivityPubID(following *model.Following) string {
 	return service.host + "/@" + following.UserID.Hex() + "/pub/following/" + following.FollowingID.Hex()
 }
 
+// ActivityPubActorID returns the public URL (ID) of the actor being followed
 func (service *Following) ActivityPubActorID(following *model.Following) string {
 	return service.host + "/@" + following.UserID.Hex()
 }
 
+// AsJSONLD returns a Following record as a JSON-LD object
 func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
 
 	return mapof.Any{

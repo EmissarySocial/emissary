@@ -38,7 +38,8 @@ func (step StepAddModelObject) Get(renderer Renderer, buffer io.Writer) Pipeline
 
 	formHTML = WrapForm(renderer.URL(), formHTML)
 
-	// nolint:errcheck // Wrap formHTML as a modal dialog
+	// Wrap formHTML as a modal dialog
+	// nolint:errcheck
 	io.WriteString(buffer, formHTML)
 	return nil
 }

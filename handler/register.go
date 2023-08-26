@@ -23,7 +23,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, domain, err := loadFactoryAndDomain(factoryManager, ctx)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, location, "Unrecognized Domain"))
+			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// If the signup form is not active, then this is a "not found" error
@@ -36,7 +36,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		template := factory.Domain().Theme().HTMLTemplate
 
 		if err := template.ExecuteTemplate(&buffer, "register", domain); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error executing template"))
+			return derp.Wrap(err, location, "Error executing template")
 		}
 
 		// Write the result to the response.
@@ -55,7 +55,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		factory, domain, err := loadFactoryAndDomain(factoryManager, ctx)
 
 		if err != nil {
-			return derp.Report(derp.Wrap(err, location, "Unrecognized Domain"))
+			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// If the signup form is not active, then this is a "not found" error
@@ -73,7 +73,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		}{}
 
 		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error binding user input"))
+			return derp.Wrap(err, location, "Error binding user input")
 		}
 
 		errorMessages := map[string]string{}
@@ -83,7 +83,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		if err := userService.LoadByUsername(transaction.Username, &user); err == nil {
 			errorMessages["username"] = "Pick a different username.  This one is already in use."
 		} else if !derp.NotFound(err) {
-			return derp.Report(derp.Wrap(err, location, "Error searching for username"))
+			return derp.Wrap(err, location, "Error searching for username")
 		}
 
 		// Otherwise, we got a 404 error, which is actually what we want here.
@@ -106,14 +106,14 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		user.SetPassword(transaction.Password)
 
 		if err := userService.Save(&user, "Created by signup form"); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error saving new user record"))
+			return derp.Wrap(err, location, "Error saving new user record")
 		}
 
 		// Try to sign-in with the new user's account
 		s := factory.Steranko()
 
 		if err := s.CreateCertificate(ctx, &user); err != nil {
-			return derp.Report(derp.Wrap(err, location, "Error signing in user"))
+			return derp.Wrap(err, location, "Error signing in user")
 		}
 
 		// Report success to the client

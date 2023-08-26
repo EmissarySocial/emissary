@@ -73,7 +73,7 @@ func (task TaskCreateWebSubFollower) subscribe() error {
 	follower, err := task.followerService.LoadOrCreateByWebSub(task.objectType, task.objectID, task.callback)
 
 	if err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback))
+		return derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback)
 	}
 
 	// Set additional properties that are not handled by LoadOrCreateByWebSub
@@ -85,12 +85,12 @@ func (task TaskCreateWebSubFollower) subscribe() error {
 
 	// Validate the request with the client
 	if err := task.validate(&follower); err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error validating request", follower.ID))
+		return derp.Wrap(err, location, "Error validating request", follower.ID)
 	}
 
 	// Save the new/updated follower
 	if err := task.followerService.Save(&follower, "Created via WebSub"); err != nil {
-		return derp.Report(derp.Wrap(err, location, "Error saving follower", follower.ID))
+		return derp.Wrap(err, location, "Error saving follower", follower.ID)
 	}
 
 	// Oh yeah...

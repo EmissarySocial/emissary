@@ -136,7 +136,7 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 			content, err := fs.ReadFile(filesystem, filename)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename))
+				return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read file", filename)
 			}
 
 			contentString := string(content)
@@ -150,11 +150,13 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 			contentTemplate, err := template.New(actionID).Funcs(funcMap).Parse(contentString)
 
 			if err != nil {
-				return derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString))
+				return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString)
 			}
 
 			// Add this minified template into the resulting parse-tree
-			t.AddParseTree(actionID, contentTemplate.Tree)
+			if _, err := t.AddParseTree(actionID, contentTemplate.Tree); err != nil {
+				derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to add template to parse tree", actionID))
+			}
 		}
 	}
 

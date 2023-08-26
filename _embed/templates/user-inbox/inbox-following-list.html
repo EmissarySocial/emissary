@@ -19,17 +19,18 @@
 
 			<div class="flex-row" style="flex-grow:1">
 
-				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
+				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
 					{{- if ne "" .ImageURL -}}
 						<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
 					{{- end -}}
 				</div>
 
 				<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
-				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" style="flex-grow:1;">
+				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" style="flex-grow:1;">
 					<div class="ellipsis-block" style="max-height:1.75em;">
 						{{- if ne "" .Label -}}
-							<span class="black bold">{{- .Label -}}</span>
+							<div class="black bold">{{- .Label -}}</div>
+							<div class="text-gray">{{- .URL -}}</div>
 						{{- else -}}
 							{{- .URL -}}
 						{{- end -}}
@@ -42,6 +43,12 @@
 							<span class="green">{{.Status}}</span>
 						{{- else -}}
 							<span class="red">{{.Status}}</span>
+						{{- end -}}
+
+						{{ if eq .Method "POLL" }}
+							&middot;
+							Next:
+							{{ .NextPoll | humanizeTime -}}
 						{{- end -}}
 					</div>
 				</div>

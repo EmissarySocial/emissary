@@ -118,7 +118,9 @@ func (w Message) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Report(derp.Wrap(status.Error, "render.Message.Render", "Error generating HTML"))
+		err := derp.Wrap(status.Error, "render.Message.Render", "Error generating HTML")
+		derp.Report(err)
+		return "", err
 	}
 
 	// Success!
@@ -167,7 +169,7 @@ func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
 }
 
 func (w Message) InReplyTo() streams.Document {
-	result, _ := w._factory.ActivityStreams().Load(w._message.InReplyTo, mapof.NewAny())
+	result, _ := w._factory.ActivityStreams().LoadDocument(w._message.InReplyTo, mapof.NewAny())
 	return result
 }
 
@@ -258,7 +260,6 @@ func (w Message) Responses() template.HTML {
 	renderer := w.ResponsesRenderer()
 
 	// Execute the "responses" template
-	// nolint:errcheck
 	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
 		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
 	}

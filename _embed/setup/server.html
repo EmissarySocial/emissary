@@ -18,10 +18,6 @@
 					<button type="button" role="tab" id="tab-general" class="tab-label" aria-controls="panel-general" aria-selected="true">General</button>
 				</div>
 
-				<div role="tabpanel" id="panel-general" aria-labelledby="tab-general" hidden="true">
-					<div hx-get="/server/general" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
 				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
 					<p>Packages define all of the Themes, Templates, and Widgets that users can include on their sites.</p>
 					<div hx-get="/server/templates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
@@ -35,6 +31,15 @@
 				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">
 					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
 					<div hx-get="/server/attachments" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-certificates" aria-labelledby="tab-certificates" hidden="true">
+					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
+					<div hx-get="/server/certificates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
+				</div>
+
+				<div role="tabpanel" id="panel-general" aria-labelledby="tab-general" hidden="true">
+					<div hx-get="/server/general" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
 				</div>
 
 			</div>

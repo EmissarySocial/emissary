@@ -1,4 +1,4 @@
-behavior listItem(folderId, rank)  
+behavior listItem(messageId)  
 	
 	on intersection(intersecting) having threshold 0
 		if my [@data-read] is null then 
@@ -7,7 +7,7 @@ behavior listItem(folderId, rank)
 				if top is less than 0 then
 					set my [@data-read] to 'true'
 					log me
-					fetch `/@me/pub/folder/readDate?folderId=${folderId}&rank=${rank}` with method:'POST'
+					fetch `/@me/messages/${messageId}/mark-read` with method:'POST'
 					trigger refreshSidebar
 				end
 			end

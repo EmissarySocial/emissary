@@ -27,17 +27,21 @@ func pipeline(ctx context.Context, collection data.Collection, result any, pipel
 
 	const location = "queries.pipeline"
 
-	// Unwrap the collection
+	// Guarantee that we're using MongoDB
 	mongo := mongoCollection(collection)
 
-	// Define the cursor
+	if mongo == nil {
+		return derp.NewInternalError("queries.pipeline", "Database must be MongoDB")
+	}
+
+	// Define a cursor for the pipeline results
 	cursor, err := mongo.Aggregate(ctx, pipeline, opts...)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error querying database")
 	}
 
-	// Execute the query
+	// Execute the query.  Results returned in "result" pointer
 	if err := cursor.All(ctx, result); err != nil {
 		return derp.Wrap(err, location, "Error reading results")
 	}
@@ -52,11 +56,14 @@ func pipeline(ctx context.Context, collection data.Collection, result any, pipel
 func mongoCollection(original data.Collection) *mongo.Collection {
 
 	switch orig := original.(type) {
+
 	case mongodb.Collection:
 		return orig.Mongo()
+
 	case *mongodb.Collection:
 		return orig.Mongo()
+
 	default:
-		panic("This should never happen.  OMG. What kind of unsupported database did you hack into this? shame!")
+		return nil
 	}
 }

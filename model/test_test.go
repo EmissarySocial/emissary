@@ -45,6 +45,8 @@ func tableTest_Schema(t *testing.T, s *schema.Schema, object any, table []tableT
 		result, err := s.Get(object, "invalid-property-that-should-never-ever-exist")
 		require.Nil(t, result)
 		require.NotNil(t, err)
-
 	}
+
+	// Test Validation
+	require.Nil(t, s.Validate(object))
 }

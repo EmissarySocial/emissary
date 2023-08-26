@@ -14,9 +14,9 @@ func TestFollowerSchema(t *testing.T) {
 	table := []tableTestItem{
 		{"followerId", "123456781234567812345678", nil},
 		{"parentId", "876543218765432187654321", nil},
-		{"type", "TYPE", nil},
-		{"method", "METHOD", nil},
-		{"format", "FORMAT", nil},
+		{"type", FollowerTypeUser, nil},
+		{"method", FollowMethodActivityPub, nil},
+		{"format", MimeTypeActivityPub, nil},
 		{"actor.name", "ACTOR NAME", nil},
 		{"data.first", "DATA FIRST", nil},
 		{"expireDate", "1234", int64(1234)},

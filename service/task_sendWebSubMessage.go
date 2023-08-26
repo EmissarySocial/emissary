@@ -52,7 +52,7 @@ func (task TaskSendWebSubMessage) Run() error {
 
 	// Try to send the transaction to the remote WebSub client
 	if err := transaction.Send(); err != nil {
-		return derp.Report(derp.Wrap(err, "service.TaskSendWebSubMessage", "Error sending WebSub message", task.follower))
+		return derp.Wrap(err, "service.TaskSendWebSubMessage", "Error sending WebSub message", task.follower)
 	}
 
 	// Woot woot!

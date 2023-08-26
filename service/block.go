@@ -65,7 +65,7 @@ func (service *Block) Query(criteria exp.Expression, options ...option.Option) (
 
 // List returns an iterator containing all of the Blocks that match the provided criteria
 func (service *Block) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Channel returns a channel that will stream all of the Blocks that match the provided criteria
@@ -154,7 +154,7 @@ func (service *Block) Delete(block *model.Block, note string) error {
 
 	if block.IsPublic {
 		if err := service.unpublish(block, false); err != nil {
-			derp.Report(derp.Wrap(err, "service.Block.Delete", "Error unpublishing Block", block)) // Fail loudly, but don't block.
+			derp.Report(derp.Wrap(err, "service.Block.Delete", "Error unpublishing Block", block))
 		}
 	}
 
@@ -299,7 +299,7 @@ func (service *Block) ValidateNewContent(block *model.Block) error {
 func (service *Block) publish(block *model.Block) error {
 
 	// Try to update the block in the database (directly, without invoking any business rules)
-	block.PublishDate = time.Now().UnixMilli()
+	block.PublishDate = time.Now().Unix()
 
 	// Generate JSONLD for this block
 	if err := service.calcJSONLD(block); err != nil {

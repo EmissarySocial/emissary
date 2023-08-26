@@ -70,7 +70,7 @@ func (service *User) Close() {
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.List(notDeleted(criteria), options...)
+	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an User from the database
@@ -294,19 +294,22 @@ func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, e
  * Custom Actions
  ******************************************/
 
-func (service *User) CalcFollowerCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowersCount(service.collection, service.followers, userID)
-	return derp.Report(derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID))
+func (service *User) CalcFollowerCount(userID primitive.ObjectID) {
+	if err := queries.SetFollowersCount(service.collection, service.followers, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID))
+	}
 }
 
-func (service *User) CalcFollowingCount(userID primitive.ObjectID) error {
-	err := queries.SetFollowingCount(service.collection, service.following, userID)
-	return derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
+func (service *User) CalcFollowingCount(userID primitive.ObjectID) {
+	if err := queries.SetFollowingCount(service.collection, service.following, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
+	}
 }
 
-func (service *User) CalcBlockCount(userID primitive.ObjectID) error {
-	err := queries.SetBlockCount(service.collection, service.blocks, userID)
-	return derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+func (service *User) CalcBlockCount(userID primitive.ObjectID) {
+	if err := queries.SetBlockCount(service.collection, service.blocks, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+	}
 }
 
 func (service *User) SetOwner(owner config.Owner) error {
@@ -480,7 +483,7 @@ func (service *User) ActivityPubURL(userID primitive.ObjectID) string {
 }
 
 func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
-	return service.host + "/@" + userID.Hex() + "/pub/key"
+	return service.host + "/@" + userID.Hex() + "#main-key" // was "/pub/key"
 }
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **

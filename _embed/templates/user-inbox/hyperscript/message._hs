@@ -1,7 +1,7 @@
-behavior message(folderId, rank)
+behavior message(messageId)
 
 	init
-		fetch `/@me/pub/folder/readDate?folderId=${folderId}&rank=${rank}` with method:"POST"
+		fetch `/@me/messages/${messageId}/mark-read` with method:'POST'
 	end
 
 	on keydown[key=="ArrowLeft"] from window

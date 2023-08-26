@@ -1,15 +1,7 @@
 package service
 
-import (
-	"net/url"
-	"strings"
-
-	"golang.org/x/net/html"
-)
-
 /******************************************
  * Helper Functions
- ******************************************/
 
 // nodeAttribute searches for a specific attribute in a node and returns its value
 func nodeAttribute(node *html.Node, name string) string {
@@ -53,3 +45,4 @@ func getRelativeURL(baseURL string, relativeURL string) string {
 	baseURLParsed.Path, _ = url.JoinPath(baseURLParsed.Path, relativeURL)
 	return baseURLParsed.String()
 }
+ ******************************************/

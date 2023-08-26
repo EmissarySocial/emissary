@@ -83,7 +83,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		following.PollDuration = int(transaction.Lease / 60 / 60 / 2) // poll again in half the lease duration
 
 		// Update the record status and save.
-		if err := followingService.SetStatus(&following, model.FollowingStatusSuccess, ""); err != nil {
+		if err := followingService.SetStatusSuccess(&following); err != nil {
 			return derp.Wrap(err, "handler.getWebSubClient_subscribe", "Error updating following status", following)
 		}
 

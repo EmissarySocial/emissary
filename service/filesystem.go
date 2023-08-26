@@ -192,12 +192,14 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 	}
 
 	// Watch the top-level director
-	watcher.Add(uri)
+	if err := watcher.Add(uri); err != nil {
+		return derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri)
+	}
 
 	// Watch all sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
-			filesystem.watchOS(uri+"/"+entry.Name(), changed, closed)
+			derp.Report(filesystem.watchOS(uri+"/"+entry.Name(), changed, closed))
 		}
 	}
 
