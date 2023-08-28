@@ -1,12 +1,10 @@
 module github.com/EmissarySocial/emissary
 
-go 1.21
-
-toolchain go1.21.0
+go 1.20
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.332
+	github.com/aws/aws-sdk-go v1.44.333
 	github.com/benpate/cachecontrol v0.0.1
 	github.com/benpate/data v0.28.0
 	github.com/benpate/data-mongo v0.28.1
@@ -15,7 +13,7 @@ require (
 	github.com/benpate/domain v0.1.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.3
-	github.com/benpate/form v0.17.0
+	github.com/benpate/form v0.17.1
 	github.com/benpate/hannibal v0.6.0
 	github.com/benpate/html v0.16.3
 	github.com/benpate/icon v0.4.0
@@ -24,7 +22,7 @@ require (
 	github.com/benpate/rosetta v0.18.0
 	github.com/benpate/sherlock v0.4.0
 	github.com/benpate/steranko v0.15.1
-	github.com/benpate/table v0.6.1
+	github.com/benpate/table v0.6.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
@@ -52,7 +50,6 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.12.0
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/oauth2 v0.11.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
@@ -61,7 +58,7 @@ require (
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/chroma/v2 v2.8.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect

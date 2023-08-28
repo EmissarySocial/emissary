@@ -70,12 +70,9 @@ func (theme Theme) IsPlaceholder() bool {
 	return strings.HasSuffix(theme.Label, "(TBD)")
 }
 
-// SortThemes is a slices.SortFunc that sorts themes by their label
-func SortThemes(a, b Theme) int {
-	if a.Label < b.Label {
-		return -1
-	}
-	return 1
+// SortThemes is a sort.Slice function that sorts themes by their label
+func SortThemes(a, b Theme) bool {
+	return a.Label < b.Label
 }
 
 func (theme *Theme) Inherit(parent *Theme) {

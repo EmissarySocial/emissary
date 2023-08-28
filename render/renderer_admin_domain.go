@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -17,7 +18,6 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/exp/slices"
 )
 
 type Domain struct {
@@ -173,7 +173,10 @@ func (w Domain) SignupForm() model.SignupForm {
 func (w Domain) Themes() []model.Theme {
 	themeService := w._factory.Theme()
 	result := themeService.List()
-	slices.SortFunc(result, model.SortThemes)
+
+	sort.Slice(result, func(i, j int) bool {
+		return model.SortThemes(result[i], result[j])
+	})
 
 	return result
 }

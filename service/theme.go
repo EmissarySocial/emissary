@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"sort"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
-	"golang.org/x/exp/slices"
 )
 
 // Theme service manages the global site theme that is stored in a particular path of the
@@ -68,7 +68,10 @@ func (service *Theme) List() []model.Theme {
 
 func (service *Theme) ListSorted() []model.Theme {
 	result := service.List()
-	slices.SortFunc(result, model.SortThemes)
+
+	sort.Slice(result, func(i, j int) bool {
+		return model.SortThemes(result[i], result[j])
+	})
 
 	return result
 }
