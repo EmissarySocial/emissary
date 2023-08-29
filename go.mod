@@ -15,7 +15,7 @@ require (
 	github.com/benpate/domain v0.1.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.3
-	github.com/benpate/form v0.17.0
+	github.com/benpate/form v0.17.1
 	github.com/benpate/hannibal v0.6.0
 	github.com/benpate/html v0.16.3
 	github.com/benpate/icon v0.4.0
@@ -24,7 +24,7 @@ require (
 	github.com/benpate/rosetta v0.18.0
 	github.com/benpate/sherlock v0.4.0
 	github.com/benpate/steranko v0.15.1
-	github.com/benpate/table v0.6.1
+	github.com/benpate/table v0.6.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
