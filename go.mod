@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.44.332
+	github.com/aws/aws-sdk-go v1.45.5
 	github.com/benpate/cachecontrol v0.0.1
 	github.com/benpate/data v0.28.0
 	github.com/benpate/data-mongo v0.28.1
