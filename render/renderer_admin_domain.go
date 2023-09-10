@@ -16,7 +16,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -209,5 +209,5 @@ func (w Domain) Provider(providerID string) providers.Provider {
 	return result
 }
 func (w Domain) debug() {
-	spew.Dump("Domain", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_admin_domain")
 }

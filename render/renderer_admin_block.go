@@ -13,7 +13,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -183,5 +183,5 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 }
 
 func (w Block) debug() {
-	spew.Dump("Block", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_admin_block")
 }

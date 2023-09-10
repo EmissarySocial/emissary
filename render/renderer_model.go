@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -156,5 +156,5 @@ func (w Model) clone(action string) (Renderer, error) {
 }
 
 func (w Model) debug() {
-	spew.Dump("Model", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_Model")
 }

@@ -12,7 +12,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -269,5 +269,5 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 }
 
 func (w Outbox) debug() {
-	spew.Dump("Outbox", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_Outbox")
 }

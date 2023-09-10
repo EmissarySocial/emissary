@@ -11,7 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -127,5 +127,5 @@ func (w Navigation) clone(action string) (Renderer, error) {
 }
 
 func (w Navigation) debug() {
-	spew.Dump("Navigation", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_admin_avigation")
 }

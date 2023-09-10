@@ -15,7 +15,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -281,5 +281,5 @@ func (w Message) ResponsesRenderer() Responses {
 }
 
 func (w Message) debug() {
-	spew.Dump("Message", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_Message")
 }

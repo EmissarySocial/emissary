@@ -14,7 +14,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -422,5 +422,5 @@ func (w Inbox) Responses(message model.Message) template.HTML {
 }
 
 func (w Inbox) debug() {
-	spew.Dump("Inbox", w.object())
+	log.Debug().Interface("object", w.object()).Msg("renderer_Inbox")
 }

@@ -30,6 +30,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/browser"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -55,6 +57,10 @@ func main() {
 	// Set global configuration
 	spew.Config.DisableMethods = true
 	spew.Config.Indent = " "
+
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
