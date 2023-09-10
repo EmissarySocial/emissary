@@ -7,11 +7,11 @@ import (
 	"encoding/pem"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/publicKey"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/sigs"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -133,8 +133,8 @@ func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.Encryptio
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", userID)
 	}
 
-	encryptionKey.PrivatePEM = publicKey.EncodePrivatePEM(privateKey)
-	encryptionKey.PublicPEM = publicKey.EncodePublicPEM(privateKey)
+	encryptionKey.PrivatePEM = sigs.EncodePrivatePEM(privateKey)
+	encryptionKey.PublicPEM = sigs.EncodePublicPEM(privateKey)
 
 	if err := service.Save(&encryptionKey, "Created"); err != nil {
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", userID)

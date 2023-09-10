@@ -6,8 +6,8 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/EmissarySocial/emissary/tools/publicKey"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -42,8 +42,8 @@ func Version3(ctx context.Context, session *mongo.Database) error {
 			return derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key")
 		}
 
-		record["privatePEM"] = publicKey.EncodePrivatePEM(privateKey)
-		record["publicPEM"] = publicKey.EncodePublicPEM(privateKey)
+		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)
+		record["publicPEM"] = sigs.EncodePublicPEM(privateKey)
 
 		// Save record with new public key
 		filter := bson.M{"_id": record["_id"]}
