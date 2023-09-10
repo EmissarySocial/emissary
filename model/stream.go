@@ -337,11 +337,9 @@ func (stream Stream) GetJSONLD() mapof.Any {
 	switch len(stream.AttributedTo) {
 	case 0:
 	case 1:
-		result["attributedTo"] = stream.AttributedTo[0].GetJSONLD()
+		result["attributedTo"] = stream.AttributedTo[0].ProfileURL
 	default:
-		result["attributedTo"] = slice.Map(stream.AttributedTo, func(person PersonLink) mapof.Any {
-			return person.GetJSONLD()
-		})
+		result["attributedTo"] = slice.Map(stream.AttributedTo, PersonLinkProfileURL)
 	}
 
 	return result

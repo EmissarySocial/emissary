@@ -65,3 +65,9 @@ func (person PersonLink) GetURL(name string) *url.URL {
 	result, _ := url.Parse(value)
 	return result
 }
+
+// PersonLinkProfileURL is a convenience function that
+// returns the profile URL for a PersonLink
+func PersonLinkProfileURL(person PersonLink) string {
+	return person.ProfileURL
+}
