@@ -69,12 +69,12 @@ func (client *Client) start() {
 
 		// Try to remove expired actors
 		if err := client.session.Collection(CollectionActor).HardDelete(criteria); err != nil {
-			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired actors from cache"))
+			derp.Report(derp.Wrap(err, "ascache.Client.delete", "Error purging expired actors from cache"))
 		}
 
 		// Try to remove expired documents
 		if err := client.session.Collection(CollectionDocument).HardDelete(criteria); err != nil {
-			derp.Report(derp.Wrap(err, "cache.Client.delete", "Error purging expired documents from cache"))
+			derp.Report(derp.Wrap(err, "ascache.Client.delete", "Error purging expired documents from cache"))
 		}
 	}
 }
@@ -101,7 +101,7 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 	result, err := client.innerClient.LoadActor(uri)
 
 	if err != nil {
-		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
+		return result, derp.Wrap(err, "ascache.Client.LoadActor", "error loading document from inner client", uri)
 	}
 
 	result.WithOptions(streams.WithClient(client))
@@ -131,7 +131,7 @@ func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (str
 	result, err := client.innerClient.LoadDocument(uri, defaultValue)
 
 	if err != nil {
-		return result, derp.Wrap(err, "cache.Client.Load", "error loading document from inner client", uri)
+		return result, derp.Wrap(err, "ascache.Client.LoadDocument", "error loading document from inner client", uri)
 	}
 
 	result.WithOptions(streams.WithClient(client))
@@ -157,7 +157,7 @@ func (client *Client) PurgeByURI(collection string, uri string) error {
 
 	// Try to purge the cache
 	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
-		return derp.Wrap(err, "cache.Client.delete", "Error deleting document from cache (by URI)", uri)
+		return derp.Wrap(err, "ascache.Client.delete", "Error deleting document from cache (by URI)", uri)
 	}
 
 	// Woot woot
@@ -226,7 +226,7 @@ func (client *Client) save(collection string, uri string, document streams.Docum
 
 	// Save the document to the cache
 	if err := client.session.Collection(collection).Save(&cachedValue, ""); err != nil {
-		derp.Report(derp.Wrap(err, "cache.Client.save", "Error saving document to cache", document.ID()))
+		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error saving document to cache", document.ID()))
 	}
 }
 
@@ -305,13 +305,13 @@ func (client *Client) calcRefreshDate(cacheSeconds int) int64 {
 func (client *Client) loadByURI(collection string, uri string, document *CachedValue) error {
 
 	if client.session == nil {
-		return derp.NewInternalError("cache.Client.loadByURI", "Cache connection is not defined")
+		return derp.NewInternalError("ascache.Client.loadByURI", "Cache connection is not defined")
 	}
 
 	criteria := exp.Equal("uri", uri)
 
 	if err := client.session.Collection(collection).Load(criteria, document); err != nil {
-		return derp.Wrap(err, "cache.Client.loadByURI", "Error loading document from cache", uri)
+		return derp.Wrap(err, "ascache.Client.loadByURI", "Error loading document from cache", uri)
 	}
 
 	return nil

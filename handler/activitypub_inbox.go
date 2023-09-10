@@ -46,12 +46,16 @@ func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityStreams())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing ActivityPub request")
+			err = derp.Wrap(err, location, "Error parsing ActivityPub request")
+			derp.Report(err)
+			return err
 		}
 
 		// Handle the ActivityPub request
 		if err := inboxRouter.Handle(factory, &user, activity); err != nil {
-			return derp.Wrap(err, location, "Error handling ActivityPub request")
+			err := derp.Wrap(err, location, "Error handling ActivityPub request")
+			derp.Report(err)
+			return err
 		}
 
 		// Send the response to the client

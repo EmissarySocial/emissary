@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -97,7 +98,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
 
 	if err != nil {
-		wrappedError := derp.Wrap(err, location, "Error loading document from source URL")
+		wrappedError := derp.Wrap(err, location, "Error loading document from source URL", following, document.Value())
 		if isDocumentAdequate(document) {
 			return wrappedError
 		} else {
