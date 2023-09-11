@@ -3,7 +3,7 @@
 
 	<div class="pos-sticky" style="top:96px;">
 
-		<form class="sortable" hx-post="/@me/inbox/inbox-folder-sort" hx-push-url="false" hx-trigger="end">
+		<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
 				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder turboclick {{if eq $selectedID .FolderID}}selected{{end}}">
@@ -30,7 +30,7 @@
 
 		</form>
 		
-		<div role="button" hx-get="/@me/inbox/inbox-folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
+		<div role="button" hx-get="/@me/inbox/folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
 
 		<hr>
 
@@ -42,7 +42,7 @@
 	</div>
 
 	<div 
-		hx-get="/@me/inbox/inbox-sidebar?folderId={{$selectedID.Hex}}" 
+		hx-get="/@me/inbox/sidebar?folderId={{$selectedID.Hex}}" 
 		hx-swap="outerHTML" 
 		hx-trigger="refreshSidebar from:window, every 600s" 
 		hx-push-url="false" 

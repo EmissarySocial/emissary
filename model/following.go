@@ -12,6 +12,7 @@ type Following struct {
 	FollowingID   primitive.ObjectID `json:"followingId"    bson:"_id"`           // Unique Identifier of this record
 	UserID        primitive.ObjectID `json:"userId"         bson:"userId"`        // ID of the stream that owns this "following"
 	FolderID      primitive.ObjectID `json:"folderId"       bson:"folderId"`      // ID of the folder to put new messages into
+	Folder        string             `json:"folder"         bson:"folder"`        // Name of the folder to put new messages into
 	Label         string             `json:"label"          bson:"label"`         // Label of this "following" record
 	URL           string             `json:"url"            bson:"url"`           // Human-Facing URL that is being followed.
 	ProfileURL    string             `json:"profileUrl"     bson:"profileUrl"`    // Updated, computer-facing URL that is being followed.
@@ -107,4 +108,8 @@ func (following *Following) SetLinks(newLinks ...digit.Link) {
 
 func (following Following) IsZero() bool {
 	return (following.UserID == primitive.NilObjectID) && (following.FolderID == primitive.NilObjectID)
+}
+
+func (following Following) NotZero() bool {
+	return !following.IsZero()
 }

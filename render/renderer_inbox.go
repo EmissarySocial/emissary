@@ -238,7 +238,21 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 	// Try to load the matching records
 	followingService := w._factory.Following()
 	return followingService.QueryByFolder(userID, followingID)
+}
 
+func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) {
+
+	userID := w.AuthenticatedID()
+
+	followingService := w._factory.Following()
+
+	following := model.NewFollowing()
+
+	if err := followingService.LoadByToken(userID, followingToken, &following); err != nil {
+		return model.Following{}, derp.Wrap(err, "render.Inbox.FollowingByID", "Error loading following")
+	}
+
+	return following, nil
 }
 
 func (w Inbox) Blocks() QueryBuilder[model.Block] {

@@ -6,7 +6,7 @@
 	<link rel="stylesheet" href="/.templates/base-social/stylesheet">
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
-	{{- template "inbox-sidebar" $folders -}}
+	{{- template "sidebar" $folders -}}
 
 	<div class="app-content">
 
@@ -16,7 +16,7 @@
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/blocks">{{icon "block"}} Blocks</span>
 		</div>
 
-		{{- template "inbox-following-list" . -}}
+		{{- template "following-list" . -}}
 				
 	</div>
 

@@ -12,7 +12,7 @@
 	{{- $inboxRenderer := . -}}
 
 	<div 
-		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
+		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-push-url="false"
@@ -34,15 +34,15 @@
 			tabIndex="0">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "list-social" $message -}}
 			{{- else if eq "CHAT" $folder.Layout -}}
-				{{- template "inbox-list-chat" $message -}}
+				{{- template "list-chat" $message -}}
 			{{- else if eq "NEWSPAPER" $folder.Layout -}}
-				{{- template "inbox-list-newspaper" $message -}}
+				{{- template "list-newspaper" $message -}}
 			{{- else if eq "MAGAZINE" $folder.Layout -}}
-				{{- template "inbox-list-magazine" $message -}}
+				{{- template "list-magazine" $message -}}
 			{{- else -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "list-social" $message -}}
 			{{- end -}}
 		</div>
 

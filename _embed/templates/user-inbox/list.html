@@ -8,7 +8,7 @@
 {{- if eq "" (.QueryParam "remote") -}}
 
 	<div 
-		hx-get="/@me/inbox/inbox-list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}"
+		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}"
 		hx-target="this"
 		hx-trigger="click once"
 		hx-swap="beforebegin"
@@ -43,15 +43,15 @@
 			script="install listItem(messageId:'{{.MessageID.Hex}}')">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "list-social" $message -}}
 			{{- else if eq "CHAT" $folder.Layout -}}
-				{{- template "inbox-list-chat" $message -}}
+				{{- template "list-chat" $message -}}
 			{{- else if eq "NEWSPAPER" $folder.Layout -}}
-				{{- template "inbox-list-newspaper" $message -}}
+				{{- template "list-newspaper" $message -}}
 			{{- else if eq "MAGAZINE" $folder.Layout -}}
-				{{- template "inbox-list-magazine" $message -}}
+				{{- template "list-magazine" $message -}}
 			{{- else -}}
-				{{- template "inbox-list-social" $message -}}
+				{{- template "list-social" $message -}}
 			{{- end -}}
 			
 		</div>
@@ -64,7 +64,7 @@
 	<!-- Target zone to load additional pages once we scroll down this far -->
 	{{- $lastMessage := $inbox.Last -}}
 	<div 
-		hx-get="/@me/inbox/inbox-list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
+		hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
 		hx-push-url="false" 
 		hx-trigger="intersect once" 
 		hx-target="this" 

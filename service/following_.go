@@ -177,6 +177,14 @@ func (service *Following) Save(following *model.Following, note string) error {
 		following.PollDuration = 24
 	}
 
+	// RULE: Set the Folder Name
+	folder := model.NewFolder()
+	if err := service.folderService.LoadByID(following.UserID, following.FolderID, &folder); err != nil {
+		return derp.Wrap(err, "service.Following.Save", "Error loading Folder", following)
+	}
+
+	following.Folder = folder.Label
+
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)

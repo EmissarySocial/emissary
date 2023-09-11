@@ -15,29 +15,34 @@
 		</div>
 	</div>
 	{{- range $following -}}
-		<div class="flex-row" style="align-items:center" role="button" hx-push-url="true">
+		<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" class="flex-row" style="align-items:center" role="button" hx-push-url="true">
 
 			<div class="flex-row" style="flex-grow:1">
 
-				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
+				<div style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
 					{{- if ne "" .ImageURL -}}
 						<img src="{{.ImageURL}}" class="circle" style="height:3em; width:3em;"/>
 					{{- end -}}
 				</div>
 
-				<!--span class="{{.StatusClass}}">{{icon .Icon}}</span-->
-				<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" style="flex-grow:1;">
-					<div class="ellipsis-block" style="max-height:1.75em;">
-						{{- if ne "" .Label -}}
-							<div class="black bold">{{- .Label -}}</div>
-							<div class="text-gray">{{- .URL -}}</div>
-						{{- else -}}
+				<div style="width:40%;">
+					{{- if ne "" .Label -}}
+						<div class="ellipsis-block" style="max-height:3em;">
+							<div class="black bold" style="margin:0px">{{- .Label -}}</div>
+							<div class="text-sm text-gray" style="margin:0px">{{- .URL -}}</div>
+						</div>
+					{{- else -}}
+						<div class="ellipsis-block" style="max-height:1.75em;">
 							{{- .URL -}}
-						{{- end -}}
-					</div>
+						</div>
+					{{- end -}}
+				</div>
+				<div style="width:60%;">
+					<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="bold text-plain" script="on click halt the event">{{.Folder}}</a></div>
 					<div class="text-xs text-gray" style="margin:0px;">
 						{{ if eq "SUCCESS" .Status -}}
 							{{ icon .Icon }} 
+							{{.Method}}
 							{{ .LastPolled | tinyDate }}
 						{{- else if eq "LOADING" .Status -}}
 							<span class="green">{{.Status}}</span>
@@ -55,7 +60,7 @@
 			</div>
 
 			<div class="align-right" hx-push-url="false">
-				<button class="text-sm" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}">Edit</button>
+				<button class="text-sm" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}" script="on click halt the event">Edit</button>
 			</div>
 		</div>
 	{{- end -}}

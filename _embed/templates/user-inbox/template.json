@@ -53,22 +53,22 @@
 			"roles": ["self"],
 			"step": "view-html"
 		},
-		"inbox-sidebar": {
+		"sidebar": {
 			"roles": ["self"],
 			"step":"view-html",
-			"file":"inbox-sidebar-remote"
+			"file":"sidebar-remote"
 		},
-		"inbox-list": {
+		"list": {
 			"roles": ["self"],
 			"steps":[
 				{"step":"view-html"}
 			]
 		},
-		"inbox-list-before": {
+		"list-before": {
 			"roles": ["self"],
 			"step":"view-html"
 		},
-		"inbox-filter":{
+		"filter":{
 			"roles":["self"],
 			"steps":[
 				{"step":"as-modal", "steps":[
@@ -76,7 +76,7 @@
 				]}
 			]
 		},
-		"inbox-folder-add": {
+		"folder-add": {
 			"roles":["self"],
 			"steps": [
 				{"step":"set-query-param", "folderId":"new"},
@@ -98,12 +98,12 @@
 				]}
 			]
 		},
-		"inbox-folder-edit": {
+		"folder-edit": {
 			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
 					{"step":"as-modal", "steps": [
-						{"step":"edit", "options":["delete:/@me/inbox/inbox-folder-delete?folderId={{.ObjectID}}"], "form": {
+						{"step":"edit", "options":["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
 							"label":"Folder Settings",
 							"children": [
@@ -119,7 +119,7 @@
 				]}
 			]
 		},
-		"inbox-folder-update":{
+		"folder-update":{
 			"roles":["self"],
 			"steps":[
 				{"step":"with-folder", "steps":[
@@ -137,7 +137,7 @@
 				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
-		"inbox-folder-delete": {
+		"folder-delete": {
 			"roles":["self"],
 			"steps": [
 				{"step":"with-folder", "steps": [
@@ -146,7 +146,7 @@
 				]}
 			]
 		},
-		"inbox-folder-sort":{
+		"folder-sort":{
 			"roles":["self"],
 			"steps":[
 				{"step":"with-folder", "steps":[
@@ -155,8 +155,8 @@
 			]
 		},
 		
-		"followers": {"step":"view-html", "file":"inbox-followers"},
-		"followers-list": {"step":"view-html", "file":"inbox-followers-list"},
+		"followers": {"step":"view-html", "file":"followers"},
+		"followers-list": {"step":"view-html", "file":"followers-list"},
 		"follower-add": {
 			"roles":["self"],
 			"steps":[
@@ -190,8 +190,8 @@
 			]
 		},
 
-		"following": {"step":"view-html", "file":"inbox-following"},
-		"following-list": {"step":"view-html", "file":"inbox-following-list"},
+		"following": {"step":"view-html", "file":"following"},
+		"following-list": {"step":"view-html", "file":"following-list"},
 		"following-add":{
 			"roles":["self"],
 			"steps":[
@@ -275,7 +275,9 @@
 							}]
 						}}
 					]}
-				]}
+				]},
+				{"step":"trigger-event", "event":"closeModal"},
+				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"following-delete":{
@@ -291,7 +293,7 @@
 		"blocks": {
 			"roles":["self"],
 			"step":"view-html", 
-			"file":"inbox-blocks"
+			"file":"blocks"
 		}
 	}
 }	

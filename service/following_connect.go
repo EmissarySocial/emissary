@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Connect attempts to connect to a new URL and determines how to follow it.
