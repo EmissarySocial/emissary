@@ -122,7 +122,7 @@ func (service *Following) saveMessage(following model.Following, document stream
 	message.Label = document.Name()
 	message.Summary = document.Summary()
 	message.ImageURL = document.Image().URL()
-	message.AttributedTo = convert.ActivityPubPersonLinks(document.AttributedTo())
+	message.AttributedTo = convert.ActivityPubPersonLink(document.AttributedTo())
 	message.ContentHTML = document.Content()
 	message.PublishDate = document.Published().Unix()
 

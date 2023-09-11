@@ -6,26 +6,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 )
 
-func ActivityPubPersonLinks(person streams.Document) []model.PersonLink {
-
-	result := make([]model.PersonLink, 0)
-
-	for ; !person.IsNil(); person = person.Next() {
-		if details, err := person.Load(); err == nil {
-			link := model.PersonLink{
-				Name:       details.Name(),
-				ProfileURL: details.ID(),
-				ImageURL:   details.IconOrImage().URL(),
-			}
-			result = append(result, link)
-		} else {
-			derp.Report(err)
-		}
-	}
-
-	return result
-}
-
 // ActivityPubPersonLink converts a streams.Document into a model.PersonLink
 func ActivityPubPersonLink(person streams.Document) model.PersonLink {
 

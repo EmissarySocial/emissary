@@ -1,22 +1,21 @@
 package model
 
 import (
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type DocumentLink struct {
-	ID           primitive.ObjectID         `json:"id,omitempty"            bson:"id,omitempty"`           // Internal ID of the record that is being linked
-	URL          string                     `json:"url,omitempty"           bson:"url,omitempty"`          // URL of the original document
-	Label        string                     `json:"label,omitempty"         bson:"label,omitempty"`        // Label/Title of the document
-	Summary      string                     `json:"summary,omitempty"       bson:"summary,omitempty"`      // Brief summary of the document
-	ImageURL     string                     `json:"imageUrl,omitempty"      bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
-	AttributedTo sliceof.Object[PersonLink] `json:"attributedTo,omitempty"  bson:"attributedTo,omitempty"` // List of people who are attributed to this document
+	ID           primitive.ObjectID `json:"id,omitempty"            bson:"id,omitempty"`           // Internal ID of the record that is being linked
+	URL          string             `json:"url,omitempty"           bson:"url,omitempty"`          // URL of the original document
+	Label        string             `json:"label,omitempty"         bson:"label,omitempty"`        // Label/Title of the document
+	Summary      string             `json:"summary,omitempty"       bson:"summary,omitempty"`      // Brief summary of the document
+	ImageURL     string             `json:"imageUrl,omitempty"      bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
+	AttributedTo PersonLink         `json:"attributedTo,omitempty"  bson:"attributedTo,omitempty"` // Person that this document is attributed to
 }
 
 func NewDocumentLink() DocumentLink {
 	return DocumentLink{
-		AttributedTo: sliceof.NewObject[PersonLink](),
+		AttributedTo: NewPersonLink(),
 	}
 }
 

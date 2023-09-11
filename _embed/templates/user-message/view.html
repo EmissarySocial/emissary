@@ -23,11 +23,10 @@
 		{{- if ne "" .Label -}}
 			{{- .Label -}}
 		{{- else if .AttributedTo.NotEmpty -}}
-			{{- $author := .AttributedTo.First -}}
-			{{- if $author.HasImageURL -}}
-				<img src="{{$author.ImageURL}}" class="circle" style="height:1.5em">&nbsp;
+			{{- if .AttributedTo.HasImageURL -}}
+				<img src="{{.AttributedTo.ImageURL}}" class="circle" style="height:1.5em">&nbsp;
 			{{- end -}}
-			{{- .AttributedTo.First.Name -}}
+			{{- .AttributedTo.Name -}}
 		{{- else -}}
 			{{.URL}}
 		{{- end -}}

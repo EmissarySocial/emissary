@@ -1,17 +1,15 @@
-{{- $author := .AttributedTo.First -}}
-
 <div class="flex-row">
 
 	<div style="width:64px; flex-grow:0; flex-shrink:0;">
-		{{- if ne "" $author.ImageURL -}}
-			<img src="{{$author.ImageURL}}" class="circle" style="width:64px;">
+		{{- if ne "" .AttributedTo.ImageURL -}}
+			<img src="{{.AttributedTo.ImageURL}}" class="circle" style="width:64px;">
 		{{- end -}}
 	</div>
 
 	<div style="flex-grow:1;">
 
 		<div class="ellipsis">
-			<span class="bold black">{{$author.Name}}</span>
+			<span class="bold black">{{.AttributedTo.Name}}</span>
 			<span class="text-gray nowrap">
 				&nbsp;
 				{{ icon .Origin.Icon }}

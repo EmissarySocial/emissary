@@ -13,7 +13,7 @@ func DocumentLinkSchema() schema.Element {
 			"label":        schema.String{MaxLength: 128},
 			"summary":      schema.String{Format: "html"},
 			"imageUrl":     schema.String{Format: "url"},
-			"attributedTo": schema.Array{Items: PersonLinkSchema()},
+			"attributedTo": PersonLinkSchema(),
 		},
 	}
 }

@@ -51,7 +51,7 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	message.Label = object.Name()
 	message.Summary = object.Summary()
 	message.ImageURL = object.Image().URL()
-	message.AttributedTo = collectPersonLinks(document)
+	message.AttributedTo = collectPersonLink(document)
 	message.ContentHTML = object.Content()
 	message.FolderID = following.FolderID
 	message.InReplyTo = object.InReplyTo().ID()
@@ -73,19 +73,17 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 	return nil
 }
 
-func collectPersonLinks(document streams.Document) []model.PersonLink {
-	result := make([]model.PersonLink, 0)
+func collectPersonLink(document streams.Document) model.PersonLink {
 
 	for attributedTo := document.Object().AttributedTo(); !attributedTo.IsNil(); attributedTo = attributedTo.Tail() {
 		if author, err := attributedTo.Load(); err == nil {
-
-			result = append(result, model.PersonLink{
+			return model.PersonLink{
 				Name:       author.Name(),
 				ProfileURL: author.ID(),
 				ImageURL:   author.IconOrImage().URL(),
-			})
+			}
 		}
 	}
 
-	return result
+	return model.NewPersonLink()
 }

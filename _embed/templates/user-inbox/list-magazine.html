@@ -1,5 +1,3 @@
-{{- $author := .AttributedTo.First -}}
-
 <div class="space-below">
 	<h2 class="black ellipsis">{{.Label}}</h2>
 
@@ -22,7 +20,7 @@
 		<span class="ellipsis">
 			{{- icon .Origin.Icon }}
 			{{ .Origin.Label }} &middot;
-			{{ $author.Name -}}
+			{{ .AttributedTo.Name -}}
 			&nbsp;&middot;
 		</span>
 		<span class="nowrap">

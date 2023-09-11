@@ -164,7 +164,7 @@ func (w Message) URL() string {
 	return w._message.URL
 }
 
-func (w Message) AttributedTo() sliceof.Object[model.PersonLink] {
+func (w Message) AttributedTo() model.PersonLink {
 	return w._message.AttributedTo
 }
 

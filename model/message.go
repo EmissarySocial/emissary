@@ -6,32 +6,31 @@ import (
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/html"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Message represents a single item in a User's inbox or outbox.  It is loosely modelled on the MessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type Message struct {
-	MessageID    primitive.ObjectID         `json:"messageId"    bson:"_id"`                    // Unique ID of the Message
-	UserID       primitive.ObjectID         `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message
-	FollowingID  primitive.ObjectID         `json:"followingId"  bson:"followingId,omitempty"`  // Unique ID of the Following record that generated this Message
-	FolderID     primitive.ObjectID         `json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Message is stored
-	SocialRole   string                     `json:"socialRole"   bson:"socialRole,omitempty"`   // Role this message plays in social integrations ("Article", "Note", etc)
-	Origin       OriginLink                 `json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Message
-	URL          string                     `json:"url"          bson:"url"`                    // URL of this Message
-	Label        string                     `json:"label"        bson:"label,omitempty"`        // Label of this Message
-	Summary      string                     `json:"summary"      bson:"summary,omitempty"`      // Summary of this Message
-	ImageURL     string                     `json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the image associated with this Message
-	AttributedTo sliceof.Object[PersonLink] `json:"attributedTo" bson:"attributedTo,omitempty"` // List of people who are attributed to this Message
-	InReplyTo    string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`    // URL this message is in reply to
-	ContentHTML  string                     `json:"contentHtml"  bson:"contentHtml,omitempty"`  // HTML Content of the Message
-	ContentJSON  string                     `json:"contentJson"  bson:"contentJson,omitempty"`  // Original JSON message, used for reprocessing later.
-	Responses    ResponseSummary            `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
-	MyResponse   string                     `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
-	ReadDate     int64                      `json:"readDate"    bson:"readDate"`                // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
-	PublishDate  int64                      `json:"publishDate"  bson:"publishDate,omitempty"`  // Unix timestamp of the date/time when this Message was published
-	Rank         int64                      `json:"rank"         bson:"rank"`                   // Sort rank for this message (publishDate * 1000 + sequence number)
+	MessageID    primitive.ObjectID `json:"messageId"    bson:"_id"`                    // Unique ID of the Message
+	UserID       primitive.ObjectID `json:"userId"       bson:"userId"`                 // Unique ID of the User who owns this Message
+	FollowingID  primitive.ObjectID `json:"followingId"  bson:"followingId,omitempty"`  // Unique ID of the Following record that generated this Message
+	FolderID     primitive.ObjectID `json:"folderId"     bson:"folderId,omitempty"`     // Unique ID of the Folder where this Message is stored
+	SocialRole   string             `json:"socialRole"   bson:"socialRole,omitempty"`   // Role this message plays in social integrations ("Article", "Note", etc)
+	Origin       OriginLink         `json:"origin"       bson:"origin,omitempty"`       // Link to the origin of this Message
+	URL          string             `json:"url"          bson:"url"`                    // URL of this Message
+	Label        string             `json:"label"        bson:"label,omitempty"`        // Label of this Message
+	Summary      string             `json:"summary"      bson:"summary,omitempty"`      // Summary of this Message
+	ImageURL     string             `json:"imageUrl"     bson:"imageUrl,omitempty"`     // URL of the image associated with this Message
+	AttributedTo PersonLink         `json:"attributedTo" bson:"attributedTo,omitempty"` // List of people who are attributed to this Message
+	InReplyTo    string             `json:"inReplyTo"    bson:"inReplyTo,omitempty"`    // URL this message is in reply to
+	ContentHTML  string             `json:"contentHtml"  bson:"contentHtml,omitempty"`  // HTML Content of the Message
+	ContentJSON  string             `json:"contentJson"  bson:"contentJson,omitempty"`  // Original JSON message, used for reprocessing later.
+	Responses    ResponseSummary    `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
+	MyResponse   string             `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
+	ReadDate     int64              `json:"readDate"    bson:"readDate"`                // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
+	PublishDate  int64              `json:"publishDate"  bson:"publishDate,omitempty"`  // Unix timestamp of the date/time when this Message was published
+	Rank         int64              `json:"rank"         bson:"rank"`                   // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -42,7 +41,7 @@ func NewMessage() Message {
 		MessageID:    primitive.NewObjectID(),
 		Responses:    NewResponseSummary(),
 		Origin:       NewOriginLink(),
-		AttributedTo: sliceof.NewObject[PersonLink](),
+		AttributedTo: NewPersonLink(),
 		ReadDate:     math.MaxInt64,
 	}
 }
@@ -91,7 +90,7 @@ func (message Message) Roles(authorization *Authorization) []string {
 
 // Author returns the primary author, i.e., the first PersonLink in the AttributedTo slice.
 func (message *Message) Author() PersonLink {
-	return message.AttributedTo.First()
+	return message.AttributedTo
 }
 
 // DocumentLink returns a fully populated DocumentLink for this message.
@@ -106,12 +105,8 @@ func (message Message) DocumentLink() DocumentLink {
 	}
 }
 
-func (message *Message) SetAttributedTo(persons ...PersonLink) {
-	message.AttributedTo = persons
-}
-
-func (message *Message) AddAttributedTo(persons ...PersonLink) {
-	message.AttributedTo = append(message.AttributedTo, persons...)
+func (message *Message) SetAttributedTo(person PersonLink) {
+	message.AttributedTo = person
 }
 
 // HasSummary returns TRUE if the "Summary" field is not empty

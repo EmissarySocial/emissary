@@ -36,7 +36,7 @@
 			role="button"
 			class="message"
 			style="max-width:640px;"
-			hx-get="/@me/messages/{{.MessageID.Hex}}?&origin.followingId={{$internalID}}"
+			hx-get="/@me/messages/{{.MessageID.Hex}}/view?folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-trigger="click"
 			hx-push-url="false"
 			tabIndex="0"
