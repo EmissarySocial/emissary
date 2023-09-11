@@ -34,7 +34,7 @@ type Stream struct {
 	Content         Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets         set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	AttributedTo    sliceof.Object[PersonLink]   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
+	AttributedTo    PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo       string                       `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	Responses       ResponseSummary              `json:"responses,omitempty"    bson:"responses,omitempty"`    // Summary of all responses to this document
 	PublishDate     int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
@@ -150,10 +150,8 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	}
 
 	// Authors sometimes have special permissions, too.
-	for _, author := range stream.AttributedTo {
-		if author.UserID == authorization.UserID {
-			result = append(result, MagicRoleAuthor)
-		}
+	if stream.AttributedTo.UserID == authorization.UserID {
+		result = append(result, MagicRoleAuthor)
 	}
 
 	// If this Stream is in the current User's outbox, then they also have "self" permissions
@@ -334,12 +332,8 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		result["inReplyTo"] = stream.InReplyTo
 	}
 
-	switch len(stream.AttributedTo) {
-	case 0:
-	case 1:
-		result["attributedTo"] = stream.AttributedTo[0].ProfileURL
-	default:
-		result["attributedTo"] = slice.Map(stream.AttributedTo, PersonLinkProfileURL)
+	if stream.AttributedTo.NotEmpty() {
+		result["attributedTo"] = stream.AttributedTo.ProfileURL
 	}
 
 	return result
@@ -382,11 +376,6 @@ func (stream *Stream) HasParent() bool {
 }
 
 // SetAttributedTo sets the list of people that this Stream is attributed to
-func (stream *Stream) SetAttributedTo(people ...PersonLink) {
-	stream.AttributedTo = people
-}
-
-// AddAttributedTo adds a person to the list of people that this Stream is attributed to
-func (stream *Stream) AddAttributedTo(people ...PersonLink) {
-	stream.AttributedTo = append(stream.AttributedTo, people...)
+func (stream *Stream) SetAttributedTo(person PersonLink) {
+	stream.AttributedTo = person
 }

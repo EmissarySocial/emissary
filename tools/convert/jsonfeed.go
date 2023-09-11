@@ -42,12 +42,11 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 	}
 
 	// Attach author if available
-	if !stream.AttributedTo.IsEmpty() {
-		author := stream.AttributedTo.First()
+	if stream.AttributedTo.NotEmpty() {
 		result.Author = &jsonfeed.Author{
-			Name:   author.Name,
-			URL:    author.ProfileURL,
-			Avatar: author.ImageURL,
+			Name:   stream.AttributedTo.Name,
+			URL:    stream.AttributedTo.ProfileURL,
+			Avatar: stream.AttributedTo.ImageURL,
 		}
 	}
 

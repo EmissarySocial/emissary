@@ -67,12 +67,11 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		ModifiedDate:  &modifiedDate,
 	}
 
-	if !stream.AttributedTo.IsEmpty() {
-		author := stream.AttributedTo.First()
+	if stream.AttributedTo.NotEmpty() {
 		result.Author = &feeds.JSONAuthor{
-			Name:   author.Name,
-			Url:    author.ProfileURL,
-			Avatar: author.ImageURL,
+			Name:   stream.AttributedTo.Name,
+			Url:    stream.AttributedTo.ProfileURL,
+			Avatar: stream.AttributedTo.ImageURL,
 		}
 	}
 

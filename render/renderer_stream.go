@@ -243,13 +243,13 @@ func (w Stream) Permalink() string {
 }
 
 // AttributedTo returns ALL AttributedTo records for this stream
-func (w Stream) AttributedTo() sliceof.Object[model.PersonLink] {
+func (w Stream) AttributedTo() model.PersonLink {
 	return w.stream.AttributedTo
 }
 
 // Author returns the "first" AttributedTo record for this stream
 func (w Stream) Author() model.PersonLink {
-	return w.stream.AttributedTo.First()
+	return w.stream.AttributedTo
 }
 
 // IsReply returns TRUE if this stream is marked as a reply to another stream or resource

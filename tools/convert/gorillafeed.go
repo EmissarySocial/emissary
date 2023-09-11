@@ -18,11 +18,10 @@ func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 		Created: time.Unix(stream.PublishDate, 0),
 	}
 
-	if !stream.AttributedTo.IsEmpty() {
-		author := stream.AttributedTo.First()
+	if stream.AttributedTo.NotEmpty() {
 		result.Author = &feeds.Author{
-			Name:  author.Name,
-			Email: author.EmailAddress,
+			Name:  stream.AttributedTo.Name,
+			Email: stream.AttributedTo.EmailAddress,
 		}
 	}
 
