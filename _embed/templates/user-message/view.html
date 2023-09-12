@@ -1,36 +1,64 @@
 <div script="install message(messageId:'{{.MessageID}}')">
 
-	<div class="text-sm">
+	<div class="space-below">
+		<div class="flex-row text-xs">
 
-		<div class="button-group float-right">
-			<button script="on click send closeModal">Close</button>
+			<div style="flex-grow:1">
+				<span class="button-group">
+					<button id="previous" hx-get="/@me/messages/{{.MessageID}}/view?sibling=prev&followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/messages/{{.MessageID}}/view?sibling=next&followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
+				</span>
+
+				<span class="button-group">
+					<button script="on click go to url '{{.URL}}' in new window">View Original</button>
+					<button hx-get="/@me/following-edit?followingId={{.Origin.FollowingID.Hex}}">Edit Source</button>
+					<button hx-get="/@me/messages/{{.MessageID}}/delete">Delete</button>
+				</span>
+			</div>
+
+			<div class="align-right">
+				<button script="on click send closeModal">Close</button>
+			</div>
+		
 		</div>
-	
-		<span class="button-group">
-			<button id="previous" hx-get="/@me/messages/{{.MessageID}}/view?sibling=prev&followingId={{.QueryParam `origin.followingId`}}">&laquo; Prev</button>
-			<button id="next" hx-get="/@me/messages/{{.MessageID}}/view?sibling=next&followingId={{.QueryParam `origin.followingId`}}">Next &raquo;</button>
-		</span>
-
-		<span class="button-group">
-			<button hx-get="/@me/following-edit?followingId={{.Origin.FollowingID.Hex}}">Edit Source</button>
-			<button hx-get="/@me/messages/{{.MessageID}}/delete">Delete</button>
-			<button hx-get="/@me/inbox/block-new?messageId={{.MessageID}}">Block</button>
-		</span>
-
 	</div>
 
-	<h1 role="link" class="clickable flex-row flex-justify-center flex-align-center" script="on click go to url '{{.URL}}' in new window">
-		{{- if ne "" .Label -}}
-			{{- .Label -}}
-		{{- else if .AttributedTo.NotEmpty -}}
-			{{- if .AttributedTo.HasImageURL -}}
-				<img src="{{.AttributedTo.ImageURL}}" class="circle" style="height:1.5em">&nbsp;
-			{{- end -}}
-			{{- .AttributedTo.Name -}}
-		{{- else -}}
-			{{.URL}}
+	{{- if eq "" .Label -}}
+		{{- if .Origin.NotEmpty -}}
+			<a class="text-black flex-row flex-align-center" 
+				href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
+
+				{{- if ne "" .Origin.ImageURL -}}
+					<img src="{{.Origin.ImageURL}}" class="circle" style="height:48px;"/>
+				{{- end -}}
+				<h1>{{.Origin.Label}}</h1>
+			</a>
 		{{- end -}}
-	</h2>
+	{{- else -}}
+		<a class="text-gray bold flex-row flex-align-center"
+			href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
+			
+			{{- if ne "" .Origin.ImageURL -}}
+				<img src="{{.Origin.ImageURL}}" class="circle" style="height:24px"/>
+			{{- end -}}
+			<div style="margin:0px;">{{.Origin.Label}}</div>
+		</a>
+		<h1><a href="{{.URL}}" target="_blank" class="text-black">{{.Label}}</a></h1>
+	{{- end -}}
+
+	<div class="flex-row text-gray">
+		<div>
+			{{- if ne .AttributedTo.Name .Origin.Label -}}
+				{{- if ne "" .AttributedTo.ProfileURL -}}
+					<a href="{{.AttributedTo.ProfileURL}}" target="_blank">By: {{.AttributedTo.Name}}</a> &middot;
+				{{- else -}}
+					By: {{.AttributedTo.Name}} &middot;
+				{{- end -}}
+			{{end}}
+			{{.PublishDate | longDate -}}
+		</div>
+		<div>{{.Responses}}</div>
+	</div>
 
 	<hr>
 
@@ -64,8 +92,6 @@
 		{{- end -}}
 			
 	</div>
-
-	{{- .Responses -}}
 
 	<hr>
 

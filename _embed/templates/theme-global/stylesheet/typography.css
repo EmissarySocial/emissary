@@ -394,16 +394,24 @@ input.text-md {
     text-decoration:none;
 }
 
+.text-black {
+    color:var(--black)!important;
+    text-decoration:none;
+}
+
 .text-light-gray {
     color:var(--gray40);
+    text-decoration:none;
 }
 
 .text-gray {
     color:var(--gray60);
+    text-decoration:none;
 }
 
 .text-green {
     color:var(--green70)!important;
+    text-decoration:none;
 }
 
 a:hover .text-green,
@@ -413,6 +421,7 @@ a.text-green:hover {
 
 .text-red {
     color:var(--red60)!important;
+    text-decoration:none;
 }
 
 a:hover .text-red,
