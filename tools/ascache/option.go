@@ -9,24 +9,25 @@ func WithPurgeFrequency(seconds int64) OptionFunc {
 	}
 }
 
-// WithDefaultCache sets the default number of seconds that a document should be cached
-func WithDefaultCache(seconds int) OptionFunc {
+// WithActorCache option sets caching values for Actors
+func WithActorCache(defaultValue int, minimum int, maximum int) OptionFunc {
 	return func(client *Client) {
-		client.defaultCacheSeconds = seconds
+		client.actorCache = CacheConfig{
+			DefaultSeconds: defaultValue,
+			MinimumSeconds: minimum,
+			MaximumSeconds: maximum,
+		}
 	}
 }
 
-// WithMinCache option sets the minimum number of seconds that a document should be cached
-func WithMinCache(seconds int) OptionFunc {
+// WithDocumentCache option sets caching values for Documents
+func WithDocumentCache(defaultValue int, minimum int, maximum int) OptionFunc {
 	return func(client *Client) {
-		client.minCacheSeconds = seconds
-	}
-}
-
-// WithMaxCache option sets the maximum number of seconds that a document should be cached
-func WithMaxCache(seconds int) OptionFunc {
-	return func(client *Client) {
-		client.maxCacheSeconds = seconds
+		client.documentCache = CacheConfig{
+			DefaultSeconds: defaultValue,
+			MinimumSeconds: minimum,
+			MaximumSeconds: maximum,
+		}
 	}
 }
 

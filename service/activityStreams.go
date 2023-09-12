@@ -16,7 +16,7 @@ import (
 type ActivityStreams struct {
 	actorCollection    data.Collection
 	documentCollection data.Collection
-	innerClient        streams.Client
+	innerClient        *ascache.Client
 }
 
 /******************************************
@@ -24,12 +24,10 @@ type ActivityStreams struct {
  ******************************************/
 
 func NewActivityStreams() ActivityStreams {
-	return ActivityStreams{
-		innerClient: streams.NewDefaultClient(),
-	}
+	return ActivityStreams{}
 }
 
-func (as *ActivityStreams) Refresh(innerClient streams.Client, actorCollection data.Collection, documentCollection data.Collection) {
+func (as *ActivityStreams) Refresh(innerClient *ascache.Client, actorCollection data.Collection, documentCollection data.Collection) {
 	as.innerClient = innerClient
 	as.actorCollection = actorCollection
 	as.documentCollection = documentCollection
@@ -45,6 +43,14 @@ func (as *ActivityStreams) LoadDocument(uri string, defaultValue map[string]any)
 
 func (as *ActivityStreams) LoadActor(uri string) (streams.Document, error) {
 	return as.innerClient.LoadActor(uri)
+}
+
+func (as *ActivityStreams) RefreshActor(uri string) {
+	as.innerClient.RefreshActor(uri)
+}
+
+func (as *ActivityStreams) RefreshDocument(uri string) {
+	as.innerClient.RefreshDocument(uri)
 }
 
 /******************************************
