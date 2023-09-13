@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 
 	"github.com/benpate/rosetta/mapof"
@@ -28,7 +27,7 @@ type Following struct {
 	inboxService  *Inbox
 	folderService *Folder
 	keyService    *EncryptionKey
-	httpClient    streams.Client
+	httpClient    *ActivityStreams
 	host          string
 	closed        chan bool
 }
@@ -43,7 +42,7 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, httpClient streams.Client, host string) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, httpClient *ActivityStreams, host string) {
 	service.collection = collection
 	service.streamService = streamService
 	service.userService = userService
@@ -200,7 +199,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// Connect to external services and discover the best update method.
 	// This will also update the status again, soon.
-	go derp.Report(service.Connect(*following))
+	go derp.Report(service.RefreshAndConnect(*following))
 
 	// Win!
 	return nil

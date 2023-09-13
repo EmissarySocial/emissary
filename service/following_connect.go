@@ -15,6 +15,19 @@ import (
 	"github.com/benpate/sherlock"
 )
 
+func (service *Following) RefreshAndConnect(following model.Following) error {
+
+	// Try to refresh the Actor in the cache
+	service.httpClient.RefreshActor(following.URL)
+
+	// Try to connect the Following record
+	if err := service.Connect(following); err != nil {
+		return derp.Wrap(err, "service.Following.RefreshAndConnect", "Error connecting to actor")
+	}
+
+	return nil
+}
+
 // Connect attempts to connect to a new URL and determines how to follow it.
 func (service *Following) Connect(following model.Following) error {
 

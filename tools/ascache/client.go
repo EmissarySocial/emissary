@@ -232,6 +232,11 @@ func (client *Client) save(collection string, uri string, document streams.Docum
 	cachedValue.ExpiresDate = time.Now().Add(time.Second * time.Duration(expireSeconds)).Unix()
 	cachedValue.RefreshesDate = client.calcRefreshDate(expireSeconds)
 
+	// Try to remove any existing documents with the same URI
+	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
+		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error deleting document from cache (by URI)", uri))
+	}
+
 	// Save the document to the cache
 	if err := client.session.Collection(collection).Save(&cachedValue, ""); err != nil {
 		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error saving document to cache", document.ID()))

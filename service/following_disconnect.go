@@ -8,6 +8,7 @@ import (
 func (service *Following) Disconnect(following *model.Following) {
 
 	switch following.Method {
+
 	case model.FollowMethodActivityPub:
 
 		if err := service.disconnect_ActivityPub(following); err != nil {
