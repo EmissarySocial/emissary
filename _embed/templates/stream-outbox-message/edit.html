@@ -34,6 +34,7 @@
 
 	<div style="margin-bottom:10px;">
 		<div
+			tabIndex="0"
 			class="input"
 			contenteditable="true"
 			data-script="
@@ -69,9 +70,9 @@
 			<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
 			<span class="text-lg">
 				&nbsp;
-				<label for="file-upload" class="link" role="button">{{icon "image"}}</label>
+				<label for="file-upload" class="link" role="button" tabIndex="0">{{icon "image"}}</label>
 				&nbsp;
-				<label class="link" role="button" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
+				<label class="link" role="button" tabIndex="0" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
 			</span>
 		{{- else -}}
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>

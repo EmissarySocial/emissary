@@ -1,5 +1,8 @@
 module github.com/EmissarySocial/emissary
 
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+replace github.com/benpate/sherlock => ../../benpate/sherlock
+
 go 1.20
 
 require (

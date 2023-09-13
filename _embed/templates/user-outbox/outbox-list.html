@@ -5,7 +5,6 @@
 	{{- $isMyself := .IsMyself -}}
 
 	{{- range $outbox -}}
-		{{- $author := .Author -}}
 		<hr>
 		<div class="hover-trigger">
 			{{- if $isMyself -}}
@@ -15,13 +14,13 @@
 			{{- end -}}
 			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{$author.ImageURL}}" class="circle-64" loading="lazy">
+					<img src="{{.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">
 						<div class="p-author h-card text-sm gray50" style="margin:0px;">
-							{{- if ne "" $author.Name -}}
-								<span class="p-name">{{$author.Name}}</span>
+							{{- if ne "" .AttributedTo.Name -}}
+								<span class="p-name">{{.AttributedTo.Name}}</span>
 								&middot;
 							{{- end -}}
 							<span class="p-published">{{.PublishDate | humanizeTime}}</span>

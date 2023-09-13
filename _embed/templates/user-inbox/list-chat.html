@@ -27,10 +27,12 @@
 			{{- .ContentOrSummary | html -}}
 		</div>
 
-		{{- if ne .ImageURL "" -}}
-			<div class="space-above" style="max-width:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-				<img src="{{.ImageURL}}" loading="lazy" style="max-width:400x; max-height:300px; object-fit:cover;"/>
-			</div>
+		{{- if not .HasContentImage -}}
+			{{- if ne .ImageURL "" -}}
+				<div class="space-above" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
+					<img src="{{.ImageURL}}" loading="lazy" style="object-fit:cover;"/>
+				</div>
+			{{- end -}}
 		{{- end -}}
 
 	</div>

@@ -88,9 +88,10 @@ func (following Following) Roles(authorization *Authorization) []string {
 func (following *Following) Origin() OriginLink {
 	return OriginLink{
 		FollowingID: following.FollowingID,
-		Label:       following.Label,
-		Type:        following.Method,
 		URL:         following.URL,
+		Type:        following.Method,
+		Label:       following.Label,
+		ImageURL:    following.ImageURL,
 	}
 }
 
