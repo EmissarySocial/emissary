@@ -18,6 +18,8 @@ func TestMessageSchema(t *testing.T) {
 		{"label", "DOCUMENT LABEL", nil},
 		{"summary", "DOCUMENT SUMMARY", nil},
 		{"origin.url", "https://origin.url", nil},
+		{"references.0.url", "https://first.reference.url", nil},
+		{"references.1.url", "https://another.reference.url", nil},
 		{"contentHtml", "TEST CONTENT", nil},
 		{"contentJson", `{"json":true}`, nil},
 		{"folderId", "123456123456123456123456", nil},

@@ -14,11 +14,12 @@ func MessageSchema() schema.Element {
 			"folderId":     schema.String{Format: "objectId"},
 			"socialRole":   schema.String{MaxLength: 64},
 			"origin":       OriginLinkSchema(),
+			"references":   schema.Array{Items: OriginLinkSchema()},
 			"url":          schema.String{Format: "uri"},
 			"label":        schema.String{MaxLength: 128},
 			"summary":      schema.String{MaxLength: 1024},
 			"imageUrl":     schema.String{Format: "uri"},
-			"attributedTo": schema.Array{Items: PersonLinkSchema()},
+			"attributedTo": PersonLinkSchema(),
 			"inReplyTo":    schema.String{Format: "uri"},
 			"contentHtml":  schema.String{Format: "html"},
 			"contentJson":  schema.String{Format: "json"},
@@ -43,6 +44,9 @@ func (message *Message) GetPointer(name string) (any, bool) {
 
 	case "origin":
 		return &message.Origin, true
+
+	case "references":
+		return &message.References, true
 
 	case "url":
 		return &message.URL, true
