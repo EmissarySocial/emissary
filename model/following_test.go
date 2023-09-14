@@ -18,6 +18,8 @@ func TestFollowingSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"url", "http://url.url", nil},
 		{"profileUrl", "https://other.url", nil},
+		{"imageUrl", "https://other.url/image.png", nil},
+		{"collapseThreads", "false", false},
 		{"method", FollowMethodActivityPub, nil},
 		{"format", FollowingFormatActivityStream, nil},
 		{"status", FollowingStatusSuccess, nil},

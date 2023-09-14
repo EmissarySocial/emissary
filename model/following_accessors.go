@@ -10,22 +10,24 @@ import (
 func FollowingSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"followingId":    schema.String{Format: "objectId"},
-			"userId":         schema.String{Format: "objectId"},
-			"folderId":       schema.String{Format: "objectId", Required: true},
-			"label":          schema.String{MaxLength: 128},
-			"url":            schema.String{Required: true, MaxLength: 1024},
-			"profileUrl":     schema.String{Format: "url", MaxLength: 1024},
-			"method":         schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"format":         schema.String{Enum: []string{FollowingFormatActivityStream, FollowingFormatRSS, FollowingFormatAtom, FollowingFormatJSONFeed, FollowingFormatMicroFormats}},
-			"status":         schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
-			"statusMessage":  schema.String{MaxLength: 1024},
-			"lastPolled":     schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"pollDuration":   schema.Integer{Minimum: null.NewInt64(1)},
-			"purgeDuration":  schema.Integer{Minimum: null.NewInt64(0)},
-			"nextPoll":       schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"errorCount":     schema.Integer{Minimum: null.NewInt64(0)},
-			"doMoveMessages": schema.Boolean{},
+			"followingId":     schema.String{Format: "objectId"},
+			"userId":          schema.String{Format: "objectId"},
+			"folderId":        schema.String{Format: "objectId", Required: true},
+			"label":           schema.String{MaxLength: 128},
+			"url":             schema.String{Required: true, MaxLength: 1024},
+			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
+			"imageUrl":        schema.String{Format: "url", MaxLength: 1024},
+			"collapseThreads": schema.Boolean{},
+			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
+			"format":          schema.String{Enum: []string{FollowingFormatActivityStream, FollowingFormatRSS, FollowingFormatAtom, FollowingFormatJSONFeed, FollowingFormatMicroFormats}},
+			"status":          schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
+			"statusMessage":   schema.String{MaxLength: 1024},
+			"lastPolled":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"pollDuration":    schema.Integer{Minimum: null.NewInt64(1)},
+			"purgeDuration":   schema.Integer{Minimum: null.NewInt64(0)},
+			"nextPoll":        schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"errorCount":      schema.Integer{Minimum: null.NewInt64(0)},
+			"doMoveMessages":  schema.Boolean{},
 		},
 	}
 }
@@ -36,53 +38,58 @@ func FollowingSchema() schema.Element {
 
 func (following *Following) GetPointer(name string) (any, bool) {
 	switch name {
+
+	case "label":
+		return &following.Label, true
+
+	case "url":
+		return &following.URL, true
+
+	case "profileUrl":
+		return &following.ProfileURL, true
+
+	case "imageUrl":
+		return &following.ImageURL, true
+
+	case "collapseThreads":
+		return &following.CollapseThreads, true
+
+	case "method":
+		return &following.Method, true
+
 	case "format":
 		return &following.Format, true
-	}
-	return nil, false
-}
 
-func (following Following) GetBoolOK(name string) (bool, bool) {
+	case "secret":
+		// Do not allow access to "secret" field
+		// return &following.Secret, true
+		return nil, false
 
-	switch name {
-	case "doMoveMessages":
-		return following.DoMoveMessages, true
-	}
+	case "status":
+		return &following.Status, true
 
-	return false, false
-}
-
-func (following Following) GetIntOK(name string) (int, bool) {
-
-	switch name {
-
-	case "pollDuration":
-		return following.PollDuration, true
-
-	case "purgeDuration":
-		return following.PurgeDuration, true
-
-	case "errorCount":
-		return following.ErrorCount, true
-
-	}
-
-	return 0, false
-}
-
-func (following Following) GetInt64OK(name string) (int64, bool) {
-
-	switch name {
+	case "statusMessage":
+		return &following.StatusMessage, true
 
 	case "lastPolled":
-		return following.LastPolled, true
+		return &following.LastPolled, true
+
+	case "pollDuration":
+		return &following.PollDuration, true
+
+	case "purgeDuration":
+		return &following.PurgeDuration, true
 
 	case "nextPoll":
-		return following.NextPoll, true
+		return &following.NextPoll, true
 
+	case "errorCount":
+		return &following.ErrorCount, true
+
+	case "doMoveMessages":
+		return &following.DoMoveMessages, true
 	}
-
-	return 0, false
+	return nil, false
 }
 
 func (following Following) GetStringOK(name string) (string, bool) {
@@ -97,25 +104,6 @@ func (following Following) GetStringOK(name string) (string, bool) {
 
 	case "folderId":
 		return following.FolderID.Hex(), true
-
-	case "label":
-		return following.Label, true
-
-	case "url":
-		return following.URL, true
-
-	case "profileUrl":
-		return following.ProfileURL, true
-
-	case "method":
-		return following.Method, true
-
-	case "status":
-		return following.Status, true
-
-	case "statusMessage":
-		return following.StatusMessage, true
-
 	}
 
 	return "", false
@@ -156,22 +144,6 @@ func (following *Following) SetInt(name string, value int) bool {
 	return false
 }
 
-func (following *Following) SetInt64(name string, value int64) bool {
-
-	switch name {
-
-	case "lastPolled":
-		following.LastPolled = value
-		return true
-
-	case "nextPoll":
-		following.NextPoll = value
-		return true
-	}
-
-	return false
-}
-
 func (following *Following) SetString(name string, value string) bool {
 
 	switch name {
@@ -189,33 +161,10 @@ func (following *Following) SetString(name string, value string) bool {
 		}
 
 	case "folderId":
-		objectID, _ := primitive.ObjectIDFromHex(value)
-		following.FolderID = objectID
-		return true
-
-	case "label":
-		following.Label = value
-		return true
-
-	case "url":
-		following.URL = value
-		return true
-
-	case "profileUrl":
-		following.ProfileURL = value
-		return true
-
-	case "method":
-		following.Method = value
-		return true
-
-	case "status":
-		following.Status = value
-		return true
-
-	case "statusMessage":
-		following.StatusMessage = value
-		return true
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			following.FolderID = objectID
+			return true
+		}
 	}
 
 	return false
