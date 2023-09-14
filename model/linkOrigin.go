@@ -32,12 +32,19 @@ func (origin OriginLink) Icon() string {
 
 	case OriginTypeActivityPub:
 		return "activitypub"
-	case OriginTypeInternal:
-		return "star"
+
 	case OriginTypePoll:
 		return "rss"
+
 	case OriginTypeWebSub:
 		return "websub"
+
+	case OriginTypeReply:
+		return "reply"
+
+	case OriginTypeBoost:
+		return "star"
+
 	}
 
 	return "question-square " + origin.Type
