@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data-mongo v0.28.2
 	github.com/benpate/derp v0.28.1
 	github.com/benpate/digit v0.10.6
-	github.com/benpate/domain v0.1.0
+	github.com/benpate/domain v0.2.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.4
 	github.com/benpate/form v0.17.2
