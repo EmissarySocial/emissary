@@ -27,46 +27,34 @@ func NewActivityStreams() ActivityStreams {
 	return ActivityStreams{}
 }
 
-func (as *ActivityStreams) Refresh(innerClient *ascache.Client, actorCollection data.Collection, documentCollection data.Collection) {
-	as.innerClient = innerClient
-	as.actorCollection = actorCollection
-	as.documentCollection = documentCollection
+func (service *ActivityStreams) Refresh(innerClient *ascache.Client, actorCollection data.Collection, documentCollection data.Collection) {
+	service.innerClient = innerClient
+	service.actorCollection = actorCollection
+	service.documentCollection = documentCollection
 }
 
 /******************************************
  * Hannibal HTTP Client Interface
  ******************************************/
 
-func (as *ActivityStreams) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
-	return as.innerClient.LoadDocument(uri, defaultValue)
-}
-
-func (as *ActivityStreams) LoadActor(uri string) (streams.Document, error) {
-	return as.innerClient.LoadActor(uri)
-}
-
-func (as *ActivityStreams) RefreshActor(uri string) {
-	as.innerClient.RefreshActor(uri)
-}
-
-func (as *ActivityStreams) RefreshDocument(uri string) {
-	as.innerClient.RefreshDocument(uri)
+func (service *ActivityStreams) Load(uri string, options ...any) (streams.Document, error) {
+	return service.innerClient.Load(uri, options...)
 }
 
 /******************************************
  * Custom Behaviors
  ******************************************/
 
-func (client *ActivityStreams) PurgeCache() error {
+func (service *ActivityStreams) PurgeCache() error {
 	criteria := exp.LessThan("expires", time.Now().Unix())
 
 	// Purge all expired Actors
-	// if err := client.actorCollection.HardDelete(criteria); err != nil {
+	// if err := service.actorCollection.HardDelete(criteria); err != nil {
 	//	return derp.Wrap(err, "emissary.tools.cache.Client.PurgeCache", "Error purging actors")
 	// }
 
 	// Purge all expired Documents
-	if err := client.documentCollection.HardDelete(criteria); err != nil {
+	if err := service.documentCollection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "emissary.tools.cache.Client.PurgeCache", "Error purging documents")
 	}
 
@@ -77,30 +65,30 @@ func (client *ActivityStreams) PurgeCache() error {
  * Custom Query Methods
  ******************************************/
 
-func (client *ActivityStreams) DeleteDocumentByURL(url string) error {
-	return client.documentCollection.HardDelete(exp.Equal("uri", url))
+func (service *ActivityStreams) DeleteDocumentByURL(url string) error {
+	return service.documentCollection.HardDelete(exp.Equal("uri", url))
 }
 
-func (client *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
 		AndLessThan("published", maxDate)
 
-	results, err := client.documentQuery(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
+	results, err := service.documentQuery(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
 
-	return streams.NewDocument(results.Reverse(), streams.WithClient(client)),
+	return streams.NewDocument(results.Reverse(), streams.WithClient(service)),
 		derp.Wrap(err, "emissary.tools.cache.Client.QueryRepliesAfterDate", "Error querying database")
 }
 
-func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
 
 	criteria := exp.
 		Equal("inReplyTo", inReplyTo).
 		AndGreaterThan("published", minDate)
 
-	results, err := client.documentQuery(criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
+	results, err := service.documentQuery(criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
 
-	return streams.NewDocument(results, streams.WithClient(client)),
+	return streams.NewDocument(results, streams.WithClient(service)),
 		derp.Wrap(err, "emissary.tools.cache.Client.QueryRepliesAfterDate", "Error querying database")
 }
 
@@ -109,18 +97,18 @@ func (client *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate i
  ******************************************/
 
 // iterator reads from the database and returns a data.Iterator with the result values.
-func (client *ActivityStreams) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return client.documentCollection.Iterator(criteria, options...)
+func (service *ActivityStreams) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.documentCollection.Iterator(criteria, options...)
 }
 
 // query reads from the database and returns a slice of streams.Document values
-func (client *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) (sliceof.Object[mapof.Any], error) {
+func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) (sliceof.Object[mapof.Any], error) {
 
-	if client.documentCollection == nil {
+	if service.documentCollection == nil {
 		return make(sliceof.Object[mapof.Any], 0), nil
 	}
 
-	iterator, err := client.documentIterator(criteria, options...)
+	iterator, err := service.documentIterator(criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "emissary.tools.cache.Client.Query", "Error querying database")

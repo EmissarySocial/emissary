@@ -135,7 +135,7 @@ func (task TaskCreateWebSubFollower) validate(follower *model.Follower) error {
 		Query("hub.topic", task.topic).
 		Query("hub.challenge", challenge).
 		Query("hub.lease_seconds", strconv.Itoa(task.leaseSeconds)).
-		Response(&body, nil)
+		Result(&body)
 
 	if err := transaction.Send(); err != nil {
 		return derp.Wrap(err, location, "Error sending verification request", follower.ID)

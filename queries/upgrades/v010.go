@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -16,7 +15,6 @@ func Version10(ctx context.Context, session *mongo.Database) error {
 	fmt.Println("... Version 10")
 
 	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) error {
-		spew.Dump(record)
 		if attributedTo, ok := record["attributedTo"]; ok {
 			if attributedToSlice, ok := attributedTo.([]any); ok {
 				if len(attributedToSlice) > 0 {
@@ -34,7 +32,6 @@ func Version10(ctx context.Context, session *mongo.Database) error {
 	}
 
 	return ForEachRecord(session.Collection("Inbox"), func(record mapof.Any) error {
-		spew.Dump(record)
 		if attributedTo, ok := record["attributedTo"]; ok {
 			if attributedToSlice, ok := attributedTo.([]any); ok {
 				if len(attributedToSlice) > 0 {

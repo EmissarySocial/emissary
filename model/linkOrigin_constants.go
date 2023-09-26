@@ -1,5 +1,6 @@
 package model
 
+/*
 // OriginTypeActivityPub identifies a link that was created by an ActivityPub push
 const OriginTypeActivityPub = "ACTIVITYPUB"
 
@@ -14,12 +15,18 @@ const OriginTypeWebMention = "WEBMENTION"
 
 // OriginTypeWebSub identifies a link that was created by a WebSub push
 const OriginTypeWebSub = "WEBSUB"
+*/
+// OriginTypeDirect identifies a link that was created by directly by the Author.
+const OriginTypeDirect = "DIRECT"
 
-// OriginTypeMention identifies a link that was created by a mention of an existing post
-const OriginTypeMention = "MENTION"
-
-// OriginTypeReply identifies a link that was created by a reply to an existing post
+// OriginTypeReply identifies a link that was retrieved because of a "Reply" to an existing post
 const OriginTypeReply = "REPLY"
 
-// OriginTypeBoost identifies a link that was created by a boost of an existing post
-const OriginTypeBoost = "BOOST"
+// OriginTypeAnnounce identifies a link that was retrieved because of a "Announce" of an existing post
+const OriginTypeAnnounce = "ANNOUNCE"
+
+// OriginTypeBoost identifies a link that was retrieved because of a "Like" of an existing post
+const OriginTypeLike = "LIKE"
+
+// OriginTypeBoost identifies a link that was retrieved because of a "Dislike" of an existing post
+const OriginTypeDislike = "DISLIKE"

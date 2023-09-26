@@ -12,17 +12,19 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	collection   data.Collection
-	userService  *User
-	blockService *Block
-	queue        *queue.Queue
-	host         string
+	collection             data.Collection
+	userService            *User
+	blockService           *Block
+	activityStreamsService *ActivityStreams
+	queue                  *queue.Queue
+	host                   string
 }
 
 // NewFollower returns a fully initialized Follower service
@@ -35,10 +37,11 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, queue *queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, activityStreamsService *ActivityStreams, queue *queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
 	service.blockService = blockService
+	service.activityStreamsService = activityStreamsService
 	service.queue = queue
 	service.host = host
 }
@@ -361,6 +364,18 @@ func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, 
 		AndEqual("actor.profileUrl", followerURL)
 
 	return service.Load(criteria, follower)
+}
+
+// RemoteActor returns the ActivityStreams document for a remote Actor for a specific Follower
+func (service *Follower) RemoteActor(follower *model.Follower) (streams.Document, error) {
+
+	// RULE: Guarantee that the Follower is using ActivityPub for updates
+	if follower.Method != model.FollowMethodActivityPub {
+		return streams.NilDocument(), derp.NewInternalError("service.Follower.RemoteActor", "Follower must use ActivityPub method", follower)
+	}
+
+	// Return the remote Actor's profile document
+	return service.activityStreamsService.Load(follower.Actor.ProfileURL, sherlock.AsActor())
 }
 
 /******************************************

@@ -212,6 +212,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionFollower),
 			factory.User(),
 			factory.Block(),
+			factory.ActivityStreams(),
 			factory.Queue(),
 			factory.Host(),
 		)
@@ -245,6 +246,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.mentionService.Refresh(
 			factory.collection(CollectionMention),
 			factory.Block(),
+			factory.ActivityStreams(),
 			factory.Host(),
 		)
 

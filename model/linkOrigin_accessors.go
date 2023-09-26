@@ -10,11 +10,11 @@ func OriginLinkSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
+			"type":        schema.String{Enum: []string{OriginTypeDirect, OriginTypeLike, OriginTypeDislike, OriginTypeReply, OriginTypeAnnounce}},
 			"followingId": schema.String{Format: "objectId"},
-			"type":        schema.String{Enum: []string{OriginTypeActivityPub, OriginTypePoll, OriginTypeRSSCloud, OriginTypeWebMention, OriginTypeMention, OriginTypeReply, OriginTypeBoost}},
-			"url":         schema.String{Format: "url"},
 			"label":       schema.String{MaxLength: 128},
-			"summary":     schema.String{MaxLength: 1024},
+			"url":         schema.String{Format: "url"},
+			"profileUrl":  schema.String{Format: "url"},
 			"imageUrl":    schema.String{Format: "url"},
 		},
 	}
@@ -24,27 +24,34 @@ func OriginLinkSchema() schema.Element {
  * Getter Interfaces
  *********************************/
 
+func (origin *OriginLink) GetPointer(name string) (any, bool) {
+	switch name {
+
+	case "type":
+		return &origin.Type, true
+
+	case "label":
+		return &origin.Label, true
+
+	case "url":
+		return &origin.URL, true
+
+	case "profileUrl":
+		return &origin.ProfileURL, true
+
+	case "imageUrl":
+		return &origin.ImageURL, true
+
+	}
+
+	return nil, false
+}
+
 func (origin *OriginLink) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "followingId":
 		return origin.FollowingID.Hex(), true
-
-	case "type":
-		return origin.Type, true
-
-	case "url":
-		return origin.URL, true
-
-	case "label":
-		return origin.Label, true
-
-	case "summary":
-		return origin.Summary, true
-
-	case "imageUrl":
-		return origin.ImageURL, true
-
 	}
 
 	return "", false
@@ -62,26 +69,6 @@ func (origin *OriginLink) SetString(name string, value string) bool {
 			origin.FollowingID = objectID
 			return true
 		}
-
-	case "type":
-		origin.Type = value
-		return true
-
-	case "url":
-		origin.URL = value
-		return true
-
-	case "label":
-		origin.Label = value
-		return true
-
-	case "summary":
-		origin.Summary = value
-		return true
-
-	case "imageUrl":
-		origin.ImageURL = value
-		return true
 	}
 
 	return false

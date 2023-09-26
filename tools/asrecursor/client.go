@@ -4,7 +4,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
 )
 
 type Recursor struct {
@@ -22,35 +21,24 @@ func New(innerClient streams.Client, maxDepth int) *Recursor {
 	return result
 }
 
-func (client *Recursor) LoadActor(uri string) (streams.Document, error) {
-	result, err := client.innerClient.LoadActor(uri)
+func (client *Recursor) Load(uri string, options ...any) (streams.Document, error) {
+	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
 		return result, derp.Wrap(err, "asrecursor.Load", "Error loading actor from inner client")
 	}
 
-	client.recurseCollection(result, "outbox", 0)
-	client.recurseCollection(result, "following", 0)
-	client.recurseCollection(result, "followers", 0)
-	client.recurseCollection(result, "liked", 0)
-	client.recurseCollection(result, "blocked", 0)
+	// Actor objects
+	client.recurseCollection(result, vocab.PropertyBlocked, 0)
+	client.recurseCollection(result, vocab.PropertyFollowers, 0)
+	client.recurseCollection(result, vocab.PropertyFollowing, 0)
+	client.recurseCollection(result, vocab.PropertyLiked, 0)
+	client.recurseCollection(result, vocab.PropertyOutbox, 0)
 
-	return result, nil
-}
+	// Document objects
+	client.recurseCollection(result, vocab.PropertyContext, 0)
+	client.recurseCollection(result, vocab.PropertyInReplyTo, 0)
 
-func (client *Recursor) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
-
-	result, err := client.innerClient.LoadDocument(uri, defaultValue)
-
-	if err != nil {
-		return result, derp.Wrap(err, "asrecursor.Load", "Error loading document from inner client")
-	}
-
-	if client.maxDepth > 0 {
-		go client.recurse(result, 0)
-	}
-
-	result.WithOptions(streams.WithClient(client))
 	return result, nil
 }
 
@@ -74,7 +62,7 @@ func (client *Recursor) recurse(document streams.Document, depth int) {
 	// RULE: If "document" is only a string/id, then load it.
 	if document.IsString() {
 		var err error
-		document, err = client.innerClient.LoadDocument(document.ID(), mapof.NewAny())
+		document, err = client.innerClient.Load(document.ID())
 
 		if err != nil {
 			return

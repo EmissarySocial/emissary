@@ -17,14 +17,14 @@
 		{{- range $content, $count := $countByContent -}}
 			{{ if eq $content $userResponse -}}
 			<span hx-post="{{$internalURL}}/set-response" hx-vals='{"type":", "content":"}' hx-swap="none" hx-push-url="false"
-				role="button" class="response-button selected turboclick" tabIndex="0">{{$content}} {{$count}}</span>
+				role="button" class="response-button selected turboclick" style="margin-right:8px;" tabIndex="0">{{$content}} {{$count}}</span>
 			{{- else -}}
 			<span hx-post="{{$internalURL}}/set-response" hx-vals='{"type":"LIKE", "content":"{{$content}}"}' hx-swap="none"
-				hx-push-url="false" role="button" class="response-button turboclick" tabIndex="0">{{$content}} {{$count}}</span>
+				hx-push-url="false" role="button" class="response-button turboclick" style="margin-right:8px;" tabIndex="0">{{$content}} {{$count}}</span>
 			{{- end -}}
 		{{- end -}}
 
-		<span role="button" hx-get="{{.InternalURL}}/response-icons" script="install tooltipContainer" style="padding:8px 16px;" tabIndex="0">
+		<span role="button" hx-get="{{.InternalURL}}/response-icons" script="install tooltipContainer" style="padding:8px 0px;" tabIndex="0">
 			{{- if eq $userResponse "" -}}
 				{{- icon "add-emoji" -}}
 			{{- else -}}

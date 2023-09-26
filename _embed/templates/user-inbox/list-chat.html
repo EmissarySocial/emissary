@@ -1,3 +1,10 @@
+<div class="flex-row" style="margin-bottom:8px;">
+	<div style="width:64px;"></div>
+	<div>
+		{{- template "origin" .Origin -}}
+	</div>
+</div>
+
 <div class="flex-row">
 
 	<div style="width:64px; flex-grow:0; flex-shrink:0;">
@@ -11,17 +18,13 @@
 		<div class="ellipsis">
 			<span class="bold black">{{.AttributedTo.Name}}</span>
 			<span class="text-gray nowrap">
-				&nbsp;
-				{{ icon .Origin.Icon }}
 				{{ .PublishDate | tinyDate }}
 			</span>
-
-			{{- if ne "" .InReplyTo -}}
-				<span class="bold text-gray">
-					{{icon "reply"}} Replying to ...
-				</span>
-			{{- end -}}
 		</div>
+
+		{{- if ne "" .Label -}}
+			<div class="bold text-black space-above">{{.Label}}</div>
+		{{- end -}}
 
 		<div>
 			{{- .ContentOrSummary | html -}}

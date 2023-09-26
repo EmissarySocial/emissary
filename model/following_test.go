@@ -21,7 +21,6 @@ func TestFollowingSchema(t *testing.T) {
 		{"imageUrl", "https://other.url/image.png", nil},
 		{"collapseThreads", "false", false},
 		{"method", FollowMethodActivityPub, nil},
-		{"format", FollowingFormatActivityStream, nil},
 		{"status", FollowingStatusSuccess, nil},
 		{"statusMessage", "STATUS-MESSAGE", nil},
 		{"lastPolled", "123", int64(123)},

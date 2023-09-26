@@ -7,12 +7,12 @@ import (
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
+	Type        string             `json:"type"         bson:"type,omitempty"`        // The type of message that this document (DIRECT, LIKE, DISLIKE, REPLY, ANNOUNCE)
 	FollowingID primitive.ObjectID `json:"followinglId" bson:"followingId,omitempty"` // Unique ID of a document in this database
-	Type        string             `json:"type"       bson:"type,omitempty"`          // The type of service that generated this document (RSS, RSS-CLOUD, ACTIVITYPUB, TWITTER, etc.)
-	URL         string             `json:"url"        bson:"url,omitempty"`           // Public URL of the origin
-	Label       string             `json:"label"      bson:"label,omitempty"`         // Human-readable label text of the origin
-	Summary     string             `json:"summary"    bson:"summary,omitempty"`       // Human-readable summary text of the origin
-	ImageURL    string             `json:"imageUrl"   bson:"imageUrl,omitempty"`      // URL of the cover image for this document's image
+	Label       string             `json:"label"        bson:"label,omitempty"`       // Human-friendly label of the origin
+	URL         string             `json:"url"          bson:"url,omitempty"`         // Public URL of the origin
+	ProfileURL  string             `json:"profileUrl"   bson:"profileUrl,omitempty"`  // URL of the profile image for this document's image
+	ImageURL    string             `json:"imageUrl"     bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
 }
 
 // NewOriginLink returns a fully initialized OriginLink
@@ -20,9 +20,18 @@ func NewOriginLink() OriginLink {
 	return OriginLink{}
 }
 
+// Equals returns TRUE if the URL for this OriginLink is the same as the URL for another OriginLink
+func (origin OriginLink) Equals(other OriginLink) bool {
+	return origin.URL == other.URL
+}
+
 // IsEmpty returns TRUE if this OriginLink is empty
 func (origin OriginLink) IsEmpty() bool {
 	return origin.FollowingID.IsZero() && (origin.URL == "")
+}
+
+func (origin OriginLink) NotEmpty() bool {
+	return !origin.IsEmpty()
 }
 
 // Icon returns the standard icon label for this origin
@@ -30,22 +39,21 @@ func (origin OriginLink) Icon() string {
 
 	switch origin.Type {
 
-	case OriginTypeActivityPub:
-		return "activitypub"
-
-	case OriginTypePoll:
-		return "rss"
-
-	case OriginTypeWebSub:
-		return "websub"
+	case OriginTypeDirect:
+		return "user"
 
 	case OriginTypeReply:
 		return "reply"
 
-	case OriginTypeBoost:
-		return "star"
+	case OriginTypeLike:
+		return "thumbs-up"
 
+	case OriginTypeDislike:
+		return "thumbs-down"
+
+	case OriginTypeAnnounce:
+		return "star"
 	}
 
-	return "question-square " + origin.Type
+	return "question-square"
 }

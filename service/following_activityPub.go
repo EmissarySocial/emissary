@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
 )
@@ -20,6 +19,13 @@ func (service *Following) connect_ActivityPub(following *model.Following, actor 
 	following.ProfileURL = actor.ID()
 	following.StatusMessage = "Pending ActivityPub connection"
 
+	// Try to get the remote actor (the account that we are following)
+	remoteActor, err := service.RemoteActor(following)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error getting remote actor", following)
+	}
+
 	// Try to get the Actor (with encryption keys)
 	localActor, err := service.userService.ActivityPubActor(following.UserID)
 
@@ -28,7 +34,7 @@ func (service *Following) connect_ActivityPub(following *model.Following, actor 
 	}
 
 	// Try to send the ActivityPub follow request
-	if err := pub.SendFollow(localActor, service.ActivityPubID(following), following.ProfileURL); err != nil {
+	if err := pub.SendFollow(localActor, service.ActivityPubID(following), remoteActor); err != nil {
 		return false, derp.Wrap(err, location, "Error sending follow request", following)
 	}
 
@@ -36,29 +42,30 @@ func (service *Following) connect_ActivityPub(following *model.Following, actor 
 	return true, nil
 }
 
+// disconnect_ActivityPub disconnects from an ActivityPub source by sending an "Undo" request
+// that references the original "Follow" request per spec.
+// https://www.w3.org/TR/activitypub/#undo-activity-outbox
 func (service *Following) disconnect_ActivityPub(following *model.Following) error {
 
 	const location = "service.Following.disconnect_ActivityPub"
 
-	// Search for an ActivityPub link for this resource
-	remoteProfile := following.Links.Find(
-		digit.NewLink(digit.RelationTypeSelf, model.MimeTypeActivityPub, ""),
-	)
+	// Try to get the local Actor (the user who initiated the follow)
+	localActor, err := service.userService.ActivityPubActor(following.UserID)
 
-	// if no ActivityPub link, then exit.
-	if remoteProfile.IsEmpty() {
-		return nil
-	}
-
-	// Try to get the Actor (with encryption keys)
-	actor, err := service.userService.ActivityPubActor(following.UserID)
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
 	}
 
+	// Try to get the Remote Actor (the account that we are following)
+	remoteActor, err := service.RemoteActor(following)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting remote actor", following)
+	}
+
 	// Try to send the ActivityPub Undo request
-	if err := pub.SendUndo(actor, service.AsJSONLD(following), following.URL); err != nil {
-		return derp.Wrap(err, location, "Error sending follow request", following)
+	if err := pub.SendUndo(localActor, service.AsJSONLD(following), remoteActor); err != nil {
+		return derp.Wrap(err, location, "Error sending follow request", remoteActor.Value())
 	}
 
 	return nil

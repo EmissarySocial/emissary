@@ -9,28 +9,6 @@ func WithPurgeFrequency(seconds int64) OptionFunc {
 	}
 }
 
-// WithActorCache option sets caching values for Actors
-func WithActorCache(defaultValue int, minimum int, maximum int) OptionFunc {
-	return func(client *Client) {
-		client.actorCache = CacheConfig{
-			DefaultSeconds: defaultValue,
-			MinimumSeconds: minimum,
-			MaximumSeconds: maximum,
-		}
-	}
-}
-
-// WithDocumentCache option sets caching values for Documents
-func WithDocumentCache(defaultValue int, minimum int, maximum int) OptionFunc {
-	return func(client *Client) {
-		client.documentCache = CacheConfig{
-			DefaultSeconds: defaultValue,
-			MinimumSeconds: minimum,
-			MaximumSeconds: maximum,
-		}
-	}
-}
-
 // WithReadWrite option sets the client to read+write mode
 func WithReadWrite() OptionFunc {
 	return func(client *Client) {

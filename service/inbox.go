@@ -1,6 +1,7 @@
 package service
 
 import (
+	"math"
 	"sync"
 	"time"
 
@@ -249,9 +250,19 @@ func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.O
 	return derp.NewNotFoundError("service.Inbox.LoadByRank", "Inbox message not found", userID, folderID, rankExpression)
 }
 
+// LoadByURL returns the first message that matches the provided UserID and URL
 func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url)
+
+	return service.Load(criteria, result)
+}
+
+// LoadUnreadByURL returns the first UNREAD message that matches the provided UserID and URL
+func (service *Inbox) LoadUnreadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
+	criteria := exp.Equal("userId", userID).
+		AndEqual("url", url).
+		AndEqual("readDate", math.MaxInt64)
 
 	return service.Load(criteria, result)
 }
@@ -331,9 +342,9 @@ func (service *Inbox) MarkRead(userID primitive.ObjectID, messageID primitive.Ob
 
 	// Update the ReadDate timestamp
 	if read {
-		message.ReadDate = time.Now().Unix()
+		message.ReadDate = time.Now().UnixMilli()
 	} else {
-		message.ReadDate = 0
+		message.ReadDate = math.MaxInt64
 	}
 
 	// Save the record to the database

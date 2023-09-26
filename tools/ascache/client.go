@@ -3,19 +3,16 @@ package ascache
 import (
 	"time"
 
-	"github.com/benpate/cachecontrol"
+	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/mapof"
 )
 
 type Client struct {
 	session        data.Session
 	innerClient    streams.Client
-	actorCache     CacheConfig
-	documentCache  CacheConfig
 	purgeFrequency int64
 	cacheMode      string
 }
@@ -25,16 +22,8 @@ func New(session data.Session, innerClient streams.Client, options ...OptionFunc
 
 	// Create a default client
 	result := Client{
-		session:     session,
-		innerClient: innerClient,
-		actorCache: CacheConfig{
-			MinimumSeconds: 60 * 60 * 1,      // Default minimum expiration is 1 hours
-			MaximumSeconds: 60 * 60 * 24 * 1, // Default maximum expiration is 1 day
-		},
-		documentCache: CacheConfig{
-			MinimumSeconds: 60 * 60 * 24 * 30,  // Default minimum expiration is 30 days
-			MaximumSeconds: 60 * 60 * 24 * 365, // Default maximum expiration is 365 days
-		},
+		session:        session,
+		innerClient:    innerClient,
 		purgeFrequency: 60 * 60 * 4, // Default purge frequency is 4 hours
 		cacheMode:      CacheModeReadWrite,
 	}
@@ -88,22 +77,29 @@ func (client *Client) start() {
  * Hannibal HTTP Client Methods
  ******************************************/
 
-func (client *Client) LoadActor(uri string) (streams.Document, error) {
+func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
 
-	// Search the cache for the document
-	cachedValue := NewCachedValue()
-	if err := client.loadByURI(CollectionActor, uri, &cachedValue); err == nil {
+	config := NewLoadConfig(options...)
 
-		if cachedValue.ShouldRefresh() {
-			go client.RefreshActor(uri)
+	// If we're not forcing the cache to reload, then try to load from the cache first
+	if client.IsReadable() && config.isCacheAllowed() {
+
+		// Search the cache for the document
+		cachedValue := NewCachedValue()
+		if err := client.loadByURI(CollectionActor, uri, &cachedValue); err == nil {
+
+			// If we're allowed to write to the cache, then do it.
+			if client.IsWritable() && cachedValue.ShouldRevalidate() {
+				go client.revalidate(uri, options...)
+			}
+
+			result := client.asDocument(cachedValue)
+			return result, nil
 		}
-
-		result := client.asDocument(cachedValue)
-		return result, nil
 	}
 
 	// Pass the request to the inner client
-	result, err := client.innerClient.LoadActor(uri)
+	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
 		return result, derp.Wrap(err, "ascache.Client.LoadActor", "error loading document from inner client", uri)
@@ -113,74 +109,10 @@ func (client *Client) LoadActor(uri string) (streams.Document, error) {
 
 	// Try to save the new value asynchronously
 	if client.IsWritable() {
-		go client.save(CollectionActor, uri, result, client.actorCache)
+		go client.save(CollectionActor, uri, result)
 	}
 
 	return result, nil
-}
-
-func (client *Client) LoadDocument(uri string, defaultValue map[string]any) (streams.Document, error) {
-
-	// Search the cache for the document
-	cachedValue := NewCachedValue()
-	if err := client.loadByURI(CollectionDocument, uri, &cachedValue); err == nil {
-
-		if cachedValue.ShouldRefresh() {
-			go client.RefreshDocument(uri)
-		}
-
-		return client.asDocument(cachedValue), nil
-	}
-
-	// Pass the request to the inner client
-	result, err := client.innerClient.LoadDocument(uri, defaultValue)
-
-	if err != nil {
-		return result, derp.Wrap(err, "ascache.Client.LoadDocument", "error loading document from inner client", uri)
-	}
-
-	result.WithOptions(streams.WithClient(client))
-
-	// Try to save the new value asynchronously
-	if client.IsWritable() {
-		go client.save(CollectionDocument, uri, result, client.documentCache)
-	}
-
-	return result, nil
-}
-
-/******************************************
- * Other Cache Management Methods
- ******************************************/
-
-// RefreshActor forces an Actor to be reloaded from the inner client.  The result
-// is saved to the cache.
-func (client *Client) RefreshActor(uri string) {
-
-	// If the client is not writable, then don't try to refresh the cache
-	if client.NotWritable() {
-		return
-	}
-
-	// Pass the request to the inner client
-	if result, err := client.innerClient.LoadActor(uri); err == nil {
-		client.save(CollectionActor, uri, result, client.actorCache)
-	}
-}
-
-// RefreshDocument forces a Document to be reloaded from the inner client.  The result
-// is saved to the cache.
-func (client *Client) RefreshDocument(uri string) {
-
-	// If the client is not writable, then don't try to refresh the cache
-	if client.NotWritable() {
-		return
-	}
-
-	// Pass the request to the inner client
-	if result, err := client.innerClient.LoadDocument(uri, mapof.NewAny()); err == nil {
-		client.save(CollectionDocument, uri, result, client.documentCache)
-	}
 }
 
 func (client *Client) PurgeByURI(collection string, uri string) error {
@@ -198,17 +130,31 @@ func (client *Client) PurgeByURI(collection string, uri string) error {
 	// Woot woot
 	return nil
 }
-func (client *Client) save(collection string, uri string, document streams.Document, cacheConfig CacheConfig) {
 
-	// If the client is not writable, then don't try to save the document
+/******************************************
+ * Other Cache Management Methods
+ ******************************************/
+
+// revalidate reloads a document from the source even if it has not yet expired.
+// This potentially updates the cache timeout value, keeping the document
+// fresh in the cache for longer.
+func (client *Client) revalidate(uri string, options ...any) {
+
+	// If the client is not writable, then don't try to refresh the cache
 	if client.NotWritable() {
 		return
 	}
 
-	// Use response headers to if we can cache this document
-	expireSeconds := client.calcExpireSeconds(document.MetaString("cache-control"), cacheConfig)
+	// Pass the request to the inner client
+	if result, err := client.innerClient.Load(uri, options...); err == nil {
+		client.save(CollectionActor, uri, result)
+	}
+}
 
-	if expireSeconds == 0 {
+func (client *Client) save(collection string, uri string, document streams.Document) {
+
+	// If the client is not writable, then don't try to save the document
+	if client.NotWritable() {
 		return
 	}
 
@@ -216,21 +162,22 @@ func (client *Client) save(collection string, uri string, document streams.Docum
 	cachedValue := NewCachedValue()
 	cachedValue.URI = uri
 	cachedValue.Original = document.Map()
-	cachedValue.Metadata = *document.Meta()
-
-	if publishedDate := document.Published(); !publishedDate.IsZero() {
-		cachedValue.PublishedDate = publishedDate.Unix()
-	} else {
-		cachedValue.PublishedDate = time.Now().Unix()
-	}
+	cachedValue.HTTPHeader = document.HTTPHeader()
 
 	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
 		cachedValue.InReplyTo = inReplyTo.String()
 	}
 
 	// Calculate caching rules
-	cachedValue.ExpiresDate = time.Now().Add(time.Second * time.Duration(expireSeconds)).Unix()
-	cachedValue.RefreshesDate = client.calcRefreshDate(expireSeconds)
+	cacheControl := cacheheader.Parse(cachedValue.HTTPHeader)
+
+	if cacheControl.NotCacheAllowed() {
+		return
+	}
+
+	cachedValue.calcPublished()
+	cachedValue.calcExpires(cacheControl)
+	cachedValue.calcRevalidates(cacheControl)
 
 	// Try to remove any existing documents with the same URI
 	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
@@ -247,68 +194,16 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 	result := streams.NewDocument(
 		cachedValue.Original,
 		streams.WithClient(client),
+		streams.WithHTTPHeader(cachedValue.HTTPHeader),
 	)
 
-	result.MetaSet(cachedValue.Metadata)
-
-	for key, value := range cachedValue.ResponseCounts {
-		result.MetaSetInt(key, value)
-	}
+	/*
+		for key, value := range cachedValue.ResponseCounts {
+			result.MetaSetInt(key, value)
+		}
+	*/
 
 	return result
-}
-
-// calcExpireSeconds calculates the number of seconds to cache this document
-func (client *Client) calcExpireSeconds(cacheString string, cacheConfig CacheConfig) int {
-
-	parsed := cachecontrol.Parse(cacheString)
-
-	// If we're told not to cache, then don't cache
-	// though we technically could, but there's no "revalidation" yet, so just screw it.
-	// TODO: LOW: possibly implement revalidation per:
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#no-cache
-	if ok, _ := parsed.NoCache(); ok {
-		return 0
-	}
-
-	// If we're told not to store, then don't cache
-	if parsed.NoStore() {
-		return 0
-	}
-
-	// TODO: handle the "age" header for more precise caching:
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Age
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#max-age
-
-	// By default, try to cache for the maximum duration
-	result := cacheConfig.DefaultSeconds
-
-	// If a max-age is defined, then use that value
-	if maxAge := parsed.MaxAge(); maxAge > 0 {
-		result = int(maxAge.Seconds())
-	}
-
-	// Don't cache for any duration less than the minimum
-	if result > cacheConfig.MaximumSeconds {
-		result = cacheConfig.MaximumSeconds
-	}
-
-	// Don't cache for any duration less than the maximum
-	if result < cacheConfig.MinimumSeconds {
-		result = cacheConfig.MinimumSeconds
-	}
-
-	// This should be the "acceptable" amount of time to cache the document.
-	return result
-}
-
-// calcRefreshDuration calculates the number of seconds to wait before "refreshing" a document.
-// "Refreshing" means to continue using the cached document, but start a background process to
-// update the cached value anyway.  This is currently set at 1/3 of the original cache duration, so
-// it should mean two (at most) extra HTTP calls compared to caching the document for the full duration.
-func (client *Client) calcRefreshDate(cacheSeconds int) int64 {
-	refreshSeconds := cacheSeconds / 3
-	return time.Now().Add(time.Duration(refreshSeconds) * time.Second).Unix()
 }
 
 /******************************************
@@ -328,6 +223,16 @@ func (client *Client) loadByURI(collection string, uri string, document *CachedV
 	}
 
 	return nil
+}
+
+// IsReadWritable returns TRUE if the cache can be read and written
+func (client *Client) IsReadWritable() bool {
+	return client.cacheMode == CacheModeReadWrite
+}
+
+// NotReadWritable returns TRUE if the cache cannot be read or written
+func (client *Client) NotReadWritable() bool {
+	return client.cacheMode != CacheModeReadWrite
 }
 
 // IsReadable returns TRUE if the client is configured to read from the cache

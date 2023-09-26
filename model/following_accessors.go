@@ -19,7 +19,6 @@ func FollowingSchema() schema.Element {
 			"imageUrl":        schema.String{Format: "url", MaxLength: 1024},
 			"collapseThreads": schema.Boolean{},
 			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
-			"format":          schema.String{Enum: []string{FollowingFormatActivityStream, FollowingFormatRSS, FollowingFormatAtom, FollowingFormatJSONFeed, FollowingFormatMicroFormats}},
 			"status":          schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage":   schema.String{MaxLength: 1024},
 			"lastPolled":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
@@ -27,7 +26,6 @@ func FollowingSchema() schema.Element {
 			"purgeDuration":   schema.Integer{Minimum: null.NewInt64(0)},
 			"nextPoll":        schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
 			"errorCount":      schema.Integer{Minimum: null.NewInt64(0)},
-			"doMoveMessages":  schema.Boolean{},
 		},
 	}
 }
@@ -57,9 +55,6 @@ func (following *Following) GetPointer(name string) (any, bool) {
 	case "method":
 		return &following.Method, true
 
-	case "format":
-		return &following.Format, true
-
 	case "secret":
 		// Do not allow access to "secret" field
 		// return &following.Secret, true
@@ -85,10 +80,8 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "errorCount":
 		return &following.ErrorCount, true
-
-	case "doMoveMessages":
-		return &following.DoMoveMessages, true
 	}
+
 	return nil, false
 }
 
@@ -112,37 +105,6 @@ func (following Following) GetStringOK(name string) (string, bool) {
 /******************************************
  * Setter Interfaces
  ******************************************/
-
-func (following *Following) SetBool(name string, value bool) bool {
-
-	switch name {
-	case "doMoveMessages":
-		following.DoMoveMessages = value
-		return true
-	}
-
-	return false
-}
-
-func (following *Following) SetInt(name string, value int) bool {
-
-	switch name {
-
-	case "pollDuration":
-		following.PollDuration = value
-		return true
-
-	case "purgeDuration":
-		following.PurgeDuration = value
-		return true
-
-	case "errorCount":
-		following.ErrorCount = value
-		return true
-	}
-
-	return false
-}
 
 func (following *Following) SetString(name string, value string) bool {
 

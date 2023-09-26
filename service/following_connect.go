@@ -2,11 +2,10 @@ package service
 
 import (
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
@@ -18,7 +17,8 @@ import (
 func (service *Following) RefreshAndConnect(following model.Following) error {
 
 	// Try to refresh the Actor in the cache
-	service.httpClient.RefreshActor(following.URL)
+	// nolint:errcheck
+	service.activityStreams.Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
 
 	// Try to connect the Following record
 	if err := service.Connect(following); err != nil {
@@ -40,7 +40,7 @@ func (service *Following) Connect(following model.Following) error {
 
 	// Try to load the actor from the remote server.  Errors mean that this actor cannot
 	// be resolved, so we should mark the Following as a "Failure".
-	actor, err := service.httpClient.LoadActor(following.URL)
+	actor, err := service.activityStreams.Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
 		if innerError := service.SetStatusFailure(&following, err.Error()); err != nil {
@@ -53,38 +53,49 @@ func (service *Following) Connect(following model.Following) error {
 	following.Label = actor.Name()
 	following.ProfileURL = actor.ID()
 	following.ImageURL = actor.IconOrImage().URL()
-	following.Format = strings.ToUpper(actor.Meta().GetString("format"))
 
 	// ...and mark the status as "Success"
 	if err := service.SetStatusSuccess(&following); err != nil {
 		return derp.Wrap(err, location, "Error setting status", following)
 	}
 
+	// Try to load an initial list of messages from the actor's outbox
+	service.connect_LoadMessages(&following, &actor)
+
 	// Try to connect to push services (WebSub, ActivityPub, etc)
-	go service.connect_PushServices(&following, &actor)
+	service.connect_PushServices(&following, &actor)
+
+	// Kool-Aid man says "ooooohhh yeah!"
+	return nil
+}
+
+func (service *Following) connect_LoadMessages(following *model.Following, actor *streams.Document) {
+
+	const location = "service.Following.connect_LoadMessages"
 
 	// Import the actor's outbox and messages
-	outbox := actor.Outbox()
-	done := make(chan struct{})
-	documentChan := collections.Documents(outbox, done)   // start reading documents from the outbox
-	documentChan = channel.Limit(256, documentChan, done) // Limit to 128 documents
-	documents := channel.Slice(documentChan)              // Convert the channel into a slice
+	outbox, err := actor.Outbox().Load()
 
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading outbox", actor))
+		return
+	}
+
+	done := make(chan struct{})
+	documentChan := collections.Documents(outbox, done)  // start reading documents from the outbox
+	documentChan = channel.Limit(12, documentChan, done) // Limit to last 12 documents
+	documents := channel.Slice(documentChan)             // Convert the channel into a slice
+
+	// Sort the collection chronologically so that they're imported in the correct order.
 	sort.Slice(documents, func(a int, b int) bool {
 		return documents[a].Published().Before(documents[b].Published())
 	})
 
 	// Try to add each message into the database unitl done
-	for index, documentOrLink := range documents {
-
-		// Traverse JSON-LD documents if necessary
-		document := getActualDocument(documentOrLink)
-
-		// RULE: The six most recent records in the data set are not marked "read"
-		markRead := (index < (len(documents) - 6))
+	for _, document := range documents {
 
 		// Try to save the document to the database.
-		if err := service.saveMessage(following, document, markRead); err != nil {
+		if err := service.saveMessage(*following, document); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error saving document", document))
 		}
 
@@ -94,81 +105,29 @@ func (service *Following) Connect(following model.Following) error {
 
 	// Recalculate Folder unread counts
 	if err := service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID); err != nil {
-		return derp.Wrap(err, location, "Error recalculating unread count")
+		derp.Report(derp.Wrap(err, location, "Error recalculating unread count"))
 	}
-
-	// Kool-Aid man says "ooooohhh yeah!"
-	return nil
-}
-
-// saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
-func (service *Following) saveMessage(following model.Following, document streams.Document, markRead bool) error {
-
-	const location = "service.Following.saveMessage"
-
-	// Load and refine the document from its actual URL
-	document, err := service.httpClient.LoadDocument(document.ID(), document.Map())
-
-	if err != nil {
-		wrappedError := derp.Wrap(err, location, "Error loading document from source URL", following, document.Value())
-		if isDocumentAdequate(document) {
-			return wrappedError
-		} else {
-			derp.Report(wrappedError)
-		}
-	}
-
-	// Try to find an existing Message that matches the document ID
-	message := model.NewMessage()
-
-	if err := service.inboxService.LoadByURL(following.UserID, document.ID(), &message); err != nil {
-		if !derp.NotFound(err) {
-			return derp.Wrap(err, location, "Error searching for message")
-		}
-	}
-
-	// Populate the new message
-	message.UserID = following.UserID
-	message.FolderID = following.FolderID
-	message.Origin = following.Origin()
-	message.URL = document.ID()
-	message.Label = document.Name()
-	message.Summary = document.Summary()
-	message.ImageURL = document.Image().URL()
-	message.AttributedTo = convert.ActivityPubPersonLink(document.AttributedTo())
-	message.ContentHTML = document.Content()
-	message.PublishDate = document.Published().Unix()
-
-	if message.NotRead() && markRead {
-		message.ReadDate = message.PublishDate
-	}
-
-	// Save the message to the database
-	if err := service.inboxService.Save(&message, "Message Imported"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
-	}
-
-	// Yee. Haw.
-	return nil
 }
 
 // connect_PushServices tries to connect to the best available push service
 func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
 
-	// ActivityPub is handled first because it is the highest fidelity connection
-	if actor.MetaString("format") == sherlock.FormatActivityStream {
+	const location = "service.Following.connect_PushServices"
+
+	// If this actor has an ActivityPub inbox, then try to via ActivityPub
+	if inbox := actor.Inbox(); inbox.NotNil() {
 		if ok, err := service.connect_ActivityPub(following, actor); ok {
 			return
 		} else if err != nil {
-			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to ActivityPub"))
+			derp.Report(derp.Wrap(err, location, "Error connecting to ActivityPub"))
 		}
 	}
 
-	// WebSub is second because it works (and fat pings will be cool when they're implemented)
-	// TODO: LOW: Implement Fat Pings
-	if webSub := actor.MetaString("websub"); webSub != "" {
-		if err := service.connect_WebSub(following, webSub); err != nil {
-			derp.Report(derp.Wrap(err, "service.Following.connect_PushServices", "Error connecting to WebSub"))
+	// If a WebSub hub is defined, then use that.
+	if hub := actor.Endpoints().Get("websub").String(); hub != "" {
+		// TODO: LOW: Implement Fat Pings
+		if err := service.connect_WebSub(following, hub); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error connecting to WebSub"))
 		}
 	}
 
@@ -192,21 +151,4 @@ func getActualDocument(document streams.Document) streams.Document {
 	default:
 		return document
 	}
-}
-
-func isDocumentAdequate(document streams.Document) bool {
-
-	if document.ID() == "" {
-		return false
-	}
-
-	if document.Name() == "" {
-		return false
-	}
-
-	if (document.Summary() == "") || (document.Content() == "") {
-		return false
-	}
-
-	return true
 }

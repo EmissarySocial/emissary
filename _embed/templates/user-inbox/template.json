@@ -215,6 +215,13 @@
 									"path":"folderId",
 									"options":{"provider": "folders"},
 									"description": "Automatically add items to this folder."
+								},
+								{
+									"type":"toggle",
+									"label":"Group Threads",
+									"path":"collapseThreads",
+									"default":true,
+									"options":{"true-text":"Yes. Group threads into a single item.", "false-text":"Show all messages separately."}
 								}
 							]
 						}}
@@ -250,9 +257,10 @@
 									},
 									{
 										"type":"toggle",
-										"label":"Update Messages?",
-										"path":"doMoveMessages",
-										"options":{"true-text":"Yes.  Move all messages to the folder selected above.", "false-text":"No.  Leave messages untouched."}
+										"label":"Group Threads?",
+										"path":"collapseThreads",
+										"default":true,
+										"options":{"true-text":"Yes. Group messages into a single item.", "false-text":"Show all messages separately."}
 									}
 								]
 							}, {

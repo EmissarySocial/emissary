@@ -1,19 +1,25 @@
 module github.com/EmissarySocial/emissary
 
+replace github.com/benpate/digit => ../../benpate/digit
+
 replace github.com/benpate/hannibal => ../../benpate/hannibal
+
 replace github.com/benpate/sherlock => ../../benpate/sherlock
+
+replace github.com/benpate/re => ../../benpate/re
+
+replace github.com/benpate/remote => ../../benpate/remote
 
 go 1.20
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.45.6
-	github.com/benpate/cachecontrol v0.0.1
 	github.com/benpate/data v0.28.1
 	github.com/benpate/data-mongo v0.28.2
 	github.com/benpate/derp v0.28.1
 	github.com/benpate/digit v0.10.6
-	github.com/benpate/domain v0.1.0
+	github.com/benpate/domain v0.2.0
 	github.com/benpate/exp v0.7.1
 	github.com/benpate/exp-builder v0.7.4
 	github.com/benpate/form v0.17.2
@@ -54,6 +60,7 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.13.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/oauth2 v0.12.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0

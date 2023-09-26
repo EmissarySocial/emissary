@@ -9,8 +9,8 @@
 	</div>
 
 	<div style="flex-grow:1; min-width:0px; position:relative; width:100%; max-width:100%;">
-		<div class="bold black ellipsis">{{.Label}}</div>
-		<div class="text-gray text-sm space-below flex-row">
+		<div class="bold black ellipsis text-lg" style="margin:0px;">{{.Label}}</div>
+		<div class="text-gray text-sm flex-row" style="margin:0px; margin-bottom:8px;">
 			<span class="ellipsis">
 				{{ icon .Origin.Icon }}
 				{{ .Origin.Label }} &middot;
@@ -21,7 +21,7 @@
 				{{ .PublishDate | tinyDate }}
 			</span>
 		</div>
-		<div class="text-gray text-sm ellipsis-block" style="max-height:6em;">{{.SummaryOrContent | html}}</div>
+		<div class="text-gray text-sm ellipsis-block" style="margin:0px; max-height:6em;">{{.SummaryOrContent | html}}</div>
 	</div>
  
 </div>

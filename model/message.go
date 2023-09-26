@@ -156,6 +156,27 @@ func (message Message) RankSeconds() int64 {
 	return message.Rank / 1000
 }
 
+// AddReference adds a new reference to this message, while attempting to prevent duplicates.
+// It returns TRUE if the message has been updated.
+func (message *Message) AddReference(reference OriginLink) bool {
+
+	// If this reference is already in the list, then don't add it again.
+	if message.Origin.Equals(reference) {
+		return false
+	}
+
+	// Same for the list of references.. if it's already in the list, then don't add it again.
+	for _, existing := range message.References {
+		if existing.Equals(reference) {
+			return false
+		}
+	}
+
+	// Fall through to here means that we don't already have this origin, so add it to the list.
+	message.References = append(message.References, reference)
+	return true
+}
+
 // UpdateWithFollowing updates the contents of this message with a Following record
 func (message *Message) UpdateWithFollowing(following *Following) {
 	message.UserID = following.UserID

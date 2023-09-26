@@ -20,7 +20,6 @@ type Following struct {
 	CollapseThreads bool               `json:"collapseThreads" bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
 	Links           digit.LinkSet      `json:"links"           bson:"links"`           // List of links can be used to update this following.
 	Method          string             `json:"method"          bson:"method"`          // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
-	Format          string             `json:"format"          bson:"format"`          // Format of the feed (ACTIVITYSTREAM, RSS, ATOM, JSON, MICROFORMATS)
 	Secret          string             `json:"secret"          bson:"secret"`          // Secret used to authenticate this feed (if required)
 	Status          string             `json:"status"          bson:"status"`          // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
 	StatusMessage   string             `json:"statusMessage"   bson:"statusMessage"`   // Optional message describing the status of the last poll
@@ -29,8 +28,6 @@ type Following struct {
 	NextPoll        int64              `json:"nextPoll"        bson:"nextPoll"`        // Unix Timestamp of the next time that this resource should be polled.
 	PurgeDuration   int                `json:"purgeDuration"   bson:"purgeDuration"`   // Time (in days) to wait before purging old messages
 	ErrorCount      int                `json:"errorCount"      bson:"errorCount"`      // Number of times that this "following" has failed to load (for exponential backoff)
-
-	DoMoveMessages bool `json:"-" bson:"-"` // Flag that indicates whether or not to move messages from the old folder to the new folder
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -91,9 +88,9 @@ func (following *Following) Origin() OriginLink {
 	return OriginLink{
 		FollowingID: following.FollowingID,
 		URL:         following.URL,
-		Type:        following.Method,
 		Label:       following.Label,
 		ImageURL:    following.ImageURL,
+		Type:        OriginTypeDirect,
 	}
 }
 

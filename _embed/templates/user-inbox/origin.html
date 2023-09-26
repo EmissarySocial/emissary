@@ -1,0 +1,20 @@
+{{- if ne "DIRECT" .Type -}}
+
+	<span class="bold italics text-gray">
+
+		{{- if eq "LIKE" .Type -}}
+			{{icon "thumbs-up-fill"}} {{.Label}} Liked this
+
+		{{- else if eq	"DISLIKE" .Type -}}
+			{{icon "thumbs-down-fill"}} {{.Label}} Disliked this
+
+		{{- else if eq "ANNOUNCE" .Type -}}
+			{{icon "rocket-fill"}} {{.Label}} Boosted this
+
+		{{- else if eq "REPLY" .Type -}}
+			{{icon "reply-fill"}} {{.Label}} Replied to this
+		{{- end -}}
+
+	</span>
+
+{{- end -}}

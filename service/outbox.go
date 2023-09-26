@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -97,7 +96,7 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
 	// nolint:errcheck
-	go service.activityStreamsService.LoadDocument(outboxMessage.URL, mapof.NewAny())
+	go service.activityStreamsService.Load(outboxMessage.URL)
 
 	return nil
 }

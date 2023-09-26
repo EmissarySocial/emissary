@@ -10,6 +10,10 @@
 	</span>
 </div>
 
+{{- if ne "" .Label -}}
+	<div class="bold text-black space-above">{{.Label}}</div>
+{{- end -}}
+
 <div class="space-above">
 	{{- .ContentOrSummary | html -}}
 </div>

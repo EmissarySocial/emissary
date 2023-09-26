@@ -181,23 +181,33 @@ func (user *User) Roles(authorization *Authorization) []string {
 
 func (user User) GetJSONLD() mapof.Any {
 
-	return mapof.Any{
-		"@context":          sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
-		"id":                user.GetProfileURL(),
-		"type":              vocab.ActorTypePerson,
-		"url":               user.ProfileURL,
-		"name":              user.DisplayName,
-		"preferredUsername": user.Username,
-		"summary":           user.StatusMessage,
-		"icon":              user.ActivityPubAvatarURL(),
-		"inbox":             user.ActivityPubInboxURL(),
-		"outbox":            user.ActivityPubOutboxURL(),
-		"following":         user.ActivityPubFollowingURL(),
-		"followers":         user.ActivityPubFollowersURL(),
-		"liked":             user.ActivityPubLikedURL(),
-		"blocked":           user.ActivityPubBlockedURL(),
-		"publicKey":         user.ActivityPubPublicKeyURL(),
+	result := mapof.Any{
+		vocab.AtContext:                 sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
+		vocab.PropertyID:                user.GetProfileURL(),
+		vocab.PropertyType:              vocab.ActorTypePerson,
+		vocab.PropertyURL:               user.ProfileURL,
+		vocab.PropertyName:              user.DisplayName,
+		vocab.PropertyPreferredUsername: user.Username,
+		vocab.PropertySummary:           user.StatusMessage,
+		vocab.PropertyIcon:              user.ActivityPubAvatarURL(),
+		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
+		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),
+		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
+		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
+		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
+		vocab.PropertyBlocked:           user.ActivityPubBlockedURL(),
+		vocab.PropertyPublicKey:         user.ActivityPubPublicKeyURL(),
 	}
+
+	// Conditionally add the Avatar URL
+	if avatarURL := user.ActivityPubAvatarURL(); avatarURL != "" {
+		result["icon"] = mapof.Any{
+			vocab.PropertyType: vocab.ObjectTypeImage,
+			vocab.PropertyURL:  avatarURL,
+		}
+	}
+
+	return result
 }
 
 func (user *User) GetProfileURL() string {

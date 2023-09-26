@@ -33,8 +33,13 @@
 		<div class="space-above">
 			<span class="p-note">{{.StatusMessage}}</span>
 		</div>
+
 		{{- if ne "" .Location -}}
 			<div class="space-above p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+		{{- end -}}
+
+		{{- if .IsMyself -}}
+			<div style="margin-top:8px;"><a href="/@me/inbox/following" class="text-plain">{{icon "settings"}} Follow Settings</a></div>
 		{{- end -}}
 
 	</div>

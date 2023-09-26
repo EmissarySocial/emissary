@@ -8,7 +8,7 @@
 {{- if eq "" (.QueryParam "remote") -}}
 
 	<div 
-		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}"
+		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}000"
 		hx-target="this"
 		hx-trigger="click once"
 		hx-swap="beforebegin"
@@ -56,7 +56,10 @@
 			
 		</div>
 
-		{{- $inboxRenderer.Responses $message -}}
+		<div class="space-above">
+			{{- $inboxRenderer.Responses $message -}}
+		</div>
+		
 		<hr>
 
 	{{- end -}}

@@ -27,6 +27,11 @@ func undoFollow(factory *domain.Factory, user *model.User, activity streams.Docu
 	originalFollow, err := activity.Object().Load()
 
 	if err != nil {
+		if derp.NotFound(err) {
+			return nil // If there is no follower record, then there's nothing to delete.
+		}
+
+		// All other errors are bad, tho.
 		return derp.Wrap(err, location, "Error retrieving original follow request", activity.Value())
 	}
 
@@ -41,6 +46,11 @@ func undoFollow(factory *domain.Factory, user *model.User, activity streams.Docu
 	}
 
 	if err := followerService.LoadByActivityPubFollower(userID, actorURL, &follower); err != nil {
+
+		if derp.NotFound(err) {
+			return nil
+		}
+
 		return derp.Wrap(err, location, "Error locating follower", activity.Value(), userID, actorURL)
 	}
 

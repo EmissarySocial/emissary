@@ -32,7 +32,8 @@ func (service *Following) connect_WebSub(following *model.Following, hub string)
 		Form("hub.callback", service.websubCallbackURL(following)).
 		Form("hub.secret", following.Secret).
 		Form("hub.lease_seconds", "2582000").
-		Response(&success, &failure)
+		Result(&success).
+		Error(&failure)
 
 	if err := transaction.Send(); err != nil {
 		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub)

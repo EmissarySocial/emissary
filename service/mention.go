@@ -12,10 +12,8 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/sherlock"
@@ -37,9 +35,10 @@ import (
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	collection   data.Collection
-	blockService *Block
-	host         string
+	collection      data.Collection
+	blockService    *Block
+	activityStreams *ActivityStreams
+	host            string
 }
 
 // NewMention returns a fully initialized Mention service
@@ -52,9 +51,10 @@ func NewMention() Mention {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Mention) Refresh(collection data.Collection, blockService *Block, host string) {
+func (service *Mention) Refresh(collection data.Collection, blockService *Block, activityStreams *ActivityStreams, host string) {
 	service.collection = collection
 	service.blockService = blockService
+	service.activityStreams = activityStreams
 	service.host = host
 }
 
@@ -313,14 +313,14 @@ func (service *Mention) DiscoverEndpoint(url string) (string, error) {
 	const location = "service.Mention.Discover"
 
 	var body string
-	txn := remote.Get(url).Response(&body, nil)
+	txn := remote.Get(url).Result(&body)
 
 	if err := txn.Send(); err != nil {
 		return "", derp.Wrap(err, location, "Error retrieving remote document", url)
 	}
 
 	// Look for Mention link in the response headers
-	if value := txn.ResponseObject.Header.Get("Link"); value != "" {
+	if value := txn.ResponseHeader().Get("Link"); value != "" {
 		links := linkheader.Parse(value)
 
 		for _, link := range links {
@@ -354,7 +354,7 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 	var content string
 
 	// Try to load the source document
-	txn := remote.Get(source).Response(&content, nil)
+	txn := remote.Get(source).Result(&content)
 
 	if err := txn.Send(); err != nil {
 		return derp.Wrap(err, location, "Error retreiving source", source)
@@ -392,28 +392,25 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 // TODO: HIGH: This should use a common service to get URL data from Microformats, OpenGraph, JSON-LD, etc.
 func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mention *model.Mention) error {
 
-	mention.Origin.URL = originURL
-
-	page := mapof.NewAny()
+	const location = "service.Mention.GetPageInfo"
 
 	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	if err := sherlock.Parse(originURL, body, page); err != nil {
-		return derp.Wrap(err, "service.Mention.ParseMicroformats", "Error parsing page", originURL)
+	document, err := service.activityStreams.Load(originURL, sherlock.AsDocument())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error retrieving page", originURL)
 	}
 
 	// Copy the page data into the mention
-	mention.Origin.Label = page.GetString(vocab.PropertyName)
-	mention.Origin.URL = page.GetString(vocab.PropertyID)
+	mention.Origin.Label = document.Name()
+	mention.Origin.URL = document.ID()
 
-	/*
-		if len(page.Authors) > 0 {
-			author := page.Authors[0]
-			mention.Author.Name = author.Name
-			mention.Author.ProfileURL = author.URL
-			mention.Author.EmailAddress = author.Email
-			mention.Author.ImageURL = author.Image.URL
-		}
-	*/
+	if attributedTo := document.AttributedTo(); attributedTo.NotNil() {
+		mention.Author.Name = attributedTo.Name()
+		mention.Author.ProfileURL = attributedTo.URL()
+		mention.Author.EmailAddress = ""
+		mention.Author.ImageURL = attributedTo.Icon().URL()
+	}
 
 	// No errors
 	return nil

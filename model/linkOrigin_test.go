@@ -14,10 +14,10 @@ func TestOriginLink(t *testing.T) {
 
 	table := []tableTestItem{
 		{"followingId", "123412341234123412341234", nil},
-		{"type", "ACTIVITYPUB", nil},
-		{"url", "https://test.url", nil},
+		{"type", "DIRECT", nil},
 		{"label", "TEST-LABEL", nil},
-		{"summary", "TEST-SUMMARY", nil},
+		{"url", "https://test.url", nil},
+		{"profileUrl", "https://test.profile.url", nil},
 		{"imageUrl", "https://test.image.url", nil},
 	}
 

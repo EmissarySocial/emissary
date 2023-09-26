@@ -246,7 +246,7 @@ func (service *Response) SetResponse(response *model.Response) error {
 		if !user.IsNew() {
 
 			// Create an "Undo" activity
-			undoActivity := pub.Undo(response.GetJSONLD())
+			undoActivity := pub.Undo(user.ActivityPubURL(), response.GetJSONLD())
 
 			// Send the "Undo" activity to followers
 			if err := service.outboxService.UnPublish(user.UserID, response.URL, undoActivity); err != nil {

@@ -138,6 +138,10 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "megaphone":
+		return service.get("megaphone")
+	case "megaphone-fill":
+		return service.get("megaphone-fill")
 	case "mention":
 		return service.get("at")
 	case "mute":
@@ -158,6 +162,10 @@ func (service Icons) Get(name string) string {
 		return service.get("reply")
 	case "reply-fill":
 		return service.get("reply-fill")
+	case "rocket":
+		return service.get("rocket-takeoff")
+	case "rocket-fill":
+		return service.get("rocket-takeoff-fill")
 	case "save":
 		return service.get("check-lg")
 	case "search":

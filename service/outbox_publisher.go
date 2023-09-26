@@ -82,7 +82,13 @@ func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, f
 
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
-		service.queue.Run(pub.SendQueueTask(actor, activity, follower.Actor.ProfileURL))
+
+		// If we have a valid ActivityPub follower, then queue the message to be sent
+		if remoteActor, err := service.followerService.RemoteActor(&follower); err == nil {
+			service.queue.Run(pub.SendQueueTask(actor, activity, remoteActor))
+		} else {
+			derp.Report(derp.Wrap(err, location, "Error loading remote actor", follower))
+		}
 	}
 }
 

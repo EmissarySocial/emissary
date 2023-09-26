@@ -69,8 +69,8 @@
 						"label":"Edit Profile Info",
 						"children": [
 							{"type":"text", "path":"displayName", "label":"Name"},
-							{"type":"text", "path":"location", "label":"Location"},
 							{"type":"textarea", "path":"statusMessage", "label":"Message"},
+							{"type":"text", "path":"location", "label":"Location"},
 							{"type":"toggle", "path":"isPublic", "label":"Public?", "options":{"true-text":"Visible to the Public", "false-text":"Hidden from Public Servers"}}
 						]
 					}},
@@ -193,6 +193,13 @@
 									"path":"folderId",
 									"options":{"provider": "folders"},
 									"description": "Automatically add items to this folder."
+								},
+								{
+									"type":"toggle",
+									"label":"Group Threads?",
+									"path":"collapseThreads",
+									"default":true,
+									"options":{"true-text":"Yes. Group messages into a single item.", "false-text":"Show all messages separately."}
 								}
 							]
 						}}
@@ -227,11 +234,11 @@
 									},
 									{
 										"type":"toggle",
-										"label":"Update Messages?",
-										"path":"doMoveMessages",
-										"options":{"true-text":"Yes.  Move all messages to the folder selected above.", "false-text":"No.  Leave messages untouched."}
-									}
-								]
+										"label":"Group Threads?",
+										"path":"collapseThreads",
+										"default":true,
+										"options":{"true-text":"Yes. Group messages into a single item.", "false-text":"Show all messages separately."}
+									}								]
 							}, {
 								"type":"layout-vertical",
 								"label":"Info",

@@ -9,7 +9,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/sherlock"
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -21,15 +23,15 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	collection    data.Collection
-	streamService *Stream
-	userService   *User
-	inboxService  *Inbox
-	folderService *Folder
-	keyService    *EncryptionKey
-	httpClient    *ActivityStreams
-	host          string
-	closed        chan bool
+	collection      data.Collection
+	streamService   *Stream
+	userService     *User
+	inboxService    *Inbox
+	folderService   *Folder
+	keyService      *EncryptionKey
+	activityStreams *ActivityStreams
+	host            string
+	closed          chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
@@ -42,14 +44,14 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, httpClient *ActivityStreams, host string) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, activityStreams *ActivityStreams, host string) {
 	service.collection = collection
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.folderService = folderService
 	service.keyService = keyService
-	service.httpClient = httpClient
+	service.activityStreams = activityStreams
 	service.host = host
 }
 
@@ -190,9 +192,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 	}
 
 	// RULE: Update messages if requested by the UX
-	if following.DoMoveMessages {
-		go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
-	}
+	go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
 
 	// Recalculate the follower count for this user
 	go service.userService.CalcFollowingCount(following.UserID)
@@ -457,6 +457,11 @@ func (service *Following) SetStatusFailure(following *model.Following, statusMes
 
 	// Save the Following to the database
 	return service.collection.Save(following, "Updating status")
+}
+
+// RemoteActor returns the ActivityStreams profile of the actor being followed
+func (service *Following) RemoteActor(following *model.Following) (streams.Document, error) {
+	return service.activityStreams.Load(following.ProfileURL, sherlock.AsActor())
 }
 
 /******************************************
