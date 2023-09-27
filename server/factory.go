@@ -15,6 +15,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
+	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
@@ -563,14 +564,13 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(sherlock.WithUserAgent("Emissary Social: https://emissary.social"))
 	cacheRulesClient := ascacherules.New(sherlockClient)
-	cacheClient := ascache.New(session, cacheRulesClient)
 
-	// TODO: Once the recursor is working, replace the cache with this,
-	// to wrap the caching client around the recursor.
-	// writableCache := ascache.New(session, cacheRulesClient)
-	// recursorClient := asrecursor.New(writeableCache, 3)
-	// readOnlyCache := ascache.New(session, recursorClient, ascache.WithReadOnly())
+	// TODO: Once the crawler is working, replace the cache with this,
+	// to wrap the caching client around the crawler.
+	writableCache := ascache.New(cacheRulesClient, session)
+	crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
+	readOnlyCache := ascache.New(crawlerClient, session, ascache.WithReadOnly())
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(cacheClient, session.Collection("Actor"), session.Collection("Document"))
+	factory.activityStreamsService.Refresh(readOnlyCache, session.Collection("Actor"), session.Collection("Document"))
 }
