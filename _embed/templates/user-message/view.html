@@ -23,44 +23,46 @@
 		</div>
 	</div>
 
-
 	{{- if .Origin.NotEmpty -}}
 
-		<div class="bold text-gray">
+		<div>
 	
 			{{- if eq "DIRECT" .Origin.Type -}}
-				<a class="text-gray flex-row flex-align-center"
+				<a class="flex-row flex-align-center"
 					href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
 					
 					{{- if ne "" .Origin.ImageURL -}}
-						<img src="{{.Origin.ImageURL}}" class="circle" style="height:32px"/>
+						<img src="{{.Origin.ImageURL}}" class="circle" style="height:48px;"/>
 					{{- end -}}
-					<span>{{.Origin.Label}}</span>
+					<div>
+						<div class="text-plain text-lg bold vertical-space-none">{{.Origin.Label}}</div>
+						<div class="text-gray text-sm vertical-space-none">{{.Origin.URL}}</div>
+					</div>
 				</a>
 
 			{{- else if eq "LIKE" .Origin.Type -}}
-				<span class="bold italics">
+				<span class="bold text-gray italics">
 					{{icon "thumbs-up-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a> 
 				</span>
 				Liked this
 	
 			{{- else if eq	"DISLIKE" .Origin.Type -}}
-				<span class="bold italics">
+				<span class="bold text-gray italics">
 					{{icon "thumbs-down-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Disliked
 				</span>
 	
 			{{- else if eq "ANNOUNCE" .Origin.Type -}}
-				<span class="bold italics">
+				<span class="bold text-gray italics">
 					{{icon "rocket-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Boosted this
 				</span>
 	
 			{{- else if eq "REPLY" .Origin.Type -}}
-				<span class="bold italics">
+				<span class="bold text-gray italics">
 					{{icon "reply-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Replied to this
@@ -71,27 +73,20 @@
 	
 	{{- end -}}
 	
+	{{- if ne "DIRECT" .Origin.Type -}}
+		<a class="flex-row flex-align-center text-plain text-lg" href="{{.AttributedTo.ProfileURL}}">
+			{{- if ne "" .AttributedTo.ImageURL -}}
+				<img src="{{.AttributedTo.ImageURL}}" class="circle" style="height:48px;"/>
+			{{- end -}}
+			<span>{{.AttributedTo.Name}}</span>
+		</a>
+	{{- end -}}
+	
 	{{- if ne "" .Label -}}
 		<h1><a href="{{.URL}}" target="_blank" class="text-black">{{.Label}}</a></h1>
 	{{- end -}}
 
-	<div class="flex-row text-gray">
-		<div>
-			{{- if ne .AttributedTo.Name .Origin.Label -}}
-				{{- if ne "" .AttributedTo.ProfileURL -}}
-					<a href="{{.AttributedTo.ProfileURL}}" target="_blank">By: {{.AttributedTo.Name}}</a> &middot;
-				{{- else if ne "" .AttributedTo.Name -}}
-					{{.AttributedTo.Name}} &middot;
-				{{- end -}}
-			{{end}}
-			{{.PublishDate | longDate -}}
-		</div>
-		<div>{{.Responses}}</div>
-	</div>
-
-	<hr>
-
-	<div class="content space-below">
+	<div class="content space-above space-below">
 		{{- if not .HasContentImage -}}
 			{{- if .HasImage -}}
 				<div class="space-below">
@@ -100,28 +95,21 @@
 			{{- end -}}
 		{{- end -}}
 
+		<div class="text-gray flex-row">
+			<div class="bold">{{ .PublishDate | longDate -}}</div>
+			{{.Responses}}
+		</div>	
+
 		{{- if .HasSummary -}}
 			{{- if .HasContent -}}
-				<div class="bold text-gray">
-					{{ .PublishDate | longDate -}}
-				</div>	
 					<div>{{- .ContentHTML -}}</div>
 			{{- else -}}
-				<div class="bold text-gray">
-					{{ .PublishDate | longDate -}}
-				</div>	
 				<div>{{- .Summary | html -}}</div>
-				{{- end -}}
+			{{- end -}}
 		{{- else -}}
-			<div class="bold text-gray">
-				{{ .PublishDate | longDate -}}
-			</div>	
 			<div>{{- .ContentHTML -}}</div>
 		{{- end -}}
-			
 	</div>
-
-	<hr>
 
 	<div hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		Loading Replies...
