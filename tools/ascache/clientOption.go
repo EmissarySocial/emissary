@@ -1,16 +1,22 @@
 package ascache
 
-type OptionFunc func(*Client)
+type ClientOptionFunc func(*Client)
+
+func WithCollectionName(collectionName string) ClientOptionFunc {
+	return func(client *Client) {
+		client.collectionName = collectionName
+	}
+}
 
 // WithPurgeFrequency option sets the frequency that expired documents will be purged from the cache
-func WithPurgeFrequency(seconds int64) OptionFunc {
+func WithPurgeFrequency(seconds int64) ClientOptionFunc {
 	return func(client *Client) {
 		client.purgeFrequency = seconds
 	}
 }
 
 // WithReadWrite option sets the client to read+write mode
-func WithReadWrite() OptionFunc {
+func WithReadWrite() ClientOptionFunc {
 	return func(client *Client) {
 		client.cacheMode = CacheModeReadWrite
 	}
@@ -19,7 +25,7 @@ func WithReadWrite() OptionFunc {
 // WithReadOnly option sets the client to read-only mode.
 // The cache will only read values from the database, and will not
 // write new values to the database.
-func WithReadOnly() OptionFunc {
+func WithReadOnly() ClientOptionFunc {
 	return func(client *Client) {
 		client.cacheMode = CacheModeReadOnly
 	}
@@ -28,7 +34,7 @@ func WithReadOnly() OptionFunc {
 // WithWriteOnly option sets the client to write-only mode.
 // The cache will only write values to the database, and will not
 // check the database for existing values.
-func WithWriteOnly() OptionFunc {
+func WithWriteOnly() ClientOptionFunc {
 	return func(client *Client) {
 		client.cacheMode = CacheModeWriteOnly
 	}

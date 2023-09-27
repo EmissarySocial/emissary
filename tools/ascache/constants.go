@@ -1,7 +1,5 @@
 package ascache
 
-const CollectionActor = "Actor"
-
 const CollectionDocument = "Document"
 
 const CacheModeReadWrite = "READWRITE"
