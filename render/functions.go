@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/benpate/rosetta/html"
-	"github.com/rs/zerolog/log"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -158,7 +158,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"dump": func(values ...any) string {
 			for _, value := range values {
-				log.Debug().Interface("value", value).Msg("dump from golang template")
+				spew.Dump(value)
 			}
 			return ""
 		},
