@@ -2,17 +2,22 @@
 
 <div class="space-below">
 	<div class="clickable flex-row" role="link" script="on click go to url '{{.ID}}'">
-		<div>
-			<img class="circle-32" src="{{$actor.Icon.URL}}">
+		<div style="width:32px; height:32px; margin-right:8px;">
+			{{- if $actor.Icon.NotNil -}}
+				<img class="circle-32" src="{{$actor.Icon.URL}}">
+			{{- end -}}
 		</div>
 		<div>
-			<div>
-				<span class="bold link">{{$actor.Name}}</span>
-				<span class="text-gray">&middot; {{ .Published | epochDate | tinyDate}}</span>
-			</div>
+
+			{{- if $actor.NotNil -}}
+				<div>
+					<span class="bold link vertical-space-none">{{$actor.Name}}</span>
+					<span class="text-gray vertical-space-none">&middot; {{ .Published | epochDate | tinyDate}}</span>
+				</div>
+			{{- end -}}
 
 			{{- if .Image.NotNil -}}
-				<div><img src="{{.Image.URL}}" style="width:100%;"></div>
+				<div class="space-above space-below"><img src="{{.Image.URL}}" style="width:100%;"></div>
 			{{- end -}}
 		
 			<div>{{.Content | html}}</div>

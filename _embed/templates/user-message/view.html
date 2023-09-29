@@ -111,6 +111,7 @@
 		{{- end -}}
 	</div>
 
+	<hr>
 	<div hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		Loading Replies...
 	</div>
