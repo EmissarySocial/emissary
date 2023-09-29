@@ -1,32 +1,33 @@
 package ascache
 
 import (
+	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
-	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Client struct {
-	session        data.Session
+	collection     *mongo.Collection
 	innerClient    streams.Client
-	collectionName string
 	purgeFrequency int64
 	cacheMode      string
 }
 
 // New returns a fully initialized Client object
-func New(innerClient streams.Client, session data.Session, options ...ClientOptionFunc) *Client {
+func New(innerClient streams.Client, collection *mongo.Collection, options ...ClientOptionFunc) *Client {
 
 	// Create a default client
 	result := Client{
-		session:        session,
+		collection:     collection,
 		innerClient:    innerClient,
 		purgeFrequency: 60 * 60 * 4, // Default purge frequency is 4 hours
-		collectionName: "Document",
 		cacheMode:      CacheModeReadWrite,
 	}
 
@@ -59,12 +60,12 @@ func (client *Client) start() {
 
 	for {
 		// wait for the purge frequency duration
-		time.Sleep(time.Second * time.Duration(client.purgeFrequency))
+		time.Sleep(time.Duration(client.purgeFrequency) * time.Second)
 
 		criteria := exp.LessThan("expires", time.Now().Unix())
 
 		// Try to remove expired actors
-		if err := client.session.Collection(client.collectionName).HardDelete(criteria); err != nil {
+		if _, err := client.collection.DeleteMany(context.Background(), criteria); err != nil {
 			derp.Report(derp.Wrap(err, "ascache.Client.delete", "Error purging expired actors from cache"))
 		}
 	}
@@ -110,22 +111,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	}
 
 	return result, nil
-}
-
-func (client *Client) PurgeByURI(collection string, uri string) error {
-
-	// If the client is not writable then don't try to purge the cache
-	if client.NotWritable() {
-		return nil
-	}
-
-	// Try to purge the cache
-	if err := client.session.Collection(collection).HardDelete(exp.Equal("uri", uri)); err != nil {
-		return derp.Wrap(err, "ascache.Client.delete", "Error deleting document from cache (by URI)", uri)
-	}
-
-	// Woot woot
-	return nil
 }
 
 /******************************************
@@ -178,13 +163,13 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue.calcExpires(cacheControl)
 	cachedValue.calcRevalidates(cacheControl)
 
-	// Try to remove any existing documents with the same URI
-	if err := client.session.Collection(client.collectionName).HardDelete(exp.Equal("uri", uri)); err != nil {
-		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error deleting document from cache (by URI)", uri))
-	}
+	// Try to upsert the document into the cache
+	filter := bson.M{"url": uri}
+	update := bson.M{"$set": cachedValue}
+	queryOptions := options.Update().SetUpsert(true)
 
-	// Save the document to the cache
-	if err := client.session.Collection(client.collectionName).Save(&cachedValue, ""); err != nil {
+	// Try to remove any existing documents with the same URI
+	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
 		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error saving document to cache", document.ID()))
 	}
 }
@@ -204,13 +189,13 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 
 func (client *Client) loadByURI(uri string, document *CachedValue) error {
 
-	if client.session == nil {
+	if client.collection == nil {
 		return derp.NewInternalError("ascache.Client.loadByURI", "Cache connection is not defined")
 	}
 
-	criteria := exp.Equal("uri", uri)
+	criteria := bson.M{"uri": uri}
 
-	if err := client.session.Collection(client.collectionName).Load(criteria, document); err != nil {
+	if err := client.collection.FindOne(context.Background(), criteria).Decode(document); err != nil {
 		return derp.Wrap(err, "ascache.Client.loadByURI", "Error loading document from cache", uri)
 	}
 

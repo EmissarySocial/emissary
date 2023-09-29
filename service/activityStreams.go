@@ -14,7 +14,6 @@ import (
 )
 
 type ActivityStreams struct {
-	actorCollection    data.Collection
 	documentCollection data.Collection
 	innerClient        *ascache.Client
 }
@@ -27,9 +26,8 @@ func NewActivityStreams() ActivityStreams {
 	return ActivityStreams{}
 }
 
-func (service *ActivityStreams) Refresh(innerClient *ascache.Client, actorCollection data.Collection, documentCollection data.Collection) {
+func (service *ActivityStreams) Refresh(innerClient *ascache.Client, documentCollection data.Collection) {
 	service.innerClient = innerClient
-	service.actorCollection = actorCollection
 	service.documentCollection = documentCollection
 }
 

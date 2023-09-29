@@ -28,6 +28,8 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Factory manages all server-level services, and generates individual
@@ -48,6 +50,7 @@ type Factory struct {
 	activityStreamsService service.ActivityStreams
 	embeddedFiles          embed.FS
 
+	activityStreamCache *mongo.Client
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
@@ -534,6 +537,17 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 
+	// If there is already a cache connection in place,
+	// then close it before we open a new one
+	if factory.activityStreamCache != nil {
+		go func(client *mongo.Client) {
+			if err := client.Disconnect(context.Background()); err != nil {
+				derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to disconnect from database"))
+			}
+		}(factory.activityStreamCache)
+	}
+
+	// Collect arguments from the connection config
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
@@ -542,35 +556,23 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 		return
 	}
 
-	// Try to connect to the server
-	server, err := mongodb.New(uri, database)
+	// Try to connect to the cache database
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to connect to database"))
 		return
 	}
 
-	// Try to establish a session
-	session, err := server.Session(context.Background())
-
-	if err != nil {
-		derp.Report(err)
-		return
-	}
-
-	// TODO: LOW: If called repeatedly, will this leak database connections?
-	// https://stackoverflow.com/questions/45479236/golang-mongodb-connections-leak
+	collection := client.Database(database).Collection("Document")
 
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(sherlock.WithUserAgent("Emissary Social: https://emissary.social"))
 	cacheRulesClient := ascacherules.New(sherlockClient)
-
-	// TODO: Once the crawler is working, replace the cache with this,
-	// to wrap the caching client around the crawler.
-	writableCache := ascache.New(cacheRulesClient, session)
+	writableCache := ascache.New(cacheRulesClient, collection)
 	crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
-	readOnlyCache := ascache.New(crawlerClient, session, ascache.WithReadOnly())
+	readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(readOnlyCache, session.Collection("Actor"), session.Collection("Document"))
+	factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }
