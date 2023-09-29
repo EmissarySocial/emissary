@@ -14,6 +14,10 @@ func (service *Following) saveMessage(following model.Following, document stream
 
 	const location = "service.Following.saveMessage"
 
+	if document.ID() == "" {
+		return derp.NewInternalError(location, "Document ID is empty", document.Value())
+	}
+
 	// Traverse JSON-LD documents if necessary
 	document = getActualDocument(document)
 
