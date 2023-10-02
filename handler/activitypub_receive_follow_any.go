@@ -32,7 +32,7 @@ func init() {
 		// What about manual accepts?
 
 		// Try to look up the complete actor record from the activity
-		follower, err := activity.Actor().Load()
+		document, err := activity.Actor().Load()
 
 		if err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error parsing actor", activity)
@@ -40,7 +40,8 @@ func init() {
 
 		// Try to create a new follower record
 		followerService := factory.Follower()
-		if err := followerService.NewActivityPubFollower(user, follower); err != nil {
+		follower := model.NewFollower()
+		if err := followerService.NewActivityPubFollower(user, document, &follower); err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error creating new follower", user)
 		}
 
@@ -51,9 +52,11 @@ func init() {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", user)
 		}
 
+		acceptID := followerService.ActivityPubID(&follower)
+
 		// Send an "Accept" to the requester (queued)
 		queue := factory.Queue()
-		queue.Run(pub.SendAcceptQueueTask(actor, activity))
+		queue.Run(pub.SendAcceptQueueTask(actor, acceptID, activity))
 
 		// Voila!
 		return nil

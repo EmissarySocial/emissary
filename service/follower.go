@@ -322,13 +322,10 @@ func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ..
 	return service.List(criteria, options...)
 }
 
-func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.Document) error {
-
-	// Create a new Follower record
-	follower := model.NewFollower()
+func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.Document, follower *model.Follower) error {
 
 	// Try to find an existing follower record
-	if err := service.LoadByActor(user.UserID, actor.ID(), &follower); err != nil {
+	if err := service.LoadByActor(user.UserID, actor.ID(), follower); err != nil {
 		if !derp.NotFound(err) {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading existing follower", actor)
 		}
@@ -348,7 +345,7 @@ func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.
 	}
 
 	// Try to save the new follower to the database
-	if err := service.Save(&follower, "New Follower via ActivityPub"); err != nil {
+	if err := service.Save(follower, "New Follower via ActivityPub"); err != nil {
 		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error saving new follower", follower)
 	}
 
