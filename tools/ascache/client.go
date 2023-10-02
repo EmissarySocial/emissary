@@ -202,6 +202,10 @@ func (client *Client) loadByURI(uri string, document *CachedValue) error {
 	return nil
 }
 
+/******************************************
+ * Configuration Accessors
+ ******************************************/
+
 // IsReadWritable returns TRUE if the cache can be read and written
 func (client *Client) IsReadWritable() bool {
 	return client.cacheMode == CacheModeReadWrite

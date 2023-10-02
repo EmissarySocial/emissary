@@ -8,36 +8,29 @@ import (
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CachedValue struct {
-	CachedValueID  primitive.ObjectID `bson:"_id"`
-	URI            string             `bson:"uri"`                  // ID/URL of this document
-	Original       mapof.Any          `bson:"original"`             // Original document, parsed as a map
-	HTTPHeader     http.Header        `bson:"httpHeader,omitempty"` // HTTP headers that were returned with this document
-	Published      int64              `bson:"published"`            // Unix epoch seconds when this document was published
-	Received       int64              `bson:"received"`             // Unix epoch seconds when this document was received by the cache
-	Expires        int64              `bson:"expires"`              // Unix epoch seconds when this document is expired. After this date, it must be revalidated from the source.
-	Revalidates    int64              `bson:"revalidates"`          // Unix epoch seconds when this document should be removed from the cache.
-	Collection     string             `bson:"collection,omitempty"` // ID/URL of the collection that this document belongs to (user outbox, etc)
-	InReplyTo      string             `bson:"inReplyTo,omitempty"`  // ID/URL of the document that this document is in reply to
-	ResponseCounts mapof.Int          `bson:"responses,omitempty"`  // Map of response types to the number of each type
+	URI            string      `bson:"uri"`                  // ID/URL of this document
+	Original       mapof.Any   `bson:"original"`             // Original document, parsed as a map
+	HTTPHeader     http.Header `bson:"httpHeader,omitempty"` // HTTP headers that were returned with this document
+	Published      int64       `bson:"published"`            // Unix epoch seconds when this document was published
+	Received       int64       `bson:"received"`             // Unix epoch seconds when this document was received by the cache
+	Expires        int64       `bson:"expires"`              // Unix epoch seconds when this document is expired. After this date, it must be revalidated from the source.
+	Revalidates    int64       `bson:"revalidates"`          // Unix epoch seconds when this document should be removed from the cache.
+	Collection     string      `bson:"collection,omitempty"` // ID/URL of the collection that this document belongs to (user outbox, etc)
+	InReplyTo      string      `bson:"inReplyTo,omitempty"`  // ID/URL of the document that this document is in reply to
+	ResponseCounts mapof.Int   `bson:"responses,omitempty"`  // Map of response types to the number of each type
 
 	journal.Journal `bson:",inline"`
 }
 
 func NewCachedValue() CachedValue {
 	return CachedValue{
-		CachedValueID:  primitive.NewObjectID(),
 		Original:       make(mapof.Any),
 		HTTPHeader:     make(http.Header),
 		ResponseCounts: make(mapof.Int),
 	}
-}
-
-func (value CachedValue) ID() string {
-	return value.CachedValueID.Hex()
 }
 
 // ShouldRevalidate returns TRUE if the "RevalidatesDate" is in the past.
