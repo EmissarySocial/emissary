@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -114,11 +115,16 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 
 	const location = "service.Following.connect_PushServices"
 
+	// Push services will not work via localhost :(
+	if domain.IsLocalhost(service.host) {
+		return
+	}
+
 	// If this actor has an ActivityPub inbox, then try to via ActivityPub
 	if inbox := actor.Inbox(); inbox.NotNil() {
 		if ok, err := service.connect_ActivityPub(following, actor); ok {
 			return
-		} else if err != nil {
+		} else {
 			derp.Report(derp.Wrap(err, location, "Error connecting to ActivityPub"))
 		}
 	}
@@ -126,7 +132,9 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 	// If a WebSub hub is defined, then use that.
 	if hub := actor.Endpoints().Get("websub").String(); hub != "" {
 		// TODO: LOW: Implement Fat Pings
-		if err := service.connect_WebSub(following, hub); err != nil {
+		if ok, err := service.connect_WebSub(following, hub); ok {
+			return
+		} else {
 			derp.Report(derp.Wrap(err, location, "Error connecting to WebSub"))
 		}
 	}

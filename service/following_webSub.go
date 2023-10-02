@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/gommon/random"
 )
 
-func (service *Following) connect_WebSub(following *model.Following, hub string) error {
+func (service *Following) connect_WebSub(following *model.Following, hub string) (bool, error) {
 
 	const location = "service.Following.ConnectWebSub"
 
@@ -36,11 +36,11 @@ func (service *Following) connect_WebSub(following *model.Following, hub string)
 		Error(&failure)
 
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending WebSub subscription request", hub)
+		return false, derp.Wrap(err, location, "Error sending WebSub subscription request", hub)
 	}
 
 	// Success!
-	return nil
+	return true, nil
 }
 
 func (service *Following) disconnect_WebSub(following *model.Following) {
