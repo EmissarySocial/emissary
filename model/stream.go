@@ -318,14 +318,26 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		"id":        stream.ActivityPubURL(),
 		"type":      stream.SocialRole,
 		"url":       stream.URL,
-		"name":      stream.Label,
-		"summary":   stream.Summary,
-		"image":     stream.ImageURL,
-		"content":   stream.Content.HTML,
 		"published": time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
-		"likes":     stream.ActivityPubLikesURL(),
-		"dislikes":  stream.ActivityPubDislikesURL(),
-		"shares":    stream.ActivityPubSharesURL(),
+		// "likes":     stream.ActivityPubLikesURL(),
+		// "dislikes":  stream.ActivityPubDislikesURL(),
+		// "shares":    stream.ActivityPubSharesURL(),
+	}
+
+	if stream.Label != "" {
+		result["name"] = stream.Label
+	}
+
+	if stream.Summary != "" {
+		result["summary"] = stream.Summary
+	}
+
+	if stream.Content.HTML != "" {
+		result["content"] = stream.Content.HTML
+	}
+
+	if stream.ImageURL != "" {
+		result["image"] = stream.ImageURL
 	}
 
 	if stream.InReplyTo != "" {

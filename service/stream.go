@@ -577,6 +577,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
 		"@context": vocab.ContextTypeActivityStreams,
+		"id":       stream.ActivityPubURL(),
 		"type":     activityType,
 		"actor":    user.ActivityPubURL(),
 		"object":   stream.GetJSONLD(),

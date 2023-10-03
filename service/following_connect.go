@@ -2,7 +2,6 @@ package service
 
 import (
 	"sort"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/ascache"
@@ -82,6 +81,7 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		return
 	}
 
+	// Create a channel from this outbox...
 	done := make(chan struct{})
 	documentChan := collections.Documents(outbox, done)  // start reading documents from the outbox
 	documentChan = channel.Limit(12, documentChan, done) // Limit to last 12 documents
@@ -96,12 +96,9 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 	for _, document := range documents {
 
 		// Try to save the document to the database.
-		if err := service.saveMessage(*following, document); err != nil {
+		if err := service.SaveMessage(following, document); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error saving document", document))
 		}
-
-		// Wait 1 millisecond between each document to guarantee sorting by CreateDate
-		time.Sleep(1 * time.Millisecond)
 	}
 
 	// Recalculate Folder unread counts
@@ -147,16 +144,20 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 func getActualDocument(document streams.Document) streams.Document {
 
 	// Load the full version of the document (if it's a link)
-	document = document.Document()
+	loaded, err := document.Load()
 
-	switch document.Type() {
+	if err != nil {
+		return document
+	}
+
+	switch loaded.Type() {
 
 	// If the document is a "Create" activity, then we want to use the object as the actual message
 	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
-		return document.Object()
+		return loaded.Object()
 
 	// Otherwise, we'll just use the document as-is
 	default:
-		return document
+		return loaded
 	}
 }

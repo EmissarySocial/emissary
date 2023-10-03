@@ -2,20 +2,21 @@ package convert
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 )
 
-// ActivityPubPersonLink converts a streams.Document into a model.PersonLink
-func ActivityPubPersonLink(person streams.Document) model.PersonLink {
+// ActivityPubAttributedTo generates a model.PersonLink for the first valid record in AttributedTo
+func ActivityPubAttributedTo(document streams.Document) model.PersonLink {
 
-	person, err := person.Load()
-
-	derp.Report(err)
-
-	return model.PersonLink{
-		Name:       person.Name(),
-		ProfileURL: person.ID(),
-		ImageURL:   person.IconOrImage().URL(),
+	for attributedTo := document.AttributedTo(); attributedTo.NotNil(); attributedTo = attributedTo.Tail() {
+		if person, err := attributedTo.Load(); err == nil {
+			return model.PersonLink{
+				Name:       person.Name(),
+				ProfileURL: person.ID(),
+				ImageURL:   person.IconOrImage().URL(),
+			}
+		}
 	}
+
+	return model.NewPersonLink()
 }

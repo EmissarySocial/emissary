@@ -107,6 +107,9 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error recalculating unread count", message)
 	}
 
+	// Wait 1 millisecond between each document to guarantee sorting by CreateDate
+	time.Sleep(1 * time.Millisecond)
+
 	return nil
 }
 
@@ -265,24 +268,6 @@ func (service *Inbox) LoadUnreadByURL(userID primitive.ObjectID, url string, res
 		AndEqual("readDate", math.MaxInt64)
 
 	return service.Load(criteria, result)
-}
-
-func (service *Inbox) LoadOrCreate(userID primitive.ObjectID, url string, result *model.Message) error {
-
-	err := service.LoadByURL(userID, url, result)
-
-	if err == nil {
-		return nil
-	}
-
-	if derp.NotFound(err) {
-		*result = model.NewMessage()
-		result.UserID = userID
-		result.URL = url
-		return nil
-	}
-
-	return derp.Wrap(err, "service.Inbox.LoadOrCreate", "Error loading Inbox", userID, url)
 }
 
 // LoadSibling searches for the previous/next sibling to the provided message criteria.

@@ -5,6 +5,8 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v4"
@@ -36,6 +38,28 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 	}
 
 	return model.NewAuthorization()
+}
+
+// getActualDocument traverses "Create" and "Update" messages to get the actual document that we want to save
+func getActualDocument(document streams.Document) streams.Document {
+
+	// Load the full version of the document (if it's a link)
+	loaded, err := document.Load()
+
+	if err != nil {
+		return document
+	}
+
+	switch loaded.Type() {
+
+	// If the document is a "Create" activity, then we want to use the object as the actual message
+	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
+		return loaded.Object()
+
+	// Otherwise, we'll just use the document as-is
+	default:
+		return loaded
+	}
 }
 
 // isOnwer returns TRUE if the JWT Claim is from a domain owner.
