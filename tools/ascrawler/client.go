@@ -36,7 +36,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, derp.Wrap(err, "ascrawler.Load", "Error loading actor from inner client")
 	}
 
-	go client.crawl(result, 0) // TODO: this should be a buffered enqueue operation
+	go client.crawl(result.Clone(), 0) // TODO: this should be a buffered enqueue operation
 
 	return result, nil
 }
@@ -73,7 +73,8 @@ func (client Client) crawlDocument(document streams.Document, propertyName strin
 
 	// Iterate through (potential) multiple values in the property
 	for property := document.Get(propertyName); property.NotNil(); property = property.Tail() {
-		go client.crawl(property.Head(), depth+1) // TODO: this should be a buffered enqueue operation
+		client.crawl(property.Head(), depth+1) // TODO: this should be a buffered enqueue operation
+		// TODO: Watch out for concurrency issues with maps. This caused a panic in dev (when I used a goroutine)
 	}
 }
 
