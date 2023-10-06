@@ -572,7 +572,11 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	writableCache := ascache.New(cacheRulesClient, collection)
 	crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
 	readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
+	factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+
+	// cacheClient := ascache.New(cacheRulesClient, collection)
+	// crawlerClient := ascrawler.New(cacheClient, ascrawler.WithMaxDepth(4))
 
 	// Inject new values into the existing object
-	factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+	// factory.activityStreamsService.Refresh(crawlerClient, mongodb.NewCollection(collection))
 }
