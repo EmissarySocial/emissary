@@ -199,7 +199,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// Connect to external services and discover the best update method.
 	// This will also update the status again, soon.
-	go derp.Report(service.RefreshAndConnect(*following))
+	go service.RefreshAndConnect(*following)
 
 	// Win!
 	return nil

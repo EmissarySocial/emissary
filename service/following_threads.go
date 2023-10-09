@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
@@ -169,7 +168,6 @@ func (service *Following) getOrigin(following *model.Following, document streams
 		result.Type = model.OriginTypeAnnounce
 
 	default:
-		spew.Dump("-------------", document.ID(), document.Value())
 		if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
 			result.Type = model.OriginTypeReply
 		}
