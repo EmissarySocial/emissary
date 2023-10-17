@@ -84,6 +84,11 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading OAuth Application")
 		}
 
+		// Validate the transaction
+		if err := transaction.Validate(application); err != nil {
+			return derp.Wrap(err, location, "Invalid transaction")
+		}
+
 		// Create a UserToken
 		userTokenService := factory.OAuthUserToken()
 		userToken, err := userTokenService.Create(application, authorization, transaction)
