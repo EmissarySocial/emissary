@@ -162,12 +162,7 @@ func (w Outbox) UserID() string {
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Outbox) Myself() bool {
 	authorization := getAuthorization(w._context)
-
-	if err := authorization.Valid(); err == nil {
-		return authorization.UserID == w.user.UserID
-	}
-
-	return false
+	return authorization.UserID == w.user.UserID
 }
 
 func (w Outbox) Username() string {

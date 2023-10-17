@@ -151,12 +151,7 @@ func (w Inbox) UserID() string {
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Inbox) Myself() bool {
 	authorization := getAuthorization(w._context)
-
-	if err := authorization.Valid(); err == nil {
-		return authorization.UserID == w._user.UserID
-	}
-
-	return false
+	return authorization.UserID == w._user.UserID
 }
 
 func (w Inbox) Username() string {

@@ -9,7 +9,7 @@ import (
 
 /******************************************
 * Single Directive Tests
-*******************************************/
+******************************************/
 
 func TestEmpty(t *testing.T) {
 	header := ParseString("")
@@ -179,7 +179,7 @@ func TestUnrecognized(t *testing.T) {
 
 /******************************************
 * Multiple Directive Tests
-*******************************************/
+******************************************/
 
 func TestMultiple(t *testing.T) {
 	header := ParseString("public, max-age=604800, immutable")

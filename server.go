@@ -26,6 +26,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	toot "github.com/benpate/toot-echo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -252,7 +253,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.GetOutbox(factory))
 	e.POST("/@:userId/pub/inbox", handler.ActivityPub_PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", handler.ActivityPub_GetOutboxCollection(factory))
-	// e.GET("/@:userId/pub/key", handler.ActivityPub_GetPublicKey(factory))
 	e.GET("/@:userId/pub/followers", handler.ActivityPub_GetFollowersCollection(factory))
 	e.GET("/@:userId/pub/following", handler.ActivityPub_GetFollowingCollection(factory))
 	e.GET("/@:userId/pub/following/:followingId", handler.ActivityPub_GetFollowingRecord(factory))
@@ -270,15 +270,23 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), mw.Owner)
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), mw.Owner)
 
-	// OAuth Connections
-	e.GET("/oauth/:provider", handler.GetOAuth(factory), mw.Owner)
-	e.GET("/oauth/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
-	e.GET("/oauth/redirect", handler.OAuthRedirect(factory), mw.Owner)
+	// OAuth Client Connections
+	e.GET("/oauth/clients/:provider", handler.GetOAuth(factory), mw.Owner)
+	e.GET("/oauth/clients/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
+	e.GET("/oauth/clients/redirect", handler.OAuthRedirect(factory), mw.Owner)
 
 	// Startup Wizard
 	e.GET("/startup", handler.GetStartup(factory), mw.Owner)
 	e.GET("/startup/:action", handler.GetStartup(factory), mw.Owner)
 	e.POST("/startup", handler.PostStartup(factory), mw.Owner)
+
+	// OAuth Server
+	e.GET("/oauth/authorize", handler.GetOAuthAuthorization(factory), mw.Authenticated)
+	e.POST("/oauth/token", handler.PostOAuthToken(factory), mw.Authenticated)
+	e.POST("/oauth/authorize", handler.PostOAuthAuthorization(factory), mw.Authenticated)
+
+	// Mastodon API
+	toot.Register(e, handler.Mastodon(factory))
 }
 
 /******************************************
@@ -387,28 +395,35 @@ func gracefulShutdown(e *echo.Echo) {
 }
 
 // errorHandler is a custom error handler that returns a JSON error message to the client
+// nolint:errcheck
 func errorHandler(err error, ctx echo.Context) {
 
 	// Special handling of permisssion errors
-	code := derp.ErrorCode(err)
-	switch code {
+	request := ctx.Request()
+
+	errorCode := derp.ErrorCode(err)
+
+	switch errorCode {
+
 	case http.StatusUnauthorized:
 
-		if currentPath := ctx.Request().URL.Path; currentPath != "/signin" {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(currentPath))
+		uri := request.URL
+
+		if currentPath := uri.Path; currentPath != "/signin" {
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(uri.String()))
 			return
 		}
-		ctx.String(code, derp.Message(err))
+
+		ctx.String(errorCode, derp.Message(err))
 		return
 	}
 
 	// On localhost, allow developers to see full error dump.
 	if domain.IsLocalhost(ctx.Request().Host) {
-		ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
+		ctx.JSONPretty(errorCode, err, "  ")
 		return
 	}
 
 	// Fall through to general error handler
-	ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
-	// ctx.String(derp.ErrorCode(err), derp.Message(err))
+	ctx.String(derp.ErrorCode(err), derp.Message(err))
 }

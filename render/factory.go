@@ -44,6 +44,8 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	Locator() service.Locator
 	LookupProvider(primitive.ObjectID) form.LookupProvider
+	OAuthApplication() *service.OAuthApplication
+	OAuthUserToken() *service.OAuthUserToken
 	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue
 	StreamUpdateChannel() chan model.Stream

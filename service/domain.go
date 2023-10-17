@@ -286,7 +286,7 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	// Generate and return the AuthCodeURL
 	config := provider.OAuthConfig()
 
-	config.RedirectURL = service.OAuthCallbackURL(providerID)
+	config.RedirectURL = service.OAuthClientCallbackURL(providerID)
 	/* TODO: MEDIUM: add hash value for challenge_method...
 	codeChallengeBytes := sha256.Sum256([]byte(client.GetStringOK("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
@@ -329,7 +329,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 
 	token, err := config.Exchange(context.Background(), code,
 		oauth2.SetAuthURLParam("code_verifier", client.Data.GetString("code_challenge")),
-		oauth2.SetAuthURLParam("redirect_uri", service.OAuthCallbackURL(providerID)))
+		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL(providerID)))
 
 	if err != nil {
 		return derp.NewInternalError(location, "Error exchanging OAuth code for token", err.Error())
@@ -349,9 +349,9 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	return nil
 }
 
-// OAuthCallbackURL returns the specific callback URL to use for this host and provider.
-func (service *Domain) OAuthCallbackURL(providerID string) string {
-	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/" + providerID + "/callback"
+// OAuthClientCallbackURL returns the specific callback URL to use for this host and provider.
+func (service *Domain) OAuthClientCallbackURL(providerID string) string {
+	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/clients/" + providerID + "/callback"
 }
 
 // NewOAuthState generates and returns a new OAuth state for the specified provider

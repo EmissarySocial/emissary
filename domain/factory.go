@@ -55,6 +55,8 @@ type Factory struct {
 	followingService     service.Following
 	inboxService         service.Inbox
 	mentionService       service.Mention
+	oauthApplication     service.OAuthApplication
+	oauthUserToken       service.OAuthUserToken
 	outboxService        service.Outbox
 	responseService      service.Response
 	streamService        service.Stream
@@ -111,6 +113,8 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityStrea
 	factory.groupService = service.NewGroup()
 	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
+	factory.oauthApplication = service.NewOAuthApplication()
+	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.streamService = service.NewStream()
@@ -247,6 +251,21 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionMention),
 			factory.Block(),
 			factory.ActivityStreams(),
+			factory.Host(),
+		)
+
+		// Populate OAuthApplication
+		factory.oauthApplication.Refresh(
+			factory.collection(CollectionOAuthApplication),
+			factory.OAuthUserToken(),
+			factory.Host(),
+		)
+
+		// Populate OAuthUserToken
+		factory.oauthUserToken.Refresh(
+			factory.collection(CollectionOAuthUserToken),
+			factory.OAuthApplication(),
+			factory.JWT(),
 			factory.Host(),
 		)
 
@@ -443,6 +462,16 @@ func (factory *Factory) Inbox() *service.Inbox {
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	return &factory.mentionService
+}
+
+// OAuthApplication returns a fully populated OAuthApplication service
+func (factory *Factory) OAuthApplication() *service.OAuthApplication {
+	return &factory.oauthApplication
+}
+
+// OAuthUserToken returns a fully populated OAuthUserToken service
+func (factory *Factory) OAuthUserToken() *service.OAuthUserToken {
+	return &factory.oauthUserToken
 }
 
 // Outbox returns a fully populated Outbox service

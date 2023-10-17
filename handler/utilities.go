@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -66,10 +66,8 @@ func getActualDocument(document streams.Document) streams.Document {
 func isOwner(claims jwt.Claims, err error) bool {
 
 	if err == nil {
-		if claims.Valid() == nil {
-			if authorization, ok := claims.(*model.Authorization); ok {
-				return authorization.DomainOwner
-			}
+		if authorization, ok := claims.(*model.Authorization); ok {
+			return authorization.DomainOwner
 		}
 	}
 

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OAuth - Emissary</title>
+	{{- template "includes-head" . -}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
+
+	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
+
+		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+
+			<form action="/oauth/authorize" method="post"
+				script="on submit add .htmx-request">
+
+				<input type="hidden" name="client_id" value="{{.ClientID}}">
+				<input type="hidden" name="redirect_uri" value="{{.RedirectURI}}">
+				<input type="hidden" name="scope" value="{{.Scope}}">
+				<input type="hidden" name="response_type" value="{{.ResponseType}}">
+
+				<div class="text-lg"><b>{{.Name}}</b> is requesting permission to:</div>
+
+				<div>
+					<ul>
+						{{- range .Scopes -}}
+							<li>{{.}}</li>
+						{{- end -}}
+					</ul>
+				</div>
+
+				<div class="space-above">
+					<span class="htmx-request-show">
+						<button disabled class="primary">
+							{{icon "loading"}} Working On It...
+						</button>
+					</span>
+					<span class="htmx-request-hide">
+						<button id="submitButton" type="submit" class="primary">
+							Allow Access
+						</button>
+					</span>
+
+					<button script="on click back() the window's history">Cancel</button>
+
+					<span id="message" class="red" hidden></span>
+
+				</div>
+
+			</form>
+
+		</div>
+
+	</main>
+
+	{{ template "includes-foot" . }}
+	
+</body>
+</html>

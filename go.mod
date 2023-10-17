@@ -2,9 +2,17 @@ module github.com/EmissarySocial/emissary
 
 go 1.20
 
+replace github.com/benpate/html => ../../benpate/html
+
+replace github.com/benpate/steranko => ../../benpate/steranko
+
+replace github.com/benpate/toot => ../../benpate/toot
+
+replace github.com/benpate/toot-echo => ../../benpate/toot-echo
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.45.24
+	github.com/aws/aws-sdk-go v1.45.25
 	github.com/benpate/data v0.28.1
 	github.com/benpate/data-mongo v0.28.4
 	github.com/benpate/derp v0.28.1
@@ -22,18 +30,20 @@ require (
 	github.com/benpate/sherlock v0.6.1
 	github.com/benpate/steranko v0.15.3
 	github.com/benpate/table v0.6.4
+	github.com/benpate/toot v0.1.0
+	github.com/benpate/toot-echo v0.1.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20230925202852-440a90f7e544
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.11.1
+	github.com/labstack/echo/v4 v4.11.2
 	github.com/labstack/gommon v0.4.0
-	github.com/microcosm-cc/bluemonday v1.0.25
+	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mmcdole/gofeed v1.2.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/rs/zerolog v1.31.0
@@ -88,7 +98,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.0 // indirect
+	github.com/klauspost/compress v1.17.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mmcdole/goxpp v1.1.0 // indirect
@@ -116,7 +126,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/mod v0.13.0 // indirect
-	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect

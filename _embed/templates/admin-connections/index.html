@@ -23,7 +23,7 @@
 							{{- if $client.Active -}}
 								<a class="button success" hx-get="/admin/connections/edit/provider={{.Value}}">{{icon "check"}} Enabled</a>
 							{{- else -}}
-								<a class="button" href="/oauth/{{.Value}}">Connect</a>
+								<a class="button" href="/oauth/clients/{{.Value}}">Connect</a>
 							{{- end -}}
 						</div>
 					</div>
