@@ -30,8 +30,8 @@ const CollectionInbox = "Inbox"
 // CollectionMention is the name of the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
-// CollectionOAuthApplication is the name of the database collection where OAuthApplications are stored
-const CollectionOAuthApplication = "OAuthApplication"
+// CollectionOAuthClient is the name of the database collection where OAuthClients are stored
+const CollectionOAuthClient = "OAuthClient"
 
 // CollectionOAuthUserToken is the name of the database collection where OAuthUserTokens are stored
 const CollectionOAuthUserToken = "OAuthUserToken"

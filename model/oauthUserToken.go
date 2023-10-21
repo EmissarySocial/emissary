@@ -1,6 +1,9 @@
 package model
 
 import (
+	"strings"
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -9,12 +12,11 @@ import (
 // UserOAuthToken represents an application-specific token that
 // a remote API can use to access a user's account on their behalf
 type OAuthUserToken struct {
-	OAuthUserTokenID   primitive.ObjectID `json:"userOAuthTokenId"   bson:"_id"`
-	OAuthApplicationID primitive.ObjectID `json:"oauthApplicationId" bson:"oauthApplicationId"`
-	UserID             primitive.ObjectID `json:"userId"             bson:"userId"`
-	Token              string             `json:"token"              bson:"token"`
-	ClientSecret       string             `json:"clientSecret"       bson:"clientSecret"`
-	Scopes             sliceof.String     `json:"scopes"             bson:"scopes"`
+	OAuthUserTokenID primitive.ObjectID `json:"userOAuthTokenId" bson:"_id"`
+	ClientID         primitive.ObjectID `json:"clientId"         bson:"clientId"`
+	UserID           primitive.ObjectID `json:"userId"           bson:"userId"`
+	Token            string             `json:"token"            bson:"token"`
+	Scopes           sliceof.String     `json:"scopes"           bson:"scopes"`
 
 	journal.Journal `bson:"journal,inline"`
 }
@@ -34,6 +36,16 @@ func (token OAuthUserToken) ID() string {
 // This is just the string version of the ID.
 func (token OAuthUserToken) Code() string {
 	return token.OAuthUserTokenID.Hex()
+}
+
+func (token OAuthUserToken) JSONResponse() map[string]any {
+
+	return map[string]any{
+		"access_token": token.Token,
+		"token_type":   "Bearer",
+		"scope":        strings.Join(token.Scopes, " "),
+		"created_at":   time.Now().Unix(),
+	}
 }
 
 // https://docs.joinmastodon.org/api/oauth-scopes/#list-of-scopes

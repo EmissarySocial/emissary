@@ -33,14 +33,25 @@ func (o OAuthUserTokenRequest) Scopes() []string {
 	return strings.Split(scope, " ")
 }
 
-// Validate confirms that a request is valid based on the settings in the OAuthApplication.
+// Validate confirms that a request is valid based on the settings in the OAuthClient.
 // This method MAY update the request if certain values are missing.
-func (req *OAuthUserTokenRequest) Validate(app OAuthApplication) error {
+func (req *OAuthUserTokenRequest) Validate(app OAuthClient) error {
 
 	const location = "model.OAuthUserTokenRequest.Validate"
 
+	// RULE: ClientID must match the application
+	if req.ClientID != app.ClientID.Hex() {
+		return derp.NewBadRequestError(location, "Invalid client_id", app, req)
+	}
+
+	// RULE: ClientSecret must match the application
+	if req.ClientSecret != app.ClientSecret {
+		return derp.NewBadRequestError(location, "Invalid client_secret", app, req)
+	}
+
+	// RULE: Client must have at least one redirect_uri
 	if len(app.RedirectURIs) == 0 {
-		return derp.NewInternalError(location, "Application must have at least one redirect_uri")
+		return derp.NewInternalError(location, "Client must have at least one redirect_uri")
 	}
 
 	// RULE: If missing, use default value for RedirectURI

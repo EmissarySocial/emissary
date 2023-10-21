@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetRegister generates an echo.HandlerFunc that handles GET /signin requests
+// GetRegister generates an echo.HandlerFunc that handles GET /register requests
 func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.GetRegister"
@@ -44,7 +44,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// PostRegister generates an echo.HandlerFunc that handles POST /signin requests
+// PostRegister generates an echo.HandlerFunc that handles POST /register requests
 func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.PostRegister"

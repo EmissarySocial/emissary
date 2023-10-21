@@ -8,12 +8,12 @@ import (
 func OAuthUserTokenSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"oauthUserTokenId":   schema.String{Format: "objectId", Required: true},
-			"userId":             schema.String{Format: "objectId", Required: true},
-			"oauthApplicationId": schema.String{Format: "objectId", Required: true},
-			"token":              schema.String{},
-			"clientSecret":       schema.String{},
-			"scopes":             schema.Array{Items: schema.String{}},
+			"oauthUserTokenId": schema.String{Format: "objectId", Required: true},
+			"userId":           schema.String{Format: "objectId", Required: true},
+			"clientId":         schema.String{Format: "objectId", Required: true},
+			"token":            schema.String{},
+			"clientSecret":     schema.String{},
+			"scopes":           schema.Array{Items: schema.String{}},
 		},
 	}
 }
@@ -23,9 +23,6 @@ func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 
 	case "token":
 		return &userToken.Token, true
-
-	case "clientSecret":
-		return &userToken.ClientSecret, true
 
 	case "scopes":
 		return &userToken.Scopes, true
@@ -41,8 +38,8 @@ func (userToken *OAuthUserToken) GetStringOK(name string) (string, bool) {
 	case "oauthUserTokenId":
 		return userToken.OAuthUserTokenID.Hex(), true
 
-	case "oauthApplicationId":
-		return userToken.OAuthApplicationID.Hex(), true
+	case "clientId":
+		return userToken.ClientID.Hex(), true
 
 	case "userId":
 		return userToken.UserID.Hex(), true
@@ -61,9 +58,9 @@ func (userToken *OAuthUserToken) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "oauthApplicationId":
+	case "clientId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			userToken.OAuthApplicationID = objectID
+			userToken.ClientID = objectID
 			return true
 		}
 

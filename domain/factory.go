@@ -55,7 +55,7 @@ type Factory struct {
 	followingService     service.Following
 	inboxService         service.Inbox
 	mentionService       service.Mention
-	oauthApplication     service.OAuthApplication
+	oauthClient          service.OAuthClient
 	oauthUserToken       service.OAuthUserToken
 	outboxService        service.Outbox
 	responseService      service.Response
@@ -113,7 +113,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityStrea
 	factory.groupService = service.NewGroup()
 	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
-	factory.oauthApplication = service.NewOAuthApplication()
+	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
@@ -254,9 +254,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
-		// Populate OAuthApplication
-		factory.oauthApplication.Refresh(
-			factory.collection(CollectionOAuthApplication),
+		// Populate OAuthClient
+		factory.oauthClient.Refresh(
+			factory.collection(CollectionOAuthClient),
 			factory.OAuthUserToken(),
 			factory.Host(),
 		)
@@ -264,7 +264,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate OAuthUserToken
 		factory.oauthUserToken.Refresh(
 			factory.collection(CollectionOAuthUserToken),
-			factory.OAuthApplication(),
+			factory.OAuthClient(),
 			factory.JWT(),
 			factory.Host(),
 		)
@@ -464,9 +464,9 @@ func (factory *Factory) Mention() *service.Mention {
 	return &factory.mentionService
 }
 
-// OAuthApplication returns a fully populated OAuthApplication service
-func (factory *Factory) OAuthApplication() *service.OAuthApplication {
-	return &factory.oauthApplication
+// OAuthClient returns a fully populated OAuthClient service
+func (factory *Factory) OAuthClient() *service.OAuthClient {
+	return &factory.oauthClient
 }
 
 // OAuthUserToken returns a fully populated OAuthUserToken service

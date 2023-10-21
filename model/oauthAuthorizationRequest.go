@@ -33,9 +33,9 @@ func (req OAuthAuthorizationRequest) Scopes() []string {
 	return strings.Split(req.Scope, " ")
 }
 
-// Validate confirms that a request is valid based on the settings in the OAuthApplication.
+// Validate confirms that a request is valid based on the settings in the OAuthClient.
 // This method MAY update the request if certain values are missing.
-func (req *OAuthAuthorizationRequest) Validate(app OAuthApplication) error {
+func (req *OAuthAuthorizationRequest) Validate(app OAuthClient) error {
 
 	const location = "model.OAuthAuthorizationRequest.Validate"
 

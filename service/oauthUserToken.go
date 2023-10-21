@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -14,10 +13,10 @@ import (
 
 // OAuthUserToken manages all interactions with the OAuthUserToken collection
 type OAuthUserToken struct {
-	collection              data.Collection
-	oauthApplicationService *OAuthApplication
-	jwtService              JWT
-	host                    string
+	collection         data.Collection
+	oauthClientService *OAuthClient
+	jwtService         JWT
+	host               string
 }
 
 // NewOAuthUserToken returns a fully populated OAuthUserToken service.
@@ -30,9 +29,9 @@ func NewOAuthUserToken() OAuthUserToken {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *OAuthUserToken) Refresh(collection data.Collection, oauthApplicationService *OAuthApplication, jwtService JWT, host string) {
+func (service *OAuthUserToken) Refresh(collection data.Collection, oauthClientService *OAuthClient, jwtService JWT, host string) {
 	service.collection = collection
-	service.oauthApplicationService = oauthApplicationService
+	service.oauthClientService = oauthClientService
 	service.jwtService = jwtService
 	service.host = host
 }
@@ -124,11 +123,49 @@ func (service *OAuthUserToken) Schema() schema.Schema {
 }
 
 /******************************************
+ * Custom Queries
+ ******************************************/
+
+func (service *OAuthUserToken) LoadByUserAndClient(userID primitive.ObjectID, clientID primitive.ObjectID, result *model.OAuthUserToken) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("clientId", clientID)
+
+	return service.Load(criteria, result)
+}
+
+func (service *OAuthUserToken) LoadByClientAndCode(userTokenID primitive.ObjectID, clientID primitive.ObjectID, clientSecret string, result *model.OAuthUserToken) error {
+
+	// RULE: must have a valid clientSecret to load this record
+	if err := service.oauthClientService.ValidateClientSecret(clientID, clientSecret); err != nil {
+		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
+	}
+
+	criteria := exp.Equal("_id", userTokenID).
+		AndEqual("clientId", clientID)
+
+	return service.Load(criteria, result)
+}
+
+func (service *OAuthUserToken) LoadByClientAndToken(clientID primitive.ObjectID, clientSecret string, token string, result *model.OAuthUserToken) error {
+
+	// RULE: must have a valid clientSecret to load this record
+	if err := service.oauthClientService.ValidateClientSecret(clientID, clientSecret); err != nil {
+		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
+	}
+
+	criteria := exp.Equal("clientId", clientID).
+		AndEqual("token", token)
+
+	return service.Load(criteria, result)
+}
+
+/******************************************
  * Custom Methods
  ******************************************/
 
 // Create creates a new OAuthUserToken for the provided application and authorization
-func (service *OAuthUserToken) Create(application model.OAuthApplication, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
+func (service *OAuthUserToken) Create(application model.OAuthClient, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
 
 	const location = "service.OAuthUserToken.Create"
 
@@ -142,19 +179,21 @@ func (service *OAuthUserToken) Create(application model.OAuthApplication, author
 		return model.OAuthUserToken{}, derp.Wrap(err, location, "Invalid OAuthUserTokenRequest")
 	}
 
-	// Create a random token
-	token, err := random.GenerateString(64)
+	// If we already have a token for this user/client, then just return that.
+	result := model.NewOAuthUserToken()
+	if err := service.LoadByUserAndClient(authorization.UserID, application.ClientID, &result); err == nil {
+		return result, nil
+	}
+
+	// Fall through means we're going to create a new token
+	token, err := service.JWT(authorization.UserID, transaction.Scope)
 
 	if err != nil {
 		return model.OAuthUserToken{}, derp.Wrap(err, location, "Error generating random token")
 	}
 
-	// Create the result object
-	result := model.NewOAuthUserToken()
-
 	// Copy data from the authorization
-	result.OAuthApplicationID = application.OAuthApplicationID
-	result.ClientSecret = application.ClientSecret
+	result.ClientID = application.ClientID
 	result.UserID = authorization.UserID
 	result.Scopes = transaction.Scopes()
 	result.Token = token
@@ -167,19 +206,19 @@ func (service *OAuthUserToken) Create(application model.OAuthApplication, author
 	return result, nil
 }
 
-func (service *OAuthUserToken) DeleteByApplication(applicationID primitive.ObjectID, note string) error {
+func (service *OAuthUserToken) DeleteByClient(applicationID primitive.ObjectID, note string) error {
 	criteria := exp.Equal("applicationId", applicationID)
 	return service.DeleteMany(criteria, note)
 }
 
 // JWT encodes an OAuthUserToken as a new JWT.
-func (service *OAuthUserToken) JWT(oauthUserToken model.OAuthUserToken) (string, error) {
+func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (string, error) {
 
 	// Collect claims
 	claims := jwt.MapClaims{
 		"api":     true,
-		"userId":  oauthUserToken.UserID,
-		"scopes:": oauthUserToken.Scopes,
+		"userId":  userID,
+		"scopes:": scopes,
 	}
 
 	// Create the token

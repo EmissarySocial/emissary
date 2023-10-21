@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/toot/object"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -77,6 +78,19 @@ func (user *User) Summary() UserSummary {
 		EmailAddress: user.EmailAddress,
 		ImageURL:     user.ActivityPubAvatarURL(),
 		ProfileURL:   user.ProfileURL,
+	}
+}
+
+func (user *User) ToToot() object.Account {
+	return object.Account{
+		ID:       user.ActivityPubURL(),
+		Username: user.Username,
+		// Acct: user.WebFingerAccount,
+		DisplayName:  user.DisplayName,
+		Note:         user.StatusMessage,
+		Avatar:       user.ActivityPubAvatarURL(),
+		Discoverable: user.IsPublic,
+		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
 	}
 }
 

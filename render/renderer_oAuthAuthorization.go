@@ -7,12 +7,13 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/davecgh/go-spew/spew"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OAuthAuthorization renderer displays UI pages for an OAuth Application
 type OAuthAuthorization struct {
-	_service *service.OAuthApplication
-	_app     model.OAuthApplication
+	_service *service.OAuthClient
+	_app     model.OAuthClient
 	_request model.OAuthAuthorizationRequest
 }
 
@@ -23,13 +24,20 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 
 	// Create the result object
 	result := OAuthAuthorization{
-		_service: factory.OAuthApplication(),
-		_app:     model.NewOAuthApplication(),
+		_service: factory.OAuthClient(),
+		_app:     model.NewOAuthClient(),
 		_request: request,
 	}
 
-	// Try to load the OAuthApplication object
-	if err := result._service.LoadByClientID(request.ClientID, &result._app); err != nil {
+	// Convert clientID
+	clientID, err := primitive.ObjectIDFromHex(request.ClientID)
+
+	if err != nil {
+		return OAuthAuthorization{}, derp.Wrap(err, location, "Invalid ClientID")
+	}
+
+	// Try to load the OAuthClient object
+	if err := result._service.LoadByClientID(clientID, &result._app); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Error loading OAuth Application")
 	}
 
@@ -43,7 +51,7 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 }
 
 func (r OAuthAuthorization) ClientID() string {
-	return r._app.OAuthApplicationID.Hex()
+	return r._app.ClientID.Hex()
 }
 
 func (r OAuthAuthorization) Name() string {

@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -38,9 +39,16 @@ type Stream struct {
  ******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, ctx *steranko.Context, template model.Template, stream *model.Stream, actionID string) (Stream, error) {
+func NewStream(factory Factory, ctx echo.Context, template model.Template, stream *model.Stream, actionID string) (Stream, error) {
 
 	const location = "render.NewStream"
+
+	// Cast the context as a steranko context (this should never fail)
+	sterankoContext, ok := ctx.(*steranko.Context)
+
+	if !ok {
+		return Stream{}, derp.NewInternalError(location, "Context must be a steranko context")
+	}
 
 	// Verify the requested action
 	action, ok := template.Action(actionID)
@@ -50,7 +58,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 	}
 
 	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
+	authorization := getAuthorization(sterankoContext)
 
 	if !action.UserCan(stream, &authorization) {
 		if authorization.IsAuthenticated() {
@@ -61,7 +69,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 	}
 
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, sterankoContext, template, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error creating common renderer")
@@ -76,7 +84,7 @@ func NewStream(factory Factory, ctx *steranko.Context, template model.Template, 
 }
 
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
-func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *model.Stream, actionID string) (Stream, error) {
+func NewStreamWithoutTemplate(factory Factory, ctx echo.Context, stream *model.Stream, actionID string) (Stream, error) {
 
 	// Use the template service to look up the correct template
 	templateService := factory.Template()
@@ -88,6 +96,41 @@ func NewStreamWithoutTemplate(factory Factory, ctx *steranko.Context, stream *mo
 
 	// Return a fully populated service
 	return NewStream(factory, ctx, template, stream, actionID)
+}
+
+// NewStreamFromURI creates a new Stream renderer for the provided request context.
+// IMPORTANT: The stream parameter is expected to be an empty stream in the caller's scope that will be populated by this function.
+func NewStreamFromURI(serverFactory ServerFactory, ctx echo.Context, stream *model.Stream, actionID string) (Stream, error) {
+
+	const location = "render.NewStreamFromURI"
+
+	// Locate the requested domain name
+	factory, err := serverFactory.ByContext(ctx)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Invalid domain")
+	}
+
+	// If Load the stream (using a stream in the caller's namespace)
+	streamService := factory.Stream()
+	token, defaultAction, err := streamService.ParsePath(ctx.Request().URL)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Invalid path")
+	}
+
+	// Try to load the Stream from the database
+	if err := streamService.LoadByToken(token, stream); err != nil {
+		return Stream{}, derp.Wrap(err, location, "Error loading stream")
+	}
+
+	// If the calling function didn't specify an action, then use the default action from the URL
+	if actionID == "" {
+		actionID = defaultAction
+	}
+
+	// Create and return a new renderer
+	return NewStreamWithoutTemplate(factory, ctx, stream, actionID)
 }
 
 /******************************************

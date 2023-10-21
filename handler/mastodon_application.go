@@ -10,8 +10,8 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func mastodon_PostApplication(serverFactory *server.Factory) func(*http.Request, txn.PostApplication) (object.Application, error) {
@@ -26,20 +26,20 @@ func mastodon_PostApplication(serverFactory *server.Factory) func(*http.Request,
 		}
 
 		// Collect OAuth Application from the request
-		oauthApplication := model.NewOAuthApplication()
-		oauthApplication.Name = t.ClientName
-		oauthApplication.Website = t.Website
-		oauthApplication.RedirectURIs = convert.SliceOfString(t.RedirectURIs)
-		oauthApplication.Scopes = strings.Split(t.Scopes, " ")
+		oauthClient := model.NewOAuthClient()
+		oauthClient.Name = t.ClientName
+		oauthClient.Website = t.Website
+		oauthClient.RedirectURIs = convert.SliceOfString(t.RedirectURIs)
+		oauthClient.Scopes = strings.Split(t.Scopes, " ")
 
 		// Save the application to the database
-		oauthApplicationService := factory.OAuthApplication()
-		if err := oauthApplicationService.Save(&oauthApplication, "Created via Mastodon API"); err != nil {
+		oauthClientService := factory.OAuthClient()
+		if err := oauthClientService.Save(&oauthClient, "Created via Mastodon API"); err != nil {
 			return object.Application{}, derp.Wrap(err, "toot.handler.mastodon_PostApplication", "Error saving application")
 		}
 
 		// Success
-		return oauthApplication.ToToot(), nil
+		return oauthClient.ToToot(), nil
 	}
 }
 
@@ -64,14 +64,20 @@ func mastodon_GetApplication_VerifyCredentials(serverFactory *server.Factory) fu
 			return object.Application{}, derp.Wrap(err, location, "Error parsing JWT")
 		}
 
-		spew.Dump(token)
-
 		// Get the Application from the database
-		oauthApplicationService := factory.OAuthApplication()
-		result := model.NewOAuthApplication()
-		clientID := token.Claims.(jwt.MapClaims)["client_id"].(string)
+		oauthClientService := factory.OAuthClient()
+		result := model.NewOAuthClient()
+		clientString := token.Claims.(jwt.MapClaims)["client_id"].(string)
 
-		if err := oauthApplicationService.LoadByClientID(clientID, &result); err != nil {
+		// Convert the clientID
+		clientID, err := primitive.ObjectIDFromHex(clientString)
+
+		if err != nil {
+			return object.Application{}, derp.Wrap(err, location, "Invalid client_id")
+		}
+
+		// Try to load the client record from the database
+		if err := oauthClientService.LoadByClientID(clientID, &result); err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Error loading application")
 		}
 

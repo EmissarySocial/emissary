@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,6 +28,7 @@ import (
 type Stream struct {
 	collection          data.Collection
 	templateService     *Template
+	userService         *User
 	draftService        *StreamDraft
 	outboxService       *Outbox
 	attachmentService   *Attachment
@@ -345,22 +347,44 @@ func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Strea
 func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 
 	// Verify we have a valid URL
-	parsedURL, err := url.Parse(streamURL)
+	uri, err := url.Parse(streamURL)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Stream.LoadByURL", "Invalid URL", streamURL)
 	}
 
+	// Retrieve the Token from the request path
+	token, _, err := service.ParsePath(uri)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Stream.LoadByURL", "Invalid URL", streamURL)
+	}
+
+	return service.LoadByToken(token, result)
+}
+
+func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
+
 	// Verify the URL matches this service
-	if domain.AddProtocol(parsedURL.Host) != service.host {
-		return derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", streamURL)
+	if domain.AddProtocol(uri.Host) != service.host {
+		return "", "", derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
 	}
 
 	// Load the Stream using the token
-	token := strings.TrimPrefix(parsedURL.Path, "/")
-	token = list.First(token, '/')
+	path := list.BySlash(strings.TrimPrefix(uri.Path, "/"))
+	token, path := path.Split()
 
-	return service.LoadByToken(token, result)
+	if token == "" {
+		token = "home"
+	}
+
+	actionID := path.Head()
+
+	if actionID == "" {
+		actionID = "view"
+	}
+
+	return token, actionID, nil
 }
 
 // LoadByOriginID returns a single `Stream` that matches the provided `Origin.FollowingID`
@@ -726,4 +750,31 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 
 func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")
+}
+
+/******************************************
+ * Mastodon API
+ ******************************************/
+
+func (service *Stream) ToToot(stream *model.Stream) (object.Status, error) {
+
+	const location = "service.Stream.ToToot"
+
+	// Load the "AttributedTo" user
+	attributedTo := model.NewUser()
+	if err := service.userService.LoadByID(stream.AttributedTo.UserID, &attributedTo); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Error loading author")
+	}
+
+	return object.Status{
+		ID:          stream.StreamID.Hex(),
+		URI:         stream.ActivityPubURL(),
+		CreatedAt:   time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
+		Account:     attributedTo.ToToot(),
+		Content:     stream.Content.HTML,
+		Visibility:  "public",
+		SpoilerText: stream.Label,
+		URL:         stream.URL,
+		InReplyToID: stream.InReplyTo,
+	}, nil
 }

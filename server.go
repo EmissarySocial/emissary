@@ -282,8 +282,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.GetOAuthAuthorization(factory), mw.Authenticated)
-	e.POST("/oauth/token", handler.PostOAuthToken(factory), mw.Authenticated)
 	e.POST("/oauth/authorize", handler.PostOAuthAuthorization(factory), mw.Authenticated)
+	e.POST("/oauth/token", handler.PostOAuthToken(factory))
+	e.POST("/oauth/revoke", handler.PostOAuthRevoke(factory))
 
 	// Mastodon API
 	toot.Register(e, handler.Mastodon(factory))
@@ -410,7 +411,8 @@ func errorHandler(err error, ctx echo.Context) {
 		uri := request.URL
 
 		if currentPath := uri.Path; currentPath != "/signin" {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(uri.String()))
+			nextPage := uri.String()
+			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(nextPage))
 			return
 		}
 

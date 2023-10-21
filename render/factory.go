@@ -9,8 +9,13 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
+	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type ServerFactory interface {
+	ByContext(echo.Context) (Factory, error)
+}
 
 // Factory is used to locate all necessary services
 type Factory interface {
@@ -44,7 +49,7 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	Locator() service.Locator
 	LookupProvider(primitive.ObjectID) form.LookupProvider
-	OAuthApplication() *service.OAuthApplication
+	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
 	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue

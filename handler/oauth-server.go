@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
@@ -65,6 +66,13 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Invalid form parameters")
 		}
 
+		// Convert the ClientID
+		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid client_id")
+		}
+
 		// Locate the current domain
 		factory, err := serverFactory.ByContext(ctx)
 
@@ -77,10 +85,10 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 		authorization := getAuthorization(sterankoContext)
 
 		// Get Application
-		applicationService := factory.OAuthApplication()
-		application := model.NewOAuthApplication()
+		clientService := factory.OAuthClient()
+		application := model.NewOAuthClient()
 
-		if err := applicationService.LoadByClientID(transaction.ClientID, &application); err != nil {
+		if err := clientService.LoadByClientID(clientID, &application); err != nil {
 			return derp.Wrap(err, location, "Error loading OAuth Application")
 		}
 
@@ -145,20 +153,13 @@ func postOAuthAuthorization_token(ctx echo.Context, userTokenService *service.OA
 
 	const location = "handler.postOAuthAuthorization_token"
 
-	// Generate the JWT token for the User
-	token, err := userTokenService.JWT(userToken)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error generating JWT")
-	}
-
 	// If this magic value is passed as the redirect URI, then we just return the token in the <title> tag of the HTML
 	// https://docs.joinmastodon.org/methods/apps/#form-data-parameters
 	if transaction.RedirectURI == "urn:ietf:wg:oauth:2.0:oob" {
 		b := html.New()
 		b.HTML()
 		b.Head()
-		b.Title(token)
+		b.Title(userToken.Token)
 
 		return ctx.HTML(http.StatusOK, b.String())
 	}
@@ -170,7 +171,7 @@ func postOAuthAuthorization_token(ctx echo.Context, userTokenService *service.OA
 		return derp.Wrap(err, location, "Error parsing redirect_uri")
 	}
 
-	redirectURI.Fragment = "access_token=" + token + "&token_type=Bearer"
+	redirectURI.Fragment = "access_token=" + userToken.Token + "&token_type=Bearer"
 
 	// Otherwise, we redirect to the redirect_uri
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
@@ -181,6 +182,93 @@ func PostOAuthToken(serverFactory *server.Factory) echo.HandlerFunc {
 	const location = "handler.PostOAuthToken"
 
 	return func(ctx echo.Context) error {
-		return nil
+
+		// Collect transaction data
+		transaction := model.NewOAuthUserTokenRequest()
+
+		if err := ctx.Bind(&transaction); err != nil {
+			return derp.Wrap(err, location, "Invalid form parameters")
+		}
+
+		// Convert client ID
+		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid client_id")
+		}
+
+		// Convert transaction.Code => userToken
+		userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid code")
+		}
+
+		// Locate the domain factory
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid Domain.")
+		}
+
+		// Load the UserToken
+		userTokenService := factory.OAuthUserToken()
+		userToken := model.NewOAuthUserToken()
+
+		if err := userTokenService.LoadByClientAndCode(userTokenID, clientID, transaction.ClientSecret, &userToken); err != nil {
+			return derp.Wrap(err, location, "Error loading OAuthUserToken")
+		}
+
+		// Return the Token as JSON
+		return ctx.JSON(http.StatusOK, userToken.JSONResponse())
+	}
+}
+
+func PostOAuthRevoke(serverFactory *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.PostOAuthRevoke"
+
+	return func(ctx echo.Context) error {
+
+		// Collect transaction data
+		transaction := model.NewOAuthUserTokenRevokeRequest()
+
+		if err := ctx.Bind(&transaction); err != nil {
+			return derp.Wrap(err, location, "Invalid form parameters")
+		}
+
+		// Convert clientID
+		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid client_id")
+		}
+
+		// Locate the domain factory
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid Domain.")
+		}
+
+		// Load the UserToken
+		userTokenService := factory.OAuthUserToken()
+		userToken := model.NewOAuthUserToken()
+
+		err = userTokenService.LoadByClientAndToken(clientID, transaction.ClientSecret, transaction.Token, &userToken)
+
+		if derp.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading OAuthUserToken")
+		}
+
+		if err := userTokenService.Delete(&userToken, "Revoked by Client"); err != nil {
+			return derp.Wrap(err, location, "Error deleting OAuthUserToken")
+		}
+
+		return ctx.JSON(http.StatusOK, map[string]any{})
 	}
 }
