@@ -38,8 +38,8 @@ func (step StepPublish) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	// Try to Publish the Stream to ActivityPub
 	streamService := factory.Stream()
 
-	if err := streamService.Publish(&user, streamRenderer.stream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamRenderer.stream))
+	if err := streamService.Publish(&user, streamRenderer._stream); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamRenderer._stream))
 	}
 
 	return nil

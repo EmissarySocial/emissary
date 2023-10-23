@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/labstack/echo/v4"
 )
 
 // StepSetData represents an action-step that can update the custom data stored in a Stream
@@ -41,10 +40,10 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	if len(step.FromForm) > 0 {
 
-		inputs := mapof.NewAny()
+		transaction := mapof.NewAny()
 
 		// Collect form POST information
-		if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &inputs); err != nil {
+		if err := bindBody(renderer.request(), &transaction); err != nil {
 			result := derp.Wrap(err, location, "Error binding body")
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return Halt().WithError(result)
@@ -52,8 +51,8 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 		// Put approved form data into the stream
 		for _, p := range step.FromForm {
-			if err := schema.Set(object, p, inputs[p]); err != nil {
-				result := derp.Wrap(err, location, "Error seting value from user input", inputs, p)
+			if err := schema.Set(object, p, transaction[p]); err != nil {
+				result := derp.Wrap(err, location, "Error seting value from user input", transaction, p)
 				derp.SetErrorCode(result, http.StatusBadRequest)
 				return Halt().WithError(result)
 			}
@@ -88,7 +87,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 func (step StepSetData) setURLPaths(renderer Renderer) error {
 
 	if len(step.FromURL) > 0 {
-		query := renderer.context().Request().URL.Query()
+		query := renderer.request().URL.Query()
 		schema := renderer.schema()
 		object := renderer.object()
 		for _, path := range step.FromURL {

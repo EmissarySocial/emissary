@@ -32,9 +32,8 @@ func (step StepWithFolder) execute(renderer Renderer, buffer io.Writer, actionMe
 
 	// Collect required services and values
 	factory := renderer.factory()
-	context := renderer.context()
 	folderService := factory.Folder()
-	folderToken := context.QueryParam("folderId")
+	folderToken := renderer.QueryParam("folderId")
 	folder := model.NewFolder()
 	folder.UserID = renderer.AuthenticatedID()
 
@@ -49,7 +48,7 @@ func (step StepWithFolder) execute(renderer Renderer, buffer io.Writer, actionMe
 	}
 
 	// Create a new renderer tied to the Folder record
-	subRenderer, err := NewModel(factory, context, folderService, &folder, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), folderService, &folder, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))

@@ -28,7 +28,7 @@ func (step StepEditWidget) Get(renderer Renderer, buffer io.Writer) PipelineBeha
 	}
 
 	// Wrap the form as a modal and return it to the client
-	formHTML = WrapModalForm(renderer.context().Response(), renderer.URL(), formHTML)
+	formHTML = WrapModalForm(renderer.response(), renderer.URL(), formHTML)
 
 	// nolint:errcheck
 	buffer.Write([]byte(formHTML))
@@ -48,7 +48,7 @@ func (step StepEditWidget) Post(renderer Renderer, _ io.Writer) PipelineBehavior
 
 	// Get the form post information
 	formData := mapof.NewAny()
-	if err := renderer.context().Bind(&formData); err != nil {
+	if err := bind(renderer.request(), &formData); err != nil {
 		return Halt().WithError(derp.Wrap(err, "render.StepEditWidget.Post", "Error binding form data"))
 	}
 
@@ -59,7 +59,7 @@ func (step StepEditWidget) Post(renderer Renderer, _ io.Writer) PipelineBehavior
 	}
 
 	// Update the stream with the new widget (in the same location)
-	streamRenderer.stream.Widgets.Put(streamWidget)
+	streamRenderer._stream.Widgets.Put(streamWidget)
 
 	return Continue().WithEvent("closeModal", "true")
 }
@@ -82,14 +82,14 @@ func (step StepEditWidget) common(renderer Renderer) (model.Widget, model.Stream
 	}
 
 	// Get the token from the request
-	token := renderer.context().QueryParam("widgetId")
+	token := renderer.QueryParam("widgetId")
 
 	if token == "" {
 		return model.Widget{}, model.StreamWidget{}, nil, derp.NewBadRequestError(location, "Missing required parameter: widgetId")
 	}
 
 	// Try to find the widget in the stream
-	streamWidget, ok := streamRenderer.stream.Widgets.Get(token)
+	streamWidget, ok := streamRenderer._stream.Widgets.Get(token)
 
 	if !ok {
 		return model.Widget{}, model.StreamWidget{}, nil, derp.NewBadRequestError(location, "Invalid widgetId", token)

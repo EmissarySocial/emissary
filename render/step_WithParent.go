@@ -27,13 +27,13 @@ func (step StepWithParent) Post(renderer Renderer, buffer io.Writer) PipelineBeh
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 
-	if err := factory.Stream().LoadByID(streamRenderer.stream.ParentID, &parent); err != nil {
+	if err := factory.Stream().LoadByID(streamRenderer._stream.ParentID, &parent); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
 	}
 
 	// Make a renderer with the new parent stream
 	// TODO: LOW: Is "view" really the best action to use here??
-	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &parent, "")
+	parentStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.request(), streamRenderer.response(), &parent, "")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating renderer for parent"))

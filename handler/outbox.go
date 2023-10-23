@@ -135,7 +135,7 @@ func renderOutbox(serverFactory *server.Factory, actionMethod render.ActionMetho
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
 
-		renderer, err := render.NewOutbox(factory, sterankoContext, &user, actionID)
+		renderer, err := render.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer")

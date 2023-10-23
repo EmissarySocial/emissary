@@ -33,7 +33,7 @@ func (step StepRedirectTo) execute(renderer Renderer) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
-	if err := renderer.context().Redirect(http.StatusTemporaryRedirect, nextPage.String()); err != nil {
+	if err := redirect(renderer.response(), http.StatusTemporaryRedirect, nextPage.String()); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error redirecting to new page"))
 	}
 

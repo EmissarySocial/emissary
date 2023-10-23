@@ -33,7 +33,7 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) PipelineBehavior
 	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
-	modalHTML := WrapModal(renderer.context().Response(), b.String())
+	modalHTML := WrapModal(renderer.response(), b.String())
 
 	// nolint:errcheck
 	io.WriteString(buffer, modalHTML)

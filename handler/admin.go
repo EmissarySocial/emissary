@@ -101,10 +101,10 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewBlock(factory, ctx, &block, template, actionID)
+		return render.NewBlock(factory, ctx.Request(), ctx.Response(), &block, template, actionID)
 
 	case "domain":
-		return render.NewDomain(factory, ctx, template, actionID)
+		return render.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "group":
 		group := model.NewGroup()
@@ -116,7 +116,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewGroup(factory, ctx, template, &group, actionID)
+		return render.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "stream":
 		stream := model.NewStream()
@@ -128,7 +128,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewNavigation(factory, ctx, template, &stream, actionID)
+		return render.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
 	case "user":
 		user := model.NewUser()
@@ -140,7 +140,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewUser(factory, ctx, template, &user, actionID)
+		return render.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	default:
 		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'block', 'domain', 'group', 'stream', or 'user'", template.Model)

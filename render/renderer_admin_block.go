@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -12,37 +13,37 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Block is a renderer for the admin/blocks page
+// It can only be accessed by a Domain Owner
 type Block struct {
-	block *model.Block
+	_block *model.Block
 	Common
 }
 
-func NewBlock(factory Factory, ctx *steranko.Context, block *model.Block, template model.Template, actionID string) (Block, error) {
+// NewBlock returns a fully initialized `Block` renderer.
+func NewBlock(factory Factory, request *http.Request, response http.ResponseWriter, block *model.Block, template model.Template, actionID string) (Block, error) {
 
 	const location = "render.NewBlock"
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	if !authorization.DomainOwner {
-		return Block{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
-	}
-
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Block{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Verify that the user is a Domain Owner
+	if !common._authorization.DomainOwner {
+		return Block{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
 	// Return the Block renderer
 	return Block{
-		block:  block,
+		_block: block,
 		Common: common,
 	}, nil
 }
@@ -66,7 +67,7 @@ func (w Block) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -75,7 +76,7 @@ func (w Block) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Block.View"
 
-	renderer, err := NewBlock(w._factory, w.context(), w.block, w._template, actionID)
+	renderer, err := NewBlock(w._factory, w._request, w._response, w._block, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Block renderer")
@@ -101,11 +102,11 @@ func (w Block) PageTitle() string {
 }
 
 func (w Block) object() data.Object {
-	return w.block
+	return w._block
 }
 
 func (w Block) objectID() primitive.ObjectID {
-	return w.block.BlockID
+	return w._block.BlockID
 }
 
 func (w Block) objectType() string {
@@ -125,7 +126,7 @@ func (w Block) executeTemplate(writer io.Writer, name string, data any) error {
 }
 
 func (w Block) clone(action string) (Renderer, error) {
-	return NewBlock(w._factory, w._context, w.block, w._template, action)
+	return NewBlock(w._factory, w._request, w._response, w._block, w._template, action)
 }
 
 /******************************************
@@ -133,11 +134,11 @@ func (w Block) clone(action string) (Renderer, error) {
  ******************************************/
 
 func (w Block) BlockID() string {
-	return w.block.BlockID.Hex()
+	return w._block.BlockID.Hex()
 }
 
 func (w Block) Label() string {
-	return w.block.Label
+	return w._block.Label
 }
 
 /******************************************
@@ -146,16 +147,14 @@ func (w Block) Label() string {
 
 func (w Block) Blocks() *QueryBuilder[model.Block] {
 
-	authorization := getAuthorization(w.context())
-
 	query := builder.NewBuilder().
 		String("type").
 		String("behavior").
 		String("trigger")
 
 	criteria := exp.And(
-		query.Evaluate(w.context().Request().URL.Query()),
-		exp.Equal("userId", authorization.UserID),
+		query.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._authorization.UserID),
 		exp.Equal("deleteDate", 0),
 	)
 
@@ -172,7 +171,7 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 		String("trigger")
 
 	criteria := exp.And(
-		query.Evaluate(w.context().Request().URL.Query()),
+		query.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", primitive.NilObjectID),
 		exp.Equal("deleteDate", 0),
 	)

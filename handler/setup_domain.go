@@ -132,9 +132,14 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		administrator.DisplayName = "Server Administrator"
 		administrator.IsOwner = true
 
-		if err := s.CreateCertificate(ctx, &administrator); err != nil {
+		cookie, err := s.CreateCertificate(ctx.Request(), &administrator)
+
+		if err != nil {
 			return derp.Wrap(err, location, "Error creating certificate")
 		}
+
+		// Set the cookie in the response
+		ctx.SetCookie(&cookie)
 
 		// Redirect to the admin page of this domain
 		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/startup")

@@ -3,6 +3,7 @@ package render
 import (
 	"html/template"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,19 +14,21 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Common provides common rendering functions that are needed by ALL renderers
 type Common struct {
-	_factory  Factory           // Factory interface is required for locating other services.
-	_context  *steranko.Context // Contains request context and authentication data.
-	_template model.Template    // Template to use for this renderer
-	action    model.Action      // Action to be performed on the Template
-	actionID  string            // Token that identifies the action requested in the URL
+	_factory       Factory             // Factory interface is required for locating other services.
+	_request       *http.Request       // Pointer to the HTTP request we are serving
+	_response      http.ResponseWriter // ResponseWriter for this request
+	_authorization model.Authorization // Authorization information for the current user
+	_template      model.Template      // Template to use for this renderer
+	action         model.Action        // Action to be performed on the Template
+	actionID       string              // Token that identifies the action requested in the URL
 
 	requestData mapof.Any // Temporary data scope for this request
 
@@ -33,22 +36,32 @@ type Common struct {
 	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
-func NewCommon(factory Factory, context *steranko.Context, template model.Template, actionID string) (Common, error) {
+func NewCommon(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Common, error) {
 
+	const location = "render.NewCommon"
+
+	// Retrieve the user's authorization information
+	steranko := factory.Steranko()
+	authorization := getAuthorization(steranko, request)
+
+	// Verify that the actionID is valid
 	action, ok := template.Actions[actionID]
 
 	if !ok {
-		return Common{}, derp.New(derp.CodeBadRequestError, "render.NewCommon", "Invalid action", actionID)
+		return Common{}, derp.New(derp.CodeBadRequestError, location, "Invalid action", actionID)
 	}
 
+	// Return a new Common renderer
 	return Common{
-		_factory:    factory,
-		_context:    context,
-		_template:   template,
-		action:      action,
-		actionID:    actionID,
-		requestData: mapof.NewAny(),
-		domain:      model.NewDomain(),
+		_factory:       factory,
+		_request:       request,
+		_response:      response,
+		_authorization: authorization,
+		_template:      template,
+		action:         action,
+		actionID:       actionID,
+		requestData:    mapof.NewAny(),
+		domain:         model.NewDomain(),
 	}, nil
 }
 
@@ -61,9 +74,16 @@ func (w Common) factory() Factory {
 	return w._factory
 }
 
-// context returns request context embedded in this renderer.
-func (w Common) context() *steranko.Context {
-	return w._context
+func (w Common) request() *http.Request {
+	return w._request
+}
+
+func (w Common) response() http.ResponseWriter {
+	return w._response
+}
+
+func (w Common) authorization() model.Authorization {
+	return w._authorization
 }
 
 // Action returns the model.Action configured into this renderer
@@ -93,7 +113,7 @@ func (w Common) Summary() string {
 
 // Returns the request method
 func (w Common) Method() string {
-	return w.context().Request().Method
+	return w._request.Method
 }
 
 // Host returns the protocol + the Hostname
@@ -103,7 +123,7 @@ func (w Common) Host() string {
 
 // URL returns the originally requested URL
 func (w Common) URL() string {
-	return w.context().Request().URL.RequestURI()
+	return w._request.URL.RequestURI()
 }
 
 // Protocol returns http:// or https:// used for this request
@@ -113,23 +133,27 @@ func (w Common) Protocol() string {
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return w._context.Request().Host
+	return w._request.Host
 }
 
 // Path returns the request path
 func (w Common) Path() string {
-	return w._context.Request().URL.Path
+	return w._request.URL.Path
+}
+
+func (w Common) PathList() list.List {
+	return list.BySlash(w.Path()).Tail()
 }
 
 func (w Common) SetQueryParam(name string, value string) {
-	query := w.context().Request().URL.Query()
+	query := w._request.URL.Query()
 	query.Set(name, value)
-	w.context().Request().URL.RawQuery = query.Encode()
+	w._request.URL.RawQuery = query.Encode()
 }
 
 // Returns the designated request parameter
 func (w Common) QueryParam(param string) string {
-	urlValue := w.context().Request().URL.Query()[param]
+	urlValue := w._request.URL.Query()[param]
 	// NOTE: we're getting the QueryParam value this way because the context.QueryParam() method
 	// doesn't seem to get updates when we change the URL via the SetQueryParam() step.
 	return convert.String(urlValue)
@@ -137,15 +161,7 @@ func (w Common) QueryParam(param string) string {
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
-
-	if context := w.context(); context != nil {
-		if request := context.Request(); request != nil {
-			if header := request.Header; header != nil {
-				return header.Get("HX-Request") != ""
-			}
-		}
-	}
-	return false
+	return w._request.Header.Get("HX-Request") != ""
 }
 
 // templateRole returns the the role that the current Template performs in the system.
@@ -298,10 +314,6 @@ func (w Common) UserImage() (string, error) {
 	return user.ActivityPubAvatarURL(), nil
 }
 
-func (w Common) authorization() model.Authorization {
-	return getAuthorization(w._context)
-}
-
 /******************************************
  * Misc Helper Methods
  ******************************************/
@@ -352,11 +364,10 @@ func (w Common) template() model.Template {
 // getUser loads/caches the currently-signed-in user to be used by other functions in this renderer
 func (w Common) getUser() (model.User, error) {
 
-	// TODO: LOW: Cache this if possible.  But without making the renderer a POINTER.
-
-	result := model.NewUser()
 	userService := w._factory.User()
-	authorization := getAuthorization(w.context())
+	steranko := w._factory.Steranko()
+	result := model.NewUser()
+	authorization := getAuthorization(steranko, w._request)
 
 	if err := userService.LoadByID(authorization.UserID, &result); err != nil {
 		return model.User{}, derp.Wrap(err, "render.Common.getUser", "Error loading user from database", authorization.UserID)

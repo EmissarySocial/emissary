@@ -32,15 +32,13 @@ func (step StepSetHeader) Post(renderer Renderer, _ io.Writer) PipelineBehavior 
 
 func (step StepSetHeader) setHeader(renderer Renderer) PipelineBehavior {
 
-	response := renderer.context().Response()
-
 	var value bytes.Buffer
 
 	if err := step.Value.Execute(&value, renderer); err != nil {
 		return Halt().WithError(derp.Wrap(err, "render.StepSetHeader.Post", "Error executing template", step.Value))
 	}
 
-	response.Header().Set(step.Name, value.String())
+	renderer.response().Header().Set(step.Name, value.String())
 
 	return nil
 }

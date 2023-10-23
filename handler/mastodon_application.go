@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -10,19 +9,24 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func mastodon_PostApplication(serverFactory *server.Factory) func(*http.Request, txn.PostApplication) (object.Application, error) {
+func mastodon_PostApplication(serverFactory *server.Factory) func(model.Authorization, txn.PostApplication) (object.Application, error) {
 
-	return func(request *http.Request, t txn.PostApplication) (object.Application, error) {
+	const location = "handler.mastodon_PostApplication"
+
+	return func(authorization model.Authorization, t txn.PostApplication) (object.Application, error) {
+
+		spew.Dump(authorization, t)
 
 		// Get the domain factory for this request
-		factory, err := serverFactory.ByDomainName(request.Host)
+		factory, err := serverFactory.ByDomainName(t.Host)
 
 		if err != nil {
-			return object.Application{}, derp.Wrap(err, "toot.handler.mastodon_PostApplication", "Unrecognized Domain")
+			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Collect OAuth Application from the request
@@ -35,7 +39,7 @@ func mastodon_PostApplication(serverFactory *server.Factory) func(*http.Request,
 		// Save the application to the database
 		oauthClientService := factory.OAuthClient()
 		if err := oauthClientService.Save(&oauthClient, "Created via Mastodon API"); err != nil {
-			return object.Application{}, derp.Wrap(err, "toot.handler.mastodon_PostApplication", "Error saving application")
+			return object.Application{}, derp.Wrap(err, location, "Error saving application")
 		}
 
 		// Success
@@ -43,14 +47,14 @@ func mastodon_PostApplication(serverFactory *server.Factory) func(*http.Request,
 	}
 }
 
-func mastodon_GetApplication_VerifyCredentials(serverFactory *server.Factory) func(*http.Request, txn.GetApplication_VerifyCredentials) (object.Application, error) {
+func mastodon_GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.Authorization, txn.GetApplication_VerifyCredentials) (object.Application, error) {
 
 	const location = "handler.mastodon_GetApplication_VerifyCredentials"
 
-	return func(request *http.Request, t txn.GetApplication_VerifyCredentials) (object.Application, error) {
+	return func(authorization model.Authorization, t txn.GetApplication_VerifyCredentials) (object.Application, error) {
 
 		// Get the domain factory
-		factory, err := serverFactory.ByDomainName(request.Host)
+		factory, err := serverFactory.ByDomainName(t.Host)
 
 		if err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -58,7 +62,7 @@ func mastodon_GetApplication_VerifyCredentials(serverFactory *server.Factory) fu
 
 		// Validate the JWT token
 		jwtService := factory.JWT()
-		token, err := jwtService.Parse(request)
+		token, err := jwtService.ParseString(t.Authorization)
 
 		if err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Error parsing JWT")

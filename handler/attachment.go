@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -63,8 +62,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
-		sterankoContext := ctx.(*steranko.Context)
-		if _, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, "view"); err != nil {
+		if _, err := render.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
 			return derp.Wrap(err, location, "Cannot create renderer")
 		}
 

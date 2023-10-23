@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -12,37 +13,37 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// User is a renderer for the admin/users page
+// It can only be accessed by a Domain Owner
 type User struct {
-	user *model.User
+	_user *model.User
 	Common
 }
 
-func NewUser(factory Factory, ctx *steranko.Context, template model.Template, user *model.User, actionID string) (User, error) {
+// NewUser returns a fully initialized `User` renderer.
+func NewUser(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, user *model.User, actionID string) (User, error) {
 
 	const location = "render.NewGroup"
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	if !authorization.DomainOwner {
-		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
-	}
-
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return User{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Verify that the user is a Domain Owner
+	if !common._authorization.DomainOwner {
+		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
 	// Return the User renderer
 	return User{
-		user:   user,
+		_user:  user,
 		Common: common,
 	}, nil
 }
@@ -66,14 +67,14 @@ func (w User) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewUser(w._factory, w._context, w._template, w.user, actionID)
+	renderer, err := NewUser(w._factory, w._request, w._response, w._template, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.User.View", "Error creating renderer")
@@ -99,11 +100,11 @@ func (w User) Permalink() string {
 }
 
 func (w User) object() data.Object {
-	return w.user
+	return w._user
 }
 
 func (w User) objectID() primitive.ObjectID {
-	return w.user.UserID
+	return w._user.UserID
 }
 
 func (w User) objectType() string {
@@ -123,7 +124,7 @@ func (w User) executeTemplate(writer io.Writer, name string, data any) error {
 }
 
 func (w User) clone(action string) (Renderer, error) {
-	return NewUser(w._factory, w._context, w._template, w.user, action)
+	return NewUser(w._factory, w._request, w._response, w._template, w._user, action)
 }
 
 /******************************************
@@ -139,19 +140,19 @@ func (w User) SignupForm() model.SignupForm {
  ******************************************/
 
 func (w User) UserID() string {
-	return w.user.UserID.Hex()
+	return w._user.UserID.Hex()
 }
 
 func (w User) Label() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w User) DisplayName() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w User) ImageURL() string {
-	return w.user.ActivityPubAvatarURL()
+	return w._user.ActivityPubAvatarURL()
 }
 
 /******************************************
@@ -165,7 +166,7 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(w._context.Request().URL.Query()),
+		query.Evaluate(w._request.URL.Query()),
 		exp.Equal("deleteDate", 0),
 	)
 
@@ -181,9 +182,9 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 // AssignedGroups lists all groups to which the current user is assigned.
 func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w.factory().Group()
-	result, err := groupService.ListByIDs(w.user.GroupIDs...)
+	result, err := groupService.ListByIDs(w._user.GroupIDs...)
 
-	return result, derp.Wrap(err, "render.User.AssignedGroups", "Error listing groups", w.user.GroupIDs)
+	return result, derp.Wrap(err, "render.User.AssignedGroups", "Error listing groups", w._user.GroupIDs)
 }
 
 func (w User) debug() {

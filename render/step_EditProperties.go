@@ -18,7 +18,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) Pipeline
 
 	schema := renderer.schema()
 	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
+	stream := streamRenderer._stream
 
 	element := form.Element{
 		Type:     "layout-vertical",
@@ -71,7 +71,7 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, "render.StepEditProperties.Get", "Error generating form HTML"))
 	}
 
-	result := WrapModalForm(renderer.context().Response(), renderer.URL(), html)
+	result := WrapModalForm(renderer.response(), renderer.URL(), html)
 	if _, err = buffer.Write([]byte(result)); err != nil {
 		return Halt().WithError(derp.Wrap(err, "render.StepEditProperties.Get", "Error writing response"))
 	}
@@ -82,16 +82,15 @@ func (step StepEditProperties) Get(renderer Renderer, buffer io.Writer) Pipeline
 func (step StepEditProperties) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	const location = "render.StepEditProperties.Post"
-	context := renderer.context()
 	body := mapof.NewAny()
 
-	if err := context.Bind(&body); err != nil {
+	if err := bind(renderer.request(), &body); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error binding request body"))
 	}
 
 	schema := renderer.schema()
 	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
+	stream := streamRenderer._stream
 
 	for _, path := range step.Paths {
 		if value, ok := body[path]; ok {

@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -14,23 +11,16 @@ import (
 )
 
 // https://docs.joinmastodon.org/methods/statuses/#create
-func mastodon_PostStatus(serverFactory *server.Factory) func(*http.Request, txn.PostStatus) (object.Status, error) {
+func mastodon_PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus) (object.Status, error) {
 
 	const location = "handler.mastodon_PostStatus"
-	return func(request *http.Request, transaction txn.PostStatus) (object.Status, error) {
+	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(request.Host)
+		factory, err := serverFactory.ByDomainName(transaction.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Confirm that the user is Authorized
-		authorization, err := getMastodonAuthorization(transaction.Authorization)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Invalid Authorization")
 		}
 
 		// Create the stream for the new mastodon "Status"
@@ -46,8 +36,13 @@ func mastodon_PostStatus(serverFactory *server.Factory) func(*http.Request, txn.
 			stream.PublishDate = scheduledAt.Unix()
 		}
 
-		// Save the stream
+		// Verify user permissions
 		streamService := factory.Stream()
+		if err := streamService.UserCan(&authorization, &stream, "create"); err != nil {
+			return object.Status{}, derp.New(derp.CodeForbiddenError, "User is not authorized to delete this stream", location)
+		}
+
+		// Save the stream
 		if err := streamService.Save(&stream, "Created via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
 		}
@@ -57,55 +52,50 @@ func mastodon_PostStatus(serverFactory *server.Factory) func(*http.Request, txn.
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#get
-func mastodon_GetStatus(serverFactory *server.Factory) func(*http.Request, txn.GetStatus) (object.Status, error) {
+func mastodon_GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus) (object.Status, error) {
 
 	const location = "handler.mastodon_GetStatus"
 
-	return func(request *http.Request, transaction txn.GetStatus) (object.Status, error) {
+	return func(authorization model.Authorization, transaction txn.GetStatus) (object.Status, error) {
 
-		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(request.Host)
+		// Get the Stream from the URL
+		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Load the Stream
-		streamService := factory.Stream()
-		stream := model.NewStream()
-
-		if err := streamService.LoadByURL(transaction.ID, &stream); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
+		// Validate permissions
+		if err := streamService.UserCan(&authorization, &stream, "view"); err != nil {
+			return object.Status{}, derp.New(derp.CodeForbiddenError, "User is not authorized to delete this stream", location)
+		}
+
+		// Return the value
 		return streamService.ToToot(&stream)
 	}
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#delete
-func mastodon_DeleteStatus(serverFactory *server.Factory) func(*http.Request, txn.DeleteStatus) (object.Status, error) {
+func mastodon_DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.DeleteStatus) (struct{}, error) {
 
 	const location = "handler.mastodon_DeleteStatus"
 
-	return func(request *http.Request, transaction txn.DeleteStatus) (object.Status, error) {
+	return func(authorization model.Authorization, transaction txn.DeleteStatus) (struct{}, error) {
 
-		stream := model.NewStream()
-		renderer, err := render.NewStreamFromURI(serverFactory, ctx, stream, "delete")
-
-		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(request.Host)
+		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
+			return struct{}{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		// Load the Stream
-		streamService := factory.Stream()
-
-		if err := streamService.LoadByURL(transaction.ID, &stream); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
+		if err := streamService.UserCan(&authorization, &stream, "delete"); err != nil {
+			return struct{}{}, derp.New(derp.CodeForbiddenError, "User is not authorized to delete this stream", location)
 		}
 
-		streamService.ObjectUserCan()
+		if err := streamService.Delete(&stream, "Deleted via Mastodon API"); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Error deleting stream")
+		}
+
+		return struct{}{}, nil
 	}
 }

@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -11,21 +12,18 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Outbox renders individual messages from a User's Outbox.
 type Outbox struct {
-	user *model.User
+	_user *model.User
 	Common
 }
 
-func NewOutbox(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Outbox, error) {
-
-	if !isUserVisible(ctx, user) {
-		return Outbox{}, derp.NewNotFoundError("render.NewOutbox", "User not found")
-	}
+// NewOutbox returns a fully initialized `Outbox` renderer.
+func NewOutbox(factory Factory, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Outbox, error) {
 
 	// Load the Template
 	templateService := factory.Template()
@@ -36,14 +34,20 @@ func NewOutbox(factory Factory, ctx *steranko.Context, user *model.User, actionI
 	}
 
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Outbox{}, derp.Wrap(err, "render.NewOutbox", "Error creating common renderer")
 	}
 
+	// Verify that the User's profile is visible
+	if !isUserVisible(&common._authorization, user) {
+		return Outbox{}, derp.NewNotFoundError("render.NewOutbox", "User not found")
+	}
+
+	// Return the Outbox renderer
 	return Outbox{
-		user:   user,
+		_user:  user,
 		Common: common,
 	}, nil
 }
@@ -61,20 +65,20 @@ func (w Outbox) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "render.Outbox.Render", "Error generating HTML", w._context.Request().URL.String())
+		err := derp.Wrap(status.Error, "render.Outbox.Render", "Error generating HTML", w._request.URL.String())
 		derp.Report(err)
 		return "", err
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
 // View executes a separate view for this Outbox
 func (w Outbox) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewOutbox(w._factory, w._context, w.user, actionID)
+	renderer, err := NewOutbox(w._factory, w._request, w._response, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.Outbox.View", "Error creating Outbox renderer")
@@ -85,18 +89,18 @@ func (w Outbox) View(actionID string) (template.HTML, error) {
 
 // NavigationID returns the ID to use for highlighing navigation menus
 func (w Outbox) NavigationID() string {
-	if w.user.UserID == w.AuthenticatedID() {
+	if w._user.UserID == w.AuthenticatedID() {
 		return "outbox"
 	}
 	return "user"
 }
 
 func (w Outbox) PageTitle() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w Outbox) Permalink() string {
-	return w.Host() + "/@" + w.user.UserID.Hex()
+	return w.Host() + "/@" + w._user.UserID.Hex()
 }
 
 func (w Outbox) Token() string {
@@ -104,11 +108,11 @@ func (w Outbox) Token() string {
 }
 
 func (w Outbox) object() data.Object {
-	return w.user
+	return w._user
 }
 
 func (w Outbox) objectID() primitive.ObjectID {
-	return w.user.UserID
+	return w._user.UserID
 }
 
 func (w Outbox) objectType() string {
@@ -128,7 +132,7 @@ func (w Outbox) templateRole() string {
 }
 
 func (w Outbox) clone(action string) (Renderer, error) {
-	return NewOutbox(w._factory, w._context, w.user, action)
+	return NewOutbox(w._factory, w._request, w._response, w._user, action)
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
@@ -142,13 +146,13 @@ func (w Outbox) UserCan(actionID string) bool {
 
 	authorization := w.authorization()
 
-	return action.UserCan(w.user, &authorization)
+	return action.UserCan(w._user, &authorization)
 }
 
 // IsMyself returns TRUE if the outbox record is owned
 // by the currently signed-in user
 func (w Outbox) IsMyself() bool {
-	return w.user.UserID == w.authorization().UserID
+	return w._user.UserID == w.authorization().UserID
 }
 
 /******************************************
@@ -156,77 +160,76 @@ func (w Outbox) IsMyself() bool {
  ******************************************/
 
 func (w Outbox) UserID() string {
-	return w.user.UserID.Hex()
+	return w._user.UserID.Hex()
 }
 
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Outbox) Myself() bool {
-	authorization := getAuthorization(w._context)
-	return authorization.UserID == w.user.UserID
+	return w._authorization.UserID == w._user.UserID
 }
 
 func (w Outbox) Username() string {
-	return w.user.Username
+	return w._user.Username
 }
 
 func (w Outbox) BlockCount() int {
-	return w.user.BlockCount
+	return w._user.BlockCount
 }
 
 func (w Outbox) DisplayName() string {
-	return w.user.DisplayName
+	return w._user.DisplayName
 }
 
 func (w Outbox) StatusMessage() string {
-	return w.user.StatusMessage
+	return w._user.StatusMessage
 }
 
 func (w Outbox) ProfileURL() string {
-	return w.user.ProfileURL
+	return w._user.ProfileURL
 }
 
 func (w Outbox) ImageURL() string {
-	return w.user.ActivityPubAvatarURL()
+	return w._user.ActivityPubAvatarURL()
 }
 
 func (w Outbox) Location() string {
-	return w.user.Location
+	return w._user.Location
 }
 
 func (w Outbox) Links() []model.PersonLink {
-	return w.user.Links
+	return w._user.Links
 }
 
 func (w Outbox) ActivityPubURL() string {
-	return w.user.ActivityPubURL()
+	return w._user.ActivityPubURL()
 }
 
 func (w Outbox) ActivityPubAvatarURL() string {
-	return w.user.ActivityPubAvatarURL()
+	return w._user.ActivityPubAvatarURL()
 }
 
 func (w Outbox) ActivityPubInboxURL() string {
-	return w.user.ActivityPubInboxURL()
+	return w._user.ActivityPubInboxURL()
 }
 
 func (w Outbox) ActivityPubOutboxURL() string {
-	return w.user.ActivityPubOutboxURL()
+	return w._user.ActivityPubOutboxURL()
 }
 
 func (w Outbox) ActivityPubFollowersURL() string {
-	return w.user.ActivityPubFollowersURL()
+	return w._user.ActivityPubFollowersURL()
 }
 
 func (w Outbox) ActivityPubFollowingURL() string {
-	return w.user.ActivityPubFollowingURL()
+	return w._user.ActivityPubFollowingURL()
 }
 
 func (w Outbox) ActivityPubLikedURL() string {
-	return w.user.ActivityPubLikedURL()
+	return w._user.ActivityPubLikedURL()
 }
 
 func (w Outbox) ActivityPubPublicKeyURL() string {
-	return w.user.ActivityPubPublicKeyURL()
+	return w._user.ActivityPubPublicKeyURL()
 }
 
 /******************************************
@@ -239,8 +242,8 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 		Int("publishDate")
 
 	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
-		exp.Equal("parentId", w.user.UserID),
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("parentId", w._user.UserID),
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
@@ -254,7 +257,7 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 		Int("createDate")
 
 	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.objectID()),
 	)
 

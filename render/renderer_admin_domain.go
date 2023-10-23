@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"net/http"
 	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,52 +14,51 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Domain is the renderer for the admin/domain page
+// It can only be accessed by a Domain Owner
 type Domain struct {
-	externalService *service.Provider
-	domain          *model.Domain
+	_provider *service.Provider
+	_domain   *model.Domain
 	Common
 }
 
-func NewDomain(factory Factory, ctx *steranko.Context, template model.Template, actionID string) (Domain, error) {
+// NewDomain returns a fully initialized `Domain` renderer.
+func NewDomain(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Domain, error) {
 
 	const location = "render.NewDomain"
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	if !authorization.DomainOwner {
-		return Domain{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
-	}
-
 	// Create the underlying common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Domain{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
-	// Create and return the Domain renderer
-	result := Domain{
-		externalService: factory.Provider(),
-		Common:          common,
+	// Verify that the user is a Domain Owner
+	if !common._authorization.DomainOwner {
+		return Domain{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	// Get a pointer to the domain for this renderer
-	domainService := factory.Domain()
+	// Create and return the Domain renderer
+	result := Domain{
+		_provider: factory.Provider(),
+		Common:    common,
+	}
 
 	// Find/Create new database record for the domain.
+	domainService := factory.Domain()
 	if _, err := domainService.LoadOrCreateDomain(); err != nil {
 		return Domain{}, derp.Wrap(err, location, "Error creating a new Domain")
 	}
 
-	result.domain = domainService.GetPointer()
+	result._domain = domainService.GetPointer()
 	return result, nil
 }
 
@@ -81,7 +81,7 @@ func (w Domain) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -90,7 +90,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Domain.View"
 
-	renderer, err := NewDomain(w._factory, w._context, w._template, actionID)
+	renderer, err := NewDomain(w._factory, w._request, w._response, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -100,15 +100,16 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 }
 
 func (w Domain) Token() string {
-	return w.context().Param("param1")
+	return list.Second(w.PathList())
+	// return w.context().Param("param1")
 }
 
 func (w Domain) object() data.Object {
-	return w.domain
+	return w._domain
 }
 
 func (w Domain) objectID() primitive.ObjectID {
-	return w.domain.DomainID
+	return w._domain.DomainID
 }
 
 func (w Domain) objectType() string {
@@ -145,7 +146,7 @@ func (w Domain) PageTitle() string {
 }
 
 func (w Domain) clone(action string) (Renderer, error) {
-	return NewDomain(w._factory, w._context, w._template, action)
+	return NewDomain(w._factory, w._request, w._response, w._template, action)
 }
 
 /******************************************
@@ -153,7 +154,7 @@ func (w Domain) clone(action string) (Renderer, error) {
  ******************************************/
 
 func (w Domain) ThemeID() string {
-	return w.domain.ThemeID
+	return w._domain.ThemeID
 }
 
 func (w Domain) Theme(themeID string) model.Theme {
@@ -163,7 +164,7 @@ func (w Domain) Theme(themeID string) model.Theme {
 
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
-	return w.domain.SignupForm
+	return w._domain.SignupForm
 }
 
 /******************************************
@@ -197,7 +198,7 @@ func (w Domain) Providers() []form.LookupCode {
 
 func (w Domain) Client(providerID string) model.Client {
 
-	if connection, ok := w.domain.Clients.Get(providerID); ok {
+	if connection, ok := w._domain.Clients.Get(providerID); ok {
 		return connection
 	}
 
@@ -205,7 +206,7 @@ func (w Domain) Client(providerID string) model.Client {
 }
 
 func (w Domain) Provider(providerID string) providers.Provider {
-	result, _ := w.externalService.GetProvider(providerID)
+	result, _ := w._provider.GetProvider(providerID)
 	return result
 }
 func (w Domain) debug() {

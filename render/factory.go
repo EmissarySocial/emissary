@@ -9,12 +9,12 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ServerFactory interface {
-	ByContext(echo.Context) (Factory, error)
+	ByDomainName(string) (Factory, error)
 }
 
 // Factory is used to locate all necessary services
@@ -53,5 +53,6 @@ type Factory interface {
 	OAuthUserToken() *service.OAuthUserToken
 	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue
+	Steranko() *steranko.Steranko
 	StreamUpdateChannel() chan model.Stream
 }

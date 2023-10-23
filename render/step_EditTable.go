@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/table"
-	"github.com/labstack/echo/v4"
 )
 
 type StepTableEditor struct {
@@ -55,7 +54,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	// Try to get the form post data
 	body := mapof.NewAny()
 
-	if err := (&echo.DefaultBinder{}).BindBody(renderer.context(), &body); err != nil {
+	if err := bindBody(renderer.request(), &body); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Failed to bind body", step))
 	}
 
@@ -115,7 +114,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	t.UseLookupProvider(renderer.lookupProvider())
 	t.AllowAll()
 
-	if err := t.DrawView(renderer.context().Response().Writer); err != nil {
+	if err := t.DrawView(renderer.response()); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
 	}
 
@@ -124,7 +123,7 @@ func (step StepTableEditor) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 
 // getTargetURL returns the URL that the table should use for all of its links
 func (step StepTableEditor) getTargetURL(renderer Renderer) string {
-	originalPath := renderer.context().Request().URL.Path
+	originalPath := renderer.request().URL.Path
 	actionID := renderer.ActionID()
 	pathSlice := strings.Split(originalPath, "/")
 	pathSlice[len(pathSlice)-1] = actionID

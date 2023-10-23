@@ -28,7 +28,7 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) Pipeline
 	// Done
 	b.CloseAll()
 
-	modalHTML := WrapModal(renderer.context().Response(), b.String())
+	modalHTML := WrapModal(renderer.response(), b.String())
 
 	// nolint:errcheck
 	io.WriteString(buffer, modalHTML)

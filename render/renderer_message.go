@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"math"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -13,18 +14,19 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Message renders individual messages from a User's Inbox.
 type Message struct {
 	_service *service.Inbox
 	_message *model.Message
 	Common
 }
 
-func NewMessage(factory Factory, ctx *steranko.Context, modelService *service.Inbox, message *model.Message, actionID string) (Message, error) {
+// NewMessage returns a fully initialized `Message` renderer.
+func NewMessage(factory Factory, request *http.Request, response http.ResponseWriter, modelService *service.Inbox, message *model.Message, actionID string) (Message, error) {
 
 	const location = "render.NewMessage"
 
@@ -43,25 +45,21 @@ func NewMessage(factory Factory, ctx *steranko.Context, modelService *service.In
 		return Message{}, derp.NewBadRequestError(location, "Invalid action", actionID, template.Actions.Keys())
 	}
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	// Check permissions on the InboxFolder
-	if !action.UserCan(message, &authorization) {
-		if authorization.IsAuthenticated() {
-			return Message{}, derp.NewForbiddenError(location, "Forbidden")
-		} else {
-			return Message{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
-		}
-	}
-
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Message{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Check permissions on the InboxFolder
+	if !action.UserCan(message, &common._authorization) {
+		if common._authorization.IsAuthenticated() {
+			return Message{}, derp.NewForbiddenError(location, "Forbidden")
+		} else {
+			return Message{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+		}
+	}
 	return Message{
 		_service: modelService,
 		_message: message,
@@ -123,7 +121,7 @@ func (w Message) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -133,7 +131,7 @@ func (w Message) View(actionID string) (template.HTML, error) {
 	const location = "render.Message.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewMessage(w._factory, w._context, w._service, w._message, actionID)
+	subStream, err := NewMessage(w._factory, w._request, w._response, w._service, w._message, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
@@ -148,7 +146,7 @@ func (w Message) templateRole() string {
 }
 
 func (w Message) clone(action string) (Renderer, error) {
-	return NewMessage(w._factory, w._context, w._service, w._message, action)
+	return NewMessage(w._factory, w._request, w._response, w._service, w._message, action)
 }
 
 /******************************************

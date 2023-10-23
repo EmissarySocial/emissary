@@ -22,30 +22,29 @@ func (step StepSortWidgets) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	streamRenderer, ok := renderer.(*Stream)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError("render.StepSortWidgets.Post", "edit-widgets can only be used on Stream data"))
+		return Halt().WithError(derp.NewInternalError("render.StepSortWidgets.Post", "edit-widgets can only be used on Stream transaction"))
 	}
 
 	// Collect required services
 	factory := streamRenderer._factory
-	context := streamRenderer._context
 	widgetService := factory.Widget()
 
-	// Collect data from form POST
-	data := mapof.NewString()
+	// Collect transaction from form POST
+	transaction := mapof.NewString()
 
-	if err := context.Bind(&data); err != nil {
-		return Halt().WithError(derp.Wrap(err, "render.StepSortWidgets.Post", "Error binding form data"))
+	if err := bind(renderer.request(), &transaction); err != nil {
+		return Halt().WithError(derp.Wrap(err, "render.StepSortWidgets.Post", "Error binding form transaction"))
 	}
 
 	// Set up some variables
-	stream := streamRenderer.stream
+	stream := streamRenderer._stream
 	template := streamRenderer.template()
 	newWidgets := model.NewStreamWidgets()
 
 	// Find and organize the selected widgets
 	for _, location := range template.WidgetLocations {
 
-		widgetTypes := strings.Split(data.GetString(location), ",")
+		widgetTypes := strings.Split(transaction.GetString(location), ",")
 		for _, widgetType := range widgetTypes {
 			var widget model.StreamWidget
 

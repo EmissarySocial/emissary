@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -12,37 +13,37 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Group is a renderer for the admin/groups page
+// It can only be accessed by a Domain Owner
 type Group struct {
-	group *model.Group
+	_group *model.Group
 	Common
 }
 
-func NewGroup(factory Factory, ctx *steranko.Context, template model.Template, group *model.Group, actionID string) (Group, error) {
+// NewGroup returns a fully initialized `Group` renderer.
+func NewGroup(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, group *model.Group, actionID string) (Group, error) {
 
 	const location = "render.NewGroup"
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	if !authorization.DomainOwner {
-		return Group{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
-	}
-
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Group{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Verify that the user is a Domain Owner
+	if !common._authorization.DomainOwner {
+		return Group{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
 	// Return the Group renderer
 	return Group{
-		group:  group,
+		_group: group,
 		Common: common,
 	}, nil
 }
@@ -66,7 +67,7 @@ func (w Group) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -75,7 +76,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Group.View"
 
-	renderer, err := NewGroup(w._factory, w.context(), w._template, w.group, actionID)
+	renderer, err := NewGroup(w._factory, w._request, w._response, w._template, w._group, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -101,11 +102,11 @@ func (w Group) PageTitle() string {
 }
 
 func (w Group) object() data.Object {
-	return w.group
+	return w._group
 }
 
 func (w Group) objectID() primitive.ObjectID {
-	return w.group.GroupID
+	return w._group.GroupID
 }
 
 func (w Group) objectType() string {
@@ -125,7 +126,7 @@ func (w Group) executeTemplate(writer io.Writer, name string, data any) error {
 }
 
 func (w Group) clone(action string) (Renderer, error) {
-	return NewGroup(w._factory, w.context(), w._template, w.group, action)
+	return NewGroup(w._factory, w._request, w._response, w._template, w._group, action)
 }
 
 /******************************************
@@ -133,11 +134,11 @@ func (w Group) clone(action string) (Renderer, error) {
  ******************************************/
 
 func (w Group) GroupID() string {
-	return w.group.GroupID.Hex()
+	return w._group.GroupID.Hex()
 }
 
 func (w Group) Label() string {
-	return w.group.Label
+	return w._group.Label
 }
 
 /******************************************
@@ -151,7 +152,7 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 		ObjectID("groupId")
 
 	criteria := exp.And(
-		query.Evaluate(w.context().Request().URL.Query()),
+		query.Evaluate(w._request.URL.Query()),
 		exp.Equal("deleteDate", 0),
 	)
 

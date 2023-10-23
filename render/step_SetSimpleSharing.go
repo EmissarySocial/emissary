@@ -24,7 +24,7 @@ type StepSetSimpleSharing struct {
 func (step StepSetSimpleSharing) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	streamRenderer := renderer.(*Stream)
-	model := streamRenderer.stream.SimplePermissionModel()
+	model := streamRenderer._stream.SimplePermissionModel()
 
 	// Try to write form HTML
 	formHTML, err := form.Editor(step.schema(), step.form(), model, renderer.lookupProvider())
@@ -63,7 +63,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) PipelineBe
 
 	const location = "render.StepSetSimpleSharing.Post"
 
-	request := renderer.context().Request()
+	request := renderer.request()
 
 	// Try to parse the form input
 	if err := request.ParseForm(); err != nil {
@@ -90,7 +90,7 @@ func (step StepSetSimpleSharing) Post(renderer Renderer, _ io.Writer) PipelineBe
 
 	// Build the stream criteria
 	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
+	stream := streamRenderer._stream
 	stream.Permissions = model.NewStreamPermissions()
 
 	for _, groupID := range groupIDs {

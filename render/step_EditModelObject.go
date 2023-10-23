@@ -50,7 +50,7 @@ func (step StepEditModelObject) Post(renderer Renderer, _ io.Writer) PipelineBeh
 	// Get the request body
 	body := mapof.NewAny()
 
-	if err := renderer.context().Bind(&body); err != nil {
+	if err := bind(renderer.request(), &body); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error binding request body"))
 	}
 

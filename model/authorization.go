@@ -1,6 +1,8 @@
 package model
 
 import (
+	"strings"
+
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -11,6 +13,7 @@ type Authorization struct {
 	GroupIDs    []primitive.ObjectID `json:"G"`           // IDs for all server-level groups that the User belongs to
 	ClientID    primitive.ObjectID   `json:"C,omitempty"` // Unique identifier of the OAuth Application/Client
 	DomainOwner bool                 `json:"O,omitempty"` // If TRUE, then this user is an owner of this domain
+	Scope       string               `json:"S,omitempty"` // OAuth Scopes that this user has access to
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
@@ -30,7 +33,7 @@ func NewAuthorization() Authorization {
 }
 
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
-func (authorization *Authorization) IsAuthenticated() bool {
+func (authorization Authorization) IsAuthenticated() bool {
 
 	// nolint:gosimple // This is more readable than "return !authorization.UserID.IsZero()"
 	if authorization.UserID.IsZero() {
@@ -42,7 +45,7 @@ func (authorization *Authorization) IsAuthenticated() bool {
 
 // AllGroupIDs returns a complete slice of groups that this authorization belongs to,
 // including the magic "Everybody", "Self", and (if valid) "Authenticated" groups.
-func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
+func (authorization Authorization) AllGroupIDs() []primitive.ObjectID {
 
 	result := append(authorization.GroupIDs, authorization.UserID, MagicGroupIDAnonymous)
 
@@ -51,4 +54,10 @@ func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
 	}
 
 	return result
+}
+
+// Scopes returns a slice of scopes that this Authorization token is allowed to use.
+// This implements the toot.ScopesGetter interface.
+func (authorization Authorization) Scopes() []string {
+	return strings.Split(authorization.Scope, " ")
 }

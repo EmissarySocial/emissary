@@ -33,9 +33,8 @@ func (step StepWithResponse) execute(renderer Renderer, buffer io.Writer, action
 
 	// Collect required services and values
 	factory := renderer.factory()
-	context := renderer.context()
 	responseService := factory.Response()
-	responseToken := context.QueryParam("responseId")
+	responseToken := renderer.QueryParam("responseId")
 	response := model.NewResponse()
 
 	// If we have a real ID, then try to load the response from the database
@@ -51,7 +50,7 @@ func (step StepWithResponse) execute(renderer Renderer, buffer io.Writer, action
 	}
 
 	// Create a new renderer tied to the Response record
-	subRenderer, err := NewModel(factory, context, responseService, &response, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), responseService, &response, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))

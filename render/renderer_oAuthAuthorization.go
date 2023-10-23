@@ -10,14 +10,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// OAuthAuthorization renderer displays UI pages for an OAuth Application
+// OAuthAuthorization is a lightweight renderer that
+// displays UI pages for an OAuth Application.
 type OAuthAuthorization struct {
 	_service *service.OAuthClient
-	_app     model.OAuthClient
+	_client  model.OAuthClient
 	_request model.OAuthAuthorizationRequest
 }
 
-// NewOAuthAuthorization returns a fully initialized/loaded OAuthAuthorization renderer
+// NewOAuthAuthorization returns a fully initialized/loaded `OAuthAuthorization` renderer
 func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequest) (OAuthAuthorization, error) {
 
 	const location = "render.NewOAuthAuthorization"
@@ -25,7 +26,7 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 	// Create the result object
 	result := OAuthAuthorization{
 		_service: factory.OAuthClient(),
-		_app:     model.NewOAuthClient(),
+		_client:  model.NewOAuthClient(),
 		_request: request,
 	}
 
@@ -37,12 +38,12 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 	}
 
 	// Try to load the OAuthClient object
-	if err := result._service.LoadByClientID(clientID, &result._app); err != nil {
+	if err := result._service.LoadByClientID(clientID, &result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Error loading OAuth Application")
 	}
 
 	// Validate the transaction
-	if err := result._request.Validate(result._app); err != nil {
+	if err := result._request.Validate(result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Invalid authorization request")
 	}
 
@@ -51,15 +52,15 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 }
 
 func (r OAuthAuthorization) ClientID() string {
-	return r._app.ClientID.Hex()
+	return r._client.ClientID.Hex()
 }
 
 func (r OAuthAuthorization) Name() string {
-	return r._app.Name
+	return r._client.Name
 }
 
 func (r OAuthAuthorization) Website() string {
-	return r._app.Website
+	return r._client.Website
 }
 
 func (r OAuthAuthorization) RedirectURI() string {

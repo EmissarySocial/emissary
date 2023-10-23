@@ -17,13 +17,13 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 
 	const location = "render.StepSetResponse.Post"
 
-	txn := struct {
+	transaction := struct {
 		Type    string `json:"type"    form:"type"`    // The Response.Type (Like, Dislike, etc)
 		Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
 	}{}
 
 	// Receive the transaction data
-	if err := renderer.context().Bind(&txn); err != nil {
+	if err := bind(renderer.request(), &transaction); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error binding transaction"))
 	}
 
@@ -41,8 +41,8 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	response.UserID = user.UserID
 	response.ActorID = user.ProfileURL
 	response.ObjectID = renderer.Permalink()
-	response.Type = txn.Type
-	response.Content = txn.Content
+	response.Type = transaction.Type
+	response.Content = transaction.Content
 
 	// Save the response to the database
 	if err := responseService.SetResponse(&response); err != nil {

@@ -84,10 +84,8 @@ func (step StepViewFeed) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 func (step StepViewFeed) detectMimeType(renderer Renderer) string {
 
-	context := renderer.context()
-
 	// First, try to get the format from the query string
-	switch context.QueryParam("format") {
+	switch renderer.QueryParam("format") {
 	case "json":
 		return model.MimeTypeJSONFeed
 	case "atom":
@@ -97,7 +95,7 @@ func (step StepViewFeed) detectMimeType(renderer Renderer) string {
 	}
 
 	// Otherwise, get the format from the "Accept" header
-	header := context.Request().Header
+	header := renderer.request().Header
 
 	if result, err := accept.Negotiate(header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText); err == nil {
 		return result
@@ -108,8 +106,6 @@ func (step StepViewFeed) detectMimeType(renderer Renderer) string {
 }
 
 func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, children data.Iterator) PipelineBehavior {
-
-	context := renderer.context()
 
 	feed := jsonfeed.Feed{
 		Version:     "https://jsonfeed.org/version/1.1",
@@ -127,7 +123,7 @@ func (step StepViewFeed) asJSONFeed(renderer Renderer, buffer io.Writer, childre
 
 	feed.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToJsonFeed)
 
-	context.Response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
+	renderer.response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
 
 	bytes, err := json.Marshal(feed)
 

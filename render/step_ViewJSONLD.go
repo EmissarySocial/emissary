@@ -36,7 +36,7 @@ func (step StepViewJSONLD) Post(renderer Renderer, buffer io.Writer) PipelineBeh
 func (step StepViewJSONLD) execute(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
 	// Try to negotiate the correct content type
-	acceptHeader := renderer.context().Request().Header.Get("Accept")
+	acceptHeader := renderer.request().Header.Get("Accept")
 	accept, err := accept.Negotiate(acceptHeader, model.MimeTypeHTML, model.MimeTypeActivityPub, model.MimeTypeJSONLD, model.MimeTypeJSON)
 
 	// If there is an error in content negotiation, then no JSON-LD for you

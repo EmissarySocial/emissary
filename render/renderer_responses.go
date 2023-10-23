@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Responses renderer is not a regular renderer, but a special case that contains the
+// Responses renderer is a lightweight renderer that contains the
 // data and types required to render the responses widget.
 type Responses struct {
 	userID          primitive.ObjectID // The currently signed in user

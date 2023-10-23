@@ -36,7 +36,7 @@ func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) PipelineB
 
 	} else {
 
-		attachmentIDString := renderer.context().QueryParam("attachmentId")
+		attachmentIDString := renderer.QueryParam("attachmentId")
 		attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
 		if err != nil {
@@ -49,7 +49,7 @@ func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) PipelineB
 	}
 
 	// Notify the client
-	renderer.context().Response().Header().Set("HX-Trigger", `attachments-updated`)
+	renderer.response().Header().Set("HX-Trigger", `attachments-updated`)
 
 	return nil
 }

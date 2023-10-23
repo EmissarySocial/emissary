@@ -43,7 +43,7 @@ func GetStartup(serverFactory *server.Factory) echo.HandlerFunc {
 		actionID := first.String(ctx.Param("action"), "page")
 
 		// Get a Renderer for this page (also authenticates admin permissions)
-		renderer, err := render.NewDomain(factory, sterankoContext, template, actionID)
+		renderer, err := render.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer")

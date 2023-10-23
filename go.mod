@@ -4,6 +4,8 @@ go 1.20
 
 replace github.com/benpate/html => ../../benpate/html
 
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 replace github.com/benpate/steranko => ../../benpate/steranko
 
 replace github.com/benpate/toot => ../../benpate/toot

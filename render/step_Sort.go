@@ -23,16 +23,16 @@ func (step StepSort) Get(renderer Renderer, _ io.Writer) PipelineBehavior {
 // Post updates the stream with approved data from the request body.
 func (step StepSort) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
-	var formPost struct {
+	var transaction struct {
 		Keys []string `form:"keys"`
 	}
 
 	// Collect form POST information
-	if err := renderer.context().Bind(&formPost); err != nil {
+	if err := bind(renderer.request(), &transaction); err != nil {
 		return Halt().WithError(derp.NewBadRequestError("render.StepSort.Post", "Error binding body"))
 	}
 
-	for index, id := range formPost.Keys {
+	for index, id := range transaction.Keys {
 
 		// Adding one so that our index does not include 0 (rank not set)
 		newRank := index + 1

@@ -112,9 +112,13 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		// Try to sign-in with the new user's account
 		s := factory.Steranko()
 
-		if err := s.CreateCertificate(ctx, &user); err != nil {
+		cookie, err := s.CreateCertificate(ctx.Request(), &user)
+
+		if err != nil {
 			return derp.Wrap(err, location, "Error signing in user")
 		}
+
+		ctx.SetCookie(&cookie)
 
 		// Report success to the client
 		ctx.Response().Header().Add("HX-Trigger", "RegistrationSuccess")

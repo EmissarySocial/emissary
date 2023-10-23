@@ -3,6 +3,7 @@ package render
 import (
 	"bytes"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -41,7 +42,7 @@ func WrapInlineError(ctx echo.Context, err error) error {
 	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
 }
 
-func WrapModal(response *echo.Response, content string, options ...string) string {
+func WrapModal(response http.ResponseWriter, content string, options ...string) string {
 
 	// These three headers make it a modal
 	header := response.Header()
@@ -69,7 +70,7 @@ func WrapModal(response *echo.Response, content string, options ...string) strin
 	return b.String()
 }
 
-func WrapModalWithCloseButton(response *echo.Response, content string, options ...string) string {
+func WrapModalWithCloseButton(response http.ResponseWriter, content string, options ...string) string {
 	b := html.New()
 
 	b.Div()
@@ -78,7 +79,7 @@ func WrapModalWithCloseButton(response *echo.Response, content string, options .
 	return WrapModal(response, content+b.String())
 }
 
-func WrapTooltip(response *echo.Response, content string) string {
+func WrapTooltip(response http.ResponseWriter, content string) string {
 
 	// These headers make it a modal
 	header := response.Header()
@@ -145,7 +146,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	return b.String()
 }
 
-func WrapModalForm(response *echo.Response, endpoint string, content string, options ...string) string {
+func WrapModalForm(response http.ResponseWriter, endpoint string, content string, options ...string) string {
 	return WrapModal(response, WrapForm(endpoint, content, options...), options...)
 }
 
@@ -171,9 +172,9 @@ func TriggerEvent(ctx echo.Context, event string) {
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
-func getAuthorization(ctx *steranko.Context) model.Authorization {
+func getAuthorization(st *steranko.Steranko, request *http.Request) model.Authorization {
 
-	if claims, err := ctx.Authorization(); err == nil {
+	if claims, err := st.GetAuthorization(request); err == nil {
 
 		if auth, ok := claims.(*model.Authorization); ok {
 			return *auth
@@ -224,9 +225,7 @@ func executeTemplate(template TemplateLike, data any) string {
 
 // isUserVisible returns TRUE if the currently signed in user is allowed to
 // view the provided model.User record.
-func isUserVisible(context *steranko.Context, user *model.User) bool {
-
-	authorization := getAuthorization(context)
+func isUserVisible(authorization *model.Authorization, user *model.User) bool {
 
 	// If the user is the domain owner, they can see everything
 	if authorization.DomainOwner {
@@ -240,4 +239,41 @@ func isUserVisible(context *steranko.Context, user *model.User) bool {
 
 	// Otherwise, only public users are visible.
 	return user.IsPublic
+}
+
+// bind replicates the echo.Context.Bind() function without
+// using an echo.Context
+func bind(request *http.Request, result any) error {
+	e := echo.New()
+	ctx := e.NewContext(request, nil)
+	return ctx.Bind(result)
+}
+
+// bindBody replicates the echo.Context.Bind() function without
+// requiring an external echo.Context.  This function ONLY binds the
+// request body, and ignores other parameters (e.g. path, query, and headers).
+func bindBody(request *http.Request, result any) error {
+	e := echo.New()
+	ctx := e.NewContext(request, nil)
+	binder := echo.DefaultBinder{}
+	return binder.BindBody(ctx, result)
+}
+
+// multipartForm replicates the echo.Context.MultipartForm() function without
+// using an echo.Context
+func multipartForm(request *http.Request) (*multipart.Form, error) {
+
+	if err := request.ParseMultipartForm(32 << 20); err != nil {
+		return nil, derp.Wrap(err, "render.multipartForm", "Error parsing multipart form")
+	}
+
+	return request.MultipartForm, nil
+}
+
+// redirect replicates the echo.Context.Redirect() function without
+// using an echo.Context
+func redirect(response http.ResponseWriter, statusCode int, location string) error {
+	response.Header().Add("Location", location)
+	response.WriteHeader(statusCode)
+	return nil
 }

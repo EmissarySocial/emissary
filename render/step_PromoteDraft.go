@@ -31,7 +31,7 @@ func (step StepStreamPromoteDraft) Post(renderer Renderer, _ io.Writer) Pipeline
 
 	// Push the newly updated stream back to the renderer so that subsequent
 	// steps (e.g. publish) can use the correct data.
-	streamRenderer.stream = &stream
+	streamRenderer._stream = &stream
 
 	return nil
 }

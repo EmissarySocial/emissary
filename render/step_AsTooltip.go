@@ -29,7 +29,7 @@ func (step StepAsTooltip) Get(renderer Renderer, buffer io.Writer) PipelineBehav
 	}
 
 	// Wrap the content in a tooltip
-	tooltipContent := WrapTooltip(renderer.context().Response(), tooltipBuffer.String())
+	tooltipContent := WrapTooltip(renderer.response(), tooltipBuffer.String())
 
 	if _, err := io.WriteString(buffer, tooltipContent); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))

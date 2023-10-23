@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"math"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -13,17 +14,18 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Inbox is a renderer for the @user/inbox page
 type Inbox struct {
 	_user *model.User
 	Common
 }
 
-func NewInbox(factory Factory, ctx *steranko.Context, user *model.User, actionID string) (Inbox, error) {
+// NewInbox returns a fully initialized `Inbox` renderer
+func NewInbox(factory Factory, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Inbox, error) {
 
 	// Load the Template
 	templateService := factory.Template()
@@ -34,7 +36,7 @@ func NewInbox(factory Factory, ctx *steranko.Context, user *model.User, actionID
 	}
 
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Inbox{}, derp.Wrap(err, "render.NewInbox", "Error creating common renderer")
@@ -59,20 +61,20 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._context.Request().URL.String())
+		err := derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._request.URL.String())
 		derp.Report(err)
 		return "", err
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
 // View executes a separate view for this Inbox
 func (w Inbox) View(actionID string) (template.HTML, error) {
 
-	renderer, err := NewInbox(w._factory, w._context, w._user, actionID)
+	renderer, err := NewInbox(w._factory, w._request, w._response, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "render.Inbox.View", "Error creating Inbox renderer")
@@ -123,7 +125,7 @@ func (w Inbox) templateRole() string {
 }
 
 func (w Inbox) clone(action string) (Renderer, error) {
-	return NewInbox(w._factory, w._context, w._user, action)
+	return NewInbox(w._factory, w._request, w._response, w._user, action)
 }
 
 // UserCan returns TRUE if this Request is authorized to access the requested view
@@ -150,8 +152,7 @@ func (w Inbox) UserID() string {
 
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Inbox) Myself() bool {
-	authorization := getAuthorization(w._context)
-	return authorization.UserID == w._user.UserID
+	return w._authorization.UserID == w._user.UserID
 }
 
 func (w Inbox) Username() string {
@@ -192,7 +193,7 @@ func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 		String("displayName")
 
 	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
@@ -255,7 +256,7 @@ func (w Inbox) Blocks() QueryBuilder[model.Block] {
 	expressionBuilder := builder.NewBuilder()
 
 	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
@@ -269,7 +270,7 @@ func (w Inbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
 	expressionBuilder := builder.NewBuilder()
 
 	criteria := exp.And(
-		expressionBuilder.Evaluate(w._context.Request().URL.Query()),
+		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
 		exp.Equal("type", blockType),
 	)
@@ -292,12 +293,12 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("render.Inbox.Inbox", "Must be signed in to view inbox")
 	}
 
-	queryString := w.context().Request().URL.Query()
+	queryString := w._request.URL.Query()
 
 	folderID, err := primitive.ObjectIDFromHex(queryString.Get("folderId"))
 
 	if err != nil {
-		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Inbox.Inbox", "Invalid folderId", w.context().QueryParam("folderId"))
+		return QueryBuilder[model.Message]{}, derp.Wrap(err, "render.Inbox.Inbox", "Invalid folderId", queryString.Get("folderId"))
 	}
 
 	if queryString.Get("readDate") == "" {
@@ -328,7 +329,7 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 		return false
 	}
 
-	if w._context.Request().URL.Query().Get("rank") != "" {
+	if w._request.URL.Query().Get("rank") != "" {
 		return false
 	}
 
@@ -344,7 +345,7 @@ func (w Inbox) FilteredByFollowing() model.Following {
 		return result
 	}
 
-	token := w._context.QueryParam("origin.followingId")
+	token := w._request.URL.Query().Get("origin.followingId")
 
 	if followingID, err := primitive.ObjectIDFromHex(token); err == nil {
 		followingService := w._factory.Following()
@@ -393,7 +394,7 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 	}
 
 	// Find/Mark the Selected FolderID
-	token := w._context.QueryParam("folderId")
+	token := w._request.URL.Query().Get("folderId")
 
 	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
 		result.SelectedID = folderID

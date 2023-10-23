@@ -7,11 +7,11 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/benpate/derp"
-	"github.com/benpate/steranko"
+	"github.com/labstack/echo/v4"
 )
 
 // renderHTML collects the logic to render complete vs. partial HTML pages.
-func renderHTML(factory *domain.Factory, ctx *steranko.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
+func renderHTML(factory *domain.Factory, ctx echo.Context, renderer render.Renderer, actionMethod render.ActionMethod) error {
 
 	const location = "handler.renderHTML"
 	var partialPage bytes.Buffer
@@ -26,7 +26,7 @@ func renderHTML(factory *domain.Factory, ctx *steranko.Context, renderer render.
 	}
 
 	// Copy status values into the Response...
-	status.Apply(ctx)
+	status.Apply(ctx.Response())
 
 	// Partial page requests can be completed here.
 	if renderer.IsPartialRequest() || status.FullPage {

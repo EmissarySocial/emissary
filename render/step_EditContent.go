@@ -26,8 +26,6 @@ func (step StepEditContent) Get(renderer Renderer, buffer io.Writer) PipelineBeh
 
 func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
-	context := renderer.context()
-
 	var rawContent string
 
 	// Try to read the content from the request body
@@ -37,7 +35,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	case model.ContentFormatEditorJS:
 		var buffer bytes.Buffer
 
-		if _, err := io.Copy(&buffer, context.Request().Body); err != nil {
+		if _, err := io.Copy(&buffer, renderer.request().Body); err != nil {
 			return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Post", "Error reading request data"))
 		}
 
@@ -47,7 +45,7 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	default:
 
 		body := mapof.NewAny()
-		if err := context.Bind(&body); err != nil {
+		if err := bind(renderer.request(), &body); err != nil {
 			return Halt().WithError(derp.Wrap(err, "render.StepEditContent.Post", "Error parsing request data"))
 		}
 

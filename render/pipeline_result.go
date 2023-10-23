@@ -6,7 +6,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/labstack/echo/v4"
 )
 
 type PipelineResult struct {
@@ -48,13 +47,12 @@ func (result PipelineResult) GetStatusCode() int {
 	return http.StatusOK
 }
 
-func (result PipelineResult) Apply(ctx echo.Context) {
+func (result PipelineResult) Apply(response http.ResponseWriter) {
 
-	response := ctx.Response()
 	header := response.Header()
 	header.Set("Content-Type", result.GetContentType())
 
-	// Copy HT-Trigger events into response
+	// Copy HX-Trigger events into response
 	if len(result.Events) > 0 {
 		if hxTrigger, err := json.Marshal(result.Events); err == nil {
 			header.Set("HX-Trigger", string(hxTrigger))

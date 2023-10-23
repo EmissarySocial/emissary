@@ -3,13 +3,13 @@ package render
 import (
 	"html/template"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -54,12 +54,13 @@ type Renderer interface {
 	SetString(name string, value string)
 
 	factory() Factory                    // The service factory
-	context() *steranko.Context          // The request context embedded in the Renderer
+	request() *http.Request              // The original http.Request that we are responding to
+	response() http.ResponseWriter       // The original http.ResponseWriter that we are responding to
+	authorization() model.Authorization  // The user's authorization data from the context
 	service() service.ModelService       // The abstracted ModelService the backs this Renderer
 	templateRole() string                // Returns the role that the current template plays in the system. Used for choosing child template.
 	template() model.Template            // The template used for this renderer (if any)
 	objectType() string                  // The type of object being rendered
-	authorization() model.Authorization  // retrieves the user's authorization data from the context
 	schema() schema.Schema               // Schema to use to validate this Object
 	object() data.Object                 // Model Object being rendered
 	objectID() primitive.ObjectID        // MongoDB ObjectID of the Object being rendered

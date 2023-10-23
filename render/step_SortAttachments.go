@@ -23,19 +23,19 @@ func (step StepSortAttachments) Get(renderer Renderer, _ io.Writer) PipelineBeha
 // Post updates the stream with approved data from the request body.
 func (step StepSortAttachments) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
-	var formPost struct {
+	var transaction struct {
 		Keys []string `form:"keys"`
 	}
 
 	// Collect form POST information
-	if err := renderer.context().Bind(&formPost); err != nil {
+	if err := bind(renderer.request(), &transaction); err != nil {
 		return Halt().WithError(derp.NewBadRequestError("render.StepSortAttachments.Post", "Error binding body"))
 	}
 
 	factory := renderer.factory()
 	attachmentService := factory.Attachment()
 
-	for index, id := range formPost.Keys {
+	for index, id := range transaction.Keys {
 
 		var attachment model.Attachment
 		newRank := index + 1 // Adding one so that ranks don't include 0 (rank unset)

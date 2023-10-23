@@ -744,6 +744,35 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 	return nil
 }
 
+// UserCan checks a user's permission to perform an action on a Stream.  If not allowed,
+// then the returned error describes why the access was denied.
+func (service *Stream) UserCan(authorization *model.Authorization, stream *model.Stream, actionID string) error {
+
+	const location = "service.Stream.UserCan"
+
+	// Find the Template used by this stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Template")
+	}
+
+	// Find the action that the user wants to perform
+	action, ok := template.Action(actionID)
+
+	if !ok {
+		return derp.NewBadRequestError(location, "Invalid Action", actionID)
+	}
+
+	// Check permissions on the action
+	if !action.UserCan(stream, authorization) {
+		return derp.NewUnauthorizedError(location, "User is not authorized to perform this action", actionID)
+	}
+
+	// UserCan!
+	return nil
+}
+
 /******************************************
  * WebFinger Behavior
  ******************************************/

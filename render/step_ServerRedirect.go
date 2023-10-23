@@ -28,7 +28,7 @@ func (step StepServerRedirect) Post(renderer Renderer, _ io.Writer) PipelineBeha
 		return nil
 	}
 
-	return step.redirect(renderer, renderer.context().Response())
+	return step.redirect(renderer, renderer.response())
 }
 
 // redirect creates a new renderer on this object with the requested Action and then continues as a GET request.

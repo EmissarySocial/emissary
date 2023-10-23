@@ -21,13 +21,13 @@ func (step StepSetQueryParam) Post(renderer Renderer, _ io.Writer) PipelineBehav
 }
 
 func (step StepSetQueryParam) Do(renderer Renderer) PipelineBehavior {
-	query := renderer.context().Request().URL.Query()
+	query := renderer.request().URL.Query()
 
 	for key, value := range step.Values {
 		queryValue := executeTemplate(value, renderer)
 		query.Set(key, queryValue)
 	}
 
-	renderer.context().Request().URL.RawQuery = query.Encode()
+	renderer.request().URL.RawQuery = query.Encode()
 	return nil
 }

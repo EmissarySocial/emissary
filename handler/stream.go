@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -51,14 +50,13 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
-		sterankoContext := ctx.(*steranko.Context)
 		actionID := getActionID(ctx)
 
 		if ok, err := handleJSONLD(ctx, &stream); ok {
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
 
-		renderer, err := render.NewStreamWithoutTemplate(factory, sterankoContext, &stream, actionID)
+		renderer, err := render.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating Renderer")
@@ -70,7 +68,7 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 		}
 
-		if err := renderHTML(factory, sterankoContext, &renderer, actionMethod); err != nil {
+		if err := renderHTML(factory, ctx, &renderer, actionMethod); err != nil {
 			return derp.Wrap(err, location, "Error rendering page")
 		}
 

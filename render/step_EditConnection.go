@@ -20,8 +20,7 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) Pipeline
 	domainRenderer := renderer.(*Domain)
 
 	// Collect parameters and services
-	context := renderer.context()
-	providerID := context.Request().URL.Query().Get("provider")
+	providerID := renderer.QueryParam("provider")
 
 	client := domainRenderer.Client(providerID)
 	adapter := domainRenderer.Provider(providerID)
@@ -44,7 +43,7 @@ func (step StepEditConnection) Get(renderer Renderer, buffer io.Writer) Pipeline
 	}
 
 	// Wrap the form as a ModalForm and return
-	formHTML = WrapModalForm(context.Response(), renderer.URL(), formHTML)
+	formHTML = WrapModalForm(renderer.response(), renderer.URL(), formHTML)
 
 	// nolint:errcheck
 	buffer.Write([]byte(formHTML))
@@ -58,16 +57,15 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) PipelineBeha
 
 	// This step must be run in a Domain admin
 	domainRenderer := renderer.(Domain)
-	context := renderer.context()
 
 	postData := mapof.NewAny()
 
-	if err := context.Bind(&postData); err != nil {
+	if err := bind(renderer.request(), &postData); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing POST data"))
 	}
 
 	// Collect parameters and services
-	providerID := context.Request().URL.Query().Get("provider")
+	providerID := renderer.QueryParam("provider")
 
 	client := domainRenderer.Client(providerID)
 	adapter := domainRenderer.Provider(providerID)
@@ -102,7 +100,7 @@ func (step StepEditConnection) Post(renderer Renderer, _ io.Writer) PipelineBeha
 	// Try to save the domain object back to the database
 	domainService := domainRenderer.domainService()
 
-	if err := domainService.Save(*domainRenderer.domain, "Updated connection"); err != nil {
+	if err := domainService.Save(*domainRenderer._domain, "Updated connection"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving domain object"))
 	}
 

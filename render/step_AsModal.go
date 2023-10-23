@@ -102,5 +102,5 @@ func (step StepAsModal) getModalContent(renderer Renderer) (string, PipelineResu
 		return "", result
 	}
 
-	return WrapModal(renderer.context().Response(), buffer.String(), step.Options...), result
+	return WrapModal(renderer.response(), buffer.String(), step.Options...), result
 }

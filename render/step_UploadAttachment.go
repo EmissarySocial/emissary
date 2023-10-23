@@ -20,10 +20,8 @@ func (step StepUploadAttachment) Get(renderer Renderer, _ io.Writer) PipelineBeh
 
 func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 
-	factory := renderer.factory()
-	context := renderer.context()
-
-	form, err := context.MultipartForm()
+	// Read the multipart form from the request
+	form, err := multipartForm(renderer.request())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, "handler.StepUploadAttachment.Post", "Error reading multipart form."))
@@ -39,6 +37,7 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) Pipel
 		step.Maximum = 1
 	}
 
+	factory := renderer.factory()
 	attachmentService := factory.Attachment()
 
 	objectID := renderer.objectID()

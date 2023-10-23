@@ -24,7 +24,10 @@ func (service JWT) FindJWTKey(token *jwt.Token) (any, error) {
 }
 
 func (service JWT) Parse(request *http.Request) (*jwt.Token, error) {
+	return service.ParseString(request.Header.Get("Authorization"))
+}
 
+func (service JWT) ParseString(tokenString string) (*jwt.Token, error) {
 	// TODO: CRITICAL: Add WithValidateMthods() to this call.
-	return jwt.Parse(request.Header.Get("Authorization"), service.FindJWTKey)
+	return jwt.Parse(tokenString, service.FindJWTKey)
 }

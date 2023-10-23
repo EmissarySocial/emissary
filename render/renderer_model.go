@@ -3,24 +3,26 @@ package render
 import (
 	"bytes"
 	"html/template"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Model renders objects from any model service that implements the ModelService interface
 type Model struct {
 	_service service.ModelService
 	_object  data.Object
 	Common
 }
 
-func NewModel(factory Factory, ctx *steranko.Context, modelService service.ModelService, object data.Object, template model.Template, actionID string) (Model, error) {
+// NewModel returns a fully initialized `Model` renderer.
+func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, modelService service.ModelService, object data.Object, template model.Template, actionID string) (Model, error) {
 
 	const location = "render.NewModel"
 
@@ -30,29 +32,27 @@ func NewModel(factory Factory, ctx *steranko.Context, modelService service.Model
 		return Model{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
+	// Create the underlying Common renderer
+	common, err := NewCommon(factory, request, response, template, actionID)
 
-	// Check permissions on the InboxFolder
+	if err != nil {
+		return Model{}, derp.Wrap(err, location, "Error creating common renderer")
+	}
+
+	// Check permissions on this model object
 	if roleStateEnumerator, ok := object.(model.RoleStateEnumerator); !ok {
 		return Model{}, derp.NewBadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
 
-	} else if !action.UserCan(roleStateEnumerator, &authorization) {
+	} else if !action.UserCan(roleStateEnumerator, &common._authorization) {
 
-		if authorization.IsAuthenticated() {
+		if common._authorization.IsAuthenticated() {
 			return Model{}, derp.NewForbiddenError(location, "Forbidden")
 		} else {
 			return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
 	}
 
-	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
-
-	if err != nil {
-		return Model{}, derp.Wrap(err, location, "Error creating common renderer")
-	}
-
+	// Return the Model renderer
 	return Model{
 		_service: modelService,
 		_object:  object,
@@ -131,7 +131,7 @@ func (w Model) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -141,7 +141,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	const location = "render.Stream.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._context, w._service, w._object, w._template, actionID)
+	subStream, err := NewModel(w._factory, w._request, w._response, w._service, w._object, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
@@ -152,7 +152,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 }
 
 func (w Model) clone(action string) (Renderer, error) {
-	return NewModel(w._factory, w._context, w._service, w._object, w._template, action)
+	return NewModel(w._factory, w._request, w._response, w._service, w._object, w._template, action)
 }
 
 func (w Model) debug() {

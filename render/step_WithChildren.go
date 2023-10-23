@@ -25,7 +25,7 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) PipelineB
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
 
-	children, err := factory.Stream().ListByParent(streamRenderer.stream.ParentID)
+	children, err := factory.Stream().ListByParent(streamRenderer._stream.ParentID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing children"))
@@ -38,7 +38,7 @@ func (step StepWithChildren) Post(renderer Renderer, buffer io.Writer) PipelineB
 
 		// Make a renderer with the new child stream
 		// TODO: LOW: Is "view" really the best action to use here??
-		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &child, "")
+		childStream, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.request(), streamRenderer.response(), &child, "")
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error creating renderer for child"))

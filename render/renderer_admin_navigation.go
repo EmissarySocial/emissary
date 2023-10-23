@@ -4,43 +4,44 @@ import (
 	"bytes"
 	"html/template"
 	"io"
+	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Navigation is a renderer for the admin/navigation page
+// It can only be accessed by a Domain Owner
 type Navigation struct {
-	stream *model.Stream
+	_stream *model.Stream
 	Common
 }
 
-func NewNavigation(factory Factory, ctx *steranko.Context, template model.Template, stream *model.Stream, actionID string) (Navigation, error) {
+// NewNavigation returns a fully initialized `Navigation` renderer.
+func NewNavigation(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, stream *model.Stream, actionID string) (Navigation, error) {
 
 	const location = "render.NewGroup"
 
-	// Verify user's authorization to perform this Action on this Stream
-	authorization := getAuthorization(ctx)
-
-	if !authorization.DomainOwner {
-		return Navigation{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
-	}
-
 	// Create the underlying Common renderer
-	common, err := NewCommon(factory, ctx, template, actionID)
+	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Navigation{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
+	// Verify that the user is a Domain Owner
+	if !common._authorization.DomainOwner {
+		return Navigation{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+	}
+
 	// Return the Navigation renderer
 	return Navigation{
-		stream: stream,
 		Common: common,
 	}, nil
 }
@@ -64,7 +65,7 @@ func (w Navigation) Render() (template.HTML, error) {
 	}
 
 	// Success!
-	status.Apply(w._context)
+	status.Apply(w._response)
 	return template.HTML(buffer.String()), nil
 }
 
@@ -73,7 +74,7 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 
 	const location = "render.Navigation.View"
 
-	renderer, err := NewNavigation(w.factory(), w.context(), w._template, w.stream, actionID)
+	renderer, err := NewNavigation(w.factory(), w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group renderer")
@@ -83,7 +84,7 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 }
 
 func (w Navigation) Token() string {
-	return w._context.Param("param1")
+	return list.Second(w.PathList())
 }
 
 func (w Navigation) NavigationID() string {
@@ -99,11 +100,11 @@ func (w Navigation) Permalink() string {
 }
 
 func (w Navigation) object() data.Object {
-	return w.stream
+	return w._stream
 }
 
 func (w Navigation) objectID() primitive.ObjectID {
-	return w.stream.StreamID
+	return w._stream.StreamID
 }
 
 func (w Navigation) objectType() string {
@@ -123,7 +124,7 @@ func (w Navigation) executeTemplate(wr io.Writer, name string, data any) error {
 }
 
 func (w Navigation) clone(action string) (Renderer, error) {
-	return NewNavigation(w._factory, w._context, w._template, w.stream, action)
+	return NewNavigation(w._factory, w._request, w._response, w._template, w._stream, action)
 }
 
 func (w Navigation) debug() {

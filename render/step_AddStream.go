@@ -46,8 +46,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 
 	// Collect prerequisites
 	factory := renderer.factory()
-	context := renderer.context()
-	templateID := context.QueryParam("templateId")
+	templateID := renderer.QueryParam("templateId")
 
 	if len(step.Templates) > 0 {
 		templateID = val.Enum(templateID, step.Templates...)
@@ -83,7 +82,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 	}
 
 	// Create a renderer for the new Stream
-	newRenderer, err := NewStream(factory, context, newTemplate, &newStream, "view")
+	newRenderer, err := NewStream(factory, renderer.request(), renderer.response(), newTemplate, &newStream, "view")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating renderer", newStream))
@@ -91,7 +90,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 
 	// Assign the current user as the author (with silent failure)
 	if user, err := newRenderer.getUser(); err == nil {
-		newRenderer.stream.SetAttributedTo(user.PersonLink())
+		newRenderer._stream.SetAttributedTo(user.PersonLink())
 	}
 
 	// If there is an "init" step for the stream's template, then execute it now
@@ -130,7 +129,6 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
 	// Get prerequisites
 	factory := renderer.factory()
-	context := renderer.context()
 	templateService := factory.Template()
 	parentRole := step.parentRole(renderer)
 
@@ -142,11 +140,11 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Find the "selected" template
-	selectedTemplateID := step.getBestTemplate(templates, context.QueryParam("templateId"))
+	selectedTemplateID := step.getBestTemplate(templates, renderer.QueryParam("templateId"))
 
 	iconService := renderer.factory().Icons()
 
-	path := renderer.context().Request().URL.Path
+	path := renderer.request().URL.Path
 	path = replaceActionID(path, renderer.ActionID())
 
 	// Build the HTML for the "embed" widget
@@ -187,7 +185,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	}
 
 	// Create a new child renderer
-	childRenderer, err := NewStream(factory, context, template, &child, "create")
+	childRenderer, err := NewStream(factory, renderer.request(), renderer.response(), template, &child, "create")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating new child stream renderer")
@@ -216,7 +214,7 @@ func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
 	// response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
 
 	factory := renderer.factory()
-	response := renderer.context().Response()
+	response := renderer.response()
 	templateService := factory.Template()
 	iconProvider := factory.Icons()
 	parentRole := step.parentRole(renderer)
@@ -305,7 +303,7 @@ func (step StepAddStream) setLocation(renderer Renderer, template *model.Templat
 
 		templateService := renderer.factory().Template()
 
-		parent := streamRenderer.stream
+		parent := streamRenderer._stream
 
 		parentTemplate, err := templateService.Load(parent.TemplateID)
 

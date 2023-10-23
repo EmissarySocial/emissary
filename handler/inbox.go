@@ -58,7 +58,7 @@ func renderInbox(serverFactory *server.Factory, actionMethod render.ActionMethod
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
 
-		renderer, err := render.NewInbox(factory, sterankoContext, &user, actionID)
+		renderer, err := render.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer")

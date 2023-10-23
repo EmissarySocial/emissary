@@ -49,7 +49,7 @@ func (step StepAddModelObject) Post(renderer Renderer, buffer io.Writer) Pipelin
 
 	// This finds/creates a new object in the renderer
 	factory := renderer.factory()
-	request := renderer.context().Request()
+	request := renderer.request()
 	object := renderer.object()
 	schema := renderer.schema()
 

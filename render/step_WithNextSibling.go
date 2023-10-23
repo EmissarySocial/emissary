@@ -31,7 +31,7 @@ func (step StepWithNextSibling) execute(renderer Renderer, buffer io.Writer, act
 
 	factory := renderer.factory()
 	streamRenderer := renderer.(*Stream)
-	stream := streamRenderer.stream
+	stream := streamRenderer._stream
 
 	if err := factory.Stream().LoadNextSibling(stream.ParentID, stream.Rank, &sibling); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
@@ -39,7 +39,7 @@ func (step StepWithNextSibling) execute(renderer Renderer, buffer io.Writer, act
 
 	// Make a renderer with the new parent stream
 	// TODO: LOW: Is "view" really the best action to use here??
-	siblingRenderer, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.context(), &sibling, "view")
+	siblingRenderer, err := NewStreamWithoutTemplate(streamRenderer.factory(), streamRenderer.request(), streamRenderer.response(), &sibling, "view")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating renderer for sibling"))
