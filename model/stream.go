@@ -136,27 +136,24 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 	// Everyone has "anonymous" access
 	result := []string{MagicRoleAnonymous}
 
-	if authorization == nil {
-		return result
-	}
-
-	// Owners are hard-coded to do everything, so no other roles need to be returned.
-	if authorization.DomainOwner {
-		return []string{MagicRoleOwner}
-	}
-
 	if authorization.IsAuthenticated() {
+
+		// Owners are hard-coded to do everything, so no other roles need to be returned.
+		if authorization.DomainOwner {
+			return []string{MagicRoleOwner}
+		}
+
 		result = append(result, MagicRoleAuthenticated)
-	}
 
-	// Authors sometimes have special permissions, too.
-	if stream.AttributedTo.UserID == authorization.UserID {
-		result = append(result, MagicRoleAuthor)
-	}
+		// Authors sometimes have special permissions, too.
+		if stream.AttributedTo.UserID == authorization.UserID {
+			result = append(result, MagicRoleAuthor)
+		}
 
-	// If this Stream is in the current User's outbox, then they also have "self" permissions
-	if stream.ParentID == authorization.UserID {
-		result = append(result, MagicRoleMyself)
+		// If this Stream is in the current User's outbox, then they also have "self" permissions
+		if stream.ParentID == authorization.UserID {
+			result = append(result, MagicRoleMyself)
+		}
 	}
 
 	// Otherwise, append all roles matched from the permissions
