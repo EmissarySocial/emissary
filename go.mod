@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.20
 
+replace github.com/benpate/exp => ../../benpate/exp
+
 replace github.com/benpate/html => ../../benpate/html
 
 replace github.com/benpate/rosetta => ../../benpate/rosetta

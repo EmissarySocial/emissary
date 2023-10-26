@@ -206,6 +206,11 @@ func (service *Domain) Theme() model.Theme {
  * Provider Methods
  ******************************************/
 
+// HasSignupForm returns TRUE if this domain allows new users to sign up.
+func (service *Domain) HasSignupForm() bool {
+	return service.domain.HasSignupForm()
+}
+
 // ActiveClients returns all active Clients for this domain
 func (service *Domain) ActiveClients() []model.Client {
 

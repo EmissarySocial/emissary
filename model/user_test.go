@@ -26,6 +26,8 @@ func TestUserSchema(t *testing.T) {
 		{"profileUrl", "http://profile.url", nil},
 		{"emailAddress", "email@address.url", nil},
 		{"username", "USERNAME", nil},
+		{"locale", "en-us", nil},
+		{"signupNote", "LetMeInBro", nil},
 		{"followerCount", "1", 1},
 		{"followingCount", "2", 2},
 		{"blockCount", "3", 3},

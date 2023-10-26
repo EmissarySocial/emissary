@@ -245,15 +245,28 @@ func (service *Block) LoadByToken(userID primitive.ObjectID, token string, block
 	return service.Load(criteria, block)
 }
 
+func (service *Block) LoadByTrigger(userID primitive.ObjectID, blockType string, trigger string, block *model.Block) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("type", blockType).
+		AndEqual("trigger", trigger)
+
+	return service.Load(criteria, block)
+}
+
 func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
 	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
 }
 
-func (service *Block) QueryActiveByUser(userID primitive.ObjectID) ([]model.Block, error) {
-	return service.Query(
-		exp.Equal("isActive", true).
-			And(service.byUserID(userID)),
-	)
+func (service *Block) QueryActiveByUser(userID primitive.ObjectID, types ...string) ([]model.Block, error) {
+
+	criteria := service.byUserID(userID).AndEqual("isActive", true)
+
+	if len(types) > 0 {
+		criteria = criteria.And(exp.In("type", types))
+	}
+
+	return service.Query(criteria)
 }
 
 func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Block, error) {

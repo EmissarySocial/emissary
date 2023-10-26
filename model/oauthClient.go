@@ -31,7 +31,7 @@ func (app OAuthClient) ID() string {
 }
 
 // ToToot converts this object into a Mastodon-compatible Application object
-func (app OAuthClient) ToToot() object.Application {
+func (app OAuthClient) Toot() object.Application {
 	return object.Application{
 		Name:         app.Name,
 		Website:      app.Website,

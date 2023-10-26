@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -385,16 +384,6 @@ func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 	}
 
 	return token, actionID, nil
-}
-
-// LoadByOriginID returns a single `Stream` that matches the provided `Origin.FollowingID`
-func (service *Stream) LoadByOriginID(originID primitive.ObjectID, result *model.Stream) error {
-	return service.Load(exp.Equal("origin.followingId", originID), result)
-}
-
-// LoadByProductID returns a single `Stream` with custom data matching the provided `Data.productId`
-func (service *Stream) LoadByProductID(productID string, result *model.Stream) error {
-	return service.Load(exp.Equal("data.productId", productID), result)
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream
@@ -785,25 +774,10 @@ func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
  * Mastodon API
  ******************************************/
 
-func (service *Stream) ToToot(stream *model.Stream) (object.Status, error) {
+func (service *Stream) QueryByUser(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 
-	const location = "service.Stream.ToToot"
+	criteria = criteria.AndEqual("ownerId", userID)
+	options = append(options, option.SortDesc("createDate"))
 
-	// Load the "AttributedTo" user
-	attributedTo := model.NewUser()
-	if err := service.userService.LoadByID(stream.AttributedTo.UserID, &attributedTo); err != nil {
-		return object.Status{}, derp.Wrap(err, location, "Error loading author")
-	}
-
-	return object.Status{
-		ID:          stream.StreamID.Hex(),
-		URI:         stream.ActivityPubURL(),
-		CreatedAt:   time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
-		Account:     attributedTo.ToToot(),
-		Content:     stream.Content.HTML,
-		Visibility:  "public",
-		SpoilerText: stream.Label,
-		URL:         stream.URL,
-		InReplyToID: stream.InReplyTo,
-	}, nil
+	return service.Query(criteria, options...)
 }

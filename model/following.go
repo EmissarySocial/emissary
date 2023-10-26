@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/digit"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -78,6 +79,18 @@ func (following Following) Roles(authorization *Authorization) []string {
 
 	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
 	return []string{}
+}
+
+/******************************************
+ * Mastodon API Methods
+ ******************************************/
+
+func (following Following) Toot() object.Relationship {
+
+	return object.Relationship{
+		ID:        following.ProfileURL,
+		Following: !following.IsDeleted(),
+	}
 }
 
 /******************************************

@@ -316,6 +316,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionFollowing),
 			factory.collection(CollectionBlock),
 			factory.Stream(),
+			factory.Block(),
 			factory.EncryptionKey(),
 			factory.Email(),
 			factory.Folder(),

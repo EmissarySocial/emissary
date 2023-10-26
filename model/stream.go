@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -368,6 +369,25 @@ func (stream *Stream) PublishActivity() string {
 	}
 
 	return vocab.ActivityTypeCreate
+}
+
+/******************************************
+ * Mastodon API Methods
+ ******************************************/
+
+func (stream Stream) Toot() object.Status {
+
+	return object.Status{
+		ID:          stream.StreamID.Hex(),
+		URI:         stream.ActivityPubURL(),
+		CreatedAt:   time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
+		Account:     stream.AttributedTo.Toot(),
+		Content:     stream.Content.HTML,
+		Visibility:  "public",
+		SpoilerText: stream.Label,
+		URL:         stream.URL,
+		InReplyToID: stream.InReplyTo,
+	}
 }
 
 /******************************************

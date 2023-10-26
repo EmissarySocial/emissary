@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -48,6 +49,11 @@ func (token OAuthUserToken) JSONResponse() map[string]any {
 	}
 }
 
-// https://docs.joinmastodon.org/api/oauth-scopes/#list-of-scopes
-// Mastodon scopes are: read, write, follow, push
-// eg: read:reports, or write:statuses
+func (token OAuthUserToken) Toot() object.Token {
+	return object.Token{
+		AccessToken: token.Token,
+		TokenType:   "Bearer",
+		Scope:       strings.Join(token.Scopes, " "),
+		CreatedAt:   time.Now().Unix(),
+	}
+}

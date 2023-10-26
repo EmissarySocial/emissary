@@ -20,6 +20,8 @@ func UserSchema() schema.Element {
 			"profileUrl":     schema.String{Format: "url"},
 			"emailAddress":   schema.String{Format: "email"},
 			"username":       schema.String{MaxLength: 32, Required: true},
+			"locale":         schema.String{},
+			"signupNote":     schema.String{MaxLength: 256},
 			"followerCount":  schema.Integer{},
 			"followingCount": schema.Integer{},
 			"blockCount":     schema.Integer{},
@@ -72,6 +74,12 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "username":
 		return &user.Username, true
+
+	case "locale":
+		return &user.Locale, true
+
+	case "signupNote":
+		return &user.SignupNote, true
 
 	case "profileUrl":
 		return &user.ProfileURL, true

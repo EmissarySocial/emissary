@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -70,4 +71,17 @@ func (person PersonLink) GetURL(name string) *url.URL {
 // returns the profile URL for a PersonLink
 func PersonLinkProfileURL(person PersonLink) string {
 	return person.ProfileURL
+}
+
+/******************************************
+ * Mastodon API Methods
+ ******************************************/
+
+func (person PersonLink) Toot() object.Account {
+	return object.Account{
+		ID:          person.ProfileURL,
+		URL:         person.ProfileURL,
+		DisplayName: person.Name,
+		Avatar:      person.ImageURL,
+	}
 }

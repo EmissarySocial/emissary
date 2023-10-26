@@ -19,6 +19,7 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,6 +30,7 @@ type User struct {
 	following     data.Collection
 	blocks        data.Collection
 	streamService *Stream
+	blockService  *Block
 	emailService  *DomainEmail
 	folderService *Folder
 	keyService    *EncryptionKey
@@ -45,13 +47,14 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, blockService *Block, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.blocks = blockCollection
 
 	service.streamService = streamService
+	service.blockService = blockService
 	service.emailService = emailService
 	service.folderService = folderService
 	service.keyService = keyService
@@ -71,6 +74,13 @@ func (service *User) Close() {
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+// Query returns an slice containing all of the Users who match the provided criteria
+func (service *User) Query(criteria exp.Expression, options ...option.Option) ([]model.User, error) {
+	result := make([]model.User, 0)
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	return result, err
 }
 
 // Load retrieves an User from the database
@@ -510,6 +520,27 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID) (pub.Actor, err
 		PublicKey:   privateKey.PublicKey,
 		PrivateKey:  privateKey,
 	}, nil
+}
+
+// TODO: MEDIUM: this function is wickedly inefficient
+func (service *User) QueryBlockedUsers(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
+
+	const location = "service.User.QueryBlockedUsers"
+
+	// Query all blocks
+	blocks, err := service.blockService.QueryActiveByUser(userID, model.BlockTypeActor)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error querying blocks")
+	}
+
+	// Extract the blocked userIDs
+	blockedUserIDs := slice.Map(blocks, func(block model.Block) string {
+		return block.Trigger
+	})
+
+	// Query all users
+	return service.Query(criteria.AndEqual("_id", blockedUserIDs), option.SortAsc("createDate"))
 }
 
 /******************************************

@@ -154,6 +154,8 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 // Save adds/updates an Following in the database
 func (service *Following) Save(following *model.Following, note string) error {
 
+	// TODO: Add duplicate checks to this function?
+
 	// RULE: Reset status and error counts when saving
 	following.Method = model.FollowMethodPoll
 	following.Status = model.FollowingStatusNew
@@ -367,9 +369,9 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 }
 
 // LoadByURL loads an infividual following using the target URL that is being followed
-func (service *Following) LoadByURL(parentID primitive.ObjectID, profileUrl string, result *model.Following) error {
+func (service *Following) LoadByURL(userID primitive.ObjectID, profileUrl string, result *model.Following) error {
 
-	criteria := exp.Equal("userId", parentID).
+	criteria := exp.Equal("userId", userID).
 		AndEqual("profileUrl", profileUrl)
 
 	return service.Load(criteria, result)

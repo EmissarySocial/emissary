@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -85,6 +86,17 @@ func (block Block) Roles(authorization *Authorization) []string {
 // This map will still need to be marshalled into JSON
 func (block Block) GetJSONLD() mapof.Any {
 	return block.JSONLD
+}
+
+/******************************************
+ * Mastodon API Methods
+ ******************************************/
+
+func (block Block) Toot() object.Relationship {
+	return object.Relationship{
+		ID:       block.Trigger,
+		Blocking: !block.IsDeleted(),
+	}
 }
 
 /******************************************

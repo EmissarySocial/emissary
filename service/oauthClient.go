@@ -124,10 +124,10 @@ func (service *OAuthClient) Schema() schema.Schema {
  ******************************************/
 
 // LoadByClientID loads a single application using the "client_id" field (which is just a stringified ObjectID)
-func (service *OAuthClient) LoadByClientID(clientID primitive.ObjectID, app *model.OAuthClient) error {
+func (service *OAuthClient) LoadByClientID(clientID primitive.ObjectID, client *model.OAuthClient) error {
 
 	criteria := exp.Equal("_id", clientID)
-	return service.Load(criteria, app)
+	return service.Load(criteria, client)
 }
 
 /******************************************

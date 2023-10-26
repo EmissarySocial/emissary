@@ -164,8 +164,33 @@ func (service *OAuthUserToken) LoadByClientAndToken(clientID primitive.ObjectID,
  * Custom Methods
  ******************************************/
 
+func (service *OAuthUserToken) CreateFromUser(user *model.User, clientID primitive.ObjectID, scope string) (model.OAuthUserToken, error) {
+
+	// Load the client from the database
+	client := model.NewOAuthClient()
+	if err := service.oauthClientService.LoadByClientID(clientID, &client); err != nil {
+		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Error loading client", clientID)
+	}
+
+	// Create the JWT authorization
+	authorization := model.NewAuthorization()
+	authorization.UserID = user.UserID
+	authorization.GroupIDs = user.GroupIDs
+	authorization.ClientID = client.ClientID
+	authorization.Scope = scope
+
+	// Mock a transaction
+	txn := model.NewOAuthAuthorizationRequest()
+	txn.ClientID = client.ClientID.Hex()
+	txn.Scope = scope
+	txn.ResponseType = "token"
+
+	// Create and return the Token
+	return service.Create(client, authorization, txn)
+}
+
 // Create creates a new OAuthUserToken for the provided application and authorization
-func (service *OAuthUserToken) Create(application model.OAuthClient, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
+func (service *OAuthUserToken) Create(client model.OAuthClient, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
 
 	const location = "service.OAuthUserToken.Create"
 
@@ -175,13 +200,13 @@ func (service *OAuthUserToken) Create(application model.OAuthClient, authorizati
 	}
 
 	// Validate the request
-	if err := transaction.Validate(application); err != nil {
+	if err := transaction.Validate(client); err != nil {
 		return model.OAuthUserToken{}, derp.Wrap(err, location, "Invalid OAuthUserTokenRequest")
 	}
 
 	// If we already have a token for this user/client, then just return that.
 	result := model.NewOAuthUserToken()
-	if err := service.LoadByUserAndClient(authorization.UserID, application.ClientID, &result); err == nil {
+	if err := service.LoadByUserAndClient(authorization.UserID, client.ClientID, &result); err == nil {
 		return result, nil
 	}
 
@@ -193,7 +218,7 @@ func (service *OAuthUserToken) Create(application model.OAuthClient, authorizati
 	}
 
 	// Copy data from the authorization
-	result.ClientID = application.ClientID
+	result.ClientID = client.ClientID
 	result.UserID = authorization.UserID
 	result.Scopes = transaction.Scopes()
 	result.Token = token
@@ -206,8 +231,8 @@ func (service *OAuthUserToken) Create(application model.OAuthClient, authorizati
 	return result, nil
 }
 
-func (service *OAuthUserToken) DeleteByClient(applicationID primitive.ObjectID, note string) error {
-	criteria := exp.Equal("applicationId", applicationID)
+func (service *OAuthUserToken) DeleteByClient(clientID primitive.ObjectID, note string) error {
+	criteria := exp.Equal("clientId", clientID)
 	return service.DeleteMany(criteria, note)
 }
 

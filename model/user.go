@@ -15,23 +15,25 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID         primitive.ObjectID         `json:"userId"          bson:"_id"`            // Unique identifier for this user.
-	GroupIDs       id.Slice                   `json:"groupIds"        bson:"groupIds"`       // Slice of IDs for the groups that this user belongs to.
-	ImageID        primitive.ObjectID         `json:"imageId"         bson:"imageId"`        // AttachmentID of this user's avatar image.
-	DisplayName    string                     `json:"displayName"     bson:"displayName"`    // Name to be displayed for this user
-	StatusMessage  string                     `json:"statusMessage"   bson:"statusMessage"`  // Status summary for this user
-	Location       string                     `json:"location"        bson:"location"`       // Human-friendly description of this user's physical location.
-	Links          sliceof.Object[PersonLink] `json:"links"           bson:"links"`          // Slice of links to profiles on other web services.
-	ProfileURL     string                     `json:"profileUrl"      bson:"profileUrl"`     // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress   string                     `json:"emailAddress"    bson:"emailAddress"`   // Email address for this user
-	Username       string                     `json:"username"        bson:"username"`       // This is the primary public identifier for the user.
-	Password       string                     `json:"-"               bson:"password"`       // This password should be encrypted with BCrypt.
-	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
-	FollowingCount int                        `json:"followingCount"  bson:"followingCount"` // Number of users that this user is following
-	BlockCount     int                        `json:"blockCount"      bson:"blockCount"`     // Number of users that this user is following
-	IsOwner        bool                       `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
-	IsPublic       bool                       `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly available
-	PasswordReset  PasswordReset              `                       bson:"passwordReset"`  // Most recent password reset information.
+	UserID         primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
+	GroupIDs       id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
+	ImageID        primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's avatar image.
+	DisplayName    string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
+	StatusMessage  string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
+	Location       string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
+	Links          sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
+	ProfileURL     string                     `json:"profileUrl"      bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress   string                     `json:"emailAddress"    bson:"emailAddress"`         // Email address for this user
+	Username       string                     `json:"username"        bson:"username"`             // This is the primary public identifier for the user.
+	Password       string                     `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
+	Locale         string                     `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
+	SignupNote     string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`        // Number of followers for this user
+	FollowingCount int                        `json:"followingCount"  bson:"followingCount"`       // Number of users that this user is following
+	BlockCount     int                        `json:"blockCount"      bson:"blockCount"`           // Number of users that this user is following
+	IsOwner        bool                       `json:"isOwner"         bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic       bool                       `json:"isPublic"        bson:"isPublic"`             // If TRUE, then this user's profile is publicly available
+	PasswordReset  PasswordReset              `                       bson:"passwordReset"`        // Most recent password reset information.
 
 	journal.Journal `json:"journal" bson:",inline"`
 }
@@ -58,7 +60,7 @@ func (user *User) ID() string {
  * Conversion Methods
  ******************************************/
 
-func (user *User) PersonLink() PersonLink {
+func (user User) PersonLink() PersonLink {
 	return PersonLink{
 		UserID:       user.UserID,
 		Name:         user.DisplayName,
@@ -70,7 +72,7 @@ func (user *User) PersonLink() PersonLink {
 }
 
 // Summary generates a lightweight summary of this user record.
-func (user *User) Summary() UserSummary {
+func (user User) Summary() UserSummary {
 	return UserSummary{
 		UserID:       user.UserID,
 		DisplayName:  user.DisplayName,
@@ -81,7 +83,7 @@ func (user *User) Summary() UserSummary {
 	}
 }
 
-func (user *User) ToToot() object.Account {
+func (user User) Toot() object.Account {
 	return object.Account{
 		ID:       user.ActivityPubURL(),
 		Username: user.Username,
@@ -101,9 +103,9 @@ func (user User) Copy() User {
 	return user
 }
 
-/******************************
- Steranko Interfaces
-*******************************/
+/******************************************
+ * Steranko Interfaces
+ ******************************************/
 
 // GetUsername returns the username for this User.  A part of the "steranko.User" interface.
 func (user *User) GetUsername() string {
