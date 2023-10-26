@@ -12,6 +12,10 @@ import (
 
 func ForEachRecord(collection *mongo.Collection, fn func(value mapof.Any) error) error {
 
+	if collection == nil {
+		panic("collection is nil")
+	}
+
 	ctx := context.Background()
 
 	cursor, err := collection.Find(ctx, bson.M{})
