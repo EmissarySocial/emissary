@@ -70,6 +70,11 @@ func (service *Following) Start() {
 
 	rand.Seed(time.Now().UnixNano())
 
+	// Wait until the service has booted up correctly.
+	for service.collection == nil {
+		time.Sleep(1 * time.Minute)
+	}
+
 	// query the database every minute, looking for following that should be loaded from the web.
 	for {
 

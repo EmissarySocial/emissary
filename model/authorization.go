@@ -35,22 +35,34 @@ func NewAuthorization() Authorization {
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
 func (authorization Authorization) IsAuthenticated() bool {
 
-	// nolint:gosimple // This is more readable than "return !authorization.UserID.IsZero()"
+	// If we have a null pointer, then NO, you're not authenticated
+	if authorization == nil {
+		return false
+	}
+
+	// If your UserID is zero, then NO, you're not authenticated
 	if authorization.UserID.IsZero() {
 		return false
 	}
 
+	// If your authorization token is not valid (expired, etc), then NO, you're not authenticated
+	if authorization.RegisteredClaims.Valid() != nil {
+		return false
+	}
+
+	// Yes, you're authenticated
 	return true
 }
 
-// AllGroupIDs returns a complete slice of groups that this authorization belongs to,
-// including the magic "Everybody", "Self", and (if valid) "Authenticated" groups.
-func (authorization Authorization) AllGroupIDs() []primitive.ObjectID {
+// AllGroupIDs returns a slice of groups that this authorization belongs to,
+// including the magic "Anonymous", and (if valid) "Authenticated" groups.
+func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
 
-	result := append(authorization.GroupIDs, authorization.UserID, MagicGroupIDAnonymous)
+	result := []primitive.ObjectID{MagicGroupIDAnonymous}
 
 	if authorization.IsAuthenticated() {
-		result = append(result, MagicGroupIDAuthenticated)
+		result = append(result, MagicGroupIDAuthenticated, authorization.UserID)
+		result = append(result, authorization.GroupIDs...)
 	}
 
 	return result

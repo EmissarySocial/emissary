@@ -15,103 +15,65 @@ import (
 
 func UpgradeMongoDB(connectionString string, databaseName string, domain *model.Domain) error {
 
-	const currentDatabaseVersion = 11
 	const location = "queries.UpgradeMongoDB"
 
-	// If we're already at the target database version, then skip any other work
-	if domain.DatabaseVersion == currentDatabaseVersion {
+	upgradeFns := []func(context.Context, *mongo.Database) error{
+		nil,
+		upgrades.Version1,
+		upgrades.Version2,
+		upgrades.Version3,
+		upgrades.Version4,
+		upgrades.Version5,
+		upgrades.Version6,
+		upgrades.Version7,
+		upgrades.Version8,
+		upgrades.Version9,
+		upgrades.Version10,
+		upgrades.Version11,
+	}
+
+	// If we're already at the target database version or higher, then skip any other work
+	if domain.DatabaseVersion >= uint(len(upgradeFns)-1) {
 		return nil
 	}
 
 	ctx := context.Background()
-	client, err := mongo.NewClient(options.Client().ApplyURI(connectionString))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
 		return derp.Wrap(err, "data.mongodb.New", "Error creating mongodb client")
-	}
-
-	if err := client.Connect(ctx); err != nil {
-		return derp.Wrap(err, "data.mongodb.New", "Error connecting to mongodb Server")
 	}
 
 	session := client.Database(databaseName)
 
 	fmt.Println("UPGRADING DATABASE...")
 
-	if domain.DatabaseVersion < 1 {
-		if err := upgrades.Version1(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 1")
+	for index, fn := range upgradeFns {
+
+		// Skip version 00
+		if fn == nil {
+			continue
 		}
-	}
 
-	if domain.DatabaseVersion < 2 {
-		if err := upgrades.Version2(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 2")
+		// Skip if this upgrade has already been run
+		if domain.DatabaseVersion >= uint(index) {
+			continue
 		}
-	}
 
-	if domain.DatabaseVersion < 3 {
-		if err := upgrades.Version3(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 3")
+		// Run the upgrade
+		if err := fn(ctx, session); err != nil {
+			return derp.Wrap(err, location, "Error upgrading database to version %d", index)
 		}
-	}
 
-	if domain.DatabaseVersion < 4 {
-		if err := upgrades.Version4(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 4")
+		// Mark the Domain as "upgraded"
+		domainCollection := session.Collection("Domain")
+
+		filter := bson.M{"_id": primitive.NilObjectID}
+		update := bson.M{"$set": bson.M{"databaseVersion": index}}
+
+		if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
+			return derp.Wrap(err, location, "Error updating domain record")
 		}
-	}
-
-	if domain.DatabaseVersion < 5 {
-		if err := upgrades.Version5(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 5")
-		}
-	}
-
-	if domain.DatabaseVersion < 6 {
-		if err := upgrades.Version6(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 6")
-		}
-	}
-
-	if domain.DatabaseVersion < 7 {
-		if err := upgrades.Version7(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 7")
-		}
-	}
-
-	if domain.DatabaseVersion < 8 {
-		if err := upgrades.Version8(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 8")
-		}
-	}
-
-	if domain.DatabaseVersion < 9 {
-		if err := upgrades.Version9(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 9")
-		}
-	}
-
-	if domain.DatabaseVersion < 10 {
-		if err := upgrades.Version10(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 10")
-		}
-	}
-
-	if domain.DatabaseVersion < 11 {
-		if err := upgrades.Version11(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version 11")
-		}
-	}
-
-	// Mark the Domain as "upgraded"
-	domainCollection := session.Collection("Domain")
-
-	filter := bson.M{"_id": primitive.NilObjectID}
-	update := bson.M{"$set": bson.M{"databaseVersion": currentDatabaseVersion}}
-
-	if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
-		return derp.Wrap(err, location, "Error updating domain record")
 	}
 
 	fmt.Println(".")

@@ -36,6 +36,11 @@ func (service *ActivityStreams) Refresh(innerClient streams.Client, documentColl
  ******************************************/
 
 func (service *ActivityStreams) Load(uri string, options ...any) (streams.Document, error) {
+
+	if service.innerClient == nil {
+		return streams.Document{}, derp.New(500, "emissary.tools.cache.Client.Load", "Client not initialized")
+	}
+
 	return service.innerClient.Load(uri, options...)
 }
 

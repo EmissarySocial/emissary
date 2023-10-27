@@ -689,8 +689,8 @@ func (w Stream) UserCan(actionID string) bool {
 		return false
 	}
 
+	// Use the action.UserCan method to determine if the user can perform this action
 	authorization := w.authorization()
-
 	return action.UserCan(w._stream, &authorization)
 }
 
