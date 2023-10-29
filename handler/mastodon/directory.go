@@ -11,6 +11,6 @@ import (
 func GetDirectory(serverFactory *server.Factory) func(model.Authorization, txn.GetDirectory) ([]object.Account, error) {
 
 	return func(model.Authorization, txn.GetDirectory) ([]object.Account, error) {
-
+		return []object.Account{}, nil
 	}
 }

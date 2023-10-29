@@ -11,6 +11,6 @@ import (
 func GetFollowedTags(serverFactory *server.Factory) func(model.Authorization, txn.GetFollowedTags) ([]object.Tag, error) {
 
 	return func(model.Authorization, txn.GetFollowedTags) ([]object.Tag, error) {
-
+		return []object.Tag{}, nil
 	}
 }

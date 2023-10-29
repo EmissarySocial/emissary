@@ -11,6 +11,6 @@ import (
 func GetEndorsements(serverFactory *server.Factory) func(model.Authorization, txn.GetEndorsements) ([]object.Account, error) {
 
 	return func(model.Authorization, txn.GetEndorsements) ([]object.Account, error) {
-
+		return []object.Account{}, nil
 	}
 }

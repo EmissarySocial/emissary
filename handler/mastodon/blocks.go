@@ -11,7 +11,7 @@ import (
 // https://docs.joinmastodon.org/methods/blocks/
 func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetBlocks) ([]object.Account, error) {
 
-	const location = "handler.mastodon_Blocks"
+	const location = "handler.mastodon.Blocks"
 
 	return func(auth model.Authorization, t txn.GetBlocks) ([]object.Account, error) {
 

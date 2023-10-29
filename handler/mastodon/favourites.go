@@ -11,6 +11,6 @@ import (
 func GetFavourites(serverFactory *server.Factory) func(model.Authorization, txn.GetFavourites) ([]object.Status, error) {
 
 	return func(model.Authorization, txn.GetFavourites) ([]object.Status, error) {
-
+		return []object.Status{}, nil
 	}
 }

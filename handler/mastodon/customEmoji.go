@@ -11,6 +11,6 @@ import (
 func GetCustomEmojis(serverFactory *server.Factory) func(model.Authorization, txn.GetCustomEmojis) ([]object.CustomEmoji, error) {
 
 	return func(model.Authorization, txn.GetCustomEmojis) ([]object.CustomEmoji, error) {
-
+		return []object.CustomEmoji{}, nil
 	}
 }

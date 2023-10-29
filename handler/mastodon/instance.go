@@ -1,51 +1,118 @@
 package mastodon
 
 import (
+	"crypto/sha256"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
 
 // https://docs.joinmastodon.org/methods/instance/
+
+// https://docs.joinmastodon.org/methods/instance/#v2
 func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance) (object.Instance, error) {
 
-	return func(model.Authorization, txn.GetInstance) (object.Instance, error) {
+	const location = "handler.mastodon.GetInstance"
 
+	return func(auth model.Authorization, t txn.GetInstance) (object.Instance, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByDomainName(t.Host)
+
+		if err != nil {
+			return object.Instance{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		domainService := factory.Domain()
+		domain, err := domainService.LoadDomain()
+
+		if err != nil {
+			return object.Instance{}, derp.Wrap(err, location, "Error loading Domain record")
+		}
+
+		result := object.Instance{
+			Domain:      t.Host,
+			Title:       domain.Label,
+			Version:     "Emissary v???",
+			SourceURL:   "https://github.com/EmissarySocial/emissary",
+			Description: "",
+		}
+
+		return result, nil
 	}
 }
 
+// https://docs.joinmastodon.org/methods/instance/#peers
 func GetInstance_Peers(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_Peers) ([]string, error) {
 
 	return func(model.Authorization, txn.GetInstance_Peers) ([]string, error) {
-
+		return []string{}, nil
 	}
 }
 
+// https://docs.joinmastodon.org/methods/instance/#activity
 func GetInstance_Activity(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_Activity) (map[string]any, error) {
 
 	return func(model.Authorization, txn.GetInstance_Activity) (map[string]any, error) {
-
+		return map[string]any{}, nil
 	}
 }
 
+// https://docs.joinmastodon.org/methods/instance/#rules
 func GetInstance_Rules(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_Rules) ([]object.Rule, error) {
 
 	return func(model.Authorization, txn.GetInstance_Rules) ([]object.Rule, error) {
-
+		return []object.Rule{}, nil
 	}
 }
 
+// https://docs.joinmastodon.org/methods/instance/#domain_blocks
 func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_DomainBlocks) ([]object.DomainBlock, error) {
 
-	return func(model.Authorization, txn.GetInstance_DomainBlocks) ([]object.DomainBlock, error) {
+	const location = "handler.mastodon.GetInstance_DomainBlocks"
 
+	return func(auth model.Authorization, t txn.GetInstance_DomainBlocks) ([]object.DomainBlock, error) {
+
+		// Get the factory for this Domain
+		factory, err := serverFactory.ByDomainName(t.Host)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// Get all Public, Global Blocks
+		blockService := factory.Block()
+		blocks, err := blockService.QueryGlobalDomainBlocks()
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Error querying database")
+		}
+
+		// Map the results into a slice of DomainBlocks
+		result := slice.Map(blocks, func(block model.Block) object.DomainBlock {
+
+			digest := sha256.Sum256([]byte(block.Trigger))
+
+			return object.DomainBlock{
+				Domain:   block.Trigger,
+				Digest:   string(digest[:]),
+				Severity: object.DomainBlockSeveritySuspend,
+				Comment:  block.Comment,
+			}
+		})
+
+		return result, nil
 	}
 }
 
+// https://docs.joinmastodon.org/methods/instance/#extended_description
 func GetInstance_ExtendedDescription(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_ExtendedDescription) (object.ExtendedDescription, error) {
 
 	return func(model.Authorization, txn.GetInstance_ExtendedDescription) (object.ExtendedDescription, error) {
-
+		return object.ExtendedDescription{}, nil
 	}
 }
