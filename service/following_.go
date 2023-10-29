@@ -327,6 +327,18 @@ func (service *Following) QueryByFolder(userID primitive.ObjectID, folderID prim
 	return result, err
 }
 
+// QueryByFolderAndExp returns a slice of all following for a given user
+func (service *Following) QueryByFolderAndExp(userID primitive.ObjectID, folderID primitive.ObjectID, criteria exp.Expression) ([]model.FollowingSummary, error) {
+
+	result := make([]model.FollowingSummary, 0)
+	criteria = criteria.
+		AndEqual("userId", userID).
+		AndEqual("folderId", folderID)
+
+	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
+	return result, err
+}
+
 // ListPollable returns an iterator of all following that are ready to be polled
 func (service *Following) ListPollable() (data.Iterator, error) {
 	criteria := exp.LessThan("nextPoll", time.Now().Unix()).

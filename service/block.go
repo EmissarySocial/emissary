@@ -76,7 +76,7 @@ func (service *Block) Channel(criteria exp.Expression, options ...option.Option)
 		return nil, derp.Wrap(err, "service.Block.Channel", "Error creating iterator", criteria, options)
 	}
 
-	return iterator.Channel(it, model.NewBlock), nil
+	return iterator.Channel[model.Block](it, model.NewBlock), nil
 }
 
 // Load retrieves an Block from the database
@@ -280,6 +280,44 @@ func (service *Block) QueryPublicBlocks(userID primitive.ObjectID, maxDate int64
 	result, err := service.Query(criteria, options...)
 
 	return result, err
+}
+
+func (service *Block) QueryByType(userID primitive.ObjectID, blockType string, criteria exp.Expression, options ...option.Option) ([]model.Block, error) {
+
+	criteria = service.byUserID(userID).
+		AndEqual("type", blockType).
+		AndEqual("isPublic", true).
+		AndNotEqual("isActive", true).
+		And(criteria)
+
+	options = append(options, option.SortDesc("publishDate"))
+	result, err := service.Query(criteria, options...)
+
+	return result, err
+}
+
+func (service *Block) QueryByTypeActor(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Block, error) {
+	return service.QueryByType(userID, model.BlockTypeActor, criteria, options...)
+}
+
+func (service *Block) QueryByTypeDomain(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Block, error) {
+	return service.QueryByType(userID, model.BlockTypeDomain, criteria, options...)
+}
+
+func (service *Block) QueryByTypeContent(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Block, error) {
+	return service.QueryByType(userID, model.BlockTypeContent, criteria, options...)
+}
+
+func (service *Block) QueryGlobalDomainBlocks(options ...option.Option) ([]model.Block, error) {
+
+	criteria := exp.Equal("userId", primitive.NilObjectID).
+		AndEqual("type", model.BlockTypeDomain).
+		AndEqual("isPublic", true).
+		AndNotEqual("isActive", true)
+
+	options = append(options, option.SortDesc("publishDate"))
+
+	return service.Query(criteria, options...)
 }
 
 /******************************************

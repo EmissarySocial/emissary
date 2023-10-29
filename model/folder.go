@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -70,4 +71,16 @@ func (folder Folder) Roles(authorization *Authorization) []string {
 
 	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
 	return []string{}
+}
+
+/******************************************
+ * Mastodon API
+ ******************************************/
+
+func (folder Folder) Toot() object.List {
+	return object.List{
+		ID:            folder.FolderID.Hex(),
+		Title:         folder.Label,
+		RepliesPolicy: object.ListRepliesPolicyFollowed,
+	}
 }

@@ -3,10 +3,12 @@ package model
 import (
 	"math"
 	"strings"
+	"time"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -242,4 +244,19 @@ func decrement(value *int) {
 
 func increment(value *int) {
 	*value++
+}
+
+/******************************************
+ * Mastodon API
+ ******************************************/
+
+func (message Message) Toot() object.Status {
+
+	return object.Status{
+		ID:          message.MessageID.Hex(),
+		URI:         message.Origin.URL,
+		CreatedAt:   time.Unix(message.CreateDate, 0).Format(time.RFC3339),
+		SpoilerText: message.Label,
+		Content:     message.ContentHTML,
+	}
 }
