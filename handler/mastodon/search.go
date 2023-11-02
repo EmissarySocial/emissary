@@ -11,6 +11,6 @@ import (
 func GetSearch(serverFactory *server.Factory) func(model.Authorization, txn.GetSearch) (object.Search, error) {
 
 	return func(model.Authorization, txn.GetSearch) (object.Search, error) {
-
+		return object.Search{}, nil
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -136,4 +137,19 @@ func (response *Response) CalcContent() {
 
 func (response Response) CreateDateSeconds() int64 {
 	return response.CreateDate / 1000
+}
+
+/******************************************
+ * Mastodon API
+ ******************************************/
+
+func (response Response) Toot() object.Status {
+
+	return object.Status{
+		ID:  response.URL,
+		URI: response.URL,
+		Account: object.Account{
+			ID: response.ActorID,
+		},
+	}
 }

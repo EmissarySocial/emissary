@@ -83,19 +83,6 @@ func (user User) Summary() UserSummary {
 	}
 }
 
-func (user User) Toot() object.Account {
-	return object.Account{
-		ID:       user.ActivityPubURL(),
-		Username: user.Username,
-		// Acct: user.WebFingerAccount,
-		DisplayName:  user.DisplayName,
-		Note:         user.StatusMessage,
-		Avatar:       user.ActivityPubAvatarURL(),
-		Discoverable: user.IsPublic,
-		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
-	}
-}
-
 // Copy returns a duplicate copy of this User
 // NOTE: This must NOT be a pointer receiver, so that a true COPY
 // of this record is returned.
@@ -272,4 +259,25 @@ func (user *User) ActivityPubPublicKeyURL() string {
 
 func (user *User) JSONFeedURL() string {
 	return user.ProfileURL + "/feed?type=json"
+}
+
+/******************************************
+ * Mastodon API
+ ******************************************/
+
+func (user User) Toot() object.Account {
+	return object.Account{
+		ID:       user.ActivityPubURL(),
+		Username: user.Username,
+		// Acct: user.WebFingerAccount,
+		DisplayName:  user.DisplayName,
+		Note:         user.StatusMessage,
+		Avatar:       user.ActivityPubAvatarURL(),
+		Discoverable: user.IsPublic,
+		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
+	}
+}
+
+func (user User) GetRank() int64 {
+	return user.CreateDate
 }

@@ -116,3 +116,35 @@ func GetInstance_ExtendedDescription(serverFactory *server.Factory) func(model.A
 		return object.ExtendedDescription{}, nil
 	}
 }
+
+// https://docs.joinmastodon.org/methods/instance/#v1
+func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_V1) (object.Instance_V1, error) {
+
+	const location = "handler.mastodon.GetInstance"
+
+	return func(auth model.Authorization, t txn.GetInstance_V1) (object.Instance_V1, error) {
+
+		// Get the Domain factory for this request
+		factory, err := serverFactory.ByDomainName(t.Host)
+
+		if err != nil {
+			return object.Instance_V1{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		domainService := factory.Domain()
+		domain, err := domainService.LoadDomain()
+
+		if err != nil {
+			return object.Instance_V1{}, derp.Wrap(err, location, "Error loading Domain record")
+		}
+
+		result := object.Instance_V1{
+			URI:         t.Host,
+			Title:       domain.Label,
+			Version:     "Emissary v???",
+			Description: "",
+		}
+
+		return result, nil
+	}
+}

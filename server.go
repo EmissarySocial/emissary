@@ -180,6 +180,21 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
+	// e.Use(middleware.Logger())
+	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
+		fmt.Println("---")
+		fmt.Print(c.Request().Host)
+		fmt.Println(c.Request().URL.String())
+
+		if len(reqBody) > 0 {
+			fmt.Println("REQUEST: " + string(reqBody))
+		}
+
+		if len(resBody) > 0 {
+			fmt.Println("RESPONSE: " + string(resBody))
+		}
+		fmt.Println("")
+	}))
 
 	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
@@ -421,7 +436,7 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// On localhost, allow developers to see full error dump.
-	if domain.IsLocalhost(ctx.Request().Host) {
+	if true || domain.IsLocalhost(ctx.Request().Host) {
 		ctx.JSONPretty(errorCode, err, "  ")
 		return
 	}

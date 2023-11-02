@@ -47,9 +47,8 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
 		}
 
-		attachment, err := attachmentService.LoadByID(model.AttachmentTypeStream, streamID, attachmentID)
-
-		if err != nil {
+		attachment := model.NewAttachment(model.AttachmentTypeStream, streamID)
+		if err := attachmentService.LoadByID(model.AttachmentTypeStream, streamID, attachmentID, &attachment); err != nil {
 			return derp.Wrap(err, location, "Error loading attachment")
 		}
 

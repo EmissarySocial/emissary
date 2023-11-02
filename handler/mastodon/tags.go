@@ -11,20 +11,20 @@ import (
 func GetTag(serverFactory *server.Factory) func(model.Authorization, txn.GetTag) (object.Tag, error) {
 
 	return func(model.Authorization, txn.GetTag) (object.Tag, error) {
-
+		return object.Tag{}, nil
 	}
 }
 
 func PostTag_Follow(serverFactory *server.Factory) func(model.Authorization, txn.PostTag_Follow) (object.Tag, error) {
 
 	return func(model.Authorization, txn.PostTag_Follow) (object.Tag, error) {
-
+		return object.Tag{}, nil
 	}
 }
 
 func PostTag_Unfollow(serverFactory *server.Factory) func(model.Authorization, txn.PostTag_Unfollow) (object.Tag, error) {
 
 	return func(model.Authorization, txn.PostTag_Unfollow) (object.Tag, error) {
-
+		return object.Tag{}, nil
 	}
 }

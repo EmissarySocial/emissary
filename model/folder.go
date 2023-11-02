@@ -84,3 +84,7 @@ func (folder Folder) Toot() object.List {
 		RepliesPolicy: object.ListRepliesPolicyFollowed,
 	}
 }
+
+func (folder Folder) GetRank() int64 {
+	return int64(folder.Rank)
+}

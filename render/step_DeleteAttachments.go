@@ -43,7 +43,7 @@ func (step StepDeleteAttachments) Post(renderer Renderer, _ io.Writer) PipelineB
 			return Halt().WithError(derp.Wrap(err, location, "Invalid attachment ID", attachmentIDString))
 		}
 
-		if err := attachmentService.DeleteByID(objectType, objectID, attachmentID); err != nil {
+		if err := attachmentService.DeleteByID(objectType, objectID, attachmentID, "Deleted by Workflow Step"); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error deleting attachment", attachmentID))
 		}
 	}

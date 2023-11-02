@@ -6,21 +6,22 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/txn"
 )
 
 // https://docs.joinmastodon.org/methods/domain_blocks/
-func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetDomainBlocks) ([]string, error) {
+func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetDomainBlocks) ([]string, toot.PageInfo, error) {
 
 	const location = "handler.mastodon.DomainBlocks"
 
-	return func(auth model.Authorization, t txn.GetDomainBlocks) ([]string, error) {
+	return func(auth model.Authorization, t txn.GetDomainBlocks) ([]string, toot.PageInfo, error) {
 
 		// Get the Domain factory for this request
 		factory, err := serverFactory.ByDomainName(t.Host)
 
 		if err != nil {
-			return []string{}, derp.Wrap(err, location, "Unrecognized Domain")
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Query the database
@@ -29,7 +30,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		blocks, err := blockService.QueryByTypeDomain(auth.UserID, criteria, option.Fields("trigger"))
 
 		if err != nil {
-			return []string{}, derp.Wrap(err, location, "Error querying database")
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
 		}
 
 		// Extract *just* the domain trigger...
@@ -37,7 +38,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 			return block.Trigger
 		})
 
-		return result, nil
+		return result, getPageInfo(blocks), nil
 	}
 }
 

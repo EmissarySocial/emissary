@@ -117,6 +117,7 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetInstance_Rules:               mastodon.GetInstance_Rules(serverFactory),
 		GetInstance_DomainBlocks:        mastodon.GetInstance_DomainBlocks(serverFactory),
 		GetInstance_ExtendedDescription: mastodon.GetInstance_ExtendedDescription(serverFactory),
+		GetInstance_V1:                  mastodon.GetInstance_V1(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/lists/
 		GetLists:            mastodon.GetLists(serverFactory),
@@ -145,9 +146,9 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		PostNotification_Dismiss: mastodon.PostNotification_Dismiss(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oauth/
-		GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
-		PostOAuth_Token:    mastodon.PostOAuth_Token(serverFactory),
-		PostOAuth_Revoke:   mastodon.PostOAuth_Revoke(serverFactory),
+		// GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
+		// PostOAuth_Token:    mastodon.PostOAuth_Token(serverFactory),
+		// PostOAuth_Revoke:   mastodon.PostOAuth_Revoke(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oembed/
 		GetOEmbed: mastodon.GetOEmbed(serverFactory),

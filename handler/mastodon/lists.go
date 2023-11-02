@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -34,7 +35,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 			return nil, derp.Wrap(err, location, "Error querying database")
 		}
 
-		return sliceOfToots[model.Folder, object.List](folders), nil
+		return getSliceOfToots[model.Folder, object.List](folders), nil
 	}
 }
 
@@ -183,30 +184,34 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 }
 
 // https://docs.joinmastodon.org/methods/lists/#accounts
-func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.GetList_Accounts) ([]object.Account, error) {
+func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.GetList_Accounts) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon.GetList_Accounts"
 
-	return func(auth model.Authorization, t txn.GetList_Accounts) ([]object.Account, error) {
+	return func(auth model.Authorization, t txn.GetList_Accounts) ([]object.Account, toot.PageInfo, error) {
 
 		// Collect Arguments
 		folderID, err := primitive.ObjectIDFromHex(t.ID)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Invalid Folder ID", t.ID)
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Folder ID", t.ID)
 		}
 
 		// Get the factory for this Domain
 		factory, err := serverFactory.ByDomainName(t.Host)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
 		// Query all Following records in this Folder
 		followingService := factory.Following()
 		criteria := queryExpression(t)
 		followingSummaries, err := followingService.QueryByFolderAndExp(auth.UserID, folderID, criteria)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
+		}
 
 		// Convert the results to a slice of objects
 		result := slice.Map(followingSummaries, func(following model.FollowingSummary) object.Account {
@@ -219,7 +224,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		})
 
 		// Return results to caller
-		return result, nil
+		return result, getPageInfo(followingSummaries), nil
 	}
 }
 

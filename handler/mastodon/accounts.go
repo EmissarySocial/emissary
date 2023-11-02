@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
@@ -152,17 +153,17 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 	}
 }
 
-func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Statuses) ([]object.Status, error) {
+func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Statuses) ([]object.Status, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Statuses"
 
-	return func(auth model.Authorization, t txn.GetAccount_Statuses) ([]object.Status, error) {
+	return func(auth model.Authorization, t txn.GetAccount_Statuses) ([]object.Status, toot.PageInfo, error) {
 
 		// Get the Domain factory for this request
 		factory, err := serverFactory.ByDomainName(t.Host)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Load the requested User
@@ -170,7 +171,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		user := model.NewUser()
 
 		if err := userService.LoadByProfileURL(t.ID, &user); err != nil {
-			return nil, derp.Wrap(err, location, "Unrecognized User")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
 		// Query all posts by this user
@@ -178,40 +179,40 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		streams, err := streamService.QueryByUser(user.UserID, queryExpression(t), option.MaxRows(t.Limit))
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error querying streams")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying streams")
 		}
 
 		// TODO: HIGH: Work out how to set response headers here for additional pagination
 
 		// Return posts as toot.Status(es)
-		return sliceOfToots[model.Stream, object.Status](streams), nil
+		return getSliceOfToots[model.Stream, object.Status](streams), getPageInfo(streams), nil
 	}
 }
 
-func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Followers) ([]object.Account, error) {
+func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
 
-	return func(auth model.Authorization, t txn.GetAccount_Followers) ([]object.Account, error) {
+	return func(auth model.Authorization, t txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
 
 		// Emissary does not (currently?) publish followers
-		return []object.Account{}, nil
+		return []object.Account{}, toot.PageInfo{}, nil
 	}
 }
 
-func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, error) {
+func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
-	return func(auth model.Authorization, t txn.GetAccount_Following) ([]object.Account, error) {
+	return func(auth model.Authorization, t txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
 		// Emissary does not (currently?) publish following data
-		return []object.Account{}, nil
+		return []object.Account{}, toot.PageInfo{}, nil
 	}
 }
 
-func GetAccount_FeaturedTags(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_FeaturedTags) ([]object.Tag, error) {
+func GetAccount_FeaturedTags(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_FeaturedTags) ([]object.Tag, toot.PageInfo, error) {
 
-	return func(auth model.Authorization, t txn.GetAccount_FeaturedTags) ([]object.Tag, error) {
+	return func(auth model.Authorization, t txn.GetAccount_FeaturedTags) ([]object.Tag, toot.PageInfo, error) {
 
 		// Emissary does not (currently?) publish featured tags
-		return []object.Tag{}, nil
+		return []object.Tag{}, toot.PageInfo{}, nil
 	}
 }
 
@@ -442,12 +443,12 @@ func GetAccount_FamiliarFollowers(serverFactory *server.Factory) func(model.Auth
 }
 
 // https://docs.joinmastodon.org/methods/accounts/#search
-func GetAccount_Search(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Search) ([]object.Account, error) {
+func GetAccount_Search(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Search"
 
-	return func(auth model.Authorization, t txn.GetAccount_Search) ([]object.Account, error) {
-		return nil, derp.NewBadRequestError(location, "Not implemented")
+	return func(auth model.Authorization, t txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
+		return nil, toot.PageInfo{}, derp.NewBadRequestError(location, "Not implemented")
 	}
 }
 

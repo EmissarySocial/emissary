@@ -137,30 +137,35 @@ func (service *Attachment) LoadFirstByObjectID(objectType string, objectID primi
 	return model.Attachment{}, derp.Wrap(err, "service.Attachment", "No attachments found", objectType, objectID)
 }
 
-func (service *Attachment) LoadByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID) (model.Attachment, error) {
-	var result model.Attachment
+func (service *Attachment) LoadByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, result *model.Attachment) error {
+
 	criteria := exp.Equal("_id", attachmentID).
 		AndEqual("objectType", objectType).
 		AndEqual("objectId", objectID)
-	err := service.Load(criteria, &result)
-	return result, err
+
+	if err := service.Load(criteria, result); err != nil {
+		return derp.Wrap(err, "service.Attachment.LoadByID", "Error loading attachment", objectType, objectID, attachmentID)
+	}
+
+	return nil
 }
 
-func (service *Attachment) DeleteByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID) error {
+func (service *Attachment) DeleteByID(objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, note string) error {
 
 	const location = "service.Attachment.DeleteByID"
 
-	attachment, err := service.LoadByID(objectType, objectID, attachmentID)
-
-	if err != nil {
+	// Load the Attachment from the database
+	attachment := model.NewAttachment(objectType, objectID)
+	if err := service.LoadByID(objectType, objectID, attachmentID, &attachment); err != nil {
 		return derp.Wrap(err, location, "Error loading attachment")
 	}
 
 	// Delete the attachment
-	if err := service.Delete(&attachment, "Deleted"); err != nil {
+	if err := service.Delete(&attachment, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting attachment")
 	}
 
+	// Success.
 	return nil
 }
 

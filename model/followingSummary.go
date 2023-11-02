@@ -13,11 +13,12 @@ type FollowingSummary struct {
 	Status      string             `bson:"status"`
 	LastPolled  int64              `bson:"lastPolled"`
 	NextPoll    int64              `bson:"nextPoll"`
+	CreateDate  int64              `bson:"createDate"`
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary
 func FollowingSummaryFields() []string {
-	return []string{"_id", "url", "label", "folder", "folderId", "imageUrl", "method", "status", "lastPolled", "nextPoll"}
+	return []string{"_id", "url", "label", "folder", "folderId", "imageUrl", "method", "status", "lastPolled", "nextPoll", "createDate"}
 }
 
 func (summary FollowingSummary) Fields() []string {
@@ -59,4 +60,8 @@ func (summary FollowingSummary) StatusClass() string {
 	default:
 		return ""
 	}
+}
+
+func (summary FollowingSummary) GetRank() int64 {
+	return summary.CreateDate
 }

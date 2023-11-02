@@ -273,6 +273,8 @@ func (service *Inbox) LoadUnreadByURL(userID primitive.ObjectID, url string, res
 // LoadSibling searches for the previous/next sibling to the provided message criteria.
 func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, following string, direction string) (model.Message, error) {
 
+	const location = "service.Inbox.LoadSibling"
+
 	// Initialize query parameters
 	var criteria exp.Expression = exp.Equal("folderId", folderID)
 	var sort option.Option
@@ -295,7 +297,7 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
 	it, err := service.List(criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return model.Message{}, derp.Wrap(err, "service.Inbox.LoadSibling", "Error retrieving siblings")
+		return model.Message{}, derp.Wrap(err, location, "Error retrieving siblings")
 	}
 
 	// Try to read the results
@@ -307,23 +309,59 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
 	}
 
 	// No results.  Shame! Shame!
-	return model.Message{}, derp.NewNotFoundError("service.Inbox.LoadSibling", "No record found")
+	return model.Message{}, derp.NewNotFoundError(location, "No record found")
+}
+
+func (service *Inbox) LoadOldestUnread(userID primitive.ObjectID, message *model.Message) error {
+
+	const location = "service.Inbox.LoadOldestUnread"
+
+	criteria := exp.Equal("userId", userID)
+	sort := option.SortAsc("createDate")
+
+	it, err := service.List(criteria, option.FirstRow(), sort)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error listing messages")
+	}
+
+	for it.Next(message) {
+		return nil
+	}
+
+	return derp.NewNotFoundError(location, "No unread messages")
+}
+
+func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) error {
+
+	const location = "service.Inbox.MarkReadByDate"
+
+	criteria := exp.Equal("userId", userID).AndLessThan("rank", rank)
+	sort := option.SortAsc("rank")
+
+	it, err := service.List(criteria, sort)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error listing messages")
+	}
+
+	message := model.NewMessage()
+	for it.Next(&message) {
+		if err := service.MarkRead(&message, true); err != nil {
+			return derp.Wrap(err, location, "Error marking message as read")
+		}
+	}
+
+	return nil
 }
 
 /******************************************
  * Custom Behaviors
  ******************************************/
 
-func (service *Inbox) MarkRead(userID primitive.ObjectID, messageID primitive.ObjectID, read bool) error {
+func (service *Inbox) MarkRead(message *model.Message, read bool) error {
 
 	const location = "service.Inbox.MarkRead"
-
-	// Load the Message from the database
-	message := model.NewMessage()
-
-	if err := service.LoadByID(userID, messageID, &message); err != nil {
-		return derp.Wrap(err, location, "Error loading message")
-	}
 
 	// Update the ReadDate timestamp
 	if read {
@@ -333,23 +371,43 @@ func (service *Inbox) MarkRead(userID primitive.ObjectID, messageID primitive.Ob
 	}
 
 	// Save the record to the database
-	if err := service.Save(&message, "MarkRead"); err != nil {
+	if err := service.Save(message, "MarkRead"); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
 	// Recalculate the "unread" count on the corresponding folder
-	unreadCount, err := service.CountUnreadMessages(userID, message.FolderID)
+	unreadCount, err := service.CountUnreadMessages(message.UserID, message.FolderID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error counting unread messages")
 	}
 
 	// Update the "unread" count for the Folder
-	if err := service.folderService.SetUnreadCount(userID, message.FolderID, unreadCount); err != nil {
+	if err := service.folderService.SetUnreadCount(message.UserID, message.FolderID, unreadCount); err != nil {
 		return derp.Wrap(err, location, "Error setting unread count")
 	}
 
 	// Lo hicimos! we did it.
+	return nil
+}
+
+func (service *Inbox) SetMuted(userID primitive.ObjectID, uri string, muted bool, message *model.Message) error {
+
+	const location = "service.Inbox.SetMuted"
+
+	// Load the message
+	if err := service.LoadByURL(userID, uri, message); err != nil {
+		return derp.Wrap(err, location, "Error loading message")
+	}
+
+	// Mark as Muted
+	message.Muted = muted
+
+	// Save the message
+	if err := service.Save(message, "SetMuted"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
 	return nil
 }
 

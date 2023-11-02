@@ -11,13 +11,13 @@ import (
 func GetSuggestions(serverFactory *server.Factory) func(model.Authorization, txn.GetSuggestions) ([]object.Suggestion, error) {
 
 	return func(model.Authorization, txn.GetSuggestions) ([]object.Suggestion, error) {
-
+		return []object.Suggestion{}, nil
 	}
 }
 
 func DeleteSuggestion(serverFactory *server.Factory) func(model.Authorization, txn.DeleteSuggestion) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteSuggestion) (struct{}, error) {
-
+		return struct{}{}, nil
 	}
 }

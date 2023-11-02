@@ -99,6 +99,10 @@ func (block Block) Toot() object.Relationship {
 	}
 }
 
+func (block Block) GetRank() int64 {
+	return block.CreateDate
+}
+
 /******************************************
  * Other Data Accessors
  ******************************************/

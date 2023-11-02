@@ -1,12 +1,7 @@
 package mastodon
 
-import (
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
-	"github.com/benpate/toot/object"
-	"github.com/benpate/toot/txn"
-)
-
+/** OAuth is handled in oauth.go, not via the Mastodon API.
+// TODO: Mayby migrate here??
 // https://docs.joinmastodon.org/methods/oauth/
 func GetOAuth_Authorize(serverFactory *server.Factory) func(model.Authorization, txn.GetOAuth_Authorize) (struct{}, error) {
 
@@ -28,3 +23,4 @@ func PostOAuth_Revoke(serverFactory *server.Factory) func(model.Authorization, t
 
 	}
 }
+**/

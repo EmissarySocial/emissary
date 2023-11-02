@@ -11,6 +11,6 @@ import (
 func PostReport(serverFactory *server.Factory) func(model.Authorization, txn.PostReport) (object.Report, error) {
 
 	return func(model.Authorization, txn.PostReport) (object.Report, error) {
-
+		return object.Report{}, nil
 	}
 }

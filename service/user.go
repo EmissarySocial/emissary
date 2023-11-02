@@ -25,16 +25,17 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	collection    data.Collection
-	followers     data.Collection
-	following     data.Collection
-	blocks        data.Collection
-	streamService *Stream
-	blockService  *Block
-	emailService  *DomainEmail
-	folderService *Folder
-	keyService    *EncryptionKey
-	host          string
+	collection        data.Collection
+	followers         data.Collection
+	following         data.Collection
+	blocks            data.Collection
+	streamService     *Stream
+	attachmentService *Attachment
+	blockService      *Block
+	emailService      *DomainEmail
+	folderService     *Folder
+	keyService        *EncryptionKey
+	host              string
 }
 
 // NewUser returns a fully populated User service
@@ -47,13 +48,14 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, streamService *Stream, blockService *Block, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, attachmentService *Attachment, streamService *Stream, blockService *Block, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.blocks = blockCollection
 
 	service.streamService = streamService
+	service.attachmentService = attachmentService
 	service.blockService = blockService
 	service.emailService = emailService
 	service.folderService = folderService
@@ -373,6 +375,31 @@ func (service *User) SetOwner(owner config.Owner) error {
 	return nil
 }
 
+func (service *User) DeleteAvatar(user *model.User, note string) error {
+
+	// If there is no image, then there's nothing more to do.
+	if user.ImageID.IsZero() {
+		return nil
+	}
+
+	// Delete the existing Avatar file
+	if err := service.attachmentService.DeleteByID(model.AttachmentTypeUser, user.UserID, user.ImageID, note); err != nil {
+		return derp.Wrap(err, "service.User.DeleteAvatar", "Error deleting avatar", user)
+	}
+
+	// Clear the reference in the User object
+	user.ImageID = primitive.NilObjectID
+	if err := service.Save(user, note); err != nil {
+		return derp.Wrap(err, "service.User.DeleteAvatar", "Error saving user", user)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Email Methods
+ ******************************************/
+
 // MakeNewPasswordResetCode generates a new password reset code for the provided user.
 func (service *User) MakeNewPasswordResetCode(user *model.User) error {
 
@@ -451,16 +478,18 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
 // because it has access to the database server.
 func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 
+	const location = "service.User.ParseProfileURL"
+
 	// Parse the URL to get the path
 	urlValue, err := url.Parse(value)
 
 	if err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, "service.User.ParseProfileURL", "Error parsing profile URL", value)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Error parsing profile URL", value)
 	}
 
 	// RULE: server must be the same as the server we're running on
 	if urlValue.Scheme+"://"+urlValue.Host != service.host {
-		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User.ParseProfileURL", "Profile URL must exist on this server", urlValue, value, service.host)
+		return primitive.NilObjectID, derp.NewBadRequestError(location, "Profile URL must exist on this server", urlValue, value, service.host)
 	}
 
 	// Extract the username from the URL
@@ -468,7 +497,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	username := path.Head()
 
 	if !strings.HasPrefix(username, "@") {
-		return primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.User.ParseProfileURL", "Username must begin with an '@'", value)
+		return primitive.NilObjectID, derp.NewBadRequestError(location, "Username must begin with an '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")
@@ -482,7 +511,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	user := model.NewUser()
 
 	if err := service.LoadByUsername(username, &user); err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, "service.User.ParseProfileURL", "Error loading user by username", username)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Error loading user by username", username)
 	}
 
 	return user.UserID, nil
@@ -549,6 +578,8 @@ func (service *User) QueryBlockedUsers(userID primitive.ObjectID, criteria exp.E
 
 func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
+	const location = "service.User.LoadWebFinger"
+
 	switch {
 
 	case domain.HasProtocol(username):
@@ -567,13 +598,13 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		username = list.First(username, '/')
 
 	default:
-		return digit.Resource{}, derp.New(derp.CodeBadRequestError, "service.User.LoadWebFinger", "Invalid username", username)
+		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
 	}
 
 	// Try to load the user from the database
 	user := model.NewUser()
 	if err := service.LoadByToken(username, &user); err != nil {
-		return digit.Resource{}, derp.Wrap(err, "service.User.LoadWebFinger", "Error loading user", username)
+		return digit.Resource{}, derp.Wrap(err, location, "Error loading user", username)
 	}
 
 	// Make a WebFinger resource for this user.

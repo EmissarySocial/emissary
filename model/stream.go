@@ -387,6 +387,10 @@ func (stream Stream) Toot() object.Status {
 	}
 }
 
+func (stream Stream) GetRank() int64 {
+	return int64(stream.Rank)
+}
+
 /******************************************
  * Other Methods
  ******************************************/

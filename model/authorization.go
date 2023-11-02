@@ -35,23 +35,8 @@ func NewAuthorization() Authorization {
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
 func (authorization Authorization) IsAuthenticated() bool {
 
-	// If we have a null pointer, then NO, you're not authenticated
-	if authorization == nil {
-		return false
-	}
-
 	// If your UserID is zero, then NO, you're not authenticated
-	if authorization.UserID.IsZero() {
-		return false
-	}
-
-	// If your authorization token is not valid (expired, etc), then NO, you're not authenticated
-	if authorization.RegisteredClaims.Valid() != nil {
-		return false
-	}
-
-	// Yes, you're authenticated
-	return true
+	return !authorization.UserID.IsZero()
 }
 
 // AllGroupIDs returns a slice of groups that this authorization belongs to,

@@ -52,7 +52,13 @@ func PostMessageMarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Try to mark the message as "read"
 		inboxService := factory.Inbox()
-		if err := inboxService.MarkRead(userID, messageID, true); err != nil {
+		message := model.NewMessage()
+
+		if err := inboxService.LoadByID(userID, messageID, &message); err != nil {
+			return derp.Wrap(err, location, "Error loading message")
+		}
+
+		if err := inboxService.MarkRead(&message, true); err != nil {
 			return derp.Wrap(err, location, "Error marking message read")
 		}
 

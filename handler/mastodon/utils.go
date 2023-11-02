@@ -9,14 +9,22 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/txn"
 )
 
-type tooter[Result any] interface {
+type tootGetter[Result any] interface {
 	Toot() Result
+	rankGetter
 }
 
-func sliceOfToots[In tooter[Out], Out any](slice []In) []Out {
+type rankGetter interface {
+	GetRank() int64
+}
+
+// getSliceOfToots maps a slice of "tootGetters" into a slice of toot objects
+// The specific type of the result objects is determined by the `Toot()` method.
+func getSliceOfToots[In tootGetter[Out], Out any](slice []In) []Out {
 
 	results := make([]Out, len(slice))
 
@@ -27,6 +35,22 @@ func sliceOfToots[In tooter[Out], Out any](slice []In) []Out {
 	return results
 }
 
+// getPageInfo uses the GetRank() interface method to calclate
+// the MaxID and MinID values for a slice of tootGetters
+func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
+
+	result := toot.PageInfo{}
+	length := len(slice)
+
+	if length > 0 {
+		last := length - 1
+		result.MaxID = strconv.FormatInt(slice[last].GetRank(), 10)
+		result.MinID = strconv.FormatInt(slice[0].GetRank(), 10)
+	}
+
+	return result
+}
+
 // queryExpression converts data from a txn.QueryPager into an exp.Expression
 // that can be used to filter database queries.
 func queryExpression(queryPager txn.QueryPager) exp.Expression {
@@ -35,21 +59,21 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
 	params := queryPager.QueryPage()
 
-	if params.MaxID != "" {
-		if maxID, err := strconv.ParseInt(params.MaxID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", maxID)
-		}
-	}
-
 	if params.MinID != "" {
 		if minID, err := strconv.ParseInt(params.MinID, 10, 64); err == nil {
 			result = result.AndLessThan("createDate", minID)
 		}
 	}
 
+	if params.MaxID != "" {
+		if maxID, err := strconv.ParseInt(params.MaxID, 10, 64); err == nil {
+			result = result.AndLessThan("createDate", maxID)
+		}
+	}
+
 	if params.SinceID != "" {
 		if sinceID, err := strconv.ParseInt(params.SinceID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", sinceID)
+			result = result.AndGreaterThan("createDate", sinceID)
 		}
 	}
 
