@@ -27,7 +27,6 @@ import (
 type Stream struct {
 	collection          data.Collection
 	templateService     *Template
-	userService         *User
 	draftService        *StreamDraft
 	outboxService       *Outbox
 	attachmentService   *Attachment
