@@ -18,6 +18,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go v1.45.25
 	github.com/benpate/data v0.28.1
+	github.com/benpate/data-mock v0.28.3
 	github.com/benpate/data-mongo v0.28.4
 	github.com/benpate/derp v0.28.1
 	github.com/benpate/digit v0.11.0
@@ -44,6 +45,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/gorilla/feeds v1.1.1
 	github.com/hairyhenderson/go-fsimpl v0.0.0-20230925202852-440a90f7e544
+	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/labstack/gommon v0.4.0

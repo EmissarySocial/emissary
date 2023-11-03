@@ -54,6 +54,7 @@ type Factory struct {
 	followerService      service.Follower
 	followingService     service.Following
 	inboxService         service.Inbox
+	jwtService           service.JWT
 	mentionService       service.Mention
 	oauthClient          service.OAuthClient
 	oauthUserToken       service.OAuthUserToken
@@ -113,6 +114,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityStrea
 	factory.groupService = service.NewGroup()
 	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
+	factory.jwtService = service.NewJWT()
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
@@ -246,6 +248,12 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
+		// Populate the JWT Key Service
+		factory.jwtService.Refresh(
+			factory.collection(CollectionJWT),
+			[]byte(domain.KeyEncryptingKey),
+		)
+
 		// Populate Mention Service
 		factory.mentionService.Refresh(
 			factory.collection(CollectionMention),
@@ -357,6 +365,7 @@ func (factory *Factory) Close() {
 	factory.streamService.Close()
 	factory.followingService.Close()
 	factory.followerService.Close()
+	factory.jwtService.Close()
 	factory.userService.Close()
 }
 
@@ -580,8 +589,8 @@ func (factory *Factory) Email() *service.DomainEmail {
 }
 
 // Key returns an instance of the Key Manager Service (KMS)
-func (factory *Factory) JWT() service.JWT {
-	return service.JWT{}
+func (factory *Factory) JWT() *service.JWT {
+	return &factory.jwtService
 }
 
 // Icons returns the icon manager service, which manages

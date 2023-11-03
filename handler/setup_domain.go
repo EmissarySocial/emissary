@@ -165,6 +165,11 @@ func setupDomainForm(header string) form.Element {
 				Description: "Complete domain name (but no https:// or trailing slashes)",
 			}, {
 				Type:        "text",
+				Path:        "keyEncryptingKey",
+				Label:       "Master Key",
+				Description: "64 Random Characters",
+			}, {
+				Type:        "text",
 				Path:        "connectString",
 				Label:       "MongoDB Connection String",
 				Description: "Should look like mongodb://host:port/database",

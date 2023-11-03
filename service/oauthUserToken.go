@@ -15,7 +15,7 @@ import (
 type OAuthUserToken struct {
 	collection         data.Collection
 	oauthClientService *OAuthClient
-	jwtService         JWT
+	jwtService         *JWT
 	host               string
 }
 
@@ -29,7 +29,7 @@ func NewOAuthUserToken() OAuthUserToken {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *OAuthUserToken) Refresh(collection data.Collection, oauthClientService *OAuthClient, jwtService JWT, host string) {
+func (service *OAuthUserToken) Refresh(collection data.Collection, oauthClientService *OAuthClient, jwtService *JWT, host string) {
 	service.collection = collection
 	service.oauthClientService = oauthClientService
 	service.jwtService = jwtService

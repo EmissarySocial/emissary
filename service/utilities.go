@@ -220,3 +220,14 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 
 	return true
 }
+
+// must strips out an error from a multi-result function call.
+// This should be used sparingly because, while it does REPORT
+// the error, it does not return it to the caller.
+func must[T any](value T, err error) T {
+	if err != nil {
+		derp.Report(err)
+	}
+
+	return value
+}

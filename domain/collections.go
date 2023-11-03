@@ -27,6 +27,9 @@ const CollectionGroup = "Group"
 // CollectionInbox is the database colleciton where user's Inbox records are stored
 const CollectionInbox = "Inbox"
 
+// CollectionJWT is the database colleciton where user's JWTKey records are stored
+const CollectionJWT = "JWT"
+
 // CollectionMention is the name of the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
