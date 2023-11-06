@@ -244,6 +244,13 @@ h3.space-below {
 	background-color:var(--gray30);
 }
 
+.circle-48 {
+    height:48px;
+    width:48px;
+    border-radius:24px;
+	background-color:var(--gray30);
+}
+
 .circle-64 {
     height:64px;
     width:64px;
@@ -392,6 +399,10 @@ input.text-md {
 .text-plain {
     color:var(--text-color)!important;
     text-decoration:none;
+}
+
+.text-underline {
+    text-decoration: underline;
 }
 
 .text-black {

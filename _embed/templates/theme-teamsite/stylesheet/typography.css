@@ -192,6 +192,13 @@ h3.space-below {
     border-radius:16px;
 }
 
+.circle-48 {
+    height:48px;
+    width:48px;
+    border-radius:24px;
+	background-color:var(--gray30);
+}
+
 .circle-64 {
     height:64px;
     width:64px;

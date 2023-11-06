@@ -50,6 +50,7 @@
 	overflow-y:auto;
 
 	/* Display properties for visible dialog*/
+	position:relative;
 	border: solid 1px var(--gray40);
 	border-radius: 8px;
 	box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.3);
