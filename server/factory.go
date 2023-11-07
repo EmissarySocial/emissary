@@ -237,6 +237,10 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
  * Server Config Methods
  ****************************/
 
+func (factory *Factory) Version() string {
+	return "0.1.0"
+}
+
 // Config returns the current configuration for the Factory
 func (factory *Factory) Config() config.Config {
 

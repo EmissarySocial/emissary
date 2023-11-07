@@ -176,11 +176,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	fmt.Println("Starting Emissary Server.")
 
 	e.Pre(mw.HttpsRedirect)
+	e.Pre(middleware.RemoveTrailingSlash())
 
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
-	// e.Use(middleware.Logger())
+	e.Use(middleware.Logger())
 	/*
 		e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
 			fmt.Println("---")
@@ -205,6 +206,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/change-password", handler.TBD)
 	e.GET("/.well-known/host-meta", handler.TBD)
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
+	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
+	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 
