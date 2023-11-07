@@ -431,6 +431,25 @@ func (w Inbox) Responses(message model.Message) template.HTML {
 	return template.HTML(buffer.String())
 }
 
+func (w Inbox) AmFollowing(uri string) model.Following {
+
+	// Get following service and new following record
+	followingService := w._factory.Following()
+	following := model.NewFollowing()
+
+	// Null check
+	if w._user == nil {
+		return following
+	}
+
+	// Retrieve following record. Discard errors
+	// nolint:errcheck
+	_ = followingService.LoadByURL(w._user.UserID, uri, &following)
+
+	// Return the (possibly empty) Following record
+	return following
+}
+
 func (w Inbox) debug() {
 	log.Debug().Interface("object", w.object()).Msg("renderer_Inbox")
 }

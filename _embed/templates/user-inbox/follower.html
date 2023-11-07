@@ -1,0 +1,63 @@
+{{- $url := .QueryParam "url" -}}
+{{- $profile := .ActivityStream $url -}}
+{{- $following := .AmFollowing $url -}}
+{{- $outbox := $profile.Outbox | collection 4 -}}
+
+<div hx-get="/@me/inbox/follower?url={{$url}}" hx-trigger="refreshSection from:window" hx-swap="outerHTML" hx-push-url="false">
+
+	{{- if ne "" $profile.Image.URL -}}
+		<div style="position:absolute; top:0px; left:0px; right:0px; height:160px; background-image:url('{{$profile.Image.URL}}'); background-size:cover;"></div>
+		<div style="height:160px;"></div>
+	{{- end -}}
+
+	<div class="flex-row space-below">
+		{{- if ne "" $profile.Icon.URL -}}
+			<img src="{{$profile.Icon.URL}}" class="circle-64">
+		{{- else -}}
+			<div class="circle-64"></div>
+		{{- end -}}
+		<div>
+			<h1 style="margin:0px;">{{- $profile.Name -}}</h1>
+			<div class="text-gray"><a href="{{$profile}}" target="_blank">@{{- $profile.PreferredUsername -}}</a></div>
+			<div>
+				<a href="{{$profile}}" class="button text-xs" target="_blank">View Profile</a>
+
+				{{- if $following.NotZero -}}
+					<button hx-post="/@me/inbox/following-delete?followingId={{$following.FollowingID.Hex}}" hx-push-url="false" hx-confirm="Do You Want To Stop Following {{$profile.Name}}?" class="button text-xs">&check; Following</a>
+				{{- else -}}
+					<button hx-get="/@me/inbox/following-add?url={{$profile.ID}}" hx-push-url="false" class="button text-xs">&plus; Follow</a>
+				{{- end -}}
+			</div>
+		</div>
+
+	</div>
+
+	{{- $profile.Summary | html -}}
+
+	{{- if eq 0 (len $outbox ) -}}
+		<div>This Person Does Not Have Any Posts.</div>
+
+	{{- else -}}
+
+		{{- range $outbox -}}
+			<hr>
+			<div role="link" script="on click go to url '{{.ID}}' in new window">
+				{{- if ne "" .Name -}}
+					<div><span class="bold">{{.Name | textOnly}}</span> &middot; {{.Published.Format "Jan 2, 2006"}}</div>
+					<div>{{.Content | textOnly | summary}}</div>
+
+				{{- else if ne "" .Summary -}}
+					<div class="bold">{{.Published.Format "Jan 2, 2006"}}</div>
+					<div>{{.Summary | textOnly | summary}}</div>
+
+				{{- else -}}
+					<div class="bold">{{.Published.Format "Jan 2, 2006"}}</div>
+					<div>{{.Content | textOnly | summary}}</div>
+
+				{{- end -}}
+
+			</div>
+		{{- end -}}
+
+	{{- end -}}
+</div>

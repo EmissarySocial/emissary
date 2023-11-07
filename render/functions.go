@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/html"
 	"github.com/davecgh/go-spew/spew"
 
@@ -161,6 +163,23 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				spew.Dump(value)
 			}
 			return ""
+		},
+
+		"collection": func(max int, collection streams.Document) ([]streams.Document, error) {
+			it, err := streams.NewIterator(collection)
+
+			if err != nil {
+				return nil, derp.ReportAndReturn(err)
+			}
+
+			result := make([]streams.Document, 0, max)
+
+			for it.HasNext() && len(result) < max {
+				document := it.Next().UnwrapActivity()
+				result = append(result, document)
+			}
+
+			return result, nil
 		},
 	}
 }

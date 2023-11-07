@@ -143,23 +143,7 @@
 				]}
 			]
 		},
-		"follower-edit": {
-			"roles":["self"],
-			"steps":[
-				{"step":"with-follower", "steps":[
-					{"step":"as-modal", "steps":[
-						{"step":"edit", "form":{
-							"type":"layout-vertical",
-							"label":"Edit Follower",
-							"children": [
-								{"type":"text", "path":"name", "label":"Name", "readOnly":true},
-								{"type":"text", "path":"url", "label":"URL"}
-							]
-						}}
-					]}
-				]}
-			]
-		},
+
 		"follow": {
 			"steps": [
 				{"step":"as-modal", "background":"profile", "steps":[
@@ -167,7 +151,6 @@
 				]}
 			]
 		},
-
 		"following": {"step":"view-html", "file":"inbox-following"},
 		"following-list": {"step":"view-html", "file":"inbox-following-list"},
 		"following-add":{

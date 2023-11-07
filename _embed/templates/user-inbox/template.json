@@ -172,20 +172,11 @@
 				]}
 			]
 		},
-		"follower-edit": {
-			"roles":["self"],
+		"follower":{
+			"roles": ["self"],
 			"steps":[
-				{"step":"with-follower", "steps":[
-					{"step":"as-modal", "steps":[
-						{"step":"edit", "form":{
-							"type":"layout-vertical",
-							"label":"Edit Follower",
-							"children": [
-								{"type":"text", "path":"name", "label":"Name", "readOnly":true},
-								{"type":"text", "path":"url", "label":"URL"}
-							]
-						}}
-					]}
+				{"step":"as-modal", "steps":[
+					{"step":"view-html", "file":"follower"}
 				]}
 			]
 		},
@@ -293,7 +284,7 @@
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"delete", "title":"Stop Following {{.Label}}", "message":"Are you sure you want to delete this follow?"},
-					{"step":"reload-page"}
+					{"step":"trigger-event", "event":"refreshSection"}
 				]}
 			]
 		},
