@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/html"
 	"github.com/davecgh/go-spew/spew"
 
@@ -166,19 +167,19 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		},
 
 		"collection": func(max int, collection streams.Document) ([]streams.Document, error) {
-			it, err := streams.NewIterator(collection)
 
-			if err != nil {
-				return nil, derp.ReportAndReturn(err)
-			}
+			// Make a channel of the first N documents
+			done := make(chan struct{})
+			ch := collections.Documents(collection, done)
+			ch = channel.Limit(max, ch, done)
 
+			// Read all of the documents from the channel
 			result := make([]streams.Document, 0, max)
-
-			for it.HasNext() && len(result) < max {
-				document := it.Next().UnwrapActivity()
-				result = append(result, document)
+			for document := range ch {
+				result = append(result, document.UnwrapActivity())
 			}
 
+			// Return the result.
 			return result, nil
 		},
 	}
