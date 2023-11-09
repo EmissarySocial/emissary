@@ -104,7 +104,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 		}
 
 		// Success!
-		render.CloseModal(ctx, "")
+		render.CloseModal(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

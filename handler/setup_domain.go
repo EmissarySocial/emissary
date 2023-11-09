@@ -81,7 +81,7 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
 		}
 
-		render.CloseModal(ctx, "")
+		render.CloseModal(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

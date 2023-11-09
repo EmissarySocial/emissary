@@ -151,14 +151,8 @@ func WrapModalForm(response http.ResponseWriter, endpoint string, content string
 }
 
 // CloseModal sets Response header to close a modal on the client and optionally forward to a new location.
-func CloseModal(ctx echo.Context, url string) {
-
-	if url == "" {
-		ctx.Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage": ""}`)
-	} else {
-		ctx.Response().Header().Set("HX-Trigger", `closeModal`)
-		ctx.Response().Header().Set("HX-Redirect", url)
-	}
+func CloseModal(ctx echo.Context) {
+	ctx.Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage": ""}`)
 }
 
 func RefreshPage(ctx echo.Context) {
