@@ -25,6 +25,7 @@ func StreamSchema() schema.Element {
 			"summary":       schema.String{MaxLength: 2048},
 			"imageUrl":      schema.String{Format: "url"},
 			"attributedTo":  schema.Array{Items: PersonLinkSchema()},
+			"context":       schema.String{Format: "url"},
 			"inReplyTo":     schema.String{Format: "url"},
 			"content":       ContentSchema(),
 			"widgets":       WidgetSchema(),

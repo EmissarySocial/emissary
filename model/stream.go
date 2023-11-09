@@ -36,6 +36,7 @@ type Stream struct {
 	Widgets         set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when rendering this Stream.
 	Data            mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	AttributedTo    PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
+	Context         string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
 	InReplyTo       string                       `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	Responses       ResponseSummary              `json:"responses,omitempty"    bson:"responses,omitempty"`    // Summary of all responses to this document
 	PublishDate     int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
@@ -313,37 +314,41 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
 // This map will still need to be marshalled into JSON
 func (stream Stream) GetJSONLD() mapof.Any {
 	result := mapof.Any{
-		"id":        stream.ActivityPubURL(),
-		"type":      stream.SocialRole,
-		"url":       stream.URL,
-		"published": time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
+		vocab.PropertyID:        stream.ActivityPubURL(),
+		vocab.PropertyType:      stream.SocialRole,
+		vocab.PropertyURL:       stream.URL,
+		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
 		// "likes":     stream.ActivityPubLikesURL(),
 		// "dislikes":  stream.ActivityPubDislikesURL(),
 		// "shares":    stream.ActivityPubSharesURL(),
 	}
 
 	if stream.Label != "" {
-		result["name"] = stream.Label
+		result[vocab.PropertyName] = stream.Label
 	}
 
 	if stream.Summary != "" {
-		result["summary"] = stream.Summary
+		result[vocab.PropertySummary] = stream.Summary
 	}
 
 	if stream.Content.HTML != "" {
-		result["content"] = stream.Content.HTML
+		result[vocab.PropertyContent] = stream.Content.HTML
 	}
 
 	if stream.ImageURL != "" {
-		result["image"] = stream.ImageURL
+		result[vocab.PropertyImage] = stream.ImageURL
+	}
+
+	if stream.Context != "" {
+		result[vocab.PropertyContext] = stream.Context
 	}
 
 	if stream.InReplyTo != "" {
-		result["inReplyTo"] = stream.InReplyTo
+		result[vocab.PropertyInReplyTo] = stream.InReplyTo
 	}
 
 	if stream.AttributedTo.NotEmpty() {
-		result["attributedTo"] = stream.AttributedTo.ProfileURL
+		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
 	return result
