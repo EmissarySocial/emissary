@@ -16,9 +16,9 @@
 					
 					<span class="folder-handle">
 						{{- if eq .UnreadCount 0 -}}
-							<span id="folder-unread-{{.FolderID.Hex}}" class="pill pill-red" style="visibility:hidden;">0</span>
+							<span id="folder-unread-{{.FolderID.Hex}}" class="text-light-gray" style="visibility:hidden;">&#9679;</span>
 						{{- else -}}
-							<span id="folder-unread-{{.FolderID.Hex}}" class="pill pill-red">{{.UnreadCount}}</span>
+							<span id="folder-unread-{{.FolderID.Hex}}" class="text-light-gray">&#9679;</span>
 						{{- end -}}
 						<span class="hover-reveal">
 							{{icon "drag-handle"}}
