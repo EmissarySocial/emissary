@@ -56,7 +56,13 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 
 	// If the document already has a context property, then
 	// there is nothing more to add
-	if context := result.Context(); context.NotNil() {
+	if context := result.Context(); context != "" {
+		return result, nil
+	}
+
+	// If there is an ostatus:conversation property, then use that
+	if conversation := result.Get("conversation"); conversation.NotNil() {
+		result.SetProperty(vocab.PropertyContext, conversation)
 		return result, nil
 	}
 
@@ -68,7 +74,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 
 		for inReplyTo.NotNil() {
 			if parent, err := inReplyTo.Load(options...); err == nil {
-				if context := parent.Context(); context.NotNil() {
+				if context := parent.Context(); context != "" {
 					result.SetProperty(vocab.PropertyContext, context)
 					break
 				}
@@ -79,7 +85,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 	}
 
 	// If the document STILL has no context, then it is ITS OWN CONTEXT
-	if context := result.Context(); context.IsNil() {
+	if context := result.Context(); context != "" {
 		result.SetProperty(vocab.PropertyContext, result.ID())
 		return result, nil
 	}
