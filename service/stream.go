@@ -25,13 +25,14 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection          data.Collection
-	templateService     *Template
-	draftService        *StreamDraft
-	outboxService       *Outbox
-	attachmentService   *Attachment
-	host                string
-	streamUpdateChannel chan<- model.Stream
+	collection            data.Collection
+	templateService       *Template
+	draftService          *StreamDraft
+	outboxService         *Outbox
+	attachmentService     *Attachment
+	activityStreamService *ActivityStreams
+	host                  string
+	streamUpdateChannel   chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
@@ -44,12 +45,13 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
 	service.attachmentService = attachmentService
+	service.activityStreamService = activityStreamService
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel
@@ -166,6 +168,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 			return derp.Wrap(err, location, "Error calculating parent IDs", stream)
 		}
 	}
+
+	// RULE: Calculate the stream context
+	service.CalcContext(stream)
 
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
@@ -588,11 +593,12 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
-		"@context": vocab.ContextTypeActivityStreams,
-		"id":       stream.ActivityPubURL(),
-		"type":     activityType,
-		"actor":    user.ActivityPubURL(),
-		"object":   stream.GetJSONLD(),
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:        stream.ActivityPubURL(),
+		vocab.PropertyType:      activityType,
+		vocab.PropertyActor:     user.ActivityPubURL(),
+		vocab.PropertyObject:    stream.GetJSONLD(),
+		vocab.PropertyPublished: time.Now().UTC().Format(time.RFC3339),
 	}
 
 	// Try to publish via the outbox service
@@ -617,10 +623,10 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
-		"@context": vocab.ContextTypeActivityStreams,
-		"type":     vocab.ActivityTypeDelete,
-		"actor":    user.ActivityPubURL(),
-		"object":   stream.GetJSONLD(),
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:   vocab.ActivityTypeDelete,
+		vocab.PropertyActor:  user.ActivityPubURL(),
+		vocab.PropertyObject: stream.GetJSONLD(),
 	}
 
 	// Remove the record from the inbox
@@ -759,6 +765,30 @@ func (service *Stream) UserCan(authorization *model.Authorization, stream *model
 
 	// UserCan!
 	return nil
+}
+
+// CalcContext calculates the conversational context for a given stream,
+// IF it can be determined.
+func (service *Stream) CalcContext(stream *model.Stream) {
+
+	// If this is an original stream (not a reply) then its context is itself.
+	if stream.InReplyTo == "" {
+		stream.Context = stream.ActivityPubURL()
+		return
+	}
+
+	// Load the "InReplyTo" document from the ActivityStreams and use its
+	// context.  Note: this should have been calculated already via the
+	// ascontextmaker client.
+	document, _ := service.activityStreamService.Load(stream.InReplyTo)
+
+	if context := document.Context(); context != "" {
+		stream.Context = document.Context()
+		return
+	}
+
+	// If a context could not be assigned, then use the InReplyTo value instead.
+	stream.Context = stream.InReplyTo
 }
 
 /******************************************

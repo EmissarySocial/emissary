@@ -307,6 +307,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.StreamDraft(),
 			factory.Outbox(),
 			factory.Attachment(),
+			factory.ActivityStreams(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
 		)
