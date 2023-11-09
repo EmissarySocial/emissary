@@ -59,6 +59,7 @@ func (value *CachedValue) calcPublished() {
 	}
 }
 
+// calcExpires calculates the expiration date for this document.
 func (value *CachedValue) calcExpires(cacheControl cacheheader.Header) {
 
 	// If we have a Max-Age value, then use that.
@@ -78,6 +79,8 @@ func (value *CachedValue) calcExpires(cacheControl cacheheader.Header) {
 	value.Expires = 0
 }
 
+// calcRevalidates clculates the date that this document should be revalidated,
+// which includes the published date + the "Stale-While-Revalidate" header.
 func (value *CachedValue) calcRevalidates(cacheControl cacheheader.Header) {
 
 	// If we have a "Stale-While-Revalidate" header, then use that.

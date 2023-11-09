@@ -18,6 +18,7 @@ type Client struct {
 	innerClient    streams.Client
 	purgeFrequency int64
 	cacheMode      string
+	obeyHeaders    bool
 }
 
 // New returns a fully initialized Client object
@@ -29,6 +30,7 @@ func New(innerClient streams.Client, collection *mongo.Collection, options ...Cl
 		innerClient:    innerClient,
 		purgeFrequency: 60 * 60 * 4, // Default purge frequency is 4 hours
 		cacheMode:      CacheModeReadWrite,
+		obeyHeaders:    true,
 	}
 
 	// Apply option functions to the client
@@ -155,7 +157,7 @@ func (client *Client) save(uri string, document streams.Document) {
 	// Calculate caching rules
 	cacheControl := cacheheader.Parse(cachedValue.HTTPHeader)
 
-	if cacheControl.NotCacheAllowed() {
+	if client.obeyHeaders && cacheControl.NotCacheAllowed() {
 		return
 	}
 
