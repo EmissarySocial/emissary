@@ -1,10 +1,7 @@
 package service
 
 import (
-	"context"
-
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -237,8 +234,8 @@ func (service *Group) ListAsOptions() []form.LookupCode {
 }
 
 // Count returns the number of (non-deleted) records in the User collection
-func (service *Group) Count(criteria exp.Expression) (int, error) {
-	return queries.CountRecords(context.TODO(), service.collection, notDeleted(criteria))
+func (service *Group) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(notDeleted(criteria))
 }
 
 /******************************************

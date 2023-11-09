@@ -482,8 +482,8 @@ func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.A
 }
 
 // Count returns the number of (non-deleted) records in the Stream collection
-func (service *Stream) Count(criteria exp.Expression) (int, error) {
-	return queries.CountRecords(context.TODO(), service.collection, notDeleted(criteria))
+func (service *Stream) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // MaxRank returns the maximum rank of all children of a stream

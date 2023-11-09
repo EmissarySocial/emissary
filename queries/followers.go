@@ -10,22 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CountFollowers returns the total number of followers for a given user
-func CountFollowers(ctx context.Context, followersCollection data.Collection, userID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("parentId", userID).AndEqual("deleteDate", 0)
-	return CountRecords(ctx, followersCollection, criteria)
-}
-
+// SetFollowersCount counts the number of Followers for a specific User and updates the User record.
 func SetFollowersCount(userCollection data.Collection, followersCollection data.Collection, userID primitive.ObjectID) error {
 
-	ctx := context.Background()
-	followerCount, err := CountFollowers(ctx, followersCollection, userID)
+	criteria := exp.Equal("parentId", userID).AndEqual("deleteDate", 0)
+	followerCount, err := followersCollection.Count(criteria)
 
 	if err != nil {
 		return derp.Wrap(err, "queries.SetFollowersCount", "Error counting followers records")
 	}
 
-	return RawUpdate(ctx, userCollection,
+	return RawUpdate(context.Background(), userCollection,
 		exp.Equal("_id", userID),
 		bson.M{
 			"$set": bson.M{

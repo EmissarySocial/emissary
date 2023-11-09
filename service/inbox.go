@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -433,7 +432,13 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 
 // CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
 func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
-	return queries.CountUnreadMessages(service.collection, userID, folderID)
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID).
+		AndEqual("readDate", math.MaxInt64).
+		AndEqual("deleteDate", 0)
+
+	count, err := service.collection.Count(criteria)
+	return int(count), err
 }
 
 func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {

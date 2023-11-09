@@ -1,11 +1,9 @@
 package service
 
 import (
-	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -255,7 +253,12 @@ func (service *Block) LoadByTrigger(userID primitive.ObjectID, blockType string,
 }
 
 func (service *Block) CountByType(userID primitive.ObjectID, blockType string) (int, error) {
-	return queries.CountBlocksByType(context.Background(), service.collection, userID, blockType)
+	criteria := exp.Equal("userId", userID).
+		AndEqual("deleteDate", 0).
+		AndEqual("type", blockType)
+
+	result, err := service.collection.Count(criteria)
+	return int(result), err
 }
 
 func (service *Block) QueryActiveByUser(userID primitive.ObjectID, types ...string) ([]model.Block, error) {

@@ -298,8 +298,8 @@ func (service *User) LoadByResetCode(userID string, code string, user *model.Use
 }
 
 // Count returns the number of (non-deleted) records in the User collection
-func (service *User) Count(ctx context.Context, criteria exp.Expression) (int, error) {
-	return queries.CountRecords(ctx, service.collection, notDeleted(criteria))
+func (service *User) Count(ctx context.Context, criteria exp.Expression) (int64, error) {
+	return service.collection.Count(notDeleted(criteria))
 }
 
 /******************************************

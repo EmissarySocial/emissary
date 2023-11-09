@@ -10,31 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CountBlocks returns the total number of blocks for a given user
-func CountBlocks(ctx context.Context, blockCollection data.Collection, userID primitive.ObjectID) (int, error) {
-	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
-	return CountRecords(ctx, blockCollection, criteria)
-}
-
-// CountBlocksByType returns the total number of blocks for a given user and type
-func CountBlocksByType(ctx context.Context, blockCollection data.Collection, userID primitive.ObjectID, blockType string) (int, error) {
-	criteria := exp.Equal("userId", userID).
-		AndEqual("deleteDate", 0).
-		AndEqual("type", blockType)
-
-	return CountRecords(ctx, blockCollection, criteria)
-}
-
 func SetBlockCount(userCollection data.Collection, blockCollection data.Collection, userID primitive.ObjectID) error {
 
-	ctx := context.Background()
-	blocksCount, err := CountBlocks(ctx, blockCollection, userID)
+	// Count the blocks for this User
+	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
+	blocksCount, err := blockCollection.Count(criteria)
 
 	if err != nil {
 		return derp.Wrap(err, "queries.SetBlocksCount", "Error counting blocks records")
 	}
 
-	return RawUpdate(ctx, userCollection,
+	return RawUpdate(context.TODO(), userCollection,
 		exp.Equal("_id", userID),
 		bson.M{
 			"$set": bson.M{
