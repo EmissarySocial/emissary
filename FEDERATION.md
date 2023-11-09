@@ -24,7 +24,7 @@ The [ActivityPub](https://activitypub.rocks) standard is currently the most comm
 
 ## WebFinger
 
-Emissary supports but does not require [WebFinger protocol](https://webfinger.net).  Every Emissary instance includes a WebFinger server that provides the publicly-available metadata about the people on that server.
+Emissary supports but does not require [WebFinger protocol](https://webfinger.net).  Every Emissary instance includes a **WebFinger server** that provides the publicly-available metadata about the people on that server, and is a **WebFinger client** that can use WebFinger to look up metadata from remote servers.
 
 ## RSS and Extensions
 
@@ -51,6 +51,9 @@ Emissary's default templates all include standard [MicroFormats](https://indiewe
 
 Emissary can also parse MicroFormats as a feed when following a URL.
 
+## Mastodon API
+
+Emisary implements a subset of the [Mastodon API](https://docs.joinmastodon.org/api/), allowing third-party Mastodon clients to interact with Emissary for all features commonly supported by both Emissary and Mastodon.
 
 ## Work In Progress
 
