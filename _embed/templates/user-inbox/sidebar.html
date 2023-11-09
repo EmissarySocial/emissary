@@ -13,13 +13,13 @@
 						{{- icon .Icon -}}
 					{{- end }}
 					{{.Label}}
-					
 					<span class="folder-handle">
-						{{- if eq .UnreadCount 0 -}}
-							<span id="folder-unread-{{.FolderID.Hex}}" class="text-light-gray" style="visibility:hidden;">&#9679;</span>
-						{{- else -}}
-							<span id="folder-unread-{{.FolderID.Hex}}" class="text-light-gray">&#9679;</span>
-						{{- end -}}
+						<span id="folder-unread-{{.FolderID.Hex}}"
+						class="
+							{{- if ne $selectedID .FolderID}}text-light-gray{{- end -}}
+							{{- if eq .UnreadCount 0 }} hide{{- end -}}
+						"
+						>&#9679;</span>
 						<span class="hover-reveal">
 							{{icon "drag-handle"}}
 						</span>
