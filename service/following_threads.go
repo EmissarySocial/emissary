@@ -17,7 +17,7 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 	const location = "service.Following.saveMessage"
 
 	// Traverse JSON-LD documents if necessary
-	object := getActualDocument(document)
+	object := document.UnwrapActivity()
 
 	// Load and refine the document from its actual URL
 	object, _ = service.activityStreams.Load(object.ID(), sherlock.WithDefaultValue(object.Map()))
