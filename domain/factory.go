@@ -18,8 +18,8 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/steranko"
+	"github.com/benpate/steranko/plugin/hash"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -619,9 +619,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 	return steranko.New(
 		service.NewSterankoUserService(factory.User(), factory.Email()),
 		factory.JWT(),
-		steranko.Config{
-			PasswordSchema: schema.Schema{Element: schema.String{}},
-		},
+		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
 	)
 }
 

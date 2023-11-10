@@ -415,28 +415,6 @@ func (service *User) MakeNewPasswordResetCode(user *model.User) error {
 	return nil
 }
 
-// ResetPassword resets the password for the provided user
-func (service *User) ResetPassword(user *model.User, resetCode string, newPassword string) error {
-
-	// Verify that the password reset code is valid
-	if !user.PasswordReset.IsValid(resetCode) {
-		return derp.NewForbiddenError("service.User.ResetPassword", "Invalid password reset code", user, resetCode)
-	}
-
-	// Update the password
-	user.Password = newPassword
-
-	// Invalidate the old reset code.
-	user.PasswordReset = model.PasswordReset{}
-
-	// Try to save the user with the new password reset code.
-	if err := service.Save(user, "Create Password Reset Code"); err != nil {
-		return derp.Wrap(err, "service.User.ResetPassword", "Error saving user", user)
-	}
-
-	return nil
-}
-
 // SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.
 func (service *User) SendWelcomeEmail(user *model.User) {
