@@ -6,6 +6,11 @@
 	box-sizing: border-box;
 }
 
+html, body {
+	/* https://tetralogical.com/blog/2023/06/08/focus-in-view/ */
+	scroll-padding-top: 56px; 
+}
+
 body {
 	background-color: var(--body-background);
 	color: var(--text-color);
