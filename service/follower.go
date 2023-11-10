@@ -209,14 +209,17 @@ func (service *Follower) LoadOrCreate(parentID primitive.ObjectID, actorID strin
 	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Error loading Follower", parentID, actorID)
 }
 
+// LoadByToken loads a follower using either the FollowerID (if an ObjectID is passed) or the Actor's ProfileURL
 func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, follower *model.Follower) error {
-	followerID, err := primitive.ObjectIDFromHex(token)
 
-	if err == nil {
-		return derp.Wrap(err, "service.Follower.LoadByToken", "Error converting token to ObjectID", token)
+	// If the token is an ObjectID then load the follower by FollowerID
+	if followerID, err := primitive.ObjectIDFromHex(token); err == nil {
+		criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
+		return service.Load(criteria, follower)
 	}
 
-	criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
+	// Otherwise, load the Follower by the Actor's ProfileURL
+	criteria := exp.Equal("parentId", parentID).AndEqual("actor.profileUrl", token)
 	return service.Load(criteria, follower)
 }
 

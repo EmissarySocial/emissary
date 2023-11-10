@@ -37,13 +37,12 @@ func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, action
 	follower := model.NewFollower()
 	follower.ParentID = renderer.AuthenticatedID()
 
-	// If we have a real ID, then try to load the follower from the database
+	// Try to load the Follower record (unless we're creating a NEW record)
 	if (followerToken != "") && (followerToken != "new") {
 		if err := followerService.LoadByToken(renderer.AuthenticatedID(), followerToken, &follower); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower", followerToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", followerToken))
 			}
-			// Fall through for POSTS..  we're just creating a new follower.
 		}
 	}
 

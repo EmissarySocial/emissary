@@ -180,6 +180,15 @@
 				]}
 			]
 		},
+		"follower-delete":{
+			"roles": ["self"],
+			"steps":[
+				{"step":"with-follower", "steps":[
+					{"step":"delete", "title":"Remove Follower?", "message":"Stop sending updates to '{{.Label}}'?", "button":"Remove"},
+					{"step":"trigger-event", "event":"refreshPage"}
+				]}
+			]
+		},
 
 		"following": {"step":"view-html", "file":"following"},
 		"following-list": {"step":"view-html", "file":"following-list"},

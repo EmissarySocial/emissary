@@ -93,6 +93,9 @@ func (w Model) Label() string {
 	case *model.Following:
 		return object.Label
 
+	case *model.Follower:
+		return object.Actor.Name
+
 	case *model.Stream:
 		return object.Label
 

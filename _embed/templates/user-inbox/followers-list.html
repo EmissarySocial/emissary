@@ -11,10 +11,14 @@
 
 		{{ range $followers }}
 			<tr role="button">
-				<td hx-get="/@me/inbox/follower?url={{.Actor.ProfileURL}}" style="width:32px;">
-					<img src="{{.Actor.ImageURL}}" class="circle" style="width:24px;">
+				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" style="width:32px;">
+					{{- if eq "" .Actor.ImageURL -}}
+						<div class="circle" style="width:24px;"></div>
+					{{- else -}}
+						<img src="{{.Actor.ImageURL}}" class="circle" style="width:24px;">
+					{{- end -}}
 				</td>
-				<td hx-get="/@me/inbox/follower?url={{.Actor.ProfileURL}}">
+				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}">
 					{{ if ne "" .Actor.Name }}
 						{{- .Actor.Name -}}
 					{{- else if ne "" .Actor.ProfileURL -}}
