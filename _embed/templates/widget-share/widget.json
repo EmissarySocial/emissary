@@ -1,0 +1,5 @@
+{
+	"widgetId":"share",
+	"label":"Share Button",
+	"description":"Adds a 'share' button that uses the native OS share facilities"
+}
