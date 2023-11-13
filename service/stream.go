@@ -606,6 +606,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
 	}
 
+	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
+	_, _ = service.activityStreamService.Load(stream.ActivityPubURL())
+
 	// Done.
 	return nil
 }
