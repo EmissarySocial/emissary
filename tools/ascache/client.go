@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,13 +35,17 @@ func New(innerClient streams.Client, collection *mongo.Collection, options ...Cl
 	}
 
 	// Apply option functions to the client
-	for _, option := range options {
-		option(&result)
-	}
+	result.WithOptions(options...)
 
 	go result.start()
 
 	return &result
+}
+
+func (client *Client) WithOptions(options ...ClientOptionFunc) {
+	for _, option := range options {
+		option(client)
+	}
 }
 
 /******************************************
@@ -130,12 +135,15 @@ func (client *Client) revalidate(uri string, options ...any) {
 	}
 
 	// Pass the request to the inner client
+	log.Trace().Str("uri", uri).Msg("ascache.Client.revalidate")
 	if result, err := client.innerClient.Load(uri, options...); err == nil {
 		client.save(uri, result)
 	}
 }
 
 func (client *Client) save(uri string, document streams.Document) {
+
+	const location = "ascache.Client.save"
 
 	// If the client is not writable, then don't try to save the document
 	if client.NotWritable() {
@@ -147,8 +155,8 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue.URI = uri
 	cachedValue.Original = document.Map()
 	cachedValue.HTTPHeader = document.HTTPHeader()
-	cachedValue.HTTPHeader.Set("X-Hannibal-Cache", "true")
-	cachedValue.HTTPHeader.Set("X-Hannibal-Cache-Date", time.Now().Format(time.RFC3339))
+	cachedValue.HTTPHeader.Set(headerHannibalCache, "true")
+	cachedValue.HTTPHeader.Set(headerHannibalCacheDate, time.Now().Format(time.RFC3339))
 
 	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
 		cachedValue.InReplyTo = inReplyTo.String()
@@ -166,16 +174,20 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue.calcRevalidates(cacheControl)
 
 	// Try to upsert the document into the cache
-	filter := bson.M{"url": uri}
+	filter := bson.M{"uri": uri}
 	update := bson.M{"$set": cachedValue}
 	queryOptions := options.Update().SetUpsert(true)
 
 	// Try to remove any existing documents with the same URI
 	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
-		derp.Report(derp.Wrap(err, "ascache.Client.save", "Error saving document to cache", document.ID()))
+		derp.Report(derp.Wrap(err, location, "Error saving document to cache", document.ID()))
 	}
+
+	// Write to log
+	log.Trace().Str("uri", uri).Msg("ascache.Client.save")
 }
 
+// asDocument converts a CachedValue into a fully-populated streams.Document
 func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 	result := streams.NewDocument(
 		cachedValue.Original,
@@ -189,18 +201,23 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
  * Other Queries
  ******************************************/
 
+// loadByURI loads a CachedValue from the cache using its URI.
 func (client *Client) loadByURI(uri string, document *CachedValue) error {
 
+	// Prevent NPE
 	if client.collection == nil {
 		return derp.NewInternalError("ascache.Client.loadByURI", "Cache connection is not defined")
 	}
 
+	// Query the cache database
 	criteria := bson.M{"uri": uri}
-
 	if err := client.collection.FindOne(context.Background(), criteria).Decode(document); err != nil {
+		log.Trace().Str("uri", uri).Msg("ascache.Client.loadByURI: NOT FOUND")
 		return derp.Wrap(err, "ascache.Client.loadByURI", "Error loading document from cache", uri)
 	}
 
+	// Success.
+	log.Trace().Str("uri", uri).Msg("ascache.Client.loadByURI: FOUND")
 	return nil
 }
 

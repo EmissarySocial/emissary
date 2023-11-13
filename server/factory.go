@@ -16,7 +16,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
-	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
@@ -575,9 +574,13 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	sherlockClient := sherlock.NewClient(sherlock.WithUserAgent("Emissary Social: https://emissary.social"))
 	cacheRulesClient := ascacherules.New(sherlockClient)
 	contextMakerClient := ascontextmaker.New(cacheRulesClient)
-	writableCache := ascache.New(contextMakerClient, collection)
-	crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
-	readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
+	cacheClient := ascache.New(contextMakerClient, collection, ascache.WithIgnoreHeaders())
 
-	factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+	factory.activityStreamsService.Refresh(cacheClient, mongodb.NewCollection(collection))
+
+	// This is breaking somehow.  Test thoroughly before re-enabling.
+	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
+	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
+	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
+	// factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }

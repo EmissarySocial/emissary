@@ -55,13 +55,18 @@ func main() {
 
 	go waitForSigInt()
 
-	// Set global configuration
+	// Troubleshoot / Error Reporting
 	spew.Config.DisableMethods = true
 	spew.Config.Indent = " "
 
+	// Logging Configuration
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		NoColor:    true,
+		TimeFormat: "",
+	})
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
@@ -181,7 +186,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	/*
 		e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
 			fmt.Println("---")
