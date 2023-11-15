@@ -1,10 +1,6 @@
 behavior Modal
 
 	init
-		measure #modal-window
-		set delta to Math.floor(it's top / 3)
-		-- set #modal-window's *transform to `translateY(-${delta}px)`
-
 		add [@role="dialog"]
 		set title to the first <h1,h2,h3/> in me
 
@@ -17,6 +13,10 @@ behavior Modal
 			set the @aria-labelledby to the title's id
 		end
 
+		-- prevent window from scrolling underneath the modal
+		set document.body.style.position to "fixed"
+		set document.body.style.top to `-${window.scrollY}px`
+
 		wait a tick then
 		add .ready to #modal
 		focus() the first <[tabindex]/> in me
@@ -24,16 +24,27 @@ behavior Modal
 
 	on closeModal(nextPage) from window	
 
-		if #modal is not empty then 
-			remove .ready from #modal
-			add .closing to #modal
-			settle
-			remove #modal
+		if #modal is empty then 
+			exit
 		end
 
-		if nextPage is not empty then 
-			set the window's location to nextPage
+		-- reset scroll position
+		set scrollY to parseInt(document.body.style.top)
+		set document.body.style.position to ""
+		set document.body.style.top to ""
+
+		if scrollY is not empty then
+			window.scrollTo(0, scrollY * -1)
 		end
+
+		-- animate the modal closing
+		remove .ready from #modal
+		add .closing to #modal
+		settle
+
+		-- done
+		remove #modal
+
 	end
 	
 	on click (target)
