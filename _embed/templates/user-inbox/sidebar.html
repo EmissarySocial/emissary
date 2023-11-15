@@ -15,8 +15,8 @@
 					{{.Label}}
 					<span class="folder-handle">
 						<span id="folder-unread-{{.FolderID.Hex}}"
-						class="
-							{{- if ne $selectedID .FolderID}}text-light-gray{{- end -}}
+						class="text-sm
+							{{- if ne $selectedID .FolderID}} text-light-gray{{- end -}}
 							{{- if eq .UnreadCount 0 }} hide{{- end -}}
 						"
 						>&#9679;</span>

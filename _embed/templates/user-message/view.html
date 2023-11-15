@@ -111,15 +111,16 @@
 		{{- end -}}
 	</div>
 
-	<hr>
 	<div hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		Loading Replies...
 	</div>
 
-	<div hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
-		{{- if .UserCan "reply" -}}
-			{{.View "reply"}}
-		{{- end -}}
-	</div>
+	{{- if .UserCan "reply" -}}
+		<div hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
+			<div id="modal-footer">
+				{{.View "reply"}}
+			</div>
+		</div>
+	{{- end -}}
 
 </div>

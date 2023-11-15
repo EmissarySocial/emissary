@@ -1,19 +1,27 @@
 {{- $actor := .AttributedTo.Load -}}
 
+<hr>
 <div class="space-below">
-	<div class="clickable flex-row" role="link" script="on click go to url '{{.ID}}'">
+	<div class="flex-row">
 		<div style="width:32px; height:32px; margin-right:8px;">
 			{{- if $actor.Icon.NotNil -}}
-				<img class="circle-32" src="{{$actor.Icon.URL}}">
+				<a href="{{$actor.ID}}"><img class="circle-32" src="{{$actor.Icon.URL}}"></a>
 			{{- end -}}
 		</div>
 		<div>
 
-			{{- if $actor.NotNil -}}
-				<div>
-					<span class="bold link vertical-space-none">{{$actor.Name}}</span>
-					<span class="text-gray vertical-space-none">&middot; {{ .Published | epochDate | tinyDate}}</span>
-				</div>
+			<div>
+				{{- if $actor.NotNil -}}
+					<a href="{{$actor.ID}}">
+						<span class="bold link">{{$actor.Name}}</span>
+						<span class="text-gray">&middot; {{ .Published | epochDate | tinyDate}}</span>
+					</a> &nbsp;
+				{{- end -}}
+				<a href="{{.ID}}"><span class="text-sm">View Original &rarr;</span></a>
+			</div>
+
+			{{- if ne "" .Name -}}
+				<h1 class="space-above">{{.Name}}</h1>
 			{{- end -}}
 
 			{{- if .Image.NotNil -}}
@@ -24,4 +32,3 @@
 		</div>
 	</div>
 </div>
-<hr>

@@ -1,0 +1,12 @@
+{{- $published := .QueryParam "published" -}}
+{{- $replies := .RepliesAfter $published 0 -}}
+
+{{- range $replies -}}
+	{{- template "activitystream" . -}}
+{{- end -}}
+
+{{- if .UserCan "reply" -}}
+	<div id="modal-footer">
+		{{- .View "reply" -}}
+	</div>
+{{- end -}}

@@ -1,14 +1,4 @@
-<script src="/.themes/global/resources/autolinker-4.0.0/autolinker.min.js"></script>
-<script src="/.themes/global/resources/vanillaCaret/vanillaCaret.min.js" id="vanillaCaretScript"></script>
-
 <script type="text/hyperscript">
-	init
-		set $autolinkerOptions to {
-			newWindow: false,
-			sanitizeHtml: true,
-			stripPrefix: false,
-			stripTrailingSlash: false
-		}
 
 	def previewUploads()
 		set #file-preview.innerHTML to ""
@@ -38,20 +28,13 @@
 			class="input"
 			contenteditable="true"
 			data-script="
-				init
-					wait for load from #vanilaCaretScript then
-					make a VanillaCaret from me called :caret
+				on keydown[key=='ArrowLeft']
+					halt the event's bubbling
 
-				on keydown[key=='Enter']
-					if event.target is not me then exit end
-					halt the event
-					send enterKey to closest #outbox-message
-
-				on keypress debounced at 500ms 
-					set oldPosition to :caret.getPos() then
-					set my innerHTML to Autolinker.link(my innerText, $autolinkerOptions) then
-					call :caret.setPos(oldPosition)"
-		>{{.ContentHTML}}</div>
+				on keydown[key=='ArrowRight']
+					halt the event's bubbling
+					
+				">{{.ContentHTML}}</div>
 	</div>
 
 	<div id="file-preview"></div>

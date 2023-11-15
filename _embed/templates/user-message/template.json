@@ -49,6 +49,7 @@
 				{"step":"trigger-event", "event":"refreshReplies"}
 			]
 		},
+		"replies-after":{"step":"view-html"},
 
 		"delete": {
 			"roles": ["self"],
