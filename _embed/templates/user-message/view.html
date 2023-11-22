@@ -1,4 +1,4 @@
-<div script="install message(messageId:'{{.MessageID}}')">
+<div id="modal-body" script="install message(messageId:'{{.MessageID}}')">
 
 	<div class="space-below">
 		<div class="flex-row text-xs">
@@ -111,16 +111,15 @@
 		{{- end -}}
 	</div>
 
-	<div hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-		Loading Replies...
+	<div id="replies" class="space-below">
+		<hr>
+		<button hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="text-xs">
+			Show Replies
+		</button>
 	</div>
 
-	{{- if .UserCan "reply" -}}
-		<div hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
-			<div id="modal-footer">
-				{{.View "reply"}}
-			</div>
-		</div>
-	{{- end -}}
+</div>
 
+<div id="modal-footer" hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="outerHTML" hx-target="this">
+	{{.View "reply"}}
 </div>

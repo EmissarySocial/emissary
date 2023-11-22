@@ -1,12 +1,13 @@
 {{- $published := .QueryParam "published" -}}
-{{- $replies := .RepliesAfter $published 0 -}}
 
-{{- range $replies -}}
-	{{- template "activitystream" . -}}
+{{- if ne "" $published -}}
+	{{- $replies := .RepliesAfter $published 0 -}}
+
+	{{- range $replies -}}
+		{{- template "activitystream" . -}}
+	{{- end -}}
 {{- end -}}
 
-{{- if .UserCan "reply" -}}
-	<div id="modal-footer">
-		{{- .View "reply" -}}
-	</div>
-{{- end -}}
+<div id="modal-footer" hx-swap-oob="true" hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="outerHTML" hx-target="this">
+	{{.View "reply"}}
+</div>

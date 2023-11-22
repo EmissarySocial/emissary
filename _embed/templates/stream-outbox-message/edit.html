@@ -11,11 +11,11 @@
 
 {{- $targetURL := .QueryParam "postTo" | addQueryParams "templateId=outbox-message" -}}
 
-<form id="outbox-message" hx-post="{{$targetURL}}" hx-trigger="submit, enterKey" hx-encoding="multipart/form-data" hx-push-url="false"
+<form id="outbox-message" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
 	data-script="
 		on htmx:configRequest(parameters)
 			set contentHtml to the first <.input/> in me
-			set parameters['content'] to Autolinker.link(contentHtml.innerText, $autolinkerOptions)
+			set parameters['content'] to contentHtml.innerText
 		">
 
 	{{if not .IsNew}}
