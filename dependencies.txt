@@ -2,6 +2,8 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
+- domain
+- html
 - sherlock
 - data-mongo
 - table
@@ -9,17 +11,16 @@ NO DEPENDENTS
 - mediaserver
 - exp-builder
 - digit
-- domain
 
 FEW DEPENDENTS
 
 - hannibal
 - form
+- oembed
 - re
 
 SOME DEPENDENTS
 
-- html
 - data-mock
 - rosetta
 - data
