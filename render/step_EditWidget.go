@@ -73,7 +73,7 @@ func (step StepEditWidget) common(renderer Renderer) (model.Widget, model.Stream
 	streamRenderer, ok := renderer.(*Stream)
 
 	if !ok {
-		return model.Widget{}, model.StreamWidget{}, nil, derp.New(derp.CodeInternalError, location, "Renderer is not a StreamRenderer")
+		return model.Widget{}, model.StreamWidget{}, nil, derp.NewInternalError(location, "Renderer is not a StreamRenderer")
 	}
 
 	// User must be authenticated to view widget details

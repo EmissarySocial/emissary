@@ -24,7 +24,7 @@ func init() {
 		}
 
 		if userID != user.UserID {
-			return derp.New(500, "handler.activityPub_HandleRequest_Follow", "Invalid User ID", userID, user.UserID)
+			return derp.NewInternalError("handler.activityPub_HandleRequest_Follow", "Invalid User ID", userID, user.UserID)
 		}
 
 		// TODO: CRITICAL: Enforce blocks here.

@@ -237,7 +237,7 @@ func (service *Mention) ParseURL(target string) (objectType string, token string
 	// RULE: If the target URL doesn't start with the service's host, then it
 	// doesn't belong on this server
 	if !strings.HasPrefix(target, service.host) {
-		return "", "", derp.New(derp.CodeNotFoundError, location, "Target URL is not on this server", target)
+		return "", "", derp.NewNotFoundError(location, "Target URL is not on this server", target)
 	}
 
 	// Parse the URL to ensure that it's valid

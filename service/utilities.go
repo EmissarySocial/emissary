@@ -98,7 +98,7 @@ func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.Ob
 	}
 
 	if objectType != "following" {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.New(derp.CodeBadRequestError, "service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.NewBadRequestError("service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
 	}
 
 	return userID, objectID, nil

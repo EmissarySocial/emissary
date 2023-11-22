@@ -44,7 +44,7 @@ func undoResponse(factory *domain.Factory, user *model.User, activity streams.Do
 
 	// RULE: ActivityPub type must match the received activity
 	if response.ActivityPubType() != originalActivity.Type() {
-		return derp.New(derp.CodeBadRequestError, "handler.undoResponse", "ActivityPub type does not match")
+		return derp.NewBadRequestError("handler.undoResponse", "ActivityPub type does not match")
 	}
 
 	// Try to remove the Response from the database. (This will NOT send updates to other servers)

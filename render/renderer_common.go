@@ -48,7 +48,7 @@ func NewCommon(factory Factory, request *http.Request, response http.ResponseWri
 	action, ok := template.Actions[actionID]
 
 	if !ok {
-		return Common{}, derp.New(derp.CodeBadRequestError, location, "Invalid action", actionID)
+		return Common{}, derp.NewBadRequestError(location, "Invalid action", actionID)
 	}
 
 	// Return a new Common renderer
