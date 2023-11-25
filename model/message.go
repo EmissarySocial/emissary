@@ -247,10 +247,38 @@ func increment(value *int) {
 	*value++
 }
 
+// Map returns a mep representation of this object
+func (message Message) Map() map[string]any {
+
+	return map[string]any{
+		"messageId":    message.MessageID,
+		"userId":       message.UserID,
+		"followingId":  message.FollowingID,
+		"folderId":     message.FolderID,
+		"socialRole":   message.SocialRole,
+		"origin":       message.Origin,
+		"references":   message.References,
+		"url":          message.URL,
+		"label":        message.Label,
+		"summary":      message.Summary,
+		"imageUrl":     message.ImageURL,
+		"attributedTo": message.AttributedTo,
+		"inReplyTyo":   message.InReplyTo,
+		"contentHtml":  message.ContentHTML,
+		"resonses":     message.Responses,
+		"myResponse":   message.MyResponse,
+		"muted":        message.Muted,
+		"readDate":     message.ReadDate,
+		"publishDate":  message.PublishDate,
+		"rank":         message.Rank,
+	}
+}
+
 /******************************************
  * Mastodon API
  ******************************************/
 
+// Toot returns this object represented as a toot status
 func (message Message) Toot() object.Status {
 
 	return object.Status{
