@@ -69,9 +69,6 @@ func (message *Message) GetPointer(name string) (any, bool) {
 	case "contentHtml":
 		return &message.ContentHTML, true
 
-	case "contentJson":
-		return &message.ContentJSON, true
-
 	case "responses":
 		return &message.Responses, true
 

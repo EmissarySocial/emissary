@@ -29,7 +29,6 @@ type Message struct {
 	AttributedTo PersonLink                 `json:"attributedTo" bson:"attributedTo,omitempty"` // List of people who are attributed to this Message
 	InReplyTo    string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`    // URL this message is in reply to
 	ContentHTML  string                     `json:"contentHtml"  bson:"contentHtml,omitempty"`  // HTML Content of the Message
-	ContentJSON  string                     `json:"contentJson"  bson:"contentJson,omitempty"`  // Original JSON message, used for reprocessing later.
 	Responses    ResponseSummary            `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
 	MyResponse   string                     `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
 	Muted        bool                       `json:"muted" bson:"muted,omitempty"`               // If TRUE, then do not display any more replies underneath this message.
