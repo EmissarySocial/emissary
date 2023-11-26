@@ -8,6 +8,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -69,11 +71,11 @@ func (client *Client) start() {
 		// wait for the purge frequency duration
 		time.Sleep(time.Duration(client.purgeFrequency) * time.Second)
 
+		// Try to remove expired actors
 		criteria := exp.LessThan("expires", time.Now().Unix())
 
-		// Try to remove expired actors
 		if _, err := client.collection.DeleteMany(context.Background(), criteria); err != nil {
-			derp.Report(derp.Wrap(err, "ascache.Client.delete", "Error purging expired actors from cache"))
+			derp.Report(derp.Wrap(err, "ascache.Client.start", "Error purging expired documents from cache"))
 		}
 	}
 }
@@ -124,6 +126,48 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
  * Other Cache Management Methods
  ******************************************/
 
+// Delete removes a single document from the cache
+func (client *Client) Delete(uri string) error {
+
+	const location = "ascache.Client.Delete"
+
+	spew.Dump(location, uri)
+
+	// NPE Check
+	if client.collection == nil {
+		return derp.NewInternalError(location, "Document Collection not initialized")
+	}
+
+	// Look for the document in the cache
+	cachedValue, err := client.Load(uri)
+
+	// If there's nothing in the cache, then there's nothing to delete
+	if derp.NotFound(err) {
+		spew.Dump(err)
+		return nil
+	}
+
+	// Return actual errors to the caller
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading document", uri)
+	}
+
+	// Delete the document from the cache
+	criteria := bson.M{"uri": uri}
+
+	if _, err := client.collection.DeleteOne(context.Background(), criteria); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error purging expired actors from cache"))
+	}
+
+	// Recalculate statistics
+	if err := client.calcStatistics(cachedValue); err != nil {
+		return derp.Wrap(err, location, "Error calculating statistics", uri)
+	}
+
+	// Success!
+	return nil
+}
+
 // revalidate reloads a document from the source even if it has not yet expired.
 // This potentially updates the cache timeout value, keeping the document
 // fresh in the cache for longer.
@@ -141,6 +185,7 @@ func (client *Client) revalidate(uri string, options ...any) {
 	}
 }
 
+// save adds/updates a document in the cache
 func (client *Client) save(uri string, document streams.Document) {
 
 	const location = "ascache.Client.save"
@@ -158,8 +203,25 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue.HTTPHeader.Set(headerHannibalCache, "true")
 	cachedValue.HTTPHeader.Set(headerHannibalCacheDate, time.Now().Format(time.RFC3339))
 
-	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
-		cachedValue.InReplyTo = inReplyTo.String()
+	// RULE: Try to set the Relation Type and HREf
+	switch document.Type() {
+
+	// Announce, Like, and Dislike are written straight to the cache.
+	case vocab.ActivityTypeAnnounce,
+		vocab.ActivityTypeLike,
+		vocab.ActivityTypeDislike:
+
+		cachedValue.RelationType = document.Type()
+		cachedValue.RelationHref = document.Object().ID()
+
+	// Otherwise, see if this is a "Reply"
+	default:
+		unwrapped := document.UnwrapActivity()
+
+		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
+			cachedValue.RelationType = RelationTypeReply
+			cachedValue.RelationHref = inReplyTo.String()
+		}
 	}
 
 	// Calculate caching rules
@@ -178,9 +240,13 @@ func (client *Client) save(uri string, document streams.Document) {
 	update := bson.M{"$set": cachedValue}
 	queryOptions := options.Update().SetUpsert(true)
 
-	// Try to remove any existing documents with the same URI
 	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error saving document to cache", document.ID()))
+	}
+
+	// Try to recalculate statistics of linked documents
+	if err := client.calcStatistics(document); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error calculating statistics", document.ID()))
 	}
 
 	// Write to log
@@ -189,12 +255,13 @@ func (client *Client) save(uri string, document streams.Document) {
 
 // asDocument converts a CachedValue into a fully-populated streams.Document
 func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
-	result := streams.NewDocument(
+
+	return streams.NewDocument(
 		cachedValue.Original,
 		streams.WithClient(client),
+		streams.WithStats(cachedValue.Statistics),
 		streams.WithHTTPHeader(cachedValue.HTTPHeader),
 	)
-	return result
 }
 
 /******************************************

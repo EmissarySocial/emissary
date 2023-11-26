@@ -25,3 +25,18 @@ const headerHannibalCache = "X-Hannibal-Cache"
 
 // Custom header used by Hannibal to indicate the date that the cached value was saved
 const headerHannibalCacheDate = "X-Hannibal-Cache-Date"
+
+// RelationTypeAnnounce labels a document that is an "Announce" of another
+// document in the cache.  This value mirrors the ActivityStream "Announce" type
+const RelationTypeAnnounce = "Announce"
+
+// RelationTypeReply labels a document that is a reply to another document in the cache
+const RelationTypeReply = "Reply"
+
+// RelationTypeLike labels a document that is a "Like" of another
+// document in the cache.  This value mirrors the ActivityStream "Like" type
+const RelationTypeLike = "Like"
+
+// RelationTypeDislike labels a document that is a "Dislike" of another
+// document in the cache.  This value mirrors the ActivityStream "Dislike" type
+const RelationTypeDislike = "Dislike"

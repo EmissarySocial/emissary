@@ -7,29 +7,37 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 )
 
 type CachedValue struct {
-	URI            string      `bson:"uri"`                  // ID/URL of this document
-	Original       mapof.Any   `bson:"original"`             // Original document, parsed as a map
-	HTTPHeader     http.Header `bson:"httpHeader,omitempty"` // HTTP headers that were returned with this document
-	Published      int64       `bson:"published"`            // Unix epoch seconds when this document was published
-	Received       int64       `bson:"received"`             // Unix epoch seconds when this document was received by the cache
-	Expires        int64       `bson:"expires"`              // Unix epoch seconds when this document is expired. After this date, it must be revalidated from the source.
-	Revalidates    int64       `bson:"revalidates"`          // Unix epoch seconds when this document should be removed from the cache.
-	Collection     string      `bson:"collection,omitempty"` // ID/URL of the collection that this document belongs to (user outbox, etc)
-	InReplyTo      string      `bson:"inReplyTo,omitempty"`  // ID/URL of the document that this document is in reply to
-	ResponseCounts mapof.Int   `bson:"responses,omitempty"`  // Map of response types to the number of each type
 
+	// Original HTTP Response
+	URI        string      `bson:"uri"`                  // ID/URL of this document
+	Original   mapof.Any   `bson:"original"`             // Original document, parsed as a map
+	HTTPHeader http.Header `bson:"httpHeader,omitempty"` // HTTP headers that were returned with this document
+
+	// Document Statistics
+	Statistics   streams.Statistics `bson:"statistics,omitempty"`   // Statistics about this document
+	RelationType string             `bson:"relationType,omitempty"` // Kind of Relationship (Announce, Reply, Like, Dislike)
+	RelationHref string             `bson:"relationHref,omitempty"` // HREF of the document that this document is related to.
+
+	// Caching Rules
+	Published   int64 `bson:"published"`   // Unix epoch seconds when this document was published
+	Received    int64 `bson:"received"`    // Unix epoch seconds when this document was received by the cache
+	Expires     int64 `bson:"expires"`     // Unix epoch seconds when this document is expired. After this date, it must be revalidated from the source.
+	Revalidates int64 `bson:"revalidates"` // Unix epoch seconds when this document should be removed from the cache.
+
+	// Journal
 	journal.Journal `bson:",inline"`
 }
 
 func NewCachedValue() CachedValue {
 	return CachedValue{
-		Original:       make(mapof.Any),
-		HTTPHeader:     make(http.Header),
-		ResponseCounts: make(mapof.Int),
+		Original:   make(mapof.Any),
+		HTTPHeader: make(http.Header),
+		Statistics: streams.NewStatistics(),
 	}
 }
 
