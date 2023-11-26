@@ -31,6 +31,9 @@
 	{{- $inboxRenderer := . -}}
 	{{- range $index, $message := $inbox -}}
 
+		{{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+		{{- $stats := $stream.Statistics -}}
+
 		<div 
 			id="item_{{.MessageID.Hex}}" 
 			role="button"
@@ -57,6 +60,9 @@
 		</div>
 
 		<div class="space-above">
+			{{ $stats.Replies }} Replies &middot;
+			{{ $stats.Likes }} Likes &middot;
+			{{ $stats.Announces }} Shares &middot;
 			{{- $inboxRenderer.Responses $message -}}
 		</div>
 		

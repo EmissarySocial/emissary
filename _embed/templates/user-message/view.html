@@ -1,3 +1,5 @@
+{{- $activity := .ActivityStream -}}
+
 <div id="modal-body" script="install message(messageId:'{{.MessageID}}')">
 
 	<div class="space-below">
@@ -82,34 +84,7 @@
 		</a>
 	{{- end -}}
 	
-	{{- if ne "" .Label -}}
-		<h1><a href="{{.URL}}" target="_blank" class="text-black">{{.Label}}</a></h1>
-	{{- end -}}
-
-	<div class="content space-above space-below">
-		{{- if not .HasContentImage -}}
-			{{- if .HasImage -}}
-				<div class="space-below">
-					<a href="{{.URL}}" target="_blank"><img src="{{.ImageURL}}" style="width:100%;"/></a>
-				</div>
-			{{- end -}}
-		{{- end -}}
-
-		<div class="text-gray flex-row">
-			<div class="bold">{{ .PublishDate | longDate -}}</div>
-			{{.Responses}}
-		</div>	
-
-		{{- if .HasSummary -}}
-			{{- if .HasContent -}}
-					<div>{{- .ContentHTML -}}</div>
-			{{- else -}}
-				<div>{{- .Summary | html -}}</div>
-			{{- end -}}
-		{{- else -}}
-			<div>{{- .ContentHTML -}}</div>
-		{{- end -}}
-	</div>
+	{{ template "activity" $activity -}}
 
 	<div id="replies" class="space-below">
 		<hr>
