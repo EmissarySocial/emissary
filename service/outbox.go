@@ -104,36 +104,16 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 // Delete removes an Outbox from the database (virtual delete)
 func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) error {
 
-	// Delete Outbox record last.
+	// Delete the message from the outbox
 	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
 
 	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
 	}
 
-	if err := service.activityStreamsService.DeleteDocumentByURL(outboxMessage.URL); err != nil {
+	// Delete the document from the cache
+	if err := service.activityStreamsService.Delete(outboxMessage.URL); err != nil {
 		return derp.Wrap(err, "service.Outbox", "Error deleting ActivityStream", outboxMessage, note)
-	}
-
-	return nil
-}
-
-// DeleteMany removes all child streams from the provided stream (virtual delete)
-func (service *Outbox) DeleteMany(criteria exp.Expression, note string) error {
-
-	it, err := service.List(criteria)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Message.Delete", "Error listing streams to delete", criteria)
-	}
-
-	outboxMessage := model.NewOutboxMessage()
-
-	for it.Next(&outboxMessage) {
-		if err := service.Delete(&outboxMessage, note); err != nil {
-			return derp.Wrap(err, "service.Message.Delete", "Error deleting outboxMessage", outboxMessage)
-		}
-		outboxMessage = model.NewOutboxMessage()
 	}
 
 	return nil

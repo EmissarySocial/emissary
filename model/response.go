@@ -135,8 +135,19 @@ func (response *Response) CalcContent() {
 	// Nothin to return.
 }
 
+// CreateDateSeconds returns the CreateDate in Unix Epoch seconds (instead of milliseconds)
 func (response Response) CreateDateSeconds() int64 {
 	return response.CreateDate / 1000
+}
+
+// IsEmpty returns TRUE if this Response has no data in it.
+func (response Response) IsEmpty() bool {
+	return response.Type == ""
+}
+
+// NotEmpty returns TRUE if this Response has data in it.
+func (response Response) NotEmpty() bool {
+	return !response.IsEmpty()
 }
 
 /******************************************

@@ -212,55 +212,51 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 	const location = "service.Response.SetResponse"
 
-	// Validate the response
+	// Normalize response content
 	response.CalcContent()
 
+	// Try to load the User who created this Response.  Only authenticated Users can create Response records.
 	user := model.NewUser()
-	err := service.userService.LoadByProfileURL(response.ActorID, &user)
 
-	// If this is a legitimate error, then abort.
-	if (err != nil) && !derp.NotFound(err) {
+	if err := service.userService.LoadByProfileURL(response.ActorID, &user); err != nil {
 		return derp.Wrap(err, location, "Error loading user", response.ActorID)
 	}
 
-	// NOTE if the actorID is not found then the User will be a blank object
+	// RULE: Set the Response URL using the User's "liked" collection.
+	response.URL = user.ActivityPubLikedURL() + "/" + response.ResponseID.Hex()
 
-	// If a response already exists, then delete it first.
+	// Search for a previous Response from this User
 	oldResponse := model.NewResponse()
-	err = service.LoadByActorAndObject(response.ActorID, response.ObjectID, &oldResponse)
 
-	// RULE: if the response exists....
-	if err == nil {
+	if err := service.LoadByActorAndObject(response.ActorID, response.ObjectID, &oldResponse); !derp.NilOrNotFound(err) {
+		return derp.Wrap(err, location, "Error loading original response", oldResponse)
+	}
 
-		// If there was no change, then there's nothing to do.
+	// If the database had a previous Response, then delete it.
+	if oldResponse.NotEmpty() {
+
+		// ... except if the new Response is the same as the old Response.
+		// If there was no change, then there's nothing else to do.
 		if response.IsEqual(oldResponse) {
 			return nil
 		}
 
-		// Otherwise, delete the old response (which triggers other logic)
+		// Otherwise, delete the old Response
 		if err := service.Delete(&oldResponse, ""); err != nil {
 			return derp.Wrap(err, location, "Error deleting old response", oldResponse)
 		}
 
-		// Responses from local Actors should be removed from the Outbox
-		if !user.IsNew() {
+		// Unpublish from the Outbox, and send the "Undo" activity to followers
+		undoActivity := pub.Undo(user.ActivityPubURL(), response.GetJSONLD())
 
-			// Create an "Undo" activity
-			undoActivity := pub.Undo(user.ActivityPubURL(), response.GetJSONLD())
-
-			// Send the "Undo" activity to followers
-			if err := service.outboxService.UnPublish(user.UserID, response.URL, undoActivity); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
-			}
+		if err := service.outboxService.UnPublish(user.UserID, oldResponse.URL, undoActivity); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
 		}
+	}
 
-		// RULE: If there is no response type, then this is a DELETE-ONLY operation. Do not create a new response.
-		if response.Type == "" {
-			return nil
-		}
-
-	} else if !derp.NotFound(err) {
-		return derp.Wrap(err, location, "Error loading original response", oldResponse)
+	// RULE: If the "new" response is empty, then this is a DELETE-ONLY operation. Do not create a new response.
+	if response.IsEmpty() {
+		return nil
 	}
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
@@ -268,12 +264,9 @@ func (service *Response) SetResponse(response *model.Response) error {
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
-	// Responses from local Actors should be published to the Outbox
-	if !user.IsNew() {
-
-		if err := service.outboxService.Publish(user.UserID, response.URL, response.GetJSONLD()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
-		}
+	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
+	if err := service.outboxService.Publish(user.UserID, response.URL, response.GetJSONLD()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
 	// Oye cómo va!

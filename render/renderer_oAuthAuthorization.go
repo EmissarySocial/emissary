@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -64,7 +63,6 @@ func (r OAuthAuthorization) Website() string {
 }
 
 func (r OAuthAuthorization) RedirectURI() string {
-	spew.Dump(r._request)
 	return r._request.RedirectURI
 }
 

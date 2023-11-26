@@ -16,7 +16,7 @@ import (
 // ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
 type ActivityStreams struct {
 	documentCollection data.Collection
-	innerClient        streams.Client
+	innerClient        *ascache.Client
 }
 
 /******************************************
@@ -29,7 +29,7 @@ func NewActivityStreams() ActivityStreams {
 }
 
 // Refresh updates the ActivityStreams service with new dependencies
-func (service *ActivityStreams) Refresh(innerClient streams.Client, documentCollection data.Collection) {
+func (service *ActivityStreams) Refresh(innerClient *ascache.Client, documentCollection data.Collection) {
 	service.innerClient = innerClient
 	service.documentCollection = documentCollection
 }
@@ -50,6 +50,18 @@ func (service *ActivityStreams) Load(uri string, options ...any) (streams.Docume
 	return service.innerClient.Load(uri, options...)
 }
 
+// Delete removes a single document from the database by its URL
+func (service *ActivityStreams) Delete(uri string) error {
+
+	const location = "service.ActivityStreams.Delete"
+
+	if err := service.innerClient.Delete(uri); err != nil {
+		return derp.Wrap(err, location, "Error deleting document from cache", uri)
+	}
+
+	return nil
+}
+
 /******************************************
  * Custom Behaviors
  ******************************************/
@@ -62,9 +74,8 @@ func (service *ActivityStreams) PurgeCache() error {
 		return derp.NewInternalError("service.ActivityStreams.PurgeCache", "Document Collection not initialized")
 	}
 
-	criteria := exp.LessThan("expires", time.Now().Unix())
-
 	// Purge all expired Documents
+	criteria := exp.LessThan("expires", time.Now().Unix())
 	if err := service.documentCollection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.ActivityStreams.PurgeCache", "Error purging documents")
 	}
@@ -76,56 +87,56 @@ func (service *ActivityStreams) PurgeCache() error {
  * Custom Query Methods
  ******************************************/
 
-// DeleteDocumentByURL removes a single document from the database by its URL
-func (service *ActivityStreams) DeleteDocumentByURL(url string) error {
-
-	// NPE Check
-	if service.documentCollection == nil {
-		return derp.NewInternalError("service.ActivityStreams.DeleteDocumentByURL", "Document Collection not initialized")
-	}
-
-	// Forward request to documentCollection
-	return service.documentCollection.HardDelete(exp.Equal("uri", url))
-}
-
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
 func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
 
+	const location = "service.ActivityStreams.QueryRepliesBeforeDate"
+
 	// NPE Check
 	if service.documentCollection == nil {
-		return streams.Document{}, derp.NewInternalError("service.ActivityStreams.QueryRepliesBeforeDate", "Document Collection not initialized")
+		return streams.Document{}, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Build the query
 	criteria := exp.
-		Equal("inReplyTo", inReplyTo).
+		Equal("relationType", "Reply").
+		AndEqual("relationHref", inReplyTo).
 		AndLessThan("published", maxDate)
 
 	results, err := service.documentQuery(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
 
+	if err != nil {
+		return streams.Document{}, derp.Wrap(err, location, "Error querying database")
+	}
+
 	// Return the results as a streams.Document / collection
-	return streams.NewDocument(results.Reverse(), streams.WithClient(service)),
-		derp.Wrap(err, "service.ActivityStreams.QueryRepliesAfterDate", "Error querying database")
+	return streams.NewDocument(results.Reverse(), streams.WithClient(service)), nil
 }
 
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
 func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
 
+	const location = "service.ActivityStreams.QueryRepliesAfterDate"
+
 	// NPE Check
 	if service.documentCollection == nil {
-		return streams.Document{}, derp.NewInternalError("service.ActivityStreams.QueryRepliesAfterDate", "Document Collection not initialized")
+		return streams.Document{}, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Build the query
 	criteria := exp.
-		Equal("inReplyTo", inReplyTo).
+		Equal("relationType", "Reply").
+		AndEqual("relationHref", inReplyTo).
 		AndGreaterThan("published", minDate)
 
 	results, err := service.documentQuery(criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
 
+	if err != nil {
+		return streams.Document{}, derp.Wrap(err, location, "Error querying database")
+	}
+
 	// Return the result as a streams.Document / collection
-	return streams.NewDocument(results, streams.WithClient(service)),
-		derp.Wrap(err, "service.ActivityStreams.QueryRepliesAfterDate", "Error querying database")
+	return streams.NewDocument(results, streams.WithClient(service)), nil
 }
 
 /******************************************
@@ -135,9 +146,11 @@ func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate 
 // iterator reads from the database and returns a data.Iterator with the result values.
 func (service *ActivityStreams) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 
+	const location = "service.ActivityStreams.documentIterator"
+
 	// NPE Check
 	if service.documentCollection == nil {
-		return nil, derp.NewInternalError("service.ActivityStreams.documentIterator", "Document Collection not initialized")
+		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Forward request to documentCollection
@@ -147,16 +160,18 @@ func (service *ActivityStreams) documentIterator(criteria exp.Expression, option
 // query reads from the database and returns a slice of streams.Document values
 func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) (sliceof.Object[mapof.Any], error) {
 
+	const location = "service.ActivityStreams.documentQuery"
+
 	// NPE Check
 	if service.documentCollection == nil {
-		return nil, derp.NewInternalError("service.ActivityStreams.documentQuery", "Document Collection not initialized")
+		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Create the Iterator
 	iterator, err := service.documentIterator(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.ActivityStreams.Query", "Error querying database")
+		return nil, derp.Wrap(err, location, "Error querying database")
 	}
 
 	// Initialize result slice
@@ -169,7 +184,7 @@ func (service *ActivityStreams) documentQuery(criteria exp.Expression, options .
 		value = ascache.NewCachedValue()
 
 		if err := iterator.Error(); err != nil {
-			return nil, derp.Wrap(err, "emisary.tools.cache.Client.Query", "Error during iteration")
+			return nil, derp.Wrap(err, location, "Error during iteration")
 		}
 	}
 

@@ -133,7 +133,7 @@ func renderMessage(serverFactory *server.Factory, actionMethod render.ActionMeth
 		actionID := first.String(context.Param("action"), "view")
 
 		// Create the new Renderer
-		renderer, err := render.NewMessage(factory, context.Request(), context.Response(), inboxService, &message, actionID)
+		renderer, err := render.NewMessage(factory, context.Request(), context.Response(), factory.Inbox(), factory.ActivityStreams(), &message, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating renderer")

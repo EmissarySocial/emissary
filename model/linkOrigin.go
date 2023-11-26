@@ -7,12 +7,12 @@ import (
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
-	Type        string             `json:"type"         bson:"type,omitempty"`        // The type of message that this document (DIRECT, LIKE, DISLIKE, REPLY, ANNOUNCE)
-	FollowingID primitive.ObjectID `json:"followinglId" bson:"followingId,omitempty"` // Unique ID of a document in this database
-	Label       string             `json:"label"        bson:"label,omitempty"`       // Human-friendly label of the origin
-	URL         string             `json:"url"          bson:"url,omitempty"`         // Public URL of the origin
-	ProfileURL  string             `json:"profileUrl"   bson:"profileUrl,omitempty"`  // URL of the profile image for this document's image
-	ImageURL    string             `json:"imageUrl"     bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
+	Type        string             `json:"type"        bson:"type,omitempty"`        // The type of message that this document (DIRECT, LIKE, DISLIKE, REPLY, ANNOUNCE)
+	FollowingID primitive.ObjectID `json:"followingId" bson:"followingId,omitempty"` // Unique ID of a document in this database
+	Label       string             `json:"label"       bson:"label,omitempty"`       // Human-friendly label of the origin
+	URL         string             `json:"url"         bson:"url,omitempty"`         // Public URL of the origin
+	ProfileURL  string             `json:"profileUrl"  bson:"profileUrl,omitempty"`  // URL of the profile image for this document's image
+	ImageURL    string             `json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
 }
 
 // NewOriginLink returns a fully initialized OriginLink

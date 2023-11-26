@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -131,8 +130,6 @@ func (client *Client) Delete(uri string) error {
 
 	const location = "ascache.Client.Delete"
 
-	spew.Dump(location, uri)
-
 	// NPE Check
 	if client.collection == nil {
 		return derp.NewInternalError(location, "Document Collection not initialized")
@@ -143,7 +140,6 @@ func (client *Client) Delete(uri string) error {
 
 	// If there's nothing in the cache, then there's nothing to delete
 	if derp.NotFound(err) {
-		spew.Dump(err)
 		return nil
 	}
 

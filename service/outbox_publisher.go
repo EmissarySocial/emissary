@@ -46,10 +46,15 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity 
 
 	// Try to load the existing outbox message
 	outboxMessage := model.NewOutboxMessage()
-	if err := service.LoadByURL(userID, url, &outboxMessage); err != nil {
-		if derp.NotFound(err) {
-			return nil
-		}
+	err := service.LoadByURL(userID, url, &outboxMessage)
+
+	// If the message is not found, then there's nothing to delete
+	if derp.NotFound(err) {
+		return nil
+	}
+
+	// Report all other errors to the caller
+	if err != nil {
 		return derp.Wrap(err, location, "Error loading outbox message", userID, url)
 	}
 

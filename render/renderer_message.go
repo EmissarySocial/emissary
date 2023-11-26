@@ -20,13 +20,14 @@ import (
 
 // Message renders individual messages from a User's Inbox.
 type Message struct {
-	_service *service.Inbox
-	_message *model.Message
+	_service         *service.Inbox
+	_message         *model.Message
+	_activityStreams *service.ActivityStreams
 	Common
 }
 
 // NewMessage returns a fully initialized `Message` renderer.
-func NewMessage(factory Factory, request *http.Request, response http.ResponseWriter, modelService *service.Inbox, message *model.Message, actionID string) (Message, error) {
+func NewMessage(factory Factory, request *http.Request, response http.ResponseWriter, modelService *service.Inbox, activityStreamsService *service.ActivityStreams, message *model.Message, actionID string) (Message, error) {
 
 	const location = "render.NewMessage"
 
@@ -61,9 +62,10 @@ func NewMessage(factory Factory, request *http.Request, response http.ResponseWr
 		}
 	}
 	return Message{
-		_service: modelService,
-		_message: message,
-		Common:   common,
+		_service:         modelService,
+		_message:         message,
+		_activityStreams: activityStreamsService,
+		Common:           common,
 	}, nil
 }
 
@@ -131,7 +133,7 @@ func (w Message) View(actionID string) (template.HTML, error) {
 	const location = "render.Message.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewMessage(w._factory, w._request, w._response, w._service, w._message, actionID)
+	subStream, err := NewMessage(w._factory, w._request, w._response, w._service, w._activityStreams, w._message, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
@@ -146,19 +148,28 @@ func (w Message) templateRole() string {
 }
 
 func (w Message) clone(action string) (Renderer, error) {
-	return NewMessage(w._factory, w._request, w._response, w._service, w._message, action)
+	return NewMessage(w._factory, w._request, w._response, w._service, w._activityStreams, w._message, action)
 }
 
 /******************************************
  * Data Access Methods
  ******************************************/
 
+// MessageID returns the inbox message ID for the object
 func (w Message) MessageID() string {
 	return w._message.MessageID.Hex()
 }
 
+// URL returns the public URL for the object
 func (w Message) URL() string {
 	return w._message.URL
+}
+
+// ActivityStream returns a hannibal Document that this message wraps
+func (w Message) ActivityStream() streams.Document {
+	result, err := w._activityStreams.Load(w._message.URL)
+	derp.Report(err)
+	return result
 }
 
 func (w Message) AttributedTo() model.PersonLink {
