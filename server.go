@@ -116,6 +116,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
+loop:
 	for {
 		select {
 
@@ -125,7 +126,7 @@ func main() {
 		// If we get a SIGINT, then shutdown gracefully
 		case <-quit:
 			gracefulShutdown(e)
-			break
+			break loop
 		}
 	}
 }
