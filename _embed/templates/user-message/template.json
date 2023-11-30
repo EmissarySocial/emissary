@@ -42,10 +42,7 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "new-stream-label":"Reply to This Post", "postTo":"/@me/messages/{{.MessageID}}/reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true, "with-stream":[
-					{"step":"save"},
-					{"step":"publish"}
-				]},
+				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
 				{"step":"trigger-event", "event":"refreshReplies"}
 			]
 		},
