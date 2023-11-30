@@ -118,7 +118,7 @@ func (storage FileStorage) load() Config {
 func (storage FileStorage) Write(config Config) error {
 
 	// Marshal the configuration to JSON
-	data, err := json.MarshalIndent(config, "", "\t")
+	data, err := json.MarshalIndent(config, "", "    ")
 
 	if err != nil {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error marshaling configuration")

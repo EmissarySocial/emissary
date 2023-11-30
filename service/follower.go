@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -240,20 +239,6 @@ func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...op
 // ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID
 // who use ActivityPub for updates
 func (service *Follower) ActivityPubFollowersChannel(userID primitive.ObjectID) (<-chan model.Follower, error) {
-
-	criteria := exp.Equal("parentId", userID).
-		AndEqual("type", model.FollowerTypeUser).
-		AndEqual("method", model.FollowMethodActivityPub)
-
-	spew.Dump(criteria)
-
-	temp, err := service.Channel(criteria)
-
-	spew.Dump(err)
-
-	for value := range temp {
-		spew.Dump(value)
-	}
 
 	return service.Channel(
 		exp.Equal("parentId", userID).

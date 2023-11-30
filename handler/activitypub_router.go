@@ -74,7 +74,7 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 	objectType := activity.Object().Type()
 
 	if pub.IsMinDebugLevel(pub.DebugLevelTerse) {
-		marshalled, _ := json.MarshalIndent(activity.Value(), "", "  ")
+		marshalled, _ := json.MarshalIndent(activity.Value(), "", "    ")
 		fmt.Println("------------------------------------------")
 		fmt.Println("EMISSARY CUSTOM ROUTER : Received Message: " + activityType + "/" + objectType)
 		fmt.Println(string(marshalled))
