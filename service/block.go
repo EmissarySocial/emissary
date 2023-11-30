@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
@@ -23,7 +23,7 @@ type Block struct {
 	userService   *User
 	host          string
 
-	queue *queue.Queue
+	queue queue.Queue
 }
 
 // NewBlock returns a fully initialized Block service
@@ -36,7 +36,7 @@ func NewBlock() Block {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Block) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
+func (service *Block) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue queue.Queue, host string) {
 	service.collection = collection
 	service.outboxService = outboxService
 	service.userService = userService

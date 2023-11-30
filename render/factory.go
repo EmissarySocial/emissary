@@ -3,10 +3,10 @@ package render
 import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
@@ -52,7 +52,7 @@ type Factory interface {
 	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
 	Providers() set.Slice[config.Provider]
-	Queue() *queue.Queue
+	Queue() queue.Queue
 	Steranko() *steranko.Steranko
 	StreamUpdateChannel() chan model.Stream
 }

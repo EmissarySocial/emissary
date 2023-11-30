@@ -7,7 +7,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -16,6 +15,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
@@ -36,7 +36,7 @@ type Factory struct {
 	widgetService          *service.Widget
 	contentService         *service.Content
 	providerService        *service.Provider
-	taskQueue              *queue.Queue
+	taskQueue              queue.Queue
 	activityStreamsService *service.ActivityStreams
 
 	// Upload Directories (from server)
@@ -72,7 +72,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityStreamsService *service.ActivityStreams, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityStreamsService *service.ActivityStreams, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	fmt.Println("Starting domain: " + domain.Hostname + "...")
 
@@ -325,11 +325,12 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionFollowing),
 			factory.collection(CollectionBlock),
 			factory.Attachment(),
-			factory.Stream(),
 			factory.Block(),
-			factory.EncryptionKey(),
 			factory.Email(),
+			factory.EncryptionKey(),
 			factory.Folder(),
+			factory.Follower(),
+			factory.Stream(),
 			factory.Host(),
 		)
 
@@ -609,7 +610,7 @@ func (factory *Factory) Locator() service.Locator {
 }
 
 // Queue returns the Queue service, which manages background jobs
-func (factory *Factory) Queue() *queue.Queue {
+func (factory *Factory) Queue() queue.Queue {
 	return factory.taskQueue
 }
 

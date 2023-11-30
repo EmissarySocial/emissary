@@ -15,7 +15,8 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -29,12 +30,13 @@ type User struct {
 	followers         data.Collection
 	following         data.Collection
 	blocks            data.Collection
-	streamService     *Stream
 	attachmentService *Attachment
 	blockService      *Block
 	emailService      *DomainEmail
-	folderService     *Folder
 	keyService        *EncryptionKey
+	folderService     *Folder
+	followerService   *Follower
+	streamService     *Stream
 	host              string
 }
 
@@ -48,18 +50,19 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, attachmentService *Attachment, streamService *Stream, blockService *Block, keyService *EncryptionKey, emailService *DomainEmail, folderService *Folder, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, attachmentService *Attachment, blockService *Block, emailService *DomainEmail, keyService *EncryptionKey, folderService *Folder, followerService *Follower, streamService *Stream, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.blocks = blockCollection
 
-	service.streamService = streamService
 	service.attachmentService = attachmentService
 	service.blockService = blockService
 	service.emailService = emailService
-	service.folderService = folderService
 	service.keyService = keyService
+	service.folderService = folderService
+	service.followerService = followerService
+	service.streamService = streamService
 
 	service.host = host
 }
@@ -505,28 +508,46 @@ func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided user.
-func (service *User) ActivityPubActor(userID primitive.ObjectID) (pub.Actor, error) {
+func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
+
+	const location = "service.Following.ActivityPubActor"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByID(userID, &encryptionKey); err != nil {
-		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error loading encryption key", userID)
+		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", userID)
 	}
 
 	// Extract the Private Key from the Encryption Key
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return pub.Actor{}, derp.Wrap(err, "service.Following.ActivityPubActor", "Error extracting private key", encryptionKey)
+		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
 	}
 
 	// Return the ActivityPub Actor
-	return pub.Actor{
-		ActorID:     service.ActivityPubURL(userID),
-		PublicKeyID: service.ActivityPubPublicKeyURL(userID),
-		PublicKey:   privateKey.PublicKey,
-		PrivateKey:  privateKey,
-	}, nil
+	actor := outbox.NewActor(service.ActivityPubURL(userID), privateKey)
+
+	// Populate the Actor's ActivityPub Followers, if requested
+	if withFollowers {
+
+		// Get a channel of all Followers
+		followers, err := service.followerService.ActivityPubFollowersChannel(userID)
+
+		if err != nil {
+			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
+		}
+
+		// Map the follower channel to only include the ProfileURL
+		followerIDs := channel.Map(followers, func(follower model.Follower) string {
+			return follower.Actor.ProfileURL
+		})
+
+		// Add the channel of follower IDs to the Actor
+		actor.With(outbox.WithFollowers(followerIDs))
+	}
+
+	return actor, nil
 }
 
 // TODO: MEDIUM: this function is wickedly inefficient

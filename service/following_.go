@@ -9,9 +9,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/sherlock"
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -476,11 +474,6 @@ func (service *Following) SetStatusFailure(following *model.Following, statusMes
 
 	// Save the Following to the database
 	return service.collection.Save(following, "Updating status")
-}
-
-// RemoteActor returns the ActivityStreams profile of the actor being followed
-func (service *Following) RemoteActor(following *model.Following) (streams.Document, error) {
-	return service.activityStreams.Load(following.ProfileURL, sherlock.AsActor())
 }
 
 /******************************************

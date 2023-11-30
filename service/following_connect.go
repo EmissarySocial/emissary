@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/sherlock"
+	"github.com/rs/zerolog/log"
 )
 
 func (service *Following) RefreshAndConnect(following model.Following) {
@@ -110,8 +111,11 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 
 	const location = "service.Following.connect_PushServices"
 
-	// Push services will not work via localhost :(
-	if domain.IsLocalhost(service.host) {
+	log.Debug().Str("loc", location).Msg("Trying to connect to push services")
+
+	// Prevent attempts to connect to external domains from localhost. It won't work anyway.
+	if domain.IsLocalhost(service.host) && !domain.IsLocalhost(following.ProfileURL) {
+		log.Debug().Str("loc", location).Msg("Cannot connect to external push services from localhost")
 		return
 	}
 

@@ -2,17 +2,18 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,7 +24,7 @@ type Follower struct {
 	userService            *User
 	blockService           *Block
 	activityStreamsService *ActivityStreams
-	queue                  *queue.Queue
+	queue                  queue.Queue
 	host                   string
 }
 
@@ -37,7 +38,7 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, activityStreamsService *ActivityStreams, queue *queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, activityStreamsService *ActivityStreams, queue queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
 	service.blockService = blockService
@@ -236,7 +237,43 @@ func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...op
 	return service.List(criteria, options...)
 }
 
-// FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
+// ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID
+// who use ActivityPub for updates
+func (service *Follower) ActivityPubFollowersChannel(userID primitive.ObjectID) (<-chan model.Follower, error) {
+
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("type", model.FollowerTypeUser).
+		AndEqual("method", model.FollowMethodActivityPub)
+
+	spew.Dump(criteria)
+
+	temp, err := service.Channel(criteria)
+
+	spew.Dump(err)
+
+	for value := range temp {
+		spew.Dump(value)
+	}
+
+	return service.Channel(
+		exp.Equal("parentId", userID).
+			AndEqual("type", model.FollowerTypeUser).
+			AndEqual("method", model.FollowMethodActivityPub),
+	)
+}
+
+// WebSubFollowersChannel returns a channel containing all of the Followers of specific parentID
+// who use WebSub for updates
+func (service *Follower) WebSubFollowersChannel(userID primitive.ObjectID) (<-chan model.Follower, error) {
+
+	return service.Channel(
+		exp.Equal("parentId", userID).
+			AndEqual("type", model.FollowerTypeUser).
+			AndEqual("method", model.FollowMethodWebSub),
+	)
+}
+
+/*/ FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
 func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan model.Follower, <-chan model.Follower) {
 
 	activityPubChannel := make(chan model.Follower, 2)
@@ -268,7 +305,7 @@ func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan m
 	}()
 
 	return activityPubChannel, webSubChannel
-}
+}*/
 
 /******************************************
  * WebSub Queries

@@ -2,8 +2,8 @@ package domain
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/hannibal/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,7 +18,7 @@ type RealtimeBroker struct {
 	// FollowerService for WebSub notifications
 	followerService *service.Follower
 
-	queue *queue.Queue
+	queue queue.Queue
 
 	// map of realtime clients
 	clients map[primitive.ObjectID]*RealtimeClient
@@ -62,7 +62,7 @@ func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBrok
  ******************************************/
 
 // Refresh
-func (b *RealtimeBroker) Refresh(followerService *service.Follower, queue *queue.Queue) {
+func (b *RealtimeBroker) Refresh(followerService *service.Follower, queue queue.Queue) {
 	b.followerService = followerService
 	b.queue = queue
 }

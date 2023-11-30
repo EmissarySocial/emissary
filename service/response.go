@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -247,7 +247,7 @@ func (service *Response) SetResponse(response *model.Response) error {
 		}
 
 		// Unpublish from the Outbox, and send the "Undo" activity to followers
-		undoActivity := pub.Undo(user.ActivityPubURL(), response.GetJSONLD())
+		undoActivity := outbox.MakeUndo(user.ActivityPubURL(), response.GetJSONLD())
 
 		if err := service.outboxService.UnPublish(user.UserID, oldResponse.URL, undoActivity); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))

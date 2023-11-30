@@ -5,7 +5,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 )
@@ -46,17 +45,15 @@ func init() {
 		}
 
 		// Try to load the Actor for this user
-		actor, err := userService.ActivityPubActor(user.UserID)
+		actor, err := userService.ActivityPubActor(user.UserID, false)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", user)
 		}
 
+		// Sen the "Accept" message to the Requester
 		acceptID := followerService.ActivityPubID(&follower)
-
-		// Send an "Accept" to the requester (queued)
-		queue := factory.Queue()
-		queue.Run(pub.SendAcceptQueueTask(actor, acceptID, activity))
+		actor.SendAccept(acceptID, activity)
 
 		// Voila!
 		return nil

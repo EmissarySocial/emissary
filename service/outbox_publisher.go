@@ -5,7 +5,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/pub"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,11 +28,9 @@ func (service Outbox) Publish(userID primitive.ObjectID, url string, activity ma
 	}
 
 	// Send notifications to followers on all push channels
-	activityPubFollowers, webSubFollowers := service.followerService.FollowerChannels(userID)
-
-	go service.SendNotifications_ActivityPub(userID, activityPubFollowers, activity)
-	go service.SendNotifications_WebSub(webSubFollowers, activity)
-	go service.SendNotifications_WebMention(activity)
+	go service.sendNotifications_ActivityPub(userID, activity)
+	go service.sendNotifications_WebSub(userID, activity)
+	go service.sendNotifications_WebMention(activity)
 
 	// Success!!
 	return nil
@@ -46,15 +43,10 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity 
 
 	// Try to load the existing outbox message
 	outboxMessage := model.NewOutboxMessage()
-	err := service.LoadByURL(userID, url, &outboxMessage)
-
-	// If the message is not found, then there's nothing to delete
-	if derp.NotFound(err) {
-		return nil
-	}
-
-	// Report all other errors to the caller
-	if err != nil {
+	if err := service.LoadByURL(userID, url, &outboxMessage); err != nil {
+		if derp.NotFound(err) {
+			return nil
+		}
 		return derp.Wrap(err, location, "Error loading outbox message", userID, url)
 	}
 
@@ -63,53 +55,56 @@ func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity 
 		return derp.Wrap(err, location, "Error deleting outbox message", outboxMessage)
 	}
 
-	// Send notifications to followers on all push channels
-	activityPubFollowers, webSubFollowers := service.followerService.FollowerChannels(userID)
-
-	go service.SendNotifications_ActivityPub(userID, activityPubFollowers, activity)
-	go service.drainChannel(webSubFollowers)
+	// Send notifications to ActivityPub followers (WebSub does not have an Undo)
+	go service.sendNotifications_ActivityPub(userID, activity)
 
 	// Hey-oh!
 	return nil
 }
 
-func (service Outbox) SendNotifications_ActivityPub(userID primitive.ObjectID, followers <-chan model.Follower, activity mapof.Any) {
+/******************************************
+ * Internal Publishing Methods
+ ******************************************/
 
-	const location = "service.Outbox.SendNotifications_ActivityPub"
+// sendNotifications_ActivityPub sends ActivityPub updates to all Followers
+func (service Outbox) sendNotifications_ActivityPub(userID primitive.ObjectID, activity mapof.Any) {
 
-	// Load the ActivityPub Actor for this Stream
-	actor, err := service.userService.ActivityPubActor(userID)
+	const location = "service.Outbox.sendNotifications_ActivityPub"
+
+	// Load the ActivityPub Actor (with Followers)
+	actor, err := service.userService.ActivityPubActor(userID, true)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading actor", userID))
 		return
 	}
 
-	// Queue up all ActivityPub messages to be sent
-	for follower := range followers {
-
-		// If we have a valid ActivityPub follower, then queue the message to be sent
-		if remoteActor, err := service.followerService.RemoteActor(&follower); err == nil {
-			service.queue.Run(pub.SendQueueTask(actor, activity, remoteActor))
-		} else {
-			derp.Report(derp.Wrap(err, location, "Error loading remote actor", follower))
-		}
-	}
+	// Use the Actor to send the Activity to all recipients
+	actor.Send(activity)
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) SendNotifications_WebSub(followers <-chan model.Follower, activity mapof.Any) {
+func (service Outbox) sendNotifications_WebSub(userID primitive.ObjectID, activity mapof.Any) {
+
+	const location = "service.Outbox.sendNotifications_WebSub"
+
+	// Get this User's Followers from the database
+	followers, err := service.followerService.WebSubFollowersChannel(userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading Followers", userID))
+	}
 
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
-		service.queue.Run(NewTaskSendWebSubMessage(follower))
+		service.queue.Push(NewTaskSendWebSubMessage(follower))
 	}
 }
 
-// SendNotifications_WebMention sends WebMention updates to external websites that are
+// sendNotifications_WebMention sends WebMention updates to external websites that are
 // mentioned in this stream.  This is here (and not in the outbox service)
 // because we need to render the content in order to discover outbound links.
-func (service Outbox) SendNotifications_WebMention(activity mapof.Any) {
+func (service Outbox) sendNotifications_WebMention(activity mapof.Any) {
 
 	// Locate the object ID for this acticity
 	object := activity.GetMap(vocab.PropertyObject)
@@ -132,13 +127,6 @@ func (service Outbox) SendNotifications_WebMention(activity mapof.Any) {
 
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
-		service.queue.Run(NewTaskSendWebMention(id, link))
-	}
-}
-
-// drainChannel empties a channel of followers.  It is used to skip over
-// channels that can't be used by the current process.
-func (service Outbox) drainChannel(channel <-chan model.Follower) {
-	for range channel {
+		service.queue.Push(NewTaskSendWebMention(id, link))
 	}
 }

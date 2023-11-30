@@ -33,7 +33,7 @@ func PostWebMention(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Run the rest of the process asynchronously
-		factory.Queue().Run(
+		factory.Queue().Push(
 			service.NewTaskReceiveWebMention(
 				factory.Stream(),
 				factory.Mention(),

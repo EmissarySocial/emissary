@@ -51,7 +51,7 @@ func (step StepWebSub) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	}
 
 	// Run the task in the background queue.
-	factory.Queue().Run(service.NewTaskCreateWebSubFollower(
+	factory.Queue().Push(service.NewTaskCreateWebSubFollower(
 		factory.Follower(),
 		factory.Locator(),
 		renderer.objectType(),

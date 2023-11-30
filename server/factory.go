@@ -10,7 +10,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
-	"github.com/EmissarySocial/emissary/queue"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
@@ -19,6 +18,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -46,7 +46,7 @@ type Factory struct {
 	contentService         service.Content
 	providerService        service.Provider
 	emailService           service.ServerEmail
-	taskQueue              *queue.Queue
+	taskQueue              queue.Queue
 	activityStreamsService service.ActivityStreams
 	embeddedFiles          embed.FS
 
@@ -68,7 +68,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		mutex:         sync.RWMutex{},
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
-		taskQueue:     queue.NewQueue(128, 16),
+		taskQueue:     queue.NewSimpleQueue(128, 16),
 		refreshed:     make(chan bool, 1),
 	}
 
