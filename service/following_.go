@@ -66,8 +66,6 @@ func (service *Following) Start() {
 
 	const location = "service.Following.Start"
 
-	rand.Seed(time.Now().UnixNano())
-
 	// Wait until the service has booted up correctly.
 	for service.collection == nil {
 		time.Sleep(1 * time.Minute)
