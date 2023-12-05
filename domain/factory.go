@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -20,6 +19,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
 	"github.com/benpate/steranko/plugin/hash"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -74,7 +74,7 @@ type Factory struct {
 // NewFactory creates a new factory tied to a MongoDB database
 func NewFactory(domain config.Domain, providers []config.Provider, activityStreamsService *service.ActivityStreams, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
-	fmt.Println("Starting domain: " + domain.Hostname + "...")
+	log.Debug().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{

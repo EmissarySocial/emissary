@@ -63,8 +63,6 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 		w.Header().Set("Transfer-Encoding", "chunked")
 		f.Flush()
 
-		// fmt.Println("handler.realtime: connected new client to token:" + token)
-
 		// Don't close the connection, instead loop until the client closes it (via <-done).
 		for {
 
@@ -76,11 +74,8 @@ func ServerSentEvent(factoryManager *server.Factory) echo.HandlerFunc {
 			// Read from our messageChan.
 			case _, open := <-client.WriteChannel:
 
-				// fmt.Println("handler.ServerSentEvent.  Received update for streamID: " + streamID.Hex())
-
 				// If our messageChan was closed, this means that the client has disconnected.
 				if !open {
-					// fmt.Println("Not Open.  Cancelling.")
 					return nil
 				}
 

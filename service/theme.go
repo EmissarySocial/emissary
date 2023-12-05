@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"sort"
@@ -13,6 +12,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	"github.com/rs/zerolog/log"
 )
 
 // Theme service manages the global site theme that is stored in a particular path of the
@@ -138,7 +138,7 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		service.setStartupContent(&theme, content)
 	}
 
-	fmt.Println("... adding theme: " + theme.ThemeID)
+	log.Trace().Msg("Theme Service: adding theme: " + theme.ThemeID)
 
 	// Add the theme into the theme library
 	service.set(theme)

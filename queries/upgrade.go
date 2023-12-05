@@ -2,11 +2,11 @@ package queries
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/EmissarySocial/emissary/model"
-	upgrades "github.com/EmissarySocial/emissary/queries/upgrades"
+	"github.com/EmissarySocial/emissary/queries/upgrades"
 	"github.com/benpate/derp"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -46,7 +46,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 
 	session := client.Database(databaseName)
 
-	fmt.Println("UPGRADING DATABASE...")
+	log.Info().Msg("UPGRADING DATABASE...")
 
 	for index, fn := range upgradeFns {
 
@@ -76,7 +76,6 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		}
 	}
 
-	fmt.Println(".")
-	fmt.Println("DONE.")
+	log.Info().Msg("DONE UPGRADING DATABASE")
 	return nil
 }

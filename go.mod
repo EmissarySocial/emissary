@@ -8,7 +8,7 @@ require (
 	github.com/benpate/data v0.28.2
 	github.com/benpate/data-mock v0.28.4
 	github.com/benpate/data-mongo v0.28.5
-	github.com/benpate/derp v0.28.2
+	github.com/benpate/derp v0.29.0
 	github.com/benpate/digit v0.11.1
 	github.com/benpate/domain v0.2.0
 	github.com/benpate/exp v0.8.0

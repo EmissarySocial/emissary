@@ -39,20 +39,3 @@ func (smtp SMTPConnection) Server() (*mail.SMTPServer, bool) {
 
 	return result, true
 }
-
-func (smtp SMTPConnection) IsStarterContent() bool {
-
-	if smtp.Hostname == "---" {
-		return true
-	}
-
-	if smtp.Username == "---" {
-		return true
-	}
-
-	if smtp.Password == "---" {
-		return true
-	}
-
-	return false
-}

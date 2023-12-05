@@ -4,57 +4,62 @@ import (
 	"os"
 	"strings"
 
-	"github.com/benpate/derp"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 )
 
 // CommandLineArgs represents the command line arguments passed to the server
 type CommandLineArgs struct {
-	Source     string // Type of configuration file (Command Line | Enviornment Variable | Default)
-	Protocol   string // Protocol to use when loading the configuration (MONGODB | FILE)
-	Location   string // URI of the configuration file
-	Initialize bool   // If TRUE, the try to initialize the configuration database
-	Setup      bool   // If TRUE, then the server will run in setup mode
+	Source   string // Type of configuration file (Command Line | Enviornment Variable | Default)
+	Protocol string // Protocol to use when loading the configuration (MONGODB | FILE)
+	Location string // URI of the configuration file
+	Setup    bool   // If TRUE, then the server will run in SETUP mode
 }
 
 // GetCommandLineArgs returns the location of the configuration file
 func GetCommandLineArgs() CommandLineArgs {
 
-	// Look for the configuration location in the command line arguments
-	location := pflag.String("config", "", "Path to configuration file")
-	setup := pflag.Bool("setup", false, "Run setup server")
-	initialize := pflag.Bool("init", false, "Initialize the database")
+	var location string
+	var setup bool
 
+	// Look for the configuration location in the command line arguments
+	pflag.StringVar(&location, "config", "", "Path to configuration file")
+	pflag.BoolVar(&setup, "setup", false, "Run setup server")
 	pflag.Parse()
 
-	if (location != nil) && (*location != "") {
+	if location != "" {
+
+		log.Debug().Msg("Locating configuration from command line argument.")
+
 		return CommandLineArgs{
-			Source:     "Command Line",
-			Location:   *location,
-			Protocol:   getConfigProtocol(*location),
-			Initialize: *initialize,
-			Setup:      *setup,
+			Source:   ConfigSourceCommandLine,
+			Location: location,
+			Protocol: getConfigProtocol(location),
+			Setup:    setup,
 		}
 	}
 
 	// Look for the configuration location in the environment
 	if location := os.Getenv("EMISSARY_CONFIG"); location != "" {
+
+		log.Debug().Msg("Locating configuration from environment variable.")
+
 		return CommandLineArgs{
-			Source:     "Environment Variable",
-			Location:   location,
-			Protocol:   getConfigProtocol(location),
-			Initialize: *initialize,
-			Setup:      *setup,
+			Source:   ConfigSourceEnvironment,
+			Location: location,
+			Protocol: getConfigProtocol(location),
+			Setup:    setup,
 		}
 	}
 
 	// Use default location
+	log.Debug().Msg("No configuration specified. Using default location: `file://./config.json`")
+
 	return CommandLineArgs{
-		Source:     "Default",
-		Location:   "file://./config.json",
-		Protocol:   getConfigProtocol("file://"),
-		Initialize: *initialize,
-		Setup:      *setup,
+		Source:   ConfigSourceDefault,
+		Location: "file://./config.json",
+		Protocol: getConfigProtocol("file://"),
+		Setup:    setup,
 	}
 }
 
@@ -62,17 +67,20 @@ func GetCommandLineArgs() CommandLineArgs {
 func getConfigProtocol(location string) string {
 
 	switch {
+
 	case strings.HasPrefix(location, "mongodb://"):
-		return "MONGODB"
+		return StorageTypeMongo
 
 	case strings.HasPrefix(location, "mongodb+srv://"):
-		return "MONGODB"
+		return StorageTypeMongo
 
 	case strings.HasPrefix(location, "file://"):
-		return "FILE"
+		return StorageTypeFile
 	}
 
-	derp.Report(derp.NewInternalError("config.getConfigProtocol", "Unable to determine storage engine for: ", location))
+	// Fatal error
+	log.Fatal().Msg("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
 	os.Exit(1)
-	panic("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
+
+	return ""
 }

@@ -71,8 +71,8 @@ github.com/benpate/data-mock v0.28.4 h1:KvQz0mOEnTmWwN/GrEnfIPyJ+EB4td1q8gEm4l3O
 github.com/benpate/data-mock v0.28.4/go.mod h1:gHQDGSxWHS1pdf9V7fWBAv6VHXC5GBocnQsrQqYMHT8=
 github.com/benpate/data-mongo v0.28.5 h1:9Un9MNjP0a7SkqX+iGTLkzWZCpyIhAfpDOkcibDlv0w=
 github.com/benpate/data-mongo v0.28.5/go.mod h1:WqdwAAS+S1/V+221yG+ZQLL4lCssNVfn4Y0TTSYAjBk=
-github.com/benpate/derp v0.28.2 h1:Bk94UB/wN8CRbJa86+TYMCZU+/3J7g6X95TaZn+g3RA=
-github.com/benpate/derp v0.28.2/go.mod h1:y+PJWv5VOBOnd1y4CGk/c7xVS0Pwxg9BGQE5r/SGc8w=
+github.com/benpate/derp v0.29.0 h1:/2WrJxrIW0QQ2yN0lJ3yLJsFMrsgIDIwWq2ewusVBfo=
+github.com/benpate/derp v0.29.0/go.mod h1:y+PJWv5VOBOnd1y4CGk/c7xVS0Pwxg9BGQE5r/SGc8w=
 github.com/benpate/digit v0.11.1 h1:4Q5Q6YbszFVHtxEOY8/yfB02Gg9GM77neubYtKOVwSg=
 github.com/benpate/digit v0.11.1/go.mod h1:grBKVzPO1OzZ+IuxbCDSHijh6BwFZDVSlw8dX+hW5U4=
 github.com/benpate/domain v0.2.0 h1:TZKKE2ZPc3SIZjaJYpFkqXB/hgDwP2ZIEKeRhfc8EJM=

@@ -2,10 +2,10 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"sort"
+	"strconv"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -205,6 +206,7 @@ func (service *Template) loadTemplates() error {
 
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
+	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
 
 	return nil
 }
@@ -212,6 +214,8 @@ func (service *Template) loadTemplates() error {
 func (service *Template) Add(templateID string, filesystem fs.FS, definition []byte) error {
 
 	const location = "service.template.Add"
+
+	log.Trace().Msg("Template Service: adding " + templateID)
 
 	template := model.NewTemplate(templateID, service.funcMap)
 
@@ -237,8 +241,6 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
 		template.Resources = resources
 	}
-
-	fmt.Println("... adding template: " + template.TemplateID)
 
 	// Add the template into the prep library
 	service.templatePrep[template.TemplateID] = template

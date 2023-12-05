@@ -34,24 +34,3 @@ func NewDomain() Domain {
 func (domain Domain) ID() string {
 	return domain.DomainID
 }
-
-func (domain Domain) IsStarterContent() bool {
-
-	if domain.Hostname == "---" {
-		return true
-	}
-
-	if domain.ConnectString == "---" {
-		return true
-	}
-
-	if domain.DatabaseName == "---" {
-		return true
-	}
-
-	if domain.SMTPConnection.IsStarterContent() {
-		return true
-	}
-
-	return false
-}

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"embed"
-	"fmt"
 	"html/template"
 	"strings"
 	"sync"
@@ -27,6 +26,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -111,14 +111,14 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 func (factory *Factory) start() {
 
-	fmt.Println("Factory: Waiting for configuration file...")
+	log.Debug().Msg("Factory: waiting for configuration file...")
 
 	filesystemService := factory.Filesystem()
 
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		fmt.Println("Factory: received new configuration...")
+		log.Debug().Msg("Factory: received new configuration...")
 
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
@@ -179,19 +179,6 @@ func (factory *Factory) Refreshed() <-chan bool {
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
 // CALLS TO THIS MUST BE LOCKED
 func (factory *Factory) refreshDomain(config config.Config, domainConfig config.Domain) error {
-
-	if domainConfig.IsStarterContent() {
-		fmt.Println("")
-		fmt.Println("INCOMPLETE CONFIGURATION...")
-		fmt.Println("It looks like you're using the starter configuration file, which contains blank")
-		fmt.Println("values that should be filled in before running. Please exit the program and edit")
-		fmt.Println("the configuration")
-		fmt.Println("")
-		fmt.Println("Run with --init to create a new configuration file")
-		fmt.Println("Run with --setup to edit the config in the setup console")
-
-		return derp.NewInternalError("server.Factory.refreshDomain", "Incomplete Configuration File")
-	}
 
 	// Try to find the domain
 	if existing := factory.domains[domainConfig.Hostname]; existing != nil {

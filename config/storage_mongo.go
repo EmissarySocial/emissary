@@ -2,8 +2,10 @@ package config
 
 import (
 	"context"
+	"os"
 
 	"github.com/benpate/derp"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -18,20 +20,17 @@ type MongoStorage struct {
 }
 
 // NewMongoStorage creates a fully initialized MongoStorage instance
-func NewMongoStorage(args CommandLineArgs) MongoStorage {
+func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 
-	// Try to make a new MongoDB connection
-	client, err := mongo.NewClient(options.Client().ApplyURI(args.Location))
+	// Create a new MongoDB database connection
+	connectOptions := options.Client().ApplyURI(args.Location)
+	client, err := mongo.Connect(context.Background(), connectOptions)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Error creating MongoDB client"))
-		panic("Error creating MongoDB client: " + err.Error())
-	}
-
-	// Try to connect to the MongoDB database
-	if err := client.Connect(context.Background()); err != nil {
-		derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Error connecting to MongoDB"))
-		panic("Error connecting to MongoDB: " + err.Error())
+		log.Fatal().Msg("Emissary cannot start because the MongoDB config database could not be reached.")
+		log.Fatal().Msg("Check the MongoDB connection string and verify the database server connection.")
+		log.Error().Err(err).Send()
+		os.Exit(1)
 	}
 
 	// Get the configuration collection
@@ -44,48 +43,56 @@ func NewMongoStorage(args CommandLineArgs) MongoStorage {
 		updateChannel: make(chan Config, 1),
 	}
 
-	if args.Initialize {
+	// Special rules for the first time we load the configuration file
+	config, err := storage.load()
 
-		// Delete existing configuration so we don't have multiple records.
-		if _, err := storage.collection.DeleteMany(context.Background(), bson.M{}); err != nil {
-			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error deleting existing config"))
-		}
+	switch {
 
-		config := DefaultConfig()
+	// If the config was read successfully, then NOOP here skips down to the next section.
+	case err == nil:
+
+	case derp.NotFound(err):
+
+		// If the config was not found, then run in setup mode and add a new default configuration
+		args.Setup = true
+
+		// Create a default configuration
+		config = DefaultConfig()
 		config.Source = storage.source
 		config.Location = storage.location
 
 		if err := storage.Write(config); err != nil {
-			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error initializing MongoDB config"))
-			panic("Error initializing MongoDB config: " + err.Error())
+			log.Fatal().Msg("Error writing new configuration file to the Mongo database")
+			log.Fatal().Err(err).Send()
+			os.Exit(1)
 		}
+
+	default:
+		// Any other errors connecting to the Mongo server will prevent Emissary from starting.
+		log.Fatal().Msg("Emissary could not start because of an error connecting to the MongoDB config database.")
+		log.Fatal().Err(err).Send()
+		os.Exit(1)
 	}
 
-	// Listen for updates and post them to the update channel
+	// If we have a valid config, post it to the update channel
+	storage.updateChannel <- config
+
+	// After the first load, watch for changes to the config record and post them to the update channel
 	go func() {
 
-		ctx := context.Background()
-
-		config, err := storage.load()
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading config from MongoDB, and unable to write default configuration."))
-			panic("Error loading config from MongoDB: " + err.Error())
-		}
-
-		storage.updateChannel <- config
-
 		// watch for changes to the configuration
-		cs, err := storage.collection.Watch(ctx, mongo.Pipeline{})
+		cs, err := storage.collection.Watch(context.Background(), mongo.Pipeline{})
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
 			return
 		}
 
-		for cs.Next(ctx) {
+		for cs.Next(context.Background()) {
 			if config, err := storage.load(); err == nil {
 				storage.updateChannel <- config
+			} else {
+				derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading updated config from MongoDB"))
 			}
 		}
 	}()
