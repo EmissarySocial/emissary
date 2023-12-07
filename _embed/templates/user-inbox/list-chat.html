@@ -27,7 +27,7 @@
 		{{- end -}}
 
 		<div>
-			{{- .ContentOrSummary | html -}}
+			{{- .ContentOrSummary | htmlMinimal -}}
 		</div>
 
 		{{- if not .HasContentImage -}}

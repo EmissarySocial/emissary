@@ -15,7 +15,7 @@
 {{- end -}}
 
 <div class="space-above">
-	{{- .ContentOrSummary | html -}}
+	{{- .ContentOrSummary | htmlMinimal -}}
 </div>
 
 {{- if ne .ImageURL "" -}}
