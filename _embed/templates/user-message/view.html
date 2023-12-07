@@ -83,14 +83,40 @@
 			<span>{{.AttributedTo.Name}}</span>
 		</a>
 	{{- end -}}
-	
-	{{ template "activity" $activity -}}
+		
+	{{- if ne "" $activity.Name -}}
+		<h1><a href="{{$activity.URL}}" target="_blank" class="text-black">{{$activity.Name}}</a></h1>
+	{{- end -}}
 
-	<div id="replies" class="space-below">
-		<hr>
-		<button hx-get="/@me/messages/{{.MessageID}}/replies-before" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="text-xs">
-			Show Replies
-		</button>
+	<div class="content space-above space-below">
+		{{- $image := $activity.Image -}}
+		{{- if $image.NotNil -}}
+			<div class="space-below">
+				<a href="{{$activity.URL}}" target="_blank"><img src="{{$image.URL}}" style="width:100%;
+				{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+			</div>
+		{{- end -}}
+
+		<div class="text-gray flex-row">
+			<div class="bold">{{ $activity.Published | longDate -}}</div>
+		</div>	
+
+		{{- if $activity.HasContent -}}
+			<div>{{- $activity.Content | html -}}</div>
+		{{- else if $activity.HasSummary -}}
+			<div>{{- $activity.Summary -}}</div>
+		{{- end -}}
+
+	</div>
+
+	<div id="replies" class="space-below"> 
+
+		<div hx-get="/@me/messages/{{.MessageID}}/replies" 
+			hx-target="this" 
+			hx-push-url="false" 
+			hx-trigger="htmx:afterProcessNode"
+			hx-swap="outerHTML">
+		</div>
 	</div>
 
 </div>
