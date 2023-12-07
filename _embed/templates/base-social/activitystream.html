@@ -1,4 +1,5 @@
-{{- $actor := .AttributedTo.Load -}}
+{{- $object := .UnwrapActivity -}}
+{{- $actor := $object.AttributedTo.Load -}}
 
 <hr>
 <div class="space-below">
@@ -14,21 +15,21 @@
 				{{- if $actor.NotNil -}}
 					<a href="{{$actor.ID}}">
 						<span class="bold link">{{$actor.Name}}</span>
-						<span class="text-gray">&middot; {{ .Published | epochDate | tinyDate}}</span>
+						<span class="text-gray">&middot; {{ $object.Published | epochDate | tinyDate}}</span>
 					</a> &nbsp;
 				{{- end -}}
-				<a href="{{.ID}}"><span class="text-sm">View Original &rarr;</span></a>
+				<a href="{{$object.ID}}"><span class="text-sm">View Original &rarr;</span></a>
 			</div>
 
-			{{- if ne "" .Name -}}
-				<h1 class="space-above">{{.Name}}</h1>
+			{{- if ne "" $object.Name -}}
+				<h1 class="space-above">{{$object.Name}}</h1>
 			{{- end -}}
 
-			{{- if .Image.NotNil -}}
-				<div class="space-above space-below"><img src="{{.Image.URL}}" style="width:100%;"></div>
+			{{- if $object.Image.NotNil -}}
+				<div class="space-above space-below"><img src="{{$object.Image.URL}}" style="width:100%;"></div>
 			{{- end -}}
 		
-			<div>{{.Content | html}}</div>
+			<div>{{$object.Content | html}}</div>
 		</div>
 	</div>
 </div>

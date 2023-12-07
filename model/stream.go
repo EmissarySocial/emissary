@@ -167,8 +167,8 @@ func (stream *Stream) Roles(authorization *Authorization) []string {
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
 func (stream *Stream) DefaultAllowAnonymous() bool {
-	for index := range stream.DefaultAllow {
-		if stream.DefaultAllow[index] == MagicGroupIDAnonymous {
+	for _, group := range stream.DefaultAllow {
+		if group == MagicGroupIDAnonymous {
 			return true
 		}
 	}
@@ -348,7 +348,12 @@ func (stream Stream) GetJSONLD() mapof.Any {
 	}
 
 	if stream.AttributedTo.NotEmpty() {
+		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
+	}
+
+	if stream.DefaultAllowAnonymous() {
+		result[vocab.PropertyCC] = []string{vocab.NamespaceActivityStreamsPublic}
 	}
 
 	return result

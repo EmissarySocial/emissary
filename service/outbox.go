@@ -75,7 +75,7 @@ func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (
 func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error loading Outbox Message", criteria)
+		return derp.Wrap(err, "service.Outbox.Load", "Error loading Outbox Message", criteria)
 	}
 
 	return nil
@@ -84,14 +84,16 @@ func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage
 // Save adds/updates an Outbox in the database
 func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) error {
 
+	const location = "service.Outbox.Save"
+
 	// Calculate the rank for this outboxMessage, using the number of outboxMessages with an identical PublishDate
 	if err := service.CalculateRank(outboxMessage); err != nil {
-		return derp.Wrap(err, "service.Outbox.Save", "Error calculating rank", outboxMessage)
+		return derp.Wrap(err, location, "Error calculating rank", outboxMessage)
 	}
 
 	// Save the value to the database
 	if err := service.collection.Save(outboxMessage, note); err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error saving Outbox", outboxMessage, note)
+		return derp.Wrap(err, location, "Error saving Outbox", outboxMessage, note)
 	}
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
@@ -104,16 +106,18 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 // Delete removes an Outbox from the database (virtual delete)
 func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) error {
 
+	const location = "service.Outbox.Delete"
+
 	// Delete the message from the outbox
 	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
 
 	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error deleting Outbox", outboxMessage, note)
+		return derp.Wrap(err, location, "Error deleting Outbox", outboxMessage, note)
 	}
 
 	// Delete the document from the cache
 	if err := service.activityStreamsService.Delete(outboxMessage.URL); err != nil {
-		return derp.Wrap(err, "service.Outbox", "Error deleting ActivityStream", outboxMessage, note)
+		return derp.Wrap(err, location, "Error deleting ActivityStream", outboxMessage, note)
 	}
 
 	return nil
@@ -139,7 +143,7 @@ func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, url string) (mode
 		return result, nil
 	}
 
-	return result, derp.Wrap(err, "service.Outbox", "Error loading Outbox", userID, url)
+	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", userID, url)
 }
 
 func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
@@ -161,7 +165,7 @@ func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int
 	result := make([]model.OutboxMessageSummary, 0, maxRows)
 
 	if err := service.collection.Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, "service.Outbox", "Error querying outbox", userID, maxDate)
+		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", userID, maxDate)
 	}
 
 	return result, nil

@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -591,17 +592,28 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
 	}
 
+	object := stream.GetJSONLD()
+
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
 		vocab.PropertyID:        stream.ActivityPubURL(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyActor:     user.ActivityPubURL(),
-		vocab.PropertyObject:    stream.GetJSONLD(),
+		vocab.PropertyObject:    object,
 		vocab.PropertyPublished: time.Now().UTC().Format(time.RFC3339),
 	}
 
+	if to, ok := object[vocab.PropertyTo]; ok {
+		activity[vocab.PropertyTo] = to
+	}
+
+	if cc, ok := object[vocab.PropertyCC]; ok {
+		activity[vocab.PropertyCC] = cc
+	}
+
 	// Try to publish via the outbox service
+	log.Trace().Msg("Publishing stream: " + stream.URL)
 	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
 		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
 	}

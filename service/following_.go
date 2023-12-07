@@ -74,9 +74,8 @@ func (service *Following) Start() {
 	// query the database every minute, looking for following that should be loaded from the web.
 	for {
 
-		// Poll randomly between 1 and 5 minutes
-		// time.Sleep(time.Duration(rand.Intn(5)+1) * time.Minute)
-		time.Sleep(time.Duration(10 * time.Second))
+		// Poll randomly between 5 and 10 minutes
+		time.Sleep(time.Duration(rand.Intn(300)+300) * time.Second)
 
 		// If (for some reason) the service collection is still nil, then
 		// wait this one out.
