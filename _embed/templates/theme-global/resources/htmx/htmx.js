@@ -1,10 +1,16 @@
-//AMD insanity
+// UMD insanity
+// This code sets up support for (in order) AMD, ES6 modules, and globals.
 (function (root, factory) {
     //@ts-ignore
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         //@ts-ignore
         define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like environments that support module.exports,
+        // like Node.
+        module.exports = factory();
     } else {
         // Browser globals
         root.htmx = root.htmx || factory();
@@ -38,6 +44,7 @@ return (function () {
             defineExtension : defineExtension,
             removeExtension : removeExtension,
             logAll : logAll,
+            logNone : logNone,
             logger : null,
             config : {
                 historyEnabled:true,
@@ -53,15 +60,23 @@ return (function () {
                 settlingClass:'htmx-settling',
                 swappingClass:'htmx-swapping',
                 allowEval:true,
+                allowScriptTags:true,
                 inlineScriptNonce:'',
                 attributesToSettle:["class", "style", "width", "height"],
                 withCredentials:false,
                 timeout:0,
                 wsReconnectDelay: 'full-jitter',
+                wsBinaryType: 'blob',
                 disableSelector: "[hx-disable], [data-hx-disable]",
                 useTemplateFragments: false,
                 scrollBehavior: 'smooth',
                 defaultFocusScroll: false,
+                getCacheBusterParam: false,
+                globalViewTransitions: false,
+                methodsThatUseUrlParams: ["get"],
+                selfRequestsOnly: false,
+                ignoreTitle: false,
+                scrollIntoViewOnBoost: true
             },
             parseInterval:parseInterval,
             _:internalEval,
@@ -69,9 +84,11 @@ return (function () {
                 return new EventSource(url, {withCredentials:true})
             },
             createWebSocket: function(url){
-                return new WebSocket(url, []);
+                var sock = new WebSocket(url, []);
+                sock.binaryType = htmx.config.wsBinaryType;
+                return sock;
             },
-            version: "1.8.4"
+            version: "1.9.9"
         };
 
         /** @type {import("./htmx").HtmxInternalApi} */
@@ -79,9 +96,11 @@ return (function () {
             addTriggerHandler: addTriggerHandler,
             bodyContains: bodyContains,
             canAccessLocalStorage: canAccessLocalStorage,
+            findThisElement: findThisElement,
             filterValues: filterValues,
             hasAttribute: hasAttribute,
             getAttributeValue: getAttributeValue,
+            getClosestAttributeValue: getClosestAttributeValue,
             getClosestMatch: getClosestMatch,
             getExpressionVars: getExpressionVars,
             getHeaders: getHeaders,
@@ -94,6 +113,7 @@ return (function () {
             mergeObjects: mergeObjects,
             makeSettleInfo: makeSettleInfo,
             oobSwap: oobSwap,
+            querySelectorExt: querySelectorExt,
             selectAndSwap: selectAndSwap,
             settleImmediately: settleImmediately,
             shouldCancel: shouldCancel,
@@ -211,7 +231,7 @@ return (function () {
          * @returns {boolean}
          */
         function matches(elt, selector) {
-            // @ts-ignore: non-standard properties for browser compatability
+            // @ts-ignore: non-standard properties for browser compatibility
             // noinspection JSUnresolvedVariable
             var matchesFunction = elt.matches || elt.matchesSelector || elt.msMatchesSelector || elt.mozMatchesSelector || elt.webkitMatchesSelector || elt.oMatchesSelector;
             return matchesFunction && matchesFunction.call(elt, selector);
@@ -255,16 +275,21 @@ return (function () {
             return responseNode;
         }
 
+        function aFullPageResponse(resp) {
+            return resp.match(/<body/);
+        }
+
         /**
          *
          * @param {string} resp
          * @returns {Element}
          */
         function makeFragment(resp) {
-            if (htmx.config.useTemplateFragments) {
+            var partialResponse = !aFullPageResponse(resp);
+            if (htmx.config.useTemplateFragments && partialResponse) {
                 var documentFragment = parseHTML("<body><template>" + resp + "</template></body>", 0);
                 // @ts-ignore type mismatch between DocumentFragment and Element.
-                // TODO: Are these close enough for htmx to use interchangably?
+                // TODO: Are these close enough for htmx to use interchangeably?
                 return documentFragment.querySelector('template').content;
             } else {
                 var startTag = getStartTag(resp);
@@ -283,6 +308,7 @@ return (function () {
                     case "th":
                         return parseHTML("<table><tbody><tr>" + resp + "</tr></tbody></table>", 3);
                     case "script":
+                    case "style":
                         return parseHTML("<div>" + resp + "</div>", 1);
                     default:
                         return parseHTML(resp, 0);
@@ -370,7 +396,7 @@ return (function () {
 
         function bodyContains(elt) {
             // IE Fix
-            if (elt.getRootNode && elt.getRootNode() instanceof ShadowRoot) {
+            if (elt.getRootNode && elt.getRootNode() instanceof window.ShadowRoot) {
                 return getDocument().body.contains(elt.getRootNode().host);
             } else {
                 return getDocument().body.contains(elt);
@@ -417,6 +443,23 @@ return (function () {
             }
         }
 
+        function normalizePath(path) {
+            try {
+                var url = new URL(path);
+                if (url) {
+                    path = url.pathname + url.search;
+                }
+                // remove trailing slash, unless index page
+                if (!path.match('^/$')) {
+                    path = path.replace(/\/+$/, '');
+                }
+                return path;
+            } catch (e) {
+                // be kind to IE11, which doesn't support URL()
+                return path;
+            }
+        }
+
         //==========================================================================================
         // public API
         //==========================================================================================
@@ -442,6 +485,10 @@ return (function () {
             }
         }
 
+        function logNone() {
+            htmx.logger = null
+        }
+
         function find(eltOrSelector, selector) {
             if (selector) {
                 return eltOrSelector.querySelector(selector);
@@ -461,7 +508,10 @@ return (function () {
         function removeElement(elt, delay) {
             elt = resolveTarget(elt);
             if (delay) {
-                setTimeout(function(){removeElement(elt);}, delay)
+                setTimeout(function(){
+                    removeElement(elt);
+                    elt = null;
+                }, delay);
             } else {
                 elt.parentElement.removeChild(elt);
             }
@@ -470,7 +520,10 @@ return (function () {
         function addClassToElement(elt, clazz, delay) {
             elt = resolveTarget(elt);
             if (delay) {
-                setTimeout(function(){addClassToElement(elt, clazz);}, delay)
+                setTimeout(function(){
+                    addClassToElement(elt, clazz);
+                    elt = null;
+                }, delay);
             } else {
                 elt.classList && elt.classList.add(clazz);
             }
@@ -479,7 +532,10 @@ return (function () {
         function removeClassFromElement(elt, clazz, delay) {
             elt = resolveTarget(elt);
             if (delay) {
-                setTimeout(function(){removeClassFromElement(elt, clazz);}, delay)
+                setTimeout(function(){
+                    removeClassFromElement(elt, clazz);
+                    elt = null;
+                }, delay);
             } else {
                 if (elt.classList) {
                     elt.classList.remove(clazz);
@@ -509,30 +565,55 @@ return (function () {
             if (elt.closest) {
                 return elt.closest(selector);
             } else {
+                // TODO remove when IE goes away
                 do{
                     if (elt == null || matches(elt, selector)){
                         return elt;
                     }
                 }
                 while (elt = elt && parentElt(elt));
+                return null;
+            }
+        }
+
+        function startsWith(str, prefix) {
+            return str.substring(0, prefix.length) === prefix
+        }
+
+        function endsWith(str, suffix) {
+            return str.substring(str.length - suffix.length) === suffix
+        }
+
+        function normalizeSelector(selector) {
+            var trimmedSelector = selector.trim();
+            if (startsWith(trimmedSelector, "<") && endsWith(trimmedSelector, "/>")) {
+                return trimmedSelector.substring(1, trimmedSelector.length - 2);
+            } else {
+                return trimmedSelector;
             }
         }
 
         function querySelectorAllExt(elt, selector) {
             if (selector.indexOf("closest ") === 0) {
-                return [closest(elt, selector.substr(8))];
+                return [closest(elt, normalizeSelector(selector.substr(8)))];
             } else if (selector.indexOf("find ") === 0) {
-                return [find(elt, selector.substr(5))];
+                return [find(elt, normalizeSelector(selector.substr(5)))];
+            } else if (selector === "next") {
+                return [elt.nextElementSibling]
             } else if (selector.indexOf("next ") === 0) {
-                return [scanForwardQuery(elt, selector.substr(5))];
+                return [scanForwardQuery(elt, normalizeSelector(selector.substr(5)))];
+            } else if (selector === "previous") {
+                return [elt.previousElementSibling]
             } else if (selector.indexOf("previous ") === 0) {
-                return [scanBackwardsQuery(elt, selector.substr(9))];
+                return [scanBackwardsQuery(elt, normalizeSelector(selector.substr(9)))];
             } else if (selector === 'document') {
                 return [document];
             } else if (selector === 'window') {
                 return [window];
+            } else if (selector === 'body') {
+                return [document.body];
             } else {
-                return getDocument().querySelectorAll(selector);
+                return getDocument().querySelectorAll(normalizeSelector(selector));
             }
         }
 
@@ -698,7 +779,7 @@ return (function () {
          * @returns
          */
         function oobSwap(oobValue, oobElement, settleInfo) {
-            var selector = "#" + oobElement.id;
+            var selector = "#" + getRawAttribute(oobElement, "id");
             var swapStyle = "outerHTML";
             if (oobValue === "true") {
                 // do nothing
@@ -748,7 +829,7 @@ return (function () {
                 var oobSelectValues = oobSelects.split(",");
                 for (let i = 0; i < oobSelectValues.length; i++) {
                     var oobSelectValue = oobSelectValues[i].split(":", 2);
-                    var id = oobSelectValue[0];
+                    var id = oobSelectValue[0].trim();
                     if (id.indexOf("#") === 0) {
                         id = id.substring(1);
                     }
@@ -779,8 +860,11 @@ return (function () {
 
         function handleAttributes(parentNode, fragment, settleInfo) {
             forEach(fragment.querySelectorAll("[id]"), function (newNode) {
-                if (newNode.id && newNode.id.length > 0) {
-                    var oldNode = parentNode.querySelector(newNode.tagName + "[id='" + newNode.id + "']");
+                var id = getRawAttribute(newNode, "id")
+                if (id && id.length > 0) {
+                    var normalizedId = id.replace("'", "\\'");
+                    var normalizedTag = newNode.tagName.replace(':', '\\:');
+                    var oldNode = parentNode.querySelector(normalizedTag + "[id='" + normalizedId + "']");
                     if (oldNode && oldNode !== parentNode) {
                         var newAttributes = newNode.cloneNode();
                         cloneAttributes(newNode, oldNode);
@@ -834,18 +918,35 @@ return (function () {
 
         function attributeHash(elt) {
             var hash = 0;
-            for (var i = 0; i < elt.attributes.length; i++) {
-                var attribute = elt.attributes[i];
-                if(attribute.value){ // only include attributes w/ actual values (empty is same as non-existent)
-                    hash = stringHash(attribute.name, hash);
-                    hash = stringHash(attribute.value, hash);
+            // IE fix
+            if (elt.attributes) {
+                for (var i = 0; i < elt.attributes.length; i++) {
+                    var attribute = elt.attributes[i];
+                    if(attribute.value){ // only include attributes w/ actual values (empty is same as non-existent)
+                        hash = stringHash(attribute.name, hash);
+                        hash = stringHash(attribute.value, hash);
+                    }
                 }
             }
             return hash;
         }
 
+        function deInitOnHandlers(elt) {
+            var internalData = getInternalData(elt);
+            if (internalData.onHandlers) {
+                for (let i = 0; i < internalData.onHandlers.length; i++) {
+                    const handlerInfo = internalData.onHandlers[i];
+                    elt.removeEventListener(handlerInfo.event, handlerInfo.listener);
+                }
+                delete internalData.onHandlers
+            }
+        }
+
         function deInitNode(element) {
             var internalData = getInternalData(element);
+            if (internalData.timeout) {
+                clearTimeout(internalData.timeout);
+            }
             if (internalData.webSocket) {
                 internalData.webSocket.close();
             }
@@ -859,6 +960,10 @@ return (function () {
                     }
                 });
             }
+            if (internalData.initHash) {
+                internalData.initHash = null
+            }
+            deInitOnHandlers(element);
         }
 
         function cleanUpElement(element) {
@@ -883,7 +988,7 @@ return (function () {
                     newElt = eltBeforeNewContent.nextSibling;
                 }
                 getInternalData(target).replacedWith = newElt; // tuck away so we can fire events on it later
-                settleInfo.elts = [] // clear existing elements
+                settleInfo.elts = settleInfo.elts.filter(function(e) { return e != target });
                 while(newElt && newElt !== target) {
                     if (newElt.nodeType === Node.ELEMENT_NODE) {
                         settleInfo.elts.push(newElt);
@@ -928,8 +1033,8 @@ return (function () {
             }
         }
 
-        function maybeSelectFromResponse(elt, fragment) {
-            var selector = getClosestAttributeValue(elt, "hx-select");
+        function maybeSelectFromResponse(elt, fragment, selectOverride) {
+            var selector = selectOverride || getClosestAttributeValue(elt, "hx-select");
             if (selector) {
                 var newFragment = getDocument().createDocumentFragment();
                 forEach(fragment.querySelectorAll(selector), function (node) {
@@ -1003,12 +1108,12 @@ return (function () {
             }
         }
 
-        function selectAndSwap(swapStyle, target, elt, responseText, settleInfo) {
+        function selectAndSwap(swapStyle, target, elt, responseText, settleInfo, selectOverride) {
             settleInfo.title = findTitle(responseText);
             var fragment = makeFragment(responseText);
             if (fragment) {
                 handleOutOfBandSwaps(elt, fragment, settleInfo);
-                fragment = maybeSelectFromResponse(elt, fragment);
+                fragment = maybeSelectFromResponse(elt, fragment, selectOverride);
                 handlePreservedElements(fragment);
                 return swap(swapStyle, elt, target, fragment, settleInfo);
             }
@@ -1028,7 +1133,10 @@ return (function () {
                     }
                 }
             } else {
-                triggerEvent(elt, triggerBody, []);
+                var eventNames = triggerBody.split(",")
+                for (var i = 0; i < eventNames.length; i++) {
+                    triggerEvent(elt, eventNames[i].trim(), []);
+                }
             }
         }
 
@@ -1038,6 +1146,8 @@ return (function () {
         var SYMBOL_CONT = /[_$a-zA-Z0-9]/;
         var STRINGISH_START = ['"', "'", "/"];
         var NOT_WHITESPACE = /[^\s]/;
+        var COMBINED_SELECTOR_START = /[{(]/;
+        var COMBINED_SELECTOR_END = /[})]/;
         function tokenizeString(str) {
             var tokens = [];
             var position = 0;
@@ -1126,6 +1236,18 @@ return (function () {
             return result;
         }
 
+        function consumeCSSSelector(tokens) {
+            var result;
+            if (tokens.length > 0 && COMBINED_SELECTOR_START.test(tokens[0])) {
+                tokens.shift();
+                result = consumeUntil(tokens, COMBINED_SELECTOR_END).trim();
+                tokens.shift();
+            } else {
+                result = consumeUntil(tokens, WHITESPACE_OR_COMMA);
+            }
+            return result;
+        }
+
         var INPUT_SELECTOR = 'input, textarea, select';
 
         /**
@@ -1174,27 +1296,33 @@ return (function () {
                                     triggerSpec.delay = parseInterval(consumeUntil(tokens, WHITESPACE_OR_COMMA));
                                 } else if (token === "from" && tokens[0] === ":") {
                                     tokens.shift();
-                                    var from_arg = consumeUntil(tokens, WHITESPACE_OR_COMMA);
-                                    if (from_arg === "closest" || from_arg === "find" || from_arg === "next" || from_arg === "previous") {
-                                        tokens.shift();
-                                        from_arg +=
-                                            " " +
-                                            consumeUntil(
-                                                tokens,
-                                                WHITESPACE_OR_COMMA
-                                            );
+                                    if (COMBINED_SELECTOR_START.test(tokens[0])) {
+                                        var from_arg = consumeCSSSelector(tokens);
+                                    } else {
+                                        var from_arg = consumeUntil(tokens, WHITESPACE_OR_COMMA);
+                                        if (from_arg === "closest" || from_arg === "find" || from_arg === "next" || from_arg === "previous") {
+                                            tokens.shift();
+                                            var selector = consumeCSSSelector(tokens);
+                                            // `next` and `previous` allow a selector-less syntax
+                                            if (selector.length > 0) {
+                                                from_arg += " " + selector;
+                                            }
+                                        }
                                     }
                                     triggerSpec.from = from_arg;
                                 } else if (token === "target" && tokens[0] === ":") {
                                     tokens.shift();
-                                    triggerSpec.target = consumeUntil(tokens, WHITESPACE_OR_COMMA);
+                                    triggerSpec.target = consumeCSSSelector(tokens);
                                 } else if (token === "throttle" && tokens[0] === ":") {
                                     tokens.shift();
                                     triggerSpec.throttle = parseInterval(consumeUntil(tokens, WHITESPACE_OR_COMMA));
                                 } else if (token === "queue" && tokens[0] === ":") {
                                     tokens.shift();
                                     triggerSpec.queue = consumeUntil(tokens, WHITESPACE_OR_COMMA);
-                                } else if ((token === "root" || token === "threshold") && tokens[0] === ":") {
+                                } else if (token === "root" && tokens[0] === ":") {
+                                    tokens.shift();
+                                    triggerSpec[token] = consumeCSSSelector(tokens);
+                                } else if (token === "threshold" && tokens[0] === ":") {
                                     tokens.shift();
                                     triggerSpec[token] = consumeUntil(tokens, WHITESPACE_OR_COMMA);
                                 } else {
@@ -1215,7 +1343,7 @@ return (function () {
                 return triggerSpecs;
             } else if (matches(elt, 'form')) {
                 return [{trigger: 'submit'}];
-            } else if (matches(elt, 'input[type="button"]')){
+            } else if (matches(elt, 'input[type="button"], input[type="submit"]')){
                 return [{trigger: 'click'}];
             } else if (matches(elt, INPUT_SELECTOR)) {
                 return [{trigger: 'change'}];
@@ -1232,7 +1360,10 @@ return (function () {
             var nodeData = getInternalData(elt);
             nodeData.timeout = setTimeout(function () {
                 if (bodyContains(elt) && nodeData.cancelled !== true) {
-                    if (!maybeFilterEvent(spec, makeEvent('hx:poll:trigger', {triggerSpec:spec, target:elt}))) {
+                    if (!maybeFilterEvent(spec, elt, makeEvent('hx:poll:trigger', {
+                        triggerSpec: spec,
+                        target: elt
+                    }))) {
                         handler(elt);
                     }
                     processPolling(elt, handler, spec);
@@ -1252,7 +1383,7 @@ return (function () {
                 var verb, path;
                 if (elt.tagName === "A") {
                     verb = "get";
-                    path = getRawAttribute(elt, 'href');
+                    path = getRawAttribute(elt, 'href')
                 } else {
                     var rawAttribute = getRawAttribute(elt, "method");
                     verb = rawAttribute ? rawAttribute.toLowerCase() : "get";
@@ -1261,7 +1392,11 @@ return (function () {
                     path = getRawAttribute(elt, 'action');
                 }
                 triggerSpecs.forEach(function(triggerSpec) {
-                    addEventListener(elt, function(evt) {
+                    addEventListener(elt, function(elt, evt) {
+                        if (closest(elt, htmx.config.disableSelector)) {
+                            cleanUpElement(elt)
+                            return
+                        }
                         issueAjaxRequest(verb, path, elt, evt)
                     }, nodeData, triggerSpec, true);
                 });
@@ -1294,11 +1429,11 @@ return (function () {
             return getInternalData(elt).boosted && elt.tagName === "A" && evt.type === "click" && (evt.ctrlKey || evt.metaKey);
         }
 
-        function maybeFilterEvent(triggerSpec, evt) {
+        function maybeFilterEvent(triggerSpec, elt, evt) {
             var eventFilter = triggerSpec.eventFilter;
             if(eventFilter){
                 try {
-                    return eventFilter(evt) !== true;
+                    return eventFilter.call(elt, evt) !== true;
                 } catch(e) {
                     triggerErrorEvent(getDocument().body, "htmx:eventFilter:error", {error: e, source:eventFilter.source});
                     return true;
@@ -1308,11 +1443,19 @@ return (function () {
         }
 
         function addEventListener(elt, handler, nodeData, triggerSpec, explicitCancel) {
+            var elementData = getInternalData(elt);
             var eltsToListenOn;
             if (triggerSpec.from) {
                 eltsToListenOn = querySelectorAllExt(elt, triggerSpec.from);
             } else {
                 eltsToListenOn = [elt];
+            }
+            // store the initial values of the elements, so we can tell if they change
+            if (triggerSpec.changed) {
+                eltsToListenOn.forEach(function (eltToListenOn) {
+                    var eltToListenOnData = getInternalData(eltToListenOn);
+                    eltToListenOnData.lastValue = eltToListenOn.value;
+                })
             }
             forEach(eltsToListenOn, function (eltToListenOn) {
                 var eventListener = function (evt) {
@@ -1326,7 +1469,7 @@ return (function () {
                     if (explicitCancel || shouldCancel(evt, elt)) {
                         evt.preventDefault();
                     }
-                    if (maybeFilterEvent(triggerSpec, evt)) {
+                    if (maybeFilterEvent(triggerSpec, elt, evt)) {
                         return;
                     }
                     var eventData = getInternalData(evt);
@@ -1334,7 +1477,6 @@ return (function () {
                     if (eventData.handledFor == null) {
                         eventData.handledFor = [];
                     }
-                    var elementData = getInternalData(elt);
                     if (eventData.handledFor.indexOf(elt) < 0) {
                         eventData.handledFor.push(elt);
                         if (triggerSpec.consume) {
@@ -1353,11 +1495,11 @@ return (function () {
                             }
                         }
                         if (triggerSpec.changed) {
-                            if (elementData.lastValue === elt.value) {
+                            var eltToListenOnData = getInternalData(eltToListenOn)
+                            if (eltToListenOnData.lastValue === eltToListenOn.value) {
                                 return;
-                            } else {
-                                elementData.lastValue = elt.value;
                             }
+                            eltToListenOnData.lastValue = eltToListenOn.value
                         }
                         if (elementData.delayed) {
                             clearTimeout(elementData.delayed);
@@ -1376,6 +1518,7 @@ return (function () {
                         } else if (triggerSpec.delay) {
                             elementData.delayed = setTimeout(function() { handler(elt, evt) }, triggerSpec.delay);
                         } else {
+                            triggerEvent(elt, 'htmx:trigger')
                             handler(elt, evt);
                         }
                     }
@@ -1389,7 +1532,7 @@ return (function () {
                     on: eltToListenOn
                 })
                 eltToListenOn.addEventListener(triggerSpec.trigger, eventListener);
-            })
+            });
         }
 
         var windowIsScrolling = false // used by initScrollHandler
@@ -1578,6 +1721,9 @@ return (function () {
                 var sseEventSource = getInternalData(sseSourceElt).sseEventSource;
                 var sseListener = function (event) {
                     if (maybeCloseSSESource(sseSourceElt)) {
+                        return;
+                    }
+                    if (!bodyContains(elt)) {
                         sseEventSource.removeEventListener(sseEventName, sseListener);
                         return;
                     }
@@ -1594,7 +1740,7 @@ return (function () {
                     var target = getTarget(elt)
                     var settleInfo = makeSettleInfo(elt);
 
-                    selectAndSwap(swapSpec.swapStyle, elt, target, response, settleInfo)
+                    selectAndSwap(swapSpec.swapStyle, target, elt, response, settleInfo)
                     settleImmediately(settleInfo.tasks)
                     triggerEvent(elt, "htmx:sseMessage", event)
                 };
@@ -1663,6 +1809,10 @@ return (function () {
                     nodeData.verb = verb;
                     triggerSpecs.forEach(function(triggerSpec) {
                         addTriggerHandler(elt, triggerSpec, nodeData, function (elt, evt) {
+                            if (closest(elt, htmx.config.disableSelector)) {
+                                cleanUpElement(elt)
+                                return
+                            }
                             issueAjaxRequest(verb, path, elt, evt)
                         })
                     });
@@ -1698,7 +1848,7 @@ return (function () {
                 observer.observe(elt);
                 addEventListener(elt, handler, nodeData, triggerSpec);
             } else if (triggerSpec.trigger === "load") {
-                if (!maybeFilterEvent(triggerSpec, makeEvent("load", {elt:elt}))) {
+                if (!maybeFilterEvent(triggerSpec, elt, makeEvent("load", {elt: elt}))) {
                                 loadImmediately(elt, handler, nodeData, triggerSpec.delay);
                             }
             } else if (triggerSpec.pollInterval) {
@@ -1710,7 +1860,7 @@ return (function () {
         }
 
         function evalScript(script) {
-            if (script.type === "text/javascript" || script.type === "module" || script.type === "") {
+            if (htmx.config.allowScriptTags && (script.type === "text/javascript" || script.type === "module" || script.type === "") ) {
                 var newScript = getDocument().createElement("script");
                 forEach(script.attributes, function (attr) {
                     newScript.setAttribute(attr.name, attr.value);
@@ -1727,7 +1877,10 @@ return (function () {
                 } catch (e) {
                     logError(e);
                 } finally {
-                    parent.removeChild(script);
+                    // remove old script element, but only if it is still in DOM
+                    if (script.parentElement) {
+                        script.parentElement.removeChild(script);
+                    }
                 }
             }
         }
@@ -1745,48 +1898,163 @@ return (function () {
             return document.querySelector("[hx-boost], [data-hx-boost]");
         }
 
+        function findHxOnWildcardElements(elt) {
+            var node = null
+            var elements = []
+
+            if (document.evaluate) {
+                var iter = document.evaluate('//*[@*[ starts-with(name(), "hx-on:") or starts-with(name(), "data-hx-on:") ]]', elt)
+                while (node = iter.iterateNext()) elements.push(node)
+            } else {
+                var allElements = document.getElementsByTagName("*")
+                for (var i = 0; i < allElements.length; i++) {
+                    var attributes = allElements[i].attributes
+                    for (var j = 0; j < attributes.length; j++) {
+                        var attrName = attributes[j].name
+                        if (startsWith(attrName, "hx-on:") || startsWith(attrName, "data-hx-on:")) {
+                            elements.push(allElements[i])
+                        }
+                    }
+                }
+            }
+
+            return elements
+        }
+
         function findElementsToProcess(elt) {
             if (elt.querySelectorAll) {
-                var boostedElts = hasChanceOfBeingBoosted() ? ", a, form" : "";
-                var results = elt.querySelectorAll(VERB_SELECTOR + boostedElts + ", [hx-sse], [data-hx-sse], [hx-ws]," +
-                    " [data-hx-ws], [hx-ext], [data-hx-ext]");
+                var boostedElts = hasChanceOfBeingBoosted() ? ", a" : "";
+                var results = elt.querySelectorAll(VERB_SELECTOR + boostedElts + ", form, [type='submit'], [hx-sse], [data-hx-sse], [hx-ws]," +
+                    " [data-hx-ws], [hx-ext], [data-hx-ext], [hx-trigger], [data-hx-trigger], [hx-on], [data-hx-on]");
                 return results;
             } else {
                 return [];
             }
         }
 
-        function initButtonTracking(form){
-            var maybeSetLastButtonClicked = function(evt){
-                if (matches(evt.target, "button, input[type='submit']")) {
-                    var internalData = getInternalData(form);
-                    internalData.lastButtonClicked = evt.target;
-                }
-            };
-
+        // Handle submit buttons/inputs that have the form attribute set
+        // see https://developer.mozilla.org/docs/Web/HTML/Element/button
+         function maybeSetLastButtonClicked(evt) {
+            var elt = closest(evt.target, "button, input[type='submit']");
+            var internalData = getRelatedFormData(evt)
+            if (internalData) {
+              internalData.lastButtonClicked = elt;
+            }
+        };
+        function maybeUnsetLastButtonClicked(evt){
+            var internalData = getRelatedFormData(evt)
+            if (internalData) {
+              internalData.lastButtonClicked = null;
+            }
+        }
+        function getRelatedFormData(evt) {
+           var elt = closest(evt.target, "button, input[type='submit']");
+           if (!elt) {
+             return;
+           }
+           var form = resolveTarget('#' + getRawAttribute(elt, 'form')) || closest(elt, 'form');
+           if (!form) {
+             return;
+           }
+           return getInternalData(form);
+        }
+        function initButtonTracking(elt) {
             // need to handle both click and focus in:
             //   focusin - in case someone tabs in to a button and hits the space bar
             //   click - on OSX buttons do not focus on click see https://bugs.webkit.org/show_bug.cgi?id=13724
+            elt.addEventListener('click', maybeSetLastButtonClicked)
+            elt.addEventListener('focusin', maybeSetLastButtonClicked)
+            elt.addEventListener('focusout', maybeUnsetLastButtonClicked)
+        }
 
-            form.addEventListener('click', maybeSetLastButtonClicked)
-            form.addEventListener('focusin', maybeSetLastButtonClicked)
-            form.addEventListener('focusout', function(evt){
-                var internalData = getInternalData(form);
-                internalData.lastButtonClicked = null;
-            })
+        function countCurlies(line) {
+            var tokens = tokenizeString(line);
+            var netCurlies = 0;
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if (token === "{") {
+                    netCurlies++;
+                } else if (token === "}") {
+                    netCurlies--;
+                }
+            }
+            return netCurlies;
+        }
+
+        function addHxOnEventHandler(elt, eventName, code) {
+            var nodeData = getInternalData(elt);
+            if (!Array.isArray(nodeData.onHandlers)) {
+                nodeData.onHandlers = [];
+            }
+            var func;
+            var listener = function (e) {
+                return maybeEval(elt, function() {
+                    if (!func) {
+                        func = new Function("event", code);
+                    }
+                    func.call(elt, e);
+                });
+            };
+            elt.addEventListener(eventName, listener);
+            nodeData.onHandlers.push({event:eventName, listener:listener});
+        }
+
+        function processHxOn(elt) {
+            var hxOnValue = getAttributeValue(elt, 'hx-on');
+            if (hxOnValue) {
+                var handlers = {}
+                var lines = hxOnValue.split("\n");
+                var currentEvent = null;
+                var curlyCount = 0;
+                while (lines.length > 0) {
+                    var line = lines.shift();
+                    var match = line.match(/^\s*([a-zA-Z:\-\.]+:)(.*)/);
+                    if (curlyCount === 0 && match) {
+                        line.split(":")
+                        currentEvent = match[1].slice(0, -1); // strip last colon
+                        handlers[currentEvent] = match[2];
+                    } else {
+                        handlers[currentEvent] += line;
+                    }
+                    curlyCount += countCurlies(line);
+                }
+
+                for (var eventName in handlers) {
+                    addHxOnEventHandler(elt, eventName, handlers[eventName]);
+                }
+            }
+        }
+
+        function processHxOnWildcard(elt) {
+            // wipe any previous on handlers so that this function takes precedence
+            deInitOnHandlers(elt)
+
+            for (var i = 0; i < elt.attributes.length; i++) {
+                var name = elt.attributes[i].name
+                var value = elt.attributes[i].value
+                if (startsWith(name, "hx-on:") || startsWith(name, "data-hx-on:")) {
+                    let eventName = name.slice(name.indexOf(":") + 1)
+                    // if the eventName starts with a colon, prepend "htmx" for shorthand support
+                    if (startsWith(eventName, ":")) eventName = "htmx" + eventName
+
+                    addHxOnEventHandler(elt, eventName, value)
+                }
+            }
         }
 
         function initNode(elt) {
-            if (elt.closest && elt.closest(htmx.config.disableSelector)) {
+            if (closest(elt, htmx.config.disableSelector)) {
+                cleanUpElement(elt)
                 return;
             }
             var nodeData = getInternalData(elt);
             if (nodeData.initHash !== attributeHash(elt)) {
+                // clean up any previously processed info
+                deInitNode(elt);
 
                 nodeData.initHash = attributeHash(elt);
 
-                // clean up any previously processed info
-                deInitNode(elt);
+                processHxOn(elt);
 
                 triggerEvent(elt, "htmx:beforeProcessNode")
 
@@ -1795,14 +2063,24 @@ return (function () {
                 }
 
                 var triggerSpecs = getTriggerSpecs(elt);
-                var explicitAction = processVerbs(elt, nodeData, triggerSpecs);
+                var hasExplicitHttpAction = processVerbs(elt, nodeData, triggerSpecs);
 
-                if (!explicitAction && getClosestAttributeValue(elt, "hx-boost") === "true") {
-                    boostElement(elt, nodeData, triggerSpecs);
+                if (!hasExplicitHttpAction) {
+                    if (getClosestAttributeValue(elt, "hx-boost") === "true") {
+                        boostElement(elt, nodeData, triggerSpecs);
+                    } else if (hasAttribute(elt, 'hx-trigger')) {
+                        triggerSpecs.forEach(function (triggerSpec) {
+                            // For "naked" triggers, don't do anything at all
+                            addTriggerHandler(elt, triggerSpec, nodeData, function () {
+                            })
+                        })
+                    }
                 }
 
-                if (elt.tagName === "FORM") {
-                    initButtonTracking(elt);
+                // Handle submit buttons/inputs that have the form attribute set
+                // see https://developer.mozilla.org/docs/Web/HTML/Element/button
+                if (elt.tagName === "FORM" || (getRawAttribute(elt, "type") === "submit" && hasAttribute(elt, "form"))) {
+                    initButtonTracking(elt)
                 }
 
                 var sseInfo = getAttributeValue(elt, 'hx-sse');
@@ -1820,8 +2098,15 @@ return (function () {
 
         function processNode(elt) {
             elt = resolveTarget(elt);
+            if (closest(elt, htmx.config.disableSelector)) {
+                cleanUpElement(elt)
+                return;
+            }
             initNode(elt);
             forEach(findElementsToProcess(elt), function(child) { initNode(child) });
+            // Because it happens second, the new way of adding onHandlers superseeds the old one
+            // i.e. if there are any hx-on:eventName attributes, the hx-on attribute will be ignored
+            forEach(findHxOnWildcardElements(elt), processHxOnWildcard);
         }
 
         //====================================================================
@@ -1899,7 +2184,7 @@ return (function () {
                 eventResult = eventResult && elt.dispatchEvent(kebabedEvent)
             }
             withExtensions(elt, function (extension) {
-                eventResult = eventResult && (extension.onEvent(eventName, event) !== false)
+                eventResult = eventResult && (extension.onEvent(eventName, event) !== false && !event.defaultPrevented)
             });
             return eventResult;
         }
@@ -1918,6 +2203,14 @@ return (function () {
             if (!canAccessLocalStorage()) {
                 return;
             }
+
+            if (htmx.config.historyCacheSize <= 0) {
+                // make sure that an eventually already existing cache is purged
+                localStorage.removeItem("htmx-history-cache");
+                return;
+            }
+
+            url = normalizePath(url);
 
             var historyCache = parseJSON(localStorage.getItem("htmx-history-cache")) || [];
             for (var i = 0; i < historyCache.length; i++) {
@@ -1948,6 +2241,8 @@ return (function () {
                 return null;
             }
 
+            url = normalizePath(url);
+
             var historyCache = parseJSON(localStorage.getItem("htmx-history-cache")) || [];
             for (var i = 0; i < historyCache.length; i++) {
                 if (historyCache[i].url === url) {
@@ -1969,13 +2264,38 @@ return (function () {
         function saveCurrentPageToHistory() {
             var elt = getHistoryElement();
             var path = currentPathForHistory || location.pathname+location.search;
-            triggerEvent(getDocument().body, "htmx:beforeHistorySave", {path:path, historyElt:elt});
-            if(htmx.config.historyEnabled) history.replaceState({htmx:true}, getDocument().title, window.location.href);
-            saveToHistoryCache(path, cleanInnerHtmlForHistory(elt), getDocument().title, window.scrollY);
+
+            // Allow history snapshot feature to be disabled where hx-history="false"
+            // is present *anywhere* in the current document we're about to save,
+            // so we can prevent privileged data entering the cache.
+            // The page will still be reachable as a history entry, but htmx will fetch it
+            // live from the server onpopstate rather than look in the localStorage cache
+            var disableHistoryCache
+            try {
+                disableHistoryCache = getDocument().querySelector('[hx-history="false" i],[data-hx-history="false" i]')
+            } catch (e) {
+                // IE11: insensitive modifier not supported so fallback to case sensitive selector
+                disableHistoryCache = getDocument().querySelector('[hx-history="false"],[data-hx-history="false"]')
+            }
+            if (!disableHistoryCache) {
+                triggerEvent(getDocument().body, "htmx:beforeHistorySave", {path: path, historyElt: elt});
+                saveToHistoryCache(path, cleanInnerHtmlForHistory(elt), getDocument().title, window.scrollY);
+            }
+
+            if (htmx.config.historyEnabled) history.replaceState({htmx: true}, getDocument().title, window.location.href);
         }
 
         function pushUrlIntoHistory(path) {
-            if(htmx.config.historyEnabled)  history.pushState({htmx:true}, "", path);
+            // remove the cache buster parameter, if any
+            if (htmx.config.getCacheBusterParam) {
+                path = path.replace(/org\.htmx\.cache-buster=[^&]*&?/, '')
+                if (endsWith(path, '&') || endsWith(path, "?")) {
+                    path = path.slice(0, -1);
+                }
+            }
+            if(htmx.config.historyEnabled) {
+                history.pushState({htmx:true}, "", path);
+            }
             currentPathForHistory = path;
         }
 
@@ -2036,7 +2356,9 @@ return (function () {
                 swapInnerHTML(historyElement, fragment, settleInfo)
                 settleImmediately(settleInfo.tasks);
                 document.title = cached.title;
-                window.scrollTo(0, cached.scroll);
+                setTimeout(function () {
+                    window.scrollTo(0, cached.scroll);
+                }, 0); // next 'tick', so browser has time to render layout
                 currentPathForHistory = path;
                 triggerEvent(getDocument().body, "htmx:historyRestore", {path:path, item:cached});
             } else {
@@ -2063,12 +2385,32 @@ return (function () {
             return indicators;
         }
 
-        function removeRequestIndicatorClasses(indicators) {
+        function disableElements(elt) {
+            var disabledElts = findAttributeTargets(elt, 'hx-disabled-elt');
+            if (disabledElts == null) {
+                disabledElts = [];
+            }
+            forEach(disabledElts, function (disabledElement) {
+                var internalData = getInternalData(disabledElement);
+                internalData.requestCount = (internalData.requestCount || 0) + 1;
+                disabledElement.setAttribute("disabled", "");
+            });
+            return disabledElts;
+        }
+
+        function removeRequestIndicators(indicators, disabled) {
             forEach(indicators, function (ic) {
                 var internalData = getInternalData(ic);
                 internalData.requestCount = (internalData.requestCount || 0) - 1;
                 if (internalData.requestCount === 0) {
                     ic.classList["remove"].call(ic.classList, htmx.config.requestClass);
+                }
+            });
+            forEach(disabled, function (disabledElement) {
+                var internalData = getInternalData(disabledElement);
+                internalData.requestCount = (internalData.requestCount || 0) - 1;
+                if (internalData.requestCount === 0) {
+                    disabledElement.removeAttribute('disabled');
                 }
             });
         }
@@ -2101,6 +2443,29 @@ return (function () {
             return true;
         }
 
+        function addValueToValues(name, value, values) {
+            // This is a little ugly because both the current value of the named value in the form
+            // and the new value could be arrays, so we have to handle all four cases :/
+            if (name != null && value != null) {
+                var current = values[name];
+                if (current === undefined) {
+                    values[name] = value;
+                } else if (Array.isArray(current)) {
+                    if (Array.isArray(value)) {
+                        values[name] = current.concat(value);
+                    } else {
+                        current.push(value);
+                    }
+                } else {
+                    if (Array.isArray(value)) {
+                        values[name] = [current].concat(value);
+                    } else {
+                        values[name] = [current, value];
+                    }
+                }
+            }
+        }
+
         function processInputValue(processed, values, errors, elt, validate) {
             if (elt == null || haveSeenNode(processed, elt)) {
                 return;
@@ -2110,35 +2475,14 @@ return (function () {
             if (shouldInclude(elt)) {
                 var name = getRawAttribute(elt,"name");
                 var value = elt.value;
-                if (elt.multiple) {
+                if (elt.multiple && elt.tagName === "SELECT") {
                     value = toArray(elt.querySelectorAll("option:checked")).map(function (e) { return e.value });
                 }
                 // include file inputs
                 if (elt.files) {
                     value = toArray(elt.files);
                 }
-                // This is a little ugly because both the current value of the named value in the form
-                // and the new value could be arrays, so we have to handle all four cases :/
-                if (name != null && value != null) {
-                    var current = values[name];
-                    if(current) {
-                        if (Array.isArray(current)) {
-                            if (Array.isArray(value)) {
-                                values[name] = current.concat(value);
-                            } else {
-                                current.push(value);
-                            }
-                        } else {
-                            if (Array.isArray(value)) {
-                                values[name] = [current].concat(value);
-                            } else {
-                                values[name] = [current, value];
-                            }
-                        }
-                    } else {
-                        values[name] = value;
-                    }
-                }
+                addValueToValues(name, value, values);
                 if (validate) {
                     validateElement(elt, errors);
                 }
@@ -2171,6 +2515,9 @@ return (function () {
             var formValues = {};
             var errors = [];
             var internalData = getInternalData(elt);
+            if (internalData.lastButtonClicked && !bodyContains(internalData.lastButtonClicked)) {
+                internalData.lastButtonClicked = null
+            }
 
             // only validate when form is directly submitted and novalidate or formnovalidate are not set
             // or if the element has an explicit hx-validate="true" on it
@@ -2188,11 +2535,11 @@ return (function () {
             processInputValue(processed, values, errors, elt, validate);
 
             // if a button or submit was clicked last, include its value
-            if (internalData.lastButtonClicked) {
-                var name = getRawAttribute(internalData.lastButtonClicked,"name");
-                if (name) {
-                    values[name] = internalData.lastButtonClicked.value;
-                }
+            if (internalData.lastButtonClicked || elt.tagName === "BUTTON" ||
+                (elt.tagName === "INPUT" && getRawAttribute(elt, "type") === "submit")) {
+                var button = internalData.lastButtonClicked || elt
+                var name = getRawAttribute(button, "name")
+                addValueToValues(name, button.value, formValues)
             }
 
             // include any explicit includes
@@ -2338,40 +2685,43 @@ return (function () {
                 "swapDelay" : htmx.config.defaultSwapDelay,
                 "settleDelay" : htmx.config.defaultSettleDelay
             }
-            if (getInternalData(elt).boosted && !isAnchorLink(elt)) {
+            if (htmx.config.scrollIntoViewOnBoost && getInternalData(elt).boosted && !isAnchorLink(elt)) {
               swapSpec["show"] = "top"
             }
             if (swapInfo) {
                 var split = splitOnWhitespace(swapInfo);
                 if (split.length > 0) {
-                    swapSpec["swapStyle"] = split[0];
-                    for (var i = 1; i < split.length; i++) {
-                        var modifier = split[i];
-                        if (modifier.indexOf("swap:") === 0) {
-                            swapSpec["swapDelay"] = parseInterval(modifier.substr(5));
-                        }
-                        if (modifier.indexOf("settle:") === 0) {
-                            swapSpec["settleDelay"] = parseInterval(modifier.substr(7));
-                        }
-                        if (modifier.indexOf("scroll:") === 0) {
-                            var scrollSpec = modifier.substr(7);
+                    for (var i = 0; i < split.length; i++) {
+                        var value = split[i];
+                        if (value.indexOf("swap:") === 0) {
+                            swapSpec["swapDelay"] = parseInterval(value.substr(5));
+                        } else if (value.indexOf("settle:") === 0) {
+                            swapSpec["settleDelay"] = parseInterval(value.substr(7));
+                        } else if (value.indexOf("transition:") === 0) {
+                            swapSpec["transition"] = value.substr(11) === "true";
+                        } else if (value.indexOf("ignoreTitle:") === 0) {
+                            swapSpec["ignoreTitle"] = value.substr(12) === "true";
+                        } else if (value.indexOf("scroll:") === 0) {
+                            var scrollSpec = value.substr(7);
                             var splitSpec = scrollSpec.split(":");
                             var scrollVal = splitSpec.pop();
                             var selectorVal = splitSpec.length > 0 ? splitSpec.join(":") : null;
                             swapSpec["scroll"] = scrollVal;
                             swapSpec["scrollTarget"] = selectorVal;
-                        }
-                        if (modifier.indexOf("show:") === 0) {
-                            var showSpec = modifier.substr(5);
+                        } else if (value.indexOf("show:") === 0) {
+                            var showSpec = value.substr(5);
                             var splitSpec = showSpec.split(":");
                             var showVal = splitSpec.pop();
                             var selectorVal = splitSpec.length > 0 ? splitSpec.join(":") : null;
                             swapSpec["show"] = showVal;
                             swapSpec["showTarget"] = selectorVal;
-                        }
-                        if (modifier.indexOf("focus-scroll:") === 0) {
-                            var focusScrollVal = modifier.substr("focus-scroll:".length);
+                        } else if (value.indexOf("focus-scroll:") === 0) {
+                            var focusScrollVal = value.substr("focus-scroll:".length);
                             swapSpec["focusScroll"] = focusScrollVal == "true";
+                        } else if (i == 0) {
+                            swapSpec["swapStyle"] = value;
+                        } else {
+                            logError('Unknown modifier in hx-swap: ' + value);
                         }
                     }
                 }
@@ -2575,6 +2925,7 @@ return (function () {
                             values : context.values,
                             targetOverride: resolveTarget(context.target),
                             swapOverride: context.swap,
+                            select: context.select,
                             returnPromise: true
                         });
                 }
@@ -2594,6 +2945,27 @@ return (function () {
             return arr;
         }
 
+        function verifyPath(elt, path, requestConfig) {
+            var sameHost
+            var url
+            if (typeof URL === "function") {
+                url = new URL(path, document.location.href);
+                var origin = document.location.origin;
+                sameHost = origin === url.origin;
+            } else {
+                // IE11 doesn't support URL
+                url = path
+                sameHost = startsWith(path, document.location.origin)
+            }
+
+            if (htmx.config.selfRequestsOnly) {
+                if (!sameHost) {
+                    return false;
+                }
+            }
+            return triggerEvent(elt, "htmx:validateUrl", mergeObjects({url: url, sameHost: sameHost}, requestConfig));
+        }
+
         function issueAjaxRequest(verb, path, elt, event, etc, confirmed) {
             var resolve = null;
             var reject = null;
@@ -2608,29 +2980,52 @@ return (function () {
                 elt = getDocument().body;
             }
             var responseHandler = etc.handler || handleAjaxResponse;
+            var select = etc.select || null;
 
             if (!bodyContains(elt)) {
-                return; // do not issue requests for elements removed from the DOM
+                // do not issue requests for elements removed from the DOM
+                maybeCall(resolve);
+                return promise;
             }
             var target = etc.targetOverride || getTarget(elt);
             if (target == null || target == DUMMY_ELT) {
                 triggerErrorEvent(elt, 'htmx:targetError', {target: getAttributeValue(elt, "hx-target")});
-                return;
+                maybeCall(reject);
+                return promise;
             }
 
-            // allow event-based confirmation w/ a callback
-            if (!confirmed) {
-                var issueRequest = function() {
-                    return issueAjaxRequest(verb, path, elt, event, etc, true);
+            var eltData = getInternalData(elt);
+            var submitter = eltData.lastButtonClicked;
+
+            if (submitter) {
+                var buttonPath = getRawAttribute(submitter, "formaction");
+                if (buttonPath != null) {
+                    path = buttonPath;
                 }
-                var confirmDetails = {target: target, elt: elt, path: path, verb: verb, triggeringEvent: event, etc: etc, issueRequest: issueRequest};
+
+                var buttonVerb = getRawAttribute(submitter, "formmethod")
+                if (buttonVerb != null) {
+                    // ignore buttons with formmethod="dialog"
+                    if (buttonVerb.toLowerCase() !== "dialog") {
+                        verb = buttonVerb;
+                    }
+                }
+            }
+
+            var confirmQuestion = getClosestAttributeValue(elt, "hx-confirm");
+            // allow event-based confirmation w/ a callback
+            if (confirmed === undefined) {
+                var issueRequest = function(skipConfirmation) {
+                    return issueAjaxRequest(verb, path, elt, event, etc, !!skipConfirmation);
+                }
+                var confirmDetails = {target: target, elt: elt, path: path, verb: verb, triggeringEvent: event, etc: etc, issueRequest: issueRequest, question: confirmQuestion};
                 if (triggerEvent(elt, 'htmx:confirm', confirmDetails) === false) {
-                    return;
+                    maybeCall(resolve);
+                    return promise;
                 }
             }
 
             var syncElt = elt;
-            var eltData = getInternalData(elt);
             var syncStrategy = getClosestAttributeValue(elt, "hx-sync");
             var queueStrategy = null;
             var abortable = false;
@@ -2646,10 +3041,12 @@ return (function () {
                 syncStrategy = (syncStrings[1] || 'drop').trim();
                 eltData = getInternalData(syncElt);
                 if (syncStrategy === "drop" && eltData.xhr && eltData.abortable !== true) {
-                    return;
+                    maybeCall(resolve);
+                    return promise;
                 } else if (syncStrategy === "abort") {
                     if (eltData.xhr) {
-                        return;
+                        maybeCall(resolve);
+                        return promise;
                     } else {
                         abortable = true;
                     }
@@ -2693,7 +3090,8 @@ return (function () {
                             issueAjaxRequest(verb, path, elt, event, etc)
                         });
                     }
-                    return;
+                    maybeCall(resolve);
+                    return promise;
                 }
             }
 
@@ -2721,8 +3119,7 @@ return (function () {
                 }
             }
 
-            var confirmQuestion = getClosestAttributeValue(elt, "hx-confirm");
-            if (confirmQuestion) {
+            if (confirmQuestion && !confirmed) {
                 if(!confirm(confirmQuestion)) {
                     maybeCall(resolve);
                     endRequestLock()
@@ -2732,6 +3129,11 @@ return (function () {
 
 
             var headers = getHeaders(elt, target, promptResponse);
+
+            if (verb !== 'get' && !usesFormData(elt)) {
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            }
+
             if (etc.headers) {
                 headers = mergeObjects(headers, etc.headers);
             }
@@ -2745,8 +3147,8 @@ return (function () {
             var allParameters = mergeObjects(rawParameters, expressionVars);
             var filteredParameters = filterValues(allParameters, elt);
 
-            if (verb !== 'get' && !usesFormData(elt)) {
-                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            if (htmx.config.getCacheBusterParam && verb === 'get') {
+                filteredParameters['org.htmx.cache-buster'] = getRawAttribute(target, "id") || "true";
             }
 
             // behavior of anchors w/ empty href is to use the current URL
@@ -2758,8 +3160,12 @@ return (function () {
             var requestAttrValues = getValuesForElement(elt, 'hx-request');
 
             var eltIsBoosted = getInternalData(elt).boosted;
+
+            var useUrlParams = htmx.config.methodsThatUseUrlParams.indexOf(verb) >= 0
+
             var requestConfig = {
                 boosted: eltIsBoosted,
+                useUrlParams: useUrlParams,
                 parameters: filteredParameters,
                 unfilteredParameters: allParameters,
                 headers:headers,
@@ -2784,6 +3190,7 @@ return (function () {
             headers = requestConfig.headers;
             filteredParameters = requestConfig.parameters;
             errors = requestConfig.errors;
+            useUrlParams = requestConfig.useUrlParams;
 
             if(errors && errors.length > 0){
                 triggerEvent(elt, 'htmx:validation:halted', requestConfig)
@@ -2795,26 +3202,31 @@ return (function () {
             var splitPath = path.split("#");
             var pathNoAnchor = splitPath[0];
             var anchor = splitPath[1];
-            var finalPathForGet = null;
-            if (verb === 'get') {
-                finalPathForGet = pathNoAnchor;
+
+            var finalPath = path
+            if (useUrlParams) {
+                finalPath = pathNoAnchor;
                 var values = Object.keys(filteredParameters).length !== 0;
                 if (values) {
-                    if (finalPathForGet.indexOf("?") < 0) {
-                        finalPathForGet += "?";
+                    if (finalPath.indexOf("?") < 0) {
+                        finalPath += "?";
                     } else {
-                        finalPathForGet += "&";
+                        finalPath += "&";
                     }
-                    finalPathForGet += urlEncode(filteredParameters);
+                    finalPath += urlEncode(filteredParameters);
                     if (anchor) {
-                        finalPathForGet += "#" + anchor;
+                        finalPath += "#" + anchor;
                     }
                 }
-                xhr.open('GET', finalPathForGet, true);
-            } else {
-                xhr.open(verb.toUpperCase(), path, true);
             }
 
+            if (!verifyPath(elt, finalPath, requestConfig)) {
+                triggerErrorEvent(elt, 'htmx:invalidPath', requestConfig)
+                maybeCall(reject);
+                return promise;
+            };
+
+            xhr.open(verb.toUpperCase(), finalPath, true);
             xhr.overrideMimeType("text/html");
             xhr.withCredentials = requestConfig.withCredentials;
             xhr.timeout = requestConfig.timeout;
@@ -2832,10 +3244,10 @@ return (function () {
             }
 
             var responseInfo = {
-                xhr: xhr, target: target, requestConfig: requestConfig, etc: etc, boosted: eltIsBoosted,
+                xhr: xhr, target: target, requestConfig: requestConfig, etc: etc, boosted: eltIsBoosted, select: select,
                 pathInfo: {
                     requestPath: path,
-                    finalRequestPath: finalPathForGet || path,
+                    finalRequestPath: finalPath,
                     anchor: anchor
                 }
             };
@@ -2845,10 +3257,10 @@ return (function () {
                     var hierarchy = hierarchyForElt(elt);
                     responseInfo.pathInfo.responsePath = getPathFromResponse(xhr);
                     responseHandler(elt, responseInfo);
-                    removeRequestIndicatorClasses(indicators);
+                    removeRequestIndicators(indicators, disableElts);
                     triggerEvent(elt, 'htmx:afterRequest', responseInfo);
                     triggerEvent(elt, 'htmx:afterOnLoad', responseInfo);
-                    // if the body no longer contains the element, trigger the even on the closest parent
+                    // if the body no longer contains the element, trigger the event on the closest parent
                     // remaining in the DOM
                     if (!bodyContains(elt)) {
                         var secondaryTriggerElt = null;
@@ -2871,21 +3283,21 @@ return (function () {
                 }
             }
             xhr.onerror = function () {
-                removeRequestIndicatorClasses(indicators);
+                removeRequestIndicators(indicators, disableElts);
                 triggerErrorEvent(elt, 'htmx:afterRequest', responseInfo);
                 triggerErrorEvent(elt, 'htmx:sendError', responseInfo);
                 maybeCall(reject);
                 endRequestLock();
             }
             xhr.onabort = function() {
-                removeRequestIndicatorClasses(indicators);
+                removeRequestIndicators(indicators, disableElts);
                 triggerErrorEvent(elt, 'htmx:afterRequest', responseInfo);
                 triggerErrorEvent(elt, 'htmx:sendAbort', responseInfo);
                 maybeCall(reject);
                 endRequestLock();
             }
             xhr.ontimeout = function() {
-                removeRequestIndicatorClasses(indicators);
+                removeRequestIndicators(indicators, disableElts);
                 triggerErrorEvent(elt, 'htmx:afterRequest', responseInfo);
                 triggerErrorEvent(elt, 'htmx:timeout', responseInfo);
                 maybeCall(reject);
@@ -2897,6 +3309,7 @@ return (function () {
                 return promise
             }
             var indicators = addRequestIndicatorClasses(elt);
+            var disableElts = disableElements(elt);
 
             forEach(['loadstart', 'loadend', 'progress', 'abort'], function(eventName) {
                 forEach([xhr, xhr.upload], function (target) {
@@ -2910,7 +3323,8 @@ return (function () {
                 });
             });
             triggerEvent(elt, 'htmx:beforeSend', responseInfo);
-            xhr.send(verb === 'get' ? null : encodeParamsForBody(xhr, elt, filteredParameters));
+            var params = useUrlParams ? null : encodeParamsForBody(xhr, elt, filteredParameters)
+            xhr.send(params);
             return promise;
         }
 
@@ -3000,6 +3414,8 @@ return (function () {
             var xhr = responseInfo.xhr;
             var target = responseInfo.target;
             var etc = responseInfo.etc;
+            var requestConfig = responseInfo.requestConfig;
+            var select = responseInfo.select;
 
             if (!triggerEvent(elt, 'htmx:beforeOnLoad', responseInfo)) return;
 
@@ -3023,16 +3439,17 @@ return (function () {
                 return;
             }
 
+            var shouldRefresh = hasHeader(xhr, /HX-Refresh:/i) && "true" === xhr.getResponseHeader("HX-Refresh");
+
             if (hasHeader(xhr, /HX-Redirect:/i)) {
                 location.href = xhr.getResponseHeader("HX-Redirect");
+                shouldRefresh && location.reload();
                 return;
             }
 
-            if (hasHeader(xhr,/HX-Refresh:/i)) {
-                if ("true" === xhr.getResponseHeader("HX-Refresh")) {
-                    location.reload();
-                    return;
-                }
+            if (shouldRefresh) {
+                location.reload();
+                return;
             }
 
             if (hasHeader(xhr,/HX-Retarget:/i)) {
@@ -3048,13 +3465,16 @@ return (function () {
             var shouldSwap = xhr.status >= 200 && xhr.status < 400 && xhr.status !== 204;
             var serverResponse = xhr.response;
             var isError = xhr.status >= 400;
-            var beforeSwapDetails = mergeObjects({shouldSwap: shouldSwap, serverResponse:serverResponse, isError:isError}, responseInfo);
+            var ignoreTitle = htmx.config.ignoreTitle
+            var beforeSwapDetails = mergeObjects({shouldSwap: shouldSwap, serverResponse:serverResponse, isError:isError, ignoreTitle:ignoreTitle }, responseInfo);
             if (!triggerEvent(target, 'htmx:beforeSwap', beforeSwapDetails)) return;
 
             target = beforeSwapDetails.target; // allow re-targeting
             serverResponse = beforeSwapDetails.serverResponse; // allow updating content
             isError = beforeSwapDetails.isError; // allow updating error
+            ignoreTitle = beforeSwapDetails.ignoreTitle; // allow updating ignoring title
 
+            responseInfo.target = target; // Make updated target available to response events
             responseInfo.failed = isError; // Make failed property available to response events
             responseInfo.successful = !isError; // Make successful property available to response events
 
@@ -3078,10 +3498,18 @@ return (function () {
                 }
                 var swapSpec = getSwapSpecification(elt, swapOverride);
 
+                if (swapSpec.hasOwnProperty('ignoreTitle')) {
+                    ignoreTitle = swapSpec.ignoreTitle;
+                }
+
                 target.classList.add(htmx.config.swappingClass);
+
+                // optional transition API promise callbacks
+                var settleResolve = null;
+                var settleReject = null;
+
                 var doSwap = function () {
                     try {
-
                         var activeElt = document.activeElement;
                         var selectionInfo = {};
                         try {
@@ -3096,19 +3524,44 @@ return (function () {
                             // safari issue - see https://github.com/microsoft/playwright/issues/5894
                         }
 
+                        var selectOverride;
+                        if (select) {
+                            selectOverride = select;
+                        }
+
+                        if (hasHeader(xhr, /HX-Reselect:/i)) {
+                            selectOverride = xhr.getResponseHeader("HX-Reselect");
+                        }
+
+                        // if we need to save history, do so, before swapping so that relative resources have the correct base URL
+                        if (historyUpdate.type) {
+                            triggerEvent(getDocument().body, 'htmx:beforeHistoryUpdate', mergeObjects({ history: historyUpdate }, responseInfo));
+                            if (historyUpdate.type === "push") {
+                                pushUrlIntoHistory(historyUpdate.path);
+                                triggerEvent(getDocument().body, 'htmx:pushedIntoHistory', {path: historyUpdate.path});
+                            } else {
+                                replaceUrlInHistory(historyUpdate.path);
+                                triggerEvent(getDocument().body, 'htmx:replacedInHistory', {path: historyUpdate.path});
+                            }
+                        }
+
                         var settleInfo = makeSettleInfo(target);
-                        selectAndSwap(swapSpec.swapStyle, target, elt, serverResponse, settleInfo);
+                        selectAndSwap(swapSpec.swapStyle, target, elt, serverResponse, settleInfo, selectOverride);
 
                         if (selectionInfo.elt &&
                             !bodyContains(selectionInfo.elt) &&
-                            selectionInfo.elt.id) {
-                            var newActiveElt = document.getElementById(selectionInfo.elt.id);
+                            getRawAttribute(selectionInfo.elt, "id")) {
+                            var newActiveElt = document.getElementById(getRawAttribute(selectionInfo.elt, "id"));
                             var focusOptions = { preventScroll: swapSpec.focusScroll !== undefined ? !swapSpec.focusScroll : !htmx.config.defaultFocusScroll };
                             if (newActiveElt) {
                                 // @ts-ignore
                                 if (selectionInfo.start && newActiveElt.setSelectionRange) {
                                     // @ts-ignore
-                                    newActiveElt.setSelectionRange(selectionInfo.start, selectionInfo.end);
+                                    try {
+                                        newActiveElt.setSelectionRange(selectionInfo.start, selectionInfo.end);
+                                    } catch (e) {
+                                        // the setSelectionRange method is present on fields that don't support it, so just let this fail
+                                    }
                                 }
                                 newActiveElt.focus(focusOptions);
                             }
@@ -3141,24 +3594,14 @@ return (function () {
                                 triggerEvent(elt, 'htmx:afterSettle', responseInfo);
                             });
 
-                            // if we need to save history, do so
-                            if (historyUpdate.type) {
-                                if (historyUpdate.type === "push") {
-                                    pushUrlIntoHistory(historyUpdate.path);
-                                    triggerEvent(getDocument().body, 'htmx:pushedIntoHistory', {path: historyUpdate.path});
-                                } else {
-                                    replaceUrlInHistory(historyUpdate.path);
-                                    triggerEvent(getDocument().body, 'htmx:replacedInHistory', {path: historyUpdate.path});
-                                }
-                            }
                             if (responseInfo.pathInfo.anchor) {
-                                var anchorTarget = find("#" + responseInfo.pathInfo.anchor);
+                                var anchorTarget = getDocument().getElementById(responseInfo.pathInfo.anchor);
                                 if(anchorTarget) {
                                     anchorTarget.scrollIntoView({block:'start', behavior: "auto"});
                                 }
                             }
 
-                            if(settleInfo.title) {
+                            if(settleInfo.title && !ignoreTitle) {
                                 var titleElt = find("title");
                                 if(titleElt) {
                                     titleElt.innerHTML = settleInfo.title;
@@ -3176,6 +3619,7 @@ return (function () {
                                 }
                                 handleTrigger(xhr, "HX-Trigger-After-Settle", finalElt);
                             }
+                            maybeCall(settleResolve);
                         }
 
                         if (swapSpec.settleDelay > 0) {
@@ -3185,9 +3629,33 @@ return (function () {
                         }
                     } catch (e) {
                         triggerErrorEvent(elt, 'htmx:swapError', responseInfo);
+                        maybeCall(settleReject);
                         throw e;
                     }
                 };
+
+                var shouldTransition = htmx.config.globalViewTransitions
+                if(swapSpec.hasOwnProperty('transition')){
+                    shouldTransition = swapSpec.transition;
+                }
+
+                if(shouldTransition &&
+                    triggerEvent(elt, 'htmx:beforeTransition', responseInfo) &&
+                    typeof Promise !== "undefined" && document.startViewTransition){
+                    var settlePromise = new Promise(function (_resolve, _reject) {
+                        settleResolve = _resolve;
+                        settleReject = _reject;
+                    });
+                    // wrap the original doSwap() in a call to startViewTransition()
+                    var innerDoSwap = doSwap;
+                    doSwap = function() {
+                        document.startViewTransition(function () {
+                            innerDoSwap();
+                            return settlePromise;
+                        });
+                    }
+                }
+
 
                 if (swapSpec.swapDelay > 0) {
                     setTimeout(doSwap, swapSpec.swapDelay)
@@ -3284,12 +3752,34 @@ return (function () {
         //====================================================================
         // Initialization
         //====================================================================
+        /**
+         * We want to initialize the page elements after DOMContentLoaded
+         * fires, but there isn't always a good way to tell whether
+         * it has already fired when we get here or not.
+         */
+        function ready(functionToCall) {
+            // call the function exactly once no matter how many times this is called
+            var callReadyFunction = function() {
+                if (!functionToCall) return;
+                functionToCall();
+                functionToCall = null;
+            };
 
-        function ready(fn) {
-            if (getDocument().readyState !== 'loading') {
-                fn();
-            } else {
-                getDocument().addEventListener('DOMContentLoaded', fn);
+            if (getDocument().readyState === "complete") {
+                // DOMContentLoaded definitely fired, we can initialize the page
+                callReadyFunction();
+            }
+            else {
+                /* DOMContentLoaded *maybe* already fired, wait for
+                 * the next DOMContentLoaded or readystatechange event
+                 */
+                getDocument().addEventListener("DOMContentLoaded", function() {
+                    callReadyFunction();
+                });
+                getDocument().addEventListener("readystatechange", function() {
+                    if (getDocument().readyState !== "complete") return;
+                    callReadyFunction();
+                });
             }
         }
 
@@ -3297,9 +3787,9 @@ return (function () {
             if (htmx.config.includeIndicatorStyles !== false) {
                 getDocument().head.insertAdjacentHTML("beforeend",
                     "<style>\
-                      ." + htmx.config.indicatorClass + "{opacity:0;transition: opacity 200ms ease-in;}\
-                      ." + htmx.config.requestClass + " ." + htmx.config.indicatorClass + "{opacity:1}\
-                      ." + htmx.config.requestClass + "." + htmx.config.indicatorClass + "{opacity:1}\
+                      ." + htmx.config.indicatorClass + "{opacity:0}\
+                      ." + htmx.config.requestClass + " ." + htmx.config.indicatorClass + "{opacity:1; transition: opacity 200ms ease-in;}\
+                      ." + htmx.config.requestClass + "." + htmx.config.indicatorClass + "{opacity:1; transition: opacity 200ms ease-in;}\
                     </style>");
             }
         }
@@ -3337,6 +3827,7 @@ return (function () {
                     internalData.xhr.abort();
                 }
             });
+            var originalPopstate = window.onpopstate;
             window.onpopstate = function (event) {
                 if (event.state && event.state.htmx) {
                     restoreHistory();
@@ -3346,10 +3837,15 @@ return (function () {
                             'triggerEvent': triggerEvent
                         });
                     });
+                } else {
+                    if (originalPopstate) {
+                        originalPopstate(event);
+                    }
                 }
             };
             setTimeout(function () {
                 triggerEvent(body, 'htmx:load', {}); // give ready handlers a chance to load up before firing this event
+                body = null; // kill reference for gc
             }, 0);
         })
 
