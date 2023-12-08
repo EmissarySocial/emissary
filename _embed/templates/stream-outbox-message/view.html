@@ -21,7 +21,7 @@
 
 		<div class="p-author space-below">
 			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
-				<img src="{{.Author.ImageURL}}" class="circle-64" style="margin-right:8px;">
+				<img src="{{.Author.ImageURL}}" class="circle-64 margin-right-sm">
 				<div class="vertical-space-none inline-block">
 					<div class="p-author text-lg bold link vertical-space-none">{{.Author.Name}}</div>
 					<div class="dt-published vertical-space-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
