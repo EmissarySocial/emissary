@@ -37,12 +37,6 @@
 				{"step":"publish"}
 			]
 		},
-		"view": {
-			"steps":[
-				{"step":"view-json"},
-				{"step":"view-html"}
-			]
-		},
 		"edit": {
 			"roles":["self"],
 			"steps": [
@@ -53,14 +47,6 @@
 					{"step":"publish"},
 					{"step":"refresh-page"}
 				]}
-			]
-		},
-		"delete": {
-			"roles":["self"],
-			"steps": [
-				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
-				{"step":"unpublish"},
-				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]
 		}
 	}
