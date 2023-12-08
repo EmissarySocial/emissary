@@ -12,7 +12,7 @@
 					</div>
 
 					{{- if .UserCan "add-child" -}}
-						<div class="space-above text-xs">
+						<div class="margin-top text-xs">
 							<br>
 							<button hx-get="/{{.Token}}/add-child">
 								{{- icon "plus"}} Add Another

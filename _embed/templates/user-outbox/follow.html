@@ -10,11 +10,11 @@
 
 <h3>Have an Account?</h3>
 
-<div class="space-below">
+<div class="margin-bottom">
 	Enter your Emissary address (or other Fediverse address) to get automatic updates on your social timeline.
 </div>
 
-<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="space-below">
+<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="margin-bottom">
 	<div class="flex-row" style="margin-bottom:4px;">
 		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
 		<input type="text" name="remoteAccount" placeholder="https://yoursite.social/@yourname" autofocus autocomplete="url"/>

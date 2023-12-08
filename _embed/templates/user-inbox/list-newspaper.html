@@ -2,7 +2,7 @@
 {{- $message := index . 1 -}}
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 
-<div class="flex-row space-below" style="justify-content:space-between;" hx-push-url="true">
+<div class="flex-row margin-bottom" style="justify-content:space-between;" hx-push-url="true">
 
 	<div style="width:160px; margin-right:16px; flex-grow:0; flex-shrink:0">
 		<div style="width:160px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
@@ -33,7 +33,6 @@
 			{{- end -}}
 		</div>
 
-		{{- template "statistics" $stream.Statistics -}}
 	</div>
  
 </div>

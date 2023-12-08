@@ -5,7 +5,7 @@
 	{{- end -}}
 
 	{{- if ne .Summary "" -}}
-		<div class="space-below">{{.Summary}}</div>
+		<div class="margin-bottom">{{.Summary}}</div>
 	{{- end -}}
 
 	<div id="menu-bar">
@@ -35,7 +35,7 @@
 
 	<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" style="width:100%;"></div>
 	{{- range $children -}}
-	<div class="card padding-sm space-below">
+	<div class="card padding-sm margin-bottom">
 		{{- .GetContent -}}
 	</div>
 	{{- end -}}

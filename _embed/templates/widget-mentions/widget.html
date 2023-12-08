@@ -1,8 +1,8 @@
 {{ $mentions := .Mentions}}
 
 {{- if gt (len $mentions) 0 -}}
-	<div class="widget mentions space-above">
-		<div class="text-lg bold space-below">Mentions</div>
+	<div class="widget mentions margin-top">
+		<div class="text-lg bold margin-bottom">Mentions</div>
 		{{- range .Mentions -}}
 			<div class="flex-row" script="on click go to url '{{.Origin.URL}}' in new window" role="link">
 				<div style="width:24px;">

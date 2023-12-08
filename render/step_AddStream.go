@@ -157,7 +157,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
 			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "margin-right-md").EndBracket()
 
-			b.Div().Class("text-lg", "vertical-space-none").EndBracket()
+			b.Div().Class("text-lg", "margin-vertical-none").EndBracket()
 			if selectedTemplateID == template.Value {
 				iconService.Write(template.Icon+"-fill", b)
 			} else {
@@ -165,7 +165,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 			}
 			b.Close() // DIV
 
-			b.Div().Class("vertical-space-none", "text-sm").InnerText(template.Label).Close()
+			b.Div().Class("margin-vertical-none", "text-sm").InnerText(template.Label).Close()
 
 			b.Close() // A
 
@@ -226,7 +226,7 @@ func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
 
 	b.H2().InnerText(step.Title).Close()
 
-	b.Table().Class("table space-below")
+	b.Table().Class("table margin-bottom")
 
 	for _, template := range templates {
 		b.TR().Role("link").Data("hx-post", renderer.URL()+"?templateId="+template.Value)

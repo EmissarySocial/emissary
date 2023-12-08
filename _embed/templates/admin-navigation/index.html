@@ -12,12 +12,12 @@
     {{ $navigation := .Navigation}}
     {{- if not $navigation.IsEmpty -}}
 
-        <div class="space-below text-sm">
+        <div class="margin-bottom text-sm">
             <button hx-get="/admin/navigation/add" class="primary">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
         </div>
 
 
-        <form class="sortable space-below" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+        <form class="sortable margin-bottom" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
             {{- range $navigation -}}
                 <div class="draggable">
                     <input type="hidden" name="keys" value="{{.StreamID}}">
@@ -31,7 +31,7 @@
             {{- end -}}
         </form>
 
-        <div class="text text-sm space-below">
+        <div class="text text-sm margin-bottom">
             <i>Drag and Drop Items to Sort.</i>
         </div>
 

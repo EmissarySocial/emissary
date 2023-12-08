@@ -18,8 +18,8 @@
 				<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
 					<div class="card align-center">
 						<div class="text-3xl">{{icon .Icon}}</div>
-						<div class="space-below text-lg bold">{{.Label}}</div>
-						<div class="space-below">
+						<div class="margin-bottom text-lg bold">{{.Label}}</div>
+						<div class="margin-bottom">
 							{{- if $client.Active -}}
 								<a class="button success" hx-get="/admin/connections/edit/provider={{.Value}}">{{icon "check"}} Enabled</a>
 							{{- else -}}
@@ -34,8 +34,8 @@
 				<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
 					<div class="card align-center">
 						<div class="text-3xl">{{icon .Icon}}</div>
-						<div class="space-below text-lg bold">{{.Label}}</div>
-						<div class="space-below">
+						<div class="margin-bottom text-lg bold">{{.Label}}</div>
+						<div class="margin-bottom">
 							{{- if $client.Active -}}
 								<a class="button success" hx-get="/admin/connections/edit?provider={{.Value}}">{{icon "check"}} Enabled</a>
 							{{- else -}}

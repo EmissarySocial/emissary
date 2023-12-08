@@ -2,7 +2,7 @@
 {{- $actor := $object.AttributedTo.Load -}}
 
 <hr>
-<div class="space-below">
+<div class="margin-bottom">
 	<div class="flex-row">
 		<div style="width:32px; height:32px; margin-right:8px;">
 			{{- if $actor.Icon.NotNil -}}
@@ -22,11 +22,11 @@
 			</div>
 
 			{{- if ne "" $object.Name -}}
-				<h1 class="space-above">{{$object.Name}}</h1>
+				<h1 class="margin-top">{{$object.Name}}</h1>
 			{{- end -}}
 
 			{{- if $object.Image.NotNil -}}
-				<div class="space-above space-below"><img src="{{$object.Image.URL}}" style="width:100%;"></div>
+				<div class="margin-top margin-bottom"><img src="{{$object.Image.URL}}" style="width:100%;"></div>
 			{{- end -}}
 		
 			<div>{{$object.Content | html}}</div>

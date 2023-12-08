@@ -12,7 +12,7 @@
 					<button hx-get="/{{.StreamID}}/edit">Edit</button>
 				</div>
 			{{- end -}}
-			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry space-below">
+			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry margin-bottom">
 				<div class="flex-shrink-0" style="width:80px;">
 					<img src="{{.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
 				</div>

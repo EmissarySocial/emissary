@@ -122,11 +122,11 @@ h3.space-below {
 
 
 .flex-shrink-0 {
-    flex-shrink:0;
+    flex-shrink: 0;
 }
 
 .flex-shrink-1 {
-    flex-shrink:1;
+    flex-shrink: 1;
 }
 
 .flex-grow-0 {
@@ -134,44 +134,72 @@ h3.space-below {
 }
 
 .flex-grow-1 {
-    flex-grow:1;
+    flex-grow: 1;
 }
 
 .width-100 {
-    width:100%;
+    width: 100%;
 }
 
 /******************************************
  * Margin Spacing
  ******************************************/
 
-.margin-top-bottom-none {
-    margin-top:0px!important;
-    margin-bottom:0px!important;
+.margin-vertical-none {
+    margin-top: 0px!important;
+    margin-bottom: 0px!important;
 }
 
-.margin-top-bottom-xs {
+.margin-vertical-xs {
     margin-top: calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
-.margin-top-bottom-sm {
+.margin-vertical-sm {
     margin-top: var(--rhythm);
     margin-bottom: var(--rhythm);
 }
 
-.margin-top-bottom-md {
+.margin-vertical,
+.margin-vertical-md {
     margin-top: calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
-.margin-top-bottom-lg {
+.margin-vertical-lg {
     margin-top: calc(var(--rhythm) * 3);
     margin-bottom: calc(var(--rhythm) * 3);
 }
 
+.margin-horizontal-none {
+    margin-left:0px!important;
+    margin-right:0px!important;
+}
+
+.margin-horizontal-xs {
+    margin-left: calc(var(--rhythm) * 2);
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-horizontal-sm {
+    margin-left: var(--rhythm);
+    margin-right: var(--rhythm);
+}
+
+.margin-horizontal,
+.margin-horizontal-md {
+    margin-left: calc(var(--rhythm) * 2);
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-horizontal-lg {
+    margin-left: calc(var(--rhythm) * 3);
+    margin-right: calc(var(--rhythm) * 3);
+}
+
+
 .margin-top-none {
-    margin-top:0px!important;
+    margin-top: 0px!important;
 }
 .margin-top-xs {
     margin-top: calc(var(--rhythm) * 2);
@@ -181,6 +209,7 @@ h3.space-below {
     margin-top: var(--rhythm);
 }
 
+.margin-top,
 .margin-top-md {
     margin-top: calc(var(--rhythm) * 2);
 }
@@ -201,6 +230,7 @@ h3.space-below {
     margin-bottom: var(--rhythm);
 }
 
+.margin-bottom,
 .margin-bottom-md {
     margin-bottom: calc(var(--rhythm) * 2);
 }
@@ -221,6 +251,7 @@ h3.space-below {
     margin-left: var(--rhythm);
 }
 
+.margin-left,
 .margin-left-md {
     margin-left: calc(var(--rhythm) * 2);
 }
@@ -241,6 +272,7 @@ h3.space-below {
     margin-right: var(--rhythm);
 }
 
+.magin-right,
 .margin-right-md {
     margin-right: calc(var(--rhythm) * 2);
 }
@@ -249,33 +281,9 @@ h3.space-below {
     margin-right: calc(var(--rhythm) * 3);
 }
 
-.vertical-space-none {
-    margin-top:0px!important;
-    margin-bottom:0px!important;
-}
-
-.horizontal-space-none {
-    margin-left:0px!important;
-    margin-right:0px!important;
-}
-
-.space-above,
-.space-before {
-    margin-top:1.5em;
-}
-
-.space-below,
-.space-after {
-    margin-bottom:1.5em;
-}
-
-.space-left {
-    margin-left:1.5em;
-}
-
-.space-right {
-    margin-right:1.5em;
-}
+/******************************************
+ * Padding Spacing
+ ******************************************/
 
 .padding-xs {
     padding:calc(var(--rhythm) * 0.5);
@@ -292,6 +300,10 @@ h3.space-below {
 .padding-lg {
     padding:calc(var(--rhythm) * 3);
 }
+
+/******************************************
+ * Display Styles
+ ******************************************/
 
 .block {
     display:block;

@@ -24,15 +24,15 @@
 
 		<div class="uploader" script="install DropToUpload(url:'/{{.Token}}/attachments', success:'/{{.Token}}')">
 		
-			<div class="space-above space-below">
+			<div class="margin-top margin-bottom">
 				<div class="gray40" style="font-size:100px;">{{icon "upload"}}</div>
 			</div>
-			<h2 class="space-below">Drag Files Here to Upload</h2>
+			<h2 class="margin-bottom">Drag Files Here to Upload</h2>
 			<label for="manual-upload" class="button primary">Or Click to Select from Your Device</label>
 			<form hx-post="/{{.Token}}/attachments" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" style="opacity:0;">
 				<input type="file" id="manual-upload" name="file"/>
 			</form>
-			<div class="space-below"></div>
+			<div class="margin-bottom"></div>
 
 		</div>
 

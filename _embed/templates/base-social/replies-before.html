@@ -3,7 +3,7 @@
 {{- $replies := .RepliesBefore $published $pageSize -}}
 
 {{- if eq $replies.Length $pageSize -}}
-	<div class="space-below" role="button" hx-get="{{.Path}}?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	<div class="margin-bottom" role="button" hx-get="{{.Path}}?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		<span class="button text-xs">Show Previous Replies</span>
 	</div>
 {{- end -}}

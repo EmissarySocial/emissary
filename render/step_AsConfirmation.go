@@ -19,7 +19,7 @@ func (step StepAsConfirmation) Get(renderer Renderer, buffer io.Writer) Pipeline
 	// Modal Content
 	b := html.New()
 	b.H1().InnerText(step.Title).Close()
-	b.Div().Class("space-below").InnerText(step.Message).Close()
+	b.Div().Class("margin-bottom").InnerText(step.Message).Close()
 
 	b.Div()
 	b.Button().Class("primary").Data("hx-post", renderer.URL()).Data("hx-swap", "none").InnerText(step.Submit).Close()

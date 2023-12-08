@@ -17,9 +17,9 @@
 		hx-swap="outerHTML"
 		hx-push-url="false"
 		role="button"
-		class="turboclick space-below">
+		class="turboclick margin-bottom">
 		<button class="text-xs">&uarr; Older than {{ $firstMessage.ReadDate | longDate}}</button>
-		<div style="border-top:solid 2px var(--gray30);"></div>
+		<div style="border-top:solid 3px var(--gray30);"></div>
 	</div>
 
 	{{- range $index, $message := $inbox -}}

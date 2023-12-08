@@ -21,13 +21,13 @@
 
 	<div class="app-content">
 
-		<div class="space-below">
+		<div class="margin-bottom">
 			<b>Posts</b> &middot;
 			<a hx-get="/@{{.UserID}}/liked" class="turboclick">Liked</a>
 		</div>
 
 		{{if .IsMyself -}}
-			<div class="flex-row space-below">
+			<div class="flex-row margin-bottom">
 				<div class="flex-shrink-0" style="width:80px;">
 					<img src="/@{{.UserID}}/avatar" class="circle-64">
 				</div>

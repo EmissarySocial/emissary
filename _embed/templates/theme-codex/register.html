@@ -20,7 +20,7 @@
 							<h1>{{.SignupForm.Title}}</h1>
 
                             {{- if ne "" .SignupForm.Message -}}
-                                <div class="space-below">{{.SignupForm.Message}}</div>
+                                <div class="margin-bottom">{{.SignupForm.Message}}</div>
                             {{- end -}}
 
 							<fieldset script="install eventValidator(name:'displayName')">
@@ -35,13 +35,13 @@
 								<div role="note" class="message text-sm gray40">How you'll sign in.  Must be unique.</div>
 							</fieldset>
 
-							<fieldset class="space-below" script="install eventValidator(name:'password')">
+							<fieldset class="margin-bottom" script="install eventValidator(name:'password')">
 								<label for="password">Password</label>
 								<input type="password" name="password" id="password" required="true" minlength="12" maxlength="100" autocomplete="off">
 								<div role="note" class="text-sm gray40">12 or more characters.  Don't reuse passwords.</div>
 							</fieldset>
 
-							<div class="space-above">
+							<div class="margin-top">
 								<button id="submitButton" type="submit" class="primary">
 									<span class="htmx-request-show">
 										{{icon "loading"}} Creating Your Profile...
@@ -50,7 +50,7 @@
 								</button>
 							</div>
 
-							<div class="space-above">
+							<div class="margin-top">
 								Already have a profile?
 								<a href="/signin">Sign In</a>
 							</div>

@@ -3,9 +3,9 @@
 	<link rel="stylesheet" href="/.templates/user-outbox/stylesheet">
 	<link rel="canonical" class="u-url" href="{{.ProfileURL}}"></link>
 
-	<div class="space-below" style="position:relative;">
+	<div class="margin-bottom" style="position:relative;">
 		{{- if .IsMyself -}}
-			<button type="button" hx-get="/@me/photo" class="text-xs vertical-space-none pos-absolute" style="top:0px; right:0px;">Edit</button>
+			<button type="button" hx-get="/@me/photo" class="text-xs margin-vertical-none pos-absolute" style="top:0px; right:0px;">Edit</button>
 		{{- end -}}
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
@@ -17,7 +17,7 @@
 		</div>
 	</div>
 
-	<div class="space-below">
+	<div class="margin-bottom">
 		{{- if .IsMyself -}}
 			<button hx-get="/@me/edit" class="text-xs float-right">Edit</button>
 		{{- end -}}
@@ -25,17 +25,17 @@
 		<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
 		<div class="text-sm gray50 ellipsis" style="margin:0px;">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
-			<div class="space-above">
+			<div class="margin-top">
 				<button type="button" class="primary width-100" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
 
-		<div class="space-above">
+		<div class="margin-top">
 			<span class="p-note">{{.StatusMessage}}</span>
 		</div>
 
 		{{- if ne "" .Location -}}
-			<div class="space-above p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
+			<div class="margin-top p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
 		{{- end -}}
 
 		{{- if .IsMyself -}}
@@ -44,7 +44,7 @@
 
 	</div>
 
-	<div class="space-above align-left">
+	<div class="margin-top align-left">
 
 		{{- $links := .Links -}}
 
@@ -60,7 +60,7 @@
 			{{- if .IsMyself  -}}
 				<hr>
 				<div class="float-right">
-					<button type="button" hx-get="/@me/links" class="text-xs vertical-space-none">Edit</button>
+					<button type="button" hx-get="/@me/links" class="text-xs margin-vertical-none">Edit</button>
 				</div>
 			{{- end -}}
 

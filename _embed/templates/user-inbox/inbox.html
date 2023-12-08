@@ -22,7 +22,7 @@
 				{{- $following := .FollowingByToken $followingID -}}
 				<div style="flex-grow:1;">
 					<div class="bold" style="margin-top:8px;"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
-					<div class="flex-row space-below" style="margin-top:16px;">
+					<div class="flex-row margin-bottom" style="margin-top:16px;">
 						<div>
 							<img src="{{$following.ImageURL}}" class="circle-48">
 						</div>

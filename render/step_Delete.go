@@ -21,7 +21,7 @@ func (step StepDelete) Get(renderer Renderer, buffer io.Writer) PipelineBehavior
 	b := html.New()
 
 	b.H1().InnerText(executeTemplate(step.Title, renderer)).Close()
-	b.Div().Class("space-below").InnerText(executeTemplate(step.Message, renderer)).Close()
+	b.Div().Class("margin-bottom").InnerText(executeTemplate(step.Message, renderer)).Close()
 
 	b.Button().Class("warning").
 		Attr("hx-post", renderer.URL()).

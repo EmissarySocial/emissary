@@ -31,7 +31,7 @@
 		</div>
 
 		{{- if ne "" $stream.Name -}}
-			<div class="bold text-black space-above">{{$stream.Name}}</div>
+			<div class="bold text-black margin-top">{{$stream.Name}}</div>
 		{{- end -}}
 
 		<div>
@@ -43,7 +43,7 @@
 		</div>
 
 		{{- if ne $stream.Image.URL "" -}}
-			<div class="space-above" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
+			<div class="margin-top" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
 				<img src="{{$stream.Image.URL}}" loading="lazy" style="object-fit:cover;"/>
 			</div>
 		{{- end -}}
