@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/fs"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -16,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/rs/zerolog/log"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
