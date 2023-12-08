@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"text/template"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
@@ -9,16 +10,18 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
+	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type StepAddStream struct {
-	Title         string      // Title to use on the create modal. Defaults to "Add a Stream"
-	Location      string      // Options are: "top", "child", "outbox".  Defaults to "child".
-	Templates     []string    // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
-	AsEmbed       bool        // If TRUE, then use embed the "create" action of the selected template into the current page.
-	AsReply       bool        // If TRUE, then the new stream will be created as a reply to the current model object (only works with DocumentLinkers: Streams and Messages).
-	WithNewStream []step.Step // List of steps to take on the newly created child record on POST.
+	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
+	Location      string                        // Options are: "top", "child", "outbox".  Defaults to "child".
+	Templates     []string                      // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	AsEmbed       bool                          // If TRUE, then use embed the "create" action of the selected template into the current page.
+	WithData      map[string]*template.Template // Map of template values to pre-populate into the new Stream.
+	WithNewStream []step.Step                   // List of steps to take on the newly created child record on POST.
 }
 
 // Get renders the HTML for this step - either a modal template selector, or the embedded edit form
@@ -72,17 +75,14 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 		return Halt().WithError(derp.Wrap(err, location, "Error getting location for new stream"))
 	}
 
-	// If this is a reply, then try to get a DocumentLink for the object we're replying to.
-	if step.AsReply {
-		if documentLinker, ok := renderer.object().(DocumentLinker); ok {
-			newStream.InReplyTo = documentLinker.DocumentLink().URL
-		} else {
-			return Halt().WithError(derp.NewInternalError(location, "Replies can only be made to Stream and Message (DocumentLinker) objects."))
-		}
+	// Apply custom stream data from the "with-data" map
+	if err := step.setStreamData(renderer, &newStream); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error setting stream data"))
 	}
 
 	// Create a renderer for the new Stream
 	newRenderer, err := NewStream(factory, renderer.request(), renderer.response(), newTemplate, &newStream, "view")
+	newRenderer.dataMap = renderer.DataMap()
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating renderer", newStream))
@@ -125,7 +125,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 // getEmbed renders the HTML for an embedded form
 func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
-	const location = "render.StepAddStream.Get"
+	const location = "render.StepAddStream.getEmbed"
 
 	// Get prerequisites
 	factory := renderer.factory()
@@ -186,6 +186,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
 	// Create a new child renderer
 	childRenderer, err := NewStream(factory, renderer.request(), renderer.response(), template, &child, "create")
+	childRenderer.dataMap = renderer.DataMap()
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating new child stream renderer")
@@ -321,6 +322,29 @@ func (step StepAddStream) setLocation(renderer Renderer, template *model.Templat
 
 		return nil
 	}
+}
+
+func (step StepAddStream) setStreamData(renderer Renderer, stream *model.Stream) error {
+
+	if len(step.WithData) == 0 {
+		return nil
+	}
+
+	s := schema.New(model.StreamSchema())
+
+	spew.Dump("stepAddStream.setStreamData -----------", stream)
+
+	for key, valueTemplate := range step.WithData {
+		value := executeTemplate(valueTemplate, renderer)
+
+		spew.Dump(key, value)
+
+		if err := s.Set(stream, key, value); err != nil {
+			return derp.Wrap(err, "render.StepAddStream.setStreamData", "Error setting stream data", key, value)
+		}
+	}
+
+	return nil
 }
 
 func (step StepAddStream) getBestTemplate(templates []form.LookupCode, templateID string) string {

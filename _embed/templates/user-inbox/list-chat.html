@@ -1,42 +1,54 @@
-<div class="flex-row" style="margin-bottom:8px;">
-	<div style="width:64px;"></div>
-	<div>
-		{{- template "origin" .Origin -}}
+{{- $inboxRenderer := index . 0 -}}
+{{- $message := index . 1 -}}
+{{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+
+{{- if ne "DIRECT" $message.Origin.Type -}}
+	<div class="flex-row" style="margin-bottom:8px;">
+		<div style="width:64px;"></div>
+		<div>
+			{{- template "origin" $message.Origin -}}
+		</div>
 	</div>
-</div>
+{{- end -}}
 
 <div class="flex-row">
 
-	<div style="width:64px; flex-grow:0; flex-shrink:0;">
-		{{- if ne "" .AttributedTo.ImageURL -}}
-			<img src="{{.AttributedTo.ImageURL}}" class="circle" style="width:64px;">
+	<div class="flex-grow-0 flex-shrink-0" style="width:64px">
+		{{- if $stream.AttributedTo.Image.NotNil -}}
+			<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-64">
+		{{- else -}}
+			<div class="circle-64"></div>
 		{{- end -}}
 	</div>
 
-	<div style="flex-grow:1;">
+	<div class="flex-grow-1">
 
 		<div class="ellipsis">
-			<span class="bold black">{{.AttributedTo.Name}}</span>
+			<span class="bold black">{{$stream.AttributedTo.Name}}</span>
 			<span class="text-gray nowrap">
-				{{ .PublishDate | tinyDate }}
+				{{ $stream.Published | tinyDate }}
 			</span>
 		</div>
 
-		{{- if ne "" .Label -}}
-			<div class="bold text-black space-above">{{.Label}}</div>
+		{{- if ne "" $stream.Name -}}
+			<div class="bold text-black space-above">{{$stream.Name}}</div>
 		{{- end -}}
 
 		<div>
-			{{- .ContentOrSummary | htmlMinimal -}}
+			{{- if $stream.HasContent -}}
+				{{- $stream.Content | htmlMinimal -}}
+			{{- else if $stream.HasSummary -}}
+				{{- $stream.Summary | htmlMinimal -}}
+			{{- end -}}
 		</div>
 
-		{{- if not .HasContentImage -}}
-			{{- if ne .ImageURL "" -}}
-				<div class="space-above" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
-					<img src="{{.ImageURL}}" loading="lazy" style="object-fit:cover;"/>
-				</div>
-			{{- end -}}
+		{{- if ne $stream.Image.URL "" -}}
+			<div class="space-above" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
+				<img src="{{$stream.Image.URL}}" loading="lazy" style="object-fit:cover;"/>
+			</div>
 		{{- end -}}
+
+		{{- template "statistics" $stream.Statistics -}}
 
 	</div>
 

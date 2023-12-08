@@ -162,6 +162,8 @@ func (service Icons) Get(name string) string {
 		return service.get("reply")
 	case "reply-fill":
 		return service.get("reply-fill")
+	case "repost":
+		return service.get("repeat")
 	case "rocket":
 		return service.get("rocket-takeoff")
 	case "rocket-fill":

@@ -409,28 +409,6 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 	return result, nil
 }
 
-// Responses generates a "Responses" renderer and passes it to the (hard-coded named) "responses" template.
-// A default file is provided in the "base-social" template but can be overridden by other installed packages.
-func (w Inbox) Responses(message model.Message) template.HTML {
-
-	// Collect values for Responses renderer
-	userID := w.authorization().UserID
-	internalURL := "/@me/messages/" + message.MessageID.Hex()
-	responseService := w.factory().Response()
-
-	renderer := NewResponses(userID, internalURL, message.URL, responseService)
-
-	// Render the responses widget
-	var buffer bytes.Buffer
-
-	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
-		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
-	}
-
-	// Celebrate with Triumph.
-	return template.HTML(buffer.String())
-}
-
 func (w Inbox) AmFollowing(uri string) model.Following {
 
 	// Get following service and new following record

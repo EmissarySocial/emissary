@@ -1,4 +1,4 @@
-{{- $activity := .ActivityStream -}}
+{{- $stream := .ActivityStream -}}
 
 <div id="modal-body" script="install message(messageId:'{{.MessageID}}')">
 
@@ -26,101 +26,108 @@
 	</div>
 
 	{{- if .Origin.NotEmpty -}}
-
-		<div>
 	
-			{{- if eq "DIRECT" .Origin.Type -}}
+		{{- if eq "DIRECT" .Origin.Type -}}
+
+			<div>
 				<a class="flex-row flex-align-center"
 					href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
 					
 					{{- if ne "" .Origin.ImageURL -}}
-						<img src="{{.Origin.ImageURL}}" class="circle" style="height:48px;"/>
+						<img src="{{.Origin.ImageURL}}" class="circle-48">
 					{{- end -}}
 					<div>
 						<div class="text-plain text-lg bold vertical-space-none">{{.Origin.Label}}</div>
 						<div class="text-gray text-sm vertical-space-none">{{.Origin.URL}}</div>
 					</div>
 				</a>
+			</div>
 
-			{{- else if eq "LIKE" .Origin.Type -}}
-				<span class="bold text-gray italics">
+		{{- else -}} 
+		
+			<div class="bold text-sm text-gray italics">
+				{{- if eq "LIKE" .Origin.Type -}}
 					{{icon "thumbs-up-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a> 
-				</span>
-				Liked this
+					Liked this
 	
-			{{- else if eq	"DISLIKE" .Origin.Type -}}
-				<span class="bold text-gray italics">
+				{{- else if eq	"DISLIKE" .Origin.Type -}}
 					{{icon "thumbs-down-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Disliked
-				</span>
-	
-			{{- else if eq "ANNOUNCE" .Origin.Type -}}
-				<span class="bold text-gray italics">
+		
+				{{- else if eq "ANNOUNCE" .Origin.Type -}}
 					{{icon "rocket-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Boosted this
-				</span>
-	
-			{{- else if eq "REPLY" .Origin.Type -}}
-				<span class="bold text-gray italics">
+		
+				{{- else if eq "REPLY" .Origin.Type -}}
 					{{icon "reply-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">{{.Origin.Label}}</a>
 					Replied to this
-				</span>
+
+				{{- end -}}
+			</div>
+
+			{{- if $stream.AttributedTo.NotNil -}}
+				<div>
+					<a class="flex-row flex-align-center text-plain text-lg" href="{{.AttributedTo.ProfileURL}}">
+						{{- if $stream.AttributedTo.Image.NotNil -}}
+							<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-48">
+						{{- else -}}
+							<div class="circle-48 inline-block"></div>
+						{{- end -}}
+						<div>
+							<div class="text-plain text-lg bold vertical-space-none">{{$stream.AttributedTo.Name}}</div>
+							<div class="text-gray text-sm vertical-space-none">{{$stream.AttributedTo.ID}}</div>
+						</div>
+					</a>
+				</div>
 			{{- end -}}
-	
-		</div>
-	
+
+		{{- end -}}
+
 	{{- end -}}
-	
-	{{- if ne "DIRECT" .Origin.Type -}}
-		<a class="flex-row flex-align-center text-plain text-lg" href="{{.AttributedTo.ProfileURL}}">
-			{{- if ne "" .AttributedTo.ImageURL -}}
-				<img src="{{.AttributedTo.ImageURL}}" class="circle" style="height:48px;"/>
-			{{- end -}}
-			<span>{{.AttributedTo.Name}}</span>
-		</a>
-	{{- end -}}
-		
-	{{- if ne "" $activity.Name -}}
-		<h1><a href="{{$activity.URL}}" target="_blank" class="text-black">{{$activity.Name}}</a></h1>
+			
+	{{- if ne "" $stream.Name -}}
+		<h1><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 	{{- end -}}
 
 	<div class="content space-above space-below">
-		{{- $image := $activity.Image -}}
+		{{- $image := $stream.Image -}}
 		{{- if $image.NotNil -}}
 			<div class="space-below">
-				<a href="{{$activity.URL}}" target="_blank"><img src="{{$image.URL}}" style="width:100%;
+				<a href="{{$stream.URL}}" target="_blank"><img src="{{$image.URL}}" style="width:100%;
 				{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
 			</div>
 		{{- end -}}
 
 		<div class="text-gray flex-row">
-			<div class="bold">{{ $activity.Published | longDate -}}</div>
+			<div class="bold">{{ $stream.Published | longDate -}}</div>
 		</div>	
 
-		{{- if $activity.HasContent -}}
-			<div>{{- $activity.Content | html -}}</div>
-		{{- else if $activity.HasSummary -}}
-			<div>{{- $activity.Summary -}}</div>
+		{{- if $stream.HasContent -}}
+			<div>{{- $stream.Content | html -}}</div>
+		{{- else if $stream.HasSummary -}}
+			<div>{{- $stream.Summary -}}</div>
 		{{- end -}}
 
 	</div>
 
 	<div id="replies" class="space-below"> 
 
-		<div hx-get="/@me/messages/{{.MessageID}}/replies" 
-			hx-target="this" 
-			hx-push-url="false" 
-			hx-trigger="htmx:afterProcessNode"
-			hx-swap="outerHTML">
-		</div>
+		{{- if gt $stream.Statistics.Replies 0 -}}
+			<div hx-get="/@me/messages/{{.MessageID}}/replies" 
+				hx-target="this" 
+				hx-push-url="false" 
+				hx-trigger="htmx:afterProcessNode"
+				hx-swap="outerHTML">
+			</div>
+		{{- end -}}
 	</div>
 
 </div>
 
-<div id="modal-footer" hx-get="/@me/messages/{{.MessageID}}/replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="outerHTML" hx-target="this">
+<div id="modal-footer">
 	{{.View "reply"}}
 </div>

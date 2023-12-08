@@ -13,9 +13,9 @@
 			<tr role="button">
 				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" style="width:32px;">
 					{{- if eq "" .Actor.ImageURL -}}
-						<div class="circle" style="width:24px;"></div>
+						<div class="circle-24"></div>
 					{{- else -}}
-						<img src="{{.Actor.ImageURL}}" class="circle" style="width:24px;">
+						<img src="{{.Actor.ImageURL}}" class="circle-24">
 					{{- end -}}
 				</td>
 				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}">

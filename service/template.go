@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/fs"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -15,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 )
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
@@ -225,12 +227,12 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, template.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Error loading Template", templateID)
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Template", templateID))
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(template.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Error loading Bundles", templateID)
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Bundles", templateID))
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

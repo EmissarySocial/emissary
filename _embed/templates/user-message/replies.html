@@ -15,7 +15,7 @@
 	{{- $actor := $object.AttributedTo.Load -}}
 
 	<hr>
-	<div class="space-below">
+	<div class="space-below hover-trigger">
 		<div class="flex-row">
 			<div style="width:32px; height:32px; margin-right:8px;">
 				{{- if $actor.Icon.NotNil -}}
@@ -42,7 +42,7 @@
 			
 				<div>{{$object.Content | html}}</div>
 			</div>
-			<div class="text-align-right text-xs nowrap">
+			<div class="text-align-right text-xs nowrap hover-reveal">
 				<button>Follow</button>
 				<button>Block</button>
 			</div>

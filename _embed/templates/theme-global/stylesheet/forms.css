@@ -1,6 +1,6 @@
 /* Input Elements */
 
-input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input {
+input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input, [role=input] {
 	border: solid 1px var(--input-border);
 	background-color: var(--input-background);
 	color: var(--input-color);
@@ -30,28 +30,24 @@ select {
 	appearance: none;
 }
 
-input:focus,
-select:focus,
-textarea:focus,
-.input:focus {
-	outline: unset;
-}
-
 input:invalid,
 input.invalid,
-.input.invalid {
+.input.invalid,
+[role=input].invalid {
 	border: solid 1px var(--input-border-invalid);
 	background-color: var(--input-background-invalid);
 }
 
 input:invalid:focus,
 input.invalid:focus,
-.input.invalid:focus {
+.input.invalid:focus,
+[role=input].invalid:focus {
 	outline: unset;
 	--outline-color: var(--red70) ;
 }
 
-input:last-child {
+input:last-child,
+[role=input]:last-child {
 	margin-right:auto;
 }
 
@@ -60,6 +56,17 @@ input[type=radio] {
 	margin-right:5px;
 }
 
+[role=input]:focus-visible,
+[role=input]:focus,
+[role=input]:has(*:focus, *:focus-visible) {
+	outline-color: -webkit-focus-ring-color;
+	outline-style: auto;
+}
+
+[role=input] :focus,
+[role=input] :focus-visible {
+	outline:unset;
+}
 
 [role=table] input {
 	border: none;
@@ -420,12 +427,14 @@ button[disabled].barberpole
 
 .htmx-request .htmx-request-hide,
 .htmx-request-show {
+	display:none;
 	opacity:0;
 	position:absolute;
 	z-index:-1;
 }
 
 .htmx-request .htmx-request-show {
+	display:initial;
 	opacity:1;
 	position:initial;
 }

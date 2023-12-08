@@ -240,13 +240,8 @@ func (w Message) PublishDate() int64 {
 
 func (w Message) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	maxDate := convert.Int64(dateString)
-
-	if maxDate == 0 {
-		maxDate = math.MaxInt64
-	}
-
 	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt)
 	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._message.URL, maxDate, maxRows)
 
 	return result.SliceOfDocuments()

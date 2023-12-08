@@ -302,6 +302,40 @@
 			"roles":["self"],
 			"step":"view-html", 
 			"file":"blocks"
+		},
+		"profile": {
+			"roles":["self"],
+			"step":"view-html"
+		},
+
+		"message": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"message-delete": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+					{"step":"trigger-event", "event":"refreshPage"}
+				]}
+			]
+		},
+		"reply":{
+			"roles":["self"],
+			"steps":[
+				{"step":"set-query-param", "new-stream-label":"Reply to This Post", "postTo":"/@me/messages/{{.MessageID}}/reply"},
+				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
+				{"step":"trigger-event", "event":"refreshReplies"}
+			]
+		},
+		"replies": {
+			"roles":["self"],
+			"step":"view-html"
 		}
 	}
 }	

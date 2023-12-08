@@ -1,0 +1,67 @@
+{
+	"templateId":"outbox-reply",
+	"templateRole":"outbox-reply",
+	"socialRole":"Note",
+	"extends":["outbox-message"],
+	"model":"stream",
+	"icon":"message",
+	"label":"Reply",
+	"description":"Reply to a post",
+	"sort": 0,
+	"containedBy": ["outbox"],
+	"schema": {
+		"type":"object",
+		"properties": {
+			"summary": {"type":"string", "format":"html"},
+			"imageUrl": {"type":"string", "format":"url"},
+			"inReplyTo": {"type":"string", "format":"url"}
+		}
+	},
+	"states": {
+		"visible": {
+			"label":"Visible",
+			"description":"Comment is publicly visible"
+		}
+	},
+	"roles": {
+		"self": {
+			"label":"Myself",
+			"decription":"Outbox messages can only be sent by the current user."
+		}
+	},
+	"actions": {
+		"create":{
+			"steps": [
+				{"step":"edit-content", "file":"edit", "format":"HTML"},
+				{"step":"save"},
+				{"step":"publish"}
+			]
+		},
+		"view": {
+			"steps":[
+				{"step":"view-json"},
+				{"step":"view-html"}
+			]
+		},
+		"edit": {
+			"roles":["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"set-render-data", "postTo":"/{{.StreamID}}/edit"},
+					{"step":"edit-content", "file":"edit", "format":"HTML"},
+					{"step":"save"},
+					{"step":"publish"},
+					{"step":"refresh-page"}
+				]}
+			]
+		},
+		"delete": {
+			"roles":["self"],
+			"steps": [
+				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
+				{"step":"unpublish"},
+				{"step":"forward-to", "url":"/@{{.ParentID}}"}
+			]
+		}
+	}
+}

@@ -1,30 +1,34 @@
+{{- $inboxRenderer := index . 0 -}}
+{{- $message := index . 1 -}}
+{{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+
 <div class="space-below">
-	<h2 class="black ellipsis">{{.Label}}</h2>
+	<h2 class="black ellipsis">{{$stream.Name}}</h2>
 
-	{{- if .HasImage -}}
+	{{- if $stream.HasImage -}}
 		<div class="space-below" style="width:100%; max-width:800px;">
-			<img src="{{.ImageURL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
-		</div>
-
-		<div class="text-gray ellipsis-block" style="max-height:6em;">
-			{{- .SummaryOrContent | html -}}
-		</div>
-	{{- else -}}
-		<div class="text-gray ellipsis-block">
-			{{- .SummaryOrContent | html -}}
+			<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
 		</div>
 	{{- end -}}
+
+	<div>
+		{{- if $stream.HasSummary -}}
+			{{- $stream.Summary | htmlMinimal -}}
+		{{- else if $stream.HasContent -}}
+			{{- $stream.Content | htmlMinimal -}}
+		{{- end -}}
+	</div>
 
 
 	<div class="text-sm space-below flex-row">
 		<span class="ellipsis">
-			{{- icon .Origin.Icon }}
-			{{ .Origin.Label }} &middot;
-			{{ .AttributedTo.Name -}}
+			{{- icon $message.Origin.Icon }}
+			{{ $message.Origin.Label }} &middot;
+			{{ $stream.AttributedTo.Name -}}
 			&nbsp;&middot;
 		</span>
 		<span class="nowrap">
-			{{- .PublishDate | tinyDate -}}
+			{{- $stream.Published | tinyDate -}}
 		</span>
 	</div>
 

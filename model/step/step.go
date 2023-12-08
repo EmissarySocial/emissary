@@ -47,6 +47,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-header":
 		return NewSetHeader(stepInfo)
 
+	case "set-render-data":
+		return NewSetRenderData(stepInfo)
+
 	case "set-response":
 		return NewSetResponse(stepInfo)
 

@@ -30,7 +30,7 @@ type Common struct {
 	action         model.Action        // Action to be performed on the Template
 	actionID       string              // Token that identifies the action requested in the URL
 
-	requestData mapof.Any // Temporary data scope for this request
+	dataMap mapof.Any // Temporary data scope for this request
 
 	// Cached values, do not populate unless needed
 	domain model.Domain // This is a value because we expect to use it in every request.
@@ -60,8 +60,8 @@ func NewCommon(factory Factory, request *http.Request, response http.ResponseWri
 		_template:      template,
 		action:         action,
 		actionID:       actionID,
-		requestData:    mapof.NewAny(),
 		domain:         model.NewDomain(),
+		dataMap:        mapof.NewAny(),
 	}, nil
 }
 
@@ -192,8 +192,12 @@ func (w Common) NavigationID() string {
  * Request Data (Getters and Setters)
  **************************/
 
+func (w Common) DataMap() mapof.Any {
+	return w.dataMap
+}
+
 func (w Common) GetBool(name string) bool {
-	return w.requestData.GetBool(name)
+	return w.dataMap.GetBool(name)
 }
 
 func (w Common) GetContent() template.HTML {
@@ -201,27 +205,27 @@ func (w Common) GetContent() template.HTML {
 }
 
 func (w Common) GetFloat(name string) float64 {
-	return w.requestData.GetFloat(name)
+	return w.dataMap.GetFloat(name)
 }
 
 func (w Common) GetHTML(name string) template.HTML {
-	return template.HTML(w.requestData.GetString(name))
+	return template.HTML(w.dataMap.GetString(name))
 }
 
 func (w Common) GetInt(name string) int {
-	return w.requestData.GetInt(name)
+	return w.dataMap.GetInt(name)
 }
 
 func (w Common) GetInt64(name string) int64 {
-	return w.requestData.GetInt64(name)
+	return w.dataMap.GetInt64(name)
 }
 
 func (w Common) GetString(name string) string {
-	return w.requestData.GetString(name)
+	return w.dataMap.GetString(name)
 }
 
 func (w Common) SetBool(name string, value bool) {
-	w.requestData.SetBool(name, value)
+	w.dataMap.SetBool(name, value)
 }
 
 func (w Common) SetContent(value string) {
@@ -229,19 +233,19 @@ func (w Common) SetContent(value string) {
 }
 
 func (w Common) SetFloat(name string, value float64) {
-	w.requestData.SetFloat(name, value)
+	w.dataMap.SetFloat(name, value)
 }
 
 func (w Common) SetInt(name string, value int) {
-	w.requestData.SetInt(name, value)
+	w.dataMap.SetInt(name, value)
 }
 
 func (w Common) SetInt64(name string, value int64) {
-	w.requestData.SetInt64(name, value)
+	w.dataMap.SetInt64(name, value)
 }
 
 func (w Common) SetString(name string, value string) {
-	w.requestData.SetString(name, value)
+	w.dataMap.SetString(name, value)
 }
 
 /******************************************

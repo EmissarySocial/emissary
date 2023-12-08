@@ -1,0 +1,42 @@
+<!-- Arguments collected from renderer data -->
+{{- $postTo := .GetString "postTo" -}}
+
+<form id="outbox-message" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-message" data-script="
+	on htmx:configRequest(parameters)
+		set contentHtml to the first <[contenteditable=true]/> in me
+		set parameters['content'] to contentHtml.innerText
+
+	on htmx:afterRequest
+		set contentHtml to the first <[contenteditable=true]/> in me
+		set contentHtml.innerHTML to ''
+	">
+
+	{{- if not .IsNew -}}
+		<h1>Edit Post</h1>
+	{{- end -}}
+
+	<div role="input" class="flex-row">
+		<div contenteditable="true" tabIndex="0" class="flex-grow-1" data-script="
+			on keydown[key=='ArrowLeft']
+				halt the event's bubbling
+
+			on keydown[key=='ArrowRight']
+				halt the event's bubbling
+				
+			">{{.ContentHTML}}</div>
+
+		<div>
+			{{- if .IsNew -}}
+				<button type="submit" class="primary htmx-request-hide text-sm">Reply</button>
+				<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
+			{{- else -}}
+				<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
+				<button type="submit" class="primary htmx-request-hide">Edit Post</button>
+				<button type="button" class="primary htmx-request-show" disabled>Saving Changes...</button>
+				<button type="button" script="on click trigger closeModal">Cancel</button>
+			{{- end -}}
+		</div>
+
+	</div>
+
+</form>

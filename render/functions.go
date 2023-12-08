@@ -22,6 +22,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 	return template.FuncMap{
 
+		"array": func(values ...any) []any {
+			return values
+		},
+
 		"add": func(a any, b any) int {
 			return convert.Int(a) + convert.Int(b)
 		},

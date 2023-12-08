@@ -41,9 +41,13 @@
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Reply to This Post", "postTo":"/@me/messages/{{.MessageID}}/reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-				{"step":"trigger-event", "event":"refreshReplies"}
+				{"step":"set-render-data", "postTo":"/@me/messages/{{.MessageID}}/reply"},
+				{"step":"add-stream", "location":"outbox", "template":"outbox-reply", "as-embed":true, "with-data":{
+					"inReplyTo":"{{.URL}}"
+				}},
+				{"step": "set-header", "name":"hx-retarget", "value":"#replies"},
+				{"step": "set-header", "name":"hx-reswap", "value":"innerHTML"},
+				{"step":"view-html", "method":"post", "file":"replies"}
 			]
 		},
 		"replies":{"step":"view-html"},

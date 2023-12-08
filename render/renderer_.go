@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -41,6 +42,7 @@ type Renderer interface {
 
 	SetContent(string)
 	GetContent() template.HTML
+	DataMap() mapof.Any
 	GetBool(name string) bool
 	GetFloat(name string) float64
 	GetHTML(name string) template.HTML

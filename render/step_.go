@@ -95,6 +95,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetResponse:
 		return StepSetResponse(s)
 
+	case step.SetRenderData:
+		return StepSetRenderData(s)
+
 	case step.SetSimpleSharing:
 		return StepSetSimpleSharing(s)
 

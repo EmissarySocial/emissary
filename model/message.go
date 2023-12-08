@@ -31,7 +31,7 @@ type Message struct {
 	ContentHTML  string                     `json:"contentHtml"  bson:"contentHtml,omitempty"`  // HTML Content of the Message
 	Responses    ResponseSummary            `json:"responses"    bson:"responses,omitempty"`    // Summary counter of Responses to this Message
 	MyResponse   string                     `json:"myResponse"   bson:"myResponse,omitempty"`   // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
-	Muted        bool                       `json:"muted" bson:"muted,omitempty"`               // If TRUE, then do not display any more replies underneath this message.
+	Muted        bool                       `json:"muted"        bson:"muted,omitempty"`        // If TRUE, then do not display any more replies underneath this message.
 	ReadDate     int64                      `json:"readDate"     bson:"readDate"`               // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	PublishDate  int64                      `json:"publishDate"  bson:"publishDate,omitempty"`  // Unix timestamp of the date/time when this Message was published
 	Rank         int64                      `json:"rank"         bson:"rank"`                   // Sort rank for this message (publishDate * 1000 + sequence number)

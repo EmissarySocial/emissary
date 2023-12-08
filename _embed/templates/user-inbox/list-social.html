@@ -1,25 +1,36 @@
+{{- $inboxRenderer := index . 0 -}}
+{{- $message := index . 1 -}}
+{{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+
 <div class="ellipsis flex-row">
-	{{- if ne "" .AttributedTo.ImageURL -}}
-		<img src="{{.AttributedTo.ImageURL}}" class="circle" style="height:1.5em;">
+	{{- if $stream.AttributedTo.Image.NotNil -}}
+		<img src="{{$stream.AttributedTo.Image.URL}}" class="circle" style="height:1.5em;">
 	{{- end -}}
 
-	<span class="bold black">{{.AttributedTo.Name}}</span>
+	<span class="bold black">{{$stream.AttributedTo.Name}}</span>
 	<span class="text-gray nowrap" style="flex-grow:1">
-		{{ icon .Origin.Icon }}
-		{{ .PublishDate | tinyDate }}
+		{{ icon $message.Origin.Icon }}
+		{{ $stream.Published | tinyDate }}
 	</span>
 </div>
 
-{{- if ne "" .Label -}}
-	<div class="bold text-black space-above">{{.Label}}</div>
+{{- if ne "" $stream.Name -}}
+	<div class="bold text-black">{{$stream.Name}}</div>
 {{- end -}}
 
-<div class="space-above">
-	{{- .ContentOrSummary | htmlMinimal -}}
+<div>
+	{{- if $stream.HasContent -}}
+		{{- $stream.Content | htmlMinimal -}}
+	{{- else if $stream.HasSummary -}}
+		{{- $stream.Summary | htmlMinimal -}}
+	{{- end -}}
 </div>
 
-{{- if ne .ImageURL "" -}}
+{{- if $stream.Image.NotNil -}}
 	<div class="space-above" style="position:relative;">
-		<img src="{{.ImageURL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+		<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 	</div>
 {{- end -}}
+
+
+{{- template "statistics" $stream.Statistics -}}

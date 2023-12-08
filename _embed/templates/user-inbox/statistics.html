@@ -1,0 +1,20 @@
+<div>
+	<span style="margin-right:8px;">
+		{{icon "chat"}}
+		{{ if gt .Replies 0 -}}
+			{{.Replies}}
+		{{- end -}}
+	</span>
+	<span style="margin-right:8px;">
+		{{icon "thumbs-up"}}
+		{{ if gt .Likes 0 -}}
+			{{.Likes}}
+		{{- end -}}
+	</span>
+	<span style="margin-right:8px;">
+		{{icon "repost"}}
+		{{ if gt .Announces 0 -}}
+			{{.Announces}}
+		{{- end -}}
+	</span>
+</div>
