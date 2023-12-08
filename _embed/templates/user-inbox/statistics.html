@@ -1,17 +1,17 @@
 <div>
-	<span style="margin-right:8px;">
+	<span class="margin-right-sm">
 		{{icon "chat"}}
 		{{ if gt .Replies 0 -}}
 			{{.Replies}}
 		{{- end -}}
 	</span>
-	<span style="margin-right:8px;">
+	<span class="margin-right-sm">
 		{{icon "thumbs-up"}}
 		{{ if gt .Likes 0 -}}
 			{{.Likes}}
 		{{- end -}}
 	</span>
-	<span style="margin-right:8px;">
+	<span class="margin-right-sm">
 		{{icon "repost"}}
 		{{ if gt .Announces 0 -}}
 			{{.Announces}}

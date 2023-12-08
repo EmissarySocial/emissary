@@ -1,6 +1,6 @@
-/****************************
+/******************************************
  * DEFAULT FONTS
- ****************************/
+ ******************************************/
 :root {
     --rhythm:8px;
     --weight:400;
@@ -19,13 +19,9 @@ html {
     line-height:calc(var(--rhythm) * 3);
 }
  
-.monospace, code {
-    font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
-}
-
-/****************************
- * HEADINGS
- ****************************/
+/******************************************
+ * Headings
+ ******************************************/
 
 h1 {
     font-weight:calc(var(--weight) + 100);
@@ -58,25 +54,25 @@ h3 {
 h1.space-above,
 h2.space-above,
 h3.space-above {
-    margin-top:30px;
+    margin-top:calc(var(--rhythm) * 3);
 }
 
 
 h1.space-below,
 h2.space-below,
 h3.space-below {
-    margin-bottom:30px;
+    margin-bottom:calc(var(--rhythm) * 3);
 }
 
-/****************************
+/******************************************
  * Block - Flexbox
- ****************************/
+ ******************************************/
 
 .flex-row {
     display:flex;
     flex-direction:row;
     align-items:stretch;
-    gap:8px;
+    gap:var(--rhythm);
 }
 
 .flex-column {
@@ -145,9 +141,113 @@ h3.space-below {
     width:100%;
 }
 
-/****************************
- * Block Spacing
- ****************************/
+/******************************************
+ * Margin Spacing
+ ******************************************/
+
+.margin-top-bottom-none {
+    margin-top:0px!important;
+    margin-bottom:0px!important;
+}
+
+.margin-top-bottom-xs {
+    margin-top: calc(var(--rhythm) * 2);
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-top-bottom-sm {
+    margin-top: var(--rhythm);
+    margin-bottom: var(--rhythm);
+}
+
+.margin-top-bottom-md {
+    margin-top: calc(var(--rhythm) * 2);
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-top-bottom-lg {
+    margin-top: calc(var(--rhythm) * 3);
+    margin-bottom: calc(var(--rhythm) * 3);
+}
+
+.margin-top-none {
+    margin-top:0px!important;
+}
+.margin-top-xs {
+    margin-top: calc(var(--rhythm) * 2);
+}
+
+.margin-top-sm {
+    margin-top: var(--rhythm);
+}
+
+.margin-top-md {
+    margin-top: calc(var(--rhythm) * 2);
+}
+
+.margin-top-lg {
+    margin-top: calc(var(--rhythm) * 3);
+}
+
+.margin-bottom-none {
+    margin-bottom:0px!important;
+}
+
+.margin-bottom-xs {
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-bottom-sm {
+    margin-bottom: var(--rhythm);
+}
+
+.margin-bottom-md {
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-bottom-lg {
+    margin-bottom: calc(var(--rhythm) * 3);
+}
+
+.margin-left-none {
+    margin-left:0px!important;
+}
+
+.margin-left-xs {
+    margin-left: calc(var(--rhythm) * 2);
+}
+
+.margin-left-sm {
+    margin-left: var(--rhythm);
+}
+
+.margin-left-md {
+    margin-left: calc(var(--rhythm) * 2);
+}
+
+.margin-left-lg {
+    margin-left: calc(var(--rhythm) * 3);
+}
+
+.margin-right-none {
+    margin-right:0px!important;
+}
+
+.margin-right-xs {
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-right-sm {
+    margin-right: var(--rhythm);
+}
+
+.margin-right-md {
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-right-lg {
+    margin-right: calc(var(--rhythm) * 3);
+}
 
 .vertical-space-none {
     margin-top:0px!important;
@@ -177,16 +277,20 @@ h3.space-below {
     margin-right:1.5em;
 }
 
-.padding-5 {
-    padding:5px;
+.padding-xs {
+    padding:calc(var(--rhythm) * 0.5);
 }
 
-.pading-10 {
-    padding:10px;
+.padding-sm {
+    padding:var(--rhythm);
 }
 
-.pading-20 {
-    padding:10px;
+.padding-md {
+    padding:calc(var(--rhythm) * 2);
+}
+
+.padding-lg {
+    padding:calc(var(--rhythm) * 3);
 }
 
 .block {
@@ -226,9 +330,33 @@ h3.space-below {
     float:unset;
 }
 
-/****************************
- * CIRCLES
- ****************************/
+/******************************************
+ * Geometry (Squares and Circles)
+ ******************************************/
+
+.square {
+    aspect-ratio:1;
+}
+
+.square-24 {
+    height:24px;
+    width:24px;
+}
+
+.square-32 {
+    height:32px;
+    width:32px;
+}
+
+.square-48 {
+    height:48px;
+    width:48px;
+}
+
+.square-64 {
+    height:64px;
+    width:64px;
+}
 
 .circle-24 {
 	height:24px;
@@ -258,37 +386,10 @@ h3.space-below {
 	background-color:var(--gray30);
 }
 
-.circle-50 {
-	height:50px;
-	width:50px;
-	border-radius:25px;
-	background-color:var(--gray30);
-}
 
-.circle-100 {
-	height:100px;
-	width:100px;
-	border-radius:50px;
-	background-color:var(--gray30);
-}
-
-.circle-200 {
-	height:200px;
-	width:200px;
-	border-radius:100px;
-	background-color:var(--gray30);
-}
-
-.circle-300 {
-	height:300px;
-	width:300px;
-	border-radius:150px;
-	background-color:var(--gray30);
-}
-
-/****************************
+/******************************************
  * MISC WIDGETS
- ****************************/
+ ******************************************/
 
 .info {
 	display:block;
@@ -306,17 +407,17 @@ h3.space-below {
 	color:var(--blue60);
 }
 
-/****************************
+/******************************************
  * PLACEHOLDER
- ****************************/
+ ******************************************/
 
 .placeholder-gray {
 	background-color:var(--gray30);
 }
 
-/****************************
+/******************************************
  * Hover Show/Hide
- ****************************/
+ ******************************************/
 
 @media(hover: hover) {
     .hover-reveal {
@@ -332,9 +433,9 @@ h3.space-below {
     }
 }
 
-/****************************
- * Text Modifiers
- ****************************/
+/******************************************
+ * Text Modifiers - Size
+ ******************************************/
  
 .text-xxxl,
 .text-3xl {
@@ -396,6 +497,11 @@ input.text-md {
     margin-bottom:calc(var(--rhythm));
 }
 
+/********************************************************
+ * Text Modifiers - Decoration
+ ******************************************/
+
+
 .text-plain {
     color:var(--text-color)!important;
     text-decoration:none;
@@ -450,7 +556,12 @@ hr {
     margin-bottom:calc(var(--rhythm) * 3);
 }
 
-code {
+/******************************************
+ * Text Modifiers - Code
+ ******************************************/
+
+ .monospace, code {
+    font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     background-color:var(--gray10);
     border:solid 1px var(--gray-20);
     padding:5px 10px;

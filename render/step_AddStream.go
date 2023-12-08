@@ -155,7 +155,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 		b.Div()
 		for _, template := range templates {
 
-			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "space-right").EndBracket()
+			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "margin-right-md").EndBracket()
 
 			b.Div().Class("text-lg", "vertical-space-none").EndBracket()
 			if selectedTemplateID == template.Value {

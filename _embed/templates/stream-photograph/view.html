@@ -35,7 +35,7 @@
 
 	<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" style="width:100%;"></div>
 	{{- range $children -}}
-	<div class="card padding-5 space-below">
+	<div class="card padding-sm space-below">
 		{{- .GetContent -}}
 	</div>
 	{{- end -}}
