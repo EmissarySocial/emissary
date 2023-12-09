@@ -1,0 +1,385 @@
+/******************************************
+ * Geometry
+ * CSS styles that calculate various 
+ * geometric shapes and sizes.
+ ******************************************/
+
+ /******************************************
+ * Aspect Ratios
+ ******************************************/
+
+.aspect-square,
+.aspect-1-1 {
+	aspect-ratio:1;
+}
+
+.aspect-4-3 {
+	aspect-ratio:4/3;
+}
+
+.aspect-16-9 {
+	aspect-ratio:16/9;
+}
+
+
+/******************************************
+ * Squares
+ ******************************************/
+
+ .square {
+    aspect-ratio:1;
+}
+
+.square-24 {
+    height:24px;
+    width:24px;
+}
+
+.square-32 {
+    height:32px;
+    width:32px;
+}
+
+.square-48 {
+    height:48px;
+    width:48px;
+}
+
+.square-64 {
+    height:64px;
+    width:64px;
+}
+
+/******************************************
+ * Circles
+ ******************************************/
+
+ .circle {
+	border-radius:50%;
+	aspect-ratio: 1;
+	background-color:var(--gray30);
+}
+
+.circle-24 {
+	height:24px;
+	width:24px;
+	border-radius:12px;
+	background-color:var(--gray30);
+}
+
+.circle-32 {
+    height:32px;
+    width:32px;
+    border-radius:16px;
+	background-color:var(--gray30);
+}
+
+.circle-48 {
+    height:48px;
+    width:48px;
+    border-radius:24px;
+	background-color:var(--gray30);
+}
+
+.circle-64 {
+    height:64px;
+    width:64px;
+    border-radius:32px;
+	background-color:var(--gray30);
+}
+
+ /******************************************
+ * Positioning
+ ******************************************/
+
+.pos-absolute {
+	-webkit-position:absolute;
+	position:absolute;
+}
+
+.pos-fixed {
+	-webkit-position:fixed;
+	position:fixed;
+}
+
+.pos-relative {
+	-webkit-position:relative;
+	position:relative;
+}
+
+.pos-sticky {
+	-webkit-positiion:sticky;
+	position:sticky;
+}
+
+/******************************************
+ * Flexbox
+ ******************************************/
+
+ .flex-row {
+    display:flex;
+    flex-direction:row;
+    align-items:stretch;
+    gap:var(--rhythm);
+}
+
+.flex-column {
+    display:flex;
+    flex-direction:column;
+}
+
+.flex-align-start {
+    align-items:flex-start;
+}
+
+.flex-align-end {
+    align-items:flex-end;
+}
+
+.flex-align-center {
+    align-items:center;
+}
+
+.flex-align-stretch {
+    align-items:stretch;
+}
+
+.flex-justify-start {
+    justify-content: flex-start safe;
+}
+
+.flex-justify-end {
+    justify-content: flex-end safe;
+}
+
+.flex-justify-center {
+    justify-content: center safe;
+}
+
+.flex-justify-between {
+    justify-content: space-between safe;
+}
+
+.flex-justify-around {
+    justify-content: space-around safe;
+}
+
+.flex-justify-evenly {
+    justify-content: space-evenly safe;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.flex-shrink-1 {
+    flex-shrink: 1;
+}
+
+.flex-grow-0 {
+    flex-grow:0;
+}
+
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+.width-100 {
+    width: 100%;
+}
+
+/******************************************
+ * Margin Spacing
+ ******************************************/
+
+.margin-none {
+    margin:0px!important;
+}
+
+.margin-xs {
+    margin:calc(var(--rhythm) * 0.5);
+}
+
+.margin-sm {
+    margin:var(--rhythm);
+}
+
+.margin,
+.margin-md {
+    margin:calc(var(--rhythm) * 2);
+}
+
+.margin-lg {
+    margin:calc(var(--rhythm) * 3);
+}
+
+.margin-vertical-none {
+    margin-top: 0px!important;
+    margin-bottom: 0px!important;
+}
+
+.margin-vertical-xs {
+    margin-top: calc(var(--rhythm) * 0.5);
+    margin-bottom: calc(var(--rhythm) * 0.5);
+}
+
+.margin-vertical-sm {
+    margin-top: var(--rhythm);
+    margin-bottom: var(--rhythm);
+}
+
+.margin-vertical,
+.margin-vertical-md {
+    margin-top: calc(var(--rhythm) * 2);
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-vertical-lg {
+    margin-top: calc(var(--rhythm) * 3);
+    margin-bottom: calc(var(--rhythm) * 3);
+}
+
+.margin-horizontal-none {
+    margin-left:0px!important;
+    margin-right:0px!important;
+}
+
+.margin-horizontal-xs {
+    margin-left: calc(var(--rhythm) * 0.5);
+    margin-right: calc(var(--rhythm) * 0.5);
+}
+
+.margin-horizontal-sm {
+    margin-left: var(--rhythm);
+    margin-right: var(--rhythm);
+}
+
+.margin-horizontal,
+.margin-horizontal-md {
+    margin-left: calc(var(--rhythm) * 2);
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-horizontal-lg {
+    margin-left: calc(var(--rhythm) * 3);
+    margin-right: calc(var(--rhythm) * 3);
+}
+
+.margin-top-none {
+    margin-top: 0px!important;
+}
+
+.margin-top-xs {
+    margin-top: calc(var(--rhythm) * 0.5);
+}
+
+.margin-top-sm {
+    margin-top: var(--rhythm);
+}
+
+.margin-top,
+.margin-top-md {
+    margin-top: calc(var(--rhythm) * 2);
+}
+
+.margin-top-lg {
+    margin-top: calc(var(--rhythm) * 3);
+}
+
+.margin-bottom-none {
+    margin-bottom:0px!important;
+}
+
+.margin-bottom-xs {
+    margin-bottom: calc(var(--rhythm) * 0.5);
+}
+
+.margin-bottom-sm {
+    margin-bottom: var(--rhythm);
+}
+
+.margin-bottom,
+.margin-bottom-md {
+    margin-bottom: calc(var(--rhythm) * 2);
+}
+
+.margin-bottom-lg {
+    margin-bottom: calc(var(--rhythm) * 3);
+}
+
+.margin-left-none {
+    margin-left:0px!important;
+}
+
+.margin-left-xs {
+    margin-left: calc(var(--rhythm) * 0.5);
+}
+
+.margin-left-sm {
+    margin-left: var(--rhythm);
+}
+
+.margin-left,
+.margin-left-md {
+    margin-left: calc(var(--rhythm) * 2);
+}
+
+.margin-left-lg {
+    margin-left: calc(var(--rhythm) * 3);
+}
+
+.margin-right-none {
+    margin-right:0px!important;
+}
+
+.margin-right-xs {
+    margin-right: calc(var(--rhythm) * 0.5);
+}
+
+.margin-right-sm {
+    margin-right: var(--rhythm);
+}
+
+.magin-right,
+.margin-right-md {
+    margin-right: calc(var(--rhythm) * 2);
+}
+
+.margin-right-lg {
+    margin-right: calc(var(--rhythm) * 3);
+}
+
+/******************************************
+ * Padding Spacing
+ ******************************************/
+
+.padding-xs {
+    padding:calc(var(--rhythm) * 0.5);
+}
+
+.padding-sm {
+    padding:var(--rhythm);
+}
+
+.padding-md {
+    padding:calc(var(--rhythm) * 2);
+}
+
+.padding-lg {
+    padding:calc(var(--rhythm) * 3);
+}
+
+
+/******************************************
+ * Lines
+ ******************************************/
+
+ hr {
+    border-top:1px solid var(--gray20);
+    border-bottom:none;
+    border-left:none;
+    border-right:none;
+    height:0px;
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 3);
+}

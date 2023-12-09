@@ -1,5 +1,12 @@
 /******************************************
- * DEFAULT FONTS
+ * Typography
+ * Everything to do with fonts, text, 
+ * letters, and numbers.
+ ******************************************/
+
+
+ /******************************************
+ * Font Stack
  ******************************************/
 :root {
     --rhythm:8px;
@@ -19,6 +26,7 @@ html {
     line-height:calc(var(--rhythm) * 3);
 }
  
+
 /******************************************
  * Headings
  ******************************************/
@@ -28,7 +36,7 @@ h1 {
     font-size:calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm) * 6);
-    margin-bottom:calc(var(--rhythm) * 1);
+    margin-bottom:calc(var(--rhythm) * 2);
     color:var(--heading-color);
 }
 
@@ -37,7 +45,7 @@ h2 {
     font-size:calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 3);
     margin-top:calc(var(--rhythm) * 4);
-    margin-bottom:calc(var(--rhythm) * 1);
+    margin-bottom:calc(var(--rhythm) * 2);
     color:var(--heading-color);
 }
 
@@ -53,8 +61,9 @@ h3 {
 h1:first-child,
 h2:first-child,
 h3:first-child {
-    margin-top:0px;
+    margin-top:calc(var(--rhythm) * 1);
 }
+
 
 /******************************************
  * Text Sizes
@@ -125,19 +134,30 @@ input.text-md {
     margin-bottom:calc(var(--rhythm) * 0.5);
 }
 
+
 /******************************************
- * Text Modifiers - Decoration
+ * Text Colors
  ******************************************/
 
+ .text-white, .text-gray-00, .gray00 .white {color:var(--white);}
+.text-gray-01, .gray01 {color:var(--gray01);}
+.text-gray-02, .gray02 {color:var(--gray02);}
+.text-gray-03, .gray03 {color:var(--gray03);}
+.text-gray-04, .gray04 {color:var(--gray04);}
+.text-gray-05, .gray05 {color:var(--gray05);}
+.text-gray-10, .gray10 {color:var(--gray10);}
+.text-gray-20, .gray20 {color:var(--gray20);}
+.text-gray-30, .gray30 {color:var(--gray30);}
+.text-gray-40, .gray40 {color:var(--gray40);}
+.text-gray-50, .gray50 {color:var(--gray50);}
+.text-gray-60, .gray60 {color:var(--gray60);}
+.text-gray-70, .gray70 {color:var(--gray70);}
+.text-gray-80, .gray80 {color:var(--gray80);}
+.text-gray-90, .gray90 {color:var(--gray90);}
 
-.text-plain {
-    color:var(--text-color)!important;
-    text-decoration:none;
-}
-
-.text-underline {
-    text-decoration: underline;
-}
+.text-black, .black {color:var(--black);}
+.text-red, .red {color:var(--red60);}
+.text-green, .green {color:var(--green70);}
 
 .text-black {
     color:var(--black)!important;
@@ -174,15 +194,20 @@ a.text-red:hover {
     color:var(--red50)!important;
 }
 
-hr {
-    border-top:1px solid var(--gray20);
-    border-bottom:none;
-    border-left:none;
-    border-right:none;
-    height:0px;
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm) * 3);
+
+/******************************************
+ * Text Decoration
+ ******************************************/
+
+.text-plain {
+    color:var(--text-color)!important;
+    text-decoration:none;
 }
+
+.text-underline {
+    text-decoration: underline;
+}
+
 
 /******************************************
  * Text Modifiers - Code
@@ -208,280 +233,10 @@ code.inline {
 
 
 /******************************************
- * Block - Flexbox
+ * Text Alignment
  ******************************************/
 
- .flex-row {
-    display:flex;
-    flex-direction:row;
-    align-items:stretch;
-    gap:var(--rhythm);
-}
-
-.flex-column {
-    display:flex;
-    flex-direction:column;
-}
-
-.flex-align-start {
-    align-items:flex-start;
-}
-
-.flex-align-end {
-    align-items:flex-end;
-}
-
-.flex-align-center {
-    align-items:center;
-}
-
-.flex-align-stretch {
-    align-items:stretch;
-}
-
-.flex-justify-start {
-    justify-content: flex-start safe;
-}
-
-.flex-justify-end {
-    justify-content: flex-end safe;
-}
-
-.flex-justify-center {
-    justify-content: center safe;
-}
-
-.flex-justify-between {
-    justify-content: space-between safe;
-}
-
-.flex-justify-around {
-    justify-content: space-around safe;
-}
-
-.flex-justify-evenly {
-    justify-content: space-evenly safe;
-}
-
-
-.flex-shrink-0 {
-    flex-shrink: 0;
-}
-
-.flex-shrink-1 {
-    flex-shrink: 1;
-}
-
-.flex-grow-0 {
-    flex-grow:0;
-}
-
-.flex-grow-1 {
-    flex-grow: 1;
-}
-
-.width-100 {
-    width: 100%;
-}
-
-/******************************************
- * Margin Spacing
- ******************************************/
-
-.margin-none {
-    margin:0px!important;
-}
-
-.margin-xs {
-    margin:calc(var(--rhythm) * 0.5);
-}
-
-.margin-sm {
-    margin:var(--rhythm);
-}
-
-.margin-md {
-    margin:calc(var(--rhythm) * 2);
-}
-
-.margin-lg {
-    margin:calc(var(--rhythm) * 3);
-}
-
-.margin-vertical-none {
-    margin-top: 0px!important;
-    margin-bottom: 0px!important;
-}
-
-.margin-vertical-xs {
-    margin-top: calc(var(--rhythm) * 0.5);
-    margin-bottom: calc(var(--rhythm) * 0.5);
-}
-
-.margin-vertical-sm {
-    margin-top: var(--rhythm);
-    margin-bottom: var(--rhythm);
-}
-
-.margin-vertical,
-.margin-vertical-md {
-    margin-top: calc(var(--rhythm) * 2);
-    margin-bottom: calc(var(--rhythm) * 2);
-}
-
-.margin-vertical-lg {
-    margin-top: calc(var(--rhythm) * 3);
-    margin-bottom: calc(var(--rhythm) * 3);
-}
-
-.margin-horizontal-none {
-    margin-left:0px!important;
-    margin-right:0px!important;
-}
-
-.margin-horizontal-xs {
-    margin-left: calc(var(--rhythm) * 0.5);
-    margin-right: calc(var(--rhythm) * 0.5);
-}
-
-.margin-horizontal-sm {
-    margin-left: var(--rhythm);
-    margin-right: var(--rhythm);
-}
-
-.margin-horizontal,
-.margin-horizontal-md {
-    margin-left: calc(var(--rhythm) * 2);
-    margin-right: calc(var(--rhythm) * 2);
-}
-
-.margin-horizontal-lg {
-    margin-left: calc(var(--rhythm) * 3);
-    margin-right: calc(var(--rhythm) * 3);
-}
-
-.margin-top-none {
-    margin-top: 0px!important;
-}
-
-.margin-top-xs {
-    margin-top: calc(var(--rhythm) * 0.5);
-}
-
-.margin-top-sm {
-    margin-top: var(--rhythm);
-}
-
-.margin-top,
-.margin-top-md {
-    margin-top: calc(var(--rhythm) * 2);
-}
-
-.margin-top-lg {
-    margin-top: calc(var(--rhythm) * 3);
-}
-
-.margin-bottom-none {
-    margin-bottom:0px!important;
-}
-
-.margin-bottom-xs {
-    margin-bottom: calc(var(--rhythm) * 0.5);
-}
-
-.margin-bottom-sm {
-    margin-bottom: var(--rhythm);
-}
-
-.margin-bottom,
-.margin-bottom-md {
-    margin-bottom: calc(var(--rhythm) * 2);
-}
-
-.margin-bottom-lg {
-    margin-bottom: calc(var(--rhythm) * 3);
-}
-
-.margin-left-none {
-    margin-left:0px!important;
-}
-
-.margin-left-xs {
-    margin-left: calc(var(--rhythm) * 0.5);
-}
-
-.margin-left-sm {
-    margin-left: var(--rhythm);
-}
-
-.margin-left,
-.margin-left-md {
-    margin-left: calc(var(--rhythm) * 2);
-}
-
-.margin-left-lg {
-    margin-left: calc(var(--rhythm) * 3);
-}
-
-.margin-right-none {
-    margin-right:0px!important;
-}
-
-.margin-right-xs {
-    margin-right: calc(var(--rhythm) * 0.5);
-}
-
-.margin-right-sm {
-    margin-right: var(--rhythm);
-}
-
-.magin-right,
-.margin-right-md {
-    margin-right: calc(var(--rhythm) * 2);
-}
-
-.margin-right-lg {
-    margin-right: calc(var(--rhythm) * 3);
-}
-
-/******************************************
- * Padding Spacing
- ******************************************/
-
-.padding-xs {
-    padding:calc(var(--rhythm) * 0.5);
-}
-
-.padding-sm {
-    padding:var(--rhythm);
-}
-
-.padding-md {
-    padding:calc(var(--rhythm) * 2);
-}
-
-.padding-lg {
-    padding:calc(var(--rhythm) * 3);
-}
-
-/******************************************
- * Display Styles
- ******************************************/
-
-.block {
-    display:block;
-    width:100%;
-}
-
-.inline-block {
-	display:inline-block;
-}
-
-.inline {
-	display:inline;
-}
-
-.align-left {
+ .align-left {
     text-align:left;
 }
 
@@ -509,105 +264,67 @@ code.inline {
     white-space: nowrap;
 }
 
+
 /******************************************
- * Geometry (Squares and Circles)
+ * Links and Anchors
  ******************************************/
 
-.square {
-    aspect-ratio:1;
+a, .link {
+	color:var(--link-color);
+	text-decoration:none;
 }
 
-.square-24 {
-    height:24px;
-    width:24px;
+a:hover,
+.link:hover {
+	cursor:pointer;
+	color:var(--link-color-hover)!important;
 }
 
-.square-32 {
-    height:32px;
-    width:32px;
+.clickable, [role="link"], [role="button"] {
+	cursor:pointer;
 }
 
-.square-48 {
-    height:48px;
-    width:48px;
+b, strong, .bold {
+	font-weight:calc(var(--weight) + 200);
 }
 
-.square-64 {
-    height:64px;
-    width:64px;
+.text-thin {
+	font-weight:calc(var(--weight) - 200);
 }
 
-.circle-24 {
-	height:24px;
-	width:24px;
-	border-radius:12px;
-	background-color:var(--gray30);
+i, em, .italics {
+	font-style:italic;
 }
 
-.circle-32 {
-    height:32px;
-    width:32px;
-    border-radius:16px;
-	background-color:var(--gray30);
+p:last-child {
+    margin:0px;
 }
 
-.circle-48 {
-    height:48px;
-    width:48px;
-    border-radius:24px;
-	background-color:var(--gray30);
+.ellipsis {
+    text-overflow:ellipsis;
+    overflow:hidden;
+    white-space:nowrap;
 }
 
-.circle-64 {
-    height:64px;
-    width:64px;
-    border-radius:32px;
-	background-color:var(--gray30);
+.ellipsis-block {
+    text-overflow:ellipsis; 
+    overflow:hidden; 
 }
 
 
 /******************************************
- * MISC WIDGETS
+ * Display Styles
  ******************************************/
 
-.info {
-	display:block;
-	border:solid 1px var(--blue20);
-	border-radius:10px;
-	background-color:var(--blue10);
-	color:var(--gray90);
-	padding:15px 15px;
-	margin-bottom:40px;
+ .block {
+    display:block;
+    width:100%;
 }
 
-.info > .info-marker {
-	float:left;
-	margin-right:15px;
-	color:var(--blue60);
+.inline-block {
+	display:inline-block;
 }
 
-/******************************************
- * PLACEHOLDER
- ******************************************/
-
-.placeholder-gray {
-	background-color:var(--gray30);
-}
-
-/******************************************
- * Hover Show/Hide
- ******************************************/
-
-@media(hover: hover) {
-    .hover-reveal {
-        opacity:0;
-    }
-
-    .hover-reveal:focus {
-        opacity:1;
-    }
-
-    .hover-trigger:hover .hover-reveal {
-        opacity:1;
-    }
+.inline {
+	display:inline;
 }
