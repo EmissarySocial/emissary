@@ -11,14 +11,13 @@
 		</div>
 	{{- end -}}
 
-	<div>
+	<div class="margin-bottom">
 		{{- if $stream.HasSummary -}}
 			{{- $stream.Summary | htmlMinimal -}}
 		{{- else if $stream.HasContent -}}
 			{{- $stream.Content | htmlMinimal -}}
 		{{- end -}}
 	</div>
-
 
 	<div class="text-sm margin-bottom flex-row">
 		<span class="ellipsis">

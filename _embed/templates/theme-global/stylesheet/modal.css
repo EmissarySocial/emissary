@@ -16,7 +16,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: safe center;
+	/* justify-content: safe center; */
+	justify-content:flex-start;
 
 	/* Opacity updated by animations */
 	opacity: 0;
@@ -31,8 +32,8 @@
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
-	background-color: #333;
-	opacity: 0.8;
+	background-color: #444;
+	opacity: 0.9;
 	overflow-x: clip;
 	overflow-y: clip;
 }
@@ -56,6 +57,7 @@
 	padding: 24px;
 	line-height: 150%;
 	transform:scale(0.8);
+	margin-top:24px;
 }
 
 /* Enhanced Modals with Fixed Header/Footer */
@@ -68,17 +70,17 @@
 }
 
 #modal-header {
-	padding:24px;
+	padding:var(--rhythm);
 }
 
 #modal-body {
 	overflow-y:scroll;
 	flex-grow:1;
-	padding:12px 24px;
+	padding:var(--rhythm) calc(var(--rhythm) * 2);
 }
 
 #modal-footer {
-	padding: 24px;
+	padding: calc(var(--rhythm) * 2);
 	padding-bottom:12px;
 	margin:0px;
 	border-top:solid 1px var(--gray20);
@@ -101,20 +103,20 @@
 #modal.ready {
 	opacity: 1;
 	transition:opacity;
-	transition-duration:150ms;
+	transition-duration:200ms;
 	transition-timing-function: ease-in-out;
 }
 
 #modal.ready #modal-window {
 	transform:scale(1);
 	transition:transform;
-	transition-duration:150ms;
+	transition-duration:200ms;
 	transition-timing-function: ease-in-out;
 }
 
 #modal.closing {
 	animation-name:fadeOut;
-	animation-duration:150ms;
+	animation-duration:200ms;
 	animation-timing-function: ease;
 
 	/* Hide after animation */
@@ -123,7 +125,7 @@
 
 #modal.closing #modal-content {
 	animation-name: zoomOut;
-	animation-duration:150ms;
+	animation-duration:200ms;
 	animation-timing-function: ease;
 }
 

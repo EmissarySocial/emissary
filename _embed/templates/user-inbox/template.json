@@ -237,7 +237,7 @@
 					{"step":"as-modal", "steps":[
 						{"step":"edit", "options":"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", "form":{
 							"type": "layout-tabs",
-							"label":"Edit Follow Settings",
+							"label":"Edit Source",
 							"children":[{
 								"type":"layout-vertical",
 								"label":"Settings",

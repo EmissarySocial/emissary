@@ -1,8 +1,8 @@
 {{- $stream := .ActivityStream -}}
 
-<div id="modal-body" script="install message(messageId:'{{.MessageID}}')">
+<div id="modal-header">
 
-	<div class="margin-bottom">
+	<div>
 		<div class="flex-row text-xs">
 
 			<div style="flex-grow:1">
@@ -12,7 +12,7 @@
 				</span>
 
 				<span class="button-group">
-					<button script="on click go to url '{{.URL}}' in new window">View Original</button>
+					<button script="on click go to url '{{.OriginalURL}}' in new window">View Original</button>
 					<button hx-get="/@me/following-edit?followingId={{.Origin.FollowingID.Hex}}">Edit Source</button>
 					<button hx-get="/@me/messages/{{.MessageID}}/delete">Delete</button>
 				</span>
@@ -25,6 +25,10 @@
 		</div>
 	</div>
 
+</div>
+
+<div id="modal-body" script="install message(messageId:'{{.MessageID}}')">
+
 	{{- if .Origin.NotEmpty -}}
 	
 		{{- if eq "DIRECT" .Origin.Type -}}
@@ -33,9 +37,12 @@
 				<a class="flex-row flex-align-center"
 					href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
 					
-					{{- if ne "" .Origin.ImageURL -}}
+					{{- if eq "" .Origin.ImageURL -}}
+						<div class="circle-48"></div>
+					{{- else -}}
 						<img src="{{.Origin.ImageURL}}" class="circle-48">
 					{{- end -}}
+					
 					<div>
 						<div class="text-plain text-lg bold margin-vertical-none">{{.Origin.Label}}</div>
 						<div class="text-gray text-sm margin-vertical-none">{{.Origin.URL}}</div>
@@ -116,7 +123,17 @@
 
 	<div id="replies" class="margin-bottom"> 
 
-		{{- if gt $stream.Statistics.Replies 0 -}}
+		{{- if eq $stream.Statistics.Replies 0 -}}
+			<div class="bold margin-bottom">No Replies</div>
+		{{- else -}}
+			<hr>
+			<div class="bold margin-bottom">
+				{{- if eq 1 $stream.Statistics.Replies -}}
+					1 Reply
+				{{- else -}}
+					{{$stream.Statistics.Replies}} Replies
+				{{- end -}}
+			</div>
 			<div hx-get="/@me/messages/{{.MessageID}}/replies" 
 				hx-target="this" 
 				hx-push-url="false" 

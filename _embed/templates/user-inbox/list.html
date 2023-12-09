@@ -1,7 +1,7 @@
 {{- $folders := .FoldersWithSelection -}}
 {{- $folder := $folders.Selected -}}
 
-{{- $inbox := .Inbox.Top12.ByRank.Slice -}}
+{{- $inbox := .Inbox.Top12.ByPublishDate.Slice -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $internalID := .QueryParam "origin.followingId" -}}
 

@@ -160,8 +160,8 @@ func (w Message) MessageID() string {
 	return w._message.MessageID.Hex()
 }
 
-// URL returns the public URL for the object
-func (w Message) URL() string {
+// URL returns the public URL of the original object
+func (w Message) OriginalURL() string {
 	return w._message.URL
 }
 

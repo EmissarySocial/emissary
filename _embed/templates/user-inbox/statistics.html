@@ -1,20 +1,24 @@
-<div class="margin-top-sm">
+<div class="text-light-gray margin-top-sm">
 	<span class="margin-right-sm">
-		{{icon "chat"}}
-		{{ if gt .Replies 0 -}}
-			{{.Replies}}
+		{{ if eq 1 .Replies -}}
+			1 Reply
+		{{- else -}}
+			{{.Replies}} Replies
 		{{- end -}}
 	</span>
 	<span class="margin-right-sm">
-		{{icon "thumbs-up"}}
-		{{ if gt .Likes 0 -}}
-			{{.Likes}}
+		{{ if eq 1 .Likes -}}
+			1 Like
+		{{- else -}}
+			{{.Likes}} Likes
 		{{- end -}}
 	</span>
 	<span class="margin-right-sm">
-		{{icon "repost"}}
-		{{ if gt .Announces 0 -}}
-			{{.Announces}}
+		{{ if eq 1 .Announces -}}
+			1 Share
+		{{- else -}}
+			{{.Announces}} Shares
 		{{- end -}}
+
 	</span>
 </div>

@@ -2,35 +2,47 @@
 {{- $message := index . 1 -}}
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 
-<div class="ellipsis flex-row">
-	{{- if $stream.AttributedTo.Image.NotNil -}}
-		<img src="{{$stream.AttributedTo.Image.URL}}" class="circle" style="height:1.5em;">
-	{{- end -}}
-
-	<span class="bold black">{{$stream.AttributedTo.Name}}</span>
-	<span class="text-gray nowrap" style="flex-grow:1">
-		{{ icon $message.Origin.Icon }}
-		{{ $stream.Published | tinyDate }}
-	</span>
-</div>
-
-{{- if ne "" $stream.Name -}}
-	<div class="bold text-black">{{$stream.Name}}</div>
-{{- end -}}
-
-<div>
-	{{- if $stream.HasContent -}}
-		{{- $stream.Content | htmlMinimal -}}
-	{{- else if $stream.HasSummary -}}
-		{{- $stream.Summary | htmlMinimal -}}
-	{{- end -}}
-</div>
-
-{{- if $stream.Image.NotNil -}}
-	<div class="margin-top" style="position:relative;">
-		<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+<div class="flex-row">
+	<div>
+		{{- if $stream.AttributedTo.Image.NotNil -}}
+			<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-32 margin-right-sm">
+		{{- else -}}
+			<div class="circle-32 margin-right-sm"></div>
+		{{- end -}}
 	</div>
-{{- end -}}
+
+	<div>
+
+		<div>
+			<span class="bold black">{{$stream.AttributedTo.Name}}</span>
+			<span class="text-gray nowrap flex-grow-1">
+				{{ icon $message.Origin.Icon }}
+				{{ $stream.Published | tinyDate }}
+			</span>
+			{{$stream.AttributedTo.PreferredUsername}}
+		</div>
+
+		{{- if ne "" $stream.Name -}}
+			<div class="bold text-black margin-top">{{$stream.Name}}</div>
+		{{- end -}}
+
+		<div>
+			{{- if $stream.HasContent -}}
+				{{- $stream.Content | htmlMinimal -}}
+			{{- else if $stream.HasSummary -}}
+				{{- $stream.Summary | htmlMinimal -}}
+			{{- end -}}
+		</div>
+
+		{{- if $stream.Image.NotNil -}}
+			<div class="margin-top" style="position:relative;">
+				<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+			</div>
+		{{- end -}}
 
 
-{{- template "statistics" $stream.Statistics -}}
+		{{- template "statistics" $stream.Statistics -}}
+
+	</div>
+</div>
+

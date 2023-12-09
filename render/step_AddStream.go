@@ -6,11 +6,11 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
-	"github.com/EmissarySocial/emissary/tools/val"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,7 +18,7 @@ import (
 type StepAddStream struct {
 	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
 	Location      string                        // Options are: "top", "child", "outbox".  Defaults to "child".
-	Templates     []string                      // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	TemplateRoles []string                      // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
 	AsEmbed       bool                          // If TRUE, then use embed the "create" action of the selected template into the current page.
 	WithData      map[string]*template.Template // Map of template values to pre-populate into the new Stream.
 	WithNewStream []step.Step                   // List of steps to take on the newly created child record on POST.
@@ -51,15 +51,18 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 	factory := renderer.factory()
 	templateID := renderer.QueryParam("templateId")
 
-	if len(step.Templates) > 0 {
-		templateID = val.Enum(templateID, step.Templates...)
-	}
-
 	// Try to load the template for the new stream
 	newTemplate, err := factory.Template().Load(templateID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Template not found", templateID))
+	}
+
+	// Verify that the Template is allowed by the TemplateRoles list.
+	if len(step.TemplateRoles) > 0 {
+		if !slice.Contains(step.TemplateRoles, newTemplate.TemplateRole) {
+			return Halt().WithError(derp.NewBadRequestError(location, "Template not allowed", templateID, step.TemplateRoles))
+		}
 	}
 
 	// Create the new child stream
@@ -133,7 +136,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 	parentRole := step.parentRole(renderer)
 
 	// Query all eligible templates
-	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
+	templates := templateService.ListByContainerLimited(parentRole, step.TemplateRoles)
 
 	if len(templates) == 0 {
 		return derp.NewBadRequestError(location, "No child templates available for this Role", renderer.templateRole())
@@ -220,7 +223,7 @@ func (step StepAddStream) getModal(renderer Renderer, buffer io.Writer) error {
 	iconProvider := factory.Icons()
 	parentRole := step.parentRole(renderer)
 
-	templates := templateService.ListByContainerLimited(parentRole, step.Templates)
+	templates := templateService.ListByContainerLimited(parentRole, step.TemplateRoles)
 
 	b := html.New()
 

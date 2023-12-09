@@ -3,13 +3,14 @@
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 
 {{- if ne "DIRECT" $message.Origin.Type -}}
-	<div class="flex-row" style="margin-bottom:8px;">
+	<div class="flex-row margin-bottom-sm">
 		<div style="width:64px;"></div>
 		<div>
 			{{- template "origin" $message.Origin -}}
 		</div>
 	</div>
 {{- end -}}
+
 
 <div class="flex-row">
 
@@ -23,7 +24,7 @@
 
 	<div class="flex-grow-1">
 
-		<div class="ellipsis">
+		<div>
 			<span class="bold black">{{$stream.AttributedTo.Name}}</span>
 			<span class="text-gray nowrap">
 				{{ $stream.Published | tinyDate }}
@@ -47,8 +48,6 @@
 				<img src="{{$stream.Image.URL}}" loading="lazy" style="object-fit:cover;"/>
 			</div>
 		{{- end -}}
-
-		{{- template "statistics" $stream.Statistics -}}
 
 	</div>
 

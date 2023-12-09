@@ -22,8 +22,8 @@
 			<button hx-get="/@me/edit" class="text-xs float-right">Edit</button>
 		{{- end -}}
 		
-		<h1 class="p-name" style="margin:0px;">{{.DisplayName}}</h1>
-		<div class="text-sm gray50 ellipsis" style="margin:0px;">@{{.Username}}@{{.Hostname}}</div>
+		<h1 class="p-name margin-none">{{.DisplayName}}</h1>
+		<div class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
 			<div class="margin-top">
 				<button type="button" class="primary width-100" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
@@ -36,10 +36,6 @@
 
 		{{- if ne "" .Location -}}
 			<div class="margin-top p-adr"><span class="p-label">{{icon "location"}} {{.Location}}</a></div>
-		{{- end -}}
-
-		{{- if .IsMyself -}}
-			<div style="margin-top:8px;"><a href="/@me/inbox/following" class="text-plain">{{icon "settings"}} Follow Settings</a></div>
 		{{- end -}}
 
 	</div>
@@ -59,13 +55,13 @@
 
 			{{- if .IsMyself  -}}
 				<hr>
-				<div class="float-right">
+				<div class="margin-top-xs float-right">
 					<button type="button" hx-get="/@me/links" class="text-xs margin-vertical-none">Edit</button>
 				</div>
 			{{- end -}}
 
 			{{- range $links -}}
-				<div><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
+				<div class="margin-top-xs"><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
 			{{- end -}}
 		{{- end -}}
 
@@ -73,9 +69,10 @@
 
 	{{- if .IsMyself -}}
 		<hr>
-		<div>
-			<button hx-post="/signout" hx-target="body">Sign Out</button>
-		</div>
+		<div class="bold">Personal Settings</div>
+		<div class="margin-top-xs"><a href="/@me/inbox/following" class="text-plain">{{icon "person"}} {{.FollowingCount}} Following</a></div>
+		<div class="margin-top-xs"><a href="/@me/inbox/followers" class="text-plain">{{icon "person"}} {{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}}</a></div>
+		<div class="margin-top"><button hx-post="/signout" hx-target="body">Sign Out</button></div>
 	{{- end -}}
 
 </div>

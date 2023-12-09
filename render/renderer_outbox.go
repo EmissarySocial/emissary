@@ -176,6 +176,14 @@ func (w Outbox) BlockCount() int {
 	return w._user.BlockCount
 }
 
+func (w Outbox) FollowerCount() int {
+	return w._user.FollowerCount
+}
+
+func (w Outbox) FollowingCount() int {
+	return w._user.FollowingCount
+}
+
 func (w Outbox) DisplayName() string {
 	return w._user.DisplayName
 }

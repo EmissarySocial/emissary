@@ -1,10 +1,11 @@
 <!-- Arguments collected from renderer data -->
-{{- $postTo := .GetString "postTo" -}}
+{{- $postTo := .GetString "postTo" | addQueryParams "templateId=outbox-reply" -}}
 
 <form id="outbox-message" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-message" data-script="
 	on htmx:configRequest(parameters)
 		set contentHtml to the first <[contenteditable=true]/> in me
 		set parameters['content'] to contentHtml.innerText
+		focus() the contentHtml
 
 	on htmx:afterRequest
 		set contentHtml to the first <[contenteditable=true]/> in me

@@ -26,9 +26,9 @@ html {
 h1 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 6);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 4);
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm));
     color:var(--heading-color);
 }
 
@@ -36,18 +36,18 @@ h1 {
 h2 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 3);
-    line-height:calc(var(--rhythm) * 4.5);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
+    margin-top:calc(var(--rhythm) * 2);
+    margin-bottom:calc(var(--rhythm));
     color:var(--heading-color);
 }
 
 h3 {
     font-weight:calc(var(--weight) + 300);
     font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 2);
+    margin-top:calc(var(--rhythm));
+    margin-bottom:calc(var(--rhythm) * 0);
     color:var(--heading-color);
 }
 
@@ -64,11 +64,167 @@ h3.space-below {
     margin-bottom:calc(var(--rhythm) * 3);
 }
 
+h1:first-child,
+h2:first-child,
+h3:first-child {
+    margin-top:0px;
+}
+
+/******************************************
+ * Text Sizes
+ ******************************************/
+ 
+.text-xxxl,
+.text-3xl {
+    font-weight:calc(var(--weight) + 100);
+    font-size:calc(var(--rhythm) * 5);
+    line-height:calc(var(--rhythm) * 5);
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 1);
+}
+
+.text-xxl,
+.text-2xl,
+.text-xxl input,
+input.text-xxl {
+    font-weight:calc(var(--weight) + 100);
+    font-size:calc(var(--rhythm) * 4);
+    line-height:calc(var(--rhythm) * 4);
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 1);
+}
+
+.text-xl,
+.text-xl input,
+input.text-xl {
+    font-weight:calc(var(--weight) + 100);
+    font-size:calc(var(--rhythm) * 3);
+    line-height:calc(var(--rhythm) * 3);
+    margin-top:calc(var(--rhythm) * 2);
+    margin-bottom:calc(var(--rhythm));
+}
+
+.text-lg,
+.text-lg input,
+input.text-lg {
+    font-weight:calc(var(--weight) + 300);
+    font-size:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 2);
+    margin-top:calc(var(--rhythm));
+    margin-bottom:calc(var(--rhythm) * 0);
+    color:var(--heading-color);
+}
+
+.text-md,
+p,
+.text-md input,
+input.text-md {
+    font-size:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 2);
+}
+
+.text-sm {
+    font-size:calc(var(--rhythm) * 1.75);
+    line-height:calc(var(--rhythm) * 2);
+    margin-top:calc(var(--rhythm) * 0.5);
+    margin-bottom:calc(var(--rhythm) * 0.5);
+}
+
+.text-xs {
+    font-size:calc(var(--rhythm) * 1.5);
+    line-height:calc(var(--rhythm) * 2);
+    margin-top: calc(var(--rhythm) * 0.5);
+    margin-bottom:calc(var(--rhythm) * 0.5);
+}
+
+/******************************************
+ * Text Modifiers - Decoration
+ ******************************************/
+
+
+.text-plain {
+    color:var(--text-color)!important;
+    text-decoration:none;
+}
+
+.text-underline {
+    text-decoration: underline;
+}
+
+.text-black {
+    color:var(--black)!important;
+    text-decoration:none;
+}
+
+.text-light-gray {
+    color:var(--gray40);
+    text-decoration:none;
+}
+
+.text-gray {
+    color:var(--gray60);
+    text-decoration:none;
+}
+
+.text-green {
+    color:var(--green70)!important;
+    text-decoration:none;
+}
+
+a:hover .text-green,
+a.text-green:hover {
+    color:var(--green80)!important;
+}
+
+.text-red {
+    color:var(--red60)!important;
+    text-decoration:none;
+}
+
+a:hover .text-red,
+a.text-red:hover {
+    color:var(--red50)!important;
+}
+
+hr {
+    border-top:1px solid var(--gray20);
+    border-bottom:none;
+    border-left:none;
+    border-right:none;
+    height:0px;
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 3);
+}
+
+/******************************************
+ * Text Modifiers - Code
+ ******************************************/
+
+ .monospace, code {
+    font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    background-color:var(--gray10);
+    border:solid 1px var(--gray-20);
+    padding:5px 10px;
+    white-space:pre-wrap;
+}
+
+pre code,
+code.block {
+    display:block;
+    tab-size:24px;
+}
+
+code.inline {
+    display:inline;
+}
+
+
 /******************************************
  * Block - Flexbox
  ******************************************/
 
-.flex-row {
+ .flex-row {
     display:flex;
     flex-direction:row;
     align-items:stretch;
@@ -145,14 +301,34 @@ h3.space-below {
  * Margin Spacing
  ******************************************/
 
+.margin-none {
+    margin:0px!important;
+}
+
+.margin-xs {
+    margin:calc(var(--rhythm) * 0.5);
+}
+
+.margin-sm {
+    margin:var(--rhythm);
+}
+
+.margin-md {
+    margin:calc(var(--rhythm) * 2);
+}
+
+.margin-lg {
+    margin:calc(var(--rhythm) * 3);
+}
+
 .margin-vertical-none {
     margin-top: 0px!important;
     margin-bottom: 0px!important;
 }
 
 .margin-vertical-xs {
-    margin-top: calc(var(--rhythm) * 2);
-    margin-bottom: calc(var(--rhythm) * 2);
+    margin-top: calc(var(--rhythm) * 0.5);
+    margin-bottom: calc(var(--rhythm) * 0.5);
 }
 
 .margin-vertical-sm {
@@ -177,8 +353,8 @@ h3.space-below {
 }
 
 .margin-horizontal-xs {
-    margin-left: calc(var(--rhythm) * 2);
-    margin-right: calc(var(--rhythm) * 2);
+    margin-left: calc(var(--rhythm) * 0.5);
+    margin-right: calc(var(--rhythm) * 0.5);
 }
 
 .margin-horizontal-sm {
@@ -197,12 +373,12 @@ h3.space-below {
     margin-right: calc(var(--rhythm) * 3);
 }
 
-
 .margin-top-none {
     margin-top: 0px!important;
 }
+
 .margin-top-xs {
-    margin-top: calc(var(--rhythm) * 2);
+    margin-top: calc(var(--rhythm) * 0.5);
 }
 
 .margin-top-sm {
@@ -223,7 +399,7 @@ h3.space-below {
 }
 
 .margin-bottom-xs {
-    margin-bottom: calc(var(--rhythm) * 2);
+    margin-bottom: calc(var(--rhythm) * 0.5);
 }
 
 .margin-bottom-sm {
@@ -244,7 +420,7 @@ h3.space-below {
 }
 
 .margin-left-xs {
-    margin-left: calc(var(--rhythm) * 2);
+    margin-left: calc(var(--rhythm) * 0.5);
 }
 
 .margin-left-sm {
@@ -265,7 +441,7 @@ h3.space-below {
 }
 
 .margin-right-xs {
-    margin-right: calc(var(--rhythm) * 2);
+    margin-right: calc(var(--rhythm) * 0.5);
 }
 
 .margin-right-sm {
@@ -340,6 +516,10 @@ h3.space-below {
 
 .float-clear {
     float:unset;
+}
+
+.nowrap {
+    white-space: nowrap;
 }
 
 /******************************************
@@ -444,149 +624,3 @@ h3.space-below {
         opacity:1;
     }
 }
-
-/******************************************
- * Text Modifiers - Size
- ******************************************/
- 
-.text-xxxl,
-.text-3xl {
-    font-size:calc(var(--rhythm) * 6);
-    line-height:calc(var(--rhythm) * 9);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
-}
-
-.text-xxl,
-.text-2xl,
-.text-xxl input,
-input.text-xxl {
-    font-size:calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 6);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
-}
-
-.text-xl,
-.text-xl input,
-input.text-xl {
-    font-size:calc(var(--rhythm) * 3);
-    line-height:calc(var(--rhythm) * 4.5);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 3);
-}
-
-.text-lg,
-.text-lg input,
-input.text-lg {
-    font-size:calc(var(--rhythm) * 2.5);
-    line-height:calc(var(--rhythm) * 3.75);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 3);
-}
-
-.text-md,
-p,
-.text-md input,
-input.text-md {
-    font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 3);
-}
-
-.text-sm {
-    font-size:calc(var(--rhythm) * 1.75);
-    line-height:calc(var(--rhythm) * 2.625);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
-}
-
-.text-xs {
-    font-size:calc(var(--rhythm) * 1.5);
-    line-height:calc(var(--rhythm) * 2.25);
-    margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm));
-}
-
-/********************************************************
- * Text Modifiers - Decoration
- ******************************************/
-
-
-.text-plain {
-    color:var(--text-color)!important;
-    text-decoration:none;
-}
-
-.text-underline {
-    text-decoration: underline;
-}
-
-.text-black {
-    color:var(--black)!important;
-    text-decoration:none;
-}
-
-.text-light-gray {
-    color:var(--gray40);
-    text-decoration:none;
-}
-
-.text-gray {
-    color:var(--gray60);
-    text-decoration:none;
-}
-
-.text-green {
-    color:var(--green70)!important;
-    text-decoration:none;
-}
-
-a:hover .text-green,
-a.text-green:hover {
-    color:var(--green80)!important;
-}
-
-.text-red {
-    color:var(--red60)!important;
-    text-decoration:none;
-}
-
-a:hover .text-red,
-a.text-red:hover {
-    color:var(--red50)!important;
-}
-
-hr {
-    border-top:1px solid var(--gray20);
-    border-bottom:none;
-    border-left:none;
-    border-right:none;
-    height:0px;
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm) * 3);
-}
-
-/******************************************
- * Text Modifiers - Code
- ******************************************/
-
- .monospace, code {
-    font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
-    background-color:var(--gray10);
-    border:solid 1px var(--gray-20);
-    padding:5px 10px;
-    white-space:pre-wrap;
-}
-
-pre code,
-code.block {
-    display:block;
-    tab-size:24px;
-}
-
-code.inline {
-    display:inline;
-}
-

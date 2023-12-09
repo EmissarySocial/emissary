@@ -1,6 +1,6 @@
 {
 	"templateId":"outbox-message",
-	"templateRole":"outbox-item",
+	"templateRole":"outbox-message",
 	"socialRole":"Note",
 	"extends":["base-social"],
 	"model":"stream",

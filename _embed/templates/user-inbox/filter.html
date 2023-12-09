@@ -9,17 +9,27 @@
 	<div class="margin-bottom">
 
 		{{$selected := eq "" $followingID}}
-		<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
+		<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
 			<span class="circle-32 margin-right-sm inline-block"></span>
-			All Sources
+			<span>All Sources</span>
 		</div>
 
 		{{- range $following -}}
 			{{- $selected := eq $followingID .FollowingID.Hex -}}
 
-			<div role="button" class="menu-option {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
-				<img src="{{.ImageURL}}" class="circle-32 margin-right-sm">
-				{{.Label}}
+			<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}">
+				<div class="flex-row flex-grow-1" hx-get="/@me/inbox?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
+					{{- if eq "" .ImageURL -}}
+						<span class="circle-32 margin-right-sm inline-block"></span>
+					{{- else -}}
+						<img src="{{.ImageURL}}" class="circle-32 margin-right-sm">
+					{{- end -}}
+					<div class="flex-grow-1">
+						<div class="margin-vertical-none">{{.Label}}</div>
+						<div class="margin-vertical-none text-xs text-gray">{{.URL}}</div>
+					</div>
+				</div>
+				<button class="text-xs nowrap" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}">Edit Source</button>
 			</div>
 		{{- end -}}
 	</div>

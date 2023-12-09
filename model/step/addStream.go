@@ -18,7 +18,7 @@ import (
 type AddStream struct {
 	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
 	Location      string                        // Options are: "top", "child", "outbox".  Defaults to "child".
-	Templates     []string                      // List of acceptable templates that can be used to make a stream.  If empty, then all templates are valid.
+	TemplateRoles []string                      // List of acceptable Template Roles that can be used to make a stream.  If empty, then all template for this container are valid.
 	AsEmbed       bool                          // If TRUE, then use embed the "create" action of the selected template into the current page.
 	WithData      map[string]*template.Template // Map of values to preset in the new stream
 	WithNewStream []Step                        // List of steps to take on the newly created child record on POST.
@@ -52,7 +52,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 	result := AddStream{
 		Title:         first.String(stepInfo.GetString("title"), "Add a Stream"),
 		Location:      val.Enum(stepInfo.GetString("location"), "top", "child", "outbox"),
-		Templates:     stepInfo.GetSliceOfString("template"),
+		TemplateRoles: stepInfo.GetSliceOfString("roles"),
 		AsEmbed:       stepInfo.GetBool("as-embed"),
 		WithData:      withDataMap,
 		WithNewStream: withNewStream,

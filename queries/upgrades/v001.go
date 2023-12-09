@@ -34,7 +34,7 @@ func Version1(ctx context.Context, session *mongo.Database) error {
 		delete(record, "inReplyTo")
 
 		switch record.GetString("templateId") {
-		case "outbox-item":
+		case "outbox-message", "outbox-reply":
 			record["socialRole"] = "Note"
 		case "folder":
 			record["socialRole"] = "Page"

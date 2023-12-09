@@ -325,16 +325,16 @@ func (service *Template) ListByContainer(containedByRole string) []form.LookupCo
 }
 
 // ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
-// are present in the "limited" list.  If the "limited" list is empty, then all otherwise-valid templates
-// are returned.
-func (service *Template) ListByContainerLimited(containedByRole string, limits sliceof.String) []form.LookupCode {
+// whose TemplateRoles are present in the "limitRoles" list.  If the "limited" list is empty, then all
+// otherwise-valid templates are returned.
+func (service *Template) ListByContainerLimited(containedByRole string, limitRoles sliceof.String) []form.LookupCode {
 
-	if limits.IsEmpty() {
+	if limitRoles.IsEmpty() {
 		return service.ListByContainer(containedByRole)
 	}
 
 	filter := func(t *model.Template) bool {
-		return t.ContainedBy.Contains(containedByRole) && limits.Contains(t.TemplateID)
+		return t.ContainedBy.Contains(containedByRole) && limitRoles.Contains(t.TemplateRole)
 	}
 
 	return service.List(filter)
