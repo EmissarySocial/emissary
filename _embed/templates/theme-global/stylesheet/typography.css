@@ -42,7 +42,7 @@ h2 {
 }
 
 h3 {
-    font-weight:calc(var(--weight) + 300);
+    font-weight:calc(var(--weight) + 200);
     font-size:calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 2);
     margin-top:calc(var(--rhythm) * 3);
@@ -93,7 +93,7 @@ input.text-xl {
 .text-lg,
 .text-lg input,
 input.text-lg {
-    font-weight:calc(var(--weight) + 300);
+    font-weight:calc(var(--weight) + 200);
     font-size:calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
     margin-top:calc(var(--rhythm));
