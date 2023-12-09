@@ -1,5 +1,7 @@
 package render
 
+import "github.com/davecgh/go-spew/spew"
+
 type PipelineBehavior func(*PipelineResult)
 
 // Continue is a NOOP that does not change the PipelineResult object
@@ -48,6 +50,18 @@ func (exit PipelineBehavior) WithEvent(name string, value string) PipelineBehavi
 			exit(status)
 		}
 		status.Events[name] = value
+	}
+}
+
+// RemoveEvent removes an HX-Trigger event to the PipelineResult object
+func (exit PipelineBehavior) RemoveEvent(name string) PipelineBehavior {
+	return func(status *PipelineResult) {
+		if exit != nil {
+			exit(status)
+		}
+		spew.Dump(status)
+		delete(status.Events, name)
+		spew.Dump(status)
 	}
 }
 
