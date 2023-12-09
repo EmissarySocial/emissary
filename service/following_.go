@@ -380,7 +380,7 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 	return service.LoadByID(userID, followingID, result)
 }
 
-// LoadByURL loads an infividual following using the target URL that is being followed
+// LoadByURL loads an individual following using the target URL that is being followed
 func (service *Following) LoadByURL(userID primitive.ObjectID, profileUrl string, result *model.Following) error {
 
 	criteria := exp.Equal("userId", userID).
@@ -392,6 +392,38 @@ func (service *Following) LoadByURL(userID primitive.ObjectID, profileUrl string
 /******************************************
  * Custom Actions
  ******************************************/
+
+func (service *Following) IsFollowing(userID primitive.ObjectID, uri string) (bool, error) {
+
+	const location = "service.Following.IsFollowing"
+
+	// Load the ActivityStream document
+	document, err := service.activityStreams.Load(uri)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error loading ActivityStream document", uri)
+	}
+
+	// If this document is not an Actor, then get the Actor of the document
+	if !document.IsActor() {
+		document = document.Actor()
+	}
+
+	if document.IsNil() {
+		return false, derp.NewBadRequestError(location, "Invalid ActivityStream document", uri)
+	}
+
+	// Look for the Actor in the Following collection
+	following := model.NewFollowing()
+
+	if err := service.LoadByURL(userID, document.ID(), &following); err == nil {
+		return true, nil
+	} else if derp.NotFound(err) {
+		return false, nil
+	} else {
+		return false, derp.Wrap(err, location, "Error loading Following record", uri)
+	}
+}
 
 // PurgeInbox removes all inbox items that are past their expiration date.
 // TODO: LOW: Should this be in the Inbox service?

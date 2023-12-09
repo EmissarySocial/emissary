@@ -188,9 +188,9 @@ func (w Common) NavigationID() string {
 	return ""
 }
 
-/***************************
+/******************************************
  * Request Data (Getters and Setters)
- **************************/
+ ******************************************/
 
 func (w Common) DataMap() mapof.Any {
 	return w.dataMap
@@ -325,6 +325,37 @@ func (w Common) UserImage() (string, error) {
 func (w Common) ActivityStream(uri string) streams.Document {
 	result, err := w._factory.ActivityStreams().Load(uri)
 	derp.Report(err)
+	return result
+}
+
+// IsMe returns TRUE if the provided URI is
+// the profileURL of the current user
+func (w Common) IsMe(uri string) bool {
+	if user, err := w.getUser(); err == nil {
+		return uri == user.ActivityPubURL()
+	}
+	return false
+}
+
+// NotMe returns TRUE if the provided URI is NOT
+// the ProfileURL of the current user
+func (w Common) NotMe(uri string) bool {
+	return !w.IsMe(uri)
+}
+
+// IsFollowing returns TRUE if the curren user is following the
+// document at a specific URI (or the actor who created the document)
+func (w Common) IsFollowing(uri string) bool {
+
+	followingService := w._factory.Following()
+
+	result, err := followingService.IsFollowing(w.AuthenticatedID(), uri)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "render.Common.IsFollowing", "Error checking following status", uri))
+		return false
+	}
+
 	return result
 }
 
