@@ -77,6 +77,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.RefreshPage:
 		return StepRefreshPage(s)
 
+	case step.RemoveEvent:
+		return StepRemoveEvent(s)
+
 	case step.Save:
 		return StepSave(s)
 

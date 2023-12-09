@@ -132,14 +132,17 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "forward-to":
 		return NewForwardTo(stepInfo)
 
-	case "trigger-event":
-		return NewTriggerEvent(stepInfo)
-
 	case "refresh-page":
 		return NewRefreshPage(stepInfo)
 
 	case "reload-page":
 		return NewReloadPage(stepInfo)
+
+	case "remove-event":
+		return NewRemoveEvent(stepInfo)
+
+	case "trigger-event":
+		return NewTriggerEvent(stepInfo)
 
 	// SERVER-SIDE CONTROL LOGIC
 
