@@ -97,7 +97,7 @@
 	{{- end -}}
 			
 	{{- if ne "" $stream.Name -}}
-		<h1><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+		<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 	{{- end -}}
 
 	<div class="content margin-top margin-bottom">
@@ -109,9 +109,7 @@
 			</div>
 		{{- end -}}
 
-		<div class="text-gray flex-row">
-			<div class="bold">{{ $stream.Published | longDate -}}</div>
-		</div>	
+		<div class="bold">{{ $stream.Published | longDate -}}</div>
 
 		{{- if $stream.HasContent -}}
 			<div>{{- $stream.Content | html -}}</div>

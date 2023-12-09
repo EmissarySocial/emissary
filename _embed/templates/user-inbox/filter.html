@@ -6,7 +6,7 @@
 
 	<h1>{{ icon "filter" }} Filter By Source</h1>
 
-	<div class="margin-bottom">
+	<div class="margin-vertical">
 
 		{{$selected := eq "" $followingID}}
 		<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}" hx-get="/@me/inbox?folderId={{$folderID}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
