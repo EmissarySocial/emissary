@@ -154,7 +154,9 @@ func (service *Following) Load(criteria exp.Expression, result *model.Following)
 // Save adds/updates an Following in the database
 func (service *Following) Save(following *model.Following, note string) error {
 
-	// TODO: Add duplicate checks to this function?
+	const location = "service.Following.Save"
+
+	// TODO: LOW: Add duplicate checks to this function?
 
 	// RULE: Reset status and error counts when saving
 	following.Method = model.FollowMethodPoll
@@ -164,7 +166,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {
-		return derp.Wrap(err, "service.Following.Save", "Error cleaning Following", following)
+		return derp.Wrap(err, location, "Error cleaning Following", following)
 	}
 
 	// RULE: Update Polling duration based on the transmission method
@@ -183,14 +185,14 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// RULE: Set the Folder Name
 	folder := model.NewFolder()
 	if err := service.folderService.LoadByID(following.UserID, following.FolderID, &folder); err != nil {
-		return derp.Wrap(err, "service.Following.Save", "Error loading Folder", following)
+		return derp.Wrap(err, location, "Error loading Folder", following)
 	}
 
 	following.Folder = folder.Label
 
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
-		return derp.Wrap(err, "service.Following.Save", "Error saving Following", following, note)
+		return derp.Wrap(err, location, "Error saving Following", following, note)
 	}
 
 	// RULE: Update messages if requested by the UX
@@ -210,12 +212,16 @@ func (service *Following) Save(following *model.Following, note string) error {
 // Delete removes an Following from the database (virtual delete)
 func (service *Following) Delete(following *model.Following, note string) error {
 
+	const location = "service.Following.Delete"
+
+	// Remove the Following record
 	if err := service.collection.Delete(following, note); err != nil {
-		return derp.Wrap(err, "service.Following.Delete", "Error deleting Following", following, note)
+		return derp.Wrap(err, location, "Error deleting Following", following, note)
 	}
 
+	// Remove any messages received from this Following
 	if err := service.inboxService.DeleteByOrigin(following.FollowingID, "Parent record deleted"); err != nil {
-		return derp.Wrap(err, "service.Following.Delete", "Error deleting streams for Following", following, note)
+		return derp.Wrap(err, location, "Error deleting streams for Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -393,7 +399,7 @@ func (service *Following) LoadByURL(userID primitive.ObjectID, profileUrl string
  * Custom Actions
  ******************************************/
 
-func (service *Following) IsFollowing(userID primitive.ObjectID, uri string) (bool, error) {
+func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) (string, error) {
 
 	const location = "service.Following.IsFollowing"
 
@@ -401,7 +407,7 @@ func (service *Following) IsFollowing(userID primitive.ObjectID, uri string) (bo
 	document, err := service.activityStreams.Load(uri)
 
 	if err != nil {
-		return false, derp.Wrap(err, location, "Error loading ActivityStream document", uri)
+		return "", derp.Wrap(err, location, "Error loading ActivityStream document", uri)
 	}
 
 	// If this document is not an Actor, then get the Actor of the document
@@ -410,18 +416,18 @@ func (service *Following) IsFollowing(userID primitive.ObjectID, uri string) (bo
 	}
 
 	if document.IsNil() {
-		return false, derp.NewBadRequestError(location, "Invalid ActivityStream document", uri)
+		return "", derp.NewBadRequestError(location, "Invalid ActivityStream document", uri)
 	}
 
 	// Look for the Actor in the Following collection
 	following := model.NewFollowing()
 
 	if err := service.LoadByURL(userID, document.ID(), &following); err == nil {
-		return true, nil
+		return following.ID(), nil
 	} else if derp.NotFound(err) {
-		return false, nil
+		return "", nil
 	} else {
-		return false, derp.Wrap(err, location, "Error loading Following record", uri)
+		return "", derp.Wrap(err, location, "Error loading Following record", uri)
 	}
 }
 

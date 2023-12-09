@@ -1,3 +1,4 @@
+{{- $inboxRenderer := . -}}
 {{- $pageSize := 4 -}}
 {{- $published := .QueryParam "published" -}}
 {{- $replies := .RepliesBefore $published $pageSize -}}
@@ -17,35 +18,45 @@
 	<hr>
 	<div class="margin-bottom hover-trigger">
 		<div class="flex-row">
-			<div class="margin-right-sm" style="width:32px; height:32px;">
-				{{- if $actor.Icon.NotNil -}}
+			<div>
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle-32"></div>
+				{{- else -}}
 					<a href="{{$actor.ID}}"><img class="circle-32" src="{{$actor.Icon.URL}}"></a>
 				{{- end -}}
 			</div>
 			<div class="flex-grow-1">
 				<div>
 					{{- if $actor.NotNil -}}
-						<a href="{{$actor.ID}}">
-							<span class="bold">{{$actor.Name}}</span>
-							<span class="text-gray">&middot; {{ $object.Published | epochDate | tinyDate}} ago</span>
-						</a> &nbsp;
+						<a href="{{$actor.ID}}" class="margin-right-sm">
+							<span class="bold margin-right-sm">{{$actor.Name}}</span>
+							<span class="text-light-gray">@{{$actor.PreferredUsername}}</span>
+						</a>
 					{{- end -}}
 				</div>
 
 				{{- if ne "" $object.Name -}}
-					<h1 class="margin-top">{{$object.Name}}</h1>
+					<div class="bold margin-top">{{$object.Name}}</div>
 				{{- end -}}
 
 				{{- if $object.Image.NotNil -}}
-					<div class="margin-top margin-bottom"><img src="{{$object.Image.URL}}" style="width:100%;"></div>
+					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
 				{{- end -}}
 			
 				<div>{{$object.Content | html}}</div>
+				<div class="text-sm text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</div>
 			</div>
-			<div class="text-align-right text-xs nowrap hover-reveal">
-				<button>Follow</button>
-				<button>Block</button>
-			</div>
+
+			{{- if $actor.NotNil -}}
+				<div class="align-right text-xs"
+					hx-get="/@me/messages/{{$inboxRenderer.MessageID}}/follow-button?url={{$object.Actor.ID}}"
+					hx-swap="innerHTML"
+					hx-target="this"
+					hx-push-url="false"
+					hx-trigger="load">
+				</div>
+			{{- end -}}
+
 		</div>
 	</div>
 

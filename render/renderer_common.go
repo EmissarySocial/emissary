@@ -345,15 +345,14 @@ func (w Common) NotMe(uri string) bool {
 
 // IsFollowing returns TRUE if the curren user is following the
 // document at a specific URI (or the actor who created the document)
-func (w Common) IsFollowing(uri string) bool {
+func (w Common) GetFollowingID(uri string) string {
 
 	followingService := w._factory.Following()
-
-	result, err := followingService.IsFollowing(w.AuthenticatedID(), uri)
+	result, err := followingService.GetFollowingID(w.AuthenticatedID(), uri)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "render.Common.IsFollowing", "Error checking following status", uri))
-		return false
+		derp.Report(derp.Wrap(err, "render.Common.GetFollowingID", "Error getting following status", uri))
+		return ""
 	}
 
 	return result
