@@ -27,18 +27,17 @@ h1 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 4);
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm));
+    margin-top:calc(var(--rhythm) * 6);
+    margin-bottom:calc(var(--rhythm) * 1);
     color:var(--heading-color);
 }
-
 
 h2 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 3);
-    margin-top:calc(var(--rhythm) * 2);
-    margin-bottom:calc(var(--rhythm));
+    margin-top:calc(var(--rhythm) * 4);
+    margin-bottom:calc(var(--rhythm) * 1);
     color:var(--heading-color);
 }
 
@@ -46,22 +45,9 @@ h3 {
     font-weight:calc(var(--weight) + 300);
     font-size:calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 2);
-    margin-top:calc(var(--rhythm));
-    margin-bottom:calc(var(--rhythm) * 0);
-    color:var(--heading-color);
-}
-
-h1.space-above,
-h2.space-above,
-h3.space-above {
     margin-top:calc(var(--rhythm) * 3);
-}
-
-
-h1.space-below,
-h2.space-below,
-h3.space-below {
-    margin-bottom:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 1);
+    color:var(--heading-color);
 }
 
 h1:first-child,
@@ -78,7 +64,7 @@ h3:first-child {
 .text-3xl {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 5);
-    line-height:calc(var(--rhythm) * 5);
+    line-height:calc(var(--rhythm) * 7);
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 1);
 }
@@ -89,7 +75,7 @@ h3:first-child {
 input.text-xxl {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 4);
+    line-height:calc(var(--rhythm) * 6);
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 1);
 }
@@ -99,9 +85,9 @@ input.text-xxl {
 input.text-xl {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 3);
-    line-height:calc(var(--rhythm) * 3);
+    line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm) * 2);
-    margin-bottom:calc(var(--rhythm));
+    margin-bottom:calc(var(--rhythm) * 1);
 }
 
 .text-lg,
@@ -109,9 +95,9 @@ input.text-xl {
 input.text-lg {
     font-weight:calc(var(--weight) + 300);
     font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
     margin-top:calc(var(--rhythm));
-    margin-bottom:calc(var(--rhythm) * 0);
+    margin-bottom:calc(var(--rhythm) * 1);
     color:var(--heading-color);
 }
 
@@ -121,6 +107,7 @@ p,
 input.text-md {
     font-size:calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
+    margin-top: calc(var(--rhythm) * 0);
     margin-bottom:calc(var(--rhythm) * 2);
 }
 
