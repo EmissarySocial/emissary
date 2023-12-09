@@ -3,7 +3,7 @@
 <div class="table">
 	<div class="link flex-row" hx-get="/@me/inbox/following-add" style="align-items:center" role="button" hx-push-url="false">
 
-		<div class="flex-row" style="flex-grow:1">
+		<div class="flex-row flex-grow-1">
 
 			<div style="width:3em; flex-grow:0; flex-shrink:0; text-align:center;">
 				{{icon "add"}}
@@ -17,7 +17,7 @@
 	{{- range $following -}}
 		<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" class="flex-row" style="align-items:center" role="button" hx-push-url="true">
 
-			<div class="flex-row" style="flex-grow:1">
+			<div class="flex-row flex-grow-1">
 
 				<div style="width:3em; height:3em; flex-grow:0; flex-shrink:0;">
 					{{- if ne "" .ImageURL -}}
@@ -28,8 +28,8 @@
 				<div style="width:60%;">
 					{{- if ne "" .Label -}}
 						<div class="ellipsis-block" style="max-height:3em;">
-							<div class="black bold" style="margin:0px">{{- .Label -}}</div>
-							<div class="text-sm text-gray" style="margin:0px">{{- .URL -}}</div>
+							<div class="black bold margin-none">{{- .Label -}}</div>
+							<div class="text-sm text-gray margin-none">{{- .URL -}}</div>
 						</div>
 					{{- else -}}
 						<div class="ellipsis-block" style="max-height:1.75em;">
@@ -39,7 +39,7 @@
 				</div>
 				<div style="width:40%;">
 					<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="bold text-plain" script="on click halt the event">{{.Folder}}</a></div>
-					<div class="text-xs text-gray" style="margin:0px;">
+					<div class="text-xs text-gray margin-none">
 						{{ if eq "SUCCESS" .Status -}}
 							{{ icon .Icon }} 
 							{{.Method}}

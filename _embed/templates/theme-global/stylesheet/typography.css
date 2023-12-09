@@ -248,6 +248,18 @@ code.inline {
     text-align:right;
 }
 
+.valign-top {
+    vertical-align:top;
+}
+
+.valign-middle {
+    vertical-align:middle;
+}
+
+.valign-bottom {
+    vertical-align:bottom
+}
+
 .float-right {
     float:right;
 }

@@ -184,16 +184,16 @@
     flex-grow: 1;
 }
 
-.width-100 {
-    width: 100%;
-}
-
 /******************************************
  * Margin Spacing
  ******************************************/
 
 .margin-none {
     margin:0px!important;
+}
+
+.margin-auto{
+    margin:auto;
 }
 
 .margin-xs {
@@ -216,6 +216,11 @@
 .margin-vertical-none {
     margin-top: 0px!important;
     margin-bottom: 0px!important;
+}
+
+.margin-verticial-auto {
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .margin-vertical-xs {
@@ -244,6 +249,11 @@
     margin-right:0px!important;
 }
 
+.margin-horizontal-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .margin-horizontal-xs {
     margin-left: calc(var(--rhythm) * 0.5);
     margin-right: calc(var(--rhythm) * 0.5);
@@ -269,6 +279,10 @@
     margin-top: 0px!important;
 }
 
+.margin-top-auto {
+    margin-top: auto;
+}
+
 .margin-top-xs {
     margin-top: calc(var(--rhythm) * 0.5);
 }
@@ -288,6 +302,10 @@
 
 .margin-bottom-none {
     margin-bottom:0px!important;
+}
+
+.margin-bottom-auto {
+    margin-bottom:auto;
 }
 
 .margin-bottom-xs {
@@ -311,6 +329,10 @@
     margin-left:0px!important;
 }
 
+.margin-left-auto {
+    margin-left:auto;
+}
+
 .margin-left-xs {
     margin-left: calc(var(--rhythm) * 0.5);
 }
@@ -330,6 +352,10 @@
 
 .margin-right-none {
     margin-right:0px!important;
+}
+
+.margin-right-auto {
+    margin-right:auto;
 }
 
 .margin-right-xs {
@@ -383,3 +409,13 @@
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 3);
 }
+
+
+/******************************************
+ * Sizes
+ ******************************************/
+
+.width-100 {
+    width: 100%;
+}
+

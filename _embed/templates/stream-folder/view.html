@@ -64,7 +64,7 @@
 					<div class="draggable clickable card" hx-get="/{{.Token}}" href="/{{.Token}}">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
 						{{- if ne .ImageURL "" -}}
-							<picture loading="lazy" style="aspect-ratio: 4 / 3;">
+							<picture loading="lazy" class="aspect-4-3">
 								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
 								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
 							</picture>
@@ -88,7 +88,7 @@
 					<input type="hidden" name="keys" value="{{.StreamID}}"/>
 					<div class="card" role="link">
 						{{- if ne .ImageURL "" -}}
-						<picture loading="lazy" style="aspect-ratio: 4 / 3;">
+						<picture loading="lazy" class="aspect-4-3">
 							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
 							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
 						</picture>

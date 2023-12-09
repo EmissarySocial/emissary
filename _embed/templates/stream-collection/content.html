@@ -24,7 +24,7 @@
 		</div>
 	{{- end -}}
 
-	<div style="flex-grow:1;">
+	<div class="flex-grow-1">
 		{{- range $children -}}
 			<div id="{{.StreamID}}" hx-get="/{{.StreamID}}" hx-trigger="revealed" hx-target="this" hx-push-url="false"></div>
 		{{- end -}}

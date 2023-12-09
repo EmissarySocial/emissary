@@ -29,8 +29,8 @@
 						</div>
 					</td>
 					<td class="align-right">
-						<a href="/{{.StreamID}}/edit" class="button text-sm" style="margin:0px">Edit</a>
-						<a hx-get="/{{.StreamID}}/delete" class="button text-sm text-red" style="margin:0px">Delete</a>
+						<a href="/{{.StreamID}}/edit" class="button text-sm margin-none">Edit</a>
+						<a hx-get="/{{.StreamID}}/delete" class="button text-sm text-red margin-none">Delete</a>
 					</td>
 				</tr>
 			{{- end -}}
@@ -45,7 +45,7 @@
 {{- else if .UserCan "add-child" -}}
 
 	<div class="align-center">
-		<div style="max-width:500px; margin:auto;">
+		<div class="margin-auto" style="max-width:500px;">
 			<h1 class="text-gray">Add a Child Stream</h1>
 			<h2 class="text-gray">Place additional pages under this one in the site map, then organize them with the sort tool.</h2>
 			<br>
