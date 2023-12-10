@@ -43,7 +43,7 @@
 			"steps":[
 				{"step":"set-render-data", "postTo":"/@me/messages/{{.MessageID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
-					"inReplyTo":"{{.OriginalURL}}"
+					"inReplyTo":"{{.Permalink}}"
 				}},
 				{"step": "set-header", "name":"hx-retarget", "value":"#replies"},
 				{"step": "set-header", "name":"hx-reswap", "value":"innerHTML"},

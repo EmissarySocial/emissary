@@ -4,7 +4,7 @@
 <form id="outbox-message" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-message" data-script="
 	on htmx:configRequest(parameters)
 		set contentHtml to the first <[contenteditable=true]/> in me
-		set parameters['content'] to contentHtml.innerText
+		set parameters['content'] to contentHtml.innerHTML
 		focus() the contentHtml
 
 	on htmx:afterRequest

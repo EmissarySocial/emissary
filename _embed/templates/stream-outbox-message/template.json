@@ -40,6 +40,7 @@
 		},
 		"view": {
 			"steps":[
+				{"step":"set-render-data", "postTo":"/{{.StreamID}}/reply"},
 				{"step":"view-json"},
 				{"step":"view-html"}
 			]
@@ -56,14 +57,31 @@
 				]}
 			]
 		},
+		"responses-replies":{
+			"roles":["authenticated"],
+			"step":"view-html"
+		},
+		"responses-announces":{
+			"roles":["authenticated"],
+			"step":"view-html"
+		},
+		"responses-likes":{
+			"roles":["authenticated"],
+			"step":"view-html"
+		},
 		"reply":{
 			"roles":["authenticated"],
 			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Reply to {{.Author.Name}}", "postTo":"/{{.StreamID}}/reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-				{"step":"trigger-event", "event":"refreshReplies"}
+				{"step":"set-render-data", "postTo":"/{{.StreamID}}/reply"},
+				{"step":"add-stream", "location":"outbox", "roles":["outbox-reply"], "as-embed":true, "with-data":{
+					"inReplyTo":"{{.Permalink}}"
+				}},
+				{"step": "set-header", "name":"hx-retarget", "value":"#replies"},
+				{"step": "set-header", "name":"hx-reswap", "value":"innerHTML"},
+				{"step":"view-html", "method":"post", "file":"replies"}
 			]
 		},
+		"replies":{"step":"view-html"},
 		"delete": {
 			"roles":["self"],
 			"steps": [

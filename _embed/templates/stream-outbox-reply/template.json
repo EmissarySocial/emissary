@@ -17,18 +17,6 @@
 			"inReplyTo": {"type":"string", "format":"url"}
 		}
 	},
-	"states": {
-		"visible": {
-			"label":"Visible",
-			"description":"Comment is publicly visible"
-		}
-	},
-	"roles": {
-		"self": {
-			"label":"Myself",
-			"decription":"Outbox messages can only be sent by the current user."
-		}
-	},
 	"actions": {
 		"create":{
 			"steps": [

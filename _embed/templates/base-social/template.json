@@ -6,17 +6,17 @@
 		}
 	},
 	"actions":{
-		"parent":{"step":"view-html"},
-		"replies-before":{"step":"view-html"},
-		"replies-after":{"step":"view-html"},
-		"responses":{"step":"view-html", "file":"responses-wrapper"},
-		"response-icons":{
+		"xparent":{"step":"view-html"},
+		"xreplies-before":{"step":"view-html"},
+		"xreplies-after":{"step":"view-html"},
+		"xresponses":{"step":"view-html", "file":"responses-wrapper"},
+		"xresponse-icons":{
 			"steps":[
 				{"step":"as-tooltip", "steps":[
 					{"step":"view-html"}
 				]}
 			]},
-		"set-response":{
+		"xset-response":{
 			"steps":[
 				{"step":"view-html", "file":"responses"},
 				{"step":"set-response"}

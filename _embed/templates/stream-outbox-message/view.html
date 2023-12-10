@@ -1,53 +1,47 @@
-{{- $activity := .ActivityStream "URL" -}}
+{{- $stream := .ActivityStream .Permalink -}}
+{{- $statistics := $stream.Statistics -}}
+
 <link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
 <link rel="stylesheet" href="/.templates/base-social/stylesheet">
 
-<div class="page h-entry">
+<div class="flex-row page h-entry">
 
-	<div class="float-right">
-		<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-sm">Edit</button>
+	<div class="margin-right">
+		<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
+			{{- if eq .Author.ImageURL "" -}}
+				<div class="circle-64"></div>
+			{{- else -}}
+				<img src="{{.Author.ImageURL}}" class="circle-64">
+			{{- end -}}
+		</a>
 	</div>
 
-	<div style="max-width:720px;"> 
+	<div class="flex-grow-1" style="max-width:720px;">
 
-		{{- if .IsReply -}}
-			{{- $inReplyTo := .InReplyTo.Load -}}
-			<div class="text-gray text-sm turboclick" role="button" hx-get="/{{.StreamID}}/parent" hx-push-url="false" hx-target="this" hx-swap="outerHTML">{{icon "reply"}} Replying to 
-				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
-				<span class="link text-xs">[show previous]</span>
-				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>
+		<div class="p-author text-xl bold margin-vertical-none">
+			<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
+		</div>
+		<div class="text-light-gray">
+			<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
+			<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+		</div>
+
+		<div class="text-lg margin-vertical-lg">
+			{{- if .UserCan "edit" -}}
+				<div class="float-right">
+					<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
+				</div>
+			{{- end -}}
+			{{.ContentHTML}}
+		</div>
+
+		{{- if ne .ImageURL "" -}}
+			<div class="margin-vertical">
+				<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
 			</div>
 		{{- end -}}
 
-		<div class="p-author margin-bottom">
-			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
-				<img src="{{.Author.ImageURL}}" class="circle-64 margin-right-sm">
-				<div class="margin-vertical-none inline-block">
-					<div class="p-author text-lg bold link margin-vertical-none">{{.Author.Name}}</div>
-					<div class="dt-published margin-vertical-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
-				</div>
-			</a>
-		</div>
-
-		<div style="margin-left:72px;">
-			<div class="margin-bottom">
-				<h2 class="p-summary">{{.ContentHTML}}</h2>
-			</div>
-
-			{{- if ne .ImageURL "" -}}
-				<div class="margin-bottom">
-					<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
-				</div>
-			{{- end -}}
-
-			<hr>
-
-			<div hx-get="/{{.StreamID}}/replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-				Loading Replies...
-			</div>
-
-		</div>
-
+		{{- .View "responses-replies" -}}
 	</div>
 
 </div>

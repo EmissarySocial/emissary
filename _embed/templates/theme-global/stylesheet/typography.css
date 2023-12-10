@@ -71,7 +71,6 @@ h3:first-child {
  
 .text-xxxl,
 .text-3xl {
-    font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 5);
     line-height:calc(var(--rhythm) * 7);
     margin-top:calc(var(--rhythm) * 3);
@@ -82,7 +81,6 @@ h3:first-child {
 .text-2xl,
 .text-xxl input,
 input.text-xxl {
-    font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 6);
     margin-top:calc(var(--rhythm) * 3);
@@ -92,7 +90,6 @@ input.text-xxl {
 .text-xl,
 .text-xl input,
 input.text-xl {
-    font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm) * 2);
@@ -102,7 +99,6 @@ input.text-xl {
 .text-lg,
 .text-lg input,
 input.text-lg {
-    font-weight:calc(var(--weight) + 200);
     font-size:calc(var(--rhythm) * 2);
     line-height:calc(var(--rhythm) * 3);
     margin-top:calc(var(--rhythm));

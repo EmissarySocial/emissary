@@ -15,11 +15,13 @@
 
 		<div>
 			<span class="bold black">{{$stream.AttributedTo.Name}}</span>
-			<span class="text-gray nowrap flex-grow-1">
+			<span class="text-light-gray nowrap flex-grow-1">
+				&middot;
+				@{{$stream.AttributedTo.PreferredUsername}} &middot;
 				{{ icon $message.Origin.Icon }}
 				{{ $stream.Published | tinyDate }}
 			</span>
-			{{$stream.AttributedTo.PreferredUsername}}
+			
 		</div>
 
 		{{- if ne "" $stream.Name -}}

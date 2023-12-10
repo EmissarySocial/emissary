@@ -15,14 +15,14 @@
 	data-script="
 		on htmx:configRequest(parameters)
 			set contentHtml to the first <.input/> in me
-			set parameters['content'] to contentHtml.innerText
+			set parameters['content'] to contentHtml.innerHTML
 		">
 
 	{{if not .IsNew}}
 		<h1>Edit Post</h1>
 	{{end}}
 
-	<div class="margin-bottom-sm">
+	<div class="margin-bottom">
 		<div
 			tabIndex="0"
 			class="input"

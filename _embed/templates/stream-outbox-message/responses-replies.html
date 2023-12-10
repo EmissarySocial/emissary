@@ -1,0 +1,40 @@
+{{- $stream := .ActivityStream .Permalink -}}
+{{- $statistics := $stream.Statistics -}}
+
+<div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top-lg">
+	<div>
+		<span hx-get="/{{.StreamID}}/responses-replies" role="button" class="margin-right-xs clickable bold">
+			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
+		</span>
+		&middot;
+		<span hx-get="/{{.StreamID}}/responses-likes" role="button" class="margin-horizontal-xs clickable">
+			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
+		</span>
+		&middot;
+		<span hx-get="/{{.StreamID}}/responses-announces" role="button" class="margin-horizontal-xs clickable">
+			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
+		</span>
+	</div>
+
+	<hr class="margin-vertical-xs"/>
+
+	<div id="replies" class="margin-vertical">
+		{{.View "replies"}}
+	</div>
+
+	{{- if .UserCan "reply" -}}
+		<div class="flex-row">
+			<div>
+				{{- $userImage := .UserImage -}}
+				{{- if eq $userImage "" -}}
+					<div class="circle-32"></div>
+				{{- else -}}
+					<img class="circle-32" src="{{$userImage}}">
+				{{- end -}}
+			</div>
+			<div class="flex-grow-1">
+				{{.View "reply"}}
+			</div>
+		</div>
+	{{- end -}}
+</div>

@@ -1,24 +1,26 @@
-<div class="text-light-gray margin-top-sm">
-	<span class="margin-right-sm">
-		{{ if eq 1 .Replies -}}
+<div class="flex-row">
+	<div class="margin-top margin-right-sm text-sm text-light-gray">
+		{{- if eq 0 .Replies -}}
+		{{ else if eq 1 .Replies -}}
 			1 Reply
 		{{- else -}}
 			{{.Replies}} Replies
 		{{- end -}}
-	</span>
-	<span class="margin-right-sm">
-		{{ if eq 1 .Likes -}}
+	</div>
+	<div class="margin-top margin-right-sm text-sm text-light-gray">
+		{{- if eq 0 .Likes -}}
+		{{- else if eq 1 .Likes -}}
 			1 Like
 		{{- else -}}
 			{{.Likes}} Likes
 		{{- end -}}
-	</span>
-	<span class="margin-right-sm">
-		{{ if eq 1 .Announces -}}
+	</div>
+	<div class="margin-top margin-right-sm text-sm text-light-gray">
+		{{- if eq 0 .Announces -}}
+		{{- else if eq 1 .Announces -}}
 			1 Share
 		{{- else -}}
 			{{.Announces}} Shares
 		{{- end -}}
-
-	</span>
+	</div>
 </div>

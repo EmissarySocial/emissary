@@ -188,7 +188,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	subStream, err := NewStream(w.factory(), w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
+		return template.HTML(""), derp.ReportAndReturn(derp.Wrap(err, location, "Error creating sub-renderer"))
 	}
 
 	// Generate HTML template

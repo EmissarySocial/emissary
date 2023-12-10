@@ -1,45 +1,38 @@
+{{- $outboxRenderer := . -}}
 {{- $outbox := .Outbox.Top12.ByPublishDate.Reverse.Slice -}}
 
 {{- if ne 0 (len $outbox) -}}
 	{{- $last := $outbox.Last -}}
 	{{- $isMyself := .IsMyself -}}
 
-	{{- range $outbox -}}
+	{{- range $index, $stream := $outbox -}}
+		{{- $document := $outboxRenderer.ActivityStream $stream.URL -}}
 		<hr>
 		<div class="hover-trigger">
-			{{- if $isMyself -}}
-				<div class="float-right hover-reveal text-sm">
-					<button hx-get="/{{.StreamID}}/edit">Edit</button>
-				</div>
-			{{- end -}}
-			<div hx-get="/{{.Token}}" hx-push-url="true" role="link" class="flex-row h-entry margin-bottom">
+			<div hx-get="/{{$stream.Token}}" hx-push-url="true" role="link" class="flex-row h-entry margin-bottom">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
+					<img src="{{$stream.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">
-						<div class="p-author h-card text-sm gray50" style="margin:0px;">
-							{{- if ne "" .AttributedTo.Name -}}
-								<span class="p-name">{{.AttributedTo.Name}}</span>
-								&middot;
-							{{- end -}}
-							<span class="p-published">{{.PublishDate | humanizeTime}}</span>
-						</div>
-						<div class="h-name bold black">{{.Label}}</div>
-						<div class="h-summary black">{{.ContentHTML | html }}</div>
-						{{- if ne .ImageURL ""}}
+						{{- if ne "" $stream.Label -}}
+							<div class="h-name bold black">{{$stream.Label}}</div>
+						{{- end -}}
+						<div class="h-summary black">{{$stream.ContentHTML | html }}</div>
+						{{- if ne $stream.ImageURL ""}}
 							<div style="margin-top:var(--rhythm);">
-								<img src="{{.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+								<img src="{{$stream.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
 							</div>
 						{{- end -}}
+						<div class="text-sm text-light-gray p-published">{{$stream.PublishDate | humanizeTime}}</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	{{- end -}}
 
-	<div hx-get="{{.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
-		Just a sec...
+	<div hx-get="{{$outboxRenderer.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
+		Loading recent posts...
 	</div>
 
 {{- end -}}

@@ -1,11 +1,10 @@
-{{- $inboxRenderer := . -}}
+{{- $streamRenderer := . -}}
 {{- $pageSize := 4 -}}
 {{- $published := .QueryParam "published" -}}
 {{- $replies := .RepliesBefore $published $pageSize -}}
 
 {{- if eq $replies.Length $pageSize -}}
-	<div class="margin-bottom" role="button" hx-get="/@me/messages/{{.MessageID}}/replies?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-		<hr>
+	<div class="margin-bottom" role="button" hx-get="/{{.StreamID}}/replies?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		<span class="button text-xs">Show Older Replies</span>
 	</div>
 {{- end -}}
@@ -15,14 +14,13 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<hr>
-	<div class="margin-bottom hover-trigger">
+	<div class="margin-bottom-lg hover-trigger">
 		<div class="flex-row">
 			<div>
 				{{- if $actor.Icon.IsNil -}}
-					<div class="circle-48"></div>
+					<div class="circle-32"></div>
 				{{- else -}}
-					<a href="{{$actor.ID}}"><img class="circle-48" src="{{$actor.Icon.URL}}"></a>
+					<a href="{{$actor.ID}}"><img class="circle-32" src="{{$actor.Icon.URL}}"></a>
 				{{- end -}}
 			</div>
 			<div class="flex-grow-1">
@@ -49,7 +47,7 @@
 
 			{{- if $actor.NotNil -}}
 				<div class="align-right text-xs"
-					hx-get="/@me/messages/{{$inboxRenderer.MessageID}}/follow-button?url={{$object.Actor.ID}}"
+					hx-get="/@me/messages//follow-button?url={{$object.Actor.ID}}"
 					hx-swap="innerHTML"
 					hx-target="this"
 					hx-push-url="false"
