@@ -9,6 +9,7 @@
 html, body {
 	/* https://tetralogical.com/blog/2023/06/08/focus-in-view/ */
 	scroll-padding-top: 56px; 
+	overscroll-behavior-y: none;
 }
 
 body {

@@ -2,12 +2,18 @@
  * Page
  ******************************************/
 
+html {
+	overscroll-behavior-y: none;
+}
+
 body {
 	min-height:100vh;
+	overscroll-behavior-y: none;
 }
 
 main {
 	min-height:100vh;
+	overscroll-behavior-y: none;
 }
 
 .fullscreen {
@@ -22,6 +28,7 @@ main {
     padding: 0px;
     position:relative;
 	line-height:150%;
+	overscroll-behavior-y: none;
 }
 
 .app-sidebar {
