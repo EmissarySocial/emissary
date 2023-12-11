@@ -32,6 +32,7 @@
 		"view": {
 			"roles":["self"],
 			"steps":[
+				{"step":"set-args", "path":"/@me/messages/{{.MessageID}}"},
 				{"step":"as-modal", "options":["class:large"], "steps":[
 					{"step":"view-html", "file":"view"}
 				]}
@@ -41,7 +42,7 @@
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-render-data", "postTo":"/@me/messages/{{.MessageID}}/reply"},
+				{"step":"set-args", "postTo":"/@me/messages/{{.MessageID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
@@ -51,32 +52,14 @@
 			]
 		},
 
-		"replies":{"step":"view-html"},
-		"follow-button": {
-			"roles":["self"],
-			"step":"view-html"
-		},
-		"follow": {
+		"replies":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
-					{"step":"save"}
-				]},
-				{"step":"view-html", "method":"post", "file":"follow-button"}
+				{"step":"set-args", "path":"/@me/messages/{{.MessageID}}"},
+				{"step":"view-html"}
 			]
 		},
-		"unfollow": {
-			"roles":["self"],
-			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"delete"}
-				]},
-				{"step":"view-html", "method":"post", "file":"follow-button"},
-				{"step":"remove-event", "event":"closeModal"}
-			]
-		},
-
+	
 		"delete": {
 			"roles": ["self"],
 			"steps": [

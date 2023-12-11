@@ -1,0 +1,15 @@
+{{- $path := .GetString "path" -}}
+{{- $folderID := .GetString "folderID" -}}
+{{- $url := .QueryParam "url" -}}
+
+{{- if .NotMe $url -}}
+	<span hx-swap="outerHTML" hx-target="this">
+		{{- $followingID := .GetFollowingID $url -}}
+		{{- if ne "" $followingID -}}
+			<button hx-post="/@me/inbox/unfollow?followingId={{$followingID}}" hx-confirm="Do you want to stop following this account and remove all of their content from your inbox?">{{icon "check"}} Following</button>
+		{{- else -}}
+			<button hx-post="/@me/inbox/follow?followingId=new&url={{$url}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
+			<button hx-get="/@me/inbox/block?url={{$url}}">{{icon "block"}} Block</button>
+		{{- end -}}
+	</span>
+{{- end -}}

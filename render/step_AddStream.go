@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -85,7 +84,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 
 	// Create a renderer for the new Stream
 	newRenderer, err := NewStream(factory, renderer.request(), renderer.response(), newTemplate, &newStream, "view")
-	newRenderer.dataMap = renderer.DataMap()
+	newRenderer.setArguments(renderer.getArguments())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating renderer", newStream))
@@ -189,7 +188,7 @@ func (step StepAddStream) getEmbed(renderer Renderer, buffer io.Writer) error {
 
 	// Create a new child renderer
 	childRenderer, err := NewStream(factory, renderer.request(), renderer.response(), template, &child, "create")
-	childRenderer.dataMap = renderer.DataMap()
+	childRenderer.setArguments(renderer.getArguments())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating new child stream renderer")
@@ -335,13 +334,8 @@ func (step StepAddStream) setStreamData(renderer Renderer, stream *model.Stream)
 
 	s := schema.New(model.StreamSchema())
 
-	spew.Dump("stepAddStream.setStreamData -----------", stream)
-
 	for key, valueTemplate := range step.WithData {
 		value := executeTemplate(valueTemplate, renderer)
-
-		spew.Dump(key, value)
-
 		if err := s.Set(stream, key, value); err != nil {
 			return derp.Wrap(err, "render.StepAddStream.setStreamData", "Error setting stream data", key, value)
 		}

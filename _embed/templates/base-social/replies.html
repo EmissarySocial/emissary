@@ -1,61 +1,65 @@
-<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
+{{- $path := .GetString "path" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 4 -}}
 
-<div class="page h-entry">
+{{- $renderer := . -}}
+{{- $replies := .RepliesBefore $publishedDate $pageSize -}}
 
-	<div class="float-right">
-		<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-sm">Edit</button>
+{{- if eq $replies.Length $pageSize -}}
+	<div class="margin-bottom" role="button" hx-get="{{$path}}/replies?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+		<span class="button text-xs">Show Older Replies</span>
 	</div>
+{{- end -}}
 
-	<div style="max-width:720px;"> 
+{{- range $replies -}}
 
-		{{- if .IsReply -}}
-			{{- $inReplyTo := .InReplyTo.Load -}}
-			<div class="text-gray margin-bottom" role="button" hx-get="/{{.StreamID}}/view-previous" hx-push-url="false" hx-target="this">{{icon "reply"}} Replying to 
-				<span class="bold">{{$inReplyTo.AttributedTo.Name}}</span>
-				<span class="link text-xs">[show previous]</span>
-				<a href="{{.InReplyTo.ID}}" class="u-in-reply-to"></a>
-			</div>
-		{{- end -}}
+	{{- $object := .UnwrapActivity -}}
+	{{- $actor := $object.AttributedTo.Load -}}
 
-		<div class="p-author text-lg margin-bottom">
-			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row">
-				<img src="{{.Author.ImageURL}}" class="circle-64">
-				<div class="inline-block">
-					<div class="p-author bold link margin-vertical-none">{{.Author.Name}}</div>
-					<div class="dt-published margin-vertical-none text-gray" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</div>
-				</div>
-			</a>
-		</div>
-
-		<div style="margin-left:72px;">
-			<div class="margin-bottom">
-				<h2 class="p-summary">{{.ContentHTML}}</h2>
-			</div>
-
-			{{- if ne .ImageURL "" -}}
-				<div class="margin-bottom">
-					<img src="{{.ImageURL}}?width=600" class="u-photo" style="max-width:100%;">
-				</div>
-			{{- end -}}
-
-			{{- if .UserCan "set-response" -}}
-				{{.View "set-response"}}
-			{{- end -}}
-
-			<hr>
-
-			<div hx-get="/{{.StreamID}}/view-replies-before" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-				Loading Replies...
-			</div>
-
-			<div hx-get="/{{.StreamID}}/view-replies-after?published={{now | epochDate}}" hx-trigger="refreshReplies" hx-push-url="false" hx-swap="innerHTML" hx-target="this">
-				{{- if .UserCan "reply" -}}
-					{{.View "reply"}}
+	<div class="margin-bottom-lg hover-trigger">
+		<div class="flex-row">
+			<div>
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle-48"></div>
+				{{- else -}}
+					<a href="{{$actor.ID}}"><img class="circle-48" src="{{$actor.Icon.URL}}"></a>
 				{{- end -}}
 			</div>
+			<div class="flex-grow-1">
+				<div>
+					{{- if $actor.NotNil -}}
+						<a href="{{$actor.ID}}" class="margin-right-sm">
+							<span class="bold">{{$actor.Name}}</span>
+							<span class="text-light-gray">@{{$actor.PreferredUsername}}</span>
+						</a>
+					{{- end -}}
+				</div>
+
+				{{- if ne "" $object.Name -}}
+					<div class="bold margin-top">{{$object.Name}}</div>
+				{{- end -}}
+
+				{{- if $object.Image.NotNil -}}
+					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+				{{- end -}}
+			
+				<div>{{$object.Content | html}}</div>
+				<div class="text-sm text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</div>
+			</div>
+
+			{{- if $actor.NotNil -}}
+				{{- if $renderer.NotMe $object.Actor.ID -}}
+					<div class="align-right text-xs"
+						hx-get="{{$path}}/follow-button?url={{$object.Actor.ID}}"
+						hx-swap="innerHTML"
+						hx-target="this"
+						hx-push-url="false"
+						hx-trigger="load">
+					</div>
+				{{- end -}}
+			{{- end -}}
 
 		</div>
-
 	</div>
 
-</div>
+{{- end -}}

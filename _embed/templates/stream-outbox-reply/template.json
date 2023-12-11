@@ -29,7 +29,7 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
-					{"step":"set-render-data", "postTo":"/{{.StreamID}}/edit"},
+					{"step":"set-args", "postTo":"/{{.StreamID}}/edit"},
 					{"step":"edit-content", "file":"edit", "format":"HTML"},
 					{"step":"save"},
 					{"step":"publish"},

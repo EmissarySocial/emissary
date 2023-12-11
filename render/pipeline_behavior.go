@@ -1,7 +1,5 @@
 package render
 
-import "github.com/davecgh/go-spew/spew"
-
 type PipelineBehavior func(*PipelineResult)
 
 // Continue is a NOOP that does not change the PipelineResult object
@@ -59,9 +57,7 @@ func (exit PipelineBehavior) RemoveEvent(name string) PipelineBehavior {
 		if exit != nil {
 			exit(status)
 		}
-		spew.Dump(status)
 		delete(status.Events, name)
-		spew.Dump(status)
 	}
 }
 

@@ -121,10 +121,11 @@
 
 	<div id="replies" class="margin-bottom"> 
 
+		<hr>
+
 		{{- if eq $stream.Statistics.Replies 0 -}}
 			<div class="bold margin-bottom">No Replies</div>
 		{{- else -}}
-			<hr>
 			<div class="bold margin-bottom">
 				{{- if eq 1 $stream.Statistics.Replies -}}
 					1 Reply

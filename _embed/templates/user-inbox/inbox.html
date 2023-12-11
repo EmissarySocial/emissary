@@ -20,8 +20,8 @@
 
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
-				<div style="flex-grow:1;">
-					<div class="bold margin-top-sm"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
+				<div class="flex-grow-1 margin-top-sm">
+					<div class="bold"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						<div class="margin-right-sm">
 							{{- if eq "" $following.ImageURL -}}
@@ -31,7 +31,7 @@
 							{{- end -}}
 						</div>
 						<div>
-							<h1 class="margin-bottom-sm" style="text-overflow:ellipsis; overflow:hidden;">
+							<h1 class="margin-bottom-sm ellipsis">
 								{{$following.Label}}
 							</h1>
 							<div class="margin-none">
@@ -44,9 +44,9 @@
 					</div>
 				</div>
 			{{- else -}}
-				<h1 style="margin-top:0px; flex-grow:1;">{{icon $folder.Icon}} {{$folder.Label}}</h1>
+				<h1 class="margin-top-sm flex-grow-1">{{icon $folder.Icon}} {{$folder.Label}}</h1>
 			{{- end -}}
-			<div class="text-sm" style="white-space:nowrap;">
+			<div class="text-sm nowrap margin-top-sm">
 				{{- if $filter.IsZero -}}
 					<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
 				{{- else -}}

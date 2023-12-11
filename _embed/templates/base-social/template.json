@@ -6,6 +6,12 @@
 		}
 	},
 	"actions":{
+
+		"follow-button": {
+			"roles":["self"],
+			"step":"view-html"
+		},
+
 		"xparent":{"step":"view-html"},
 		"xreplies-before":{"step":"view-html"},
 		"xreplies-after":{"step":"view-html"},

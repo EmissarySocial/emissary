@@ -30,7 +30,7 @@ type Common struct {
 	action         model.Action        // Action to be performed on the Template
 	actionID       string              // Token that identifies the action requested in the URL
 
-	dataMap mapof.Any // Temporary data scope for this request
+	arguments mapof.String // Temporary data scope for this request
 
 	// Cached values, do not populate unless needed
 	domain model.Domain // This is a value because we expect to use it in every request.
@@ -61,7 +61,7 @@ func NewCommon(factory Factory, request *http.Request, response http.ResponseWri
 		action:         action,
 		actionID:       actionID,
 		domain:         model.NewDomain(),
-		dataMap:        mapof.NewAny(),
+		arguments:      make(mapof.String),
 	}, nil
 }
 
@@ -192,60 +192,50 @@ func (w Common) NavigationID() string {
  * Request Data (Getters and Setters)
  ******************************************/
 
-func (w Common) DataMap() mapof.Any {
-	return w.dataMap
+func (w Common) getArguments() map[string]string {
+	return w.arguments
+}
+
+func (w *Common) setArguments(arguments map[string]string) {
+	for key, value := range arguments {
+		w.arguments.SetString(key, value)
+	}
 }
 
 func (w Common) GetBool(name string) bool {
-	return w.dataMap.GetBool(name)
+	return convert.Bool(w.GetString(name))
+}
+
+func (w Common) GetFloat(name string) float64 {
+	return convert.Float(w.GetString(name))
+}
+
+func (w Common) GetHTML(name string) template.HTML {
+	return template.HTML(w.GetString(name))
+}
+
+func (w Common) GetInt(name string) int {
+	return convert.Int(w.GetString(name))
+}
+
+func (w Common) GetInt64(name string) int64 {
+	return convert.Int64(w.GetString(name))
+}
+
+func (w Common) GetString(name string) string {
+	return w.arguments.GetString(name)
+}
+
+func (w Common) setString(name string, value string) {
+	w.arguments.SetString(name, value)
+}
+
+func (w Common) SetContent(value string) {
+	w.setString("content", value)
 }
 
 func (w Common) GetContent() template.HTML {
 	return w.GetHTML("content")
-}
-
-func (w Common) GetFloat(name string) float64 {
-	return w.dataMap.GetFloat(name)
-}
-
-func (w Common) GetHTML(name string) template.HTML {
-	return template.HTML(w.dataMap.GetString(name))
-}
-
-func (w Common) GetInt(name string) int {
-	return w.dataMap.GetInt(name)
-}
-
-func (w Common) GetInt64(name string) int64 {
-	return w.dataMap.GetInt64(name)
-}
-
-func (w Common) GetString(name string) string {
-	return w.dataMap.GetString(name)
-}
-
-func (w Common) SetBool(name string, value bool) {
-	w.dataMap.SetBool(name, value)
-}
-
-func (w Common) SetContent(value string) {
-	w.SetString("content", value)
-}
-
-func (w Common) SetFloat(name string, value float64) {
-	w.dataMap.SetFloat(name, value)
-}
-
-func (w Common) SetInt(name string, value int) {
-	w.dataMap.SetInt(name, value)
-}
-
-func (w Common) SetInt64(name string, value int64) {
-	w.dataMap.SetInt64(name, value)
-}
-
-func (w Common) SetString(name string, value string) {
-	w.dataMap.SetString(name, value)
 }
 
 /******************************************

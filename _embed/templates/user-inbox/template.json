@@ -298,6 +298,28 @@
 			]
 		},
 
+		"follow": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
+					{"step":"save"}
+				]},
+				{"step":"view-html", "method":"post", "file":"follow-button"}
+			]
+		},
+		"unfollow": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"delete"}
+				]},
+				{"step":"view-html", "method":"post", "file":"follow-button"},
+				{"step":"remove-event", "event":"closeModal"}
+			]
+		},
+
+
 		"blocks": {
 			"roles":["self"],
 			"step":"view-html", 

@@ -44,21 +44,21 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 	action, ok := template.Action(actionID)
 
 	if !ok {
-		return Stream{}, derp.NewBadRequestError(location, "Invalid action", actionID)
+		return Stream{}, derp.ReportAndReturn(derp.NewBadRequestError(location, "Invalid action", template.TemplateID, actionID))
 	}
 
 	// Create the underlying Common renderer
 	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Error creating common renderer")
+		return Stream{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error creating common renderer"))
 	}
 
 	if !action.UserCan(stream, &common._authorization) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.NewForbiddenError(location, "Forbidden")
+			return Stream{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
 		} else {
-			return Stream{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
 		}
 	}
 

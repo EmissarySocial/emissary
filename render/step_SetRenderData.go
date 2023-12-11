@@ -23,7 +23,7 @@ func (step StepSetRenderData) Post(renderer Renderer, _ io.Writer) PipelineBehav
 func (step StepSetRenderData) Do(renderer Renderer) PipelineBehavior {
 	for key, value := range step.Values {
 		queryValue := executeTemplate(value, renderer)
-		renderer.SetString(key, queryValue)
+		renderer.setString(key, queryValue)
 	}
 
 	return nil

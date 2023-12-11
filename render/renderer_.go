@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -40,20 +39,17 @@ type Renderer interface {
 	UserCan(string) bool                 // Returns TRUE if the signed-in user has access to the named action
 	AuthenticatedID() primitive.ObjectID // Returns the ID of the signed-in user (or zero if not signed in)
 
-	SetContent(string)
-	GetContent() template.HTML
-	DataMap() mapof.Any
+	getArguments() map[string]string // Returns the arguments passed to the action
 	GetBool(name string) bool
 	GetFloat(name string) float64
 	GetHTML(name string) template.HTML
 	GetInt(name string) int
 	GetInt64(name string) int64
 	GetString(name string) string
-	SetBool(name string, value bool)
-	SetFloat(name string, value float64)
-	SetInt(name string, value int)
-	SetInt64(name string, value int64)
-	SetString(name string, value string)
+	setString(name string, value string)
+
+	GetContent() template.HTML
+	SetContent(string)
 
 	factory() Factory                    // The service factory
 	request() *http.Request              // The original http.Request that we are responding to

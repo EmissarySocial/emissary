@@ -28,8 +28,8 @@
 				<div style="width:60%;">
 					{{- if ne "" .Label -}}
 						<div class="ellipsis-block" style="max-height:3em;">
-							<div class="black bold margin-none">{{- .Label -}}</div>
-							<div class="text-sm text-gray margin-none">{{- .URL -}}</div>
+							<div class="black bold">{{- .Label -}}</div>
+							<div class="text-sm text-light-gray">{{- .URL -}}</div>
 						</div>
 					{{- else -}}
 						<div class="ellipsis-block" style="max-height:1.75em;">
@@ -38,8 +38,8 @@
 					{{- end -}}
 				</div>
 				<div style="width:40%;">
-					<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="bold text-plain" script="on click halt the event">{{.Folder}}</a></div>
-					<div class="text-xs text-gray margin-none">
+					<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="black bold" script="on click halt the event">{{.Folder}}</a></div>
+					<div class="text-sm text-light-gray margin-none">
 						{{ if eq "SUCCESS" .Status -}}
 							{{ icon .Icon }} 
 							{{.Method}}

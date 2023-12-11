@@ -9,7 +9,7 @@
 
 </script>
 
-{{- $targetURL := .QueryParam "postTo" | addQueryParams "templateId=outbox-message" -}}
+{{- $targetURL := .GetString "postTo" | addQueryParams "templateId=outbox-message" -}}
 
 <form id="outbox-message" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
 	data-script="

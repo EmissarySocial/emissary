@@ -40,7 +40,6 @@
 		},
 		"view": {
 			"steps":[
-				{"step":"set-render-data", "postTo":"/{{.StreamID}}/reply"},
 				{"step":"view-json"},
 				{"step":"view-html"}
 			]
@@ -49,7 +48,7 @@
 			"roles":["self"],
 			"steps": [
 				{"step":"as-modal", "steps":[
-					{"step":"set-query-param", "postTo":"/{{.StreamID}}/edit"},
+					{"step":"set-args", "postTo":"/{{.StreamID}}/edit"},
 					{"step":"edit-content", "file":"edit", "format":"HTML"},
 					{"step":"save"},
 					{"step":"publish"},
@@ -59,29 +58,45 @@
 		},
 		"responses-replies":{
 			"roles":["authenticated"],
-			"step":"view-html"
+			"steps": [
+				{"step":"set-args", "path":"/{{.StreamID}}"},
+				{"step":"view-html"}
+			]
 		},
 		"responses-announces":{
 			"roles":["authenticated"],
-			"step":"view-html"
+			"steps": [
+				{"step":"set-args", "path":"/{{.StreamID}}"},
+				{"step":"view-html"}
+			]
 		},
 		"responses-likes":{
 			"roles":["authenticated"],
-			"step":"view-html"
+			"steps": [
+				{"step":"set-args", "path":"/{{.StreamID}}"},
+				{"step":"view-html"}
+			]
 		},
 		"reply":{
 			"roles":["authenticated"],
 			"steps":[
-				{"step":"set-render-data", "postTo":"/{{.StreamID}}/reply"},
+				{"step":"set-args", "path":"/{{.StreamID}}", "replies":"{{.StreamID}}/reply", "postTo":"/{{.StreamID}}/reply"},
 				{"step":"add-stream", "location":"outbox", "roles":["outbox-reply"], "as-embed":true, "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
-				{"step": "set-header", "name":"hx-retarget", "value":"#replies"},
-				{"step": "set-header", "name":"hx-reswap", "value":"innerHTML"},
-				{"step":"view-html", "method":"post", "file":"replies"}
+				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"step":"view-html", "method":"post", "file":"responses-replies"}
 			]
 		},
-		"replies":{"step":"view-html"},
+
+		"replies":{
+			"steps":[
+				{"step":"set-args", "path":"/{{.StreamID}}"},
+				{"step":"view-html"}
+			]
+		},
+
 		"delete": {
 			"roles":["self"],
 			"steps": [

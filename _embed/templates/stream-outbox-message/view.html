@@ -4,44 +4,48 @@
 <link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
 <link rel="stylesheet" href="/.templates/base-social/stylesheet">
 
-<div class="flex-row page h-entry">
+<div class="page flex-row h-entry">
 
-	<div class="margin-right">
-		<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
-			{{- if eq .Author.ImageURL "" -}}
-				<div class="circle-64"></div>
-			{{- else -}}
-				<img src="{{.Author.ImageURL}}" class="circle-64">
-			{{- end -}}
-		</a>
-	</div>
+	<div class="flex-row margin-top-sm width-100">
 
-	<div class="flex-grow-1" style="max-width:720px;">
-
-		<div class="p-author text-xl bold margin-vertical-none">
-			<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
-		</div>
-		<div class="text-light-gray">
-			<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
-			<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+		<div class="margin-right">
+			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
+				{{- if eq .Author.ImageURL "" -}}
+					<div class="circle-64"></div>
+				{{- else -}}
+					<img src="{{.Author.ImageURL}}" class="circle-64">
+				{{- end -}}
+			</a>
 		</div>
 
-		<div class="text-lg margin-vertical-lg">
-			{{- if .UserCan "edit" -}}
-				<div class="float-right">
-					<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
+		<div class="flex-grow-1" style="max-width:720px;">
+
+			<div class="p-author text-xl bold margin-vertical-none">
+				<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
+			</div>
+			<div class="text-light-gray">
+				<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
+				<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+			</div>
+
+			<div class="text-lg margin-vertical-lg">
+				{{- if .UserCan "edit" -}}
+					<div class="float-right">
+						<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
+					</div>
+				{{- end -}}
+				{{.ContentHTML}}
+			</div>
+
+			{{- if ne .ImageURL "" -}}
+				<div class="margin-vertical">
+					<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
 				</div>
 			{{- end -}}
-			{{.ContentHTML}}
+
+			{{- .View "responses-replies" -}}
 		</div>
 
-		{{- if ne .ImageURL "" -}}
-			<div class="margin-vertical">
-				<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
-			</div>
-		{{- end -}}
-
-		{{- .View "responses-replies" -}}
 	</div>
 
 </div>
