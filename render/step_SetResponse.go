@@ -49,7 +49,6 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 		return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 	}
 
-	return Continue().WithEvent("refreshResponses", response.ObjectID)
-	//	TriggerEvent(renderer.context(), `{"refreshResponses":{"url":"`+response.ObjectID+`"}}`)
-	// return nil
+	// Carry on, carry onnnnn...
+	return Continue()
 }

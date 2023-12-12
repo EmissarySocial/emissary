@@ -61,7 +61,6 @@
 		"replies":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-args", "path":"/@me/messages/{{.MessageID}}"},
 				{"step":"view-html"}
 			]
 		}

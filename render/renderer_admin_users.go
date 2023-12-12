@@ -96,7 +96,11 @@ func (w User) PageTitle() string {
 }
 
 func (w User) Permalink() string {
-	return ""
+	return w.Host() + "/admin/users/" + w.UserID()
+}
+
+func (w User) BasePath() string {
+	return "/admin/users/" + w.UserID()
 }
 
 func (w User) object() data.Object {
@@ -140,18 +144,30 @@ func (w User) SignupForm() model.SignupForm {
  ******************************************/
 
 func (w User) UserID() string {
+	if w._user == nil {
+		return ""
+	}
 	return w._user.UserID.Hex()
 }
 
 func (w User) Label() string {
+	if w._user == nil {
+		return ""
+	}
 	return w._user.DisplayName
 }
 
 func (w User) DisplayName() string {
+	if w._user == nil {
+		return ""
+	}
 	return w._user.DisplayName
 }
 
 func (w User) ImageURL() string {
+	if w._user == nil {
+		return ""
+	}
 	return w._user.ActivityPubAvatarURL()
 }
 

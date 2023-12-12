@@ -99,6 +99,10 @@ func (w Navigation) Permalink() string {
 	return ""
 }
 
+func (w Navigation) BasePath() string {
+	return ""
+}
+
 func (w Navigation) object() data.Object {
 	return w._stream
 }

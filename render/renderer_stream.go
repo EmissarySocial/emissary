@@ -272,6 +272,10 @@ func (w Stream) Permalink() string {
 	return w._stream.Permalink()
 }
 
+func (w Stream) BasePath() string {
+	return "/" + w._stream.StreamID.Hex()
+}
+
 // AttributedTo returns ALL AttributedTo records for this stream
 func (w Stream) AttributedTo() model.PersonLink {
 	return w._stream.AttributedTo
@@ -546,14 +550,27 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 
 func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	maxDate := convert.Int64(dateString)
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, maxRows)
 
-	if maxDate == 0 {
-		maxDate = math.MaxInt64
-	}
+	return result.SliceOfDocuments()
+}
+
+func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	activityStreamsService := w._factory.ActivityStreams()
-	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, maxRows)
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, maxRows)
+
+	return result.SliceOfDocuments()
+}
+
+func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, maxRows)
 
 	return result.SliceOfDocuments()
 }

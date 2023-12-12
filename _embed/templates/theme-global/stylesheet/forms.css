@@ -340,6 +340,11 @@ button[disabled].barberpole
   animation: barberpole 3s linear infinite;
 }
 
+.button.button-invisible,
+button.button-invisible {
+	background-color: rgba(0,0,0,0);
+}
+
 /******************************************
  * Form Layouts
  ******************************************/

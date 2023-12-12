@@ -81,7 +81,7 @@ func (response Response) EnglishType() string {
 
 	switch response.Type {
 
-	case ResponseTypeShare:
+	case ResponseTypeAnnounce:
 		return "Shared"
 
 	case ResponseTypeLike:
@@ -148,6 +148,40 @@ func (response Response) IsEmpty() bool {
 // NotEmpty returns TRUE if this Response has data in it.
 func (response Response) NotEmpty() bool {
 	return !response.IsEmpty()
+}
+
+/******************************************
+ * RoleStateEnumerator Methods
+ ******************************************/
+
+// State returns the current state of this Stream.  It is
+// part of the implementation of the RoleStateEmulator interface
+func (response Response) State() string {
+	return ""
+}
+
+// Roles returns a list of all roles that match the provided authorization
+func (response Response) Roles(authorization *Authorization) []string {
+
+	// Everyone has "anonymous" access
+	result := []string{MagicRoleAnonymous}
+
+	if authorization.IsAuthenticated() {
+
+		// Owners are hard-coded to do everything, so no other roles need to be returned.
+		if authorization.DomainOwner {
+			return []string{MagicRoleOwner}
+		}
+
+		result = append(result, MagicRoleAuthenticated)
+
+		// Authors sometimes have special permissions, too.
+		if response.UserID == authorization.UserID {
+			result = append(result, MagicRoleAuthor)
+		}
+	}
+
+	return result
 }
 
 /******************************************

@@ -6,9 +6,9 @@
 
 <div class="page flex-row h-entry">
 
-	<div class="flex-row margin-top-sm width-100">
+	<div class="flex-row width-100">
 
-		<div class="margin-right">
+		<div class="margin-right margin-top-sm">
 			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
 				{{- if eq .Author.ImageURL "" -}}
 					<div class="circle-64"></div>
@@ -18,32 +18,43 @@
 			</a>
 		</div>
 
-		<div class="flex-grow-1" style="max-width:720px;">
-
-			<div class="p-author text-xl bold margin-vertical-none">
-				<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
-			</div>
-			<div class="text-light-gray">
-				<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
-				<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
-			</div>
-
-			<div class="text-lg margin-vertical-lg">
-				{{- if .UserCan "edit" -}}
-					<div class="float-right">
-						<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
-					</div>
-				{{- end -}}
-				{{.ContentHTML}}
-			</div>
-
-			{{- if ne .ImageURL "" -}}
-				<div class="margin-vertical">
-					<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
+		<div class="flex-grow-1">
+		
+			{{- if .UserCan "edit" -}}
+				<div class="float-right">
+					<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
 				</div>
 			{{- end -}}
+		
+			<div class="margin-top-sm" style="max-width:720px;">
 
-			{{- .View "responses-replies" -}}
+				<div class="p-author text-xl bold margin-vertical-none">
+					<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
+				</div>
+				<div class="text-light-gray">
+					<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
+					<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+				</div>
+
+				<div class="text-lg margin-vertical-lg">
+					{{.ContentHTML}}
+				</div>
+
+				{{- if ne .ImageURL "" -}}
+					<div class="margin-vertical">
+						<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
+					</div>
+				{{- end -}}
+
+				{{- if .UserCan "like-button" -}}
+					<div class="margin-vertical text-sm">
+						{{.View "like-button"}}
+					</div>
+				{{- end -}}
+
+				{{- .View "responses-replies" -}}
+			</div>
+
 		</div>
 
 	</div>

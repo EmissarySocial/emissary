@@ -101,6 +101,10 @@ func (w Message) PageTitle() string {
 	return ""
 }
 
+func (w Message) BasePath() string {
+	return "/@me/messages/" + w._message.MessageID.Hex()
+}
+
 func (w Message) Permalink() string {
 	return w._message.URL
 }
@@ -252,6 +256,24 @@ func (w Message) RepliesAfter(dateString string, maxRows int) sliceof.Object[str
 
 	activityStreamsService := w._factory.ActivityStreams()
 	result, _ := activityStreamsService.QueryRepliesAfterDate(w._message.URL, minDate, maxRows)
+
+	return result.SliceOfDocuments()
+}
+
+func (w Message) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(w._message.URL, maxDate, maxRows)
+
+	return result.SliceOfDocuments()
+}
+
+func (w Message) LikesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryLikesBeforeDate(w._message.URL, maxDate, maxRows)
 
 	return result.SliceOfDocuments()
 }

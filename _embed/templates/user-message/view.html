@@ -38,14 +38,14 @@
 					href="/@me/inbox?folderId={{.FolderID}}&origin.followingId={{.Origin.FollowingID.Hex}}">
 					
 					{{- if eq "" .Origin.ImageURL -}}
-						<div class="circle-48"></div>
+						<div class="circle-64"></div>
 					{{- else -}}
-						<img src="{{.Origin.ImageURL}}" class="circle-48">
+						<img src="{{.Origin.ImageURL}}" class="circle-64">
 					{{- end -}}
 					
 					<div>
 						<div class="text-plain text-lg bold margin-vertical-none">{{.Origin.Label}}</div>
-						<div class="text-gray text-sm margin-vertical-none">{{.Origin.URL}}</div>
+						<div class="text-light-gray text-sm margin-vertical-none">{{.Origin.URL}}</div>
 					</div>
 				</a>
 			</div>
@@ -80,9 +80,9 @@
 				<div>
 					<a class="flex-row flex-align-center text-plain text-lg" href="{{.AttributedTo.ProfileURL}}">
 						{{- if $stream.AttributedTo.Image.NotNil -}}
-							<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-48">
+							<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-64">
 						{{- else -}}
-							<div class="circle-48 inline-block"></div>
+							<div class="circle-64 inline-block"></div>
 						{{- end -}}
 						<div>
 							<div class="text-plain text-lg bold margin-vertical-none">{{$stream.AttributedTo.Name}}</div>
@@ -95,52 +95,63 @@
 		{{- end -}}
 
 	{{- end -}}
-			
-	{{- if ne "" $stream.Name -}}
-		<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
-	{{- end -}}
 
-	<div class="content margin-top margin-bottom">
-		{{- $image := $stream.Image -}}
-		{{- if $image.NotNil -}}
-			<div class="margin-bottom">
-				<a href="{{$stream.URL}}" target="_blank"><img src="{{$image.URL}}" style="width:100%;
-				{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+	<div class="flex-row">
+		<div style="width:64px;"></div>
+		<div class="flex-grow-1">
+					
+			{{- if ne "" $stream.Name -}}
+				<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+			{{- end -}}
+
+			<div class="content margin-top margin-bottom">
+				{{- $image := $stream.Image -}}
+				{{- if $image.NotNil -}}
+					<div class="margin-bottom">
+						<a href="{{$stream.URL}}" target="_blank"><img src="{{$image.URL}}" style="width:100%;
+						{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+					</div>
+				{{- end -}}
+
+				{{- if $stream.HasContent -}}
+					<div>{{- $stream.Content | html -}}</div>
+				{{- else if $stream.HasSummary -}}
+					<div>{{- $stream.Summary -}}</div>
+				{{- end -}}
+
+				<div class="text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+
 			</div>
-		{{- end -}}
-
-		<div class="bold">{{ $stream.Published | longDate -}}</div>
-
-		{{- if $stream.HasContent -}}
-			<div>{{- $stream.Content | html -}}</div>
-		{{- else if $stream.HasSummary -}}
-			<div>{{- $stream.Summary -}}</div>
-		{{- end -}}
-
+		</div>
 	</div>
 
-	<div id="replies" class="margin-bottom"> 
+	<hr class="margin-bottom-sm">
 
-		<hr>
-
-		{{- if eq $stream.Statistics.Replies 0 -}}
-			<div class="bold margin-bottom">No Replies</div>
-		{{- else -}}
-			<div class="bold margin-bottom">
+	{{- if eq $stream.Statistics.Replies 0 -}}
+		<div class="margin-none">
+			<span class="bold margin-right-sm">No Replies</span>
+			<span class="text-sm">{{.View "like-button"}}</span>
+		</div>
+		<hr class="margin-top-sm">
+		<div id="replies"></div>
+	{{- else -}}
+		<div class="margin-none">
+			<span class="bold margin-right-sm">
 				{{- if eq 1 $stream.Statistics.Replies -}}
 					1 Reply
 				{{- else -}}
 					{{$stream.Statistics.Replies}} Replies
 				{{- end -}}
-			</div>
-			<div hx-get="/@me/messages/{{.MessageID}}/replies" 
-				hx-target="this" 
-				hx-push-url="false" 
-				hx-trigger="htmx:afterProcessNode"
-				hx-swap="outerHTML">
-			</div>
-		{{- end -}}
-	</div>
+			</span>
+			<span class="text-sm">{{.View "like-button"}}</span>
+		</div>
+		<hr class="margin-top-sm">
+
+		<div id="replies">
+			{{.View "replies"}}
+		</div>
+
+	{{- end -}}
 
 </div>
 

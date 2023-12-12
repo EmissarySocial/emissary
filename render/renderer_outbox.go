@@ -103,6 +103,10 @@ func (w Outbox) Permalink() string {
 	return w.Host() + "/@" + w._user.UserID.Hex()
 }
 
+func (w Outbox) BasePath() string {
+	return "/@" + w._user.UserID.Hex()
+}
+
 func (w Outbox) Token() string {
 	return "users"
 }

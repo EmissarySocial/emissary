@@ -5,7 +5,7 @@
 	"label":"User Outbox",
 	"description":"Profile displays everything about a user, including their inbox and outbox information",
 	"icon":"inbox",
-	"extends":[],
+	"extends":["base-social"],
 	"containedBy": [],
 	"schema": {
 		"title":"User Profile",
@@ -259,6 +259,17 @@
 			"roles":["self"],
 			"step":"view-html", 
 			"file":"inbox-blocks"
+		},
+
+		"announce":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-response", "steps":[
+					{"step":"set-data", "from-url":["objectId"], "values":{"type":"Announce"}},
+					{"step":"save"},
+					{"step":"view-html", "file":"announce-button", "method":"post"}
+				]}
+			]
 		},
 
 		"feed": {"step":"view-feed"},

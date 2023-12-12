@@ -1,30 +1,33 @@
 package model
 
-// https://indieweb.org/Reply_downvotes
-const ResponseTypeDislike = "DISLIKE"
+// https://www.w3.org/TR/activitystreams-vocabulary/#dfn-announce
+// https://indieweb.org/Share
+const ResponseTypeAnnounce = "Announce"
 
+// https://www.w3.org/TR/activitystreams-vocabulary/#dfn-dislike
+// https://indieweb.org/Reply_downvotes
+const ResponseTypeDislike = "Dislike"
+
+// https://www.w3.org/TR/activitystreams-vocabulary/#dfn-like
 // https://indieweb.org/like
-const ResponseTypeLike = "LIKE"
+const ResponseTypeLike = "Like"
 
 // https://indieweb.org/mention
-const ResponseTypeMention = "MENTION"
+const ResponseTypeMention = "Mention"
 
 // https://indieweb.org/quotation
-const ResponseTypeQuote = "QUOTE"
+const ResponseTypeQuote = "Quote"
 
 // https://indieweb.org/reacji
-const ResponseTypeReactji = "REACTJI"
+const ResponseTypeReactji = "EmojiReact"
 
 // https://indieweb.org/repost
-const ResponseTypeRepost = "REPOST"
+const ResponseTypeRepost = "Repost"
 
 // https://indieweb.org/review
-const ResponseTypeReview = "REVIEW"
+const ResponseTypeReview = "Review"
 
 // https://indieweb.org/reply
-const ResponseTypeReply = "REPLY"
-
-// https://indieweb.org/share
-const ResponseTypeShare = "SHARE"
+const ResponseTypeReply = "Reply"
 
 // (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")

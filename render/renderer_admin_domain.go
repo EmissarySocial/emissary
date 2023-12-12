@@ -138,7 +138,11 @@ func (w Domain) NavigationID() string {
 }
 
 func (w Domain) Permalink() string {
-	return ""
+	return w.Host() + "/admin/domains"
+}
+
+func (w Domain) BasePath() string {
+	return "/admin/domains"
 }
 
 func (w Domain) PageTitle() string {

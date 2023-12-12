@@ -2,6 +2,10 @@
 {{- $stream := .ActivityStream .Permalink -}}
 {{- $statistics := $stream.Statistics -}}
 
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 1000 -}}
+{{- $announces := .AnnouncesBefore $publishedDate $pageSize -}}
+
 <div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top-lg">
 
 	<hr class="margin-vertical-sm"/>
@@ -18,6 +22,16 @@
 		<span hx-get="{{$path}}/responses-announces" role="button" class="margin-horizontal-xs clickable bold">
 			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
 		</span>
+	</div>
+
+	<div class="margin-top">
+		{{- range $index, $announce := $announces -}}
+			<div>
+				{{$announce.Actor.Name}} | 
+				{{$announce.Actor.URL}} |
+				{{$announce.Actor.Image.URL}} |
+			</div>
+		{{- end -}}
 	</div>
 
 </div>

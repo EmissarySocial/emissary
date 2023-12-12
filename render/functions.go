@@ -3,6 +3,7 @@ package render
 import (
 	"encoding/json"
 	"html/template"
+	"math"
 	"strings"
 	"time"
 
@@ -21,6 +22,34 @@ import (
 func FuncMap(icons icon.Provider) template.FuncMap {
 
 	return template.FuncMap{
+
+		"seq": func(count int) []int {
+			result := make([]int, count)
+			for i := 0; i < count; i++ {
+				result[i] = i
+			}
+			return result
+		},
+
+		"max": func(values ...any) int {
+			var result int = math.MinInt
+			for _, value := range values {
+				if value32 := convert.Int(value); value32 > result {
+					result = value32
+				}
+			}
+			return result
+		},
+
+		"min": func(values ...any) int {
+			var result int = math.MaxInt
+			for _, value := range values {
+				if value32 := convert.Int(value); value32 < result {
+					result = value32
+				}
+			}
+			return result
+		},
 
 		"array": func(values ...any) []any {
 			return values

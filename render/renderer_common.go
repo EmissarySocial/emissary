@@ -426,6 +426,35 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 }
 
 /******************************************
+ * Common ActivityStreams Queries
+ ******************************************/
+
+func (w Common) GetResponseID(responseType string, url string) string {
+
+	// If the user is not signed in, then they can't have responded.
+	if !w.IsAuthenticated() {
+		return ""
+	}
+
+	if len(url) == 0 {
+		return ""
+	}
+
+	// If the user is signed in, then we need to check the database to see if they've responded.
+	responseService := w._factory.Response()
+
+	response := model.NewResponse()
+
+	if err := responseService.LoadByUserAndObject(w.AuthenticatedID(), url, &response); err == nil {
+		if response.Type == responseType {
+			return response.ResponseID.Hex()
+		}
+	}
+
+	return ""
+}
+
+/******************************************
  * Additional Data
  ******************************************/
 

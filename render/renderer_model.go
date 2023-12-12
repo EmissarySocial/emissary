@@ -116,6 +116,10 @@ func (w Model) Permalink() string {
 	return ""
 }
 
+func (w Model) BasePath() string {
+	return ""
+}
+
 func (w Model) UserCan(string) bool {
 	return false
 }

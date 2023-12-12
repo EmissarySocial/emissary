@@ -92,6 +92,10 @@ func (w Inbox) PageTitle() string {
 	return w._user.DisplayName
 }
 
+func (w Inbox) BasePath() string {
+	return "/me/inbox"
+}
+
 func (w Inbox) Permalink() string {
 	return w.Host() + "/@me/inbox"
 }

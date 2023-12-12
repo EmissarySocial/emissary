@@ -8,25 +8,29 @@
 	"actions":{
 
 		"follow-button": {
-			"roles":["self"],
+			"roles":["authenticatd"],
 			"step":"view-html"
 		},
 
-		"xparent":{"step":"view-html"},
-		"xreplies-before":{"step":"view-html"},
-		"xreplies-after":{"step":"view-html"},
-		"xresponses":{"step":"view-html", "file":"responses-wrapper"},
-		"xresponse-icons":{
+		"like-button": {
+			"roles":["authenticatd"],
+			"steps":[
+				{"step":"set-response"},
+				{"step":"view-html", "method":"both"}
+			]
+		},
+
+		"response-button":{"step":"view-html", "file":"response-buton"},
+		"response-icons":{
 			"steps":[
 				{"step":"as-tooltip", "steps":[
 					{"step":"view-html"}
 				]}
-			]},
-		"xset-response":{
-			"steps":[
-				{"step":"view-html", "file":"responses"},
-				{"step":"set-response"}
 			]
-		}
+		},
+		
+		"xparent":{"step":"view-html"},
+		"xreplies-before":{"step":"view-html"},
+		"xreplies-after":{"step":"view-html"}
 	}
 }

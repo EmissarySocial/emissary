@@ -88,9 +88,9 @@ func (service *ActivityStreams) PurgeCache() error {
  ******************************************/
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, maxRows int) (streams.Document, error) {
 
-	const location = "service.ActivityStreams.QueryRepliesBeforeDate"
+	const location = "service.ActivityStreams.QueryRelated"
 
 	// NPE Check
 	if service.documentCollection == nil {
@@ -99,9 +99,14 @@ func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate
 
 	// Build the query
 	criteria := exp.
-		Equal("relationType", "Reply").
-		AndEqual("relationHref", inReplyTo).
-		AndLessThan("published", maxDate)
+		Equal("relationType", relationType).
+		AndEqual("relationHref", relationHref)
+
+	if cutType == "before" {
+		criteria = criteria.AndLessThan("published", cutDate)
+	} else {
+		criteria = criteria.AndGreaterThan("published", cutDate)
+	}
 
 	results, err := service.documentQuery(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
 
@@ -110,33 +115,30 @@ func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate
 	}
 
 	// Return the results as a streams.Document / collection
-	return streams.NewDocument(results.Reverse(), streams.WithClient(service)), nil
+
+	if cutType == "before" {
+		results = results.Reverse()
+	}
+
+	return streams.NewDocument(results, streams.WithClient(service)), nil
+}
+
+// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
+	return service.queryByRelation("Reply", inReplyTo, "before", maxDate, maxRows)
 }
 
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
 func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
+	return service.queryByRelation("Reply", inReplyTo, "after", minDate, maxRows)
+}
 
-	const location = "service.ActivityStreams.QueryRepliesAfterDate"
+func (service *ActivityStreams) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, maxRows int) (streams.Document, error) {
+	return service.queryByRelation("Announce", relationHref, "before", maxDate, maxRows)
+}
 
-	// NPE Check
-	if service.documentCollection == nil {
-		return streams.Document{}, derp.NewInternalError(location, "Document Collection not initialized")
-	}
-
-	// Build the query
-	criteria := exp.
-		Equal("relationType", "Reply").
-		AndEqual("relationHref", inReplyTo).
-		AndGreaterThan("published", minDate)
-
-	results, err := service.documentQuery(criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
-
-	if err != nil {
-		return streams.Document{}, derp.Wrap(err, location, "Error querying database")
-	}
-
-	// Return the result as a streams.Document / collection
-	return streams.NewDocument(results, streams.WithClient(service)), nil
+func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDate int64, maxRows int) (streams.Document, error) {
+	return service.queryByRelation("Like", relationHref, "before", maxDate, maxRows)
 }
 
 /******************************************

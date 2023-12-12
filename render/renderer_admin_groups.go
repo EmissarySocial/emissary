@@ -93,6 +93,13 @@ func (w Group) Permalink() string {
 	return w.Hostname() + "/groups/" + w.GroupID()
 }
 
+func (w Group) BasePath() string {
+	if w._group == nil {
+		return "/groups"
+	}
+	return "/groups/" + w.GroupID()
+}
+
 func (w Group) Token() string {
 	return "groups"
 }
@@ -134,10 +141,16 @@ func (w Group) clone(action string) (Renderer, error) {
  ******************************************/
 
 func (w Group) GroupID() string {
+	if w._group == nil {
+		return ""
+	}
 	return w._group.GroupID.Hex()
 }
 
 func (w Group) Label() string {
+	if w._group == nil {
+		return ""
+	}
 	return w._group.Label
 }
 

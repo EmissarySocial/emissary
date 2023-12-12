@@ -93,6 +93,10 @@ func (w Block) Permalink() string {
 	return w.Hostname() + "/admin/blocks/" + w.BlockID()
 }
 
+func (w Block) BasePath() string {
+	return "/admin/blocks/" + w.BlockID()
+}
+
 func (w Block) Token() string {
 	return "blocks"
 }
@@ -134,10 +138,16 @@ func (w Block) clone(action string) (Renderer, error) {
  ******************************************/
 
 func (w Block) BlockID() string {
+	if w._block == nil {
+		return ""
+	}
 	return w._block.BlockID.Hex()
 }
 
 func (w Block) Label() string {
+	if w._block == nil {
+		return ""
+	}
 	return w._block.Label
 }
 
