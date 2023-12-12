@@ -38,6 +38,13 @@
 				]}
 			]
 		},
+		"delete": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+				{"step":"reload-page"}
+			]
+		},
 
 		"reply":{
 			"roles":["self"],
@@ -51,20 +58,11 @@
 				{"step":"view-html", "method":"post", "file":"replies"}
 			]
 		},
-
 		"replies":{
 			"roles":["self"],
 			"steps":[
 				{"step":"set-args", "path":"/@me/messages/{{.MessageID}}"},
 				{"step":"view-html"}
-			]
-		},
-	
-		"delete": {
-			"roles": ["self"],
-			"steps": [
-				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
-				{"step":"reload-page"}
 			]
 		}
 	}
