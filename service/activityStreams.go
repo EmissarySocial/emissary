@@ -9,8 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/rosetta/slice"
 )
 
 // ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
@@ -88,13 +87,13 @@ func (service *ActivityStreams) PurgeCache() error {
  ******************************************/
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStreams) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, maxRows int) ([]streams.Document, error) {
 
 	const location = "service.ActivityStreams.QueryRelated"
 
 	// NPE Check
 	if service.documentCollection == nil {
-		return streams.Document{}, derp.NewInternalError(location, "Document Collection not initialized")
+		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Build the query
@@ -102,42 +101,50 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 		Equal("relationType", relationType).
 		AndEqual("relationHref", relationHref)
 
+	var sortOption option.Option
+
 	if cutType == "before" {
 		criteria = criteria.AndLessThan("published", cutDate)
+		sortOption = option.SortDesc("published")
 	} else {
 		criteria = criteria.AndGreaterThan("published", cutDate)
+		sortOption = option.SortAsc("published")
 	}
 
-	results, err := service.documentQuery(criteria, option.SortDesc("published"), option.MaxRows(int64(maxRows)))
+	documents, err := service.documentQuery(criteria, sortOption, option.MaxRows(int64(maxRows)))
 
 	if err != nil {
-		return streams.Document{}, derp.Wrap(err, location, "Error querying database")
+		return nil, derp.Wrap(err, location, "Error querying database")
 	}
 
 	// Return the results as a streams.Document / collection
 
 	if cutType == "before" {
-		results = results.Reverse()
+		documents = slice.Reverse(documents)
 	}
 
-	return streams.NewDocument(results, streams.WithClient(service)), nil
+	result := slice.Map(documents, func(document ascache.CachedValue) streams.Document {
+		return streams.NewDocument(document.Original, streams.WithStats(document.Statistics), streams.WithClient(service))
+	})
+
+	return result, nil
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) ([]streams.Document, error) {
 	return service.queryByRelation("Reply", inReplyTo, "before", maxDate, maxRows)
 }
 
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
-func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, maxRows int) ([]streams.Document, error) {
 	return service.queryByRelation("Reply", inReplyTo, "after", minDate, maxRows)
 }
 
-func (service *ActivityStreams) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, maxRows int) ([]streams.Document, error) {
 	return service.queryByRelation("Announce", relationHref, "before", maxDate, maxRows)
 }
 
-func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDate int64, maxRows int) (streams.Document, error) {
+func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDate int64, maxRows int) ([]streams.Document, error) {
 	return service.queryByRelation("Like", relationHref, "before", maxDate, maxRows)
 }
 
@@ -160,7 +167,7 @@ func (service *ActivityStreams) documentIterator(criteria exp.Expression, option
 }
 
 // query reads from the database and returns a slice of streams.Document values
-func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) (sliceof.Object[mapof.Any], error) {
+func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) ([]ascache.CachedValue, error) {
 
 	const location = "service.ActivityStreams.documentQuery"
 
@@ -169,25 +176,10 @@ func (service *ActivityStreams) documentQuery(criteria exp.Expression, options .
 		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
-	// Create the Iterator
-	iterator, err := service.documentIterator(criteria, options...)
-
-	if err != nil {
+	// Query the database
+	result := make([]ascache.CachedValue, 0)
+	if err := service.documentCollection.Query(&result, criteria, options...); err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")
-	}
-
-	// Initialize result slice
-	result := make(sliceof.Object[mapof.Any], 0, iterator.Count())
-
-	// Map iterator into results
-	value := ascache.NewCachedValue()
-	for iterator.Next(&value) {
-		result = append(result, value.Original)
-		value = ascache.NewCachedValue()
-
-		if err := iterator.Error(); err != nil {
-			return nil, derp.Wrap(err, location, "Error during iteration")
-		}
 	}
 
 	// Return success

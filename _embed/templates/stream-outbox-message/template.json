@@ -57,26 +57,30 @@
 			]
 		},
 		"responses-replies":{
-			"roles":["authenticated"],
 			"steps": [
 				{"step":"set-args", "path":"/{{.StreamID}}"},
 				{"step":"view-html"}
 			]
 		},
 		"responses-announces":{
-			"roles":["authenticated"],
 			"steps": [
 				{"step":"set-args", "path":"/{{.StreamID}}"},
 				{"step":"view-html"}
 			]
 		},
 		"responses-likes":{
-			"roles":["authenticated"],
 			"steps": [
 				{"step":"set-args", "path":"/{{.StreamID}}"},
 				{"step":"view-html"}
 			]
 		},
+		"replies":{
+			"steps":[
+				{"step":"set-args", "path":"/{{.StreamID}}"},
+				{"step":"view-html"}
+			]
+		},
+
 		"reply":{
 			"roles":["authenticated"],
 			"steps":[
@@ -87,13 +91,6 @@
 				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
 				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
 				{"step":"view-html", "method":"post", "file":"responses-replies"}
-			]
-		},
-
-		"replies":{
-			"steps":[
-				{"step":"set-args", "path":"/{{.StreamID}}"},
-				{"step":"view-html"}
 			]
 		},
 

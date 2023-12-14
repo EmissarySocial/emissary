@@ -248,7 +248,7 @@ func (w Message) RepliesBefore(dateString string, maxRows int) sliceof.Object[st
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
 	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._message.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Message) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -257,7 +257,7 @@ func (w Message) RepliesAfter(dateString string, maxRows int) sliceof.Object[str
 	activityStreamsService := w._factory.ActivityStreams()
 	result, _ := activityStreamsService.QueryRepliesAfterDate(w._message.URL, minDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Message) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -266,7 +266,7 @@ func (w Message) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(w._message.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Message) LikesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -275,7 +275,7 @@ func (w Message) LikesBefore(dateString string, maxRows int) sliceof.Object[stre
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	result, _ := activityStreamsService.QueryLikesBeforeDate(w._message.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 // Responses generates a "Responses" renderer and passes it to the (hard-coded named) "responses" template.

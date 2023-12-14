@@ -71,39 +71,43 @@ h3:first-child {
  
 .text-xxxl,
 .text-3xl {
-    font-size:calc(var(--rhythm) * 6);
+    font-size:calc(var(--rhythm) * 7 * 2/3);
     line-height:calc(var(--rhythm) * 7);
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 1);
+    font-weight:calc(var(--weight) - 100);
 }
 
 .text-xxl,
 .text-2xl,
 .text-xxl input,
 input.text-xxl {
-    font-size:calc(var(--rhythm) * 5);
+    font-size:calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 6);
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 1);
+    font-weight:calc(var(--weight) - 100);
 }
 
 .text-xl,
 .text-xl input,
 input.text-xl {
-    font-size:calc(var(--rhythm) * 4);
+    font-size:calc(var(--rhythm) * 5 * 2/3);
     line-height:calc(var(--rhythm) * 5);
     margin-top:calc(var(--rhythm) * 2);
     margin-bottom:calc(var(--rhythm) * 1);
+    font-weight:calc(var(--weight) - 100);
 }
 
 .text-lg,
 .text-lg input,
 input.text-lg {
-    font-size:calc(var(--rhythm) * 3);
+    font-size:calc(var(--rhythm) * 4 * 2/3);
     line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm));
     margin-bottom:calc(var(--rhythm) * 1);
     color:var(--heading-color);
+    font-weight:calc(var(--weight) - 100);
 }
 
 .text-md,
@@ -204,7 +208,17 @@ a.text-red:hover {
     text-decoration: underline;
 }
 
+.text-lowercase {
+    text-transform: lowercase;
+}
 
+.text-uppercase {
+    text-transform: uppercase;
+}
+
+.text-capitalize {
+    text-transform: capitalize;
+}
 /******************************************
  * Text Modifiers - Code
  ******************************************/

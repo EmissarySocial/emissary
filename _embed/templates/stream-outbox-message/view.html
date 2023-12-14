@@ -1,10 +1,30 @@
 {{- $stream := .ActivityStream .Permalink -}}
 {{- $statistics := $stream.Statistics -}}
+{{- $inReplyTo := .InReplyTo -}}
 
 <link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
-<link rel="stylesheet" href="/.templates/base-social/stylesheet">
 
-<div class="page flex-row h-entry">
+<div class="page h-entry">
+
+	{{- if $inReplyTo.NotNil -}}
+		{{- $attributedTo := $inReplyTo.AttributedTo -}}
+		<div>
+			<a href="{{$inReplyTo.ID}}" class="u-in-reply-to">
+				<div class="text-plain">
+					<span class="text-gray bold">
+						{{icon "reply"}}Replying to {{$attributedTo.Name}} &nbsp;
+					</span>
+				</div>
+				<div class="text-plain text-sm margin-left ellipsis-block" style="max-height:5em;">
+					<span class="text-light-gray">{{$inReplyTo.Content | html}}</span>
+				</div>
+				<div class="text-light-gray text-sm margin-left">
+					(Show Full Post)
+				</div>
+			</a>
+		</div>
+		<hr>
+	{{- end -}}
 
 	<div class="flex-row width-100">
 
@@ -31,32 +51,34 @@
 				<div class="p-author text-xl bold margin-vertical-none">
 					<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
 				</div>
+
 				<div class="text-light-gray">
 					<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
 					<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
 				</div>
 
-				<div class="text-lg margin-vertical-lg">
-					{{.ContentHTML}}
-				</div>
-
-				{{- if ne .ImageURL "" -}}
-					<div class="margin-vertical">
-						<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
-					</div>
-				{{- end -}}
-
-				{{- if .UserCan "like-button" -}}
-					<div class="margin-vertical text-sm">
-						{{.View "like-button"}}
-					</div>
-				{{- end -}}
-
-				{{- .View "responses-replies" -}}
 			</div>
 
 		</div>
 
 	</div>
+
+	<div class="text-lg margin-vertical-lg">
+		{{.ContentHTML}}
+	</div>
+
+	{{- if ne .ImageURL "" -}}
+		<div class="margin-vertical">
+			<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
+		</div>
+	{{- end -}}
+
+	{{- if .UserCan "like-button" -}}
+		<div class="margin-vertical text-sm">
+			{{.View "like-button"}}
+		</div>
+	{{- end -}}
+
+	{{- .View "responses-replies" -}}
 
 </div>

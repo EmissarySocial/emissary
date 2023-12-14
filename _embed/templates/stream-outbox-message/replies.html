@@ -1,0 +1,79 @@
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 12 -}}
+
+{{- $renderer := . -}}
+{{- $replies := .RepliesBefore $publishedDate $pageSize -}}
+
+{{- if eq $replies.Length $pageSize -}}
+	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/replies?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+		<span class="button text-xs">Show Older Replies</span>
+	</div>
+{{- end -}}
+
+{{- range $replies -}}
+
+	{{- $statistics := .Statistics -}}
+	{{- $object := .UnwrapActivity -}}
+	{{- $actor := $object.AttributedTo.Load -}}
+
+	<div class="clickable margin-bottom-lg hover-trigger" script="on click go to url '{{$object.ID}}'">
+		<div class="flex-row">
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle-48 margin-right-sm"></div>
+				{{- else -}}
+					<a href="{{$actor.ID}}"><img class="circle-48 margin-right-sm" src="{{$actor.Icon.URL}}"></a>
+				{{- end -}}
+			<div class="flex-grow-1">
+				<div class="margin-bottom-xs">
+					{{- if $actor.NotNil -}}
+						<span class="bold margin-right-xs">{{$actor.Name}}</span>
+						<span class="text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</span>
+
+						{{- if $renderer.NotMe $object.Actor.ID -}}
+							<span class="text-xs margin-left-md"
+								hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
+								hx-swap="innerHTML"
+								hx-target="this"
+								hx-push-url="false"
+								hx-trigger="load">
+							</span>
+						{{- end -}}
+
+					{{- end -}}
+				
+				</div>
+
+				{{- if ne "" $object.Name -}}
+					<div class="bold">{{$object.Name}}</div>
+				{{- end -}}
+
+				{{- if $object.Image.NotNil -}}
+					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+				{{- end -}}
+			
+				<div>{{$object.Content | html}}</div>
+				<div class="text-xs text-light-gray text-uppercase">
+					{{- if gt $statistics.Replies 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
+						</span>
+					{{- end -}}
+
+					{{- if gt $statistics.Likes 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
+						</span>
+					{{- end -}}
+
+					{{- if gt $statistics.Announces 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
+						</span>
+					{{- end -}}
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+{{- end -}}

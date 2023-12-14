@@ -8,7 +8,7 @@
 
 <div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top-lg">
 
-	<hr class="margin-vertical-sm"/>
+	<hr class="margin-bottom-sm"/>
 
 	<div>
 		<span hx-get="{{$path}}/responses-replies" role="button" class="margin-right-xs clickable">
@@ -23,6 +23,8 @@
 			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
 		</span>
 	</div>
+
+	<hr class="margin-top-sm"/>
 
 	<div class="margin-top">
 		{{- range $index, $like := $likes -}}

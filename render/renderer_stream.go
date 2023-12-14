@@ -554,7 +554,7 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -563,7 +563,7 @@ func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[s
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -572,7 +572,7 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	result, _ := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -581,7 +581,7 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	activityStreamsService := w._factory.ActivityStreams()
 	result, _ := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, maxRows)
 
-	return result.SliceOfDocuments()
+	return result
 }
 
 /******************************************
