@@ -14,52 +14,50 @@ type CommandLineArgs struct {
 	Protocol string // Protocol to use when loading the configuration (MONGODB | FILE)
 	Location string // URI of the configuration file
 	Setup    bool   // If TRUE, then the server will run in SETUP mode
+	HTTPPort int    // Port to use in setup mode (only)
 }
 
 // GetCommandLineArgs returns the location of the configuration file
 func GetCommandLineArgs() CommandLineArgs {
 
+	var source string
 	var location string
 	var setup bool
+	var httpPort int
 
 	// Look for the configuration location in the command line arguments
 	pflag.StringVar(&location, "config", "", "Path to configuration file")
 	pflag.BoolVar(&setup, "setup", false, "Run setup server")
+	pflag.IntVar(&httpPort, "port", 0, "HTTP Port to use for setup mode.")
 	pflag.Parse()
 
 	if location != "" {
 
+		// Use command line argument for configuration
 		log.Debug().Msg("Locating configuration from command line argument.")
+		source = ConfigSourceCommandLine
 
-		return CommandLineArgs{
-			Source:   ConfigSourceCommandLine,
-			Location: location,
-			Protocol: getConfigProtocol(location),
-			Setup:    setup,
-		}
-	}
+	} else if env := os.Getenv("EMISSARY_CONFIG"); env != "" {
 
-	// Look for the configuration location in the environment
-	if location := os.Getenv("EMISSARY_CONFIG"); location != "" {
-
+		// Look for the configuration location in the environment
 		log.Debug().Msg("Locating configuration from environment variable.")
+		source = ConfigSourceEnvironment
+		location = env
 
-		return CommandLineArgs{
-			Source:   ConfigSourceEnvironment,
-			Location: location,
-			Protocol: getConfigProtocol(location),
-			Setup:    setup,
-		}
+	} else {
+
+		// Fall through to using default location (file in local directory)
+		log.Debug().Msg("No configuration specified. Using default location: `file://./config.json`")
+		location = "file://./config.json"
+		source = ConfigSourceDefault
 	}
-
-	// Use default location
-	log.Debug().Msg("No configuration specified. Using default location: `file://./config.json`")
 
 	return CommandLineArgs{
-		Source:   ConfigSourceDefault,
-		Location: "file://./config.json",
-		Protocol: getConfigProtocol("file://"),
+		Source:   source,
+		Location: location,
+		Protocol: getConfigProtocol(location),
 		Setup:    setup,
+		HTTPPort: httpPort,
 	}
 }
 
@@ -83,4 +81,16 @@ func getConfigProtocol(location string) string {
 	os.Exit(1)
 
 	return ""
+}
+
+// ConfigOptions returns any config modifiers specified in the command line (like --port)
+func (args CommandLineArgs) ConfigOptions() []Option {
+
+	result := make([]Option, 0)
+
+	if args.HTTPPort != 0 {
+		result = append(result, WithHTTPPort(args.HTTPPort))
+	}
+
+	return result
 }

@@ -40,8 +40,13 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 	// If the config was not found, then run in setup mode and create a new default configuration
 	case derp.NotFound(err):
 
+		if !args.Setup {
+			log.Error().Msg("Emissary could not start because the configuration file could not be found.")
+			log.Error().Msg("Please re-run Emissary with the --setup flag to create a new configuration file.")
+			os.Exit(1)
+		}
+
 		log.Debug().Msg("Configuration file not found.  Running in setup mode.")
-		args.Setup = true
 
 		// Overwrite the configuration with a default value
 		config = DefaultConfig()

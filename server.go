@@ -95,14 +95,17 @@ func main() {
 
 	if commandLineArgs.Setup {
 
+		// Get config modifiers from the command line (like HTTP PORT)
+		configOptions := commandLineArgs.ConfigOptions()
+
 		// Add routes for setup tool
 		makeSetupRoutes(factory, e)
 
 		// When running the setup tool, wait a second, then open a browser window to the correct URL
-		openLocalhostBrowser(factory.Config())
+		openLocalhostBrowser(factory, configOptions...)
 
 		// Prepare HTTP and HTTPS servers using the new configuration
-		go startHTTP(factory, e)
+		go startHTTP(factory, e, configOptions...)
 
 	} else {
 		// Add routes for standard web server
@@ -308,7 +311,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 // openLocalhostBrowser opens a browser window to the localhost URL
 // IF the server is configured to run on HTTP or HTTPS
-func openLocalhostBrowser(config config.Config) {
+func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
+
+	// Get and modify the configuration
+	config := factory.Config()
+	config.With(options...)
 
 	if portString, ok := config.HTTPPortString(); ok {
 		time.Sleep(500 * time.Millisecond)
@@ -325,10 +332,11 @@ func openLocalhostBrowser(config config.Config) {
 
 // startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTPS(factory *server.Factory, e *echo.Echo) {
+func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option) {
 
-	// Get Current configuration
+	// Get and modify the configuration
 	config := factory.Config()
+	config.With(options...)
 
 	// If HTTPS is configured, then try to start an HTTPS server
 	if portString, ok := config.HTTPSPortString(); ok {
@@ -364,8 +372,11 @@ func startHTTPS(factory *server.Factory, e *echo.Echo) {
 
 // startHTTP starts the HTTP server.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTP(factory *server.Factory, e *echo.Echo) {
+func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) {
+
+	// Get and modify the configuration
 	config := factory.Config()
+	config.With(options...)
 
 	if portString, ok := config.HTTPPortString(); ok {
 

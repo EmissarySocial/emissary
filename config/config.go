@@ -125,6 +125,7 @@ func (config Config) HTTPSPortString() (string, bool) {
 	return ":" + strconv.Itoa(config.HTTPSPort), true
 }
 
+// IsEmpty returns TRUE if this configuration is not usable (no ports or domains)
 func (config Config) IsEmpty() bool {
 
 	if config.HTTPPort != 0 {
@@ -140,4 +141,12 @@ func (config Config) IsEmpty() bool {
 	}
 
 	return true
+}
+
+// With applies one or more options to this configuration
+func (config *Config) With(options ...Option) {
+
+	for _, option := range options {
+		option(config)
+	}
 }

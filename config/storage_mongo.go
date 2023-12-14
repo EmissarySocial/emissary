@@ -53,8 +53,11 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 
 	case derp.NotFound(err):
 
-		// If the config was not found, then run in setup mode and add a new default configuration
-		args.Setup = true
+		if !args.Setup {
+			log.Error().Msg("Emissary could not start because the configuration database could not be found.")
+			log.Error().Msg("Please re-run Emissary with the --setup flag to initialize the configuration database.")
+			os.Exit(1)
+		}
 
 		// Create a default configuration
 		config = DefaultConfig()
@@ -68,6 +71,9 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		}
 
 	default:
+
+		derp.Report(err)
+
 		// Any other errors connecting to the Mongo server will prevent Emissary from starting.
 		log.Error().Msg("Emissary could not start because of an error connecting to the MongoDB config database.")
 		log.Error().Err(err).Send()
@@ -111,6 +117,11 @@ func (storage MongoStorage) load() (Config, error) {
 	result := NewConfig()
 
 	if err := storage.collection.FindOne(context.Background(), bson.M{}).Decode(&result); err != nil {
+
+		if err == mongo.ErrNoDocuments {
+			return Config{}, derp.NewNotFoundError("config.MongoStorage", "Error loading config from MongoDB", err.Error())
+		}
+
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")
 	}
 
