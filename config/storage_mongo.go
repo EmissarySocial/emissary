@@ -27,8 +27,8 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	client, err := mongo.Connect(context.Background(), connectOptions)
 
 	if err != nil {
-		log.Fatal().Msg("Emissary cannot start because the MongoDB config database could not be reached.")
-		log.Fatal().Msg("Check the MongoDB connection string and verify the database server connection.")
+		log.Error().Msg("Emissary cannot start because the MongoDB config database could not be reached.")
+		log.Error().Msg("Check the MongoDB connection string and verify the database server connection.")
 		log.Error().Err(err).Send()
 		os.Exit(1)
 	}
@@ -62,15 +62,15 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		config.Location = storage.location
 
 		if err := storage.Write(config); err != nil {
-			log.Fatal().Msg("Error writing new configuration file to the Mongo database")
-			log.Fatal().Err(err).Send()
+			log.Error().Msg("Error writing new configuration file to the Mongo database")
+			log.Error().Err(err).Send()
 			os.Exit(1)
 		}
 
 	default:
 		// Any other errors connecting to the Mongo server will prevent Emissary from starting.
-		log.Fatal().Msg("Emissary could not start because of an error connecting to the MongoDB config database.")
-		log.Fatal().Err(err).Send()
+		log.Error().Msg("Emissary could not start because of an error connecting to the MongoDB config database.")
+		log.Error().Err(err).Send()
 		os.Exit(1)
 	}
 

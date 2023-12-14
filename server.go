@@ -318,7 +318,7 @@ func openLocalhostBrowser(config config.Config) {
 		}
 
 	} else {
-		log.Fatal().Msg("Unable to open setup tool because no HTTP port is configured.")
+		log.Error().Msg("Unable to open setup tool because no HTTP port is configured.")
 		os.Exit(0)
 	}
 }

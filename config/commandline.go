@@ -79,7 +79,7 @@ func getConfigProtocol(location string) string {
 	}
 
 	// Fatal error
-	log.Fatal().Msg("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
+	log.Error().Msg("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
 	os.Exit(1)
 
 	return ""

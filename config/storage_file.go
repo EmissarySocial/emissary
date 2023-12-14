@@ -51,7 +51,8 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 		// Save the config to disk
 		if err := storage.Write(config); err != nil {
 			derp.Report(derp.Wrap(err, "config.FileStorage", "Error initializing MongoDB config"))
-			log.Fatal().Msg("Error initializing File config: " + err.Error())
+			log.Error().Msg("Error initializing File config: " + err.Error())
+			os.Exit(1)
 		}
 
 	// Anything but a "Not Found" error is a catastrophic failure.
