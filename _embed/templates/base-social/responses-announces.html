@@ -1,4 +1,3 @@
-{{- $path := .GetString "path" -}}
 {{- $stream := .ActivityStream .Permalink -}}
 {{- $statistics := $stream.Statistics -}}
 
@@ -6,20 +5,20 @@
 {{- $pageSize := 1000 -}}
 {{- $announces := .AnnouncesBefore $publishedDate $pageSize -}}
 
-<div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top-lg">
+<div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top">
 
 	<hr class="margin-bottom-sm"/>
 
 	<div>
-		<span hx-get="{{$path}}/responses-replies" role="button" class="margin-right-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-replies" role="button" class="margin-right-xs clickable">
 			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
 		</span>
 		&middot;
-		<span hx-get="{{$path}}/responses-likes" role="button" class="margin-horizontal-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-likes" role="button" class="margin-horizontal-xs clickable">
 			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
 		</span>
 		&middot;
-		<span hx-get="{{$path}}/responses-announces" role="button" class="margin-horizontal-xs clickable bold">
+		<span hx-get="{{.BasePath}}/responses-announces" role="button" class="margin-horizontal-xs clickable bold">
 			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
 		</span>
 	</div>

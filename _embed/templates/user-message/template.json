@@ -46,6 +46,27 @@
 			]
 		},
 
+		"responses-replies":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"responses-announces":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"responses-likes":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"replies":{
+			"roles":["self"],
+			"steps":[
+				{"step":"view-html"}
+			]
+		},
 		"reply":{
 			"roles":["self"],
 			"steps":[
@@ -53,15 +74,9 @@
 				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
-				{"step": "set-header", "name":"hx-retarget", "value":"#replies"},
-				{"step": "set-header", "name":"hx-reswap", "value":"innerHTML"},
-				{"step":"view-html", "method":"post", "file":"replies"}
-			]
-		},
-		"replies":{
-			"roles":["self"],
-			"steps":[
-				{"step":"view-html"}
+				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"step":"view-html", "method":"post", "file":"responses-replies"}
 			]
 		}
 	}

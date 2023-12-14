@@ -81,7 +81,7 @@
 			]
 		},
 
-		"reply":{
+		"embedded-reply":{
 			"roles":["authenticated"],
 			"steps":[
 				{"step":"set-args", "path":"/{{.StreamID}}", "replies":"{{.StreamID}}/reply", "postTo":"/{{.StreamID}}/reply"},

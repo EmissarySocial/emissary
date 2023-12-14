@@ -1,4 +1,4 @@
-{{- $stream := .ActivityStream -}}
+{{- $stream := .ActivityStream .Permalink -}}
 
 <div id="modal-header">
 
@@ -23,6 +23,7 @@
 			</div>
 		
 		</div>
+
 	</div>
 
 </div>
@@ -104,7 +105,8 @@
 				<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 			{{- end -}}
 
-			<div class="content margin-top margin-bottom">
+			<div class="content">
+
 				{{- $image := $stream.Image -}}
 				{{- if $image.NotNil -}}
 					<div class="margin-bottom">
@@ -119,39 +121,17 @@
 					<div>{{- $stream.Summary -}}</div>
 				{{- end -}}
 
-				<div class="text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+				<div class="margin-top text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
 
 			</div>
+
+			<div class="margin-top-lg text-sm">{{.View "like-button"}}</div>
+
 		</div>
+		
 	</div>
 
-	<hr class="margin-bottom-sm">
-
-	{{- if eq $stream.Statistics.Replies 0 -}}
-		<div class="margin-none">
-			<span class="bold margin-right-sm">No Replies</span>
-			<span class="text-sm">{{.View "like-button"}}</span>
-		</div>
-		<hr class="margin-top-sm">
-		<div id="replies"></div>
-	{{- else -}}
-		<div class="margin-none">
-			<span class="bold margin-right-sm">
-				{{- if eq 1 $stream.Statistics.Replies -}}
-					1 Reply
-				{{- else -}}
-					{{$stream.Statistics.Replies}} Replies
-				{{- end -}}
-			</span>
-			<span class="text-sm">{{.View "like-button"}}</span>
-		</div>
-		<hr class="margin-top-sm">
-
-		<div id="replies">
-			{{.View "replies"}}
-		</div>
-
-	{{- end -}}
+	{{.View "responses-replies"}}
 
 </div>
 

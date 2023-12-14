@@ -21,6 +21,7 @@ import (
 // Message renders individual messages from a User's Inbox.
 type Message struct {
 	_service         *service.Inbox
+	_template        *model.Template
 	_message         *model.Message
 	_activityStreams *service.ActivityStreams
 	Common
@@ -63,6 +64,7 @@ func NewMessage(factory Factory, request *http.Request, response http.ResponseWr
 	}
 	return Message{
 		_service:         modelService,
+		_template:        &template,
 		_message:         message,
 		_activityStreams: activityStreamsService,
 		Common:           common,
@@ -109,8 +111,17 @@ func (w Message) Permalink() string {
 	return w._message.URL
 }
 
-func (w Message) UserCan(string) bool {
-	return w._message.UserID == w.AuthenticatedID()
+func (w Message) UserCan(actionID string) bool {
+
+	if w._message.UserID != w.AuthenticatedID() {
+		return false
+	}
+
+	if action, ok := w._template.Actions[actionID]; ok {
+		return action.UserCan(w._message, &w._authorization)
+	}
+
+	return false
 }
 
 func (w Message) Render() (template.HTML, error) {
@@ -170,8 +181,8 @@ func (w Message) OriginalURL() string {
 }
 
 // ActivityStream returns a hannibal Document that this message wraps
-func (w Message) ActivityStream() streams.Document {
-	result, err := w._activityStreams.Load(w._message.URL)
+func (w Message) ActivityStream(url string) streams.Document {
+	result, err := w._activityStreams.Load(url)
 	derp.Report(err)
 	return result
 }
