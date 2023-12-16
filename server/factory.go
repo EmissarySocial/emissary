@@ -551,7 +551,7 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to connect to database"))
+		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to connect to database", uri))
 		return
 	}
 
