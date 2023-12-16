@@ -78,10 +78,4 @@ behavior Modal
 			set event.detail.serverResponse to event.detail.serverResponse.replace(firstDiv, "<div class='ready' ")
 		end
 	end
-
-	on scroll from window
-		if #modal-footer is not empty
-			log #modal-footer
-		end
-	end
 end
