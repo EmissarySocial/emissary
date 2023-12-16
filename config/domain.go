@@ -20,7 +20,7 @@ type Domain struct {
 // NewDomain returns a fully initialized Domain object.
 func NewDomain() Domain {
 
-	// Default KEK is a slice of 64 random bytes
+	// Default KEK is a slice of 32 random bytes
 	keyEncryptingKey, _ := random.GenerateString(32)
 
 	return Domain{

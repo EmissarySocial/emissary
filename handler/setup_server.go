@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
@@ -140,7 +141,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Success!
-		return render.WrapInlineSuccess(ctx, "Record Updated")
+		return render.WrapInlineSuccess(ctx, "Record Updated at: "+time.Now().Format(time.TimeOnly))
 	}
 }
 
