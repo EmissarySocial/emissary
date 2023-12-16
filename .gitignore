@@ -21,3 +21,4 @@
 config-env.json
 .emissary
 /emissary
+config.json

@@ -18,7 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// WrapInlineSuccess sends a confirmation message to the #inline-confirmation element
+// WrapInlineSuccess sends a confirmation message to the #htmx-response-message element
 func WrapInlineSuccess(ctx echo.Context, message any) error {
 
 	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
@@ -27,16 +27,11 @@ func WrapInlineSuccess(ctx echo.Context, message any) error {
 	return ctx.HTML(http.StatusOK, `<span class="green">`+convert.String(message)+`</span>`)
 }
 
-// WrapInlineError sends a confirmation message to the #inline-confirmation element
+// WrapInlineError sends a confirmation message to the #htmx-response-message element
 func WrapInlineError(ctx echo.Context, err error) error {
 
 	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
 	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
-
-	if derpError, ok := err.(derp.SingleError); ok {
-		derp.Report(derpError)
-		return ctx.HTML(http.StatusOK, `<span class="red">`+derpError.Message+`</span>`)
-	}
 
 	derp.Report(err)
 	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)

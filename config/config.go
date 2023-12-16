@@ -52,9 +52,9 @@ func DefaultConfig() Config {
 		// File Locations
 		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
 		Emails:              sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "emails"}},
-		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": ".emissary/attachments"},
-		AttachmentCache:     mapof.String{"adapter": "FILE", "location": ".emissary/cache"},
-		Certificates:        mapof.String{"adapter": "FILE", "location": ".emissary/certificates"},
+		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": "./.emissary/attachments"},
+		AttachmentCache:     mapof.String{"adapter": "FILE", "location": "./.emissary/cache"},
+		Certificates:        mapof.String{"adapter": "FILE", "location": "./.emissary/certificates"},
 		ActivityPubCache:    mapof.String{},
 		DebugLevel:          "None",
 		HTTPPort:            80,
@@ -123,4 +123,30 @@ func (config Config) HTTPSPortString() (string, bool) {
 	}
 
 	return ":" + strconv.Itoa(config.HTTPSPort), true
+}
+
+// IsEmpty returns TRUE if this configuration is not usable (no ports or domains)
+func (config Config) IsEmpty() bool {
+
+	if config.HTTPPort != 0 {
+		return false
+	}
+
+	if config.HTTPSPort != 0 {
+		return false
+	}
+
+	if len(config.Domains) > 0 {
+		return false
+	}
+
+	return true
+}
+
+// With applies one or more options to this configuration
+func (config *Config) With(options ...Option) {
+
+	for _, option := range options {
+		option(config)
+	}
 }

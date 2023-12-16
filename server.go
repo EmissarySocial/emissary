@@ -30,6 +30,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	gommonlog "github.com/labstack/gommon/log"
 	"github.com/pkg/browser"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -70,7 +71,7 @@ func main() {
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
-	configStorage := config.Load(commandLineArgs)
+	configStorage := config.Load(&commandLineArgs)
 
 	factory := server.NewFactory(configStorage, embeddedFiles)
 
@@ -79,7 +80,9 @@ func main() {
 
 	// Start and configure the Web server
 	e := echo.New()
+	e.Logger.SetLevel(gommonlog.OFF)
 	e.HideBanner = true
+	e.HidePort = true
 	e.HTTPErrorHandler = errorHandler
 
 	// Global middleware
@@ -92,14 +95,17 @@ func main() {
 
 	if commandLineArgs.Setup {
 
+		// Get config modifiers from the command line (like HTTP PORT)
+		configOptions := commandLineArgs.ConfigOptions()
+
 		// Add routes for setup tool
 		makeSetupRoutes(factory, e)
 
 		// When running the setup tool, wait a second, then open a browser window to the correct URL
-		openLocalhostBrowser(factory.Config())
+		openLocalhostBrowser(factory, configOptions...)
 
 		// Prepare HTTP and HTTPS servers using the new configuration
-		go startHTTP(factory, e)
+		go startHTTP(factory, e, configOptions...)
 
 	} else {
 		// Add routes for standard web server
@@ -116,6 +122,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
+loop:
 	for {
 		select {
 
@@ -125,7 +132,7 @@ func main() {
 		// If we get a SIGINT, then shutdown gracefully
 		case <-quit:
 			gracefulShutdown(e)
-			break
+			break loop
 		}
 	}
 }
@@ -137,7 +144,7 @@ func main() {
 // makeSetupRoutes generates a new Echo instance for the setup behavior
 func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 
-	fmt.Println("Starting Emissary Setup Tool.")
+	log.Info().Msg("Starting Emissary Setup Console")
 
 	// Locate the setup templates
 	setupFiles, err := fs.Sub(embeddedFiles, "_embed/setup")
@@ -178,7 +185,7 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 // makeStandardRoutes generates a new Echo instance the primary server behavior
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
-	fmt.Println("Starting Emissary Server.")
+	log.Info().Msg("Starting Emissary Server.")
 
 	e.Pre(mw.HttpsRedirect)
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -186,23 +193,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
-	// e.Use(middleware.Logger())
-	/*
-		e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-			fmt.Println("---")
-			fmt.Print(c.Request().Host)
-			fmt.Println(c.Request().URL.String())
-
-			if len(reqBody) > 0 {
-				fmt.Println("REQUEST: " + string(reqBody))
-			}
-
-			if len(resBody) > 0 {
-				fmt.Println("RESPONSE: " + string(resBody))
-			}
-			fmt.Println("")
-		}))
-	*/
 
 	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
@@ -321,23 +311,32 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 // openLocalhostBrowser opens a browser window to the localhost URL
 // IF the server is configured to run on HTTP or HTTPS
-func openLocalhostBrowser(config config.Config) {
+func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
+
+	// Get and modify the configuration
+	config := factory.Config()
+	config.With(options...)
 
 	if portString, ok := config.HTTPPortString(); ok {
 		time.Sleep(500 * time.Millisecond)
-		browser.OpenURL("http://localhost" + portString + "/")
+
+		if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
+			derp.Report(derp.Wrap(err, "server.openLocalhostBrowser", "OS Error opening browser window"))
+		}
 
 	} else {
-		fmt.Println("Unable to open setup tool because no HTTP port is configured.")
+		log.Error().Msg("Unable to open setup tool because no HTTP port is configured.")
+		os.Exit(0)
 	}
 }
 
 // startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTPS(factory *server.Factory, e *echo.Echo) {
+func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option) {
 
-	// Get Current configuration
+	// Get and modify the configuration
 	config := factory.Config()
+	config.With(options...)
 
 	// If HTTPS is configured, then try to start an HTTPS server
 	if portString, ok := config.HTTPSPortString(); ok {
@@ -346,7 +345,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo) {
 		domains := slice.Filter(config.DomainNames(), domain.NotLocalhost)
 
 		if len(domains) == 0 {
-			fmt.Println("Skipping HTTPS server because there are no non-local domains.")
+			log.Info().Msg("Skipping HTTPS server because there are no non-local domains.")
 			return
 		}
 
@@ -358,35 +357,40 @@ func startHTTPS(factory *server.Factory, e *echo.Echo) {
 			Email:      config.AdminEmail,
 		}
 
-		fmt.Println("Starting HTTPS server on port " + portString + ".")
+		log.Info().Msg("Starting HTTPS server on port " + portString + ".")
 
 		for {
 			if err := e.StartAutoTLS(portString); err != nil {
-				fmt.Println(err.Error())
+				log.Error().Err(err).Send()
 				time.Sleep(1 * time.Second)
 			}
 		}
 	}
 
-	fmt.Println("Skipping HTTPS server because no HTTPS port is configured.")
+	log.Info().Msg("NO HTTPS PORT CONFIGURED. Skipping HTTPS server.")
 }
 
 // startHTTP starts the HTTP server.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTP(factory *server.Factory, e *echo.Echo) {
+func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) {
+
+	// Get and modify the configuration
 	config := factory.Config()
+	config.With(options...)
 
 	if portString, ok := config.HTTPPortString(); ok {
-		fmt.Println("Starting HTTP server on port " + portString + ".")
+
+		log.Info().Msg("Starting HTTP server on port " + portString + ".")
+
 		for {
 			if err := e.Start(portString); err != nil {
-				fmt.Println(err.Error())
+				log.Error().Err(err).Send()
 				time.Sleep(1 * time.Second)
 			}
 		}
 	}
 
-	fmt.Println("Skipping HTTP server because no HTTP port is configured.")
+	log.Info().Msg("NO HTTP PORT CONFIGURED. Skipping HTTP server")
 }
 
 func waitForSigInt() {

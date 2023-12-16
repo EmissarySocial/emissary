@@ -18,17 +18,14 @@
 				<tr>
 					<td hx-get="/domains/{{.DomainID}}" role="button" nowrap>
 						{{icon "server"}} {{ .Label }}
-						{{if .IsStarterContent}}(click to edit){{end}}
 					</td>
 					<td><div class="hide-md">{{.Hostname}}</div></td>
-					{{- if not .IsStarterContent -}}
-						<td class="align-right" nowrap>
-							<button hx-get="/domains/{{.DomainID}}">Edit <span class="hide-sm">Domain</span></button>
-								<button hx-get="/domains/{{.DomainID}}/users"><span class="hide-sm">Edit</span> Users</button>
-							<span style="min-width:20px">&nbsp;&nbsp;</span>
-							<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>
-						</td>
-					{{- end -}}
+					<td class="align-right" nowrap>
+						<button hx-get="/domains/{{.DomainID}}">Edit <span class="hide-sm">Domain</span></button>
+							<button hx-get="/domains/{{.DomainID}}/users"><span class="hide-sm">Edit</span> Users</button>
+						<span style="min-width:20px">&nbsp;&nbsp;</span>
+						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} Delete</button>
+					</td>
 				</tr>
 			{{- end -}}
 		</table>

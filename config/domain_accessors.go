@@ -8,7 +8,7 @@ import (
 func DomainSchema() schema.Element {
 
 	// Default KEK is a slice of 64 random bytes
-	keyEncryptingKey, _ := random.GenerateString(64)
+	keyEncryptingKey, _ := random.GenerateString(32)
 
 	return schema.Object{
 		Properties: schema.ElementMap{

@@ -8,41 +8,15 @@
 
 		<form hx-post="/server">
 
-			<div class="tabs" data-script="install TabContainer">
-
-				<div role="tablist">
-					<button type="button" role="tab" id="tab-templates" class="tab-label" aria-controls="panel-templates" aria-selected="true">Packages</button>
-					<button type="button" role="tab" id="tab-emails" class="tab-label" aria-controls="panel-emails">Emails</button>
-					<button type="button" role="tab" id="tab-attachments" class="tab-label" aria-controls="panel-attachments">Attachments</button>
-					<button type="button" role="tab" id="tab-certificates" class="tab-label" aria-controls="panel-certificates">Certificates</button>
-					<button type="button" role="tab" id="tab-general" class="tab-label" aria-controls="panel-general" aria-selected="true">General</button>
-				</div>
-
-				<div role="tabpanel" id="panel-templates" aria-labelledby="tab-templates" hidden="true">
-					<p>Packages define all of the Themes, Templates, and Widgets that users can include on their sites.</p>
-					<div hx-get="/server/templates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-emails" aria-labelledby="tab-emails" hidden="true">
-					<p>Email Templates contain all of the emails that are sent by websites.</p>
-					<div hx-get="/server/emails" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-attachments" aria-labelledby="tab-attachments" hidden="true">
-					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
-					<div hx-get="/server/attachments" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-certificates" aria-labelledby="tab-certificates" hidden="true">
-					<p>Choose the readable/writeable directories where users uploaded files will be stored.</p>
-					<div hx-get="/server/certificates" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
-				<div role="tabpanel" id="panel-general" aria-labelledby="tab-general" hidden="true">
-					<div hx-get="/server/general" hx-trigger="load" hx-target="this" hx-push-url="false"></div>
-				</div>
-
+			<div role="tablist" hx-target="#tab-panel" hx-swap="innerHTML" hx-push-url="false">
+				<span role="tab" script="on click take .selected" hx-get="/server/general" hx-trigger="load, click" class="selected">General</span>
+				<span role="tab" script="on click take .selected" hx-get="/server/templates">Packages</span>
+				<span role="tab" script="on click take .selected" hx-get="/server/emails">Emails</span>
+				<span role="tab" script="on click take .selected" hx-get="/server/attachments">Attachments</span>
+				<span role="tab" script="on click take .selected" hx-get="/server/certificates">Certificates</span>
 			</div>
+
+			<div id="tab-panel" role="tabpanel" hx-trigger="load"></div>
 
 		</form>
 	</div>

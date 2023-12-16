@@ -6,7 +6,6 @@ behavior listItem(messageId)
 				measure my top
 				if top is less than 0 then
 					set my [@data-read] to 'true'
-					log me
 					fetch `/@me/messages/${messageId}/mark-read` with method:'POST'
 					trigger refreshSidebar
 				end

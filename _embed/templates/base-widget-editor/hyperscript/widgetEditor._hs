@@ -31,7 +31,6 @@ behavior widgetEditor(url)
 			set widgetIds to []
 
 			for widget in <.widget /> in you
-				log widget
 				widgetIds.push(widget[@data-widgetId])
 			end
 
@@ -40,10 +39,6 @@ behavior widgetEditor(url)
 			end
 		end
 
-		log "RESULTS ----------"
-		for input in <input[type=hidden] />
-			log input
-		end
 		trigger editor:save
 	end
 end

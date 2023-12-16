@@ -4,14 +4,17 @@
 
 [role="tablist"] {
     border-bottom:solid 1px var(--gray40);
-    margin-bottom:20px;
+    margin-bottom:calc( var(--rhythm) * 3);
     line-height:normal;
 }
 
 [role="tablist"] > [role="tab"] {
     cursor:pointer;
     display:inline-block;
-    padding:8px 16px 4px 16px;
+    padding-top:var(--rhythm);
+    padding-bottom:calc( var(--rhythm) * 0.5);
+    padding-left:calc( var(--rhythm) * 2);
+    padding-right:calc( var(--rhythm) * 2);
     margin:0px 2px -1px 0px;
     background-color:var(--gray05);
     border:solid 1px var(--gray30);
@@ -37,7 +40,10 @@
     cursor:not-allowed;
 }
 
-[role="tablist"] > [role="tab"][aria-selected="true"]:not([disabled]) {
+[role="tablist"] > [role="tab"][aria-selected="true"]:not([disabled]),
+[role="tablist"] > [role="tab"][aria-selected="true"]:not([disabled]):hover,
+[role="tablist"] > [role="tab"].selected:not([disabled]), 
+[role="tablist"] > [role="tab"].selected:not([disabled]):hover {
     border-color:var(--gray40);
     border-bottom:solid 1px white;
     background-color:white;
@@ -50,7 +56,7 @@
 
  [role="tablist"].underlined {
     border-bottom:none;
-    margin-bottom:20px;
+    margin-bottom:calc( var(--rhythm) * 3);
     line-height:1em;
 }
 
@@ -84,7 +90,8 @@
     cursor:not-allowed;
 }
 
-[role="tablist"].underlined > [role="tab"][aria-selected="true"]:not([disabled]) {
+[role="tablist"].underlined > [role="tab"][aria-selected="true"]:not([disabled]),
+[role="tablist"].underlined > [role="tab"].selected:not([disabled]) {
     border-color:var(--gray40);
     border-bottom:solid 3px var(--blue60);
     border-radius:0px;
@@ -101,7 +108,7 @@
 
  [role="tablist"].pills {
     border-bottom:none;
-    margin-bottom:20px;
+    margin-bottom:calc( var(--rhythm) * 3);
     line-height:1em;
     font-weight:400;
     font-family:inherit;
@@ -137,7 +144,9 @@
 }
 
 [role="tablist"].pills > [role="tab"][aria-selected="true"],
-[role="tablist"].pills > [role="tab"][aria-selected="true"]:hover {
+[role="tablist"].pills > [role="tab"][aria-selected="true"]:hover,
+[role="tablist"].pills > [role="tab"].selected,
+[role="tablist"].pills > [role="tab"].selected:hover {
     border:none;
     margin:0px;
     padding:8px 16px;

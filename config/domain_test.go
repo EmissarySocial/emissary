@@ -26,6 +26,7 @@ func TestDomainSchema(t *testing.T) {
 		{"owner.emailAddress", "owner@email.address", nil},
 		{"owner.phoneNumber", "123-456-7890", nil},
 		{"owner.mailingAddress", "1234 Owner Street, Ownerville, OW 00000", nil},
+		{"keyEncryptingKey", "12345678901234567890123456789012", nil},
 	}
 
 	tableTest_Schema(t, &s, &d, table)

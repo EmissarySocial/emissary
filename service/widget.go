@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"sort"
@@ -11,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/rs/zerolog/log"
 )
 
 // Widget service manages the global, in-memory library of widget templates that can
@@ -35,6 +35,8 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 
 	const location = "service.widget.Add"
 
+	log.Trace().Msg("Widget Service: adding widget: " + widgetID)
+
 	widget := model.NewWidget(widgetID, service.funcMap)
 
 	// Unmarshal the file into the schema.
@@ -56,8 +58,6 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
 		widget.Resources = resources
 	}
-
-	fmt.Println("... adding widget: " + widget.WidgetID)
 
 	// Add the widget into the service library
 	service.mutex.Lock()

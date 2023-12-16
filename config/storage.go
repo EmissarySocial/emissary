@@ -1,9 +1,9 @@
 package config
 
 import (
-	"fmt"
+	"os"
 
-	"github.com/benpate/derp"
+	"github.com/rs/zerolog/log"
 )
 
 type Storage interface {
@@ -11,21 +11,23 @@ type Storage interface {
 	Write(Config) error
 }
 
-// GetStorage initializes the storage engine for the server configuration
-func Load(args CommandLineArgs) Storage {
+// Load retrieves a Storage object from the location designated in the config file
+func Load(args *CommandLineArgs) Storage {
 
-	fmt.Println("Loading configuration from: " + args.Location)
+	log.Debug().Msg("Loading server config from: " + args.Location)
 
 	switch args.Protocol {
 
-	case "MONGODB":
+	case StorageTypeMongo:
 		return NewMongoStorage(args)
 
-	case "FILE":
+	case StorageTypeFile:
 		return NewFileStorage(args)
 	}
 
-	// This should never happen because we've already checked this error when we parsed the command line
-	derp.Report(derp.NewInternalError("config.Load", "Unable to determine storage engine", args))
-	panic("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
+	// Failure
+	log.Error().Msg("Invalid configuration location.  Must be file:// or mongodb:// or mongodb+srv://")
+	os.Exit(1)
+
+	return nil
 }

@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 
 	mail "github.com/xhit/go-simple-mail/v2"
 )
@@ -106,6 +106,8 @@ func (service *ServerEmail) loadTemplates() {
 
 	for _, location := range service.locations {
 
+		log.Trace().Msg("Server Email Service: adding email: " + location["location"])
+
 		filesystem, err := service.filesystemService.GetFS(location)
 
 		if err != nil {
@@ -116,7 +118,6 @@ func (service *ServerEmail) loadTemplates() {
 			derp.Report(err)
 		}
 
-		fmt.Println("... email: " + location["location"])
 	}
 
 	// If we got this far, then we're good to go!
