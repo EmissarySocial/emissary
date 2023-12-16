@@ -7,6 +7,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"strings"
+
+	"github.com/benpate/derp"
 )
 
 /******************************************
@@ -35,8 +37,16 @@ func GenerateBytes(n int) ([]byte, error) {
 // number generator fails to function correctly, in which
 // case the caller should not continue.
 func GenerateString(s int) (string, error) {
+
 	b, err := GenerateBytes(s)
-	return Base64URLEncode(b), err
+
+	if err != nil {
+		return "", derp.Wrap(err, "random.GenerateString", "Error generating random bytes")
+	}
+
+	str := Base64URLEncode(b)
+	str = string(str[0:s])
+	return str, nil
 }
 
 // Base64URLEncode base64 encodes the given bytes in a URL-safe way
