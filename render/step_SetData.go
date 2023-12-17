@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -71,7 +71,7 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 	// Set default values (only if no value already exists)
 	for name, value := range step.Defaults {
 		currentValue, _ := schema.Get(renderer, name)
-		if convert.IsZeroValue(currentValue) {
+		if compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value)
 				derp.SetErrorCode(result, http.StatusBadRequest)

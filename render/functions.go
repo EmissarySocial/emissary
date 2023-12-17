@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/html"
 	"github.com/davecgh/go-spew/spew"
 
@@ -69,7 +70,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"first": func(values ...any) any {
 			for _, value := range values {
-				if !convert.IsZeroValue(value) {
+				if compare.NotZero(value) {
 					return value
 				}
 			}
