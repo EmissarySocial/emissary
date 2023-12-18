@@ -25,6 +25,7 @@ func TestConfig(t *testing.T) {
 		{"domains.0.owner.emailAddress", "EMAIL@ADDRESS.COM", nil},
 		{"domains.0.owner.phoneNumber", "PHONE_NUMBER", nil},
 		{"domains.0.owner.mailingAddress", "MAILING_ADDRESS", nil},
+		{"domains.0.keyEncryptingKey", "12345678901234567890123456789012", nil},
 
 		{"templates.0.adapter", "S3", nil},
 		{"templates.0.location", "LOCATION", nil},
