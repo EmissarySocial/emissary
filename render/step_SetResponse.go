@@ -18,6 +18,7 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	const location = "render.StepSetResponse.Post"
 
 	transaction := struct {
+		URI     string `json:"uri"     form:"uri"`     // The URI of the object being responded to
 		Type    string `json:"type"    form:"type"`    // The Response.Type (Like, Dislike, etc)
 		Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
 	}{}
@@ -40,7 +41,7 @@ func (step StepSetResponse) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 	response := model.NewResponse()
 	response.UserID = user.UserID
 	response.ActorID = user.ProfileURL
-	response.ObjectID = renderer.Permalink()
+	response.ObjectID = transaction.URI
 	response.Type = transaction.Type
 	response.Content = transaction.Content
 

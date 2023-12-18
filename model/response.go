@@ -12,14 +12,14 @@ import (
 // Reponse defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type Response struct {
-	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`      // Unique identifier for this Response
-	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`   // ID of the INTERNAL user who made this response (Zero for external users)
-	URL        string             `json:"url"        bson:"url"`      // URL of this Response document
-	ActorID    string             `json:"actorId"    bson:"actorId"`  // URL of the Actor who made the response
-	ObjectID   string             `json:"objectId"   bson:"objectId"` // URL of the Object that the actor responded to
-	Type       string             `json:"type"       bson:"type"`     // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
-	Summary    string             `json:"summary"    bson:"summary"`  // Summary of the response (e.g. "I liked this post because...")
-	Content    string             `json:"content"    bson:"content"`  // Custom value assigned to the response (emoji, vote, etc.)
+	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`               // Unique identifier for this Response
+	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`            // ID of the INTERNAL user who made this response (Zero for external users)
+	URL        string             `json:"url"        bson:"url"`               // URL of this Response document
+	ActorID    string             `json:"actorId"    bson:"actorId"`           // URL of the Actor who made the response
+	ObjectID   string             `json:"objectId"   bson:"objectId"`          // URL of the Object that the actor responded to
+	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
+	Summary    string             `json:"summary"    bson:"summary,omitempty"` // Summary of the response (e.g. "I liked this post because...")
+	Content    string             `json:"content"    bson:"content,omitempty"` // Custom value assigned to the response (emoji, vote, etc.)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

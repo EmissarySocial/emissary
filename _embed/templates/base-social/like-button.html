@@ -1,6 +1,8 @@
+{{- $uri := .Permalink -}}
 {{- $responseID := .GetResponseID "Like" .Permalink -}}
+
 {{- if eq "" $responseID -}}
-	<button class="bold" hx-post="{{.BasePath}}/like-button" hx-vals='{"type":"Like"}' hx-target="this" hx-swap="outerHTML" hx-push-url="false">{{icon "thumbs-up"}} Like<span style="opacity:0;">d</span></button>
+	<button class="bold" hx-post="{{.BasePath}}/like-button" hx-vals='{"type":"Like", "uri": "{{$uri}}"}' hx-target="this" hx-swap="outerHTML" hx-push-url="false">{{icon "thumbs-up"}} Like<span style="opacity:0;">d</span></button>
 {{- else -}}
-	<button class="bold link button-invisible" hx-post="{{.BasePath}}/like-button" hx-vals='{"type":""}' hx-target="this" hx-swap="outerHTML" hx-push-url="false">{{icon "thumbs-up-fill"}} Liked</button>
+	<button class="bold link button-invisible" hx-post="{{.BasePath}}/like-button" hx-vals='{"type":"", "uri":"{{$uri}}"}' hx-target="this" hx-swap="outerHTML" hx-push-url="false">{{icon "thumbs-up-fill"}} Liked</button>
 {{- end -}}

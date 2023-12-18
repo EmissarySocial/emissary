@@ -422,24 +422,25 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
  * Message Methods
  ******************************************/
 
-func (w Inbox) Message() (model.Message, error) {
+// Message uses the queryString ?messageId= parameter to load a Message from the database
+// If the messageId parameter does not exist, is malformed, or if the message does not exist, then
+// a new, empty Message is returned.
+func (w Inbox) Message() model.Message {
 
 	// Get the messageID from the query string
-	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
+	if messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId")); err == nil {
 
-	if err != nil {
-		return model.Message{}, derp.Wrap(err, "render.Inbox.Message", "Invalid message ID", w._request.URL.Query().Get("messageId"))
+		// Load the message
+		inboxService := w._factory.Inbox()
+		message := model.NewMessage()
+
+		if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err == nil {
+			return message
+		}
 	}
 
-	// Load the message
-	inboxService := w._factory.Inbox()
-	message := model.NewMessage()
-
-	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
-		return model.Message{}, derp.Wrap(err, "render.Inbox.Message", "Error loading message")
-	}
-
-	return message, nil
+	// Return empty/new message instead
+	return model.NewMessage()
 }
 
 func (w Inbox) RepliesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {

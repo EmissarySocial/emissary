@@ -12,29 +12,33 @@
 	</div>
 {{- end -}}
 
-{{- range $replies -}}
+{{- range $index, $stream := $replies -}}
 
-	{{- $object := .UnwrapActivity -}}
+	{{- $object := $stream.UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div class="margin-bottom-lg hover-trigger">
+	<div role="link"
+		class="margin-bottom-lg"
+		hx-get="/@me/inbox/message?uri={{$object.ID}}"
+		hx-push-url="false"
+		hx-target="#modal-window"
+		hx-swap="innerHTML">
+
 		<div class="flex-row">
 			<div>
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle-48"></div>
 				{{- else -}}
-					<a href="{{$actor.ID}}"><img class="circle-48" src="{{$actor.Icon.URL}}"></a>
+					<img class="circle-48" src="{{$actor.Icon.URL}}">
 				{{- end -}}
 			</div>
 			<div class="flex-grow-1">
-				<div>
-					{{- if $actor.NotNil -}}
-						<a href="{{$actor.ID}}" class="margin-right-sm">
-							<span class="bold">{{$actor.Name}}</span>
-							<span class="text-light-gray">@{{$actor.PreferredUsername}}</span>
-						</a>
-					{{- end -}}
-				</div>
+				{{- if $actor.NotNil -}}
+					<div class="margin-right-sm">
+						<span class="bold">{{$actor.Name}}</span>
+						<span class="text-light-gray">@{{$actor.PreferredUsername}}</span>
+					</div>
+				{{- end -}}
 
 				{{- if ne "" $object.Name -}}
 					<div class="bold margin-top">{{$object.Name}}</div>
@@ -45,7 +49,23 @@
 				{{- end -}}
 			
 				<div>{{$object.Content | html}}</div>
-				<div class="text-sm text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</div>
+				<div class="text-sm text-light-gray">
+					{{ $object.Published | epochDate | tinyDate}} ago
+					{{- $stats := $stream.Statistics -}}
+
+					{{ if $stats.HasReplies }}
+						&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+					{{ end }}
+
+					{{ if $stats.HasLikes }}
+						&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+					{{ end }}
+
+					{{ if $stats.HasAnnounces }}
+						&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+					{{ end }}
+
+				</div>
 			</div>
 
 			{{- if $actor.NotNil -}}

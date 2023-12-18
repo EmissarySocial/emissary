@@ -49,6 +49,9 @@ func undoResponse(factory *domain.Factory, user *model.User, activity streams.Do
 
 	// Try to remove the Response from the database. (This will NOT send updates to other servers)
 	if err := responseService.Delete(&response, "Undo via ActivityPub"); err != nil {
+		if derp.NotFound(err) {
+			return nil
+		}
 		return derp.Wrap(err, "handler.undoResponse", "Error deleting Response")
 	}
 

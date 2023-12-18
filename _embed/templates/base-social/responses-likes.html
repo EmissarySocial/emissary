@@ -10,15 +10,15 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div>
-		<span hx-get="{{.BasePath}}/responses-replies" role="button" class="margin-right-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-replies?uri={{.Permalink}}" role="button" class="margin-right-xs clickable">
 			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
 		</span>
 		&middot;
-		<span hx-get="{{.BasePath}}/responses-likes" role="button" class="margin-horizontal-xs clickable bold">
+		<span hx-get="{{.BasePath}}/responses-likes?uri={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
 			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
 		</span>
 		&middot;
-		<span hx-get="{{.BasePath}}/responses-announces" role="button" class="margin-horizontal-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-announces?uri={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
 			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
 		</span>
 	</div>
