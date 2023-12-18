@@ -111,8 +111,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return result, derp.Wrap(err, "ascache.Client.LoadActor", "error loading document from inner client", uri)
 	}
 
-	result.WithOptions(streams.WithClient(client))
-
 	// Try to save the new value asynchronously
 	if client.IsWritable() {
 		go client.save(uri, result)
