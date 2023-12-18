@@ -38,8 +38,8 @@ func TestStreamSchema(t *testing.T) {
 		{"label", "DOC-LABEL", nil},
 		{"summary", "DOC-SUMMARY", nil},
 		{"imageUrl", "DOC-IMAGEURL", nil},
-		{"attributedTo.0.name", "DOC-AUTHOR-NAME", nil},
-		{"attributedTo.0.profileUrl", "https://example/author", nil},
+		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
+		{"attributedTo.profileUrl", "https://example/author", nil},
 
 		{"inReplyTo", "https://in-reply-to.com", nil},
 		{"content.format", "HTML", nil},
