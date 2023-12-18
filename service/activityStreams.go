@@ -46,7 +46,14 @@ func (service *ActivityStreams) Load(uri string, options ...any) (streams.Docume
 	}
 
 	// Forward request to inner client
-	return service.innerClient.Load(uri, options...)
+	result, err := service.innerClient.Load(uri, options...)
+
+	if err != nil {
+		return streams.NilDocument(), derp.Wrap(err, "service.ActivityStreams.Load", "Error loading document from inner client", uri)
+	}
+
+	result.WithOptions(streams.WithClient(service))
+	return result, nil
 }
 
 // Delete removes a single document from the database by its URL
