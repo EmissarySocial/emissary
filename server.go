@@ -258,10 +258,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
-	e.GET("@me/messages/:message", handler.GetMessage(factory))
-	e.POST("@me/messages/:message", handler.PostMessage(factory))
-	e.GET("@me/messages/:message/:action", handler.GetMessage(factory))
-	e.POST("@me/messages/:message/:action", handler.PostMessage(factory))
 	e.POST("@me/messages/:message/mark-read", handler.PostMessageMarkRead(factory))
 
 	// ActivityPub Routes
