@@ -23,10 +23,9 @@ func TestBlockSchema(t *testing.T) {
 		{"isPublic", "true", true},
 		{"publishDate", int64(1234567890), nil},
 		{"origin.followingId", "123456781234567812345678", nil},
-		{"origin.type", "INTERNAL", nil},
+		{"origin.type", "LIKE", nil},
 		{"origin.url", "https://example.com", nil},
 		{"origin.label", "LABEL", nil},
-		{"origin.summary", "SUMMARY", nil},
 		{"origin.imageUrl", "ICON.URL.HERE", nil},
 	}
 

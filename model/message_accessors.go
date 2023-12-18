@@ -22,7 +22,6 @@ func MessageSchema() schema.Element {
 			"attributedTo": PersonLinkSchema(),
 			"inReplyTo":    schema.String{Format: "uri"},
 			"contentHtml":  schema.String{Format: "html"},
-			"contentJson":  schema.String{Format: "json"},
 			"responses":    ResponseSummarySchema(),
 			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
 			"publishDate":  schema.Integer{BitSize: 64},

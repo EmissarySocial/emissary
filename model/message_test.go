@@ -21,7 +21,6 @@ func TestMessageSchema(t *testing.T) {
 		{"references.0.url", "https://first.reference.url", nil},
 		{"references.1.url", "https://another.reference.url", nil},
 		{"contentHtml", "TEST CONTENT", nil},
-		{"contentJson", `{"json":true}`, nil},
 		{"folderId", "123456123456123456123456", nil},
 		{"publishDate", "123", int64(123)},
 		{"readDate", 456, int64(456)},

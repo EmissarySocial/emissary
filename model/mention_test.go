@@ -16,7 +16,7 @@ func TestMention(t *testing.T) {
 		{"mentionId", "123412341234123412341234", nil},
 		{"objectId", "123456781234567812345678", nil},
 		{"type", "Stream", nil},
-		{"origin.type", "ACTIVITYPUB", nil},
+		{"origin.type", "LIKE", nil},
 		{"origin.label", "LABEL", nil},
 		{"origin.url", "https://source.url", nil},
 		{"origin.imageUrl", "http://entry.photo.url/", nil},
