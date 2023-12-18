@@ -333,31 +333,51 @@
 		"message": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
+				{"step":"as-modal", "options":["class:large"], "steps":[
 					{"step":"view-html"}
 				]}
 			]
 		},
 		"message-delete": {
+			"roles": ["self"],
+			"steps": [
+				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+				{"step":"reload-page"}
+			]
+		},
+
+		"responses-replies":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"responses-announces":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"responses-likes":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"replies":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
-					{"step":"trigger-event", "event":"refreshPage"}
-				]}
+				{"step":"view-html"}
 			]
 		},
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "new-stream-label":"Reply to This Post", "postTo":"/@me/messages/{{.MessageID}}/reply"},
-				{"step":"add-stream", "location":"outbox", "as-reply":true, "as-embed":true},
-				{"step":"trigger-event", "event":"refreshReplies"}
+				{"step":"set-args", "postTo":"/@me/inbox/reply?uri={{.Permalink}}"},
+				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
+					"inReplyTo":"{{.Permalink}}"
+				}},
+				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"step":"view-html", "method":"post", "file":"responses-replies"}
 			]
-		},
-		"replies": {
-			"roles":["self"],
-			"step":"view-html"
 		}
 	}
 }	

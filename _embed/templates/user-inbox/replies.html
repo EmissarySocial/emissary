@@ -1,11 +1,13 @@
+{{- $uri := .QueryParam "uri" -}}
 {{- $publishedDate := .QueryParam "published" -}}
-{{- $pageSize := 4 -}}
 
+{{- $pageSize := 4 -}}
 {{- $renderer := . -}}
-{{- $replies := .RepliesBefore $publishedDate $pageSize -}}
+
+{{- $replies := .RepliesBefore $uri $publishedDate $pageSize -}}
 
 {{- if eq $replies.Length $pageSize -}}
-	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/replies?published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/replies?uri={{$uri}}&published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		<span class="button text-xs">Show Older Replies</span>
 	</div>
 {{- end -}}

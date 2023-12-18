@@ -1,0 +1,40 @@
+{{- $uri := .QueryParam "uri" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+
+{{- $stream := .ActivityStream $uri -}}
+{{- $statistics := $stream.Statistics -}}
+
+{{- $pageSize := 128 -}}
+{{- $announces := .AnnouncesBefore $uri $publishedDate $pageSize -}}
+
+<div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top">
+
+	<hr class="margin-bottom-sm"/>
+
+	<div>
+		<span hx-get="{{.BasePath}}/responses-replies?uri={{$uri}}" role="button" class="margin-right-xs clickable">
+			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
+		</span>
+		&middot;
+		<span hx-get="{{.BasePath}}/responses-likes?uri={{$uri}}" role="button" class="margin-horizontal-xs clickable">
+			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
+		</span>
+		&middot;
+		<span hx-get="{{.BasePath}}/responses-announces?uri={{$uri}}" role="button" class="margin-horizontal-xs clickable bold">
+			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
+		</span>
+	</div>
+
+	<hr class="margin-top-sm"/>
+
+	<div class="margin-top">
+		{{- range $index, $announce := $announces -}}
+			<div>
+				{{$announce.Actor.Name}} | 
+				{{$announce.Actor.URL}} |
+				{{$announce.Actor.Image.URL}} |
+			</div>
+		{{- end -}}
+	</div>
+
+</div>

@@ -32,11 +32,11 @@
 	{{- range $index, $message := $inbox -}}
 
 		<div 
-			id="item_{{.MessageID.Hex}}" 
+			id="item_{{$message.MessageID.Hex}}" 
 			role="button"
 			class="message"
 			style="max-width:640px;"
-			hx-get="/@me/messages/{{.MessageID.Hex}}/view?folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&uri={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-trigger="click"
 			hx-push-url="false"
 			tabIndex="0"

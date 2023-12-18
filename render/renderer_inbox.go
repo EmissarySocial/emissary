@@ -12,8 +12,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -93,10 +95,13 @@ func (w Inbox) PageTitle() string {
 }
 
 func (w Inbox) BasePath() string {
-	return "/me/inbox"
+	return "/@me/inbox"
 }
 
 func (w Inbox) Permalink() string {
+	if uri := w._request.URL.Query().Get("uri"); uri != "" {
+		return uri
+	}
 	return w.Host() + "/@me/inbox"
 }
 
@@ -411,6 +416,66 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 
 	// Return the result
 	return result, nil
+}
+
+/******************************************
+ * Message Methods
+ ******************************************/
+
+func (w Inbox) Message() (model.Message, error) {
+
+	// Get the messageID from the query string
+	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
+
+	if err != nil {
+		return model.Message{}, derp.Wrap(err, "render.Inbox.Message", "Invalid message ID", w._request.URL.Query().Get("messageId"))
+	}
+
+	// Load the message
+	inboxService := w._factory.Inbox()
+	message := model.NewMessage()
+
+	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
+		return model.Message{}, derp.Wrap(err, "render.Inbox.Message", "Error loading message")
+	}
+
+	return message, nil
+}
+
+func (w Inbox) RepliesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt)
+	result, _ := activityStreamsService.QueryRepliesBeforeDate(uri, maxDate, maxRows)
+
+	return result
+}
+
+func (w Inbox) RepliesAfter(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+	minDate := convert.Int64(dateString)
+
+	activityStreamsService := w._factory.ActivityStreams()
+	result, _ := activityStreamsService.QueryRepliesAfterDate(uri, minDate, maxRows)
+
+	return result
+}
+
+func (w Inbox) AnnouncesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(uri, maxDate, maxRows)
+
+	return result
+}
+
+func (w Inbox) LikesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	activityStreamsService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	result, _ := activityStreamsService.QueryLikesBeforeDate(uri, maxDate, maxRows)
+
+	return result
 }
 
 func (w Inbox) AmFollowing(uri string) model.Following {
