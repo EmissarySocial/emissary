@@ -47,7 +47,7 @@
 		"outbox-add": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"set-query-param", "postTo":"/@me/outbox-add?templateId=outbox-message"},
+				{"step":"set-args", "postTo":"/@me/outbox-add?templateId=outbox-message"},
 				{"step":"add-stream", "location":"outbox", "roles":["outbox-message"], "as-embed":true},
 				{"step":"refresh-page"}
 			]
