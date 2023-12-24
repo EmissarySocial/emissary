@@ -1,4 +1,4 @@
-{{ $folderID := .QueryParam "folderId" -}}
+{{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "followingId" -}}
 {{- $following := .FollowingByFolder $folderID -}}
 
