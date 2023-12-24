@@ -214,12 +214,12 @@ input[type=radio] {
 
 button,
 .button {
-	font-size:12pt;
+	font-size:calc(var(--rhythm) * 2);
 	font-weight:400;
 	margin-top:0px;
 	margin-left:0px;
 	margin-bottom:0px;
-	margin-right:5px;
+	margin-right:4px;
 	box-sizing:border-box;
 	width:auto;
 	display:inline-block;
@@ -238,8 +238,8 @@ button,
 .text-sm .button,
 button.text-sm,
 .button.text-sm {
-	font-size: calc(var(--rhythm) * 1.75);
-	padding: var(--rhythm) calc(var(--rhythm) * 1.5);
+	font-size: calc(var(--rhythm) * 1.6);
+	padding: calc(var(--rhythm) * 0.75) calc(var(--rhythm) * 1.25);
 }
 
 .text-xs button,

@@ -39,8 +39,7 @@
 
 #modal-window {
 	/* Sizing for visible dialog */
-	width: 600px;
-	max-width: 96vh;
+	width: clamp(480px, 600px, 96%);
 	max-height:96vh;
 
 	/* Scrolling behavior */
@@ -71,6 +70,7 @@
 #modal-header {
 	padding-top: calc(var(--rhythm) * 1);
 	padding: calc(var(--rhythm) * 2);
+	border-bottom: solid 1px var(--gray20);
 }
 
 #modal-body {
@@ -81,6 +81,7 @@
 
 #modal-header + #modal-body {
 	padding-top: calc(var(--rhythm) * 1);
+	background-color: var(--gray03);
 }
 
 #modal-footer {
@@ -88,13 +89,13 @@
 	padding-bottom:12px;
 	margin:0px;
 	border-top:solid 1px var(--gray20);
-	background-color: var(--gray05);
+	background-color: var(--gray10);
 }
 
 /* Additional Sizes */
 
 #modal-window.large {
-	width: clamp(320px, 80%, 800px);}
+	width: clamp(480px, 80%, 900px);}
 
 #modal-window.huge {
 	width:96%;

@@ -1,5 +1,4 @@
 {{- $uri := .QueryParam "uri" -}}
-{{- $messageID := .QueryParam "messageId" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
@@ -11,25 +10,22 @@
 	<div>
 		<div class="flex-row text-xs">
 
-			<div style="flex-grow:1">
-	
-				{{- if not $message.IsNew -}}
-					<span class="button-group" script="install message(messageId:'{{$messageID}}')">
-						<button id="previous" hx-get="/@me/messages/{{$message.MessageID}}/view?sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
-						<button id="next" hx-get="/@me/messages/{{$message.MessageID}}/view?sibling=next&followingId={{$followingID}}">Next &raquo;</button>
-					</span>
+			<div class="flex-grow-1">
+				<span class="button-group" script="install message(messageId:'{{$message.MessageID.Hex}}')">
+					<button id="previous" hx-get="/@me/messages/{{$message.MessageID.Hex}}/view?sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/messages/{{$message.MessageID.Hex}}/view?sibling=next&followingId={{$followingID}}">Next &raquo;</button>
+				</span>
 
-					<span class="button-group">
-						<button script="on click go to url '{{$message.URL}}' in new window">View Original</button>
-						<button hx-get="/@me/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Source</button>
-						<button hx-get="/@me/messages/{{$message.MessageID}}/delete">Delete</button>
-					</span>
-				{{- end -}}
-	
+				<span class="button-group">
+					<button script="on click go to url '{{$message.URL}}' in new window">View Original</button>
+					<button hx-get="/@me/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Source</button>
+				</span>
 			</div>
 
-			<div class="align-right">
-				<button script="on click send closeModal">Close</button>
+			<div>
+				<span class="button-group">	
+					<button script="on click send closeModal">Close</button>
+				</span>
 			</div>
 		
 		</div>
@@ -39,9 +35,26 @@
 </div>
 
 <div id="modal-body">
-
-	{{- if not $message.IsNew -}}
 	
+	{{- $inReplyTo := $stream.InReplyTo -}}
+	{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
+	{{- if $inReplyTo.NotNil -}}
+		<div role="link" class="text-gray flex-row clickable margin-vertical-lg" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$inReplyTo.ID}}">
+			<div class="margin-left-md">
+				{{- $icon := $inReplyToAttributedTo.Icon -}}
+				{{- if $icon.NotNil -}}
+					<img src="{{$icon.URL}}" class="circle-48">
+				{{- else -}}
+					<div class="circle-48"></div>
+				{{- end -}}
+			</div>
+			<div>
+				<div class="bold">{{$inReplyToAttributedTo.Name}}</div>
+				<div>{{$inReplyTo.Content | html}}</div>
+			</div>
+		</div>
+	{{- else -}}
+
 		{{- if ne "DIRECT" $message.Origin.Type -}}
 		
 			<div class="bold text-sm text-gray italics">
@@ -49,7 +62,7 @@
 					{{icon "thumbs-up-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
 					Liked this
-	
+
 				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
 					{{icon "thumbs-down-fill"}} 
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
@@ -72,24 +85,30 @@
 
 	{{- end -}}
 
-	{{- if $stream.AttributedTo.NotNil -}}
-		<div>
-			<a class="flex-row flex-align-center text-plain text-lg" href="{{$stream.AttributedTo.ID}}">
-				{{- if $stream.AttributedTo.Image.NotNil -}}
-					<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-64">
+	{{- $attributedTo := $stream.AttributedTo -}}
+	{{- if $attributedTo.NotNil -}}
+		<div class="flex-row">
+			<a class="flex-grow-1 flex-row flex-align-center text-plain text-lg" href="{{$attributedTo.ID}}">
+				{{- if $attributedTo.Icon.NotNil -}}
+					<img src="{{$attributedTo.Icon.URL}}" class="circle-64">
 				{{- else -}}
 					<div class="circle-64"></div>
 				{{- end -}}
 				<div>
-					<div class="text-plain text-lg bold margin-vertical-none">{{$stream.AttributedTo.Name}}</div>
-					<div class="text-gray text-sm margin-vertical-none">{{$stream.AttributedTo.ID}}</div>
+					{{- if $inReplyTo.NotNil -}}
+						<div class="text-xs text-light-gray">{{icon "reply"}} Replying to {{$inReplyToAttributedTo.Name}}</div>
+					{{- end -}}
+					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
+					<div class="text-gray text-sm margin-vertical-none">{{$attributedTo.ID}}</div>
 				</div>
 			</a>
+
 		</div>
+
 	{{- end -}}
 
 	<div class="flex-row">
-		<div style="width:64px;"></div>
+		<div class="width-64 flex-shrink-0"></div>
 		<div class="flex-grow-1">
 					
 			{{- if ne "" $stream.Name -}}
@@ -115,13 +134,25 @@
 
 			</div>
 
-			<div class="margin-top-lg text-sm">{{.View "like-button"}}</div>
+			<div class="margin-top-lg text-xs">
+				{{.View "like-button"}}
+
+				{{- if .NotMe $attributedTo.ID -}}
+					<span
+						hx-get="{{.BasePath}}/follow-button?url={{$attributedTo.ID}}"
+						hx-target="this"
+						hx-trigger="load">
+					</span>
+				{{- end -}}
+			</div>
 
 		</div>
 		
 	</div>
 
-	{{.View "responses-replies"}}
+	<div class="margin-left-md">
+		{{.View "responses-replies"}}
+	</div>
 
 </div>
 

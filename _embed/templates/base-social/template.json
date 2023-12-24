@@ -8,12 +8,16 @@
 	"actions":{
 
 		"follow-button": {
-			"roles":["authenticatd"],
-			"step":"view-html"
+			"roles":["authenticated"],
+			"steps": [
+				{"step":"view-html"},
+				{"step":"set-header", "name":"hx-push-url", "value":"false"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
+			]
 		},
 
 		"like-button": {
-			"roles":["authenticatd"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"set-response"},
 				{"step":"view-html", "method":"both"}

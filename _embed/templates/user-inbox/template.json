@@ -363,9 +363,11 @@
 		},
 		"replies":{
 			"roles":["self"],
-			"steps":[
-				{"step":"view-html"}
-			]
+			"step":"view-html"
+		},
+		"replies-recursive":{
+			"roles":["self"],
+			"step":"view-html"
 		},
 		"reply":{
 			"roles":["self"],

@@ -445,6 +445,23 @@
  * Sizes
  ******************************************/
 
+.width-24 {
+    width:24px;
+}
+
+.width-32 {
+    width:32px;
+}
+
+.width-48 {
+    width:48px;
+}
+
+.width-64 {
+    width:64px;
+}
+
+
 .width-100 {
     width: 100%;
 }

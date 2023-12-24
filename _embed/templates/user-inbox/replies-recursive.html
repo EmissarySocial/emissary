@@ -1,0 +1,106 @@
+{{- $uri := .QueryParam "uri" -}}
+{{- $messageID := .QueryParam "messageId" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
+
+{{- $pageSize := 6 -}}
+{{- $renderer := . -}}
+
+{{- $replies := .RepliesAfter $uri "0" $pageSize -}}
+
+{{- range $index, $stream := $replies -}}
+
+	{{- $object := $stream.UnwrapActivity -}}
+	{{- $attributedTo := $object.AttributedTo.Load -}}
+
+	<div 
+		role="link"
+		class="flex-row margin-bottom-xs" 
+		hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
+		
+		<div>
+			{{- if $attributedTo.Icon.IsNil -}}
+				<div class="circle-24"></div>
+			{{- else -}}
+				<img class="circle-24" src="{{$attributedTo.Icon.URL}}">
+			{{- end -}}
+		</div>
+
+		<div class="flex-grow-1">
+			{{- if $attributedTo.NotNil -}}
+				<div class="margin-right-sm">
+					<span class="bold">{{$attributedTo.Name}}</span>
+					<span class="text-light-gray">@{{$attributedTo.PreferredUsername}}</span>
+				</div>
+			{{- end -}}
+
+			{{- if ne "" $object.Name -}}
+				<div class="bold margin-top">{{$object.Name}}</div>
+			{{- end -}}
+
+			{{- if $object.Image.NotNil -}}
+				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+			{{- end -}}
+		
+			<div>{{$object.Content | html}}</div>
+
+		</div>
+
+		{{- if $attributedTo.NotNil -}}
+			{{- if $renderer.NotMe $object.Actor.ID -}}
+				<div class="align-right text-xs nowrap">
+					<div
+						hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
+						hx-swap="innerHTML"
+						hx-target="this"
+						hx-push-url="false"
+						hx-trigger="load">
+					</div>
+				</div>
+			{{- end -}}
+		{{- end -}}
+
+	</div>
+
+	<div class="flex-row">
+		<div class="width-24 flex-shrink-0"></div>
+		<div class="flex-grow-1">
+			<div class="text-sm text-light-gray">
+				{{ $object.Published | epochDate | tinyDate}} ago
+				{{- $stats := $stream.Statistics -}}
+
+				{{ if or true $stats.HasReplies }}
+					&middot;
+					<span 
+						role="link" 
+						hx-get="/@me/inbox/replies-recursive?uri={{$object.ID}}"
+						hx-target="next .recursive-replies"
+						hx-swap="innerHTML">
+						{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+					</span>
+				{{ end }}
+
+				{{ if $stats.HasLikes }}
+					&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+				{{ end }}
+
+				{{ if $stats.HasAnnounces }}
+					&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+				{{ end }}
+
+			</div>
+		</div>
+	</div>
+
+	<div class="flex-row margin-vertical">
+		<div style="width:2px; background-color:var(--gray20); margin-left:11px; margin-right:11px;"></div>
+		<div class="flex-grow-1 recursive-replies"></div>
+	</div>
+
+{{- end -}}
+
+{{- if eq $replies.Length $pageSize -}}
+	<div class="margin-bottom" role="button" hx-get="/@me/inbox/message?messageId={{$messageID}}&uri={{$uri}}&folderId={{$folderID}}&origin.internalId={{$followingID}}">
+		<span class="button text-xs">Show All Replies</span>
+	</div>
+{{- end -}}

@@ -1,7 +1,10 @@
 {{- $uri := .QueryParam "uri" -}}
+{{- $messageID := .QueryParam "messageId" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
-{{- $pageSize := 4 -}}
+{{- $pageSize := 6 -}}
 {{- $renderer := . -}}
 
 {{- $replies := .RepliesBefore $uri $publishedDate $pageSize -}}
@@ -18,11 +21,7 @@
 	{{- $actor := $object.AttributedTo.Load -}}
 
 	<div role="link"
-		class="margin-bottom-lg"
-		hx-get="/@me/inbox/message?uri={{$object.ID}}"
-		hx-push-url="false"
-		hx-target="#modal-window"
-		hx-swap="innerHTML">
+		hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
 
 		<div class="flex-row">
 			<div>
@@ -49,38 +48,59 @@
 				{{- end -}}
 			
 				<div>{{$object.Content | html}}</div>
-				<div class="text-sm text-light-gray">
-					{{ $object.Published | epochDate | tinyDate}} ago
-					{{- $stats := $stream.Statistics -}}
-
-					{{ if $stats.HasReplies }}
-						&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
-					{{ end }}
-
-					{{ if $stats.HasLikes }}
-						&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
-					{{ end }}
-
-					{{ if $stats.HasAnnounces }}
-						&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
-					{{ end }}
-
-				</div>
 			</div>
 
 			{{- if $actor.NotNil -}}
 				{{- if $renderer.NotMe $object.Actor.ID -}}
-					<div class="align-right text-xs"
-						hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
-						hx-swap="innerHTML"
-						hx-target="this"
-						hx-push-url="false"
-						hx-trigger="load">
+					<div class="align-right text-xs">
+						<div
+							hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
+							hx-swap="innerHTML"
+							hx-target="this"
+							hx-push-url="false"
+							hx-trigger="load">
+						</div>
 					</div>
 				{{- end -}}
 			{{- end -}}
 
 		</div>
+		
+	</div>
+
+	<div class="flex-row">
+		<div class="width-48"></div>
+		<div class="flex-grow-1">
+			<div class="text-sm text-light-gray">
+				{{ $object.Published | epochDate | tinyDate}} ago
+				{{- $stats := $stream.Statistics -}}
+
+				{{ if or true $stats.HasReplies }}
+					&middot; 
+					<span 
+						role="link" 
+						hx-get="/@me/inbox/replies-recursive?uri={{$object.ID}}"
+						hx-target="next .recursive-replies"
+						hx-swap="innerHTML">
+						{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+					</span>
+				{{ end }}
+
+				{{ if $stats.HasLikes }}
+					&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+				{{ end }}
+
+				{{ if $stats.HasAnnounces }}
+					&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+				{{ end }}
+
+			</div>
+		</div>
+	</div>
+
+	<div class="flex-row margin-vertical">
+		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
+		<div class="flex-grow-1 recursive-replies"></div>
 	</div>
 
 {{- end -}}
