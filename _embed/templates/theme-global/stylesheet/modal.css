@@ -69,6 +69,7 @@
 }
 
 #modal-header {
+	padding-top: calc(var(--rhythm) * 1);
 	padding: calc(var(--rhythm) * 2);
 }
 
@@ -76,6 +77,10 @@
 	overflow-y:scroll;
 	flex-grow:1;
 	padding: calc(var(--rhythm) * 2);
+}
+
+#modal-header + #modal-body {
+	padding-top: calc(var(--rhythm) * 1);
 }
 
 #modal-footer {
