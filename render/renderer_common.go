@@ -136,27 +136,36 @@ func (w Common) Hostname() string {
 	return w._request.Host
 }
 
-// Path returns the request path
+// Path returns the HTTP Request path
 func (w Common) Path() string {
 	return w._request.URL.Path
 }
 
+// PathList returns the HTTP Request path as a List
+// of strings
 func (w Common) PathList() list.List {
 	return list.BySlash(w.Path()).Tail()
 }
 
+// SetQueryParam updates the HTTP request, setting a new value
+// for an individual query parameter.
 func (w Common) SetQueryParam(name string, value string) {
 	query := w._request.URL.Query()
 	query.Set(name, value)
 	w._request.URL.RawQuery = query.Encode()
 }
 
-// Returns the designated request parameter
+// Returns the designated request parameter.  If there are
+// multiple values for the parameter, then only the first
+// value is returned.
 func (w Common) QueryParam(param string) string {
-	urlValue := w._request.URL.Query()[param]
-	// NOTE: we're getting the QueryParam value this way because the context.QueryParam() method
-	// doesn't seem to get updates when we change the URL via the SetQueryParam() step.
-	return convert.String(urlValue)
+	return w._request.URL.Query().Get(param)
+}
+
+// QueryParamSlice returns a slice of all values for the
+// designated request parameter
+func (w Common) QueryParamSlice(param string) sliceof.String {
+	return w._request.URL.Query()[param]
 }
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
