@@ -3,7 +3,7 @@
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-{{- $pageSize := 6 -}}
+{{- $pageSize := 4 -}}
 {{- $renderer := . -}}
 
 {{- $replies := .RepliesAfter $uri "0" $pageSize -}}
@@ -15,7 +15,7 @@
 
 	<div 
 		role="link"
-		class="flex-row margin-bottom-xs" 
+		class="flex-row margin-top-xs" 
 		hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
 		
 		<div>
@@ -33,17 +33,6 @@
 					<span class="text-light-gray">@{{$attributedTo.PreferredUsername}}</span>
 				</div>
 			{{- end -}}
-
-			{{- if ne "" $object.Name -}}
-				<div class="bold margin-top">{{$object.Name}}</div>
-			{{- end -}}
-
-			{{- if $object.Image.NotNil -}}
-				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
-			{{- end -}}
-		
-			<div>{{$object.Content | html}}</div>
-
 		</div>
 
 		{{- if $attributedTo.NotNil -}}
@@ -63,8 +52,19 @@
 	</div>
 
 	<div class="flex-row">
-		<div class="width-24 flex-shrink-0"></div>
+		<div style="width:1px; background-color:var(--gray20); margin-left:11.5px; margin-right:11.5px;"></div>
 		<div class="flex-grow-1">
+
+			{{- if ne "" $object.Name -}}
+				<div class="bold margin-top">{{$object.Name}}</div>
+			{{- end -}}
+
+			{{- if $object.Image.NotNil -}}
+				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+			{{- end -}}
+		
+			<div>{{$object.Content | html}}</div>
+
 			<div class="text-sm text-light-gray">
 				{{ $object.Published | epochDate | tinyDate}} ago
 				{{- $stats := $stream.Statistics -}}
@@ -92,9 +92,9 @@
 		</div>
 	</div>
 
-	<div class="flex-row margin-vertical">
-		<div style="width:2px; background-color:var(--gray20); margin-left:11px; margin-right:11px;"></div>
-		<div class="flex-grow-1 recursive-replies"></div>
+	<div class="flex-row">
+		<div style="width:1px; background-color:var(--gray20); margin-left:11.5px; margin-right:11.5px;"></div>
+		<div class="flex-grow-1 margin-vertical recursive-replies"></div>
 	</div>
 
 {{- end -}}

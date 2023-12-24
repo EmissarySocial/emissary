@@ -88,7 +88,7 @@
 	{{- $attributedTo := $stream.AttributedTo -}}
 	{{- if $attributedTo.NotNil -}}
 		<div class="flex-row">
-			<a class="flex-grow-1 flex-row flex-align-center text-plain text-lg" href="{{$attributedTo.ID}}">
+			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.URL}}" class="circle-64">
 				{{- else -}}
@@ -99,7 +99,7 @@
 						<div class="text-xs text-light-gray">{{icon "reply"}} Replying to {{$inReplyToAttributedTo.Name}}</div>
 					{{- end -}}
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
-					<div class="text-gray text-sm margin-vertical-none">{{$attributedTo.ID}}</div>
+					<div class="text-light-gray margin-vertical-none">@{{$attributedTo.PreferredUsername}}</div>
 				</div>
 			</a>
 
@@ -130,7 +130,7 @@
 					<div>{{- $stream.Summary -}}</div>
 				{{- end -}}
 
-				<div class="margin-top text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+				<div class="text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
 
 			</div>
 

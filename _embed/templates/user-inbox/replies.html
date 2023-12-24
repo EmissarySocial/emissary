@@ -21,6 +21,7 @@
 	{{- $actor := $object.AttributedTo.Load -}}
 
 	<div role="link"
+		class="margin-top-xs"
 		hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
 
 		<div class="flex-row">
@@ -33,26 +34,14 @@
 			</div>
 			<div class="flex-grow-1">
 				{{- if $actor.NotNil -}}
-					<div class="margin-right-sm">
-						<span class="bold">{{$actor.Name}}</span>
-						<span class="text-light-gray">@{{$actor.PreferredUsername}}</span>
-					</div>
+					<div class="bold">{{$actor.Name}}</div>
+					<div class="text-light-gray">@{{$actor.PreferredUsername}}</div>
 				{{- end -}}
-
-				{{- if ne "" $object.Name -}}
-					<div class="bold margin-top">{{$object.Name}}</div>
-				{{- end -}}
-
-				{{- if $object.Image.NotNil -}}
-					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
-				{{- end -}}
-			
-				<div>{{$object.Content | html}}</div>
 			</div>
 
 			{{- if $actor.NotNil -}}
 				{{- if $renderer.NotMe $object.Actor.ID -}}
-					<div class="align-right text-xs">
+					<div class="align-right text-xs nowrap">
 						<div
 							hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
 							hx-swap="innerHTML"
@@ -69,8 +58,18 @@
 	</div>
 
 	<div class="flex-row">
-		<div class="width-48"></div>
+		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
 		<div class="flex-grow-1">
+			{{- if ne "" $object.Name -}}
+				<div class="bold margin-top">{{$object.Name}}</div>
+			{{- end -}}
+
+			{{- if $object.Image.NotNil -}}
+				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+			{{- end -}}
+		
+			<div>{{$object.Content | html}}</div>
+
 			<div class="text-sm text-light-gray">
 				{{ $object.Published | epochDate | tinyDate}} ago
 				{{- $stats := $stream.Statistics -}}
@@ -98,9 +97,9 @@
 		</div>
 	</div>
 
-	<div class="flex-row margin-vertical">
+	<div class="flex-row">
 		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
-		<div class="flex-grow-1 recursive-replies"></div>
+		<div class="flex-grow-1 recursive-replies margin-vertical"></div>
 	</div>
 
 {{- end -}}
