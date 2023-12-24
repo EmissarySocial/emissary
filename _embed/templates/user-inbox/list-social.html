@@ -1,26 +1,28 @@
 {{- $inboxRenderer := index . 0 -}}
 {{- $message := index . 1 -}}
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+{{- $attributedTo := $stream.AttributedTo -}}
 
 <div class="flex-row">
-	<div>
-		{{- if $stream.AttributedTo.Image.NotNil -}}
-			<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-32 margin-right-sm">
-		{{- else -}}
-			<div class="circle-32 margin-right-sm"></div>
+	<div class="width-32 margin-right-sm">
+		{{- if $attributedTo.Icon.NotNil -}}
+			<img src="{{$attributedTo.Icon.URL}}" class="circle-32">
 		{{- end -}}
 	</div>
 
 	<div>
 
-		<div>
-			<span class="bold black">{{$stream.AttributedTo.Name}}</span>
-			<span class="text-light-gray nowrap flex-grow-1">
-				&middot;
-				@{{$stream.AttributedTo.PreferredUsername}} &middot;
-			</span>
-			
-		</div>
+		{{- if ne "" $attributedTo.Name -}}
+			<div>
+				<span class="bold black">{{$attributedTo.Name}}</span>
+				<span class="text-light-gray nowrap flex-grow-1">
+					{{- if ne "" $attributedTo.PreferredUsername -}}
+						&middot;
+						@{{$attributedTo.PreferredUsername}}
+					{{- end -}}
+				</span>
+			</div>
+		{{- end -}}
 
 		{{- if ne "" $stream.Name -}}
 			<div class="bold text-black margin-top">{{$stream.Name}}</div>
@@ -34,9 +36,9 @@
 			{{- end -}}
 		</div>
 
-		{{- if $stream.Icon.NotNil -}}
+		{{- if $stream.Image.NotNil -}}
 			<div class="margin-top" style="position:relative;">
-				<img src="{{$stream.Icon.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+				<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 			</div>
 		{{- end -}}
 

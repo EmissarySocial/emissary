@@ -16,64 +16,66 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div class="clickable margin-bottom-lg hover-trigger" script="on click go to url '{{$object.ID}}'">
-		<div class="flex-row">
-				{{- if $actor.Icon.IsNil -}}
-					<div class="circle-48 margin-right-sm"></div>
-				{{- else -}}
-					<a href="{{$actor.ID}}"><img class="circle-48 margin-right-sm" src="{{$actor.Icon.URL}}"></a>
+	<div class="flex-row margin-bottom-lg hover-trigger">
+
+		<div class="clickable margin-right-sm" script="on click go to url '{{$object.ID}}'">
+			{{- if $actor.Icon.IsNil -}}
+				<div class="circle-48"></div>
+			{{- else -}}
+				<img class="circle-48" src="{{$actor.Icon.URL}}">
+			{{- end -}}
+		</div>
+
+		<div class="clickable flex-grow-1" script="on click go to url '{{$object.ID}}'">
+
+			<div class="margin-bottom-xs">
+				{{- if $actor.NotNil -}}
+					<span class="bold margin-right-xs">{{$actor.Name}}</span>
+					<span class="flex-grow-1 text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</span>
 				{{- end -}}
-			<div class="flex-grow-1">
-				<div class="margin-bottom-xs">
-					{{- if $actor.NotNil -}}
-						<span class="bold margin-right-xs">{{$actor.Name}}</span>
-						<span class="text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</span>
-
-						{{- if $renderer.NotMe $object.Actor.ID -}}
-							<span class="text-xs margin-left-md"
-								hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
-								hx-swap="innerHTML"
-								hx-target="this"
-								hx-push-url="false"
-								hx-trigger="load">
-							</span>
-						{{- end -}}
-
-					{{- end -}}
-				
-				</div>
-
-				{{- if ne "" $object.Name -}}
-					<div class="bold">{{$object.Name}}</div>
-				{{- end -}}
-
-				{{- if $object.Image.NotNil -}}
-					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
-				{{- end -}}
-			
-				<div>{{$object.Content | html}}</div>
-				<div class="text-xs text-light-gray text-uppercase">
-					{{- if gt $statistics.Replies 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
-						</span>
-					{{- end -}}
-
-					{{- if gt $statistics.Likes 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
-						</span>
-					{{- end -}}
-
-					{{- if gt $statistics.Announces 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
-						</span>
-					{{- end -}}
-				</div>
 			</div>
 
+			{{- if ne "" $object.Name -}}
+				<div class="bold">{{$object.Name}}</div>
+			{{- end -}}
+
+			{{- if $object.Image.NotNil -}}
+				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+			{{- end -}}
+		
+			<div>{{$object.Content | html}}</div>
+			<div class="text-xs text-light-gray text-uppercase">
+				{{- if gt $statistics.Replies 0 -}}
+					<span class="margin-right-sm">
+						{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
+					</span>
+				{{- end -}}
+
+				{{- if gt $statistics.Likes 0 -}}
+					<span class="margin-right-sm">
+						{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
+					</span>
+				{{- end -}}
+
+				{{- if gt $statistics.Announces 0 -}}
+					<span class="margin-right-sm">
+						{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
+					</span>
+				{{- end -}}
+			</div>
 		</div>
+
+		{{- if $renderer.NotMe $object.Actor.ID -}}
+			<div class="text-xs margin-left-md nowrap">
+				<span
+					hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
+					hx-swap="innerHTML"
+					hx-target="this"
+					hx-push-url="false"
+					hx-trigger="load"></span>
+			</div>
+		{{- end -}}
+
 	</div>
 
 {{- end -}}
