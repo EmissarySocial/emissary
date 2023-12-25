@@ -55,15 +55,17 @@
 		<div style="width:1px; background-color:var(--gray20); margin-left:11.5px; margin-right:11.5px;"></div>
 		<div class="flex-grow-1">
 
-			{{- if ne "" $object.Name -}}
-				<div class="bold margin-top">{{$object.Name}}</div>
-			{{- end -}}
+			<div role="link" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
+				{{- if ne "" $object.Name -}}
+					<div class="bold margin-top">{{$object.Name}}</div>
+				{{- end -}}
 
-			{{- if $object.Image.NotNil -}}
-				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
-			{{- end -}}
-		
-			<div>{{$object.Content | html}}</div>
+				{{- if $object.Image.NotNil -}}
+					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100"></div>
+				{{- end -}}
+			
+				<div>{{$object.Content | html}}</div>
+			</div>
 
 			<div class="text-sm text-light-gray">
 				{{ $object.Published | epochDate | tinyDate}} ago

@@ -6,11 +6,13 @@ behavior message(messageId)
 
 	on keydown[key=="ArrowLeft"] from window
 		halt the event
+		focus() the #previous in me
 		send click to #previous in me
 	end
 	
 	on keydown[key=="ArrowRight"] from window
 		halt the event
+		focus() the #next in me
 		send click to #next in me
 	end
 end

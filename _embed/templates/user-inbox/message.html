@@ -5,6 +5,9 @@
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
 {{- $stream := .ActivityStream $uri -}}
+{{- $attributedTo := $stream.AttributedTo -}}
+{{- $inReplyTo := $stream.InReplyTo -}}
+{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 
 <div id="modal-header">
 
@@ -18,7 +21,12 @@
 				</span>
 
 				<span class="button-group">
-					<button script="on click go to url '{{$message.URL}}' in new window">View Original</button>
+					<button script="on click go to url '{{$message.URL}}' in new window">Original Post</button>
+					{{- if $attributedTo.NotNil -}}
+						<button script="on click go to url '{{$attributedTo.ID}}' in new window">Profile</button>
+					{{- else -}}
+						<button disabled>Profile</button>
+					{{- end -}}
 					<button hx-get="/@me/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Source</button>
 				</span>
 			</div>
@@ -37,8 +45,6 @@
 
 <div id="modal-body">
 	
-	{{- $inReplyTo := $stream.InReplyTo -}}
-	{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 	{{- if $inReplyTo.NotNil -}}
 		<div role="link" class="text-gray flex-row clickable margin-vertical-lg" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$inReplyTo.ID}}">
 			<div class="margin-left-md">
@@ -86,7 +92,6 @@
 
 	{{- end -}}
 
-	{{- $attributedTo := $stream.AttributedTo -}}
 	{{- if $attributedTo.NotNil -}}
 		<div class="flex-row">
 			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
