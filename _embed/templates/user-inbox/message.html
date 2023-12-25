@@ -1,9 +1,10 @@
+{{- $message := .Message -}}
+
 {{- $uri := .QueryParam "uri" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
 {{- $stream := .ActivityStream $uri -}}
-{{- $message := .Message -}}
 
 <div id="modal-header">
 
@@ -12,8 +13,8 @@
 
 			<div class="flex-grow-1">
 				<span class="button-group" script="install message(messageId:'{{$message.MessageID.Hex}}')">
-					<button id="previous" hx-get="/@me/messages/{{$message.MessageID.Hex}}/view?sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/messages/{{$message.MessageID.Hex}}/view?sibling=next&followingId={{$followingID}}">Next &raquo;</button>
+					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">

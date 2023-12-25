@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
@@ -428,19 +429,57 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 func (w Inbox) Message() model.Message {
 
 	// Get the messageID from the query string
-	if messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId")); err == nil {
+	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
 
-		// Load the message
-		inboxService := w._factory.Inbox()
-		message := model.NewMessage()
-
-		if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err == nil {
-			return message
-		}
+	if err != nil {
+		return model.NewMessage()
 	}
 
-	// Return empty/new message instead
-	return model.NewMessage()
+	// Load the message
+	inboxService := w._factory.Inbox()
+	message := model.NewMessage()
+
+	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
+		return model.NewMessage()
+	}
+
+	// If no sibling is specified, then return the message
+	sibling := w._request.URL.Query().Get("sibling")
+
+	if sibling == "" {
+		return message
+	}
+
+	// Otherwise, look up the next/previous message
+	criteria := exp.Equal("userId", w.AuthenticatedID()).AndEqual("folderId", message.FolderID)
+	options := []option.Option{option.MaxRows(1)}
+
+	if sibling == "next" {
+		criteria = criteria.And(exp.GreaterThan("rank", message.Rank))
+		options = append(options, option.SortAsc("rank"))
+	} else {
+		criteria = criteria.And(exp.LessThan("rank", message.Rank))
+		options = append(options, option.SortDesc("rank"))
+	}
+
+	// Limit results to a particular origin, if specified
+	if followingID := w._request.URL.Query().Get("origin.followingId"); followingID != "" {
+		criteria = criteria.And(exp.Equal("origin.followingId", followingID))
+	}
+
+	// Get results from the database
+	result, _ := inboxService.Query(criteria, options...)
+
+	// If we have (a) result, then return it.
+	if len(result) > 0 {
+		message = result[0]
+	}
+
+	// Icky side effect to update the URI parameter to use the new Message
+	w.SetQueryParam("uri", message.URL)
+
+	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
+	return message
 }
 
 func (w Inbox) RepliesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
