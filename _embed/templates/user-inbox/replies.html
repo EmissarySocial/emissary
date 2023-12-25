@@ -1,4 +1,4 @@
-{{- $uri := .QueryParam "uri" -}}
+{{- $url := .QueryParam "url" -}}
 {{- $messageID := .QueryParam "messageId" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
@@ -7,10 +7,10 @@
 {{- $pageSize := 4 -}}
 {{- $renderer := . -}}
 
-{{- $replies := .RepliesBefore $uri $publishedDate $pageSize -}}
+{{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
 
 {{- if eq $replies.Length $pageSize -}}
-	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/replies?uri={{$uri}}&published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/replies?url={{$url}}&published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		<span class="button text-xs">Show Older Replies</span>
 	</div>
 {{- end -}}
@@ -20,38 +20,40 @@
 	{{- $object := $stream.UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div role="link"
-		class="margin-top-xs"
-		hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
+	<div role="link" class="margin-top-xs">
 
 		<div class="flex-row">
-			<div>
+			<div hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle-48"></div>
 				{{- else -}}
 					<img class="circle-48" src="{{$actor.Icon.URL}}">
 				{{- end -}}
 			</div>
-			<div class="flex-grow-1">
+
+			<div class="flex-grow-1" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 				{{- if $actor.NotNil -}}
 					<div class="bold">{{$actor.Name}}</div>
 					<div class="text-light-gray">@{{$actor.PreferredUsername}}</div>
 				{{- end -}}
 			</div>
 
-			{{- if $actor.NotNil -}}
-				{{- if $renderer.NotMe $object.Actor.ID -}}
-					<div class="align-right text-xs nowrap">
-						<div
-							hx-get="{{$renderer.BasePath}}/follow-button?url={{$object.Actor.ID}}"
-							hx-swap="innerHTML"
+			<div class="align-right text-xs nowrap">
+				<span
+					hx-get="/@me/inbox/like-button?url={{$object.ID}}"
+					hx-target="this"
+					hx-trigger="load">
+				</span>
+				{{- if $actor.NotNil -}}
+					{{- if $renderer.NotMe $object.Actor.ID -}}
+						<span
+							hx-get="/@me/inbox/follow-button?url={{$object.Actor.ID}}"
 							hx-target="this"
-							hx-push-url="false"
 							hx-trigger="load">
-						</div>
-					</div>
+						</span>
+					{{- end -}}
 				{{- end -}}
-			{{- end -}}
+			</div>
 
 		</div>
 		
@@ -60,7 +62,7 @@
 	<div class="flex-row">
 		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
 		<div class="flex-grow-1">
-			<div role="link" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$object.ID}}">
+			<div role="link" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 
 				{{- if ne "" $object.Name -}}
 					<div class="bold margin-top">{{$object.Name}}</div>
@@ -81,7 +83,7 @@
 					&middot; 
 					<span 
 						role="link" 
-						hx-get="/@me/inbox/replies-recursive?uri={{$object.ID}}"
+						hx-get="/@me/inbox/replies-recursive?url={{$object.ID}}"
 						hx-target="next .recursive-replies"
 						hx-swap="innerHTML">
 						{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}

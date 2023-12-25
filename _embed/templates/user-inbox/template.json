@@ -298,6 +298,14 @@
 			]
 		},
 
+		"follow-button": {
+			"roles":["authenticated"],
+			"steps": [
+				{"step":"view-html"},
+				{"step":"set-header", "name":"hx-push-url", "value":"false"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
+			]
+		},
 		"follow": {
 			"roles":["self"],
 			"steps":[
@@ -305,7 +313,9 @@
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
 					{"step":"save"}
 				]},
-				{"step":"view-html", "method":"post", "file":"follow-button"}
+				{"step":"view-html", "method":"post", "file":"follow-button"},
+				{"step":"set-header", "name":"hx-push-url", "value":"false"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
 			]
 		},
 		"unfollow": {
@@ -315,6 +325,8 @@
 					{"step":"delete"}
 				]},
 				{"step":"view-html", "method":"post", "file":"follow-button"},
+				{"step":"set-header", "name":"hx-push-url", "value":"false"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},

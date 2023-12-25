@@ -1,5 +1,5 @@
-{{- $uri := .QueryParam "uri" -}}
-{{- $stream := .ActivityStream $uri -}}
+{{- $url := .QueryParam "url" -}}
+{{- $stream := .ActivityStream $url -}}
 {{- $statistics := $stream.Statistics -}}
 
 <div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top">
@@ -7,15 +7,15 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div>
-		<span hx-get="{{.BasePath}}/responses-replies?uri={{$uri}}" role="button" class="margin-right-xs clickable bold">
+		<span hx-get="{{.BasePath}}/responses-replies?url={{$url}}" role="button" class="margin-right-xs clickable bold">
 			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
 		</span>
 		&middot;
-		<span hx-get="{{.BasePath}}/responses-likes?uri={{$uri}}" role="button" class="margin-horizontal-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-likes?url={{$url}}" role="button" class="margin-horizontal-xs clickable">
 			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
 		</span>
 		&middot;
-		<span hx-get="{{.BasePath}}/responses-announces?uri={{$uri}}" role="button" class="margin-horizontal-xs clickable">
+		<span hx-get="{{.BasePath}}/responses-announces?url={{$url}}" role="button" class="margin-horizontal-xs clickable">
 			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
 		</span>
 	</div>

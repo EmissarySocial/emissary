@@ -7,15 +7,6 @@
 	},
 	"actions":{
 
-		"follow-button": {
-			"roles":["authenticated"],
-			"steps": [
-				{"step":"view-html"},
-				{"step":"set-header", "name":"hx-push-url", "value":"false"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
-			]
-		},
-
 		"like-button": {
 			"roles":["authenticated"],
 			"steps":[

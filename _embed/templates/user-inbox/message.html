@@ -1,10 +1,10 @@
 {{- $message := .Message -}}
 
-{{- $uri := .QueryParam "uri" -}}
+{{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-{{- $stream := .ActivityStream $uri -}}
+{{- $stream := .ActivityStream $url -}}
 {{- $attributedTo := $stream.AttributedTo -}}
 {{- $inReplyTo := $stream.InReplyTo -}}
 {{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
@@ -46,7 +46,7 @@
 <div id="modal-body">
 	
 	{{- if $inReplyTo.NotNil -}}
-		<div role="link" class="text-gray flex-row clickable margin-vertical-lg" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&uri={{$inReplyTo.ID}}">
+		<div role="link" class="text-gray flex-row clickable margin-vertical-lg" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
 			<div class="margin-left-md">
 				{{- $icon := $inReplyToAttributedTo.Icon -}}
 				{{- if $icon.NotNil -}}
@@ -144,11 +144,7 @@
 				{{.View "like-button"}}
 
 				{{- if .NotMe $attributedTo.ID -}}
-					<span
-						hx-get="{{.BasePath}}/follow-button?url={{$attributedTo.ID}}"
-						hx-target="this"
-						hx-trigger="load">
-					</span>
+					{{.View "follow-button"}}
 				{{- end -}}
 			</div>
 

@@ -100,8 +100,8 @@ func (w Inbox) BasePath() string {
 }
 
 func (w Inbox) Permalink() string {
-	if uri := w._request.URL.Query().Get("uri"); uri != "" {
-		return uri
+	if url := w._request.URL.Query().Get("url"); url != "" {
+		return url
 	}
 	return w.Host() + "/@me/inbox"
 }
@@ -435,7 +435,7 @@ func (w Inbox) Message() model.Message {
 		return model.NewMessage()
 	}
 
-	// Load the message
+	// Load the message from the database
 	inboxService := w._factory.Inbox()
 	message := model.NewMessage()
 
@@ -443,40 +443,38 @@ func (w Inbox) Message() model.Message {
 		return model.NewMessage()
 	}
 
-	// If no sibling is specified, then return the message
-	sibling := w._request.URL.Query().Get("sibling")
+	// If sibling (prev/next) is specified, then try to look that up before returning.
+	if sibling := w._request.URL.Query().Get("sibling"); sibling != "" {
 
-	if sibling == "" {
-		return message
-	}
+		// Otherwise, look up the next/previous message
+		criteria := exp.Equal("userId", w.AuthenticatedID()).AndEqual("folderId", message.FolderID)
+		options := []option.Option{option.MaxRows(1)}
 
-	// Otherwise, look up the next/previous message
-	criteria := exp.Equal("userId", w.AuthenticatedID()).AndEqual("folderId", message.FolderID)
-	options := []option.Option{option.MaxRows(1)}
+		if sibling == "next" {
+			criteria = criteria.And(exp.GreaterThan("rank", message.Rank))
+			options = append(options, option.SortAsc("rank"))
+		} else {
+			criteria = criteria.And(exp.LessThan("rank", message.Rank))
+			options = append(options, option.SortDesc("rank"))
+		}
 
-	if sibling == "next" {
-		criteria = criteria.And(exp.GreaterThan("rank", message.Rank))
-		options = append(options, option.SortAsc("rank"))
-	} else {
-		criteria = criteria.And(exp.LessThan("rank", message.Rank))
-		options = append(options, option.SortDesc("rank"))
-	}
+		// Limit results to a particular origin, if specified
+		if followingID := w._request.URL.Query().Get("origin.followingId"); followingID != "" {
+			criteria = criteria.And(exp.Equal("origin.followingId", followingID))
+		}
 
-	// Limit results to a particular origin, if specified
-	if followingID := w._request.URL.Query().Get("origin.followingId"); followingID != "" {
-		criteria = criteria.And(exp.Equal("origin.followingId", followingID))
-	}
+		// Get results from the database
+		result, _ := inboxService.Query(criteria, options...)
 
-	// Get results from the database
-	result, _ := inboxService.Query(criteria, options...)
-
-	// If we have (a) result, then return it.
-	if len(result) > 0 {
-		message = result[0]
+		// If we have (a) result, then return it.
+		if len(result) > 0 {
+			message = result[0]
+		}
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
 	w.SetQueryParam("uri", message.URL)
+	w.SetQueryParam("folderId", message.FolderID.Hex())
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
