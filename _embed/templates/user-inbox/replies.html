@@ -4,7 +4,7 @@
 {{- $followingID := .QueryParam "origin.followingId" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
-{{- $pageSize := 6 -}}
+{{- $pageSize := 4 -}}
 {{- $renderer := . -}}
 
 {{- $replies := .RepliesBefore $uri $publishedDate $pageSize -}}
