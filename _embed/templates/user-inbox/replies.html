@@ -47,7 +47,7 @@
 				{{- if $actor.NotNil -}}
 					{{- if $renderer.NotMe $object.Actor.ID -}}
 						<span
-							hx-get="/@me/inbox/follow-button?url={{$object.Actor.ID}}"
+							hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"
 							hx-target="this"
 							hx-trigger="load">
 						</span>

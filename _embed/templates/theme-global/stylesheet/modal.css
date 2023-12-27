@@ -33,8 +33,6 @@
 	right: 0px;
 	background-color: #444;
 	opacity: 0.9;
-	overflow-x: clip;
-	overflow-y: clip;
 }
 
 #modal-window {
@@ -44,7 +42,6 @@
 
 	/* Scrolling behavior */
 	display:flow-root;
-	overflow-y:auto;
 
 	/* Display properties for visible dialog */
 	position:relative;
@@ -63,7 +60,6 @@
 #modal-window:has(#modal-body) {
 	display:flex;
 	flex-direction:column;
-	overflow:clip;
 	padding: 0px;
 }
 

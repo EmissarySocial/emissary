@@ -298,7 +298,7 @@
 			]
 		},
 
-		"follow-button": {
+		"actor-button": {
 			"roles":["authenticated"],
 			"steps": [
 				{"step":"view-html"},
@@ -306,6 +306,7 @@
 				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
 			]
 		},
+
 		"follow": {
 			"roles":["self"],
 			"steps":[

@@ -1,0 +1,27 @@
+.menu {
+	color:black;
+	background-color:var(--gray15);
+	min-width: 160px;
+	border-radius: calc(var(--rhythm) / 2);
+	box-shadow: 0px var(--rhythm) var(--rhythm) 0px rgba(0, 0, 0, 0.2);
+}
+
+.menu > a,
+.menu > [role=link],
+.menu > [role=button] {
+	padding: 4px 8px;
+	border-top: solid 1px var(--gray20);
+}
+
+.menu > a:first-child,
+.menu > [role=link]:first-child,
+.menu > [role=button]:first-child {
+	border-top: none;
+}
+
+.menu > a:hover,
+.menu > [role=link]:hover,
+.menu > [role=button]:hover {
+	background-color: var(--button-primary-background-hover);
+	color:var(--button-primary-color-hover);
+}

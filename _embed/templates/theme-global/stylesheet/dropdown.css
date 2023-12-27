@@ -1,0 +1,15 @@
+.dropdown-content {
+	position: absolute;
+	z-index: 1000;
+	overflow:hidden;
+
+	opacity:0;
+	transform: scaleY(0);
+	transition: all 0.125s ease-in-out;
+}
+
+.dropdown.hovered > .dropdown-content,
+.dropdown.pinned > .dropdown-content {
+	transform: scaleY(1);
+	opacity:1;
+}

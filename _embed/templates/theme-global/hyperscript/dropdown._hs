@@ -1,0 +1,74 @@
+behavior dropdown(position)
+
+	init
+		add .dropdown
+		set :button to first <.dropdown-button/> in me
+		set :content to first <.dropdown-content/> in me
+
+		set :button.tabIndex to 0
+
+		if position contains "center" then
+			set buttonLeft to the :button's offsetLeft
+			set buttonWidth to parseInt(:button's *computed-width)
+			set contentWidth to parseInt(:content's *computed-width)
+
+			set buttonCenter to buttonWidth / 2
+			set contentCenter to contentWidth / 2
+
+			set contentLeft to (buttonCenter - contentCenter) + buttonLeft
+			set :content's *left to contentLeft px
+
+		else if position contains "right" then
+			set buttonLeft to parseInt(the :button's offsetLeft)
+			set buttonWidth to parseInt(the :button's *computed-width)
+			set contentWidth to parseInt(the :content's *computed-width)
+			set contentLeft to (buttonLeft + buttonWidth) - contentWidth
+			set :content's *left to contentLeft px
+
+		else 
+			set :content's *left to the :button's offsetLeft
+		end
+
+		if position contains "top" then
+			set :content's *transform-origin to "bottom"
+
+			set buttonTop to parseInt(:button's offsetTop)
+			set contentHeight to parseInt(:content's *computed-height)
+			set contentTop to (buttonTop - contentHeight)
+			set :content's *top to contentTop px
+
+		else 
+			set :content's *transform-origin to "top"
+		end
+
+	end
+
+	on mouseover
+		add .hovered
+	end
+
+	on mouseout
+		remove .hovered
+	end
+
+	on mousedown from .dropdown-button in me
+		remove .hovered
+		toggle .pinned
+	end
+
+	on touchstart from .dropdown-button in me
+		remove .hovered
+		toggle .pinned
+	end
+
+	on mousedown elsewhere
+		remove .hovered
+		remove .pinned
+	end
+
+	on touchstart elsewhere
+		remove .hovered
+		remove .pinned
+	end
+
+end

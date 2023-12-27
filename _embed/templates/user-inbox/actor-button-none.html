@@ -1,0 +1,27 @@
+{{- $url := .QueryParam "url" -}}
+<span script="install dropdown(position:'default')">
+	<button class="dropdown-button">{{icon "more-horizontal"}}</button>
+	<div class="dropdown-content menu text-md align-left">
+		<div class="clickable flex-row" role="button" hx-post="/@me/inbox/follow?url={{$url}}">
+			<div class="text-xl margin-none">{{icon "add"}}</div>
+			<div class="flex-grow-1 margin-left-xs">
+				<div class="bold">Follow</div>
+				<div class="text-gray text-sm">New Posts In Your Inbox</div>
+			</div>
+		</div>
+		<div class="clickable flex-row" role="button" hx-post="/@me/inbox/mute?url={{$url}}">
+			<div class="text-xl margin-none">{{icon "mute"}}</div>
+			<div class="flex-grow-1 margin-left-xs">
+				<div class="bold">Mute</div>
+				<div class="text-gray text-sm">Silence This Sender</div>
+			</div>
+		</div>
+		<div class="clickable flex-row" role="button" hx-post="/@me/inbox/block?url={{$url}}">
+			<div class="text-xl margin-none">{{icon "block"}}</div>
+			<div class="flex-grow-1 margin-left-xs">
+				<div class="bold">Block</div>
+				<div class="text-gray text-sm">Prevent All Contact</div>
+			</div>
+		</div>
+	</div>
+</span>
