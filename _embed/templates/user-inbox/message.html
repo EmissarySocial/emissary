@@ -46,44 +46,39 @@
 <div id="modal-body">
 	
 	{{- if $inReplyTo.NotNil -}}
-		<div role="link" class="text-gray flex-row clickable margin-vertical-lg" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
-			<div class="margin-left-md">
-				{{- $icon := $inReplyToAttributedTo.Icon -}}
-				{{- if $icon.NotNil -}}
-					<img src="{{$icon.URL}}" class="circle-48">
-				{{- else -}}
-					<div class="circle-48"></div>
-				{{- end -}}
-			</div>
-			<div>
-				<div class="bold">{{$inReplyToAttributedTo.Name}}</div>
-				<div>{{$inReplyTo.Content | html}}</div>
+		<div class="flex-row margin-bottom">
+			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
 			</div>
 		</div>
 	{{- else -}}
 
 		{{- if ne "DIRECT" $message.Origin.Type -}}
 		
-			<div class="bold text-sm text-gray italics">
+			<div class="margin-bottom text-sm text-gray italics">
 				{{- if eq "LIKE" $message.Origin.Type -}}
 					{{icon "thumbs-up-fill"}} 
+					Because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
-					Liked this
+					Liked this Post
 
 				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
 					{{icon "thumbs-down-fill"}} 
+					Because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Disliked
+					Disliked this Post
 		
 				{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
 					{{icon "rocket-fill"}} 
+					Because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Boosted this
+					Boosted this Post
 		
 				{{- else if eq "REPLY" $message.Origin.Type -}}
 					{{icon "reply-fill"}} 
+					Because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Replied to this
+					Replied to this Post
 
 				{{- end -}}
 			</div>
@@ -101,9 +96,6 @@
 					<div class="circle-64"></div>
 				{{- end -}}
 				<div>
-					{{- if $inReplyTo.NotNil -}}
-						<div class="text-xs text-light-gray">{{icon "reply"}} Replying to {{$inReplyToAttributedTo.Name}}</div>
-					{{- end -}}
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
 					<div class="text-light-gray margin-vertical-none">@{{$attributedTo.PreferredUsername}}</div>
 				</div>
