@@ -164,14 +164,12 @@ input.text-md {
     text-decoration:none;
 }
 
-.text-light-gray {
-    color:var(--gray40);
-    text-decoration:none;
+.text-gray {
+    opacity:0.75;
 }
 
-.text-gray {
-    color:var(--gray60);
-    text-decoration:none;
+.text-light-gray {
+    opacity:0.5;
 }
 
 .text-green {

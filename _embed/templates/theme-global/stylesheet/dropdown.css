@@ -1,4 +1,4 @@
-.dropdown-content {
+.popUp-content {
 	position: absolute;
 	z-index: 1000;
 	overflow:hidden;
@@ -8,8 +8,8 @@
 	transition: all 0.125s ease-in-out;
 }
 
-.dropdown.hovered > .dropdown-content,
-.dropdown.pinned > .dropdown-content {
+.popUp.hovered > .popUp-content,
+.popUp.pinned > .popUp-content {
 	transform: scaleY(1);
 	opacity:1;
 }

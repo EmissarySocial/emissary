@@ -1,9 +1,9 @@
-behavior dropdown(position)
+behavior popUp(position)
 
 	init
-		add .dropdown
-		set :button to first <.dropdown-button/> in me
-		set :content to first <.dropdown-content/> in me
+		add .popUp
+		set :button to first <.popUp-button/> in me
+		set :content to first <.popUp-content/> in me
 
 		set :button.tabIndex to 0
 
@@ -51,12 +51,12 @@ behavior dropdown(position)
 		remove .hovered
 	end
 
-	on mousedown from .dropdown-button in me
+	on mousedown from .popUp-button in me
 		remove .hovered
 		toggle .pinned
 	end
 
-	on touchstart from .dropdown-button in me
+	on touchstart from .popUp-button in me
 		remove .hovered
 		toggle .pinned
 	end

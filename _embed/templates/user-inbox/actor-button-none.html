@@ -1,7 +1,7 @@
 {{- $url := .QueryParam "url" -}}
-<span script="install dropdown(position:'default')">
-	<button class="dropdown-button">{{icon "more-horizontal"}}</button>
-	<div class="dropdown-content menu text-md align-left">
+<span script="install popUp(position:'default')">
+	<button class="popUp-button">{{icon "more-horizontal"}}</button>
+	<div class="popUp-content menu text-md align-left">
 		<div class="clickable flex-row" role="button" hx-post="/@me/inbox/follow?url={{$url}}">
 			<div class="text-xl margin-none">{{icon "add"}}</div>
 			<div class="flex-grow-1 margin-left-xs">
