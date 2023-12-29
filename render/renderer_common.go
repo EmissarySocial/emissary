@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -298,12 +297,6 @@ func (w Common) UserName() (string, error) {
 	}
 
 	return user.DisplayName, nil
-}
-
-func (w Common) Avatar(url string, size int) template.HTML {
-	b := html.New()
-	b.Empty("img").Attr("src", url).Style("width:"+convert.String(size)+"px", "border-radius:"+convert.String(size)+"px").Close()
-	return template.HTML(b.String())
 }
 
 // UserAvatar returns the avatar image of the user
