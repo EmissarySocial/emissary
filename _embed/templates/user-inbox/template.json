@@ -49,10 +49,6 @@
 	},
 	"actions": {
 
-		"test": {
-			"roles": ["self"],
-			"step": "view-html"
-		},
 		"inbox": {
 			"roles": ["self"],
 			"step": "view-html"
@@ -316,6 +312,16 @@
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
 					{"step":"save"},
 					{"step":"view-html", "method":"post", "file":"actor-button-follow"}
+				]}
+			]
+		},
+		"actor-button-follow-update": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-following", "steps":[
+					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
+					{"step":"save"},
+					{"step":"inline-success", "message":"Updated: {{now | shortTime}}"}
 				]}
 			]
 		},

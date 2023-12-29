@@ -1,11 +1,13 @@
+{{- $trigger := .QueryParam "trigger" -}}
+{{- $folderID := .QueryParam "folderId" -}}
 {{- $block := .Object -}}
 
 <span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 	<button class="popUp-button bold">{{icon "block"}} Blocked</button>
-	<div class="popUp-content width-240 text-md">
+	<div class="popUp-content width-320 text-md">
 		<div class="text-sm text-gray margin-bottom">Posts from this sender will not be displayed, but they will not be notified of your posts.</div>
 		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$trigger}}" role="button">
 			{{icon "cancel"}} Stop Blocking
 		</div>
 	</div>

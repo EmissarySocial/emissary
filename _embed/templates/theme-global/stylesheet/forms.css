@@ -258,6 +258,15 @@ button:focus,
 	color:var(--black)!important;
 }
 
+.text-red button:hover,
+.text-red [role=button]:hover,
+button.text-read:hover,
+[role=button].text-red:hover {
+	color:var(--white)!important;
+    background-color:var(--red60)!important;
+	border-radius:4px;
+}
+
 button.primary,
 .button.primary {
 	background-color: var(--button-primary-background)!important;

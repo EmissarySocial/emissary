@@ -194,6 +194,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return valueTime.Format("Monday, January 2, 2006")
 		},
 
+		"shortTime": func(value any) string {
+			valueTime := convert.Time(value)
+			return valueTime.Format("3:04:05 PM")
+		},
+
 		"addQueryParams": func(extraParams string, url string) string {
 			if strings.Contains(url, "?") {
 				return url + "&" + extraParams

@@ -3,7 +3,7 @@
 
 <span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 	<button class="popUp-button">{{icon "more-horizontal"}}</button>
-	<div class="popUp-content width-240">
+	<div class="popUp-content width-320">
 		<div class="menu">
 
 			<div class="clickable flex-row" role="button" hx-post="/@me/inbox/actor-button-follow?url={{$url}}&folderId={{$folderID}}">
@@ -13,14 +13,14 @@
 					<div class="text-light-gray">New Posts In Your Inbox</div>
 				</div>
 			</div>
-			<div class="clickable flex-row" role="button" hx-post="/@me/inbox/actor-button-mute?trigger={{$url}}">
+			<div class="clickable flex-row" role="button" hx-post="/@me/inbox/actor-button-mute?trigger={{$url}}&folderId={{$folderID}}">
 				<div class="text-xl margin-none">{{icon "mute"}}</div>
 				<div class="text-sm flex-grow-1 margin-left-xs">
 					<div class="bold">Mute</div>
 					<div class="text-light-gray">Silence This Sender</div>
 				</div>
 			</div>
-			<div class="clickable flex-row" role="button" hx-post="/@me/inbox/actor-button-block?trigger={{$url}}">
+			<div class="clickable flex-row" role="button" hx-post="/@me/inbox/actor-button-block?trigger={{$url}}&folderId={{$folderID}}">
 				<div class="text-xl margin-none">{{icon "block"}}</div>
 				<div class="text-sm flex-grow-1 margin-left-xs">
 					<div class="bold">Block</div>

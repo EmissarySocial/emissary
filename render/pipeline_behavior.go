@@ -21,7 +21,8 @@ func UseResult(newStatus PipelineResult) PipelineBehavior {
 	}
 }
 
-// AsFullPage adds an HX-Trigger event to the PipelineResult object
+// AsFullPage sets the FullPage flag on the PipelineResult object, which
+// tells the renderer to NOT include the header/footer from the site theme.
 func (exit PipelineBehavior) AsFullPage() PipelineBehavior {
 	return func(status *PipelineResult) {
 		if exit != nil {

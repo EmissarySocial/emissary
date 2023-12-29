@@ -40,7 +40,7 @@ behavior popUp(position)
 		else 
 			set :content's *transform-origin to "top"
 		end
-
+		
 	end
 
 	on mouseover

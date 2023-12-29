@@ -1,14 +1,60 @@
 {{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId" -}}
 {{- $following := .Object -}}
 
 <span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 	<button class="popUp-button bold">{{icon "check"}} Following</button>
-	<div class="popUp-content text-md menu width-240">
-		<div class="text-sm text-gray margin-bottom">Receiving real-time updates via ActivityPub</div>
-		<hr>
-			<pre>{{$following | json }}</pre>
-		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unfollow?followingId={{$following.FollowingID.Hex}}&folderId={{$following.FolderID.Hex}}&url={{$url}}" role="button">
+	<div class="popUp-content text-md width-320">
+		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}" hx-trigger="change">
+
+			<div class="text-sm margin-bottom-lg">
+				{{- if eq "ACTIVITYPUB" $following.Method -}}
+					<b>{{icon "activitypub"}} ActivityPub</b>: Receiving real-time updates
+				{{- else if eq "WEBSUB" $following.Method -}}
+					<b>{{icon "websub"}} WebSub</b>: Receiving real-time updates
+				{{- else if eq "POLL" $following.Method -}}
+					<b>{{icon "rss"}} Polling</b>: Check for updates frequently
+				{{- end -}}
+			</div>
+			
+			<div>
+				<span class="bold margin-right-sm">Options</span>
+				<span class="htmx-request-show text-gray"><span class="spin">{{icon "loading"}}</span> Saving</span>
+				<span class="htmx-request-hide" id="htmx-response-message"></span>
+			</div>
+
+			<div class="layout layout-vertical text-sm">
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<select name="behavior" script="install select(value:'{{$following.Behavior}}')">
+							<option value="POSTS+REPLIES+BLOCKS">Import: Posts, Replies, and Blocks</option>
+							<option value="POSTS+REPLIES">Import: Posts and Replies</option>
+							<option value="POSTS+BLOCKS">Import: Posts and Blocks</option>
+							<option value="POSTS">Import: Posts Only</option>
+							<option value="BLOCKS">Import: Blocks Only</option>
+						</select>
+					</div>
+					<div class="layout-vertical-element">
+						<select name="collapseThreads" script="install select(value:'{{$following.CollapseThreads}}')">
+							<option value="true">Group messages into a single thread</option>
+							<option value="false">Show all messages separately</option>
+						</select>
+					</div>
+					<div class="layout-vertical-element">
+						<span 
+							script="install toggle" 
+							name="isPublic" 
+							value="{{$following.IsPublic}}" 
+							true-text="PUBLISHED with others who follow me" 
+							false-text="PRIVATE: not visible to others">
+						</span>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<hr class="margin-vertical-sm">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unfollow?followingId={{$following.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Following
 		</div>
 	</div>
