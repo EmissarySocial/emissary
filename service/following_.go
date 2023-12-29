@@ -190,6 +190,11 @@ func (service *Following) Save(following *model.Following, note string) error {
 
 	following.Folder = folder.Label
 
+	// Prevent duplicate following records
+	if err := service.preventDuplicates(following); err != nil {
+		return derp.Wrap(err, location, "Error preventing duplicate", following)
+	}
+
 	// Save the following to the database
 	if err := service.collection.Save(following, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Following", following, note)
@@ -535,4 +540,27 @@ func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
 		"actor":    service.ActivityPubActorID(following),
 		"object":   following.URL,
 	}
+}
+
+/******************************************
+ * Helper Methods
+ ******************************************/
+
+func (service *Following) preventDuplicates(current *model.Following) error {
+
+	// Search the database for the original record
+	original := model.NewFollowing()
+	if err := service.LoadByURL(current.UserID, current.URL, &original); err != nil {
+		if derp.NotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, "service.Following.preventDuplicate", "Error loading Following", current)
+	}
+
+	// Delete the original record
+	if err := service.Delete(&original, "removing duplicate"); err != nil {
+		return derp.Wrap(err, "service.Following.preventDuplicate", "Error deleting original", original)
+	}
+
+	return nil
 }
