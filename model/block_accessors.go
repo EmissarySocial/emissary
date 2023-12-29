@@ -11,6 +11,7 @@ func BlockSchema() schema.Element {
 			"blockId":     schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
 			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent}},
+			"action":      schema.String{Required: true, Enum: []string{BlockActionBlock, BlockActionMute}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
 			"comment":     schema.String{},
@@ -44,6 +45,9 @@ func (block *Block) GetPointer(name string) (any, bool) {
 
 	case "type":
 		return &block.Type, true
+
+	case "action":
+		return &block.Action, true
 
 	case "label":
 		return &block.Label, true

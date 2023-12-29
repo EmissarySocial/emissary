@@ -45,9 +45,11 @@
 					hx-trigger="load">
 				</span>
 				{{- if $actor.NotNil -}}
-					{{- if $renderer.NotMe $object.Actor.ID -}}
+					{{- if $renderer.IsMe $object.Actor.ID -}}
+						<span class="button" disabled>{{icon "more-horizontal"}}</span>
+					{{- else -}}
 						<span
-							hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"
+							hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}&folderId={{$folderID}}"
 							hx-target="this"
 							hx-trigger="load">
 						</span>

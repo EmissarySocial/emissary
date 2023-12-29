@@ -87,12 +87,19 @@ func (w Model) service() service.ModelService {
 	return w._service
 }
 
+func (w Model) Object() any {
+	return w._object
+}
+
 func (w Model) ObjectID() string {
 	return w._object.ID()
 }
 
 func (w Model) Label() string {
 	switch object := w._object.(type) {
+
+	case *model.Block:
+		return object.Label
 
 	case *model.Folder:
 		return object.Label

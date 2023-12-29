@@ -49,6 +49,10 @@
 	},
 	"actions": {
 
+		"test": {
+			"roles": ["self"],
+			"step": "view-html"
+		},
 		"inbox": {
 			"roles": ["self"],
 			"step": "view-html"
@@ -301,37 +305,70 @@
 		"actor-button": {
 			"roles":["authenticated"],
 			"steps": [
-				{"step":"view-html"},
-				{"step":"set-header", "name":"hx-push-url", "value":"false"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
+				{"step":"view-html"}
 			]
 		},
 
-		"follow": {
+		"actor-button-follow": {
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
-					{"step":"save"}
-				]},
-				{"step":"view-html", "method":"post", "file":"follow-button"},
-				{"step":"set-header", "name":"hx-push-url", "value":"false"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"}
+					{"step":"save"},
+					{"step":"view-html", "method":"post", "file":"actor-button-follow"}
+				]}
 			]
 		},
-		"unfollow": {
+		"actor-button-unfollow": {
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"delete"}
 				]},
-				{"step":"view-html", "method":"post", "file":"follow-button"},
-				{"step":"set-header", "name":"hx-push-url", "value":"false"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"step":"view-html", "method":"post", "file":"actor-button-none"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},
-
+		"actor-button-mute":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"set-data", "from-url":["trigger"], "values": {"type":"ACTOR", "action": "MUTE"}},
+					{"step":"save"},
+					{"step":"view-html", "method":"post", "file":"actor-button-mute"}
+				]}
+			]
+		},
+		"actor-button-unmute":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"delete"}
+				]},
+				{"step":"view-html", "method":"post", "file":"actor-button-none"},
+				{"step":"remove-event", "event":"closeModal"}
+			]
+		},
+		"actor-button-block":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"set-data", "from-url":["trigger"], "values": {"type":"ACTOR", "action": "BLOCK"}},
+					{"step":"save"},
+					{"step":"view-html", "method":"post", "file":"actor-button-block"}
+				]}
+			]
+		},
+		"actor-button-unblock":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"delete"}
+				]},
+				{"step":"view-html", "method":"post", "file":"actor-button-none"},
+				{"step":"remove-event", "event":"closeModal"}
+			]
+		},
 
 		"blocks": {
 			"roles":["self"],

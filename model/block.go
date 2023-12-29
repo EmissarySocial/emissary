@@ -14,6 +14,7 @@ type Block struct {
 	BlockID     primitive.ObjectID `json:"blockId"     bson:"_id"`         // Unique identifier of this Block
 	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // Unique identifier of the User who owns this Block
 	Type        string             `json:"type"        bson:"type"`        // Type of Block (e.g. "ACTOR", "ACTIVITY", "OBJECT")
+	Action      string             `json:"action"      bson:"action"`      // Action to take when this block is triggered (e.g. "BLOCK", "HIDE", "MUTE")
 	Label       string             `json:"label"       bson:"label"`       // Human-friendly label for this block
 	Trigger     string             `json:"trigger"     bson:"trigger"`     // Parameter for this block type)
 	Comment     string             `json:"comment"     bson:"comment"`     // Optional comment describing why this block exists

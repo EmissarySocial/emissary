@@ -1,9 +1,13 @@
 .menu {
-	color:black;
-	background-color:var(--gray15);
+	color: var(--black);
+	background-color: var(--gray15);
 	min-width: 160px;
-	border-radius: calc(var(--rhythm) / 2);
-	box-shadow: 0px var(--rhythm) var(--rhythm) 0px rgba(0, 0, 0, 0.2);
+
+	font-size:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
+	text-align: left;
+	margin: 0px;
+	white-space: normal;
 }
 
 .menu > a,
@@ -23,5 +27,9 @@
 .menu > [role=link]:hover,
 .menu > [role=button]:hover {
 	background-color: var(--button-primary-background-hover);
-	color:var(--button-primary-color-hover);
+	color: var(--button-primary-color-hover);
+}
+
+.popUp-content:has(.menu) {
+	padding: 0px;
 }

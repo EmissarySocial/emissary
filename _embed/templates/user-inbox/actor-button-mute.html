@@ -1,8 +1,12 @@
-<span script="install popUp(position:'default')">
-	<button class="popUp-button">{{icon "mute"}} Muted</button>
-	<div class="popUp-content">
-		<div class="text-gray margin-bottom">Posts from this sender will not be displayed, but they may still see your posts.</div>
+{{- $block := .Object -}}
+
+<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	<button class="popUp-button bold">{{icon "mute"}} Muted</button>
+	<div class="popUp-content text-md width-240">
+		<div class="text-sm text-gray margin-bottom">Posts from this sender will not be displayed, but they may still see your posts.</div>
 		<hr>
-		<span class="text-red" role="button">{{icon "cancel"}} Stop Muting</span>
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unmute?blockId={{$block.ID}}&url=" role="button">
+			{{icon "cancel"}} Stop Muting
+		</div>
 	</div>
 </span>

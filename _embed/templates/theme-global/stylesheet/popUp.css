@@ -1,0 +1,25 @@
+.popUp-content {
+	position: absolute;
+	z-index: 1000;
+	overflow:auto;
+
+	color:black;
+	background-color:var(--gray15);
+	border: solid 1px var(--gray20);
+	min-width: 160px;
+	border-radius: calc(var(--rhythm) / 2);
+	box-shadow: 0px var(--rhythm) var(--rhythm) 0px rgba(0, 0, 0, 0.2);
+	padding: var(--rhythm);
+	text-align:left;
+	white-space:normal;
+
+	opacity: 0;
+	transform: scaleY(0);
+	transition: all 0.125s ease-in-out;
+}
+
+.popUp.hovered > .popUp-content,
+.popUp.pinned > .popUp-content {
+	transform: scaleY(1);
+	opacity: 1;
+}

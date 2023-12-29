@@ -57,28 +57,28 @@
 		
 			<div class="margin-bottom text-sm text-gray italics">
 				{{- if eq "LIKE" $message.Origin.Type -}}
-					{{icon "thumbs-up-fill"}} 
-					Because
-					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
-					Liked this Post
+					{{icon "inbox"}} 
+					In your inbox because
+				<a class="text-gray" href="/me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
+					{{icon "thumbs-up"}} LIKED this post.
 
 				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
-					{{icon "thumbs-down-fill"}} 
-					Because
+					{{icon "inbox"}} 
+					In your inbox because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Disliked this Post
+					{{icon "thumbs-down"}} DISLIKED this post.
 		
 				{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
-					{{icon "rocket-fill"}} 
-					Because
+					{{icon "inbox"}} 
+					In your inbox because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Boosted this Post
+					{{icon "rocket"}} BOOSTED this post.
 		
 				{{- else if eq "REPLY" $message.Origin.Type -}}
-					{{icon "reply-fill"}} 
-					Because
+					{{icon "inbox"}} 
+					In your inbox because
 					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					Replied to this Post
+					{{icon "reply"}} REPLIED to this post.
 
 				{{- end -}}
 			</div>
@@ -88,7 +88,7 @@
 	{{- end -}}
 
 	{{- if $attributedTo.NotNil -}}
-		<div class="flex-row">
+		<div class="flex-row margin-bottom">
 			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.URL}}" class="circle-64">
@@ -134,6 +134,7 @@
 
 			<div class="margin-top-lg text-xs">
 				{{.View "like-button"}}
+
 
 				{{- if .NotMe $attributedTo.ID -}}
 					{{.View "actor-button"}}

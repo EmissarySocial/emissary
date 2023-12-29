@@ -535,6 +535,25 @@ func (w Inbox) AmFollowing(uri string) model.Following {
 	return following
 }
 
+func (w Inbox) AmBlocking(blockType string, uri string) model.Block {
+
+	// Get following service and new following record
+	blockService := w._factory.Block()
+	block := model.NewBlock()
+
+	// Null check
+	if w._user == nil {
+		return block
+	}
+
+	// Retrieve block record. Discard errors
+	// nolint:errcheck
+	_ = blockService.LoadByTrigger(w._user.UserID, blockType, uri, &block)
+
+	// Return the (possibly empty) Block record
+	return block
+}
+
 func (w Inbox) debug() {
 	log.Debug().Interface("object", w.object()).Msg("renderer_Inbox")
 }

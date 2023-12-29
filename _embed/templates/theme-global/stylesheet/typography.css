@@ -165,11 +165,11 @@ input.text-md {
 }
 
 .text-gray {
-    opacity:0.75;
+    opacity:0.66;
 }
 
 .text-light-gray {
-    opacity:0.5;
+    opacity:0.50;
 }
 
 .text-green {
@@ -280,10 +280,14 @@ code.inline {
     float:unset;
 }
 
+
 .nowrap {
     white-space: nowrap;
 }
 
+.wrap {
+    white-space: normal;
+}
 
 /******************************************
  * Links and Anchors
