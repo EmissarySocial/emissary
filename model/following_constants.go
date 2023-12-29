@@ -11,6 +11,8 @@ const FollowMethodPoll = "POLL"
 // https://websub.rocks
 const FollowMethodWebSub = "WEBSUB"
 
+const FollowMethodRssCloud = "RSSCLOUD"
+
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"
 

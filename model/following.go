@@ -18,7 +18,9 @@ type Following struct {
 	URL             string             `json:"url"             bson:"url"`             // Human-Facing URL that is being followed.
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
 	ImageURL        string             `json:"imageUrl"        bson:"imageUrl"`        // URL of an image that represents this "following"
+	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor (POSTS+REPLIES+BLOCKS)
 	CollapseThreads bool               `json:"collapseThreads" bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
+	IsPublic        bool               `json:"isPublic"        bson:"isPublic"`        // If TRUE, this following is visible to the public
 	Links           digit.LinkSet      `json:"links"           bson:"links"`           // List of links can be used to update this following.
 	Method          string             `json:"method"          bson:"method"`          // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
 	Secret          string             `json:"secret"          bson:"secret"`          // Secret used to authenticate this feed (if required)
