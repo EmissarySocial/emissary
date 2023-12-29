@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
+	"github.com/benpate/data"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
@@ -47,6 +48,7 @@ type Factory interface {
 	Hostname() string
 	Icons() icon.Provider
 	MediaServer() mediaserver.MediaServer
+	ModelService(data.Object) service.ModelService
 	Locator() service.Locator
 	LookupProvider(primitive.ObjectID) form.LookupProvider
 	OAuthClient() *service.OAuthClient

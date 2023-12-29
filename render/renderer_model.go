@@ -22,7 +22,7 @@ type Model struct {
 }
 
 // NewModel returns a fully initialized `Model` renderer.
-func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, modelService service.ModelService, object data.Object, template model.Template, actionID string) (Model, error) {
+func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, object data.Object, template model.Template, actionID string) (Model, error) {
 
 	const location = "render.NewModel"
 
@@ -50,6 +50,13 @@ func NewModel(factory Factory, request *http.Request, response http.ResponseWrit
 		} else {
 			return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
+	}
+
+	// Retrieve the correct service to use for this Model object
+	modelService := factory.ModelService(object)
+
+	if modelService == nil {
+		return Model{}, derp.NewInternalError(location, "Invalid model service", object)
 	}
 
 	// Return the Model renderer
@@ -148,7 +155,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	const location = "render.Stream.View"
 
 	// Create a new renderer (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._request, w._response, w._service, w._object, w._template, actionID)
+	subStream, err := NewModel(w._factory, w._request, w._response, w._object, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-renderer")
@@ -159,7 +166,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 }
 
 func (w Model) clone(action string) (Renderer, error) {
-	return NewModel(w._factory, w._request, w._response, w._service, w._object, w._template, action)
+	return NewModel(w._factory, w._request, w._response, w._object, w._template, action)
 }
 
 func (w Model) debug() {

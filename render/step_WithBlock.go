@@ -47,7 +47,7 @@ func (step StepWithBlock) execute(renderer Renderer, buffer io.Writer, actionMet
 	}
 
 	// Create a new renderer tied to the Block record
-	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), blockService, &block, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), &block, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))

@@ -321,14 +321,43 @@ func (w Common) UserImage() (string, error) {
  * Misc Helper Methods
  ******************************************/
 
+// SubRenderer creates a new renderer for a child object.  This function works
+// with Block, Folder, Follower, Following, and Stream objects.  It will return
+// an error if the object is not one of those types.
+func (w Common) SubRenderer(object any) (Renderer, error) {
+
+	switch typed := object.(type) {
+
+	case model.Block:
+		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+
+	case model.Folder:
+		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+
+	case model.Follower:
+		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+
+	case model.Following:
+		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+
+	case model.Stream:
+		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+
+	}
+
+	return nil, derp.NewInternalError("render.Common.SubRenderer", "Invalid object type", object)
+}
+
+// ActivityStream returns an ActivityStream document for the provided URI.  The
+// returned document uses Emissary's custom ActivityStream service, which uses
+// document values and rules from the server's shared cache.
 func (w Common) ActivityStream(uri string) streams.Document {
 	result, err := w._factory.ActivityStreams().Load(uri)
 	derp.Report(err)
 	return result
 }
 
-// IsMe returns TRUE if the provided URI is
-// the profileURL of the current user
+// IsMe returns TRUE if the provided URI is the profileURL of the current user
 func (w Common) IsMe(uri string) bool {
 	if user, err := w.getUser(); err == nil {
 		return uri == user.ActivityPubURL()
@@ -336,8 +365,7 @@ func (w Common) IsMe(uri string) bool {
 	return false
 }
 
-// NotMe returns TRUE if the provided URI is NOT
-// the ProfileURL of the current user
+// NotMe returns TRUE if the provided URI is NOT the ProfileURL of the current user
 func (w Common) NotMe(uri string) bool {
 	return !w.IsMe(uri)
 }

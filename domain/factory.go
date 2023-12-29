@@ -658,3 +658,34 @@ func (factory *Factory) collection(name string) data.Collection {
 	}
 	return factory.Session.Collection(name)
 }
+
+// ModelService returns the correct service to use for this particular Model object
+func (factory *Factory) ModelService(object data.Object) service.ModelService {
+
+	switch object.(type) {
+
+	case *model.Block:
+		return factory.Block()
+
+	case *model.Folder:
+		return factory.Folder()
+
+	case *model.Follower:
+		return factory.Follower()
+
+	case *model.Following:
+		return factory.Following()
+
+	case *model.Message:
+		return factory.Inbox()
+
+	case *model.Response:
+		return factory.Response()
+
+	case *model.Stream:
+		return factory.Stream()
+
+	default:
+		return nil
+	}
+}

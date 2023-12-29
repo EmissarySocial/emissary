@@ -50,7 +50,7 @@ func (step StepWithResponse) execute(renderer Renderer, buffer io.Writer, action
 	}
 
 	// Create a new renderer tied to the Response record
-	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), responseService, &response, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), &response, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))

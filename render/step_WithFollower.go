@@ -47,7 +47,7 @@ func (step StepWithFollower) execute(renderer Renderer, buffer io.Writer, action
 	}
 
 	// Create a new renderer tied to the Follower record
-	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), followerService, &follower, renderer.template(), renderer.ActionID())
+	subRenderer, err := NewModel(factory, renderer.request(), renderer.response(), &follower, renderer.template(), renderer.ActionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-renderer"))
