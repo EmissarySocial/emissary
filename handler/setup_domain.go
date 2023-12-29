@@ -64,21 +64,21 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
 		}
 
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
 		}
 
 		if err := s.Validate(&domain); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
 		}
 
 		if err := factory.PutDomain(domain); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
 		}
 
 		render.CloseModal(ctx)

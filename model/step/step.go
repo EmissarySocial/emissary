@@ -132,6 +132,12 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "forward-to":
 		return NewForwardTo(stepInfo)
 
+	case "inline-error":
+		return NewInlineError(stepInfo)
+
+	case "inline-success":
+		return NewInlineSuccess(stepInfo)
+
 	case "refresh-page":
 		return NewRefreshPage(stepInfo)
 

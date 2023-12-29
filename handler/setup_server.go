@@ -30,17 +30,17 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 
 		if useWrapper {
 			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", config); err != nil {
-				derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
+				derp.Report(render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
 			}
 		}
 
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
-			derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
+			derp.Report(render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
 		}
 
 		if useWrapper {
 			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", config); err != nil {
-				derp.Report(render.WrapInlineError(ctx, derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
+				derp.Report(render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error rendering index page")))
 			}
 		}
 
@@ -93,7 +93,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		data := mapof.NewAny()
 
 		if err := ctx.Bind(&data); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverPost", "Error parsing form data"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error parsing form data"))
 		}
 
 		// Data schema and UI schema
@@ -106,7 +106,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		element, asTable, err := getSetupForm(section)
 
 		if err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverTable", "Invalid table name"))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Invalid table name"))
 		}
 
 		// Write Table-formatted forms.
@@ -115,12 +115,12 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 			// Apply the changes to the configuration
 			if err := widget.Do(ctx.Request().URL, data); err != nil {
-				return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverTable", "Error saving form data"))
+				return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Error saving form data"))
 			}
 
 			// Try to save the configuration to the persistent storage
 			if err := factory.UpdateConfig(config); err != nil {
-				return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
+				return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
 			}
 
 			// Redraw the table
@@ -132,16 +132,16 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 		// Apply the changes to the configuration
 		if err := form.SetAll(&config, data, nil); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.serverPost", "Error saving form data", data))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error saving form data", data))
 		}
 
 		// Try to save the configuration to the persistent storage
 		if err := factory.UpdateConfig(config); err != nil {
-			return render.WrapInlineError(ctx, derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
+			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
 		}
 
 		// Success!
-		return render.WrapInlineSuccess(ctx, "Record Updated at: "+time.Now().Format(time.TimeOnly))
+		return render.WrapInlineSuccess(ctx.Response(), "Record Updated at: "+time.Now().Format(time.TimeOnly))
 	}
 }
 

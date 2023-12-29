@@ -19,22 +19,30 @@ import (
 )
 
 // WrapInlineSuccess sends a confirmation message to the #htmx-response-message element
-func WrapInlineSuccess(ctx echo.Context, message any) error {
+func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 
-	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
-	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
+	response.Header().Set("HX-Reswap", "innerHTML")
+	response.Header().Set("HX-Retarget", "#htmx-response-message")
+	response.WriteHeader(http.StatusOK)
 
-	return ctx.HTML(http.StatusOK, `<span class="green">`+convert.String(message)+`</span>`)
+	_, err := response.Write([]byte(`<span class="green">` + convert.String(message) + `</span>`))
+	return derp.Wrap(err, "render.WrapInlineSuccess", "Error writing response", message)
 }
 
-// WrapInlineError sends a confirmation message to the #htmx-response-message element
-func WrapInlineError(ctx echo.Context, err error) error {
-
-	ctx.Response().Header().Set("HX-Reswap", "innerHTML")
-	ctx.Response().Header().Set("HX-Retarget", "#htmx-response-message")
+// WrapInlineError sends an error message to the #htmx-response-message element
+func WrapInlineError(response http.ResponseWriter, err error) error {
 
 	derp.Report(err)
-	return ctx.HTML(http.StatusOK, `<span class="red">`+derp.Message(err)+`</span>`)
+
+	response.Header().Set("HX-Reswap", "innerHTML")
+	response.Header().Set("HX-Retarget", "#htmx-response-message")
+	response.WriteHeader(http.StatusOK)
+
+	if _, writeError := response.Write([]byte(`<span class="red">` + derp.Message(err) + `</span>`)); writeError != nil {
+		return derp.Wrap(writeError, "render.WrapInlineError", "Error writing response", err)
+	}
+
+	return nil
 }
 
 func WrapModal(response http.ResponseWriter, content string, options ...string) string {

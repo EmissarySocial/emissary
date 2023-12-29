@@ -65,6 +65,12 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.IfCondition:
 		return StepIfCondition(s)
 
+	case step.InlineError:
+		return StepInlineError(s)
+
+	case step.InlineSuccess:
+		return StepInlineSuccess(s)
+
 	case step.Publish:
 		return StepPublish(s)
 
