@@ -26,7 +26,7 @@
 		<hr>
 	{{- end -}}
 
-	<div class="flex-row width-100">
+	<div class="flex-row width-100-percent">
 
 		<div class="margin-right margin-top-sm">
 			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
@@ -69,7 +69,7 @@
 
 	{{- if ne .ImageURL "" -}}
 		<div class="margin-vertical">
-			<img src="{{.ImageURL}}?width=600" class="u-photo width-100">
+			<img src="{{.ImageURL}}?width=600" class="u-photo width-100-percent">
 		</div>
 	{{- end -}}
 

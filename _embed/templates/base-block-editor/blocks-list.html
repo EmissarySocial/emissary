@@ -1,6 +1,6 @@
 {{- range . -}}
 	<tr hx-get="/@me/inbox/block-edit?blockId={{.BlockID.Hex}}" role="button">
-		<td class="width-100 valign-middle">
+		<td class="width-100-percent valign-middle">
 			<div class="ellipsis">
 				{{.Trigger}} &nbsp;
 				<span class="text-sm text-gray">{{.Comment}}</span>

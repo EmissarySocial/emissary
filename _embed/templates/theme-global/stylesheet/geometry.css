@@ -461,8 +461,47 @@
     width:64px;
 }
 
+.width-128 {
+    width:128px;
+}
 
-.width-100 {
+.width-240 {
+    width:240px;
+}
+
+.width-320 {
+    width:320px;
+}
+
+.width-480 {
+    width:480px;
+}
+
+.width-640 {
+    width:640px;
+}
+
+.width-25-percent {
+    width:25%;
+}
+
+.width-33-percent {
+    width:33.333333%;
+}
+
+.width-50-percent {
+    width:50%;
+}
+
+.width-66-percent {
+    width:66.666667%;
+}
+
+.width-75-percent {
+    width:75%;
+}
+
+.width-100-percent {
     width: 100%;
 }
 
