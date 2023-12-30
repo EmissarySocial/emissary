@@ -309,8 +309,9 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-url":["folderId", "url"], "values": {"collapseThreads": true}},
+					{"step":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
 					{"step":"save"},
+					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
 					{"step":"view-html", "method":"post", "file":"actor-button-follow"}
 				]}
 			]
@@ -321,7 +322,7 @@
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
 					{"step":"save"},
-					{"step":"inline-success", "message":"Updated: {{now | shortTime}}"}
+					{"step":"inline-success", "message":"Saved: {{now | shortTime}}"}
 				]}
 			]
 		},
@@ -329,7 +330,8 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"delete"}
+					{"step":"delete"},
+					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"}
 				]},
 				{"step":"view-html", "method":"post", "file":"actor-button-none"},
 				{"step":"remove-event", "event":"closeModal"}
@@ -339,8 +341,9 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-block", "steps":[
-					{"step":"set-data", "from-url":["trigger"], "values": {"type":"ACTOR", "action": "MUTE"}},
+					{"step":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
 					{"step":"save"},
+					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
 					{"step":"view-html", "method":"post", "file":"actor-button-mute"}
 				]}
 			]
@@ -352,6 +355,7 @@
 					{"step":"delete"}
 				]},
 				{"step":"view-html", "method":"post", "file":"actor-button-none"},
+				{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},
@@ -359,9 +363,20 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-block", "steps":[
-					{"step":"set-data", "from-url":["trigger"], "values": {"type":"ACTOR", "action": "BLOCK"}},
+					{"step":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
 					{"step":"save"},
+					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
 					{"step":"view-html", "method":"post", "file":"actor-button-block"}
+				]}
+			]
+		},
+		"actor-button-block-update": {
+			"roles":["self"],
+			"steps":[
+				{"step":"with-block", "steps":[
+					{"step":"set-data", "from-form":["comment", "isPublic"]},
+					{"step":"save"},
+					{"step":"inline-success", "message":"Saved: {{now | shortTime}}"}
 				]}
 			]
 		},
@@ -372,6 +387,7 @@
 					{"step":"delete"}
 				]},
 				{"step":"view-html", "method":"post", "file":"actor-button-none"},
+				{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},

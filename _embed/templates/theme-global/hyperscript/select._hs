@@ -6,7 +6,7 @@ behavior select(value)
 			exit
 		end
 
-		set option to first <option[value=${value}]/> in me
+		set option to first <option[value="${value}"]/> in me
 		log option
 		if option is not null
 			set option.selected to true

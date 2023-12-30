@@ -3,6 +3,7 @@ package render
 import (
 	"io"
 	"net/http"
+	"text/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
@@ -11,10 +12,10 @@ import (
 
 // StepSetData represents an action-step that can update the custom data stored in a Stream
 type StepSetData struct {
-	FromURL  []string  // List of paths to pull from URL data
-	FromForm []string  // List of paths to pull from Form data
-	Values   mapof.Any // values to set directly into the object
-	Defaults mapof.Any // values to set into the object IFF they are currently empty.
+	FromURL  []string                      // List of paths to pull from URL data
+	FromForm []string                      // List of paths to pull from Form data
+	Values   map[string]*template.Template // values to set directly into the object
+	Defaults mapof.Any                     // values to set into the object IFF they are currently empty.
 }
 
 func (step StepSetData) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
@@ -61,7 +62,8 @@ func (step StepSetData) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 
 	// Put values from template.json into the stream
 	for key, value := range step.Values {
-		if err := schema.Set(object, key, value); err != nil {
+		valueString := executeTemplate(value, renderer)
+		if err := schema.Set(object, key, valueString); err != nil {
 			result := derp.Wrap(err, location, "Error setting value from template.json", key, value)
 			derp.SetErrorCode(result, http.StatusBadRequest)
 			return Halt().WithError(result)

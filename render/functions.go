@@ -85,6 +85,13 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(icons.Get(name + "-fill"))
 		},
 
+		"iff": func(condition bool, trueValue any, falseValue any) any {
+			if condition {
+				return trueValue
+			}
+			return falseValue
+		},
+
 		"pluralize": func(count any, single string, plural string) string {
 			countInt := convert.Int(count)
 			if countInt == 1 {

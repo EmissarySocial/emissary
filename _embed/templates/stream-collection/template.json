@@ -40,7 +40,7 @@
 	"actions": {
 		"init": {
 			"steps": [
-				{"step":"set-data", "values": {"label":"New Collector", "data.showSidebar":true}}
+				{"step":"set-data", "values": {"label":"New Collector", "data.showSidebar":"true"}}
 			]
 		},
 		"view": {

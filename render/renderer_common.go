@@ -161,10 +161,10 @@ func (w Common) QueryParam(param string) string {
 	return w._request.URL.Query().Get(param)
 }
 
-// QueryParamSlice returns a slice of all values for the
-// designated request parameter
-func (w Common) QueryParamSlice(param string) sliceof.String {
-	return w._request.URL.Query()[param]
+// QueryString returns the raw query string (encoded as a template.URL)
+// to be re-embedded in a template link.
+func (w Common) QueryString() template.URL {
+	return template.URL(w._request.URL.RawQuery)
 }
 
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.

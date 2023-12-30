@@ -1,13 +1,43 @@
-{{- $trigger := .QueryParam "trigger" -}}
+{{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $block := .Object -}}
+{{- $class := iff (eq "POST" .Method) "hovered" "" -}}
 
-<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
 	<button class="popUp-button bold">{{icon "block"}} Blocked</button>
 	<div class="popUp-content width-320 text-md">
-		<div class="text-sm text-gray margin-bottom">Posts from this sender will not be displayed, but they will not be notified of your posts.</div>
+		<div class="margin-bottom-lg">
+			<div class="bold ellipsis">Blocked {{$block.Label}}</div>
+			<div class="text-sm text-light-gray">Don't display posts. Don't send updates.</div>
+		</div>
+
+		<div>
+			<span class="bold margin-right-sm">Settings:</span>
+			<span class="htmx-request-show text-gray"><span class="spin">{{icon "loading"}}</span> Saving</span>
+			<span class="htmx-request-hide" id="htmx-response-message"></span>
+		</div>
+
+		<form hx-post="/@me/inbox/actor-button-block-update?blockId={{$block.ID}}&url={{$url}}" hx-trigger="change">
+			<div class="layout layout-vertical text-sm">
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<textarea name="comment" placeholder="Add a comment" rows="3">{{$block.Comment}}</textarea>
+					</div>
+					<div class="layout-vertical-element">
+						<span 
+							script="install toggle" 
+							name="isPublic" 
+							value="{{$block.IsPublic}}" 
+							true-text="PUBLIC: visible to others" 
+							false-text="PRIVATE: not visible to others">
+						</span>
+					</div>
+				</div>
+			</div>
+		</form>
+
 		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$trigger}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Blocking
 		</div>
 	</div>

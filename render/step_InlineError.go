@@ -3,8 +3,6 @@ package render
 import (
 	"io"
 	"text/template"
-
-	"github.com/benpate/derp"
 )
 
 // StepInlineError represents an action-step that can render a Stream into HTML
@@ -19,11 +17,10 @@ func (step StepInlineError) Get(renderer Renderer, buffer io.Writer) PipelineBeh
 
 func (step StepInlineError) Post(renderer Renderer, buffer io.Writer) PipelineBehavior {
 	result := executeTemplate(step.Message, renderer)
-	err := derp.NewInternalError("InlineError", result)
 
-	if err := WrapInlineError(renderer.response(), err); err != nil {
+	if _, err := buffer.Write([]byte(`<span class="red">` + result + `</span>`)); err != nil {
 		return Halt().WithError(err)
 	}
 
-	return Continue().AsFullPage()
+	return Halt().WithHeader("HX-Reswap", "innerHTML").WithHeader("HX-Retarget", "#htmx-response-message")
 }

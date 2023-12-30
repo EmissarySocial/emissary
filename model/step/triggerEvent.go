@@ -1,22 +1,30 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
+	"text/template"
+
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
 // TriggerEvent represents an action-step that forwards the user to a new page.
 type TriggerEvent struct {
 	Event string
-	Value string
+	Value *template.Template
 }
 
 // NewTriggerEvent returns a fully initialized TriggerEvent object
 func NewTriggerEvent(stepInfo mapof.Any) (TriggerEvent, error) {
 
+	value, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("value"))
+
+	if err != nil {
+		return TriggerEvent{}, derp.Wrap(err, "model.step.NewTriggerEvent", "Error parsing template")
+	}
+
 	return TriggerEvent{
 		Event: stepInfo.GetString("event"),
-		Value: first.String(stepInfo.GetString("value"), "true"),
+		Value: value,
 	}, nil
 }
 

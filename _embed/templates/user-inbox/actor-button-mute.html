@@ -1,13 +1,14 @@
-{{- $trigger := .QueryParam "trigger" -}}
+{{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $block := .Object -}}
+{{- $class := iff (eq "POST" .Method) "hovered" "" -}}
 
-<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
 	<button class="popUp-button bold">{{icon "mute"}} Muted</button>
 	<div class="popUp-content text-md width-320">
 		<div class="text-sm text-gray margin-bottom">Posts from this sender will not be displayed, but they may still see your posts.</div>
 		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unmute?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$trigger}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unmute?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Muting
 		</div>
 	</div>

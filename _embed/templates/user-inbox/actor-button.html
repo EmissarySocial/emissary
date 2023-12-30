@@ -1,23 +1,25 @@
 {{- $url := .QueryParam "url" -}}
 {{- $following := .AmFollowing $url -}}
 
-{{- if not $following.IsNew -}}
-	{{- $subRenderer := .SubRenderer $following -}}
-	{{- template "actor-button-follow" $subRenderer -}}
-
-{{- else -}}
-	{{- $block := .AmBlocking "USER" $url -}}
-
-	{{- if eq "MUTE" $block.Action -}}
-		{{- $subRenderer := .SubRenderer $block -}}
-		{{- template "actor-button-mute" $subRenderer -}}
-
-	{{- else if eq "BLOCK" $block.Action -}}
-		{{- $subRenderer := .SubRenderer $block -}}
-		{{- template "actor-button-block" $subRenderer -}}
+<span hx-get="/@me/inbox/actor-button?{{.QueryString}}" hx-trigger="actor-update[detail.value=='{{$url}}'] from:window" hx-target="this" hx-swap="outerHTML">
+	{{- if not $following.IsNew -}}
+		{{- $subRenderer := .SubRenderer $following -}}
+		{{- template "actor-button-follow" $subRenderer -}}
 
 	{{- else -}}
-		{{- template "actor-button-none" . -}}
+		{{- $block := .AmBlocking "ACTOR" $url -}}
+
+		{{- if eq "MUTE" $block.Action -}}
+			{{- $subRenderer := .SubRenderer $block -}}
+			{{- template "actor-button-mute" $subRenderer -}}
+
+		{{- else if eq "BLOCK" $block.Action -}}
+			{{- $subRenderer := .SubRenderer $block -}}
+			{{- template "actor-button-block" $subRenderer -}}
+
+		{{- else -}}
+			{{- template "actor-button-none" . -}}
+		{{- end -}}
+		
 	{{- end -}}
-	
-{{- end -}}
+</span>

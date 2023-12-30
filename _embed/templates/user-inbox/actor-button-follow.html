@@ -1,28 +1,32 @@
 {{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $following := .Object -}}
+{{- $class := iff (eq "POST" .Method) "hovered" "" -}}
 
-<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
 	<button class="popUp-button bold">{{icon "check"}} Following</button>
 	<div class="popUp-content text-md width-320">
-		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}" hx-trigger="change">
 
-			<div class="text-sm margin-bottom-lg">
-				{{- if eq "ACTIVITYPUB" $following.Method -}}
-					<b>{{icon "activitypub"}} ActivityPub</b>: Receiving real-time updates
-				{{- else if eq "WEBSUB" $following.Method -}}
-					<b>{{icon "websub"}} WebSub</b>: Receiving real-time updates
-				{{- else if eq "POLL" $following.Method -}}
-					<b>{{icon "rss"}} Polling</b>: Check for updates frequently
-				{{- end -}}
-			</div>
-			
-			<div>
-				<span class="bold margin-right-sm">Options</span>
-				<span class="htmx-request-show text-gray"><span class="spin">{{icon "loading"}}</span> Saving</span>
-				<span class="htmx-request-hide" id="htmx-response-message"></span>
-			</div>
+		<div class="margin-bottom-lg">
+			{{- if eq "ACTIVITYPUB" $following.Method -}}
+				<div class="bold">Following with {{icon "activitypub"}} ActivityPub</div>
+				<div class="text-sm text-light-gray">Real-time updates. Two-way communication.</div>
+			{{- else if eq "WEBSUB" $following.Method -}}
+				<div class="bold">Follwing with {{icon "websub"}} WebSub</div>
+				<div class="text-sm text-light-gray">Real-time updates. One-way communication.</div>
+			{{- else if eq "POLL" $following.Method -}}
+				<div class="bold">Following with {{icon "rss"}} RSS (Polling)</div>
+				<div class="text-sm text-light-gray">Daily Updates.</div>
+			{{- end -}}
+		</div>
+		
+		<div>
+			<span class="bold margin-right-sm">Settings:</span>
+			<span class="htmx-request-show text-gray"><span class="spin">{{icon "loading"}}</span> Saving</span>
+			<span class="htmx-request-hide" id="htmx-response-message"></span>
+		</div>
 
+		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
 				<div class="layout-vertical-elements">
 					<div class="layout-vertical-element">
@@ -45,7 +49,7 @@
 							script="install toggle" 
 							name="isPublic" 
 							value="{{$following.IsPublic}}" 
-							true-text="PUBLISHED with others who follow me" 
+							true-text="PUBLIC: visible to others" 
 							false-text="PRIVATE: not visible to others">
 						</span>
 					</div>
