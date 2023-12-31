@@ -1,11 +1,14 @@
-on mousedown 
+on mousedown
 
 	if event.button is not 0 then 
 		exit
 	end
 
-	if the event.target.className contains "turboclick" then
-		halt the event then
-		send click to the event.target
+	set node to the closest <.turboclick /> to the event.target
+
+	if node is not empty then
+		halt the event
+		send click to node
 	end
+
 end

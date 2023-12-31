@@ -27,7 +27,7 @@
 		<div 
 			id="item_{{.MessageID.Hex}}" 
 			role="button"
-			class="message" 
+			class="message turboclick" 
 			style="max-width:640px;"
 			hx-get="/@me/inbox/message?messageId={{.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-push-url="false"
