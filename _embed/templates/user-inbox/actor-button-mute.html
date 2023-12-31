@@ -1,9 +1,9 @@
 {{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $block := .Object -}}
-{{- $class := iff (eq "POST" .Method) "hovered" "" -}}
+{{- $class := iff (eq "POST" .Method) "visible" "" -}}
 
-<span script="install popUp(position:'default')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
+<span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
 	<button class="popUp-button bold">{{icon "mute"}} Muted</button>
 	<div class="popUp-content text-md width-320">
 		<div class="text-sm text-gray margin-bottom">Posts from this sender will not be displayed, but they may still see your posts.</div>

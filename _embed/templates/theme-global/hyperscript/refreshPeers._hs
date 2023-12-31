@@ -1,0 +1,19 @@
+behavior refreshPeers(id)
+
+	init
+		set @data-peer to id
+
+	on refreshPeers
+
+		repeat for peer in <[data-peer=`${id}`]/>
+
+			if the peer is not me
+				log peer
+				send refresh to peer
+			end
+
+		end
+
+	end
+
+end

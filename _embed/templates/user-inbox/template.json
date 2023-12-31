@@ -49,6 +49,10 @@
 	},
 	"actions": {
 
+		"test": {
+			"roles": ["self"],
+			"step": "view-html"
+		},
 		"inbox": {
 			"roles": ["self"],
 			"step": "view-html"
@@ -301,7 +305,9 @@
 		"actor-button": {
 			"roles":["authenticated"],
 			"steps": [
-				{"step":"view-html"}
+				{"step":"view-html"},
+				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"step":"set-header", "name":"hx-push-url", "value":"false"}
 			]
 		},
 
@@ -311,7 +317,7 @@
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
 					{"step":"save"},
-					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
+					{"step":"trigger-event", "event":"refreshPeers"},
 					{"step":"view-html", "method":"post", "file":"actor-button-follow"}
 				]}
 			]
@@ -322,7 +328,8 @@
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
 					{"step":"save"},
-					{"step":"inline-success", "message":"Saved: {{now | shortTime}}"}
+					{"step":"trigger-event", "event":"refreshPeers"},
+					{"step":"set-header", "name":"hx-reswap", "value":"none"}
 				]}
 			]
 		},
@@ -330,10 +337,10 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"delete"},
-					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"}
+					{"step":"delete"}
 				]},
 				{"step":"view-html", "method":"post", "file":"actor-button-none"},
+				{"step":"trigger-event", "event":"refreshPeers"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},
@@ -343,7 +350,7 @@
 				{"step":"with-block", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
 					{"step":"save"},
-					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
+					{"step":"trigger-event", "event":"refreshPeers"},
 					{"step":"view-html", "method":"post", "file":"actor-button-mute"}
 				]}
 			]
@@ -355,7 +362,7 @@
 					{"step":"delete"}
 				]},
 				{"step":"view-html", "method":"post", "file":"actor-button-none"},
-				{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
+				{"step":"trigger-event", "event":"refreshPeers"},
 				{"step":"remove-event", "event":"closeModal"}
 			]
 		},
@@ -365,7 +372,7 @@
 				{"step":"with-block", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
 					{"step":"save"},
-					{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
+					{"step":"trigger-event", "event":"refreshPeers"},
 					{"step":"view-html", "method":"post", "file":"actor-button-block"}
 				]}
 			]
@@ -376,7 +383,8 @@
 				{"step":"with-block", "steps":[
 					{"step":"set-data", "from-form":["comment", "isPublic"]},
 					{"step":"save"},
-					{"step":"inline-success", "message":"Saved: {{now | shortTime}}"}
+					{"step":"trigger-event", "event":"refreshPeers"},
+					{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"}
 				]}
 			]
 		},
@@ -386,9 +394,9 @@
 				{"step":"with-block", "steps":[
 					{"step":"delete"}
 				]},
-				{"step":"view-html", "method":"post", "file":"actor-button-none"},
-				{"step":"trigger-event", "event":"actor-update", "value":"{{.QueryParam `url`}}"},
-				{"step":"remove-event", "event":"closeModal"}
+				{"step":"trigger-event", "event":"refreshPeers"},
+				{"step":"remove-event", "event":"closeModal"},
+				{"step":"view-html", "method":"post", "file":"actor-button-none"}
 			]
 		},
 

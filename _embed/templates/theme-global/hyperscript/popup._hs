@@ -1,74 +1,161 @@
+js
+	function singleAnimationFrame() {
+		return new Promise(resolve => {
+			window.requestAnimationFrame(() => {
+				console.log("singleAnimationFrame")
+				resolve();
+			});
+		});
+	}
+end
+
 behavior popUp(position)
 
 	init
+		if no position then set the position to "bottom center" end
+
 		add .popUp
 		set :button to first <.popUp-button/> in me
 		set :content to first <.popUp-content/> in me
-
 		set :button.tabIndex to 0
-
-		if position contains "center" then
-			set buttonLeft to the :button's offsetLeft
-			set buttonWidth to parseInt(:button's *computed-width)
-			set contentWidth to parseInt(:content's *computed-width)
-
-			set buttonCenter to buttonWidth / 2
-			set contentCenter to contentWidth / 2
-
-			set contentLeft to (buttonCenter - contentCenter) + buttonLeft
-			set :content's *left to contentLeft px
-
-		else if position contains "right" then
-			set buttonLeft to parseInt(the :button's offsetLeft)
-			set buttonWidth to parseInt(the :button's *computed-width)
-			set contentWidth to parseInt(the :content's *computed-width)
-			set contentLeft to (buttonLeft + buttonWidth) - contentWidth
-			set :content's *left to contentLeft px
-
-		else 
-			set :content's *left to the :button's offsetLeft
-		end
-
-		if position contains "top" then
-			set :content's *transform-origin to "bottom"
-
-			set buttonTop to parseInt(:button's offsetTop)
-			set contentHeight to parseInt(:content's *computed-height)
-			set contentTop to (buttonTop - contentHeight)
-			set :content's *top to contentTop px
-
-		else 
-			set :content's *transform-origin to "top"
-		end
-		
 	end
 
-	on mouseover
+	on mouseenter or focus
 		add .hovered
+		trigger showOrClose
 	end
 
-	on mouseout
+	on mouseleave or blur
 		remove .hovered
+		trigger showOrClose
 	end
 
-	on mousedown from .popUp-button in me
+	on XXmousedown from .popUp-button in me
 		remove .hovered
 		toggle .pinned
+		trigger showOrClose
 	end
 
 	on touchstart from .popUp-button in me
 		remove .hovered
 		toggle .pinned
+		trigger showOrClose
 	end
 
-	on mousedown elsewhere
-		remove .hovered
-		remove .pinned
+	on keydown
+		halt the event's bubbling
 	end
 
-	on touchstart elsewhere
-		remove .hovered
-		remove .pinned
+	on showOrClose
+
+		if (my classList contains "hovered") or (my classList contains "pinned") then
+
+			-- Prevent duplicate calls
+			if my classList contains "visible" then
+				exit
+			end
+
+			
+			-- Position Calculations
+			set buttonRect to :button's getBoundingClientRect()
+			set buttonLeft to :button's offsetLeft
+			set buttonWidth to parseInt(:button's *computed-width)
+			set contentWidth to parseInt(:content's *computed-width)
+			set contentHeight to parseInt(:content's *computed-height)
+
+			-- Horizontal positioning
+			if position contains "center" then
+				set contentLeft to (buttonLeft + (buttonWidth / 2)) - (contentWidth / 2)
+
+			else if position contains "right" then
+				set contentLeft to (buttonLeft + buttonWidth) - contentWidth
+
+			else 
+				set contentLeft to the buttonLeft
+			end
+
+			-- Vertical positioning
+			if position contains "top" then
+				set :content's *transform-origin to "bottom"
+				set contentTop to the buttonRect's top - contentHeight
+
+				if the :button's offsetParent is not empty then
+					set contentTop to contentTop - :button's offsetParent.offsetTop
+				end
+
+			else 
+				set :content's *transform-origin to "top"
+				set contentTop to buttonRect's bottom
+
+				if :button's offsetParent is not empty then
+					set contentTop to contentTop - :button's offsetParent.offsetTop
+				end
+			end
+
+
+			-- Account for Overflows
+			set :content's *top to contentTop px
+			set :content's *left to contentLeft px
+			get singleAnimationFrame()
+
+			log "----------"
+			log :content
+			log "contentTop = " + contentTop
+			log "contentLeft = " + contentLeft
+			log "content's *top = " + :content's *top
+			log "content's *left = " + :content's *left
+
+			set rect to the :content's getBoundingClientRect()
+			set top to the rect's top
+			set left to the rect's left
+			log rect
+			log "top = " + top
+			log "left = " + left
+
+			-- Horizontal Overflows
+			if left < 0 then
+				set :content's *left to 0px
+			else
+				set right to left + contentWidth
+				set overflowX to (right + 16) - the window's innerWidth
+				log "overflowX = " + overflowX
+				if overflowX > 0 then
+					set :content's *left to (contentLeft - overflowX) px
+				end
+			end
+
+			-- Vertical Overflows
+			if top < 0 then
+				set :content's *top to 0px
+			else
+				set bottom to top + contentHeight
+				set overflowY to (bottom + 16) - the window's innerHeight
+				log "overflowY = " + overflowY
+				if overflowY > 0 then
+					set :content's *top to (contentTop - overflowY) px
+				end
+			end
+
+
+			-- Display the PopUp
+			get singleAnimationFrame()
+			add .visible
+			async transition the :content's opacity to 1 over 125ms
+			transition the :content's transform to "scaleY(1)" over 125ms
+			
+		else
+			-- Hide the PopUp
+			async transition the :content's opacity to 0 over 125ms
+			transition the :content's transform to "scaleY(0)" over 125ms
+			remove .visible
+
+			-- Deselect any focused elements
+			tell <:focus/> in me 
+				you.blur()
+			end
+
+		end
+		
 	end
 
 end

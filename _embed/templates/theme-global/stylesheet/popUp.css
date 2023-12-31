@@ -1,5 +1,5 @@
 .popUp-content {
-	position: absolute;
+	position: fixed;
 	z-index: 1000;
 	overflow:auto;
 
@@ -15,11 +15,11 @@
 
 	opacity: 0;
 	transform: scaleY(0);
+	transform-origin: top;
 	transition: all 0.125s ease-in-out;
 }
 
-.popUp.hovered > .popUp-content,
-.popUp.pinned > .popUp-content {
+.popUp.XXvisible > .popUp-content {
 	transform: scaleY(1);
 	opacity: 1;
 }
