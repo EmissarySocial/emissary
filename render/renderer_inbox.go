@@ -17,6 +17,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -426,6 +427,8 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 // Message uses the queryString ?messageId= parameter to load a Message from the database
 // If the messageId parameter does not exist, is malformed, or if the message does not exist, then
 // a new, empty Message is returned.
+// In addition, if there is a "sibling" URL parameter (either "next" or "prev") then the next/previous
+// message is loaded instead.
 func (w Inbox) Message() model.Message {
 
 	// Get the messageID from the query string
@@ -473,8 +476,12 @@ func (w Inbox) Message() model.Message {
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
-	w.SetQueryParam("uri", message.URL)
+	w.SetQueryParam("messageId", message.MessageID.Hex())
+	w.SetQueryParam("url", message.URL)
 	w.SetQueryParam("folderId", message.FolderID.Hex())
+
+	spew.Dump(w._request.URL.Query())
+	spew.Dump(message)
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
