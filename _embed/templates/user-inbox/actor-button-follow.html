@@ -35,18 +35,21 @@
 						</select>
 					</div>
 					<div class="layout-vertical-element">
-						<select name="collapseThreads" script="install select(value:'{{$following.CollapseThreads}}')">
-							<option value="true">Group messages into a single thread</option>
-							<option value="false">Show all messages separately</option>
-						</select>
+						<span 
+							script="install toggle" 
+							name="collapseThreads" 
+							value="{{$following.CollapseThreads}}" 
+							true-text="Group messages into a single thread" 
+							false-text="Show all messages separately">
+						</span>
 					</div>
 					<div class="layout-vertical-element">
 						<span 
 							script="install toggle" 
 							name="isPublic" 
 							value="{{$following.IsPublic}}" 
-							true-text="PUBLIC: visible to others" 
-							false-text="PRIVATE: not visible to others">
+							true-text="Allow others to see this connection" 
+							false-text="Not visible to others">
 						</span>
 					</div>
 				</div>

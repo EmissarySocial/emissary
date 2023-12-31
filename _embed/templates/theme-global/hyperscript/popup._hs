@@ -2,7 +2,6 @@ js
 	function singleAnimationFrame() {
 		return new Promise(resolve => {
 			window.requestAnimationFrame(() => {
-				console.log("singleAnimationFrame")
 				resolve();
 			});
 		});
@@ -30,15 +29,13 @@ behavior popUp(position)
 		trigger showOrClose
 	end
 
-	on XXmousedown from .popUp-button in me
-		remove .hovered
-		toggle .pinned
+	on mousedown from .popUp-button in me
+		toggle .hovered
 		trigger showOrClose
 	end
 
 	on touchstart from .popUp-button in me
-		remove .hovered
-		toggle .pinned
+		toggle .hovered
 		trigger showOrClose
 	end
 
@@ -55,7 +52,6 @@ behavior popUp(position)
 				exit
 			end
 
-			
 			-- Position Calculations
 			set buttonRect to :button's getBoundingClientRect()
 			set buttonLeft to :button's offsetLeft
@@ -92,25 +88,14 @@ behavior popUp(position)
 				end
 			end
 
-
 			-- Account for Overflows
 			set :content's *top to contentTop px
 			set :content's *left to contentLeft px
 			get singleAnimationFrame()
 
-			log "----------"
-			log :content
-			log "contentTop = " + contentTop
-			log "contentLeft = " + contentLeft
-			log "content's *top = " + :content's *top
-			log "content's *left = " + :content's *left
-
 			set rect to the :content's getBoundingClientRect()
 			set top to the rect's top
 			set left to the rect's left
-			log rect
-			log "top = " + top
-			log "left = " + left
 
 			-- Horizontal Overflows
 			if left < 0 then
@@ -118,7 +103,6 @@ behavior popUp(position)
 			else
 				set right to left + contentWidth
 				set overflowX to (right + 16) - the window's innerWidth
-				log "overflowX = " + overflowX
 				if overflowX > 0 then
 					set :content's *left to (contentLeft - overflowX) px
 				end
@@ -130,7 +114,6 @@ behavior popUp(position)
 			else
 				set bottom to top + contentHeight
 				set overflowY to (bottom + 16) - the window's innerHeight
-				log "overflowY = " + overflowY
 				if overflowY > 0 then
 					set :content's *top to (contentTop - overflowY) px
 				end
@@ -140,13 +123,13 @@ behavior popUp(position)
 			-- Display the PopUp
 			get singleAnimationFrame()
 			add .visible
-			async transition the :content's opacity to 1 over 125ms
-			transition the :content's transform to "scaleY(1)" over 125ms
+			-- async transition the :content's opacity to 1 over 125ms
+			-- transition the :content's transform to "scaleY(1)" over 125ms
 			
 		else
 			-- Hide the PopUp
-			async transition the :content's opacity to 0 over 125ms
-			transition the :content's transform to "scaleY(0)" over 125ms
+			-- async transition the :content's opacity to 0 over 125ms
+			-- transition the :content's transform to "scaleY(0)" over 125ms
 			remove .visible
 
 			-- Deselect any focused elements

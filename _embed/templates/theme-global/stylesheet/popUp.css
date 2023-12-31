@@ -1,3 +1,8 @@
+.popUp {
+	display:inline-block;
+	padding:4px;
+	margin:-4px;
+}
 .popUp-content {
 	position: fixed;
 	z-index: 1000;
@@ -19,7 +24,7 @@
 	transition: all 0.125s ease-in-out;
 }
 
-.popUp.XXvisible > .popUp-content {
+.popUp.visible > .popUp-content {
 	transform: scaleY(1);
 	opacity: 1;
 }
