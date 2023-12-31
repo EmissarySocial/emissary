@@ -18,6 +18,7 @@ func FollowingSchema() schema.Element {
 			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
 			"imageUrl":        schema.String{Format: "url", MaxLength: 1024},
 			"behavior":        schema.String{MaxLength: 64},
+			"blockAction":     schema.String{Enum: []string{FollowingBlockActionIgnore, BlockActionMute, BlockActionLabel, BlockActionBlock}},
 			"collapseThreads": schema.Boolean{},
 			"isPublic":        schema.Boolean{},
 			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
@@ -53,6 +54,9 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "behavior":
 		return &following.Behavior, true
+
+	case "blockAction":
+		return &following.BlockAction, true
 
 	case "collapseThreads":
 		return &following.CollapseThreads, true

@@ -14,3 +14,6 @@ const BlockActionBlock = "BLOCK"
 
 // BlockActionMute prevents inbound messages from a particular user or domain
 const BlockActionMute = "MUTE"
+
+// BlockActionLabel allows inbound messages but labels them with a custom message
+const BlockActionLabel = "LABEL"

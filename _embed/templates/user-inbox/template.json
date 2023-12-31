@@ -196,7 +196,13 @@
 
 		"following": {"step":"view-html", "file":"following"},
 		"following-list": {"step":"view-html", "file":"following-list"},
-		"following-add":{
+		"following-add": {
+			"roles":["self"],
+			"steps":[
+				{"step":"view-html"}
+			]
+		},
+		"following-Xadd":{
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
@@ -329,7 +335,7 @@
 					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
 					{"step":"save"},
 					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"set-header", "name":"hx-reswap", "value":"none"}
+					{"step":"inline-success", "message":"Saved"}
 				]}
 			]
 		},
@@ -384,7 +390,7 @@
 					{"step":"set-data", "from-form":["comment", "isPublic"]},
 					{"step":"save"},
 					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"}
+					{"step":"inline-success", "message":"Saved"}
 				]}
 			]
 		},

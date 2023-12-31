@@ -11,7 +11,7 @@ func BlockSchema() schema.Element {
 			"blockId":     schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
 			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent}},
-			"action":      schema.String{Required: true, Enum: []string{BlockActionBlock, BlockActionMute}},
+			"action":      schema.String{Required: true, Enum: []string{BlockActionBlock, BlockActionMute, BlockActionLabel}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
 			"comment":     schema.String{},

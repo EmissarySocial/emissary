@@ -432,6 +432,7 @@ func (w Inbox) Message() model.Message {
 	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
 
 	if err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Message", "Invalid message ID", w._request.URL.Query().Get("messageId")))
 		return model.NewMessage()
 	}
 
@@ -440,6 +441,7 @@ func (w Inbox) Message() model.Message {
 	message := model.NewMessage()
 
 	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Message", "Error loading message", messageID))
 		return model.NewMessage()
 	}
 

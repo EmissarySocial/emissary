@@ -20,6 +20,8 @@
 		
 		<div>
 			<span class="bold margin-right-sm">Settings:</span>
+			<span class="htmx-request-show spin">{{icon "loading"}}</span>
+			<span class="htmx-request-hide" id="htmx-response-message"></span>
 		</div>
 
 		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
@@ -27,11 +29,16 @@
 				<div class="layout-vertical-elements">
 					<div class="layout-vertical-element">
 						<select name="behavior" script="install select(value:'{{$following.Behavior}}')">
-							<option value="POSTS+REPLIES+BLOCKS">Import: Posts, Replies, and Blocks</option>
-							<option value="POSTS+REPLIES">Import: Posts and Replies</option>
-							<option value="POSTS+BLOCKS">Import: Posts and Blocks</option>
-							<option value="POSTS">Import: Posts Only</option>
-							<option value="BLOCKS">Import: Blocks Only</option>
+							<option value="POSTS+REPLIES">Show: Posts and Replies</option>
+							<option value="POSTS">Show: Posts Only (ignore replies)</option>
+						</select>
+					</div>
+					<div class="layout-vertical-element">
+						<select name="blockAction" script="install select(value:'{{$following.BlockAction}}')">
+							<option value="IGNORE">Shared Blocks: Ignore</option>
+							<option value="LABEL">Shared Blocks: Display a Label</option>
+							<option value="MUTE">Shared Blocks: Mute incomming messages</option>
+							<option value="BLOCK">Shared Blocks: Block all communication</option>
 						</select>
 					</div>
 					<div class="layout-vertical-element">
@@ -48,8 +55,8 @@
 							script="install toggle" 
 							name="isPublic" 
 							value="{{$following.IsPublic}}" 
-							true-text="Allow others to see this connection" 
-							false-text="Not visible to others">
+							true-text="Visible to others" 
+							false-text="Hidden from others">
 						</span>
 					</div>
 				</div>
