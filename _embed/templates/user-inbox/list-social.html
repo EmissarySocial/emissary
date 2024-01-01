@@ -7,6 +7,8 @@
 	<div class="width-32 margin-right-sm">
 		{{- if $attributedTo.Icon.NotNil -}}
 			<img src="{{$attributedTo.Icon.URL}}" class="circle-32">
+		{{- else -}}
+			<div class="circle-32"></div>
 		{{- end -}}
 	</div>
 

@@ -44,7 +44,7 @@
 </div>
 
 <div id="modal-body">
-	
+
 	{{- if $inReplyTo.NotNil -}}
 		<div class="flex-row margin-bottom">
 			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
@@ -88,6 +88,7 @@
 	{{- end -}}
 
 	{{- if $attributedTo.NotNil -}}
+
 		<div class="flex-row margin-bottom">
 			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
 				{{- if $attributedTo.Icon.NotNil -}}
@@ -110,7 +111,7 @@
 		<div class="flex-grow-1">
 					
 			{{- if ne "" $stream.Name -}}
-				<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+				<h1 class="margin-vertical-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 			{{- end -}}
 
 			<div class="content">
@@ -118,7 +119,7 @@
 				{{- $image := $stream.Image -}}
 				{{- if $image.NotNil -}}
 					<div class="margin-bottom">
-						<img src="{{$image.URL}}" style="width:100%; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
+						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></span>
 					</div>
 				{{- end -}}
 

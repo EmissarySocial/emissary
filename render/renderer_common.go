@@ -344,16 +344,20 @@ func (w Common) SubRenderer(object any) (Renderer, error) {
 // ActivityStream returns an ActivityStream document for the provided URI.  The
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
-func (w Common) ActivityStream(uri string) streams.Document {
-	result, err := w._factory.ActivityStreams().Load(uri)
-	derp.Report(err)
+func (w Common) ActivityStream(url string) streams.Document {
+	result, err := w._factory.ActivityStreams().Load(url)
+
+	if err != nil {
+		derp.Report(err)
+	}
+
 	return result
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
-func (w Common) IsMe(uri string) bool {
+func (w Common) IsMe(url string) bool {
 	if user, err := w.getUser(); err == nil {
-		return uri == user.ActivityPubURL()
+		return url == user.ActivityPubURL()
 	}
 	return false
 }

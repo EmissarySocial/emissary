@@ -40,16 +40,22 @@ func (service *ActivityStreams) Refresh(innerClient *ascache.Client, documentCol
 // Load implements the Hannibal `Client` interface, and returns a streams.Document from the cache.
 func (service *ActivityStreams) Load(uri string, options ...any) (streams.Document, error) {
 
+	const location = "service.ActivityStreams.Load"
+
+	if uri == "" {
+		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", uri)
+	}
+
 	// NPE Check
 	if service.innerClient == nil {
-		return streams.Document{}, derp.NewInternalError("service.ActivityStreams.Load", "Client not initialized")
+		return streams.Document{}, derp.NewInternalError(location, "Client not initialized")
 	}
 
 	// Forward request to inner client
 	result, err := service.innerClient.Load(uri, options...)
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, "service.ActivityStreams.Load", "Error loading document from inner client", uri)
+		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", uri)
 	}
 
 	result.WithOptions(streams.WithClient(service))
