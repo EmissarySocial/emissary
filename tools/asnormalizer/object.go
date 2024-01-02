@@ -37,15 +37,17 @@ func Object(document streams.Document) map[string]any {
 
 	if image := actual.Image(); image.NotNil() {
 		result[vocab.PropertyImage] = Image(image)
-	} else {
-		/* TODO: Mastodon images are presented as attachments.  Go figure.
-		for attachment := actual.Attachment(); attachment.NotNil(); attachment = attachment.Tail() {
 
-			if strings.HasPrefix(attachment.MediaType(), "image/") {
-				result[vocab.PropertyImage] = Image(attachment)
-				break
-			}
-		}
+		/*
+			TODO: Mastodon images are presented as attachments.  Go figure.
+			} else {
+				for attachment := actual.Attachment(); attachment.NotNil(); attachment = attachment.Tail() {
+
+					if strings.HasPrefix(attachment.MediaType(), "image/") {
+						result[vocab.PropertyImage] = Image(attachment)
+						break
+					}
+				}
 		*/
 	}
 

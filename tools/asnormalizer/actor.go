@@ -8,9 +8,7 @@ import (
 // Actor normalizes an Actor document
 func Actor(document streams.Document) map[string]any {
 
-	publicKey := document.PublicKey()
-
-	return map[string]any{
+	result := map[string]any{
 
 		// Profile
 		vocab.PropertyType:              document.Type(),
@@ -28,11 +26,15 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyLiked:     document.Liked().String(),
 		vocab.PropertyFollowers: document.Followers().String(),
 		vocab.PropertyFollowing: document.Following().String(),
+	}
 
-		// Cryptography
-		vocab.PropertyPublicKey: map[string]any{
+	// Cryptography
+	if publicKey := document.PublicKey(); publicKey.NotNil() {
+		result[vocab.PropertyPublicKey] = map[string]any{
 			vocab.PropertyID:           publicKey.ID(),
 			vocab.PropertyPublicKeyPEM: publicKey.PublicKeyPEM(),
-		},
+		}
 	}
+
+	return result
 }
