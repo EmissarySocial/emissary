@@ -27,7 +27,9 @@
 		{{- end -}}
 
 		{{- if ne "" $stream.Name -}}
-			<div class="bold text-black margin-top">{{$stream.Name}}</div>
+			<div>
+				<span class="bold black">{{$stream.Name}}</span>
+			</div>
 		{{- end -}}
 
 		<div>
