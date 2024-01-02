@@ -196,13 +196,7 @@
 
 		"following": {"step":"view-html", "file":"following"},
 		"following-list": {"step":"view-html", "file":"following-list"},
-		"following-add": {
-			"roles":["self"],
-			"steps":[
-				{"step":"view-html"}
-			]
-		},
-		"following-Xadd":{
+		"following-add":{
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
