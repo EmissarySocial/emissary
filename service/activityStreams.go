@@ -137,7 +137,7 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 	}
 
 	result := slice.Map(documents, func(document ascache.CachedValue) streams.Document {
-		return streams.NewDocument(document.Original, streams.WithStats(document.Statistics), streams.WithClient(service))
+		return streams.NewDocument(document.Object, streams.WithStats(document.Statistics), streams.WithClient(service))
 	})
 
 	return result, nil

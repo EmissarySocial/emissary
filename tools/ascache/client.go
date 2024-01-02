@@ -192,7 +192,7 @@ func (client *Client) save(uri string, document streams.Document) {
 	// Create a new cachedValue
 	cachedValue := NewCachedValue()
 	cachedValue.URI = uri
-	cachedValue.Original = document.Map()
+	cachedValue.Object = document.Map()
 	cachedValue.HTTPHeader = document.HTTPHeader()
 	cachedValue.HTTPHeader.Set(headerHannibalCache, "true")
 	cachedValue.HTTPHeader.Set(headerHannibalCacheDate, time.Now().Format(time.RFC3339))
@@ -228,6 +228,12 @@ func (client *Client) save(uri string, document streams.Document) {
 	cachedValue.calcPublished()
 	cachedValue.calcExpires(cacheControl)
 	cachedValue.calcRevalidates(cacheControl)
+	cachedValue.Received = time.Now().Unix()
+
+	// Set Other Metadata
+	cachedValue.IsActor = document.IsActor()
+	cachedValue.IsObject = document.IsObject()
+	cachedValue.IsCollection = document.IsCollection()
 
 	// Try to upsert the document into the cache
 	filter := bson.M{"uri": uri}
@@ -251,7 +257,7 @@ func (client *Client) save(uri string, document streams.Document) {
 func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
 
 	return streams.NewDocument(
-		cachedValue.Original,
+		cachedValue.Object,
 		streams.WithClient(client),
 		streams.WithStats(cachedValue.Statistics),
 		streams.WithHTTPHeader(cachedValue.HTTPHeader),
