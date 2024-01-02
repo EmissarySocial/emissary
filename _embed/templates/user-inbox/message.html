@@ -96,7 +96,9 @@
 				{{- end -}}
 				<div>
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
-					<div class="text-light-gray margin-vertical-none">@{{$attributedTo.PreferredUsername}}</div>
+					{{- if ne "" $attributedTo.PreferredUsername -}}
+						<div class="text-light-gray margin-vertical-none">@{{$attributedTo.PreferredUsername}}</div>
+					{{- end -}}
 				</div>
 			</a>
 

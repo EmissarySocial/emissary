@@ -17,12 +17,15 @@
 		<div class="text-sm text-light-gray flex-row">
 			<span class="ellipsis">
 				{{ icon $message.Origin.Icon }}
-				{{ $message.Origin.Label }} &middot;
-				{{ $stream.AttributedTo.Name }} 
-				&nbsp;&middot;
+				{{ $message.Origin.Label }} 
+				{{- if $stream.AttributedTo.NotNil -}}
+					&middot;
+					{{ $stream.AttributedTo.Name }} 
+				{{- end -}}
 			</span>
 			<span class="nowrap">
-				{{ $stream.Published | tinyDate }}
+				&middot;
+				{{ $message.PublishDate | tinyDate }}
 			</span>
 		</div>
 		<div class="ellipsis-block margin-top-md" style="max-height:6em;">

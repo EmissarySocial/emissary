@@ -47,7 +47,7 @@
 		<div class="margin-top text-sm text-light-gray">
 
 			{{- $stats := $stream.Statistics -}}
-			{{- $stream.Published | tinyDate }} ago
+			{{- $message.PublishDate | tinyDate }} ago
 
 			{{ if gt $stats.Replies 0 -}}
 				&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
