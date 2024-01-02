@@ -2,8 +2,8 @@ package asnormalizer
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/hannibal/unit"
 	"github.com/benpate/hannibal/vocab"
 )
 
@@ -30,7 +30,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 
 	// Try to Normalize the document
 	if normalized := Normalize(result); normalized != nil {
-		result.SetValue(unit.Map(normalized))
+		result.SetValue(property.Map(normalized))
 	}
 
 	// Return the result
