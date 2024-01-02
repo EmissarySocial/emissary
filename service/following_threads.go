@@ -4,33 +4,25 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/sherlock"
 )
 
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
 func (service *Following) SaveMessage(following *model.Following, document streams.Document) error {
 
-	const location = "service.Following.saveMessage"
-
-	// Traverse JSON-LD documents if necessary
-	object := document.UnwrapActivity()
-
-	// Load and refine the document from its actual URL
-	object, _ = service.activityStreams.Load(object.ID(), sherlock.WithDefaultValue(object.Map()))
+	const location = "service.Following.SaveMessage"
 
 	// Convert the document into a message (and traverse responses if necessary)
-	message, err := service.getMessage(following, object)
+	message, err := service.getMessage(following, document)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error converting document to message")
 	}
 
 	// Set the origin based on the original document (not the object of the message)
-	message.Origin = service.getOrigin(following, object)
+	message.Origin = service.getOrigin(following, document)
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
 	if err := service.saveUniqueMessage(message); err != nil {
@@ -46,28 +38,23 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 // If following.collapseThreads is FALSE, then this document will be converted into a message directly.
 func (service *Following) getMessage(following *model.Following, document streams.Document) (model.Message, error) {
 
-	// Try to load the document from the Interwebs
-	document, err := document.Load()
-
-	if err != nil {
-		return model.Message{}, derp.Wrap(err, "service.Following.getMessage", "Error loading document")
-	}
-
-	// Always follow Likes, Dislikes, and Announces to their source.
-	// Also, if we're collapsing threads, then also follow InReplyTo links.
 	nextDocument := streams.NilDocument()
 
 	switch document.Type() {
 
+	// Always follow Likes
 	case vocab.ActivityTypeLike:
 		nextDocument = document.Object()
 
+	// Always follow Dislikes
 	case vocab.ActivityTypeDislike:
 		nextDocument = document.Object()
 
+	// Always follow Announces
 	case vocab.ActivityTypeAnnounce:
 		nextDocument = document.Object()
 
+	// Follow InReplyTo links if we're collapsing threads
 	default:
 		if following.CollapseThreads {
 			if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
@@ -93,11 +80,11 @@ func (service *Following) getMessage(following *model.Following, document stream
 	result.Origin = service.getOrigin(following, document)
 	result.SocialRole = document.Type()
 	result.URL = document.ID()
-	result.Label = document.Name()
-	result.Summary = document.Summary()
-	result.ImageURL = document.Image().URL()
-	result.AttributedTo = convert.ActivityPubAttributedTo(document)
-	result.ContentHTML = document.Content()
+	// result.Label = document.Name()
+	// result.Summary = document.Summary()
+	// result.ImageURL = document.Image().URL()
+	// result.AttributedTo = convert.ActivityPubAttributedTo(document)
+	// result.ContentHTML = document.Content()
 	result.InReplyTo = document.InReplyTo().ID()
 
 	if publishDate := document.Published().Unix(); publishDate > 0 {

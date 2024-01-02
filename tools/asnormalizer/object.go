@@ -21,15 +21,33 @@ func Object(document streams.Document) map[string]any {
 
 	actorID := first(actual.Actor().ID(), document.Actor().ID())
 
-	return map[string]any{
+	result := map[string]any{
 		vocab.PropertyType:         actual.Type(),
 		vocab.PropertyID:           actual.ID(),
 		vocab.PropertyActor:        actorID,
 		vocab.PropertyAttributedTo: first(actual.AttributedTo().ID(), actorID),
+		vocab.PropertyName:         actual.Name(),
 		vocab.PropertyContext:      Context(document),
 		vocab.PropertyImage:        Image(actual.Image()),
 		vocab.PropertySummary:      actual.Summary(),
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
+		"x-original":               document.Value(),
 	}
+
+	if image := actual.Image(); image.NotNil() {
+		result[vocab.PropertyImage] = Image(image)
+	} else {
+		/* TODO: Mastodon images are presented as attachments.  Go figure.
+		for attachment := actual.Attachment(); attachment.NotNil(); attachment = attachment.Tail() {
+
+			if strings.HasPrefix(attachment.MediaType(), "image/") {
+				result[vocab.PropertyImage] = Image(attachment)
+				break
+			}
+		}
+		*/
+	}
+
+	return result
 }

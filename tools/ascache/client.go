@@ -108,7 +108,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
-		return result, derp.Wrap(err, "ascache.Client.LoadActor", "error loading document from inner client", uri)
+		return result, derp.Wrap(err, "ascache.Client.Load", "Error loading document from inner client", uri)
 	}
 
 	// Try to save the new value asynchronously

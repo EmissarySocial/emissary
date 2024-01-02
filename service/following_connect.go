@@ -72,16 +72,9 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 
 	const location = "service.Following.connect_LoadMessages"
 
-	// Import the actor's outbox and messages
-	outbox, err := actor.Outbox().Load()
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading outbox", actor))
-		return
-	}
-
 	// Create a channel from this outbox...
 	done := make(chan struct{})
+	outbox := actor.Outbox()
 	documentChan := collections.Documents(outbox, done)  // start reading documents from the outbox
 	documentChan = channel.Limit(12, documentChan, done) // Limit to last 12 documents
 	documents := channel.Slice(documentChan)             // Convert the channel into a slice
@@ -94,9 +87,18 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 	// Try to add each message into the database unitl done
 	for _, document := range documents {
 
+		// RULE: For RSS feeds, push this document down the stack once more, to:
+		// 1. Retrieve any extra data missing from an RSS feed
+		// 2. Guarantee that the document has been saved in our cache.
+		// nolint:errcheck -- It's okay to ignore errors because pages may exist
+		// in an RSS feed, but return an error to us right now. (e.g. CAPTCHAs)
+		if following.Method == model.FollowMethodPoll {
+			document, _ = document.Load(sherlock.WithDefaultValue(document.Map()))
+		}
+
 		// Try to save the document to the database.
 		if err := service.SaveMessage(following, document); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving document", document))
+			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", document.Value()))
 		}
 	}
 
