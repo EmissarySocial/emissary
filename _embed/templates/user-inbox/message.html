@@ -93,8 +93,6 @@
 			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.Href}}" class="circle-64">
-				{{- else -}}
-					<div class="circle-64"></div>
 				{{- end -}}
 				<div>
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
@@ -107,11 +105,13 @@
 	{{- end -}}
 
 	<div class="flex-row">
-		<div class="width-64 flex-shrink-0"></div>
+		{{- if $attributedTo.Icon.NotNil -}}
+			<div class="width-64 flex-shrink-0"></div>
+		{{- end -}}
 		<div class="flex-grow-1">
 					
 			{{- if ne "" $stream.Name -}}
-				<h1 class="margin-vertical-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+				<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 			{{- end -}}
 
 			<div class="content">
@@ -119,7 +119,7 @@
 				{{- $image := $stream.Image -}}
 				{{- if $image.NotNil -}}
 					<div class="margin-bottom">
-						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></span>
+						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
 					</div>
 				{{- end -}}
 
