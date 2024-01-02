@@ -34,7 +34,7 @@ html {
 h1 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 5);
-    line-height:calc(var(--rhythm) * 5);
+    line-height:calc(var(--rhythm) * 6);
     margin-top:calc(var(--rhythm) * 6);
     margin-bottom:calc(var(--rhythm) * 2);
     color:var(--heading-color);
@@ -43,7 +43,7 @@ h1 {
 h2 {
     font-weight:calc(var(--weight) + 100);
     font-size:calc(var(--rhythm) * 3);
-    line-height:calc(var(--rhythm) * 3);
+    line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm) * 4);
     margin-bottom:calc(var(--rhythm) * 2);
     color:var(--heading-color);
@@ -52,7 +52,7 @@ h2 {
 h3 {
     font-weight:calc(var(--weight) + 200);
     font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 3);
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 1);
     color:var(--heading-color);
