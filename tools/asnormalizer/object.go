@@ -26,6 +26,7 @@ func Object(document streams.Document) map[string]any {
 		vocab.PropertyID:           actual.ID(),
 		vocab.PropertyActor:        actorID,
 		vocab.PropertyAttributedTo: first(actual.AttributedTo().ID(), actorID),
+		vocab.PropertyInReplyTo:    actual.InReplyTo().ID(),
 		vocab.PropertyName:         actual.Name(),
 		vocab.PropertyContext:      Context(document),
 		vocab.PropertyImage:        Image(actual.Image()),
