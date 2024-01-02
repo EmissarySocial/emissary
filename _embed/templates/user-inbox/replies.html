@@ -27,7 +27,7 @@
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle-48"></div>
 				{{- else -}}
-					<img class="circle-48" src="{{$actor.Icon.URL}}">
+					<img class="circle-48" src="{{$actor.Icon.Href}}">
 				{{- end -}}
 			</div>
 
@@ -71,7 +71,7 @@
 				{{- end -}}
 
 				{{- if $object.Image.NotNil -}}
-					<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100-percent"></div>
+					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 				{{- end -}}
 			
 				<div>{{$object.Content | html}}</div>

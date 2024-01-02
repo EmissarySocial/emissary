@@ -6,8 +6,8 @@
 
 	<div class="flex-grow-0 flex-shrink-0 margin-right-md" style="width:160px;">
 		<div style="width:160px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
-			{{- if ne "" $stream.Image.URL -}}
-				<img src="{{$stream.Image.URL}}" loading="lazy" style="width:160px; max-height:160px; object-fit:cover;"/>
+			{{- if ne "" $stream.Image.Href -}}
+				<img src="{{$stream.Image.Href}}" loading="lazy" style="width:160px; max-height:160px; object-fit:cover;"/>
 			{{- end -}}
 		</div>
 	</div>

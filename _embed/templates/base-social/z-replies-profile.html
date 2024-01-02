@@ -4,7 +4,7 @@
 
 	<div class="flex-row">
 		<div>
-			<img class="circle-32" src="{{$actor.Icon.URL}}">
+			<img class="circle-32" src="{{$actor.Icon.Href}}">
 		</div>
 		<div>
 			<div>
@@ -13,7 +13,7 @@
 			</div>
 
 			{{- if .Image.NotNil -}}
-				<div><img src="{{.Image.URL}}" class="width-100-percent"></div>
+				<div><img src="{{.Image.Href}}" class="width-100-percent"></div>
 			{{- end -}}
 		
 			<div>{{.Content | html}}</div>

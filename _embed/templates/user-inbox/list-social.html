@@ -6,7 +6,7 @@
 <div class="flex-row">
 	<div class="width-32 margin-right-sm">
 		{{- if $attributedTo.Icon.NotNil -}}
-			<img src="{{$attributedTo.Icon.URL}}" class="circle-32">
+			<img src="{{$attributedTo.Icon.Href}}" class="circle-32">
 		{{- else -}}
 			<div class="circle-32"></div>
 		{{- end -}}
@@ -40,7 +40,7 @@
 
 		{{- if $stream.Image.NotNil -}}
 			<div class="margin-top" style="position:relative;">
-				<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+				<img src="{{$stream.Image.Href}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 			</div>
 		{{- end -}}
 

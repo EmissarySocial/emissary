@@ -16,7 +16,7 @@
 
 	<div class="flex-grow-0 flex-shrink-0" style="width:64px">
 		{{- if $stream.AttributedTo.Image.NotNil -}}
-			<img src="{{$stream.AttributedTo.Image.URL}}" class="circle-64">
+			<img src="{{$stream.AttributedTo.Image.Href}}" class="circle-64">
 		{{- else -}}
 			<div class="circle-64"></div>
 		{{- end -}}
@@ -43,9 +43,9 @@
 			{{- end -}}
 		</div>
 
-		{{- if ne $stream.Image.URL "" -}}
+		{{- if ne $stream.Image.Href "" -}}
 			<div class="margin-top" style="max-width:400px; max-height:400px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10); overflow:hidden;">
-				<img src="{{$stream.Image.URL}}" loading="lazy" style="object-fit:cover;"/>
+				<img src="{{$stream.Image.Href}}" loading="lazy" style="object-fit:cover;"/>
 			</div>
 		{{- end -}}
 
