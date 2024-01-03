@@ -1,8 +1,11 @@
 package service
 
 import (
+	"context"
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -14,8 +17,8 @@ import (
 
 // ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
 type ActivityStreams struct {
-	documentCollection data.Collection
-	innerClient        *ascache.Client
+	collection  data.Collection
+	innerClient *ascache.Client
 }
 
 /******************************************
@@ -28,9 +31,9 @@ func NewActivityStreams() ActivityStreams {
 }
 
 // Refresh updates the ActivityStreams service with new dependencies
-func (service *ActivityStreams) Refresh(innerClient *ascache.Client, documentCollection data.Collection) {
+func (service *ActivityStreams) Refresh(innerClient *ascache.Client, collection data.Collection) {
 	service.innerClient = innerClient
-	service.documentCollection = documentCollection
+	service.collection = collection
 }
 
 /******************************************
@@ -82,13 +85,13 @@ func (service *ActivityStreams) Delete(uri string) error {
 func (service *ActivityStreams) PurgeCache() error {
 
 	// NPE Check
-	if service.documentCollection == nil {
+	if service.collection == nil {
 		return derp.NewInternalError("service.ActivityStreams.PurgeCache", "Document Collection not initialized")
 	}
 
 	// Purge all expired Documents
 	criteria := exp.LessThan("expires", time.Now().Unix())
-	if err := service.documentCollection.HardDelete(criteria); err != nil {
+	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.ActivityStreams.PurgeCache", "Error purging documents")
 	}
 
@@ -105,7 +108,7 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 	const location = "service.ActivityStreams.QueryRelated"
 
 	// NPE Check
-	if service.documentCollection == nil {
+	if service.collection == nil {
 		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
@@ -143,6 +146,10 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 	return result, nil
 }
 
+func (service *ActivityStreams) SearchActors(queryString string) ([]model.ActorSummary, error) {
+	return queries.SearchActivityStreamActors(context.TODO(), service.collection, queryString)
+}
+
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
 func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, maxRows int) ([]streams.Document, error) {
 	return service.queryByRelation("Reply", inReplyTo, "before", maxDate, maxRows)
@@ -171,12 +178,12 @@ func (service *ActivityStreams) documentIterator(criteria exp.Expression, option
 	const location = "service.ActivityStreams.documentIterator"
 
 	// NPE Check
-	if service.documentCollection == nil {
+	if service.collection == nil {
 		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
-	// Forward request to documentCollection
-	return service.documentCollection.Iterator(criteria, options...)
+	// Forward request to collection
+	return service.collection.Iterator(criteria, options...)
 }
 
 // query reads from the database and returns a slice of streams.Document values
@@ -185,13 +192,13 @@ func (service *ActivityStreams) documentQuery(criteria exp.Expression, options .
 	const location = "service.ActivityStreams.documentQuery"
 
 	// NPE Check
-	if service.documentCollection == nil {
+	if service.collection == nil {
 		return nil, derp.NewInternalError(location, "Document Collection not initialized")
 	}
 
 	// Query the database
 	result := make([]ascache.CachedValue, 0)
-	if err := service.documentCollection.Query(&result, criteria, options...); err != nil {
+	if err := service.collection.Query(&result, criteria, options...); err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")
 	}
 

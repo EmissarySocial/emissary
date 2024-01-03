@@ -354,6 +354,10 @@ func (w Common) ActivityStream(url string) streams.Document {
 	return result
 }
 
+func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
+	return w._factory.ActivityStreams().SearchActors(search)
+}
+
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
 func (w Common) IsMe(url string) bool {
 	if user, err := w.getUser(); err == nil {
