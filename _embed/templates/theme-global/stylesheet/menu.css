@@ -1,6 +1,5 @@
 .menu {
 	color: var(--black);
-	background-color: var(--gray15);
 	min-width: 160px;
 
 	font-size:calc(var(--rhythm) * 2);
@@ -10,6 +9,7 @@
 	white-space: normal;
 }
 
+.menu > .menu-item,
 .menu > a,
 .menu > [role=link],
 .menu > [role=button] {
@@ -17,15 +17,21 @@
 	border-top: solid 1px var(--gray20);
 }
 
+.menu > .menu-item:first-child,
 .menu > a:first-child,
 .menu > [role=link]:first-child,
 .menu > [role=button]:first-child {
 	border-top: none;
 }
 
-.menu > a:hover,
-.menu > [role=link]:hover,
-.menu > [role=button]:hover {
+.menu:not(:has([aria-selected=true])) > .menu-item:hover,
+.menu:not(:has([aria-selected=true])) > a:hover,
+.menu:not(:has([aria-selected=true])) > [role=link]:hover,
+.menu:not(:has([aria-selected=true])) > [role=button]:hover,
+.menu > .menu-item[aria-selected=true],
+.menu > a[aria-selected=true],
+.menu > [role=link][aria-selected=true],
+.menu > [role=button][aria-selected=true] {
 	background-color: var(--button-primary-background-hover);
 	color: var(--button-primary-color-hover);
 }

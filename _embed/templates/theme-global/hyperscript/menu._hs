@@ -1,0 +1,76 @@
+behavior menu
+
+	init
+		log me
+
+	on mouseover(target)
+		if the target's classList does not contain "menu-item" then
+			exit
+		end
+		log the target
+		take [@aria-selected=true] from .menu-item for target
+	end
+
+	on htmx:afterSwap 
+		set selectNext to first <.menu-item /> in me
+		if selectNext is not null then
+			add [@aria-selected=true] to selectNext
+		end
+	end
+
+--	on keydown[key=="Tab"]
+--		set focusedElement to the first <:focus/>
+--
+--		if focusedElement is null then
+--			exit
+--		end
+--
+--		if event.shiftKey
+--			focus() the previous <[tabindex]/> from focusedElement within me with wrapping
+--		else
+--			focus() the next <[tabindex]/> from focusedElement within me with wrapping
+--		end
+--
+--		halt the event
+--	end
+
+	on keydown[key=='ArrowUp']
+		halt the event
+
+		set selected to the first <[aria-selected=true]/> in me
+		if selected is null then
+			set selectNext to last <.menu-item /> in me
+		else 
+			set menu to the first < .menu /> in me
+			set selectNext to the previous <.menu-item /> from selected within menu with wrapping
+		end
+
+		set items to <.menu-item /> in me
+		take [@aria-selected=true] from items for selectNext
+	end
+
+	on keydown[key=='ArrowDown']
+		halt the event
+
+		set selected to the first <[aria-selected=true]/> in me
+		if selected is null then
+			set selectNext to first <.menu-item /> in me
+		else 
+			set menu to the first < .menu /> in me
+			set selectNext to the next <.menu-item /> from selected within menu with wrapping
+		end
+
+		set items to <.menu-item /> in me
+		take [@aria-selected=true] from items for selectNext
+	end
+
+	on keydown[key=='Enter']
+		halt the event
+		set selected to the first <[aria-selected=true]/> in me
+
+		if selected is not null then
+			send click to selected
+		end
+	end
+
+end
