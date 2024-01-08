@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/sherlock"
 )
 
 // ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
@@ -147,7 +148,38 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 }
 
 func (service *ActivityStreams) SearchActors(queryString string) ([]model.ActorSummary, error) {
-	return queries.SearchActivityStreamActors(context.TODO(), service.collection, queryString)
+
+	const location = "service.ActivityStreams.SearchActors"
+
+	// If we think this is an address we can work with (because sherlock says so)
+	// the try to retrieve it directly.
+	if sherlock.IsValidAddress(queryString) {
+
+		// Try to load the actor directly from the Interwebs
+		if newActor, err := service.Load(queryString, sherlock.AsActor()); err == nil {
+
+			// If this is a valid, but (previously) unknown actor, then add it to the results
+			// This will also automatically get cached/crawled for next time.
+			result := []model.ActorSummary{{
+				ID:       newActor.ID(),
+				Type:     newActor.Type(),
+				Name:     newActor.Name(),
+				Icon:     newActor.Icon().Href(),
+				Username: newActor.PreferredUsername(),
+			}}
+
+			return result, nil
+		}
+	}
+
+	// Fall through means that we can't find a perfect match, so fall back to a full-text search
+	result, err := queries.SearchActivityStreamActors(context.TODO(), service.collection, queryString)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error querying database")
+	}
+
+	return result, nil
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.

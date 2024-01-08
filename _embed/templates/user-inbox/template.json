@@ -196,6 +196,18 @@
 
 		"following": {"step":"view-html", "file":"following"},
 		"following-list": {"step":"view-html", "file":"following-list"},
+		"following-search": {
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"following-search-results": {
+			"roles":["self"],
+			"step":"view-html"
+		},
 		"following-add":{
 			"roles":["self"],
 			"steps":[

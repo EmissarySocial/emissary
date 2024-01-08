@@ -23,16 +23,18 @@ func SearchActivityStreamActors(ctx context.Context, collection data.Collection,
 
 	// Build the query pipeline
 	pipeline := []bson.M{
-		{"$match": bson.M{"$text": bson.M{"$search": text}}, "isActor": true},
-		{"$project": bson.M{
-			"object.id":                "id",
-			"object.type":              "type",
-			"object.name":              "name",
-			"object.icon.href":         "icon",
-			"object.preferredUsername": "preferredUsername",
-		}},
+		{"$match": bson.M{"isActor": true, "$text": bson.M{"$search": text}}},
 		{"$sort": bson.M{"score": bson.M{"$meta": "textScore"}}},
 		{"$limit": 12},
+		{"$replaceWith": "$object"},
+		{"$project": bson.M{
+			"_id":      false,
+			"id":       true,
+			"type":     true,
+			"name":     true,
+			"icon":     "$icon.href",
+			"username": "$preferredUsername",
+		}},
 	}
 
 	// Execute the query and return
