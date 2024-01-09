@@ -27,6 +27,20 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
+	case "block-behaviors":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "POSTS+REPLIES", Label: "Posts and Replies"},
+			form.LookupCode{Value: "POSTS", Label: "Posts Only (ignore replies)"},
+		)
+
+	case "block-blockActions":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "IGNORE", Label: "Do not import blocks from this source (display messages normally)"},
+			form.LookupCode{Value: "LABEL", Label: "LABEL CONTENT that is blocked by this source"},
+			form.LookupCode{Value: "MUTE", Label: "MUTE posts that are blocked by this source (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Label: "BLOCK everyone who is blocked by this source (two-way block)"},
+		)
+
 	case "block-types":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Label: "Block a Domain", Value: model.BlockTypeDomain},

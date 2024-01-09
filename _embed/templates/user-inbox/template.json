@@ -221,90 +221,118 @@
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
 				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-url":["url", "folderId"]},
-					{"step":"edit", "form":{
-						"type":"layout-vertical",
-						"xlabel":"Follow a Person or Website",
-						"children": [
-							{
-								"type":"hidden",
-								"label":"Fediverse Address or Website URL",
-								"path":"url",
-								"description":"Enter the URL of the website you want to subscribe to."
-							},
-							{
-								"type":"select",
-								"label":"Folder",
-								"path":"folderId",
-								"options":{"provider": "folders"},
-								"description": "Automatically add items to this folder."
-							},
-							{
-								"type":"toggle",
-								"label":"Group Threads",
-								"path":"collapseThreads",
-								"default":true,
-								"options":{"true-text":"Yes. Group threads into a single item.", "false-text":"Show all messages separately."}
-							}
-						]
-					}, "options":["submit-label:Follow this Source","saving-label:Following..."]}
+					{
+						"step":"set-data", 
+						"from-url":["url", "folderId"]
+					}, {
+						"step":"edit",
+						"options":["submit-label:Follow this Source","saving-label:Following..."],
+						"form":{
+							"type":"layout-vertical",
+							"children": [
+								{
+									"type":"hidden",
+									"path":"url"
+								},
+								{
+									"type":"select", 
+									"label":"Content to Show", 
+									"path":"behavior", 
+									"options":{"provider":"block-behaviors"}
+								},
+								{
+									"type":"select",
+									"label":"Folder",
+									"path":"folderId",
+									"options":{"provider": "folders"},
+									"description": "Automatically add items to this folder."
+								},
+								{
+									"type":"select", 
+									"label":"Shared Blocks", 
+									"path":"blockAction", 
+									"options":{"provider":"block-blockActions"}
+								},
+								{
+									"type":"toggle",
+									"path":"collapseThreads",
+									"default":true,
+									"options":{"true-text":"Group messages into a single thread", "false-text":"Show all messages separately"}
+								},
+								{
+									"type":"toggle",
+									"path":"isPublic",
+									"default":false,
+									"options":{"true-text":"Share this 'Follow' on my profile", "false-text":"Hide this 'Follow' from others"}
+								}
+							]
+						}
+					}
 				]},
 				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"following-edit":{
 			"roles":["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"with-following", "steps":[
+						{"step":"view-html"}
+					]}
+				]}
+			]
+		},
+		"following-edit-form":{
+			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
-					{"step":"as-modal", "steps":[
-						{"step":"edit", "options":"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", "form":{
-							"type": "layout-tabs",
-							"label":"Edit Source",
-							"children":[{
-								"type":"layout-vertical",
-								"label":"Settings",
-								"children": [
-									{
-										"type":"text",
-										"label":"Fediverse Address or Website URL",
-										"path":"url",
-										"description":"Enter the URL of the website you want to subscribe to."
-									},
-									{
-										"type":"select",
-										"label":"Folder",
-										"path":"folderId",
-										"options":{"provider": "folders"},
-										"description": "Automatically add items to this folder."
-									},
-									{
-										"type":"toggle",
-										"label":"Group Threads?",
-										"path":"collapseThreads",
-										"default":true,
-										"options":{"true-text":"Yes. Group messages into a single item.", "false-text":"Show all messages separately."}
-									}
-								]
-							}, {
-								"type":"layout-vertical",
-								"label":"Info",
-								"readOnly":true,
-								"children":[{
-									"type":"text",
-									"label":"Method",
-									"path":"method"
-								}, {
-									"type":"text",
-									"label":"Status",
-									"path":"status"
-								}, {
-									"type":"text",
-									"label":"Notes",
-									"path":"statusMessage"
-								}]
-							}]
-						}}
-					]}
+					{"step":"set-data", "from-url":["folderId"]},
+					{
+						"step":"edit", 
+						"options":[
+							"endpoint:/@me/inbox/following-edit-form?followingId={{.ObjectID}}",
+							"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", 
+							"delete-label:Stop Following"
+						], 
+						"form":{
+							"type":"layout-vertical",
+							"children": [
+								{
+									"type":"select", 
+									"label":"Content to Show", 
+									"path":"behavior", 
+									"hint": "Which messages from this source should show up in your timeline?",
+									"options":{"provider":"block-behaviors"}
+								},
+								{
+									"type":"select",
+									"label":"Folder",
+									"path":"folderId",
+									"options":{"provider": "folders"},
+									"description": "Automatically add items to this folder."
+								},
+								{
+									"type":"select", 
+									"label":"Follow Blocks", 
+									"path":"blockAction", 
+									"hint":"When this source blocks someone online, do you want to block them as well?",
+									"options":{"provider":"block-blockActions"}
+								},
+								{
+									"type":"toggle",
+									"path":"collapseThreads",
+									"default":true,
+									"options":{"true-text":"Group messages into a single thread", "false-text":"Show all messages separately"}
+								},
+								{
+									"type":"toggle",
+									"path":"isPublic",
+									"default":false,
+									"options":{"true-text":"Share this 'Follow' on my profile", "false-text":"Hide this 'Follow' from others"}
+								}
+							]
+						}
+					}
 				]},
 				{"step":"trigger-event", "event":"closeModal"},
 				{"step":"trigger-event", "event":"refreshPage"}

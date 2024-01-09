@@ -1,8 +1,5 @@
 behavior menu
 
-	init
-		log me
-
 	on mouseover(target)
 		if the target's classList does not contain "menu-item" then
 			exit
@@ -18,22 +15,6 @@ behavior menu
 			add [@aria-selected=true] to selectNext
 		end
 	end
-
---	on keydown[key=="Tab"]
---		set focusedElement to the first <:focus/>
---
---		if focusedElement is null then
---			exit
---		end
---
---		if event.shiftKey
---			focus() the previous <[tabindex]/> from focusedElement within me with wrapping
---		else
---			focus() the next <[tabindex]/> from focusedElement within me with wrapping
---		end
---
---		halt the event
---	end
 
 	on keydown[key=='ArrowUp']
 		halt the event

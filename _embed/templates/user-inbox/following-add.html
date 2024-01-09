@@ -21,58 +21,17 @@
 	<div>
 		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$stream.Name}}</div>
 		<div class="margin-vertical-none">
-			<span script="on click go to '{{$stream.ID}}' in new window" tabIndex="0" class="clickable text-light-gray" role="link">{{$stream.ID}}</span>
-			{{- if not $following.IsNew -}}
-				<span class="text-green bold margin-left-sm">{{icon "check-badge-fill"}} Following</span>
-			{{- end -}}
+			<a href="{{$stream.ID}}" target="_blank" class="clickable text-plain text-light-gray" role="link">{{$stream.ID}}</a>
 		</div>
 	</div>
 </div>
 
 <hr>
+{{- if $following.IsNew -}}
+	{{- .View "following-add-form" -}}
+{{- else -}}
 
-<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}">
-	<div class="layout layout-vertical text-sm">
-		<div class="layout-vertical-elements">
-			<div class="layout-vertical-heading">Follow Options</div>
-			<div class="layout-vertical-element">
-				<label>Content to Show</label>
-				<select name="behavior" tabIndex="0" script="install select(value:'{{$following.Behavior}}')">
-					<option value="POSTS+REPLIES">Posts and Replies</option>
-					<option value="POSTS">Posts Only (ignore replies)</option>
-				</select>
-			</div>
-			<div class="layout-vertical-element">
-				<label>Shared Blocks</label>
-				<select name="blockAction" tabIndex="0" script="install select(value:'{{$following.BlockAction}}')">
-					<option value="IGNORE">Display normally</option>
-					<option value="LABEL">Display a with a label</option>
-					<option value="MUTE">Mute messages from blocked sources</option>
-					<option value="BLOCK">Block all communication with blocked sources</option>
-				</select>
-			</div>
-			<div class="layout-vertical-heading">Behavior</div>
-			<div class="layout-vertical-element">
-				<span 
-					script="install toggle" 
-					name="collapseThreads" 
-					value="{{$following.CollapseThreads}}" 
-					true-text="Group messages into a single thread" 
-					false-text="Show all messages separately">
-				</span>
-			</div>
-			<div class="layout-vertical-element">
-				<span 
-					script="install toggle" 
-					name="isPublic" 
-					value="{{$following.IsPublic}}" 
-					true-text="Share this 'Follow' on my profile" 
-					false-text="Hidden this 'Follow' from others">
-				</span>
-			</div>
-		</div>
-	</div>
+	<div class="text-lg text-green bold margin-bottom">{{icon "check-badge-fill"}} You Are Following {{$stream.Name}}</div>
 
-	<button type="submit" class="primary">Follow this Source</button>
-	<button type="button" script="on click send closeModal">Cancel</button>
-</form>
+	{{- .View "following-edit-form" -}}
+{{- end -}}
