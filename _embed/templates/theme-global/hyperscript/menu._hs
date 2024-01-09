@@ -7,7 +7,8 @@ behavior menu
 		if the target's classList does not contain "menu-item" then
 			exit
 		end
-		log the target
+		
+		halt the event
 		take [@aria-selected=true] from .menu-item for target
 	end
 
@@ -64,10 +65,9 @@ behavior menu
 		take [@aria-selected=true] from items for selectNext
 	end
 
-	on keydown[key=='Enter']
+	on keyup[key=='Enter']
 		halt the event
 		set selected to the first <[aria-selected=true]/> in me
-
 		if selected is not null then
 			send click to selected
 		end
