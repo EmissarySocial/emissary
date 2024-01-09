@@ -124,13 +124,15 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	// Controls
 	b.Div()
 
+	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
+	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
+	deleteLabel := first.String(optionMap.GetString("delete-label"), "Delete")
+
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
-		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).Attr("hx-push-url", "false").InnerText("Delete").Close()
+		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).Attr("hx-push-url", "false").InnerText(deleteLabel).Close()
 		b.Space()
 	}
 
-	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
 	b.Button().Type("submit").Class("htmx-request-hide primary").InnerText(submitLabel).Close()
 	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerText(savingLabel).Close()
 
