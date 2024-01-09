@@ -42,10 +42,18 @@ func (service Icons) Get(name string) string {
 		return service.get("chat")
 	case "chat-fill":
 		return service.get("chat-fill")
+	case "check-badge":
+		return service.get("patch-check")
+	case "check-badge-fill":
+		return service.get("patch-check-fill")
 	case "check-circle":
 		return service.get("check-circle")
 	case "check-circle-fill":
 		return service.get("check-circle-fill")
+	case "check-shield":
+		return service.get("shield-check")
+	case "check-shield-fill":
+		return service.get("shield-check-fill")
 	case "chevron-left":
 		return service.get("chevron-left")
 	case "chevron-right":

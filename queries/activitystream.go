@@ -25,7 +25,7 @@ func SearchActivityStreamActors(ctx context.Context, collection data.Collection,
 	pipeline := []bson.M{
 		{"$match": bson.M{"isActor": true, "$text": bson.M{"$search": text}}},
 		{"$sort": bson.M{"score": bson.M{"$meta": "textScore"}}},
-		{"$limit": 12},
+		{"$limit": 6},
 		{"$replaceWith": "$object"},
 		{"$project": bson.M{
 			"_id":      false,

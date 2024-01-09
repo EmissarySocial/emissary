@@ -1,0 +1,78 @@
+{{- $search := .QueryParam "search" -}}
+{{- $url := .QueryParam "url" -}}
+{{- $stream := .ActivityStream $url -}}
+{{- $following := .AmFollowing $url -}}
+
+<div class="margin-bottom">
+	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal" script="on click log event on select log event">
+		&larr; Back to Search
+	</span>
+</div>
+
+<div class="flex-row flex-align-start margin-bottom-lg">
+	<div class="margin-top-sm">
+		{{- if $stream.Icon.NotNil -}}
+			<img src="{{$stream.Icon.Href}}" class="circle-64">
+		{{- else -}}
+			<div class="circle-64"></div>
+		{{- end -}}
+	</div>
+
+	<div>
+		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$stream.Name}}</div>
+		<div class="margin-vertical-none">
+			<span script="on click go to '{{$stream.ID}}' in new window" tabIndex="0" class="clickable text-light-gray" role="link">{{$stream.ID}}</span>
+			{{- if not $following.IsNew -}}
+				<span class="text-green bold margin-left-sm">{{icon "check-badge-fill"}} Following</span>
+			{{- end -}}
+		</div>
+	</div>
+</div>
+
+<hr>
+
+<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}">
+	<div class="layout layout-vertical text-sm">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-heading">Follow Options</div>
+			<div class="layout-vertical-element">
+				<label>Content to Show</label>
+				<select name="behavior" tabIndex="0" script="install select(value:'{{$following.Behavior}}')">
+					<option value="POSTS+REPLIES">Posts and Replies</option>
+					<option value="POSTS">Posts Only (ignore replies)</option>
+				</select>
+			</div>
+			<div class="layout-vertical-element">
+				<label>Shared Blocks</label>
+				<select name="blockAction" tabIndex="0" script="install select(value:'{{$following.BlockAction}}')">
+					<option value="IGNORE">Display normally</option>
+					<option value="LABEL">Display a with a label</option>
+					<option value="MUTE">Mute messages from blocked sources</option>
+					<option value="BLOCK">Block all communication with blocked sources</option>
+				</select>
+			</div>
+			<div class="layout-vertical-heading">Behavior</div>
+			<div class="layout-vertical-element">
+				<span 
+					script="install toggle" 
+					name="collapseThreads" 
+					value="{{$following.CollapseThreads}}" 
+					true-text="Group messages into a single thread" 
+					false-text="Show all messages separately">
+				</span>
+			</div>
+			<div class="layout-vertical-element">
+				<span 
+					script="install toggle" 
+					name="isPublic" 
+					value="{{$following.IsPublic}}" 
+					true-text="Share this 'Follow' on my profile" 
+					false-text="Hidden this 'Follow' from others">
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<button type="submit" class="primary">Follow this Source</button>
+	<button type="button" script="on click send closeModal">Cancel</button>
+</form>

@@ -12,7 +12,7 @@
 	<div class="text-light-gray margin-top">Found {{$resultCount}} {{pluralize $resultCount "result:" "results:"}}</div>
 	<div class="menu margin-top">
 		{{- range $results -}}
-			<div class="menu-item" role="button" tabIndex="0" hx-get="/@me/inbox/following-add?url={{.ID}}">
+			<div class="menu-item" role="button" tabIndex="0" hx-get="/@me/inbox/following-add?url={{.ID}}&search={{$search}}">
 				<div class="flex-row margin-vertical-sm">
 					{{- if ne "" .Icon -}}
 						<img src="{{.Icon}}" class="circle-32">

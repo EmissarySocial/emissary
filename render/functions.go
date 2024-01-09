@@ -144,6 +144,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(html.Minimal(value))
 		},
 
+		"attr": func(value string) template.HTMLAttr {
+			return template.HTMLAttr(value)
+		},
+
 		"css": func(value string) template.CSS {
 			return template.CSS(value)
 		},

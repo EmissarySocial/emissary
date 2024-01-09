@@ -208,40 +208,46 @@
 			"roles":["self"],
 			"step":"view-html"
 		},
-		"following-add":{
+		"following-add": {
+			"roles":["self"],
+			"steps": [
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"following-add-form":{
 			"roles":["self"],
 			"steps":[
 				{"step":"set-query-param", "followingId":"new"},
-				{"step":"as-modal", "background":"view", "steps":[
-					{"step":"with-following", "steps":[
-						{"step":"set-data", "from-url":["url", "folderId"]},
-						{"step":"edit", "form":{
-							"type":"layout-vertical",
-							"label":"Follow a Person or Website",
-							"children": [
-								{
-									"type":"text",
-									"label":"Fediverse Address or Website URL",
-									"path":"url",
-									"description":"Enter the URL of the website you want to subscribe to."
-								},
-								{
-									"type":"select",
-									"label":"Folder",
-									"path":"folderId",
-									"options":{"provider": "folders"},
-									"description": "Automatically add items to this folder."
-								},
-								{
-									"type":"toggle",
-									"label":"Group Threads",
-									"path":"collapseThreads",
-									"default":true,
-									"options":{"true-text":"Yes. Group threads into a single item.", "false-text":"Show all messages separately."}
-								}
-							]
-						}}
-					]}
+				{"step":"with-following", "steps":[
+					{"step":"set-data", "from-url":["url", "folderId"]},
+					{"step":"edit", "form":{
+						"type":"layout-vertical",
+						"xlabel":"Follow a Person or Website",
+						"children": [
+							{
+								"type":"hidden",
+								"label":"Fediverse Address or Website URL",
+								"path":"url",
+								"description":"Enter the URL of the website you want to subscribe to."
+							},
+							{
+								"type":"select",
+								"label":"Folder",
+								"path":"folderId",
+								"options":{"provider": "folders"},
+								"description": "Automatically add items to this folder."
+							},
+							{
+								"type":"toggle",
+								"label":"Group Threads",
+								"path":"collapseThreads",
+								"default":true,
+								"options":{"true-text":"Yes. Group threads into a single item.", "false-text":"Show all messages separately."}
+							}
+						]
+					}, "options":["submit-label:Follow this Source","saving-label:Following..."]}
 				]},
 				{"step":"trigger-event", "event":"refreshPage"}
 			]

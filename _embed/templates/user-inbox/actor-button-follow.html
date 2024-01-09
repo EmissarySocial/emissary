@@ -35,9 +35,9 @@
 					</div>
 					<div class="layout-vertical-element">
 						<select name="blockAction" script="install select(value:'{{$following.BlockAction}}')">
-							<option value="IGNORE">Shared Blocks: Ignore</option>
-							<option value="LABEL">Shared Blocks: Display a Label</option>
-							<option value="MUTE">Shared Blocks: Mute incomming messages</option>
+							<option value="IGNORE">Shared Blocks: Display normally</option>
+							<option value="LABEL">Shared Blocks: Display with a Label</option>
+							<option value="MUTE">Shared Blocks: Mute incoming messages</option>
 							<option value="BLOCK">Shared Blocks: Block all communication</option>
 						</select>
 					</div>
@@ -55,7 +55,7 @@
 							script="install toggle" 
 							name="isPublic" 
 							value="{{$following.IsPublic}}" 
-							true-text="Visible to others" 
+							true-text="Shown on my profile" 
 							false-text="Hidden from others">
 						</span>
 					</div>

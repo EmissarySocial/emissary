@@ -56,7 +56,7 @@ func NewFollowing() Following {
  ******************************************/
 
 // ID returns the primary key of this object
-func (following *Following) ID() string {
+func (following Following) ID() string {
 	return following.FollowingID.Hex()
 }
 
