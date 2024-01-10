@@ -16,9 +16,9 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div class="flex-row margin-bottom-lg hover-trigger">
+	<div role="link" class="flex-row margin-bottom-lg hover-trigger clickable" script="on click go to url '{{$object.ID}}'">
 
-		<div class="clickable margin-right-sm" script="on click go to url '{{$object.ID}}'">
+		<div class="margin-right-sm">
 			{{- if $actor.Icon.IsNil -}}
 				<div class="circle-48"></div>
 			{{- else -}}
@@ -26,7 +26,7 @@
 			{{- end -}}
 		</div>
 
-		<div class="clickable flex-grow-1" script="on click go to url '{{$object.ID}}'">
+		<div class="flex-grow-1">
 
 			<div class="margin-bottom-xs">
 				{{- if $actor.NotNil -}}
