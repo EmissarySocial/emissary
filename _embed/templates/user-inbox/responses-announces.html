@@ -27,14 +27,58 @@
 
 	<hr class="margin-top-sm"/>
 
-	<div class="margin-top">
-		{{- range $index, $announce := $announces -}}
-			<div>
-				{{$announce.Actor.Name}} | 
-				{{$announce.Actor.URL}} |
-				{{$announce.Actor.Image.Href}} |
-			</div>
-		{{- end -}}
-	</div>
+	{{- if lt $announces.Length 6 -}}
+
+		<div class="margin-top">
+	
+			{{- range $index, $announce := $announces -}}
+				{{- $icon := $announce.Actor.Icon -}}
+				<div hx-get="/@me/inbox/following-add?url={{$announce.Actor.ID}}" class="flex-row clickable" role="link">
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-48">
+						{{- else -}}
+							<div class="circle-48"></div>
+						{{- end -}}
+					</div>
+
+					<div>
+						<div class="bold">Liked by {{$announce.Actor.Name}}</div>
+						<div class="text-gray">on {{$announce.Published | shortDate}}</div>
+					</div>
+
+				</div>
+			{{- end -}}
+		</div>
+
+	{{- else -}}
+
+		<div class="margin-top flex-row flex-wrap">
+	
+			{{- $size := iif (lt $announces.Length 18) "32" "48" -}}	
+
+			{{- range $index, $announce := $announces -}}
+				{{- $icon := $announce.Actor.Icon -}}
+				<div hx-get="/@me/inbox/following-add?url={{$announce.Actor.ID}}" class="clickable tooltip-container" role="link">
+
+					<div class="tooltip align-left">
+						<div class="bold margin-vertical-xs">Liked by {{$announce.Actor.Name}}</div>
+						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
+					</div>
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-{{$size}}">
+						{{- else -}}
+							<div class="circle-{{$size}}"></div>
+						{{- end -}}
+					</div>
+				</div>
+			{{- end -}}
+
+		</div>
+
+	{{- end -}}
 
 </div>

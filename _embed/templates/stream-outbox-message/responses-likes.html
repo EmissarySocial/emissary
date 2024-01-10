@@ -25,14 +25,59 @@
 
 	<hr class="margin-top-sm"/>
 
-	<div class="margin-top">
-		{{- range $index, $like := $likes -}}
-			<div>
-				{{$like.Actor.Name}} | 
-				{{$like.Actor.URL}} |
-				{{$like.Actor.Image.Href}} |
-			</div>
-		{{- end -}}
-	</div>
+	{{- if lt $likes.Length 6 -}}
+
+		<div class="margin-top">
+
+			{{- range $index, $like := $likes -}}
+				{{- $icon := $like.Actor.Icon -}}
+				<div script="on click go to url '{{$like.Actor.ID}}' in new window" class="flex-row clickable" role="link">
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-48">
+						{{- else -}}
+							<div class="circle-48"></div>
+						{{- end -}}
+					</div>
+
+					<div>
+						<div class="bold">Liked by {{$like.Actor.Name}}</div>
+						<div class="text-gray">on {{$like.Published | shortDate}}</div>
+					</div>
+
+				</div>
+			{{- end -}}
+		
+		</div>
+
+	{{- else -}}
+
+		<div class="margin-top flex-row flex-wrap">
+			{{- $size := iif (lt $likes.Length 18) "32" "48" -}}	
+			
+			{{- range $index, $like := $likes -}}
+				{{- $icon := $like.Actor.Icon -}}
+				<div script="on click go to url '{{$like.Actor.ID}}' in new window" class="clickable tooltip-container" role="link">
+
+					<div class="tooltip align-left">
+						<div class="bold margin-vertical-xs">Liked by {{$like.Actor.Name}}</div>
+						<div class="text-gray margin-vertical-xs">on {{$like.Published | shortDate}}</div>
+					</div>
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-{{$size}}">
+						{{- else -}}
+							<div class="circle-{{$size}}"></div>
+						{{- end -}}
+					</div>
+				</div>
+
+			{{- end -}}
+
+		</div>
+
+	{{- end -}}
 
 </div>

@@ -451,9 +451,14 @@
 			"step":"view-html", 
 			"file":"blocks"
 		},
+
 		"profile": {
 			"roles":["self"],
-			"step":"view-html"
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
+				]}
+			]
 		},
 
 		"message": {

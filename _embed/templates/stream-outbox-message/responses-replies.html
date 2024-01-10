@@ -27,7 +27,7 @@
 
 	{{- if .UserCan "reply" -}}
 		<div class="flex-row">
-			<div>
+			<div class="flex-shrink-0">
 				{{- $userImage := .UserImage -}}
 				{{- if eq $userImage "" -}}
 					<div class="circle-48"></div>

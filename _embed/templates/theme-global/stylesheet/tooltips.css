@@ -2,8 +2,13 @@
 	position: relative;
 }
 
-#tooltip {
+.tooltip-container:hover .tooltip,
+.tooltip-container:focus .tooltip {
 	display:block;
+}
+
+.tooltip {
+	display:none;
 	position: absolute;
 	z-index:10000;
 	overflow:visible;
@@ -21,7 +26,7 @@
 	border-radius:8px;
 }
 
-#tooltip::before {
+.tooltip::before {
 	content: '';
 	position: absolute;
 	top: 100%;
@@ -31,13 +36,4 @@
 	border: 0.5em solid transparent;
 	border-top-color: var(--gray80);
 	transform: translate(-50%, 0);
-}
-
-#tooltip.closing {
-	animation-name:fadeOut;
-	animation-duration:50ms;
-	animation-timing-function: ease;
-
-	/* Hide after animation */
-	opacity:0;
 }

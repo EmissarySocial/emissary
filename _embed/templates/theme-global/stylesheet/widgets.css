@@ -1,6 +1,6 @@
-/****************************
+/******************************************
  * Card Widget Classes
- ****************************/
+ ******************************************/
 
 .card-group {
 	margin-right: -1px;
@@ -101,9 +101,9 @@
 	}
 }
 
-/****************************
+/******************************************
  * PICTURE/PHOTO FORMATTING
- ****************************/
+ ******************************************/
 
  picture {
 	display: block;
@@ -129,26 +129,6 @@ picture img {
 		margin-bottom: 20px;
 	}
 
-}
-
-.aspect-2-3 {
-	aspect-ratio:2/3;
-	overflow-y:hidden;
-}
-
-.aspect-4-3 {
-	aspect-ratio:4/3;
-	overflow-y:hidden;
-}
-
-.aspect-1-1 {
-	aspect-ratio:1;
-	overflow-y:hidden;
-}
-
-.aspect-16-9 {
-	aspect-ratio:16/9;
-	overflow-y:hidden;
 }
 
 /****************************************** 

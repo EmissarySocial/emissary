@@ -23,7 +23,7 @@
 	<div role="link" class="margin-top-xs">
 
 		<div class="flex-row">
-			<div hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
+			<div class="flex-shrink-0" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle-48"></div>
 				{{- else -}}

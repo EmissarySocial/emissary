@@ -3,11 +3,13 @@
 {{- $stream := .ActivityStream $url -}}
 {{- $following := .AmFollowing $url -}}
 
+{{- if ne "" $search -}}
 <div class="margin-bottom">
 	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal">
 		&larr; Back to Search
 	</span>
 </div>
+{{- end -}}
 
 <div class="flex-row flex-align-start margin-bottom-lg">
 	<div class="margin-top-sm">
