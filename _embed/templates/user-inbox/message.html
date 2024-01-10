@@ -9,15 +9,16 @@
 {{- $inReplyTo := $stream.InReplyTo -}}
 {{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 
+
 <div id="modal-header">
 
 	<div>
 		<div class="flex-row text-xs">
 
 			<div class="flex-grow-1">
-				<span class="button-group" script="install message(messageId:'{{$message.MessageID.Hex}}')">
-					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
+				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
+					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">
@@ -47,7 +48,7 @@
 
 	{{- if $inReplyTo.NotNil -}}
 		<div class="flex-row margin-bottom">
-			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
 				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
 			</div>
 		</div>
