@@ -4,7 +4,7 @@
 {{- $following := .AmFollowing $url -}}
 
 <div class="margin-bottom">
-	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal" script="on click log event on select log event">
+	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal">
 		&larr; Back to Search
 	</span>
 </div>
