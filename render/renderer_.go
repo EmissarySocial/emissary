@@ -28,7 +28,7 @@ type Renderer interface {
 	NavigationID() string                // ID of the Top-Level item to highlight in the navigation.
 	PageTitle() string                   // Human-friendly title to put at the top of the page.
 	Summary() string                     // Human-friendly summary to put at the top of the page (maybe)
-	Permalink() string                   // Permanent link to the stream being rendered
+	Permalink() string                   // Permanent link to the record being rendered
 	BasePath() string                    // URL Path of the root of this object, without any additional actions.
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page

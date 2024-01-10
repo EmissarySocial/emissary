@@ -42,12 +42,12 @@ func (service *ActivityStreams) Refresh(innerClient *ascache.Client, collection 
  ******************************************/
 
 // Load implements the Hannibal `Client` interface, and returns a streams.Document from the cache.
-func (service *ActivityStreams) Load(uri string, options ...any) (streams.Document, error) {
+func (service *ActivityStreams) Load(url string, options ...any) (streams.Document, error) {
 
 	const location = "service.ActivityStreams.Load"
 
-	if uri == "" {
-		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", uri)
+	if url == "" {
+		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", url)
 	}
 
 	// NPE Check
@@ -56,10 +56,10 @@ func (service *ActivityStreams) Load(uri string, options ...any) (streams.Docume
 	}
 
 	// Forward request to inner client
-	result, err := service.innerClient.Load(uri, options...)
+	result, err := service.innerClient.Load(url, options...)
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", uri)
+		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", url)
 	}
 
 	result.WithOptions(streams.WithClient(service))
@@ -67,12 +67,12 @@ func (service *ActivityStreams) Load(uri string, options ...any) (streams.Docume
 }
 
 // Delete removes a single document from the database by its URL
-func (service *ActivityStreams) Delete(uri string) error {
+func (service *ActivityStreams) Delete(url string) error {
 
 	const location = "service.ActivityStreams.Delete"
 
-	if err := service.innerClient.Delete(uri); err != nil {
-		return derp.Wrap(err, location, "Error deleting document from cache", uri)
+	if err := service.innerClient.Delete(url); err != nil {
+		return derp.Wrap(err, location, "Error deleting document from cache", url)
 	}
 
 	return nil

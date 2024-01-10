@@ -367,19 +367,19 @@ func (w Common) IsMe(url string) bool {
 }
 
 // NotMe returns TRUE if the provided URI is NOT the ProfileURL of the current user
-func (w Common) NotMe(uri string) bool {
-	return !w.IsMe(uri)
+func (w Common) NotMe(url string) bool {
+	return !w.IsMe(url)
 }
 
 // IsFollowing returns TRUE if the curren user is following the
 // document at a specific URI (or the actor who created the document)
-func (w Common) GetFollowingID(uri string) string {
+func (w Common) GetFollowingID(url string) string {
 
 	followingService := w._factory.Following()
-	result, err := followingService.GetFollowingID(w.AuthenticatedID(), uri)
+	result, err := followingService.GetFollowingID(w.AuthenticatedID(), url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "render.Common.GetFollowingID", "Error getting following status", uri))
+		derp.Report(derp.Wrap(err, "render.Common.GetFollowingID", "Error getting following status", url))
 		return ""
 	}
 

@@ -100,9 +100,15 @@ func (w Inbox) BasePath() string {
 }
 
 func (w Inbox) Permalink() string {
+
+	if message := w.Message(); !message.IsNew() {
+		return message.URL
+	}
+
 	if url := w._request.URL.Query().Get("url"); url != "" {
 		return url
 	}
+
 	return w.Host() + "/@me/inbox"
 }
 
@@ -475,50 +481,50 @@ func (w Inbox) Message() model.Message {
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
-	w.SetQueryParam("uri", message.URL)
+	w.SetQueryParam("url", message.URL)
 	w.SetQueryParam("folderId", message.FolderID.Hex())
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
 }
 
-func (w Inbox) RepliesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
-	result, _ := activityStreamsService.QueryRepliesBeforeDate(uri, maxDate, maxRows)
+	result, _ := activityStreamsService.QueryRepliesBeforeDate(url, maxDate, maxRows)
 
 	return result
 }
 
-func (w Inbox) RepliesAfter(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 	minDate := convert.Int64(dateString)
 
 	activityStreamsService := w._factory.ActivityStreams()
-	result, _ := activityStreamsService.QueryRepliesAfterDate(uri, minDate, maxRows)
+	result, _ := activityStreamsService.QueryRepliesAfterDate(url, minDate, maxRows)
 
 	return result
 }
 
-func (w Inbox) AnnouncesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(uri, maxDate, maxRows)
+	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(url, maxDate, maxRows)
 
 	return result
 }
 
-func (w Inbox) LikesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryLikesBeforeDate(uri, maxDate, maxRows)
+	result, _ := activityStreamsService.QueryLikesBeforeDate(url, maxDate, maxRows)
 
 	return result
 }
 
-func (w Inbox) AmFollowing(uri string) model.Following {
+func (w Inbox) AmFollowing(url string) model.Following {
 
 	// Get following service and new following record
 	followingService := w._factory.Following()
@@ -531,13 +537,13 @@ func (w Inbox) AmFollowing(uri string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._user.UserID, uri, &following)
+	_ = followingService.LoadByURL(w._user.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
 }
 
-func (w Inbox) AmBlocking(blockType string, uri string) model.Block {
+func (w Inbox) AmBlocking(blockType string, url string) model.Block {
 
 	// Get following service and new following record
 	blockService := w._factory.Block()
@@ -550,7 +556,7 @@ func (w Inbox) AmBlocking(blockType string, uri string) model.Block {
 
 	// Retrieve block record. Discard errors
 	// nolint:errcheck
-	_ = blockService.LoadByTrigger(w._user.UserID, blockType, uri, &block)
+	_ = blockService.LoadByTrigger(w._user.UserID, blockType, url, &block)
 
 	// Return the (possibly empty) Block record
 	return block

@@ -498,7 +498,7 @@
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-args", "postTo":"/@me/inbox/reply?uri={{.Permalink}}"},
+				{"step":"set-args", "postTo":"/@me/inbox/reply?url={{.Permalink}}"},
 				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},

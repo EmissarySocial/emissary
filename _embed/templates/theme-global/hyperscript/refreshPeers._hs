@@ -8,7 +8,6 @@ behavior refreshPeers(id)
 		repeat for peer in <[data-peer=`${id}`]/>
 
 			if the peer is not me
-				log peer
 				send refresh to peer
 			end
 

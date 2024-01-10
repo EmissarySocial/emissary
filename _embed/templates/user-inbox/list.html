@@ -37,7 +37,6 @@
 			class="message turboclick"
 			style="max-width:640px;"
 			hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
-			hx-trigger="click"
 			hx-push-url="false"
 			tabIndex="0"
 			script="install listItem(messageId:'{{.MessageID.Hex}}')">

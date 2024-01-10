@@ -26,7 +26,7 @@
 		{{.View "replies"}}
 	</div>
 
-	{{- if .UserCan "embedded-reply" -}}
+	{{- if .UserCan "reply" -}}
 		<div class="flex-row">
 			<div>
 				{{- $userImage := .UserImage -}}
@@ -37,7 +37,7 @@
 				{{- end -}}
 			</div>
 			<div class="flex-grow-1">
-				{{.View "embedded-reply"}}
+				{{.View "reply"}}
 			</div>
 		</div>
 	{{- end -}}
