@@ -34,7 +34,7 @@
 			<div class="flex-grow-1" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 				{{- if $actor.NotNil -}}
 					<div class="bold">{{$actor.Name}}</div>
-					<div class="text-light-gray">@{{$actor.PreferredUsername}}</div>
+					<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
 				{{- end -}}
 			</div>
 

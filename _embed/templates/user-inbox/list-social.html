@@ -18,10 +18,8 @@
 			<div>
 				<span class="bold black">{{$attributedTo.Name}}</span>
 				<span class="text-light-gray nowrap flex-grow-1">
-					{{- if ne "" $attributedTo.PreferredUsername -}}
 						&middot;
-						@{{$attributedTo.PreferredUsername}}
-					{{- end -}}
+						{{$attributedTo.UsernameOrID}}
 				</span>
 			</div>
 		{{- end -}}

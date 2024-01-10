@@ -27,7 +27,7 @@
 			{{- if $attributedTo.NotNil -}}
 				<div class="margin-right-sm">
 					<span class="bold">{{$attributedTo.Name}}</span>
-					<span class="text-light-gray">@{{$attributedTo.PreferredUsername}}</span>
+					<span class="text-light-gray">{{$attributedTo.UsernameOrID}}</span>
 				</div>
 			{{- end -}}
 		</div>

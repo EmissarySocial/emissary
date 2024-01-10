@@ -24,11 +24,7 @@
 							<span class="bold">{{.Name}}</span>
 						</div>
 						<div class="text-light-gray text-sm ellipsis">
-							{{- if ne "" .Username -}}
-								@{{.Username}}
-							{{- else -}}
-								{{.ID}}
-							{{- end -}}
+								{{.UsernameOrID}}
 						</div>
 					</div>
 

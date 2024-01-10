@@ -22,9 +22,10 @@
 
 	<div>
 		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$stream.Name}}</div>
-		<div class="margin-vertical-none">
-			<a href="{{$stream.ID}}" target="_blank" class="clickable text-plain text-light-gray" role="link">{{$stream.ID}}</a>
+		<div class="margin-bottom">
+			<a href="{{$stream.ID}}" target="_blank" class="clickable text-plain text-gray" role="link">{{$stream.UsernameOrID}}</a>
 		</div>
+		<div>{{$stream.Summary}}</div>
 	</div>
 </div>
 

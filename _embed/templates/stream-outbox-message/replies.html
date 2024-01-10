@@ -44,7 +44,7 @@
 			{{- end -}}
 		
 			<div>{{$object.Content | html}}</div>
-			<div class="text-xs text-light-gray text-uppercase">
+			<div class="text-sm text-light-gray">
 				{{- if gt $statistics.Replies 0 -}}
 					<span class="margin-right-sm">
 						{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
