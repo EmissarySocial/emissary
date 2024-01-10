@@ -472,11 +472,6 @@
 			]
 		},
 
-		"responses-replies":{
-			"steps": [
-				{"step":"view-html"}
-			]
-		},
 		"responses-announces":{
 			"steps": [
 				{"step":"view-html"}
@@ -487,11 +482,16 @@
 				{"step":"view-html"}
 			]
 		},
-		"replies":{
+		"responses-replies":{
+			"steps": [
+				{"step":"view-html"}
+			]
+		},
+		"responses-replies-list":{
 			"roles":["self"],
 			"step":"view-html"
 		},
-		"replies-recursive":{
+		"responses-replies-recursive":{
 			"roles":["self"],
 			"step":"view-html"
 		},

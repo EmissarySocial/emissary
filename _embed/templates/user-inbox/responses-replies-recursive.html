@@ -39,7 +39,7 @@
 				hx-trigger="load">
 			</span>
 			{{- if $object.Actor.NotNil -}}
-				{{- if $renderer.IstMe $object.Actor.ID -}}
+				{{- if $renderer.IsMe $object.Actor.ID -}}
 					<span class="button" disabled>{{icon "more-horizontal"}}</span>
 				{{- else -}}
 					<span
