@@ -161,17 +161,16 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"isoDate": func(value any) string {
 
-			valueTime := convert.Time(value)
-			emptyTime := time.Time{}
-
-			if valueTime == emptyTime {
-				return ""
+			if valueTime, ok := convert.TimeOk(value, time.Time{}); ok {
+				return valueTime.Format(time.RFC3339)
 			}
 
-			return valueTime.Format(time.RFC3339)
+			return ""
 		},
 
-		"epochDate": convert.EpochDate,
+		"epochDate": func(value any) int64 {
+			return convert.Time(value).Unix()
+		},
 
 		"humanizeTime": func(value any) string {
 			valueTime := convert.Time(value)
