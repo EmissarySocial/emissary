@@ -481,8 +481,13 @@ func (w Inbox) Message() model.Message {
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
-	w.SetQueryParam("url", message.URL)
-	w.SetQueryParam("folderId", message.FolderID.Hex())
+	if url := w.QueryParam("url"); url == "" {
+		w.SetQueryParam("url", message.URL)
+	}
+
+	if folderID := w.QueryParam("folderId"); folderID == "" {
+		w.SetQueryParam("folderId", message.FolderID.Hex())
+	}
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
