@@ -31,7 +31,7 @@
 			<div class="margin-bottom-xs">
 				{{- if $actor.NotNil -}}
 					<span class="bold margin-right-xs">{{$actor.Name}}</span>
-					<span class="flex-grow-1 text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</span>
+					<span class="flex-grow-1 text-light-gray">{{ $object.Published | tinyDate}} ago</span>
 				{{- end -}}
 			</div>
 

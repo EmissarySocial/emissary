@@ -1,10 +1,5 @@
 {
 	"templateId":"base-social",
-	"bundles":{
-		"stylesheet":{
-			"content-type":"text/css"
-		}
-	},
 	"actions":{
 
 		"like-button": {
@@ -13,19 +8,6 @@
 				{"step":"set-response"},
 				{"step":"view-html", "method":"both"}
 			]
-		},
-
-		"response-button":{"step":"view-html", "file":"response-buton"},
-		"response-icons":{
-			"steps":[
-				{"step":"as-tooltip", "steps":[
-					{"step":"view-html"}
-				]}
-			]
-		},
-		
-		"xparent":{"step":"view-html"},
-		"xreplies-before":{"step":"view-html"},
-		"xreplies-after":{"step":"view-html"}
+		}
 	}
 }

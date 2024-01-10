@@ -31,7 +31,7 @@
 	"actions": {
 		"create":{
 			"steps": [
-				{"step":"edit-content", "file":"edit", "format":"HTML"},
+				{"step":"edit-content", "file":"create", "format":"HTML"},
 				{"step":"save"},
 				{"step":"upload-attachments"},
 				{"step":"set-thumbnail", "path":"imageUrl"},

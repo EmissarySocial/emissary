@@ -2,9 +2,9 @@
 {{- $statistics := $stream.Statistics -}}
 {{- $inReplyTo := .InReplyTo -}}
 
-<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
+<div class="page h-entry" hx-get="{{.Permalink}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
-<div class="page h-entry">
+	<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
 
 	{{- if $inReplyTo.NotNil -}}
 		{{- $attributedTo := $inReplyTo.AttributedTo -}}

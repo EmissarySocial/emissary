@@ -70,10 +70,10 @@
 			</div>
 
 			<div class="text-sm text-light-gray">
-				{{ $object.Published | epochDate | tinyDate}} ago
+				{{ $object.Published | tinyDate}} ago
 				{{- $stats := $stream.Statistics -}}
 
-				{{ if or true $stats.HasReplies }}
+				{{ if $stats.HasReplies }}
 					&middot;
 					<span 
 						role="link" 

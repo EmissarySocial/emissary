@@ -26,19 +26,4 @@
 		{{.View "replies"}}
 	</div>
 
-	{{- if .UserCan "reply" -}}
-		<div class="flex-row">
-			<div>
-				{{- $userImage := .UserImage -}}
-				{{- if eq $userImage "" -}}
-					<div class="circle-48"></div>
-				{{- else -}}
-					<img class="circle-48" src="{{$userImage}}">
-				{{- end -}}
-			</div>
-			<div class="flex-grow-1">
-				{{.View "reply"}}
-			</div>
-		</div>
-	{{- end -}}
 </div>
