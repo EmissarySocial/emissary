@@ -2,7 +2,6 @@ package ascache
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
@@ -10,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -212,19 +210,12 @@ func (client *Client) save(uri string, document streams.Document) {
 
 	// Otherwise, see if this is a "Reply"
 	default:
-		fmt.Println("----------------------")
 		unwrapped := document.UnwrapActivity()
-		fmt.Println("InReplyTo")
-		fmt.Println(unwrapped.InReplyTo().String())
 
 		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
 			cachedValue.RelationType = RelationTypeReply
 			cachedValue.RelationHref = inReplyTo.String()
 		}
-
-		spew.Dump("================================")
-		spew.Dump("cachedValue.RelationType = ", cachedValue.RelationType)
-		spew.Dump("cachedValue.RelationHref = ", cachedValue.RelationHref)
 	}
 
 	// Calculate caching rules
