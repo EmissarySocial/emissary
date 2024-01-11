@@ -20,6 +20,7 @@ func FollowingSchema() schema.Element {
 			"behavior":        schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
 			"blockAction":     schema.String{Enum: []string{FollowingBlockActionIgnore, BlockActionMute, BlockActionLabel, BlockActionBlock}, Default: BlockActionLabel, Required: true},
 			"collapseThreads": schema.Boolean{Default: null.NewBool(true)},
+			"isPublic":        schema.Boolean{Default: null.NewBool(false)},
 			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":          schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage":   schema.String{MaxLength: 1024},
