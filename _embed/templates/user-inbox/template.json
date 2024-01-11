@@ -317,7 +317,7 @@
 								},
 								{
 									"type":"select", 
-									"label":"Follow Blocks", 
+									"label":"Shared Blocks", 
 									"path":"blockAction", 
 									"hint":"When this source blocks someone online, do you want to block them as well?",
 									"options":{"provider":"block-blockActions"}
