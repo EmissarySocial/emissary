@@ -219,14 +219,17 @@
 		"following-add-form":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-query-param", "followingId":"new"},
 				{"step":"with-following", "steps":[
 					{
 						"step":"set-data", 
 						"from-url":["url", "folderId"]
 					}, {
 						"step":"edit",
-						"options":["submit-label:Follow this Source","saving-label:Following..."],
+						"options":[
+							"endpoint:/@me/inbox/following-add-form?followingId=new",
+							"submit-label:Follow this Source",
+							"saving-label:Following..."
+						],
 						"form":{
 							"type":"layout-vertical",
 							"children": [
@@ -269,6 +272,7 @@
 						}
 					}
 				]},
+				{"step":"trigger-event", "event":"closeModal"},
 				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
