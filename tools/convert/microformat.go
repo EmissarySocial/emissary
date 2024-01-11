@@ -13,22 +13,6 @@ func MicroformatToMessage(feed *microformats.Microformat, entry *microformats.Mi
 
 	// Get properties from entry
 	message.URL = MicroformatPropertyToString(entry, "url")
-	message.Label = MicroformatPropertyToString(entry, "name")
-	message.Summary = MicroformatPropertyToString(entry, "summary")
-
-	// Get photo from entry, then feed
-	if photoURL := MicroformatPropertyToString(entry, "photo"); photoURL != "" {
-		message.ImageURL = photoURL
-	} else if photoURL := MicroformatPropertyToString(feed, "photo"); photoURL != "" {
-		message.ImageURL = photoURL
-	}
-
-	// Get author from entry, then feed
-	if author := AnyToMicroformat(entry.Properties["author"]); author != nil {
-		message.SetAttributedTo(MicroformatToAuthor(author))
-	} else if author := AnyToMicroformat(feed.Properties["author"]); author != nil {
-		message.SetAttributedTo(MicroformatToAuthor(author))
-	}
 
 	// Get the publish date from the entry
 	if published := MicroformatPropertyToString(entry, "published"); published != "" {

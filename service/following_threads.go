@@ -22,7 +22,7 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 	}
 
 	// Set the origin based on the original document (not the object of the message)
-	message.Origin = service.getOrigin(following, document)
+	message.AddReference(service.getOrigin(following, document))
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
 	if err := service.saveUniqueMessage(message); err != nil {
@@ -77,7 +77,7 @@ func (service *Following) getMessage(following *model.Following, document stream
 	result := model.NewMessage()
 	result.UserID = following.UserID
 	result.FolderID = following.FolderID
-	result.Origin = service.getOrigin(following, document)
+	result.AddReference(service.getOrigin(following, document))
 	result.SocialRole = document.Type()
 	result.URL = document.ID()
 	// result.Label = document.Name()

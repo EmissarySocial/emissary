@@ -14,7 +14,6 @@ func OriginLinkSchema() schema.Element {
 			"followingId": schema.String{Format: "objectId"},
 			"label":       schema.String{MaxLength: 128},
 			"url":         schema.String{Format: "url"},
-			"profileUrl":  schema.String{Format: "url"},
 			"imageUrl":    schema.String{Format: "url"},
 		},
 	}
@@ -35,9 +34,6 @@ func (origin *OriginLink) GetPointer(name string) (any, bool) {
 
 	case "url":
 		return &origin.URL, true
-
-	case "profileUrl":
-		return &origin.ProfileURL, true
 
 	case "imageUrl":
 		return &origin.ImageURL, true

@@ -85,7 +85,7 @@ func (service *Block) FilterMessage(message *model.Message) error {
 
 	// Try to execute each block
 	for _, block := range activeBlocks {
-		if block.FilterByActorAndContent(message.Origin.URL, message.Label, message.Summary, message.ContentHTML) {
+		if block.FilterByActorAndContent(message.Origin.URL, "", "", "") { // message.Label, message.Summary, message.ContentHTML) {
 			return derp.NewValidationError("Actor blocked")
 		}
 	}

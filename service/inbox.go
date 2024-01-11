@@ -400,7 +400,7 @@ func (service *Inbox) SetMuted(userID primitive.ObjectID, uri string, muted bool
 	}
 
 	// Mark as Muted
-	message.Muted = muted
+	message.Status = model.MessageStatusMuted
 
 	// Save the message
 	if err := service.Save(message, "SetMuted"); err != nil {

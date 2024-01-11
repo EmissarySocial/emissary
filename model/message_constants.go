@@ -1,18 +1,17 @@
 package model
 
-// InboxMessageStateReceived represents an inbox message that has been received, but has not yet passed through any block filters.
-// "Received" messages are not visible to users
-const InboxMessageStateReceived = "RECEIVED"
+// MessageStatusNew labels a message that has been received but not yet read by its owner
+const MessageStatusUnread = "UNREAD"
 
-// InboxMessageStateVisible represents an inbox message that has been received and passed through all block filters.
-// "Visible" messages are visible to users in their designated inbox folders.
-const InboxMessageStateVisible = "VISIBLE"
+// MessageStatusRead labels a message that has been read by its owner. If additional
+// replies are recieved for this message, it will be re-displayed in their inbox.
+const MessageStatusRead = "READ"
 
-// InboxMessageStateMuted represents an inbox message that has been muted by the user's block settings.
-// "Muted" messages are visible to users in a special folder, but are not visible in the main inbox.
-const InboxMessageStateMuted = "MUTED"
+// MessageStatusMuted labels a message that has been read by its owner and marked as "Muted".
+// If additional replies are received for this messages, it will NOT be re-displayed
+// in their inbox.
+const MessageStatusMuted = "MUTED"
 
-// InboxMessageStateBlocked represents an inbox message that has been blocked by the user's block settings.
-// "Blocked" messages should not be saved to the database, and should be discarded by the inbox service without
-// any feedback to the originating server.
-const InboxMessageStateBlocked = "BLOCKED"
+// MessageStatusNewReplies labels a message that has been read by its owner, and is now being
+// re-displayed in their inbox because new replies have been received.
+const MessageStatusNewReplies = "NEW-REPLIES"

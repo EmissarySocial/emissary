@@ -24,6 +24,7 @@ func MessageSchema() schema.Element {
 			"contentHtml":  schema.String{Format: "html"},
 			"responses":    ResponseSummarySchema(),
 			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
+			"status":       schema.String{Enum: []string{MessageStatusUnread, MessageStatusRead, MessageStatusMuted, MessageStatusNewReplies}},
 			"publishDate":  schema.Integer{BitSize: 64},
 			"readDate":     schema.Integer{BitSize: 64},
 			"rank":         schema.Integer{BitSize: 64},
@@ -50,29 +51,17 @@ func (message *Message) GetPointer(name string) (any, bool) {
 	case "url":
 		return &message.URL, true
 
-	case "label":
-		return &message.Label, true
-
-	case "summary":
-		return &message.Summary, true
-
-	case "imageUrl":
-		return &message.ImageURL, true
-
-	case "attributedTo":
-		return &message.AttributedTo, true
-
 	case "inReplyTo":
 		return &message.InReplyTo, true
-
-	case "contentHtml":
-		return &message.ContentHTML, true
 
 	case "responses":
 		return &message.Responses, true
 
 	case "myResponse":
 		return &message.MyResponse, true
+
+	case "status":
+		return &message.Status, true
 
 	case "publishDate":
 		return &message.PublishDate, true
