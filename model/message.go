@@ -103,13 +103,18 @@ func (message Message) NotRead() bool {
  * Write Methods
  ******************************************/
 
-// MarkRead sets the status of this Message to "READ"
+// MarkRead sets the status of this Message to "READ".
+// If the ReadDate is not already set, then it is set to the current time
 func (message *Message) MarkRead() {
 	message.Status = MessageStatusRead
-	message.ReadDate = time.Now().Unix()
+
+	if message.ReadDate == math.MaxInt64 {
+		message.ReadDate = time.Now().Unix()
+	}
 }
 
 // MarkUnread sets the status of this Message to "UNREAD"
+// ReadDate is cleared to MaxInt64
 func (message *Message) MarkUnread() {
 	message.Status = MessageStatusUnread
 	message.ReadDate = math.MaxInt64
@@ -121,6 +126,7 @@ func (message *Message) MarkMuted() {
 }
 
 // MarkNewReplies sets the status of this Message to "NEW-REPLIES"
+// ReadDate is cleared to MaxInt64
 func (message *Message) MarkNewReplies() {
 	message.Status = MessageStatusNewReplies
 	message.ReadDate = math.MaxInt64

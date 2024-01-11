@@ -45,7 +45,7 @@ func PostMessageMarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading message")
 		}
 
-		if err := inboxService.MarkRead(&message, true); err != nil {
+		if err := inboxService.MarkRead(&message); err != nil {
 			return derp.Wrap(err, location, "Error marking message read")
 		}
 

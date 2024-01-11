@@ -285,7 +285,12 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 		inboxService := factory.Inbox()
 		message := model.NewMessage()
 
-		if err := inboxService.SetMuted(auth.UserID, t.ID, true, &message); err != nil {
+		if err := inboxService.LoadByURL(auth.UserID, t.ID, &message); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
+		}
+
+		// Mark the message as Muted
+		if err := inboxService.MarkMuted(&message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error muting message")
 		}
 
@@ -311,7 +316,12 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 		inboxService := factory.Inbox()
 		message := model.NewMessage()
 
-		if err := inboxService.SetMuted(auth.UserID, t.ID, false, &message); err != nil {
+		if err := inboxService.LoadByURL(auth.UserID, t.ID, &message); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
+		}
+
+		// Mark the message as Muted
+		if err := inboxService.MarkUnmuted(&message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error muting message")
 		}
 

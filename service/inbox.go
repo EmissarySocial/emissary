@@ -346,7 +346,7 @@ func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) erro
 
 	message := model.NewMessage()
 	for it.Next(&message) {
-		if err := service.MarkRead(&message, true); err != nil {
+		if err := service.MarkRead(&message); err != nil {
 			return derp.Wrap(err, location, "Error marking message as read")
 		}
 	}
@@ -358,21 +358,102 @@ func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) erro
  * Custom Behaviors
  ******************************************/
 
-func (service *Inbox) MarkRead(message *model.Message, read bool) error {
+// MarkRead updates a message to "READ" status and recalculates statistics
+func (service *Inbox) MarkRead(message *model.Message) error {
 
 	const location = "service.Inbox.MarkRead"
 
-	// Update the ReadDate timestamp
-	if read {
-		message.ReadDate = time.Now().UnixMilli()
-	} else {
-		message.ReadDate = math.MaxInt64
+	// If the message status is already "READ" then there's nothing more to do
+	if message.Status == model.MessageStatusRead {
+		return nil
 	}
 
-	// Save the record to the database
-	if err := service.Save(message, "MarkRead"); err != nil {
+	// Update the model object
+	message.MarkRead()
+
+	// Save the message
+	if err := service.Save(message, "Update Status to "+message.Status); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
+
+	// Recalculate statistics
+	if err := service.recalculateUnreadCounts(message); err != nil {
+		return derp.Wrap(err, location, "Error recalculating unread counts")
+	}
+
+	// Lo hicimos!
+	return nil
+}
+
+// MarkRead updates a message to "UNREAD" status and recalculates statistics
+func (service *Inbox) MarkUnread(message *model.Message) error {
+
+	const location = "service.Inbox.MarkUnread"
+
+	// If the message status is already "UNREAD" then there's nothing more to do
+	if message.Status == model.MessageStatusUnread {
+		return nil
+	}
+
+	// Update the model object
+	message.MarkUnread()
+
+	// Save the message
+	if err := service.Save(message, "Update Status to "+message.Status); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Recalculate statistics
+	if err := service.recalculateUnreadCounts(message); err != nil {
+		return derp.Wrap(err, location, "Error recalculating unread counts")
+	}
+
+	return nil
+}
+
+func (service *Inbox) MarkMuted(message *model.Message) error {
+
+	const location = "service.Inbox.MarkMuted"
+
+	// If the message is already muted, then there's nothing to do
+	if message.Status == model.MessageStatusMuted {
+		return nil
+	}
+
+	// Mark as Muted
+	message.MarkMuted()
+
+	// Save the message
+	if err := service.Save(message, "Set Status to MUTED"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	return nil
+}
+
+func (service *Inbox) MarkUnmuted(message *model.Message) error {
+
+	const location = "service.Inbox.MarkMuted"
+
+	// If the message is already muted, then there's nothing to do
+	if message.Status == model.MessageStatusRead {
+		return nil
+	}
+
+	// Mark as Muted
+	message.MarkRead()
+
+	// Save the message
+	if err := service.Save(message, "Set Status to MUTED"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	return nil
+}
+
+func (service *Inbox) recalculateUnreadCounts(message *model.Message) error {
+
+	const location = "service.Inbox.recalculateUnreadCounts"
 
 	// Recalculate the "unread" count on the corresponding folder
 	unreadCount, err := service.CountUnreadMessages(message.UserID, message.FolderID)
@@ -387,26 +468,6 @@ func (service *Inbox) MarkRead(message *model.Message, read bool) error {
 	}
 
 	// Lo hicimos! we did it.
-	return nil
-}
-
-func (service *Inbox) SetMuted(userID primitive.ObjectID, uri string, muted bool, message *model.Message) error {
-
-	const location = "service.Inbox.SetMuted"
-
-	// Load the message
-	if err := service.LoadByURL(userID, uri, message); err != nil {
-		return derp.Wrap(err, location, "Error loading message")
-	}
-
-	// Mark as Muted
-	message.Status = model.MessageStatusMuted
-
-	// Save the message
-	if err := service.Save(message, "SetMuted"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
-	}
-
 	return nil
 }
 
@@ -432,6 +493,7 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 
 // CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
 func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
+
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID).
 		AndEqual("readDate", math.MaxInt64).
