@@ -9,25 +9,23 @@ import (
 func MessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"messageId":    schema.String{Format: "objectId"},
-			"userId":       schema.String{Format: "objectId"},
-			"folderId":     schema.String{Format: "objectId"},
-			"socialRole":   schema.String{MaxLength: 64},
-			"origin":       OriginLinkSchema(),
-			"references":   schema.Array{Items: OriginLinkSchema()},
-			"url":          schema.String{Format: "url"},
-			"label":        schema.String{MaxLength: 128},
-			"summary":      schema.String{MaxLength: 1024},
-			"imageUrl":     schema.String{Format: "url"},
-			"attributedTo": PersonLinkSchema(),
-			"inReplyTo":    schema.String{Format: "url"},
-			"contentHtml":  schema.String{Format: "html"},
-			"responses":    ResponseSummarySchema(),
-			"myResponse":   schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
-			"status":       schema.String{Enum: []string{MessageStatusUnread, MessageStatusRead, MessageStatusMuted, MessageStatusNewReplies}},
-			"publishDate":  schema.Integer{BitSize: 64},
-			"readDate":     schema.Integer{BitSize: 64},
-			"rank":         schema.Integer{BitSize: 64},
+			"messageId":   schema.String{Format: "objectId"},
+			"userId":      schema.String{Format: "objectId"},
+			"folderId":    schema.String{Format: "objectId"},
+			"socialRole":  schema.String{MaxLength: 64},
+			"origin":      OriginLinkSchema(),
+			"references":  schema.Array{Items: OriginLinkSchema()},
+			"url":         schema.String{Format: "url"},
+			"label":       schema.String{MaxLength: 128},
+			"summary":     schema.String{MaxLength: 1024},
+			"imageUrl":    schema.String{Format: "url"},
+			"inReplyTo":   schema.String{Format: "url"},
+			"contentHtml": schema.String{Format: "html"},
+			"myResponse":  schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
+			"status":      schema.String{Enum: []string{MessageStatusUnread, MessageStatusRead, MessageStatusMuted, MessageStatusNewReplies}},
+			"publishDate": schema.Integer{BitSize: 64},
+			"readDate":    schema.Integer{BitSize: 64},
+			"rank":        schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -53,9 +51,6 @@ func (message *Message) GetPointer(name string) (any, bool) {
 
 	case "inReplyTo":
 		return &message.InReplyTo, true
-
-	case "responses":
-		return &message.Responses, true
 
 	case "myResponse":
 		return &message.MyResponse, true

@@ -22,7 +22,6 @@ type Message struct {
 	References  sliceof.Object[OriginLink] `json:"references"   bson:"references,omitempty"`  // Links to other references to this Message - likes, reposts, or comments that informed us of its existence
 	URL         string                     `json:"url"          bson:"url"`                   // URL of this Message
 	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
-	Responses   ResponseSummary            `json:"responses"    bson:"responses,omitempty"`   // Summary counter of Responses to this Message
 	MyResponse  string                     `json:"myResponse"   bson:"myResponse,omitempty"`  // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
 	Status      string                     `json:"status"       bson:"status"`                // Status of this message (NEW,READ,MUTED,NEW-REPLIES)
 	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
@@ -36,7 +35,6 @@ type Message struct {
 func NewMessage() Message {
 	return Message{
 		MessageID:  primitive.NewObjectID(),
-		Responses:  NewResponseSummary(),
 		Origin:     NewOriginLink(),
 		References: sliceof.NewObject[OriginLink](),
 		Status:     MessageStatusUnread,
@@ -83,11 +81,49 @@ func (message Message) Roles(authorization *Authorization) []string {
 }
 
 /******************************************
- * Other Methods
+ * Read-only Methods
  ******************************************/
 
+// RankSeconds returns the rank of this Message in seconds (ignoring milliseconds)
 func (message Message) RankSeconds() int64 {
 	return message.Rank / 1000
+}
+
+// IsRead returns TRUE if this message has a valid ReadDate
+func (message Message) IsRead() bool {
+	return message.ReadDate < math.MaxInt64
+}
+
+// NotRead returns TRUE if this message does not have a valid ReadDate
+func (message Message) NotRead() bool {
+	return message.ReadDate == math.MaxInt64
+}
+
+/******************************************
+ * Write Methods
+ ******************************************/
+
+// MarkRead sets the status of this Message to "READ"
+func (message *Message) MarkRead() {
+	message.Status = MessageStatusRead
+	message.ReadDate = time.Now().Unix()
+}
+
+// MarkUnread sets the status of this Message to "UNREAD"
+func (message *Message) MarkUnread() {
+	message.Status = MessageStatusUnread
+	message.ReadDate = math.MaxInt64
+}
+
+// MarkMuted sets the status of this Message to "MUTED"
+func (message *Message) MarkMuted() {
+	message.Status = MessageStatusMuted
+}
+
+// MarkNewReplies sets the status of this Message to "NEW-REPLIES"
+func (message *Message) MarkNewReplies() {
+	message.Status = MessageStatusNewReplies
+	message.ReadDate = math.MaxInt64
 }
 
 // AddReference adds a new reference to this message, while attempting to prevent duplicates.
@@ -118,47 +154,9 @@ func (message *Message) AddReference(reference OriginLink) bool {
 	return true
 }
 
-// IsRead returns TRUE if this message has a valid ReadDate
-func (message Message) IsRead() bool {
-	return message.ReadDate < math.MaxInt64
-}
-
-// NotRead returns TRUE if this message does not have a valid ReadDate
-func (message Message) NotRead() bool {
-	return message.ReadDate == math.MaxInt64
-}
-
+// SetMyResponse
 func (message *Message) SetMyResponse(responseType string) {
-
-	switch message.MyResponse {
-
-	case ResponseTypeLike:
-		decrement(&message.Responses.LikeCount)
-
-	case ResponseTypeDislike:
-		decrement(&message.Responses.DislikeCount)
-	}
-
 	message.MyResponse = responseType
-
-	switch message.MyResponse {
-
-	case ResponseTypeLike:
-		increment(&message.Responses.LikeCount)
-
-	case ResponseTypeDislike:
-		increment(&message.Responses.DislikeCount)
-	}
-}
-
-func decrement(value *int) {
-	if *value > 0 {
-		*value--
-	}
-}
-
-func increment(value *int) {
-	*value++
 }
 
 /******************************************
