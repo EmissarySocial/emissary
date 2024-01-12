@@ -478,6 +478,10 @@ func (w Inbox) Message() model.Message {
 		if len(result) > 0 {
 			message = result[0]
 		}
+
+		// Update the QueryString to reflect the "correct" message
+		w.SetQueryParam("messageId", message.ID())
+		w.SetQueryParam("sibling", "")
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
