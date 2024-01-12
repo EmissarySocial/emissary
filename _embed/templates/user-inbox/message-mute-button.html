@@ -1,7 +1,9 @@
 {{- $message := .Object -}}
 
 {{- if eq "MUTED" $message.StateID -}}
-	<button hx-post="/@me/inbox/message-unmute?messageId={{$message.ID}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="primary">{{icon "mute-fill"}} Mute Notifications</button>
+	<button hx-post="/@me/inbox/message-unmute?messageId={{$message.ID}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="selected">{{icon "mute-fill"}} Mute Notifications</button>
 {{- else -}}
 	<button hx-post="/@me/inbox/message-mute?messageId={{$message.ID}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">{{icon "mute"}} Mute Notifications</button>
 {{- end -}}
+
+[{{$message.StateID}}]

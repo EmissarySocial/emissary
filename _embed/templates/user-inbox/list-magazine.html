@@ -3,6 +3,17 @@
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 
 <div class="margin-bottom">
+
+	{{- if eq "NEW-REPLIES" $message.StateID -}}
+		<div class="bold italics text-green margin-bottom-sm">
+			{{icon "chat-fill"}} Received New Replies
+		</div>
+	{{- else if eq "MUTED" $message.StateID -}}
+		<div class="bold italics text-gray margin-bottom-sm">
+			{{icon "mute"}} Notifications Muted
+		</div>
+	{{- end -}}
+
 	<h2 class="black ellipsis">{{$stream.Name}}</h2>
 
 	{{- if $stream.HasImage -}}
