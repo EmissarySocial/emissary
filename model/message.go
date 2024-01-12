@@ -136,6 +136,11 @@ func (message *Message) MarkRead() bool {
 		return false
 	}
 
+	// "MUTED" is like "READ" but even more.  So don't go backwards from "MUTED"
+	if message.StateID == MessageStateMuted {
+		return false
+	}
+
 	// Update the stateID to "READ"
 	message.StateID = MessageStateRead
 
