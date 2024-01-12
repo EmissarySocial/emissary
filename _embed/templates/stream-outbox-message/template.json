@@ -40,7 +40,7 @@
 		},
 		"view": {
 			"steps":[
-				{"step":"set-data", "url-values":{"url":"{{.Permalink}}"}},
+				{"step":"set-query-param", "url":"{{.Permalink}}"},
 				{"step":"view-json"},
 				{"step":"view-html"}
 			]
