@@ -478,7 +478,8 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 	// Increment the counter (MOD 1000) so that we have precise ordering of messages
 	service.counter = (service.counter + 1) % 1000
 
-	message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
+	// message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
+	message.Rank = (message.PublishDate * 1000) + int64(service.counter)
 }
 
 // CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
