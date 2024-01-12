@@ -473,11 +473,51 @@
 				]}
 			]
 		},
+		"message-mute-button":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"view-html"}
+				]}
+			]
+		},
+		"message-mute":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"set-state", "state":"MUTED"},
+					{"step":"save"},
+					{"step":"view-html", "method":"both", "file":"message-mute-button"}
+				]}
+			]
+		},
+		"message-unmute":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"set-state", "state":"READ"},
+					{"step":"save"},
+					{"step":"view-html", "method":"both", "file":"message-mute-button"}
+				]}
+			]
+		},
 		"message-delete": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
-				{"step":"reload-page"}
+				{"step":"with-message", "steps":[
+					{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+					{"step":"reload-page"}
+				]}
+			]
+		},
+		"message-read":{
+			"roles":["self"],
+			"steps":[
+				{"step":"with-message", "steps":[
+					{"step":"set-state", "state":"READ"},
+					{"step":"save"},
+					{"step":"trigger-event", "event":"refreshSidebar"}
+				]}
 			]
 		},
 

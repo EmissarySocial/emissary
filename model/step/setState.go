@@ -4,13 +4,13 @@ import "github.com/benpate/rosetta/mapof"
 
 // SetState represents an action-step that can change a Stream's state
 type SetState struct {
-	StateID string
+	State string
 }
 
 func NewSetState(stepInfo mapof.Any) (SetState, error) {
 
 	return SetState{
-		StateID: stepInfo.GetString("state"),
+		State: stepInfo.GetString("state"),
 	}, nil
 }
 

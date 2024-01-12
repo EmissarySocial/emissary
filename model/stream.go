@@ -123,6 +123,14 @@ func (stream *Stream) GetSort(fieldName string) any {
 }
 
 /******************************************
+ * StateSetter Methods
+ ******************************************/
+
+func (stream *Stream) SetState(stateID string) {
+	stream.StateID = stateID
+}
+
+/******************************************
  * RoleStateEnumerator Methods
  ******************************************/
 

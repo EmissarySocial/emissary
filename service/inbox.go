@@ -363,13 +363,13 @@ func (service *Inbox) MarkRead(message *model.Message) error {
 
 	const location = "service.Inbox.MarkRead"
 
-	// Set "READ" status.  Continue if object was updated
+	// Set status to READ.  If the message was not changed, then exit
 	if isUpdated := message.MarkRead(); !isUpdated {
 		return nil
 	}
 
 	// Save the message
-	if err := service.Save(message, "Update Status to "+message.Status); err != nil {
+	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
@@ -387,20 +387,22 @@ func (service *Inbox) MarkUnread(message *model.Message) error {
 
 	const location = "service.Inbox.MarkUnread"
 
-	// Update the model object.  If successful, then save
-	if message.MarkUnread() {
-
-		// Save the message
-		if err := service.Save(message, "Update Status to "+message.Status); err != nil {
-			return derp.Wrap(err, location, "Error saving message")
-		}
-
-		// Recalculate statistics
-		if err := service.recalculateUnreadCounts(message); err != nil {
-			return derp.Wrap(err, location, "Error recalculating unread counts")
-		}
+	// Set status to UNREAD.  If the message was not changed, then exit
+	if isUpdated := message.MarkUnread(); !isUpdated {
+		return nil
 	}
 
+	// Save the message
+	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Recalculate statistics
+	if err := service.recalculateUnreadCounts(message); err != nil {
+		return derp.Wrap(err, location, "Error recalculating unread counts")
+	}
+
+	// Success
 	return nil
 }
 
@@ -408,13 +410,10 @@ func (service *Inbox) MarkMuted(message *model.Message) error {
 
 	const location = "service.Inbox.MarkMuted"
 
-	// If the message is already muted, then there's nothing to do
-	if message.Status == model.MessageStatusMuted {
+	// Set status to MUTED.  If the message is unchanged, then exit
+	if isUpdated := message.MarkMuted(); !isUpdated {
 		return nil
 	}
-
-	// Mark as Muted
-	message.MarkMuted()
 
 	// Save the message
 	if err := service.Save(message, "Set Status to MUTED"); err != nil {
@@ -428,19 +427,17 @@ func (service *Inbox) MarkUnmuted(message *model.Message) error {
 
 	const location = "service.Inbox.MarkMuted"
 
-	// If the message is already muted, then there's nothing to do
-	if message.Status == model.MessageStatusRead {
+	// Set status to READ (unmuted).  If the message is unchanged, then exit
+	if isUpdated := message.MarkRead(); !isUpdated {
 		return nil
 	}
-
-	// Mark as Muted
-	message.MarkRead()
 
 	// Save the message
 	if err := service.Save(message, "Set Status to MUTED"); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
+	// Success
 	return nil
 }
 

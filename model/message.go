@@ -23,7 +23,7 @@ type Message struct {
 	URL         string                     `json:"url"          bson:"url"`                   // URL of this Message
 	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
 	MyResponse  string                     `json:"myResponse"   bson:"myResponse,omitempty"`  // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
-	Status      string                     `json:"status"       bson:"status"`                // Status of this message (NEW,READ,MUTED,NEW-REPLIES)
+	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (NEW,READ,MUTED,NEW-REPLIES)
 	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	PublishDate int64                      `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
 	Rank        int64                      `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
@@ -37,13 +37,13 @@ func NewMessage() Message {
 		MessageID:  primitive.NewObjectID(),
 		Origin:     NewOriginLink(),
 		References: sliceof.NewObject[OriginLink](),
-		Status:     MessageStatusUnread,
+		StateID:    MessageStateUnread,
 		ReadDate:   math.MaxInt64,
 	}
 }
 
 func MessageFields() []string {
-	return []string{"_id", "userId", "socialRole", "origin", "url", "label", "summary", "imageUrl", "contentHtml", "attributedTo", "folderId", "publishDate", "rank", "responses", "myResponse", "status", "readDate", "createDate"}
+	return []string{"_id", "userId", "socialRole", "origin", "url", "label", "summary", "imageUrl", "contentHtml", "attributedTo", "folderId", "publishDate", "rank", "responses", "myResponse", "stateID", "readDate", "createDate"}
 }
 
 func (summary Message) Fields() []string {
@@ -103,18 +103,41 @@ func (message Message) NotRead() bool {
  * Write Methods
  ******************************************/
 
-// MarkRead sets the status of this Message to "READ".
+// SetState implements the model.StateSetter interface, and
+// updates the message.StateID by wrapping the MarkXXX() methods.
+// This method is primarily used by HTML templates in the
+// render pipeline.  Services and handlers written in Go should
+// probably use MarkRead(), MarkUnread(), etc. directly.
+func (message *Message) SetState(stateID string) {
+
+	switch stateID {
+
+	case MessageStateRead:
+		message.MarkRead()
+
+	case MessageStateUnread:
+		message.MarkUnread()
+
+	case MessageStateMuted:
+		message.MarkMuted()
+
+	case MessageStateNewReplies:
+		message.MarkNewReplies()
+	}
+}
+
+// MarkRead sets the stateID of this Message to "READ".
 // If the ReadDate is not already set, then it is set to the current time.
 // This function returns TRUE if the value was changed
 func (message *Message) MarkRead() bool {
 
-	// If the message status is already "READ" then there's nothing more to do
-	if message.Status == MessageStatusRead {
+	// If the message stateID is already "READ" then there's nothing more to do
+	if message.StateID == MessageStateRead {
 		return false
 	}
 
-	// Update the status to "READ"
-	message.Status = MessageStatusRead
+	// Update the stateID to "READ"
+	message.StateID = MessageStateRead
 
 	// Set the ReadDate if it is not already set
 	if message.ReadDate == math.MaxInt64 {
@@ -124,60 +147,60 @@ func (message *Message) MarkRead() bool {
 	return true
 }
 
-// MarkUnread sets the status of this Message to "UNREAD"
+// MarkUnread sets the stateID of this Message to "UNREAD"
 // ReadDate is cleared to MaxInt64
 // This function returns TRUE if the value was  changed
 func (message *Message) MarkUnread() bool {
 
-	// If the status is already "UNREAD" then no change is necessary.
-	if message.Status == MessageStatusUnread {
+	// If the stateID is already "UNREAD" then no change is necessary.
+	if message.StateID == MessageStateUnread {
 		return false
 	}
 
-	// Update the status and clear the ReadDate
-	message.Status = MessageStatusUnread
+	// Update the stateID and clear the ReadDate
+	message.StateID = MessageStateUnread
 	message.ReadDate = math.MaxInt64
 	return true
 }
 
-// MarkMuted sets the status of this Message to "MUTED"
+// MarkMuted sets the stateID of this Message to "MUTED"
 // This function returns TRUE if the value was  changed
 func (message *Message) MarkMuted() bool {
 
-	// If the status is already "MUTED" then no change is necessary
-	if message.Status == MessageStatusMuted {
+	// If the stateID is already "MUTED" then no change is necessary
+	if message.StateID == MessageStateMuted {
 		return false
 	}
 
-	// Update the status to "MUTED"
-	message.Status = MessageStatusMuted
+	// Update the stateID to "MUTED"
+	message.StateID = MessageStateMuted
 	return true
 }
 
-// MarkNewReplies sets the status of this Message to "NEW-REPLIES"
+// MarkNewReplies sets the stateID of this Message to "NEW-REPLIES"
 // ReadDate is cleared to MaxInt64
 // This function returns TRUE if the value was  changed
 func (message *Message) MarkNewReplies() bool {
 
-	// If the status is already "NEW-REPLIES" then no change is necessary
-	if message.Status == MessageStatusNewReplies {
+	// If the stateID is already "NEW-REPLIES" then no change is necessary
+	if message.StateID == MessageStateNewReplies {
 		return false
 	}
 
-	// If the status is "MUTED" then do not update this message
-	if message.Status == MessageStatusMuted {
+	// If the stateID is "MUTED" then do not update this message
+	if message.StateID == MessageStateMuted {
 		return false
 	}
 
-	// If the status is "UNREAD" then new replies have no affect.  It's still "UNREAD"
+	// If the stateID is "UNREAD" then new replies have no affect.  It's still "UNREAD"
 	// even though it's received new replies.
-	if message.Status == MessageStatusUnread {
+	if message.StateID == MessageStateUnread {
 		return false
 	}
 
-	// Basically, this state change only works when the status is "READ"
-	// If so, update to "NEW-REPLIES" status and clear the ReadDate
-	message.Status = MessageStatusNewReplies
+	// Basically, this state change only works when the stateID is "READ"
+	// If so, update to "NEW-REPLIES" stateID and clear the ReadDate
+	message.StateID = MessageStateNewReplies
 	message.ReadDate = math.MaxInt64
 	return true
 }
@@ -208,8 +231,8 @@ func (message *Message) AddReference(reference OriginLink) bool {
 	// And append the origin to the Reference list
 	message.References = append(message.References, reference)
 
-	// If this message status is "READ", then MarkNewReplies will
-	// update its status to "NEW-REPLIES".  Other status types
+	// If this message stateID is "READ", then MarkNewReplies will
+	// update its stateID to "NEW-REPLIES".  Other stateID types
 	// ("UNREAD", "MUTED") will be left unchanged.
 	message.MarkNewReplies()
 
@@ -226,7 +249,7 @@ func (message *Message) SetMyResponse(responseType string) {
  * Mastodon API
  ******************************************/
 
-// Toot returns this object represented as a toot status
+// Toot returns this object represented as a toot stateID
 func (message Message) Toot() object.Status {
 
 	return object.Status{

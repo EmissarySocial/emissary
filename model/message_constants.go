@@ -1,17 +1,17 @@
 package model
 
-// MessageStatusNew labels a message that has been received but not yet read by its owner
-const MessageStatusUnread = "UNREAD"
+// MessageStateNew labels a message that has been received but not yet read by its owner
+const MessageStateUnread = "UNREAD"
 
-// MessageStatusRead labels a message that has been read by its owner. If additional
+// MessageStateRead labels a message that has been read by its owner. If additional
 // replies are recieved for this message, it will be re-displayed in their inbox.
-const MessageStatusRead = "READ"
+const MessageStateRead = "READ"
 
-// MessageStatusMuted labels a message that has been read by its owner and marked as "Muted".
+// MessageStateMuted labels a message that has been read by its owner and marked as "Muted".
 // If additional replies are received for this messages, it will NOT be re-displayed
 // in their inbox.
-const MessageStatusMuted = "MUTED"
+const MessageStateMuted = "MUTED"
 
-// MessageStatusNewReplies labels a message that has been read by its owner, and is now being
+// MessageStateNewReplies labels a message that has been read by its owner, and is now being
 // re-displayed in their inbox because new replies have been received.
-const MessageStatusNewReplies = "NEW-REPLIES"
+const MessageStateNewReplies = "NEW-REPLIES"

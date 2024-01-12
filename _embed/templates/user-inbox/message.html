@@ -29,6 +29,8 @@
 						<button disabled>Profile</button>
 					{{- end -}}
 					<button hx-get="/@me/inbox/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Follow Settings</button>
+
+					{{.View "message-mute-button"}}
 				</span>
 			</div>
 

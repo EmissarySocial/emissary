@@ -22,7 +22,7 @@ func MessageSchema() schema.Element {
 			"inReplyTo":   schema.String{Format: "url"},
 			"contentHtml": schema.String{Format: "html"},
 			"myResponse":  schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
-			"status":      schema.String{Enum: []string{MessageStatusUnread, MessageStatusRead, MessageStatusMuted, MessageStatusNewReplies}},
+			"stateId":     schema.String{Enum: []string{MessageStateUnread, MessageStateRead, MessageStateMuted, MessageStateNewReplies}},
 			"publishDate": schema.Integer{BitSize: 64},
 			"readDate":    schema.Integer{BitSize: 64},
 			"rank":        schema.Integer{BitSize: 64},
@@ -55,8 +55,8 @@ func (message *Message) GetPointer(name string) (any, bool) {
 	case "myResponse":
 		return &message.MyResponse, true
 
-	case "status":
-		return &message.Status, true
+	case "stateId":
+		return &message.StateID, true
 
 	case "publishDate":
 		return &message.PublishDate, true

@@ -172,6 +172,16 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
+func (w Model) setState(stateID string) error {
+
+	if setter, ok := w._object.(model.StateSetter); ok {
+		setter.SetState(stateID)
+		return nil
+	}
+
+	return derp.NewInternalError("render.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
+}
+
 func (w Model) clone(action string) (Renderer, error) {
 	return NewModel(w._factory, w._request, w._response, w._object, w._template, action)
 }
