@@ -102,13 +102,13 @@ func (following Following) Toot() object.Relationship {
  * Other Methods
  ******************************************/
 
-func (following *Following) Origin() OriginLink {
+func (following *Following) Origin(originType string) OriginLink {
 	return OriginLink{
 		FollowingID: following.FollowingID,
 		URL:         following.URL,
 		Label:       following.Label,
 		ImageURL:    following.ImageURL,
-		Type:        OriginTypeDirect,
+		Type:        originType,
 	}
 }
 

@@ -58,7 +58,7 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 		if common._authorization.IsAuthenticated() {
 			return Stream{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
 		} else {
-			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
+			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID))
 		}
 	}
 

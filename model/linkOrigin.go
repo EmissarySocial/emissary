@@ -38,7 +38,7 @@ func (origin OriginLink) Icon() string {
 
 	switch origin.Type {
 
-	case OriginTypeDirect:
+	case OriginTypePrimary:
 		return "user"
 
 	case OriginTypeReply:

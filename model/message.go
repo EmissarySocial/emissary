@@ -104,32 +104,82 @@ func (message Message) NotRead() bool {
  ******************************************/
 
 // MarkRead sets the status of this Message to "READ".
-// If the ReadDate is not already set, then it is set to the current time
-func (message *Message) MarkRead() {
+// If the ReadDate is not already set, then it is set to the current time.
+// This function returns TRUE if the value was changed
+func (message *Message) MarkRead() bool {
+
+	// If the message status is already "READ" then there's nothing more to do
+	if message.Status == MessageStatusRead {
+		return false
+	}
+
+	// Update the status to "READ"
 	message.Status = MessageStatusRead
 
+	// Set the ReadDate if it is not already set
 	if message.ReadDate == math.MaxInt64 {
 		message.ReadDate = time.Now().Unix()
 	}
+
+	return true
 }
 
 // MarkUnread sets the status of this Message to "UNREAD"
 // ReadDate is cleared to MaxInt64
-func (message *Message) MarkUnread() {
+// This function returns TRUE if the value was  changed
+func (message *Message) MarkUnread() bool {
+
+	// If the status is already "UNREAD" then no change is necessary.
+	if message.Status == MessageStatusUnread {
+		return false
+	}
+
+	// Update the status and clear the ReadDate
 	message.Status = MessageStatusUnread
 	message.ReadDate = math.MaxInt64
+	return true
 }
 
 // MarkMuted sets the status of this Message to "MUTED"
-func (message *Message) MarkMuted() {
+// This function returns TRUE if the value was  changed
+func (message *Message) MarkMuted() bool {
+
+	// If the status is already "MUTED" then no change is necessary
+	if message.Status == MessageStatusMuted {
+		return false
+	}
+
+	// Update the status to "MUTED"
 	message.Status = MessageStatusMuted
+	return true
 }
 
 // MarkNewReplies sets the status of this Message to "NEW-REPLIES"
 // ReadDate is cleared to MaxInt64
-func (message *Message) MarkNewReplies() {
+// This function returns TRUE if the value was  changed
+func (message *Message) MarkNewReplies() bool {
+
+	// If the status is already "NEW-REPLIES" then no change is necessary
+	if message.Status == MessageStatusNewReplies {
+		return false
+	}
+
+	// If the status is "MUTED" then do not update this message
+	if message.Status == MessageStatusMuted {
+		return false
+	}
+
+	// If the status is "UNREAD" then new replies have no affect.  It's still "UNREAD"
+	// even though it's received new replies.
+	if message.Status == MessageStatusUnread {
+		return false
+	}
+
+	// Basically, this state change only works when the status is "READ"
+	// If so, update to "NEW-REPLIES" status and clear the ReadDate
 	message.Status = MessageStatusNewReplies
 	message.ReadDate = math.MaxInt64
+	return true
 }
 
 // AddReference adds a new reference to this message, while attempting to prevent duplicates.
@@ -157,6 +207,13 @@ func (message *Message) AddReference(reference OriginLink) bool {
 
 	// And append the origin to the Reference list
 	message.References = append(message.References, reference)
+
+	// If this message status is "READ", then MarkNewReplies will
+	// update its status to "NEW-REPLIES".  Other status types
+	// ("UNREAD", "MUTED") will be left unchanged.
+	message.MarkNewReplies()
+
+	// Sucsess!!
 	return true
 }
 

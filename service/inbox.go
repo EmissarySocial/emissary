@@ -363,13 +363,10 @@ func (service *Inbox) MarkRead(message *model.Message) error {
 
 	const location = "service.Inbox.MarkRead"
 
-	// If the message status is already "READ" then there's nothing more to do
-	if message.Status == model.MessageStatusRead {
+	// Set "READ" status.  Continue if object was updated
+	if isUpdated := message.MarkRead(); !isUpdated {
 		return nil
 	}
-
-	// Update the model object
-	message.MarkRead()
 
 	// Save the message
 	if err := service.Save(message, "Update Status to "+message.Status); err != nil {
@@ -390,22 +387,18 @@ func (service *Inbox) MarkUnread(message *model.Message) error {
 
 	const location = "service.Inbox.MarkUnread"
 
-	// If the message status is already "UNREAD" then there's nothing more to do
-	if message.Status == model.MessageStatusUnread {
-		return nil
-	}
+	// Update the model object.  If successful, then save
+	if message.MarkUnread() {
 
-	// Update the model object
-	message.MarkUnread()
+		// Save the message
+		if err := service.Save(message, "Update Status to "+message.Status); err != nil {
+			return derp.Wrap(err, location, "Error saving message")
+		}
 
-	// Save the message
-	if err := service.Save(message, "Update Status to "+message.Status); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
-	}
-
-	// Recalculate statistics
-	if err := service.recalculateUnreadCounts(message); err != nil {
-		return derp.Wrap(err, location, "Error recalculating unread counts")
+		// Recalculate statistics
+		if err := service.recalculateUnreadCounts(message); err != nil {
+			return derp.Wrap(err, location, "Error recalculating unread counts")
+		}
 	}
 
 	return nil

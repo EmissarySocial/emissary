@@ -20,21 +20,21 @@ func PostMessageMarkRead(serverFactory *server.Factory) echo.HandlerFunc {
 		userID, err := authenticatedID(context)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error getting authenticated user ID")
+			return derp.Wrap(err, location, "You must be signed in to perform this action")
 		}
 
 		// Get the folder ID from the URL
 		messageID, err := primitive.ObjectIDFromHex(context.Param("message"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing folder ID", context.Param("message"))
+			return derp.Wrap(err, location, "Message ID must be a valid hexadecimal number", context.Param("message"))
 		}
 
 		// Get the factory for this domain
 		factory, err := serverFactory.ByContext(context)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error getting server factory")
+			return derp.Wrap(err, location, "Invalid server name")
 		}
 
 		// Try to mark the message as "read"

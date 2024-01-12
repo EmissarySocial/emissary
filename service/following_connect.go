@@ -97,7 +97,7 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		}
 
 		// Try to save the document to the database.
-		if err := service.SaveMessage(following, document); err != nil {
+		if err := service.SaveMessage(following, document, model.OriginTypePrimary); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", document.Value()))
 		}
 	}

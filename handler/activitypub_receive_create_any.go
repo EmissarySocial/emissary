@@ -13,10 +13,16 @@ func init() {
 	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, activityPub_CreateOrUpdate)
 }
 
-func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, document streams.Document) error {
+func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, activity streams.Document) error {
+
+	const location = "handler.activityPub_CreateOrUpdate"
+
+	// Load the actual document into the ActivityStream cache
+	object := activity.UnwrapActivity()
 
 	// Ignore these types of objects.
-	switch document.Object().Type() {
+	switch object.Type() {
+
 	case vocab.ObjectTypeRelationship,
 		vocab.ObjectTypeProfile,
 		vocab.ObjectTypePlace,
@@ -25,19 +31,26 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, docum
 		return nil
 	}
 
+	// Guarantee that we can load the object from the Interwebs.
+	object, err := object.Load()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading activity.Object")
+	}
+
+	// Verify that this message comes from a valid "Following" object.
 	followingService := factory.Following()
 	following := model.NewFollowing()
 
-	// Verify that this message comes from a "Following" object.  If not, we can cache it, but it won't become a message.
-	if err := followingService.LoadByURL(user.UserID, document.Actor().ID(), &following); err != nil {
-		_, _ = factory.ActivityStreams().Load(document.ID())
+	if err := followingService.LoadByURL(user.UserID, activity.Actor().ID(), &following); err != nil {
 		return nil
 	}
 
 	// Try to save the message to the database (with de-duplication)
-	if err := followingService.SaveMessage(&following, document); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, document.Object().ID())
+	if err := followingService.SaveMessage(&following, object, model.OriginTypePrimary); err != nil {
+		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, object.Value())
 	}
 
+	// Success!!
 	return nil
 }
