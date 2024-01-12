@@ -25,6 +25,11 @@
 		<div class="margin-bottom">
 			<a href="{{$stream.ID}}" target="_blank" class="clickable text-plain text-gray" role="link">{{$stream.UsernameOrID}}</a>
 		</div>
+
+		{{- if not $following.IsNew -}}
+			<div class="text-green bold">{{icon "check-badge-fill"}} Following</div>
+		{{- end -}}
+		
 		<div>{{$stream.Summary}}</div>
 	</div>
 </div>
@@ -33,8 +38,6 @@
 {{- if $following.IsNew -}}
 	{{- .View "following-add-form" -}}
 {{- else -}}
-
-	<div class="text-lg text-green bold margin-bottom">{{icon "check-badge-fill"}} You Are Following {{$stream.Name}}</div>
-
+	<div class="text-lg bold margin-bottom">Edit Settings</div>
 	{{- .View "following-edit-form" -}}
 {{- end -}}
