@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -91,16 +90,16 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	if client.IsReadable() && config.isCacheAllowed() {
 
 		// Search the cache for the document
-		cachedValue := NewCachedValue()
-		if err := client.loadByURI(uri, &cachedValue); err == nil {
+		value := NewValue()
+
+		if err := client.loadByURLs(uri, &value); err == nil {
 
 			// If we're allowed to write to the cache, then do it.
-			if client.IsWritable() && cachedValue.ShouldRevalidate() {
+			if client.IsWritable() && value.ShouldRevalidate() {
 				go client.revalidate(uri, options...)
 			}
 
-			result := client.asDocument(cachedValue)
-			return result, nil
+			return client.asDocument(value), nil
 		}
 	}
 
@@ -124,7 +123,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
  ******************************************/
 
 // Delete removes a single document from the cache
-func (client *Client) Delete(uri string) error {
+func (client *Client) Delete(url string) error {
 
 	const location = "ascache.Client.Delete"
 
@@ -134,7 +133,7 @@ func (client *Client) Delete(uri string) error {
 	}
 
 	// Look for the document in the cache
-	cachedValue, err := client.Load(uri)
+	value, err := client.Load(url)
 
 	// If there's nothing in the cache, then there's nothing to delete
 	if derp.NotFound(err) {
@@ -143,19 +142,19 @@ func (client *Client) Delete(uri string) error {
 
 	// Return actual errors to the caller
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading document", uri)
+		return derp.Wrap(err, location, "Error loading document", url)
 	}
 
 	// Delete the document from the cache
-	criteria := bson.M{"uri": uri}
+	criteria := bson.M{"urls": url}
 
 	if _, err := client.collection.DeleteOne(context.Background(), criteria); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error purging expired actors from cache"))
 	}
 
 	// Recalculate statistics
-	if err := client.calcStatistics(cachedValue); err != nil {
-		return derp.Wrap(err, location, "Error calculating statistics", uri)
+	if err := client.calcStatistics(value); err != nil {
+		return derp.Wrap(err, location, "Error calculating statistics", url)
 	}
 
 	// Success!
@@ -165,7 +164,7 @@ func (client *Client) Delete(uri string) error {
 // revalidate reloads a document from the source even if it has not yet expired.
 // This potentially updates the cache timeout value, keeping the document
 // fresh in the cache for longer.
-func (client *Client) revalidate(uri string, options ...any) {
+func (client *Client) revalidate(url string, options ...any) {
 
 	// If the client is not writable, then don't try to refresh the cache
 	if client.NotWritable() {
@@ -173,14 +172,14 @@ func (client *Client) revalidate(uri string, options ...any) {
 	}
 
 	// Pass the request to the inner client
-	log.Trace().Str("uri", uri).Msg("ascache.Client.revalidate")
-	if result, err := client.innerClient.Load(uri, options...); err == nil {
-		client.save(uri, result)
+	log.Trace().Str("url", url).Msg("ascache.Client.revalidate")
+	if result, err := client.innerClient.Load(url, options...); err == nil {
+		client.save(url, result)
 	}
 }
 
 // save adds/updates a document in the cache
-func (client *Client) save(uri string, document streams.Document) {
+func (client *Client) save(url string, document streams.Document) {
 
 	const location = "ascache.Client.save"
 
@@ -189,78 +188,70 @@ func (client *Client) save(uri string, document streams.Document) {
 		return
 	}
 
-	// Create a new cachedValue
-	cachedValue := NewCachedValue()
-	cachedValue.URI = uri
-	cachedValue.Object = document.Map()
-	cachedValue.HTTPHeader = document.HTTPHeader()
-	cachedValue.HTTPHeader.Set(headerHannibalCache, "true")
-	cachedValue.HTTPHeader.Set(headerHannibalCacheDate, time.Now().Format(time.RFC3339))
+	// Write to trace log
+	log.Trace().Str("url", url).Msg(location)
 
-	// RULE: Try to set the Relation Type and HREf
-	switch document.Type() {
-
-	// Announce, Like, and Dislike are written straight to the cache.
-	case vocab.ActivityTypeAnnounce,
-		vocab.ActivityTypeLike,
-		vocab.ActivityTypeDislike:
-
-		cachedValue.RelationType = document.Type()
-		cachedValue.RelationHref = document.Object().ID()
-
-	// Otherwise, see if this is a "Reply"
-	default:
-		unwrapped := document.UnwrapActivity()
-
-		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
-			cachedValue.RelationType = RelationTypeReply
-			cachedValue.RelationHref = inReplyTo.String()
-		}
-	}
-
-	// Calculate caching rules
-	cacheControl := cacheheader.Parse(cachedValue.HTTPHeader)
-
+	// Calculate caching rules and exit if cache is not allowed.
+	cacheControl := cacheheader.Parse(document.HTTPHeader())
 	if client.obeyHeaders && cacheControl.NotCacheAllowed() {
+		log.Trace().Str("url", url).Msg("Cache not allowed by HTTP headers. Skipping save method.")
 		return
 	}
 
-	cachedValue.calcPublished()
-	cachedValue.calcExpires(cacheControl)
-	cachedValue.calcRevalidates(cacheControl)
-	cachedValue.Received = time.Now().Unix()
+	// Try to load an existing/duplicate values using the object.id field.
+	// There may be multiple URLs that point to the same document, so we're
+	// doing this check HERE using the object.id field.
+	value := NewValue()
 
-	// Set Other Metadata
-	cachedValue.IsActor = document.IsActor()
-	cachedValue.IsObject = document.IsObject()
-	cachedValue.IsCollection = document.IsCollection()
+	if err := client.loadByID(document.ID(), &value); !derp.NilOrNotFound(err) {
+		derp.Report(derp.Wrap(err, location, "Error searching for duplicate document in cache", document))
+		return
+	}
+
+	// Add the document.id to the list of URLs (avoiding duplicates)
+	if !value.URLs.Contains(document.ID()) {
+		value.URLs.Append(document.ID())
+	}
+
+	// Create a new value
+	value.URLs = []string{url}
+	value.Object = document.Map()
+	value.HTTPHeader = document.HTTPHeader()
+	value.HTTPHeader.Set(HeaderHannibalCache, "true")
+	value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+	// Additional metadata
+	value.Received = time.Now().Unix()
+	value.calcPublished()
+	value.calcExpires(cacheControl)
+	value.calcRevalidates(cacheControl)
+	value.calcRelationType(document)
+	value.calcDocumentType(document)
 
 	// Try to upsert the document into the cache
-	filter := bson.M{"uri": uri}
-	update := bson.M{"$set": cachedValue}
+	filter := bson.M{"object.id": value.Object.GetString("id")}
+	update := bson.M{"$set": value}
 	queryOptions := options.Update().SetUpsert(true)
 
 	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error saving document to cache", document.ID()))
+		return
 	}
 
-	// Try to recalculate statistics of linked documents
+	// Finally, try to recalculate statistics of linked documents
 	if err := client.calcStatistics(document); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error calculating statistics", document.ID()))
 	}
-
-	// Write to log
-	log.Trace().Str("uri", uri).Msg("ascache.Client.save")
 }
 
-// asDocument converts a CachedValue into a fully-populated streams.Document
-func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
+// asDocument converts a Document into a fully-populated streams.Document
+func (client *Client) asDocument(value Value) streams.Document {
 
 	return streams.NewDocument(
-		cachedValue.Object,
+		value.Object,
 		streams.WithClient(client),
-		streams.WithStats(cachedValue.Statistics),
-		streams.WithHTTPHeader(cachedValue.HTTPHeader),
+		streams.WithStats(value.Statistics),
+		streams.WithHTTPHeader(value.HTTPHeader),
 	)
 }
 
@@ -268,23 +259,42 @@ func (client *Client) asDocument(cachedValue CachedValue) streams.Document {
  * Other Queries
  ******************************************/
 
-// loadByURI loads a CachedValue from the cache using its URI.
-func (client *Client) loadByURI(uri string, document *CachedValue) error {
+// load loads a Value from the cache using any criteria expression.
+func (client *Client) load(criteria bson.M, value *Value) error {
+
+	const location = "ascache.Client.load"
 
 	// Prevent NPE
 	if client.collection == nil {
-		return derp.NewInternalError("ascache.Client.loadByURI", "Cache connection is not defined")
+		return derp.NewInternalError(location, "Cache connection is not defined")
 	}
 
 	// Query the cache database
-	criteria := bson.M{"uri": uri}
-	if err := client.collection.FindOne(context.Background(), criteria).Decode(document); err != nil {
-		log.Trace().Str("uri", uri).Msg("ascache.Client.loadByURI: NOT FOUND")
-		return derp.Wrap(err, "ascache.Client.loadByURI", "Error loading document from cache", uri)
+	if err := client.collection.FindOne(context.Background(), criteria).Decode(value); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return derp.NewNotFoundError(location, "Document not found", criteria)
+		}
+		return derp.Wrap(err, location, "Error loading document", criteria)
 	}
 
 	// Success.
-	log.Trace().Str("uri", uri).Msg("ascache.Client.loadByURI: FOUND")
+	return nil
+}
+
+// loadByURLs loads a Value from the cache using its URL.
+// This value can match any of the URLs in the "urls" array.
+func (client *Client) loadByURLs(url string, value *Value) error {
+	if err := client.load(bson.M{"urls": url}, value); err != nil {
+		return derp.Wrap(err, "ascache.Client.loadByURLs", "Error loading document", url)
+	}
+	return nil
+}
+
+// loadByID loads a Value from the cache using its document.ID.
+func (client *Client) loadByID(id string, value *Value) error {
+	if err := client.load(bson.M{"object.id": id}, value); err != nil {
+		return derp.Wrap(err, "ascache.Client.loadByID", "Error loading document", id)
+	}
 	return nil
 }
 

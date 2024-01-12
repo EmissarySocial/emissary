@@ -14,11 +14,7 @@ import (
 func (client *Client) calcStatistics(document streams.Document) error {
 
 	// Guarantee that we have a usable document (and not just an ID)
-	document, err := document.Load()
-
-	if err != nil {
-		return derp.Wrap(err, "ascache.Client.calculateStats", "Error loading document", document)
-	}
+	document = document.LoadLink()
 
 	// First, inspect the document type to see if it's a relationship we can use
 	switch document.Type() {
@@ -76,8 +72,11 @@ func (client *Client) calcStatistics_inner(objectID string, relationType string)
 
 	// Count all documents in the cache with the same relation type/href
 	count, err := client.collection.CountDocuments(
-		context.Background(), // context
-		bson.M{"relationType": relationType, "relationHref": objectID}, // filter
+		context.Background(),
+		bson.M{
+			"metadata.relationType": relationType,
+			"metadata.relationHref": objectID,
+		},
 	)
 
 	if err != nil {
@@ -87,7 +86,7 @@ func (client *Client) calcStatistics_inner(objectID string, relationType string)
 	// Set likes in document statistics
 	_, err = client.collection.UpdateOne(
 		context.Background(),
-		bson.M{"uri": objectID}, // filter
+		bson.M{"urls": objectID}, // filter
 		bson.M{"$set": bson.M{fieldName: count}},
 	)
 

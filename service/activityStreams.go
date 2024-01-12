@@ -115,8 +115,8 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 
 	// Build the query
 	criteria := exp.
-		Equal("relationType", relationType).
-		AndEqual("relationHref", relationHref)
+		Equal("metadata.relationType", relationType).
+		AndEqual("metadata.relationHref", relationHref)
 
 	var sortOption option.Option
 
@@ -140,7 +140,7 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 		documents = slice.Reverse(documents)
 	}
 
-	result := slice.Map(documents, func(document ascache.CachedValue) streams.Document {
+	result := slice.Map(documents, func(document ascache.Value) streams.Document {
 		return streams.NewDocument(document.Object, streams.WithStats(document.Statistics), streams.WithClient(service))
 	})
 
@@ -219,7 +219,7 @@ func (service *ActivityStreams) documentIterator(criteria exp.Expression, option
 }
 
 // query reads from the database and returns a slice of streams.Document values
-func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) ([]ascache.CachedValue, error) {
+func (service *ActivityStreams) documentQuery(criteria exp.Expression, options ...option.Option) ([]ascache.Value, error) {
 
 	const location = "service.ActivityStreams.documentQuery"
 
@@ -229,7 +229,7 @@ func (service *ActivityStreams) documentQuery(criteria exp.Expression, options .
 	}
 
 	// Query the database
-	result := make([]ascache.CachedValue, 0)
+	result := make([]ascache.Value, 0)
 	if err := service.collection.Query(&result, criteria, options...); err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")
 	}
