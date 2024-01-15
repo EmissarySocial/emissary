@@ -29,9 +29,9 @@ type User struct {
 	collection        data.Collection
 	followers         data.Collection
 	following         data.Collection
-	blocks            data.Collection
+	rules             data.Collection
 	attachmentService *Attachment
-	blockService      *Block
+	ruleService       *Rule
 	emailService      *DomainEmail
 	keyService        *EncryptionKey
 	folderService     *Folder
@@ -50,14 +50,14 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, blockCollection data.Collection, attachmentService *Attachment, blockService *Block, emailService *DomainEmail, keyService *EncryptionKey, folderService *Folder, followerService *Follower, streamService *Stream, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, ruleService *Rule, emailService *DomainEmail, keyService *EncryptionKey, folderService *Folder, followerService *Follower, streamService *Stream, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
-	service.blocks = blockCollection
+	service.rules = ruleCollection
 
 	service.attachmentService = attachmentService
-	service.blockService = blockService
+	service.ruleService = ruleService
 	service.emailService = emailService
 	service.keyService = keyService
 	service.folderService = folderService
@@ -321,9 +321,9 @@ func (service *User) CalcFollowingCount(userID primitive.ObjectID) {
 	}
 }
 
-func (service *User) CalcBlockCount(userID primitive.ObjectID) {
-	if err := queries.SetBlockCount(service.collection, service.blocks, userID); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.CalcBlockCount", "Error setting block count", userID))
+func (service *User) CalcRuleCount(userID primitive.ObjectID) {
+	if err := queries.SetRuleCount(service.collection, service.rules, userID); err != nil {
+		derp.Report(derp.Wrap(err, "service.User.CalcRuleCount", "Error setting rule count", userID))
 	}
 }
 
@@ -551,20 +551,20 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers b
 }
 
 // TODO: MEDIUM: this function is wickedly inefficient
-func (service *User) QueryBlockedUsers(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
+func (service *User) QueryRuleedUsers(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
 
-	const location = "service.User.QueryBlockedUsers"
+	const location = "service.User.QueryRuleedUsers"
 
-	// Query all blocks
-	blocks, err := service.blockService.QueryActiveByUser(userID, model.BlockTypeActor)
+	// Query all rules
+	rules, err := service.ruleService.QueryActiveByUser(userID, model.RuleTypeActor)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error querying blocks")
+		return nil, derp.Wrap(err, location, "Error querying rules")
 	}
 
 	// Extract the blocked userIDs
-	blockedUserIDs := slice.Map(blocks, func(block model.Block) string {
-		return block.Trigger
+	blockedUserIDs := slice.Map(rules, func(rule model.Rule) string {
+		return rule.Trigger
 	})
 
 	// Query all users

@@ -23,16 +23,16 @@ func GetMutes(serverFactory *server.Factory) func(model.Authorization, txn.GetMu
 				return nil, derp.Wrap(err, location, "Invalid Domain")
 			}
 
-			blockService := factory.Block()
+			ruleService := factory.Rule()
 
-			// Locate Block for the Current User
-			blocks, err := blockService.QueryActiveByUser(auth.UserID, model.BlockTypeActor)
+			// Locate Rule for the Current User
+			rules, err := ruleService.QueryActiveByUser(auth.UserID, model.RuleTypeActor)
 
 			if err != nil {
-				return nil, derp.Wrap(err, location, "Error querying blocks")
+				return nil, derp.Wrap(err, location, "Error querying rules")
 			}
 
-			return getSliceOfToots[model.Block, object.Account](blocks), getPageInfo(blocks), nil
+			return getSliceOfToots[model.Rule, object.Account](rules), getPageInfo(rules), nil
 		*/
 		return []object.Account{}, toot.PageInfo{}, nil
 	}

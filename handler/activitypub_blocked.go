@@ -49,18 +49,18 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 		}
 
 		// Fallthrough means this is a request for a specific page
-		blockService := factory.Block()
+		ruleService := factory.Rule()
 		publishDate := convert.Int64(publishDateString)
 		pageSize := 60
-		blocks, err := blockService.QueryPublicBlocks(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
+		rules, err := ruleService.QueryPublicRules(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading blocks")
+			return derp.Wrap(err, location, "Error loading rules")
 		}
 
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		results := activityPub_CollectionPage(user.ActivityPubBlockedURL(), pageSize, blocks)
+		results := activityPub_CollectionPage(user.ActivityPubBlockedURL(), pageSize, rules)
 		return ctx.JSON(200, results)
 	}
 }
@@ -71,11 +71,11 @@ func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		// Collect BlockID from URL
-		blockID, err := primitive.ObjectIDFromHex(ctx.Param("block"))
+		// Collect RuleID from URL
+		ruleID, err := primitive.ObjectIDFromHex(ctx.Param("rule"))
 
 		if err != nil {
-			return derp.NewNotFoundError(location, "Invalid Block ID", err)
+			return derp.NewNotFoundError(location, "Invalid Rule ID", err)
 		}
 
 		// Validate the domain name
@@ -98,16 +98,16 @@ func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewNotFoundError(location, "User not found")
 		}
 
-		// Try to load the Block from the database
-		blockService := factory.Block()
-		block := model.NewBlock()
+		// Try to load the Rule from the database
+		ruleService := factory.Rule()
+		rule := model.NewRule()
 
-		if err := blockService.LoadByID(user.UserID, blockID, &block); err != nil {
-			return derp.Wrap(err, location, "Error loading block")
+		if err := ruleService.LoadByID(user.UserID, ruleID, &rule); err != nil {
+			return derp.Wrap(err, location, "Error loading rule")
 		}
 
-		// Return the block as JSON-LD
+		// Return the rule as JSON-LD
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		return ctx.JSON(http.StatusOK, block.GetJSONLD())
+		return ctx.JSON(http.StatusOK, rule.GetJSONLD())
 	}
 }

@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBlockSchema(t *testing.T) {
+func TestRuleSchema(t *testing.T) {
 
-	block := NewBlock()
-	s := schema.New(BlockSchema())
+	block := NewRule()
+	s := schema.New(RuleSchema())
 
 	table := []tableTestItem{
 		{"blockId", "123456781234567812345678", nil},
@@ -33,10 +33,10 @@ func TestBlockSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &block, table)
 }
 
-func TestBlock_FilterByActorEmail(t *testing.T) {
+func TestRule_FilterByActorEmail(t *testing.T) {
 
-	block := Block{
-		Type:    BlockTypeActor,
+	block := Rule{
+		Type:    RuleTypeActor,
 		Trigger: "john@connor.com",
 	}
 
@@ -45,10 +45,10 @@ func TestBlock_FilterByActorEmail(t *testing.T) {
 	require.False(t, block.FilterByActor("sara@sky.net"))
 }
 
-func TestBlock_FilterByActorURI(t *testing.T) {
+func TestRule_FilterByActorURI(t *testing.T) {
 
-	block := Block{
-		Type:    BlockTypeActor,
+	block := Rule{
+		Type:    RuleTypeActor,
 		Trigger: "https://connor.com/@john",
 	}
 
@@ -56,10 +56,10 @@ func TestBlock_FilterByActorURI(t *testing.T) {
 	require.False(t, block.FilterByActor("https://sky.net/@sarah"))
 }
 
-func TestBlock_FilterByDomain(t *testing.T) {
+func TestRule_FilterByDomain(t *testing.T) {
 
-	block := Block{
-		Type:    BlockTypeDomain,
+	block := Rule{
+		Type:    RuleTypeDomain,
 		Trigger: "connor.com",
 	}
 

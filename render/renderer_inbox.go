@@ -183,8 +183,8 @@ func (w Inbox) FollowingCount() int {
 	return w._user.FollowingCount
 }
 
-func (w Inbox) BlockCount() int {
-	return w._user.BlockCount
+func (w Inbox) RuleCount() int {
+	return w._user.RuleCount
 }
 
 func (w Inbox) DisplayName() string {
@@ -267,7 +267,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	return following, nil
 }
 
-func (w Inbox) Blocks() QueryBuilder[model.Block] {
+func (w Inbox) Rules() QueryBuilder[model.Rule] {
 
 	expressionBuilder := builder.NewBuilder()
 
@@ -276,28 +276,28 @@ func (w Inbox) Blocks() QueryBuilder[model.Block] {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return result
 }
 
-func (w Inbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
+func (w Inbox) RulesByType(ruleType string) QueryBuilder[model.Rule] {
 
 	expressionBuilder := builder.NewBuilder()
 
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("type", blockType),
+		exp.Equal("type", ruleType),
 	)
 
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return result
 }
 
-func (w Inbox) CountBlocks(blockType string) (int, error) {
-	return w._factory.Block().CountByType(w.objectID(), blockType)
+func (w Inbox) CountRules(ruleType string) (int, error) {
+	return w._factory.Rule().CountByType(w.objectID(), ruleType)
 }
 
 // Inbox returns a slice of messages in the current User's inbox
@@ -552,23 +552,23 @@ func (w Inbox) AmFollowing(url string) model.Following {
 	return following
 }
 
-func (w Inbox) AmBlocking(blockType string, url string) model.Block {
+func (w Inbox) AmRuleing(ruleType string, url string) model.Rule {
 
 	// Get following service and new following record
-	blockService := w._factory.Block()
-	block := model.NewBlock()
+	ruleService := w._factory.Rule()
+	rule := model.NewRule()
 
 	// Null check
 	if w._user == nil {
-		return block
+		return rule
 	}
 
-	// Retrieve block record. Discard errors
+	// Retrieve rule record. Discard errors
 	// nolint:errcheck
-	_ = blockService.LoadByTrigger(w._user.UserID, blockType, url, &block)
+	_ = ruleService.LoadByTrigger(w._user.UserID, ruleType, url, &rule)
 
-	// Return the (possibly empty) Block record
-	return block
+	// Return the (possibly empty) Rule record
+	return rule
 }
 
 func (w Inbox) debug() {

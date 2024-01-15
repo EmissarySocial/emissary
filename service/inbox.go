@@ -17,7 +17,7 @@ import (
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
 	collection    data.Collection
-	blockService  *Block
+	ruleService   *Rule
 	folderService *Folder
 	host          string
 	counter       int
@@ -36,9 +36,9 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(collection data.Collection, blockService *Block, folderService *Folder, host string) {
+func (service *Inbox) Refresh(collection data.Collection, ruleService *Rule, folderService *Folder, host string) {
 	service.collection = collection
-	service.blockService = blockService
+	service.ruleService = ruleService
 	service.folderService = folderService
 	service.host = host
 }
@@ -88,8 +88,8 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
 	}
 
-	// Apply block filters to this message
-	if err := service.blockService.FilterMessage(message); err != nil {
+	// Apply rule filters to this message
+	if err := service.ruleService.FilterMessage(message); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
 	}
 

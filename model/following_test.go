@@ -20,7 +20,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"profileUrl", "https://other.url", nil},
 		{"imageUrl", "https://other.url/image.png", nil},
 		{"behavior", "POSTS+REPLIES", nil},
-		{"blockAction", BlockActionMute, nil},
+		{"blockAction", RuleActionMute, nil},
 		{"collapseThreads", "false", false},
 		{"isPublic", "true", true},
 		{"method", FollowMethodActivityPub, nil},

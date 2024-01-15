@@ -15,7 +15,7 @@
 			<span class="bold margin-right-sm">Settings:</span>
 		</div>
 
-		<form hx-post="/@me/inbox/actor-button-block-update?blockId={{$block.ID}}&url={{$url}}" hx-trigger="change">
+		<form hx-post="/@me/inbox/actor-button-block-update?ruleId={{$block.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
 				<div class="layout-vertical-elements">
 					<div class="layout-vertical-element">
@@ -35,7 +35,7 @@
 		</form>
 
 		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?ruleId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Blocking
 		</div>
 	</div>

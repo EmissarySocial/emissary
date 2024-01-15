@@ -42,7 +42,7 @@
 							"label": "Custom Signup Form",
 							"children": [
 								{"type": "text", "path":"signupForm.title", "label": "Title", "description": "Large text is displayed at the top of the signup page."},
-								{"type": "textarea", "path":"signupForm.message", "label":"Message", "description": "A block of regular text displayed below the title.", "cssClass":"height100"},
+								{"type": "textarea", "path":"signupForm.message", "label":"Message", "description": "A rule of regular text displayed below the title.", "cssClass":"height100"},
 								{"type": "toggle", "path": "signupForm.active", "options":{"true-text":"Activate Form", "false-text": "Activate Form"}}
 							]
 						}

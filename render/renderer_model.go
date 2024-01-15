@@ -98,7 +98,7 @@ func (w Model) ObjectID() string {
 func (w Model) Label() string {
 	switch object := w._object.(type) {
 
-	case *model.Block:
+	case *model.Rule:
 		return object.Label
 
 	case *model.Folder:

@@ -168,8 +168,8 @@ func (service *Following) Save(following *model.Following, note string) error {
 		following.Behavior = model.FollowingBehaviorPostsAndReplies
 	}
 
-	if following.BlockAction == "" {
-		following.BlockAction = model.BlockActionLabel
+	if following.RuleAction == "" {
+		following.RuleAction = model.RuleActionLabel
 	}
 
 	// Clean the value before saving

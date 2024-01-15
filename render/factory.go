@@ -23,7 +23,7 @@ type Factory interface {
 	// Model Services
 	ActivityStreams() *service.ActivityStreams
 	Attachment() *service.Attachment
-	Block() *service.Block
+	Rule() *service.Rule
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower

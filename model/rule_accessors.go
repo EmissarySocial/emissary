@@ -5,13 +5,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func BlockSchema() schema.Element {
+func RuleSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"blockId":     schema.String{Required: true, Format: "objectId"},
+			"ruleId":      schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
-			"type":        schema.String{Required: true, Enum: []string{BlockTypeDomain, BlockTypeActor, BlockTypeContent}},
-			"action":      schema.String{Required: true, Enum: []string{BlockActionBlock, BlockActionMute, BlockActionLabel}},
+			"type":        schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
+			"action":      schema.String{Required: true, Enum: []string{RuleActionRule, RuleActionMute, RuleActionLabel}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
 			"comment":     schema.String{},
@@ -27,69 +27,69 @@ func BlockSchema() schema.Element {
  * Getter/Setter Interfaces
  ******************************************/
 
-func (block *Block) GetPointer(name string) (any, bool) {
+func (rule *Rule) GetPointer(name string) (any, bool) {
 
 	switch name {
 
 	case "origin":
-		return &block.Origin, true
+		return &rule.Origin, true
 
 	case "isPublic":
-		return &block.IsPublic, true
+		return &rule.IsPublic, true
 
 	case "isActive":
-		return &block.IsActive, true
+		return &rule.IsActive, true
 
 	case "publishDate":
-		return &block.PublishDate, true
+		return &rule.PublishDate, true
 
 	case "type":
-		return &block.Type, true
+		return &rule.Type, true
 
 	case "action":
-		return &block.Action, true
+		return &rule.Action, true
 
 	case "label":
-		return &block.Label, true
+		return &rule.Label, true
 
 	case "trigger":
-		return &block.Trigger, true
+		return &rule.Trigger, true
 
 	case "comment":
-		return &block.Comment, true
+		return &rule.Comment, true
 	}
 
 	return nil, false
 }
 
-func (block *Block) GetStringOK(name string) (string, bool) {
+func (rule *Rule) GetStringOK(name string) (string, bool) {
 
 	switch name {
 
-	case "blockId":
-		return block.BlockID.Hex(), true
+	case "ruleId":
+		return rule.RuleID.Hex(), true
 
 	case "userId":
-		return block.UserID.Hex(), true
+		return rule.UserID.Hex(), true
 
 	}
 
 	return "", false
 }
 
-func (block *Block) SetString(name string, value string) bool {
+func (rule *Rule) SetString(name string, value string) bool {
 
 	switch name {
 
-	case "blockId":
+	case "ruleId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			block.BlockID = objectID
+			rule.RuleID = objectID
 			return true
 		}
 
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			block.UserID = objectID
+			rule.UserID = objectID
 			return true
 		}
 	}

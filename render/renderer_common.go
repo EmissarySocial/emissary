@@ -315,13 +315,13 @@ func (w Common) UserImage() (string, error) {
  ******************************************/
 
 // SubRenderer creates a new renderer for a child object.  This function works
-// with Block, Folder, Follower, Following, and Stream objects.  It will return
+// with Rule, Folder, Follower, Following, and Stream objects.  It will return
 // an error if the object is not one of those types.
 func (w Common) SubRenderer(object any) (Renderer, error) {
 
 	switch typed := object.(type) {
 
-	case model.Block:
+	case model.Rule:
 		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Folder:
@@ -522,8 +522,8 @@ func (w Common) AdminSections() []form.LookupCode {
 			Label: "Users",
 		},
 		{
-			Value: "blocks",
-			Label: "Blocks",
+			Value: "rules",
+			Label: "Rules",
 		},
 	}
 }

@@ -6,26 +6,26 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithBlock represents an action-step that can update the data.DataMap custom data stored in a Stream
-type WithBlock struct {
+// WithRule represents an action-step that can update the data.DataMap custom data stored in a Stream
+type WithRule struct {
 	SubSteps []Step
 }
 
-// NewWithBlock returns a fully initialized WithBlock object
-func NewWithBlock(stepInfo mapof.Any) (WithBlock, error) {
+// NewWithRule returns a fully initialized WithRule object
+func NewWithRule(stepInfo mapof.Any) (WithRule, error) {
 
-	const location = "NewWithBlock"
+	const location = "NewWithRule"
 
 	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 
 	if err != nil {
-		return WithBlock{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
+		return WithRule{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
 	}
 
-	return WithBlock{
+	return WithRule{
 		SubSteps: subSteps,
 	}, nil
 }
 
 // AmStep is here only to verify that this struct is a render pipeline step
-func (step WithBlock) AmStep() {}
+func (step WithRule) AmStep() {}

@@ -21,7 +21,7 @@ import (
 type Follower struct {
 	collection             data.Collection
 	userService            *User
-	blockService           *Block
+	ruleService            *Rule
 	activityStreamsService *ActivityStreams
 	queue                  queue.Queue
 	host                   string
@@ -37,10 +37,10 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, blockService *Block, activityStreamsService *ActivityStreams, queue queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, ruleService *Rule, activityStreamsService *ActivityStreams, queue queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
-	service.blockService = blockService
+	service.ruleService = ruleService
 	service.activityStreamsService = activityStreamsService
 	service.queue = queue
 	service.host = host
@@ -97,8 +97,8 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 	}
 
 	// Check if this potential follower is blocked or not
-	if err := service.blockService.FilterFollower(follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Save", "Blocked", follower)
+	if err := service.ruleService.FilterFollower(follower); err != nil {
+		return derp.Wrap(err, "service.Follower.Save", "Ruleed", follower)
 	}
 
 	// Save the follower to the database

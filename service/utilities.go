@@ -59,7 +59,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 		return urlValue, userID, "", primitive.NilObjectID, nil
 	}
 
-	// Third item in the path must be the object type (followers, following, blocks, etc.)
+	// Third item in the path must be the object type (followers, following, rules, etc.)
 	objectType, path = path.Split()
 
 	if path.IsEmpty() {

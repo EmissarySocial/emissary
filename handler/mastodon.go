@@ -45,7 +45,7 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		PostApplication:                  mastodon.PostApplication(serverFactory),
 		GetApplication_VerifyCredentials: mastodon.GetApplication_VerifyCredentials(serverFactory),
 
-		// https://docs.joinmastodon.org/methods/blocks/
+		// https://docs.joinmastodon.org/methods/rules/
 		GetBlocks: mastodon.GetBlocks(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/bookmarks/
@@ -62,7 +62,7 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		// https://docs.joinmastodon.org/methods/directory/
 		GetDirectory: mastodon.GetDirectory(serverFactory),
 
-		// https://docs.joinmastodon.org/methods/domain_blocks/
+		// https://docs.joinmastodon.org/methods/domain_rules/
 		GetDomainBlocks:   mastodon.GetDomainBlocks(serverFactory),
 		PostDomainBlock:   mastodon.PostDomainBlock(serverFactory),
 		DeleteDomainBlock: mastodon.DeleteDomainBlock(serverFactory),

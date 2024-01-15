@@ -19,7 +19,7 @@ type Following struct {
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
 	ImageURL        string             `json:"imageUrl"        bson:"imageUrl"`        // URL of an image that represents this "following"
 	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
-	BlockAction     string             `json:"blockAction"     bson:"blockAction"`     // BlockAction determines the types of records to block from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
+	RuleAction      string             `json:"ruleAction"     bson:"ruleAction"`       // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
 	CollapseThreads bool               `json:"collapseThreads" bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
 	IsPublic        bool               `json:"isPublic"        bson:"isPublic"`        // If TRUE, this following is visible to the public
 	Links           digit.LinkSet      `json:"links"           bson:"links"`           // List of links can be used to update this following.
@@ -43,7 +43,7 @@ func NewFollowing() Following {
 		Status:          FollowingStatusNew,
 		Method:          FollowMethodPoll,
 		Behavior:        FollowingBehaviorPostsAndReplies,
-		BlockAction:     BlockActionLabel,
+		RuleAction:      RuleActionLabel,
 		Links:           make(digit.LinkSet, 0),
 		CollapseThreads: true, // default behavior is to collapse threads
 		PollDuration:    24,   // default poll interval is 24 hours

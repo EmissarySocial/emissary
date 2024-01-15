@@ -89,19 +89,19 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 	// Create the correct renderer for this controller
 	switch template.Model {
 
-	case "block":
+	case "rule":
 
-		blockService := factory.Block()
-		block := model.NewBlock()
+		ruleService := factory.Rule()
+		rule := model.NewRule()
 
 		if !objectID.IsZero() {
 			authorization := getAuthorization(ctx)
-			if err := blockService.LoadByID(authorization.UserID, objectID, &block); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Block", objectID)
+			if err := ruleService.LoadByID(authorization.UserID, objectID, &rule); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Rule", objectID)
 			}
 		}
 
-		return render.NewBlock(factory, ctx.Request(), ctx.Response(), &block, template, actionID)
+		return render.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
 	case "domain":
 		return render.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
@@ -143,6 +143,6 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 		return render.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	default:
-		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'block', 'domain', 'group', 'stream', or 'user'", template.Model)
+		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'group', 'stream', or 'user'", template.Model)
 	}
 }

@@ -26,7 +26,7 @@ func init() {
 			return derp.NewInternalError("handler.activityPub_HandleRequest_Follow", "Invalid User ID", userID, user.UserID)
 		}
 
-		// TODO: CRITICAL: Enforce blocks here.
+		// TODO: CRITICAL: Enforce rules here.
 		// Are there other limits on who we allow to follow?
 		// What about manual accepts?
 

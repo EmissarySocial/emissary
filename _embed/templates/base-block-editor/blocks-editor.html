@@ -1,9 +1,9 @@
 {{- $tab := .QueryParam "tab" -}}
 
 {{- if eq "DOMAIN" $tab -}}
-	{{- template "blocks-editor-domain" . -}}
+	{{- template "rules-editor-domain" . -}}
 {{- else if eq "CONTENT" $tab -}}
-	{{- template "blocks-editor-content" . -}}
+	{{- template "rules-editor-content" . -}}
 {{- else -}}
-	{{- template "blocks-editor-actor" . -}}
+	{{- template "rules-editor-actor" . -}}
 {{- end -}}

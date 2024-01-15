@@ -27,25 +27,25 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
-	case "block-behaviors":
+	case "rule-behaviors":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: "POSTS+REPLIES", Label: "Posts and Replies"},
 			form.LookupCode{Value: "POSTS", Label: "Posts Only (ignore replies)"},
 		)
 
-	case "block-blockActions":
+	case "rule-ruleActions":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "IGNORE", Label: "Do not import blocks from this source (display messages normally)"},
+			form.LookupCode{Value: "IGNORE", Label: "Do not import rules from this source (display messages normally)"},
 			form.LookupCode{Value: "LABEL", Label: "LABEL CONTENT that is blocked by this source"},
 			form.LookupCode{Value: "MUTE", Label: "MUTE posts that are blocked by this source (one-way block)"},
 			form.LookupCode{Value: "BLOCK", Label: "BLOCK everyone who is blocked by this source (two-way block)"},
 		)
 
-	case "block-types":
+	case "rule-types":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "Block a Domain", Value: model.BlockTypeDomain},
-			form.LookupCode{Label: "Block a Person", Value: model.BlockTypeActor},
-			form.LookupCode{Label: "Block Tags & Keywords", Value: model.BlockTypeContent},
+			form.LookupCode{Label: "Rule a Domain", Value: model.RuleTypeDomain},
+			form.LookupCode{Label: "Rule a Person", Value: model.RuleTypeActor},
+			form.LookupCode{Label: "Rule Tags & Keywords", Value: model.RuleTypeContent},
 		)
 
 	case "folders":
