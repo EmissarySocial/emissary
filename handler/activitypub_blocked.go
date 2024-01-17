@@ -52,7 +52,7 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 		ruleService := factory.Rule()
 		publishDate := convert.Int64(publishDateString)
 		pageSize := 60
-		rules, err := ruleService.QueryPublicRules(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
+		rules, err := ruleService.QueryPublic(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading rules")

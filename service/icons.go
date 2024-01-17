@@ -112,6 +112,8 @@ func (service Icons) Get(name string) string {
 		return service.get("grip-vertical")
 	case "grip-horizontal":
 		return service.get("grip-horizontal")
+	case "hashtag":
+		return service.get("hash")
 	case "heart":
 		return service.get("heart")
 	case "heart-fill":
@@ -180,6 +182,10 @@ func (service Icons) Get(name string) string {
 		return service.get("rocket-takeoff")
 	case "rocket-fill":
 		return service.get("rocket-takeoff-fill")
+	case "rule":
+		return service.get("funnel")
+	case "rule-fill":
+		return service.get("funnel-fill")
 	case "save":
 		return service.get("check-lg")
 	case "search":

@@ -97,11 +97,6 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 		return derp.Wrap(err, "service.Mention.Save", "Error cleaning Mention", mention)
 	}
 
-	// Filter Mentions that are blocked
-	if err := service.ruleService.FilterMention(mention); err != nil {
-		return derp.Wrap(err, "service.Mention.Save", "Error filtering Mention", mention)
-	}
-
 	// Save the value to the database
 	if err := service.collection.Save(mention, note); err != nil {
 		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", mention, note)

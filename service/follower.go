@@ -96,11 +96,6 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 		return derp.Wrap(err, "service.Follower.Save", "Error cleaning Follower", follower)
 	}
 
-	// Check if this potential follower is blocked or not
-	if err := service.ruleService.FilterFollower(follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Save", "Ruleed", follower)
-	}
-
 	// Save the follower to the database
 	if err := service.collection.Save(follower, note); err != nil {
 		return derp.Wrap(err, "service.Follower.Save", "Error saving Follower", follower, note)

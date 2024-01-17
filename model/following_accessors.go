@@ -18,7 +18,7 @@ func FollowingSchema() schema.Element {
 			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
 			"imageUrl":        schema.String{Format: "url", MaxLength: 1024},
 			"behavior":        schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
-			"ruleAction":      schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionRule}, Default: RuleActionLabel, Required: true},
+			"ruleAction":      schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
 			"collapseThreads": schema.Boolean{Default: null.NewBool(true)},
 			"isPublic":        schema.Boolean{Default: null.NewBool(false)},
 			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},

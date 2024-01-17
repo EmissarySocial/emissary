@@ -269,7 +269,9 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 
 func (w Inbox) Rules() QueryBuilder[model.Rule] {
 
-	expressionBuilder := builder.NewBuilder()
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("trigger"), builder.WithDefaultOpContains()).
+		String("trigger")
 
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
@@ -279,25 +281,6 @@ func (w Inbox) Rules() QueryBuilder[model.Rule] {
 	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return result
-}
-
-func (w Inbox) RulesByType(ruleType string) QueryBuilder[model.Rule] {
-
-	expressionBuilder := builder.NewBuilder()
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("type", ruleType),
-	)
-
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
-
-	return result
-}
-
-func (w Inbox) CountRules(ruleType string) (int, error) {
-	return w._factory.Rule().CountByType(w.objectID(), ruleType)
 }
 
 // Inbox returns a slice of messages in the current User's inbox
@@ -552,7 +535,7 @@ func (w Inbox) AmFollowing(url string) model.Following {
 	return following
 }
 
-func (w Inbox) AmRuleing(ruleType string, url string) model.Rule {
+func (w Inbox) AmBlocking(ruleType string, url string) model.Rule {
 
 	// Get following service and new following record
 	ruleService := w._factory.Rule()
@@ -565,7 +548,9 @@ func (w Inbox) AmRuleing(ruleType string, url string) model.Rule {
 
 	// Retrieve rule record. Discard errors
 	// nolint:errcheck
-	_ = ruleService.LoadByTrigger(w._user.UserID, ruleType, url, &rule)
+	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, url, &rule); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.AmBlocking", "Error loading rule", ruleType, url))
+	}
 
 	// Return the (possibly empty) Rule record
 	return rule

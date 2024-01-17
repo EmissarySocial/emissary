@@ -25,7 +25,7 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 
 		// Query the database
 		userService := factory.User()
-		users, err := userService.QueryRuleedUsers(auth.UserID, queryExpression(t))
+		users, err := userService.QueryBlockedActors(auth.UserID, queryExpression(t))
 
 		if err != nil {
 			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")

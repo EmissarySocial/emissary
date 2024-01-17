@@ -60,7 +60,6 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeDomain
 		rule.Trigger = t.Domain
-		rule.IsActive = true
 
 		// Save it to the database
 		ruleService := factory.Rule()

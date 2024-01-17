@@ -11,12 +11,11 @@ func RuleSchema() schema.Element {
 			"ruleId":      schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
 			"type":        schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
-			"action":      schema.String{Required: true, Enum: []string{RuleActionRule, RuleActionMute, RuleActionLabel}},
+			"action":      schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
-			"comment":     schema.String{},
+			"summary":     schema.String{},
 			"origin":      OriginLinkSchema(),
-			"isActive":    schema.Boolean{},
 			"isPublic":    schema.Boolean{},
 			"publishDate": schema.Integer{BitSize: 64},
 		},
@@ -37,9 +36,6 @@ func (rule *Rule) GetPointer(name string) (any, bool) {
 	case "isPublic":
 		return &rule.IsPublic, true
 
-	case "isActive":
-		return &rule.IsActive, true
-
 	case "publishDate":
 		return &rule.PublishDate, true
 
@@ -55,8 +51,8 @@ func (rule *Rule) GetPointer(name string) (any, bool) {
 	case "trigger":
 		return &rule.Trigger, true
 
-	case "comment":
-		return &rule.Comment, true
+	case "summary":
+		return &rule.Summary, true
 	}
 
 	return nil, false

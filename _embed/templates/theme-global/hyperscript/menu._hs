@@ -1,19 +1,31 @@
-behavior menu
+behavior menu(input)
 
-	on mouseover(target)
-		if the target's classList does not contain "menu-item" then
+	on load
+		trigger selectFirst
+	end
+
+	on htmx:afterSwap 
+		trigger selectFirst
+	end
+
+	on selectFirst
+		set selectNext to first <[role=menuitem]/> in me
+		if selectNext is not null then
+			add [@aria-selected=true] to selectNext
+		end
+	end
+
+	on focus or mouseover(target)
+		set target to the closest <[role=menuitem]/> to target
+
+		if the target is null then
 			exit
 		end
 		
 		halt the event
-		take [@aria-selected=true] from .menu-item for target
-	end
 
-	on htmx:afterSwap 
-		set selectNext to first <.menu-item /> in me
-		if selectNext is not null then
-			add [@aria-selected=true] to selectNext
-		end
+		set items to <[role=menuitem]/> in me
+		take [@aria-selected=true] from items for target
 	end
 
 	on keydown[key=='ArrowUp']
@@ -21,13 +33,17 @@ behavior menu
 
 		set selected to the first <[aria-selected=true]/> in me
 		if selected is null then
-			set selectNext to last <.menu-item /> in me
+			set selectNext to last <[role=menuitem]/> in me
 		else 
 			set menu to the first < .menu /> in me
-			set selectNext to the previous <.menu-item /> from selected within menu with wrapping
+			set selectNext to the previous <[role=menuitem] /> from selected within menu with wrapping
 		end
 
-		set items to <.menu-item /> in me
+		if input is null then
+			focus() the selectNext
+		end
+
+		set items to <[role=menuitem]/> in me
 		take [@aria-selected=true] from items for selectNext
 	end
 
@@ -36,14 +52,19 @@ behavior menu
 
 		set selected to the first <[aria-selected=true]/> in me
 		if selected is null then
-			set selectNext to first <.menu-item /> in me
+			set selectNext to first <[role=menuitem]/> in me
 		else 
 			set menu to the first < .menu /> in me
-			set selectNext to the next <.menu-item /> from selected within menu with wrapping
+			set selectNext to the next <[role=menuitem]/> from selected within menu with wrapping
 		end
 
-		set items to <.menu-item /> in me
+		if input is null then
+			focus() the selectNext
+		end
+		
+		set items to <[role=menuitem]/> in me
 		take [@aria-selected=true] from items for selectNext
+		
 	end
 
 	on keyup[key=='Enter']

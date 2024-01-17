@@ -73,6 +73,23 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 	activityType := activity.Type()
 	objectType := activity.Object().Type()
 
+	// Check all activities for blocks.  If the Domain/Actor/Content *has* been blocked,
+	// then do not process the inbound activity.
+	filter := factory.Rule().Filter(user.UserID)
+	if filter.One(&activity) {
+
+		if pub.IsMinDebugLevel(pub.DebugLevelTerse) {
+			marshalled, _ := json.MarshalIndent(activity.Value(), "", "    ")
+			fmt.Println("------------------------------------------")
+			fmt.Println("EMISSARY CUSTOM ROUTER : Blocked Message: " + activityType + "/" + objectType)
+			fmt.Println((string(marshalled)))
+			fmt.Println("")
+		}
+
+		// We're gonna lie, and act like the message was handled successfully, even though it's been blocked.
+		return nil
+	}
+
 	if pub.IsMinDebugLevel(pub.DebugLevelTerse) {
 		marshalled, _ := json.MarshalIndent(activity.Value(), "", "    ")
 		fmt.Println("------------------------------------------")

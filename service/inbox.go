@@ -88,11 +88,6 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
 	}
 
-	// Apply rule filters to this message
-	if err := service.ruleService.FilterMessage(message); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
-	}
-
 	// Calculate a (hopefully unique) rank for this message
 	service.CalculateRank(message)
 

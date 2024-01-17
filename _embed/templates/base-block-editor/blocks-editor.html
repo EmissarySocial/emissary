@@ -1,9 +1,0 @@
-{{- $tab := .QueryParam "tab" -}}
-
-{{- if eq "DOMAIN" $tab -}}
-	{{- template "rules-editor-domain" . -}}
-{{- else if eq "CONTENT" $tab -}}
-	{{- template "rules-editor-content" . -}}
-{{- else -}}
-	{{- template "rules-editor-actor" . -}}
-{{- end -}}

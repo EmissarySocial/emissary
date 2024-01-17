@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/hannibal/vocab"
@@ -61,6 +62,15 @@ func (service *Rule) Query(criteria exp.Expression, options ...option.Option) ([
 	return result, err
 }
 
+// QuerySummary returns an slice of allthe Rules that match the provided criteria
+func (service *Rule) QuerySummary(criteria exp.Expression, options ...option.Option) ([]model.RuleSummary, error) {
+	result := make([]model.RuleSummary, 0)
+	options = append(options, option.Fields(model.RuleSummaryFields()...))
+	err := service.collection.Query(&result, notDeleted(criteria), options...)
+
+	return result, err
+}
+
 // List returns an iterator containing all of the Rules that match the provided criteria
 func (service *Rule) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
@@ -90,40 +100,20 @@ func (service *Rule) Load(criteria exp.Expression, rule *model.Rule) error {
 // Save adds/updates an Rule in the database
 func (service *Rule) Save(rule *model.Rule, note string) error {
 
-	if rule.IsNew() {
-		var err error
-
-		switch rule.Type {
-
-		case model.RuleTypeActor:
-			err = service.ValidateNewActor(rule)
-
-		case model.RuleTypeDomain:
-			err = service.ValidateNewDomain(rule)
-
-		case model.RuleTypeContent:
-			err = service.ValidateNewContent(rule)
-		}
-
-		if err != nil {
-			return derp.Wrap(err, "service.Rule.Save", "Error validating new Rule", rule)
-		}
-	}
-
 	// Clean the value before saving
 	if err := service.Schema().Clean(rule); err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error cleaning Rule", rule)
 	}
 
 	// RULE: Publish changes when the rule is first shared publicly
-	if rule.IsActive && rule.IsPublic && (rule.PublishDate == 0) {
+	if rule.IsPublic && (rule.PublishDate == 0) {
 		if err := service.publish(rule); err != nil {
 			return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
 		}
 	}
 
 	// RULE: Unpublish changes when the rule is no longer shared publicly
-	if (!rule.IsPublic || !rule.IsActive) && (rule.PublishDate > 0) {
+	if (!rule.IsPublic) && (rule.PublishDate > 0) {
 		if err := service.unpublish(rule, true); err != nil {
 			return derp.Wrap(err, "service.Rule.Save", "Error unpublishing Rule", rule)
 		}
@@ -243,6 +233,7 @@ func (service *Rule) LoadByToken(userID primitive.ObjectID, token string, rule *
 	return service.Load(criteria, rule)
 }
 
+// LoadByTrigger retrieves a single Rule that maches the provided User, RuleType, and Trigger
 func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
 
 	criteria := exp.Equal("userId", userID).
@@ -252,31 +243,11 @@ func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, t
 	return service.Load(criteria, rule)
 }
 
-func (service *Rule) CountByType(userID primitive.ObjectID, ruleType string) (int, error) {
-	criteria := exp.Equal("userId", userID).
-		AndEqual("deleteDate", 0).
-		AndEqual("type", ruleType)
-
-	result, err := service.collection.Count(criteria)
-	return int(result), err
-}
-
-func (service *Rule) QueryActiveByUser(userID primitive.ObjectID, types ...string) ([]model.Rule, error) {
-
-	criteria := service.byUserID(userID).AndEqual("isActive", true)
-
-	if len(types) > 0 {
-		criteria = criteria.And(exp.In("type", types))
-	}
-
-	return service.Query(criteria)
-}
-
-func (service *Rule) QueryPublicRules(userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Rule, error) {
+// QueryPublic returns a collection of Rules that are marked Public, in reverse chronological order.
+func (service *Rule) QueryPublic(userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Rule, error) {
 
 	criteria := service.byUserID(userID).
 		AndEqual("isPublic", true).
-		AndNotEqual("isActive", true).
 		AndLessThan("publishDate", maxDate)
 
 	options = append(options, option.SortDesc("publishDate"))
@@ -290,7 +261,6 @@ func (service *Rule) QueryByType(userID primitive.ObjectID, ruleType string, cri
 	criteria = service.byUserID(userID).
 		AndEqual("type", ruleType).
 		AndEqual("isPublic", true).
-		AndNotEqual("isActive", true).
 		And(criteria)
 
 	options = append(options, option.SortDesc("publishDate"))
@@ -311,38 +281,47 @@ func (service *Rule) QueryByTypeContent(userID primitive.ObjectID, criteria exp.
 	return service.QueryByType(userID, model.RuleTypeContent, criteria, options...)
 }
 
-func (service *Rule) QueryGlobalDomainRules(options ...option.Option) ([]model.Rule, error) {
+// QueryByActor retrieves a slice of RuleSummaries that match the provided User and Actor
+func (service *Rule) QueryByActor(userID primitive.ObjectID, actorID string) ([]model.RuleSummary, error) {
+
+	criteria := exp.And(
+		service.byUserID(userID),
+		exp.Or(
+			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
+			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", domain.NameOnly(actorID)),
+			exp.Equal("type", model.RuleTypeContent),
+		),
+	)
+
+	return service.QuerySummary(criteria)
+}
+
+// QueryDomainBlocks returns all external domains blocked by this Instance/Domain.
+func (service *Rule) QueryDomainBlocks() ([]model.Rule, error) {
 
 	criteria := exp.Equal("userId", primitive.NilObjectID).
 		AndEqual("type", model.RuleTypeDomain).
-		AndEqual("isPublic", true).
-		AndNotEqual("isActive", true)
+		AndEqual("behavior", model.RuleActionBlock)
 
-	options = append(options, option.SortDesc("publishDate"))
+	return service.Query(criteria, option.SortAsc("trigger"))
+}
 
-	return service.Query(criteria, options...)
+// QueryBlockedActors returns all Actors blocked by this User (or by the Domain on behalf of the User)
+func (service *Rule) QueryBlockedActors(userID primitive.ObjectID) ([]model.Rule, error) {
+
+	criteria := service.byUserID(userID).
+		AndEqual("type", model.RuleTypeActor).
+		AndEqual("behavior", model.RuleActionBlock)
+
+	return service.Query(criteria, option.SortAsc("trigger"))
 }
 
 /******************************************
- * Initial Validations
+ * Filters
  ******************************************/
 
-// ValidateNewActor validates a new rule of a specific Actor
-func (service *Rule) ValidateNewActor(rule *model.Rule) error {
-	rule.Label = rule.Trigger
-	return nil
-}
-
-// ValidateNewDomain validates a new rule of a specific Domain
-func (service *Rule) ValidateNewDomain(rule *model.Rule) error {
-	rule.Label = rule.Trigger
-	return nil
-}
-
-// ValidateNewContent validates a external rule service
-func (service *Rule) ValidateNewContent(rule *model.Rule) error {
-	rule.Label = rule.Trigger
-	return nil
+func (service *Rule) Filter(userID primitive.ObjectID) RuleFilter {
+	return NewRuleFilter(service, userID)
 }
 
 /******************************************

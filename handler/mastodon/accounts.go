@@ -294,7 +294,6 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeActor
 		rule.Trigger = t.ID
-		rule.IsActive = true
 
 		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
@@ -355,7 +354,6 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeActor
 		rule.Trigger = t.ID
-		rule.IsActive = true
 
 		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")

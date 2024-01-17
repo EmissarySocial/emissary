@@ -106,7 +106,6 @@ input.text-lg {
     line-height:calc(var(--rhythm) * 4);
     margin-top:calc(var(--rhythm));
     margin-bottom:calc(var(--rhythm) * 1);
-    color:var(--heading-color);
     font-weight:calc(var(--weight) - 100);
 }
 

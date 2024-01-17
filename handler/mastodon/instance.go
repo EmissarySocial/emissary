@@ -70,7 +70,7 @@ func GetInstance_Rules(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
-// https://docs.joinmastodon.org/methods/instance/#domain_rules
+// https://docs.joinmastodon.org/methods/instance/#domain_blocks
 func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_DomainBlocks) ([]object.DomainBlock, error) {
 
 	const location = "handler.mastodon.GetInstance_DomainBlocks"
@@ -86,7 +86,7 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 
 		// Get all Public, Global Blocks
 		ruleService := factory.Rule()
-		rules, err := ruleService.QueryGlobalDomainRules()
+		rules, err := ruleService.QueryDomainBlocks()
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error querying database")
@@ -101,7 +101,7 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 				Domain:   rule.Trigger,
 				Digest:   string(digest[:]),
 				Severity: object.DomainBlockSeveritySuspend,
-				Comment:  rule.Comment,
+				Comment:  rule.Summary,
 			}
 		})
 

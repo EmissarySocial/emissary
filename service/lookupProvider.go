@@ -27,25 +27,32 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
-	case "rule-behaviors":
+	case "following-behaviors":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: "POSTS+REPLIES", Label: "Posts and Replies"},
 			form.LookupCode{Value: "POSTS", Label: "Posts Only (ignore replies)"},
 		)
 
-	case "rule-ruleActions":
+	case "following-rule-actions":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: "IGNORE", Label: "Do not import rules from this source (display messages normally)"},
-			form.LookupCode{Value: "LABEL", Label: "LABEL CONTENT that is blocked by this source"},
-			form.LookupCode{Value: "MUTE", Label: "MUTE posts that are blocked by this source (one-way block)"},
-			form.LookupCode{Value: "BLOCK", Label: "BLOCK everyone who is blocked by this source (two-way block)"},
+			form.LookupCode{Value: "LABEL", Label: "LABEL posts that are blocked by this source"},
+			form.LookupCode{Value: "MUTE", Label: "MUTE senders who are blocked by this source (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
+		)
+
+	case "rule-actions":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
+			form.LookupCode{Value: "MUTE", Label: "MUTE senders but do not prevent followers (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers (two-way block)"},
 		)
 
 	case "rule-types":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "Rule a Domain", Value: model.RuleTypeDomain},
-			form.LookupCode{Label: "Rule a Person", Value: model.RuleTypeActor},
-			form.LookupCode{Label: "Rule Tags & Keywords", Value: model.RuleTypeContent},
+			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
+			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
+			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
 		)
 
 	case "folders":

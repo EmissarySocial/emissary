@@ -11,14 +11,13 @@ import (
 
 // Rule represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Rule struct {
-	RuleID      primitive.ObjectID `json:"ruleId"     bson:"_id"`          // Unique identifier of this Rule
+	RuleID      primitive.ObjectID `json:"ruleId"      bson:"_id"`         // Unique identifier of this Rule
 	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // Unique identifier of the User who owns this Rule
-	Type        string             `json:"type"        bson:"type"`        // Type of Rule (e.g. "ACTOR", "ACTIVITY", "OBJECT")
-	Action      string             `json:"action"      bson:"action"`      // Action to take when this rule is triggered (e.g. "BLOCK", "HIDE", "MUTE")
-	Label       string             `json:"label"       bson:"label"`       // Human-friendly label for this rule
+	Type        string             `json:"type"        bson:"type"`        // Type of Rule (e.g. "ACTOR", "DOMAIN", "CONTENT")
+	Action      string             `json:"action"      bson:"action"`      // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
+	Label       string             `json:"label"       bson:"label"`       // Human-friendly label to add to messages
 	Trigger     string             `json:"trigger"     bson:"trigger"`     // Parameter for this rule type)
-	Comment     string             `json:"comment"     bson:"comment"`     // Optional comment describing why this rule exists
-	IsActive    bool               `json:"isActive"    bson:"isActive"`    // If TRUE, this rule is active and should be applied to incoming messages
+	Summary     string             `json:"summary"     bson:"summary"`     // Optional comment describing why this rule exists
 	IsPublic    bool               `json:"isPublic"    bson:"isPublic"`    // If TRUE, this record is visible publicly
 	Origin      OriginLink         `json:"origin"      bson:"origin"`      // Internal or External service where this rule originated (used for subscriptions)
 	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Unix timestamp when this rule was published to followers
@@ -30,8 +29,8 @@ type Rule struct {
 func NewRule() Rule {
 	return Rule{
 		RuleID:   primitive.NewObjectID(),
-		IsActive: true,
-		IsPublic: true,
+		Action:   RuleActionMute,
+		IsPublic: false,
 	}
 }
 
@@ -47,9 +46,10 @@ func (rule Rule) Fields() []string {
 	return []string{
 		"_id",
 		"type",
+		"action",
+		"label",
 		"trigger",
 		"isPublic",
-		"isActive",
 	}
 }
 

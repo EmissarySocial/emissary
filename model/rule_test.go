@@ -13,14 +13,13 @@ func TestRuleSchema(t *testing.T) {
 	s := schema.New(RuleSchema())
 
 	table := []tableTestItem{
-		{"blockId", "123456781234567812345678", nil},
+		{"ruleId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
 		{"type", "ACTOR", nil},
 		{"action", "LABEL", nil},
 		{"label", "LABEL", nil},
 		{"trigger", "TRIGGER", nil},
-		{"comment", "COMMENT", nil},
-		{"isActive", "true", true},
+		{"summary", "COMMENT", nil},
 		{"isPublic", "true", true},
 		{"publishDate", int64(1234567890), nil},
 		{"origin.followingId", "123456781234567812345678", nil},

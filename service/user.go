@@ -551,12 +551,12 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers b
 }
 
 // TODO: MEDIUM: this function is wickedly inefficient
-func (service *User) QueryRuleedUsers(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
+func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
 
 	const location = "service.User.QueryRuleedUsers"
 
 	// Query all rules
-	rules, err := service.ruleService.QueryActiveByUser(userID, model.RuleTypeActor)
+	rules, err := service.ruleService.QueryBlockedActors(userID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error querying rules")

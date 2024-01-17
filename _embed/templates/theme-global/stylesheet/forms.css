@@ -371,15 +371,6 @@ button.button-invisible {
     color: var(--heading-color);
 }
 
-#modal .layout-title {
-    font-weight:calc(var(--weight) + 100);
-    font-size: calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 6);
-    margin-top:0px;
-    margin-bottom:calc(var(--rhythm) * 2);
-}
-
-
 .layout-description {
 	margin-bottom: calc(var(--rhythm) * 4);
 }

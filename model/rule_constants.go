@@ -9,8 +9,8 @@ const RuleTypeActor = "ACTOR"
 // RuleTypeUser rules all messages that contain a particular phrase (hashtag)
 const RuleTypeContent = "CONTENT"
 
-// RuleActionRule rules all contact with a particular user or domain
-const RuleActionRule = "BLOCK"
+// RuleActionBlock rules all contact with a particular user or domain
+const RuleActionBlock = "BLOCK"
 
 // RuleActionMute prevents inbound messages from a particular user or domain
 const RuleActionMute = "MUTE"
