@@ -1,8 +1,7 @@
 {{- $folders := .Folders -}}
 
 <div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
-
-	<title>{{.FollowerCount}} Followers | {{.DisplayName}}</title>
+	<title>{{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}} | {{.DisplayName}}</title>
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	{{- template "sidebar" $folders -}}
@@ -15,7 +14,21 @@
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
 		</div>
 
-		{{ .View "followers-list"}}
+		<div>
+			<input
+				type="text" 
+				name="search" 
+				placeholder="Search Followers"
+				hx-get="/@me/inbox/followers-list"
+				hx-trigger="keyup queue:last delay:100ms"
+				hx-target="#followers-list"
+				hx-swap="innerHTML"
+				hx-push-url="false">
+		</div>
+
+		<div id="followers-list" class="table margin-top">
+			{{.View "followers-list"}}
+		</div>
 
 	</div>
 

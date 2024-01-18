@@ -4,7 +4,7 @@
 
 {{- range $rules -}}
 	<div hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}" role="button" class="flex-row width-100-percent">
-		<div class="width-1-5" nowrap>
+		<div class="width-1-6" nowrap>
 			{{- if eq "ACTOR" .Type -}}
 				{{- icon "person"}} Person
 			{{- else if eq "DOMAIN" .Type -}}
@@ -13,21 +13,21 @@
 				{{- icon "hash"}} Keyword
 			{{- end -}}
 		</div>
-		<div class="width-2-5">
+		<div class="width-2-6">
 			<div class="ellipsis">
 				{{.Trigger}}
 			</div>
 		</div>
-		<div class="width-1-5" nowrap>
+		<div class="width-2-6" nowrap>
 			{{- if eq "BLOCK" .Action -}}
-				Block messages and sender
+				{{icon "block"}} Block
 			{{- else if eq "MUTE" .Action -}}
-				Mute messages
+				{{icon "mute"}} Mute
 			{{- else -}}
-				Label messages: &quot;{{.Label}}&quot;
+				{{icon "tag"}} &quot;{{.Label}}&quot;
 			{{- end -}}
 		</div>
-		<div class="width-1-5 align-right" nowrap>
+		<div class="width-1-6 align-right" nowrap>
 			{{- if .IsPublic -}}
 				{{icon "visible-fill"}} Public
 			{{- else -}}

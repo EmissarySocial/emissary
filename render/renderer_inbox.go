@@ -205,30 +205,33 @@ func (w Inbox) ImageURL() string {
 
 func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 
+	// Define inbound parameters
 	expressionBuilder := builder.NewBuilder().
-		String("displayName")
+		String("search", builder.WithAlias("actor.name"), builder.WithDefaultOpContains()).
+		String("name", builder.WithAlias("actor.name"))
 
+	// Calculate criteria
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
-
-	return result
+	// Return the query builder
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
 }
 
-func (w Inbox) Following() ([]model.FollowingSummary, error) {
+func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 
-	userID := w.AuthenticatedID()
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("label"), builder.WithDefaultOpContains()).
+		String("label")
 
-	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Inbox.Following", "Must be signed in to view following")
-	}
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
 
-	followingService := w._factory.Following()
-
-	return followingService.QueryByUser(userID)
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
 }
 
 func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
@@ -306,6 +309,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
+		ObjectID("followingId", builder.WithAlias("origin.followingId")).
 		Int("rank").
 		Int("readDate").
 		Int("createDate")

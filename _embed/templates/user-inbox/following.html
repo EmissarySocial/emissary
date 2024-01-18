@@ -15,9 +15,31 @@
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
 		</div>
 
-		{{- template "following-list" . -}}
+		<div>
+			<input
+				type="text" 
+				name="search" 
+				placeholder="Search Following"
+				hx-get="/@me/inbox/following-list"
+				hx-trigger="keyup queue:last delay:100ms"
+				hx-target="#following-list"
+				hx-swap="innerHTML"
+				hx-push-url="false">
+		</div>
+
+		<div class="table margin-top">
+			<div class="link flex-row" role="button" hx-get="/@me/inbox/following-search" hx-push-url="false">
+				<div class="flex-grow-1">
+					{{icon "add"}}
+					Follow a Person or Website
+				</div>
+			</div>
+		</div>
+
+		<div id="following-list" class="table">
+			{{- .View "following-list" -}}
+		</div>
 				
 	</div>
-
 
 </div>

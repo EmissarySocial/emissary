@@ -1,41 +1,36 @@
+{{- $search := .QueryParam "search" -}}
 {{- $canBlock := .UserCan "block" -}}
-{{- $followers := .Followers.Slice -}}
+{{- $followers := .Followers.Top12.Slice -}}
 
-{{- if eq 0 (len $followers) -}}
+{{ range $followers }}
+	<div class="flex-row" role="button">
+		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="margin-right-sm">
+			{{- if eq "" .Actor.ImageURL -}}
+				<div class="circle-24"></div>
+			{{- else -}}
+				<img src="{{.Actor.ImageURL}}" class="circle-24">
+			{{- end -}}
+		</div>
+		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="width-100-percent">
+			{{ if ne "" .Actor.Name }}
+				{{- .Actor.Name -}}
+			{{- else if ne "" .Actor.ProfileURL -}}
+				{{- .Actor.ProfileURL -}}
+			{{- else -}}
+				{{- .Actor.InboxURL -}}
+			{{- end -}}
+			&nbsp;
+			{{- icon .MethodIcon -}}
+		</div>
+		<div class="align-right">
+			{{- if $canBlock -}}
+				<button class="text-red">Block</button>
+			{{- end -}}
+		</div>
+	</div>
+{{ end }}
 
-	No followers.
-
-{{- else -}}
-
-	<table class="table">
-
-		{{ range $followers }}
-			<tr role="button">
-				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" style="width:32px;">
-					{{- if eq "" .Actor.ImageURL -}}
-						<div class="circle-24"></div>
-					{{- else -}}
-						<img src="{{.Actor.ImageURL}}" class="circle-24">
-					{{- end -}}
-				</td>
-				<td hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}">
-					{{ if ne "" .Actor.Name }}
-						{{- .Actor.Name -}}
-					{{- else if ne "" .Actor.ProfileURL -}}
-						{{- .Actor.ProfileURL -}}
-					{{- else -}}
-						{{- .Actor.InboxURL -}}
-					{{- end -}}
-					&nbsp;
-					{{- icon .MethodIcon -}}
-				</td>
-				<td class="align-right">
-					{{- if $canBlock -}}
-						<button class="text-red">Block</button>
-					{{- end -}}
-				</td>
-			</tr>
-		{{ end }}
-	</table>
-
+{{- if eq 12 $followers.Length -}}
+	{{- $last := $followers.Last -}}
+	<div hx-get="/@me/inbox/followers-list?search={{$search}}&name=GT:{{$last.Actor.Name}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
 {{- end -}}
