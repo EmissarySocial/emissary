@@ -249,7 +249,7 @@
 								{
 									"type":"select", 
 									"label":"Shared Blocks", 
-									"path":"blockAction", 
+									"path":"ruleAction", 
 									"options":{"provider":"following-rule-actions"}
 								},
 								{
@@ -314,9 +314,9 @@
 								{
 									"type":"select", 
 									"label":"Shared Blocks", 
-									"path":"blockAction", 
+									"path":"ruleAction", 
 									"hint":"When this source blocks someone online, do you want to block them as well?",
-									"options":{"provider":"block-blockActions"}
+									"options":{"provider":"following-rule-actions"}
 								},
 								{
 									"type":"toggle",
@@ -480,7 +480,7 @@
 		},
 
 		"actor-button-follow": {
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
@@ -491,7 +491,7 @@
 			]
 		},
 		"actor-button-follow-update": {
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
@@ -502,7 +502,7 @@
 			]
 		},
 		"actor-button-unfollow": {
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"delete"}
@@ -513,7 +513,7 @@
 			]
 		},
 		"actor-button-mute":{
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
@@ -524,7 +524,7 @@
 			]
 		},
 		"actor-button-unmute":{
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"delete"}
@@ -535,7 +535,7 @@
 			]
 		},
 		"actor-button-block":{
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
@@ -546,7 +546,7 @@
 			]
 		},
 		"actor-button-block-update": {
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "from-form":["comment", "isPublic"]},
@@ -557,7 +557,7 @@
 			]
 		},
 		"actor-button-unblock":{
-			"roles":["self"],
+			"roles":["authenticated"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"delete"}
