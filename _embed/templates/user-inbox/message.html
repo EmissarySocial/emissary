@@ -9,7 +9,6 @@
 {{- $inReplyTo := $stream.InReplyTo -}}
 {{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 
-
 <div id="modal-header">
 
 	<div>
@@ -140,7 +139,7 @@
 				{{.View "like-button"}}
 
 				{{- if .NotMe $attributedTo.ID -}}
-					{{.View "actor-button"}}
+					<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window"></div>
 				{{- end -}}
 			</div>
 
