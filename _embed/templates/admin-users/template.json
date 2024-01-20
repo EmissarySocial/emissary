@@ -33,31 +33,44 @@
 			}]
 		},
 
-		"edit": {
+		"edit":{
+			"steps":[
+				{
+					"step":"as-modal",
+					"steps":[
+						{"step":"view-html"},
+						{"step": "refresh-page"}
+					]
+				}				
+			]
+		},
+
+		"edit-form": {
 			"steps": [{
-				"step": "as-modal",
-				"steps": [
-					{
-						"step": "edit",
-						"type": "user",
-						"form": {
-							"type": "layout-vertical",
-							"label": "Edit Person",
-							"description": "",
-							"children": [
-								{"type": "text", "label": "Full Name", "path": "displayName"},
-								{"type": "text", "label": "Email Address", "path": "emailAddress"},
-								{"type": "text", "label": "Username", "path": "username"},
-								{"type": "toggle", "label": "Public?", "path": "isPublic"},
-								{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
-							]
-						},
-						"options": ["delete:/admin/users/{{.UserID}}/delete"]
-					},
-					{"step": "save", "type":"user", "comment": "Updated by {{.Author}}"},
-					{"step": "refresh-page"}
+				"step": "edit",
+				"type": "user",
+				"form": {
+					"type": "layout-vertical",
+					"description": "",
+					"children": [
+						{"type": "text", "label": "Full Name", "path": "displayName"},
+						{"type": "text", "label": "Email Address", "path": "emailAddress"},
+						{"type": "text", "label": "Username", "path": "username"},
+						{"type": "toggle", "label": "Public?", "path": "isPublic"},
+						{"type": "multiselect", "label": "Group(s)", "path": "groupIds", "options":{"provider": "groups", "sort":false}}
+					]
+				},
+				"options": [
+					"endpoint:/admin/users/{{.UserID}}/edit-form",
+					"delete:/admin/users/{{.UserID}}/delete"
 				]
 			}]
+		},
+
+		"send-welcome": {
+			"steps":[
+				{"step":"send-email", "email":"welcome"}
+			]
 		},
 
 		"delete": {
