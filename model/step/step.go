@@ -199,6 +199,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
 
+	case "send-email":
+		return NewSendEmail(stepInfo)
+
 	case "websub":
 		return NewWebSub(stepInfo)
 	}

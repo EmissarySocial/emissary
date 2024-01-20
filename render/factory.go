@@ -44,6 +44,7 @@ type Factory interface {
 	Config() config.Domain
 	Content() *service.Content
 	Domain() *service.Domain
+	Email() *service.DomainEmail
 	Host() string
 	Hostname() string
 	Icons() icon.Provider

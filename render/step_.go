@@ -89,6 +89,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Save:
 		return StepSave(s)
 
+	case step.SendEmail:
+		return StepSendEmail(s)
+
 	case step.ServerRedirect:
 		return StepServerRedirect(s)
 
