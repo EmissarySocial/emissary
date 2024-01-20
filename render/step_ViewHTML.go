@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/compare"
 )
 
 // StepViewHTML represents an action-step that can render a Stream into HTML
@@ -77,9 +78,14 @@ func (step StepViewHTML) execute(renderer Renderer, buffer io.Writer) PipelineBe
 	}
 
 	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
-	object := renderer.object()
 
-	return Continue().
-		WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
-		WithHeader("ETag", object.ETag())
+	// If we have a valid object, then try to set ETag headers.
+	if object := renderer.object(); compare.NotNil(object) {
+		return Continue().
+			WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
+			WithHeader("ETag", object.ETag())
+	}
+
+	// Otherwise, just continue without headers.
+	return Continue()
 }
