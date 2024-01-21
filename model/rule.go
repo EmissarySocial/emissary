@@ -70,7 +70,7 @@ func (rule Rule) State() string {
 // are not returned.
 func (rule Rule) Roles(authorization *Authorization) []string {
 
-	// Folders are private, so only MagicRoleMyself is allowed
+	// Rules are private, so only MagicRoleMyself is allowed
 	if authorization.UserID == rule.UserID {
 		return []string{MagicRoleMyself}
 	}

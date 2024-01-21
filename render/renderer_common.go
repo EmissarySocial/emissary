@@ -319,26 +319,36 @@ func (w Common) UserImage() (string, error) {
 // an error if the object is not one of those types.
 func (w Common) SubRenderer(object any) (Renderer, error) {
 
+	var result Renderer
+	var err error
+
 	switch typed := object.(type) {
 
 	case model.Rule:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Folder:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Follower:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Following:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Stream:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
+	default:
+		result, err = nil, derp.NewInternalError("render.Common.SubRenderer", "Invalid object type", object)
 	}
 
-	return nil, derp.NewInternalError("render.Common.SubRenderer", "Invalid object type", object)
+	if err != nil {
+		err = derp.Wrap(err, "render.Common.SubRenderer", "Error creating sub-renderer for object", object)
+		derp.Report(err)
+	}
+
+	return result, err
 }
 
 // ActivityStream returns an ActivityStream document for the provided URI.  The

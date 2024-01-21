@@ -539,7 +539,9 @@ func (w Inbox) AmFollowing(url string) model.Following {
 	return following
 }
 
-func (w Inbox) AmBlocking(ruleType string, url string) model.Rule {
+// HasRule returns a rule that matches the current user, rule type, and trigger.
+// If no rule is found, then an empty rule is returned.
+func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Get following service and new following record
 	ruleService := w._factory.Rule()
@@ -550,10 +552,10 @@ func (w Inbox) AmBlocking(ruleType string, url string) model.Rule {
 		return rule
 	}
 
-	// Retrieve rule record. Discard errors
-	// nolint:errcheck
-	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, url, &rule); err != nil {
-		derp.Report(derp.Wrap(err, "render.Inbox.AmBlocking", "Error loading rule", ruleType, url))
+	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
+	// In either case, do not halt the request
+	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.NilOrNotFound(err) {
+		derp.Report(derp.Wrap(err, "render.Inbox.HasRule", "Error loading rule", ruleType, trigger))
 	}
 
 	// Return the (possibly empty) Rule record
