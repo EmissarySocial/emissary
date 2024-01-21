@@ -471,7 +471,7 @@
 		},
 
 		"actor-button": {
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps": [
 				{"step":"view-html"},
 				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
@@ -480,7 +480,7 @@
 		},
 
 		"actor-button-follow": {
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
@@ -491,7 +491,7 @@
 			]
 		},
 		"actor-button-follow-update": {
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
@@ -502,7 +502,7 @@
 			]
 		},
 		"actor-button-unfollow": {
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-following", "steps":[
 					{"step":"delete"}
@@ -513,7 +513,7 @@
 			]
 		},
 		"actor-button-mute":{
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
@@ -524,7 +524,7 @@
 			]
 		},
 		"actor-button-unmute":{
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"delete"}
@@ -535,7 +535,7 @@
 			]
 		},
 		"actor-button-block":{
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
@@ -546,7 +546,7 @@
 			]
 		},
 		"actor-button-block-update": {
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"set-data", "from-form":["comment", "isPublic"]},
@@ -557,7 +557,7 @@
 			]
 		},
 		"actor-button-unblock":{
-			"roles":["authenticated"],
+			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
 					{"step":"delete"}
