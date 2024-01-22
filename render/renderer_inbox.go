@@ -14,8 +14,10 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -486,38 +488,91 @@ func (w Inbox) Message() model.Message {
 
 func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
-	maxDate := convert.Int64Default(dateString, math.MaxInt)
-	result, _ := activityStreamsService.QueryRepliesBeforeDate(url, maxDate, maxRows)
+	done := make(channel.Done)
 
-	return result
+	// Get ActivityStreams that reply to the provided URL
+	activityStreamService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt)
+	replies := activityStreamService.QueryRepliesBeforeDate(url, maxDate, done)
+
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredReplies := ruleFilter.Channel(replies)
+
+	// Limit to maximum number of replies
+	// limitedReplies := channel.Limit(maxRows, filteredReplies, done)
+	// result := channel.Slice(limitedReplies)
+	result := channel.Slice(filteredReplies)
+
+	// For glory and honor!
+	return slice.Reverse(result)
 }
 
 func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	done := make(channel.Done)
+
+	// Get ActivityStreams that reply to the provided URL
+	activityStreamService := w._factory.ActivityStreams()
 	minDate := convert.Int64(dateString)
+	replies := activityStreamService.QueryRepliesAfterDate(url, minDate, done)
 
-	activityStreamsService := w._factory.ActivityStreams()
-	result, _ := activityStreamsService.QueryRepliesAfterDate(url, minDate, maxRows)
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredReplies := ruleFilter.Channel(replies)
 
+	// Limit to maximum number of replies
+	limitedReplies := channel.Limit(maxRows, filteredReplies, done)
+	result := channel.Slice(limitedReplies)
+
+	// Invictus
 	return result
 }
 
 func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
-	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(url, maxDate, maxRows)
+	done := make(channel.Done)
 
-	return result
+	// Get ActivityStreams that announce the provided URL
+	activityStreamService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	announces := activityStreamService.QueryAnnouncesBeforeDate(url, maxDate, done)
+
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredAnnounces := ruleFilter.Channel(announces)
+
+	// Limit to maximum number of replies
+	limitedAnnounces := channel.Limit(maxRows, filteredAnnounces, done)
+	result := channel.Slice(limitedAnnounces)
+
+	// Victory
+	return slice.Reverse(result)
 }
 
 func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
-	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryLikesBeforeDate(url, maxDate, maxRows)
+	done := make(channel.Done)
 
-	return result
+	// Get ActivityStreams that announce the provided URL
+	activityStreamService := w._factory.ActivityStreams()
+	maxDate := convert.Int64Default(dateString, math.MaxInt64)
+	announces := activityStreamService.QueryLikesBeforeDate(url, maxDate, done)
+
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredLikes := ruleFilter.Channel(announces)
+
+	// Limit to maximum number of replies
+	limitedLikes := channel.Limit(maxRows, filteredLikes, done)
+	result := channel.Slice(limitedLikes)
+
+	// Success
+	return slice.Reverse(result)
 }
 
 func (w Inbox) AmFollowing(url string) model.Following {

@@ -75,11 +75,11 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
 	// All actions (except label) will disallow the document
 	if rule.Action != RuleActionLabel {
-		return false
+		return true
 	}
 
 	// Label actions add a label to the document, but do not disallow it.
 	// TODO: Add label actions.
 
-	return true
+	return false
 }

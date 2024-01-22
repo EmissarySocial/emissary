@@ -60,7 +60,7 @@ func (filter *RuleFilter) One(document *streams.Document) bool {
 
 // Channel returns a channel of all documents that are allowed by User/Domain filters.
 // Documents may be modified by filters in the process, for instance, to add content warning labels.
-func (filter *RuleFilter) Channel(ch chan streams.Document) chan streams.Document {
+func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Document {
 
 	result := make(chan streams.Document)
 
