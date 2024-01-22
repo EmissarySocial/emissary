@@ -23,7 +23,7 @@ type Message struct {
 	URL         string                     `json:"url"          bson:"url"`                   // URL of this Message
 	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
 	MyResponse  string                     `json:"myResponse"   bson:"myResponse,omitempty"`  // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
-	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (NEW,READ,MUTED,NEW-REPLIES)
+	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
 	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	PublishDate int64                      `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
 	Rank        int64                      `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
@@ -236,10 +236,10 @@ func (message *Message) AddReference(reference OriginLink) bool {
 	// And append the origin to the Reference list
 	message.References = append(message.References, reference)
 
-	// If this message stateID is "READ", then MarkNewReplies will
-	// update its stateID to "NEW-REPLIES".  Other stateID types
-	// ("UNREAD", "MUTED") will be left unchanged.
-	message.MarkNewReplies()
+	// If the Origin is a reply, then (try to) mark the message as a new reply
+	if reference.Type == OriginTypeReply {
+		message.MarkNewReplies()
+	}
 
 	// Sucsess!!
 	return true
