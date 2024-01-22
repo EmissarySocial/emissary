@@ -56,10 +56,13 @@ func (service *Following) saveUniqueMessage(message model.Message) error {
 
 	// Try to update the previousMessage with a new origin (a new reply, like, etc)
 	isReferenceUpdated := previousMessage.AddReference(message.Origin)
+	isStatusUpdated := false
 
 	// Update the message status to "NEW-REPLIES" so that previously
 	// read messages will show up again in the Inbox.
-	isStatusUpdated := previousMessage.MarkNewReplies()
+	if message.Origin.Type == model.OriginTypeReply {
+		isStatusUpdated = previousMessage.MarkNewReplies()
+	}
 
 	// if the message was updated (from AddReference or MarkNewReplies) then save it.
 	if isReferenceUpdated || isStatusUpdated {
