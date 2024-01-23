@@ -19,7 +19,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
