@@ -3,8 +3,8 @@
 	"extends":["global"],
 	"isVisible":true,
 	"category":"General",
-	"label": "Maximus",
-	"description": "Clean, top navbar for general purpose websites.",
+	"label": "Minimus",
+	"description": "Clean, top nav theme for general purpose websites.",
 	"rank": 0,
 	"bundles": {
 		"stylesheet": {
@@ -22,7 +22,7 @@
 	},
 	"startupStreams": [
 		{"templateId":"article-editorjs", "token":"home", "label":"Welcome!", "rank":1},
-		{"templateId":"article-markdown", "token":"about", "label":"About Maximus", "rank":2},
+		{"templateId":"article-markdown", "token":"about", "label":"About Minimus", "rank":2},
 		{"templateId":"article-markdown", "token":"join-the-team", "label":"Join the Team", "rank":3}
 	],
 	"startupGroups":[

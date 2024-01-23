@@ -16,8 +16,6 @@
 				{{- range .Navigation -}}
 					<a href="/{{.Token}}" class="turboclick {{ if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
 				{{- end -}}
-			</div>
-			<div class="right">
 				{{- if .IsAuthenticated -}}
 					{{- if eq $topID "outbox" -}}
 						<a href="/@me" class="selected turboclick">{{icon "person-fill"}} Profile</a>
@@ -31,6 +29,10 @@
 						<a href="/@me/inbox" class="turboclick">{{icon "inbox"}} Inbox</a>
 					{{- end -}}
 
+				{{- end -}}
+			</div>
+			<div class="right">
+				{{- if .IsAuthenticated -}}
 					{{- if .IsOwner -}}
 						{{- if eq $topID "admin" -}}
 							<a href="/admin/domain" class="selected turboclick">{{icon "settings-fill"}} Server</a>
@@ -38,8 +40,7 @@
 							<a href="/admin/domain" class="turboclick">{{icon "settings"}} Server</a>
 						{{- end -}}
 					{{- end -}}
-
-					{{- else -}}
+				{{- else -}}
 					<a href="/signin" class="turboclick">Sign In</a>
 				{{- end -}}
 			</div>
