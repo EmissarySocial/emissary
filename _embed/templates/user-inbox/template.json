@@ -109,7 +109,7 @@
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"},
 								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
-								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
 						{"step":"save"}
@@ -117,24 +117,6 @@
 					{"step":"trigger-event", "event":"closeModal"},
 					{"step":"trigger-event", "event":"refreshPage"}
 				]}
-			]
-		},
-		"folder-update":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-folder", "steps":[
-					{"step":"edit", "form": {
-						"type":"layout-vertical",
-						"children": [
-							{"type":"text", "path":"label", "label":"Name"},
-							{"type":"text", "path":"layout", "label":"Layout"},
-							{"type":"text", "path":"filter", "label":"Filter"}
-						]}
-					},
-					{"step":"save"}
-				]},
-				{"step":"set-header", "on":"post", "name":"HX-Reswap", "value":"none"},
-				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"folder-delete": {
