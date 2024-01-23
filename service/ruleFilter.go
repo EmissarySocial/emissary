@@ -26,10 +26,10 @@ func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID) RuleFilter {
 	}
 }
 
-// One returns TRUE if this document is allowed past all User and Domain filters.
+// Allow returns TRUE if this document is allowed past all User and Domain filters.
 // The document is passed as a pointer because it MAY BE MODIFIED by the filter, for
 // instance, to add a label or other metadata.
-func (filter *RuleFilter) One(document *streams.Document) bool {
+func (filter *RuleFilter) Allow(document *streams.Document) bool {
 
 	// Get the actor ID from the document.
 	actorID := document.Actor().ID()
@@ -58,6 +58,11 @@ func (filter *RuleFilter) One(document *streams.Document) bool {
 	return true
 }
 
+// Disallow returns TRUE if a document is NOT allowed past all User and Domain filters.
+func (filter *RuleFilter) Disallow(document *streams.Document) bool {
+	return !filter.Allow(document)
+}
+
 // Channel returns a channel of all documents that are allowed by User/Domain filters.
 // Documents may be modified by filters in the process, for instance, to add content warning labels.
 func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Document {
@@ -68,7 +73,7 @@ func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Doc
 		defer close(result)
 
 		for document := range ch {
-			if filter.One(&document) {
+			if filter.Allow(&document) {
 				result <- document
 			}
 		}
@@ -84,7 +89,7 @@ func (filter *RuleFilter) Slice(documents []streams.Document) []streams.Document
 	result := make([]streams.Document, 0, len(documents))
 
 	for _, document := range documents {
-		if filter.One(&document) {
+		if filter.Allow(&document) {
 			result = append(result, document)
 		}
 	}

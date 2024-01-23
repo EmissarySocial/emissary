@@ -76,7 +76,7 @@ func (router *ActivityPubRouter) Handle(factory *domain.Factory, user *model.Use
 	// Check all activities for blocks.  If the Domain/Actor/Content *has* been blocked,
 	// then do not process the inbound activity.
 	filter := factory.Rule().Filter(user.UserID)
-	if filter.One(&activity) {
+	if filter.Disallow(&activity) {
 
 		if pub.IsMinDebugLevel(pub.DebugLevelTerse) {
 			marshalled, _ := json.MarshalIndent(activity.Value(), "", "    ")
