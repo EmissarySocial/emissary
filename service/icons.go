@@ -108,6 +108,10 @@ func (service Icons) Get(name string) string {
 		return service.get("folder")
 	case "folder-fill":
 		return service.get("folder-fill")
+	case "globe":
+		return service.get("globe2")
+	case "globe-fill":
+		return service.get("globe2")
 	case "grip-vertical":
 		return service.get("grip-vertical")
 	case "grip-horizontal":

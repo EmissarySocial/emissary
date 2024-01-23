@@ -62,6 +62,10 @@ func Icons() []form.LookupCode {
 			Label: "Folder",
 		},
 		{
+			Value: "globe",
+			Label: "Globe",
+		},
+		{
 			Value: "heart",
 			Label: "Heart",
 		},
@@ -82,16 +86,16 @@ func Icons() []form.LookupCode {
 			Label: "Shield",
 		},
 		{
+			Value: "star",
+			Label: "Star",
+		},
+		{
 			Value: "person",
 			Label: "Person",
 		},
 		{
 			Value: "people",
 			Label: "People",
-		},
-		{
-			Value: "star",
-			Label: "Star",
 		},
 	}
 }
