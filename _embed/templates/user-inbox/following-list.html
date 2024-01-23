@@ -33,10 +33,10 @@
 						{{ icon .Icon }} 
 						{{.Method}}
 						{{ .LastPolled | tinyDate }}
-					{{- else if eq "LOADING" .Status -}}
-						<span class="green">{{.Status}}</span>
-					{{- else -}}
+					{{- else if eq "ERROR" .Status -}}
 						<span class="red">{{.Status}}</span>
+					{{- else -}}
+						<span class="green">{{.Status}}</span>
 					{{- end -}}
 				</div>
 			</div>
