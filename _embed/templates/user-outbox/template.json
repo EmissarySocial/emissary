@@ -75,7 +75,8 @@
 						]
 					}},
 					{"step":"save", "comment":"Profile updated by me"}
-				]}
+				]},
+				{"step":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"photo": {

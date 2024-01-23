@@ -1,11 +1,12 @@
 {{- $search := .QueryParam "search" -}}
 {{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId" -}}
 {{- $stream := .ActivityStream $url -}}
 {{- $following := .AmFollowing $url -}}
 
 {{- if ne "" $search -}}
 <div class="margin-bottom">
-	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal">
+	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}&folderId={{$folderID}}" hx-target="#modal">
 		&larr; Back to Search
 	</span>
 </div>

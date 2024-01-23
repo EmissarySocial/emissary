@@ -88,7 +88,7 @@
 							"children": [
 								{"type":"text", "path":"label", "label":"Name"},
 								{"type":"select", "path":"icon", "label":"Icon", "options":{"provider":"folder-icons"}},
-								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"CHAT,SOCIAL,NEWSPAPER,MAGAZINE"}}
+								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
 						{"step":"save"}
@@ -216,22 +216,24 @@
 									"path":"url"
 								},
 								{
-									"type":"select", 
-									"label":"Content to Show", 
-									"path":"behavior", 
-									"options":{"provider":"following-behaviors"}
+									"type":"select",
+									"label":"Inbox Folder",
+									"path":"folderId",
+									"description":"Where should messages from this source be placed?",
+									"options":{"provider": "folders"}
 								},
 								{
-									"type":"select",
-									"label":"Folder",
-									"path":"folderId",
-									"options":{"provider": "folders"},
-									"description": "Automatically add items to this folder."
+									"type":"select", 
+									"label":"Message Types", 
+									"path":"behavior", 
+									"description":"What kinds of posts should be shown in my timeline?",
+									"options":{"provider":"following-behaviors"}
 								},
 								{
 									"type":"select", 
 									"label":"Shared Blocks", 
 									"path":"ruleAction", 
+									"description":"How should blocks from this source be handled?",
 									"options":{"provider":"following-rule-actions"}
 								},
 								{
@@ -244,7 +246,7 @@
 									"type":"toggle",
 									"path":"isPublic",
 									"default":false,
-									"options":{"true-text":"Share this 'Follow' on my profile", "false-text":"Hide this 'Follow' from others"}
+									"options":{"true-text":"Public: This 'Follow' is visible on my profile", "false-text":"Private: This 'Follow' is hidden from others"}
 								}
 							]
 						}
@@ -280,24 +282,24 @@
 							"type":"layout-vertical",
 							"children": [
 								{
-									"type":"select", 
-									"label":"Content to Show", 
-									"path":"behavior", 
-									"hint": "Which messages from this source should show up in your timeline?",
-									"options":{"provider":"following-behaviors"}
+									"type":"select",
+									"label":"Inbox Folder",
+									"path":"folderId",
+									"description":"Where should messages from this source be placed?",
+									"options":{"provider": "folders"}
 								},
 								{
-									"type":"select",
-									"label":"Folder",
-									"path":"folderId",
-									"options":{"provider": "folders"},
-									"description": "Automatically add items to this folder."
+									"type":"select", 
+									"label":"Message Types", 
+									"path":"behavior", 
+									"description":"What kinds of posts should be shown in my timeline?",
+									"options":{"provider":"following-behaviors"}
 								},
 								{
 									"type":"select", 
 									"label":"Shared Blocks", 
 									"path":"ruleAction", 
-									"hint":"When this source blocks someone online, do you want to block them as well?",
+									"description":"How should blocks from this source be handled?",
 									"options":{"provider":"following-rule-actions"}
 								},
 								{
@@ -310,7 +312,7 @@
 									"type":"toggle",
 									"path":"isPublic",
 									"default":false,
-									"options":{"true-text":"Share this 'Follow' on my profile", "false-text":"Hide this 'Follow' from others"}
+									"options":{"true-text":"Public: This 'Follow' is visible on my profile", "false-text":"Private: This 'Follow' is hidden from others"}
 								}
 							]
 						}
