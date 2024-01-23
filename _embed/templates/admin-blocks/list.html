@@ -1,4 +1,4 @@
-{{- $rules := .ServerWideBlocks.Slice -}}
+{{- $rules := .ServerWideRules.Slice -}}
 
 {{- range $rules -}}
 	<div hx-get="/admin/rules/{{.RuleID.Hex}}/edit" role="button">

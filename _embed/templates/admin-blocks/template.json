@@ -3,7 +3,7 @@
 	"templateRole":"admin",
 	"model":"rule",
 	"containedBy":["admin"],
-	"label": "Blocks",
+	"label": "Rules",
 	"description": "Domain Owners only.  Site Admin",
 	"actions": {
 		"index": {"step": "view-html"},
@@ -12,26 +12,35 @@
 			{"step":"as-modal", "background":"/admin/rules", "steps":[
 				{"step": "edit", "form":{
 					"type":"layout-vertical",
-					"label":"Server-Wide Block",
+					"label":"Add Server-Wide Rule",
 					"children":[
 						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"rule-types"}},
-						{"type":"text", "path":"trigger", "label":"Trigger Text"}
+						{"type":"text", "path":"trigger", "label":"Trigger Text"},
+						{"type":"select", "path":"action", "label":"Action", "options":{"provider":"rule-actions"}}
 					]
 				}}
-			]}
+			]},
+			{"step":"trigger-event", "event":"refreshPage"}
 		]},
 		"edit": {"steps":[
 			{"step":"as-modal", "background":"/admin/rules", "steps":[
 				{"step": "edit", "form":{
 					"type":"layout-vertical",
-					"label":"Server-Wide Block",
+					"label":"Edit Server-Wide Rule",
 					"children":[
 						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"rule-types"}},
-						{"type":"text", "path":"trigger", "label":"Trigger Text"}
+						{"type":"text", "path":"trigger", "label":"Trigger Text"},
+						{"type":"select", "path":"action", "label":"Action", "options":{"provider":"rule-actions"}}
 					]
 				}, "options":["delete:/admin/rules/{{.RuleID}}/delete"]}
-			]}
+			]},
+			{"step":"trigger-event", "event":"refreshPage"}
 		]},
-		"delete": {"step": "delete"}
+		"delete": {
+			"steps":[
+				{"step": "delete"},
+				{"step":"trigger-event", "event":"refreshPage"}
+			]
+		}
 	}
 }
